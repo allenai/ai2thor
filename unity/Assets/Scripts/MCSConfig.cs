@@ -3,6 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MCSConfig {
+    public static Dictionary<string, string[]> AGENT_SCENE_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "Custom/Materials/Black", new string[] { "black" } },
+        { "Custom/Materials/Blue", new string[] { "blue" } },
+        { "Custom/Materials/Brown", new string[] { "brown" } },
+        { "Custom/Materials/Cyan", new string[] { "cyan" } },
+        { "Custom/Materials/Green", new string[] { "green" } },
+        { "Custom/Materials/Grey", new string[] { "grey" } },
+        { "Custom/Materials/Indigo", new string[] { "indigo" } },
+        { "Custom/Materials/Lime", new string[] { "lime" } },
+        { "Custom/Materials/Magenta", new string[] { "magenta" } },
+        { "Custom/Materials/Maroon", new string[] { "maroon" } },
+        { "Custom/Materials/Navy", new string[] { "navy" } },
+        { "Custom/Materials/Olive", new string[] { "olive" } },
+        { "Custom/Materials/Orange", new string[] { "orange" } },
+        { "Custom/Materials/Pink", new string[] { "pink" } },
+        { "Custom/Materials/Purple", new string[] { "purple" } },
+        { "Custom/Materials/Red", new string[] { "red" } },
+        { "Custom/Materials/TAn", new string[] { "tan" } },
+        { "Custom/Materials/Teal", new string[] { "teal" } },
+        { "Custom/Materials/White", new string[] { "white" } },
+        { "Custom/Materials/Yellow", new string[] { "yellow" } }
+    };
+
     public static Dictionary<string, string[]> BLOCK_BLANK_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/blue_1x1", new string[] { "blue" } },
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/gray_1x1", new string[] { "grey" } },
@@ -133,6 +156,7 @@ public class MCSConfig {
     };
 
     public static Dictionary<string, Dictionary<string, string[]>> MATERIAL_REGISTRY = new Dictionary<string, Dictionary<string, string[]>>() {
+        { "agent_scene", AGENT_SCENE_MATERIAL_REGISTRY },
         { "block_blank", BLOCK_BLANK_MATERIAL_REGISTRY },
         { "block_design", BLOCK_DESIGN_MATERIAL_REGISTRY },
         { "cardboard", CARDBOARD_MATERIAL_REGISTRY },

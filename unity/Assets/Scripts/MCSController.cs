@@ -18,8 +18,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float MAX_DISTANCE_ACROSS_ROOM = 14.15f;
 
     // The number of times to run Physics.Simulate after each action from the player is LOOPS * STEPS.
-    public static int PHYSICS_SIMULATION_LOOPS = 5;
+    public static int PHYSICS_SIMULATION_LOOPS = 1;
     public static int PHYSICS_SIMULATION_STEPS = 5;
+
+    public static int ROTATION_DEGREES = 10;
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
@@ -56,7 +58,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
     public override void CloseObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -65,35 +67,34 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.CloseObject(action);
     }
 
-    private string ConvertObjectDirectionToId(Vector3 direction, string previousObjectId) {
-        // If the objectId was set or the direction vector was not set, return the previous objectId.
+    private string ConvertScreenPointToId(Vector3 screenPoint, string previousObjectId) {
+        // If the objectId was set or the screen point vector was not set, return the previous objectId.
         if ((previousObjectId != null && !previousObjectId.Equals("")) ||
-            (direction.x == 0 && direction.y == 0 && direction.z == 0)) {
+            (screenPoint.x <= 0 && screenPoint.y <= 0)) {
             return previousObjectId;
         }
 
         int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
-        List<RaycastHit> hits = Physics.RaycastAll(this.transform.position, direction,
+        Ray screenPointRay = m_Camera.ScreenPointToRay(screenPoint);
+        List<RaycastHit> hits = Physics.RaycastAll(screenPointRay.origin, screenPointRay.direction,
             MCSController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
         if (hits.Count == 0) {
-            this.errorMessage = "Cannot find any object on the directional vector.";
+            this.errorMessage = "Cannot find any object on the screen point vector.";
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
             this.actionFinished(false);
             return previousObjectId;
-        }
-        else {
+        } else {
             hits.Sort(delegate (RaycastHit one, RaycastHit two) {
                 return one.distance.CompareTo(two.distance);
             });
             SimObjPhysics simObjPhysics = hits.First().transform.gameObject
                 .GetComponentInParent<SimObjPhysics>();
             if (simObjPhysics == null) {
-                this.errorMessage = "The closest object on the directional vector is not interactable.";
+                this.errorMessage = "The closest object on the screen point is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 this.actionFinished(false);
                 return previousObjectId;
-            }
-            else {
+            } else {
                 return simObjPhysics.UniqueID;
             }
         }
@@ -206,6 +207,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void Initialize(ServerAction action) {
+        // Set consistentColors to randomize segmentation mask colors if required
+        this.agentManager.consistentColors = action.consistentColors;
         base.Initialize(action);
 
         this.step = 0;
@@ -270,7 +273,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void OpenObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -280,7 +283,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void PickupObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -371,7 +374,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void PullObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -388,7 +391,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void PushObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -588,8 +591,27 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         GameObject gameObj = ItemInHand;
 
         if(base.DropHandObject(action)) {
-            if (action.objectDirection.x != 0 || action.objectDirection.y != 0 || action.objectDirection.z != 0) {
-                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectDirection, action.moveMagnitude);
+            if (action.objectImageCoords.x > 0 && action.objectImageCoords.y > 0) {
+                // Need to calculate z for where to throw towards based on a raycast, since now
+                // we are using screen points instead of directional vectors as input, which
+                // will only give us (x,y).
+                int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
+                Ray screenPointRay = m_Camera.ScreenPointToRay(action.objectImageCoords);
+                List<RaycastHit> hits = Physics.RaycastAll(screenPointRay.origin, screenPointRay.direction,
+                    MCSController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
+                if (hits.Count == 0) {
+                    this.errorMessage = "Cannot convert screen point to directional vector.";
+                    Debug.Log(errorMessage);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                    this.actionFinished(false);
+                } else {
+                    hits.Sort(delegate (RaycastHit one, RaycastHit two) {
+                        return one.distance.CompareTo(two.distance);
+                    });
+
+                    Vector3 directionToThrowTowards = hits.First().point;
+                    gameObj.GetComponent<SimObjPhysics>().ApplyForce(directionToThrowTowards, action.moveMagnitude);
+                }
             } else {
                 // throw object forward if no direction input is given
                 gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(Vector3.forward, action.moveMagnitude);
@@ -604,7 +626,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ToggleObject(ServerAction action, bool toggleOn, bool forceAction) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        bool continueAction = TryConvertingEachScreenPointToId(action);
 
         if (!continueAction) {
             return;
@@ -613,24 +635,28 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.ToggleObject(action, toggleOn, forceAction);
     }
 
-    private bool TryConvertingEachObjectDirectionToId(ServerAction action) {
-        action.objectId = this.ConvertObjectDirectionToId(action.objectDirection,
+    // Note that for screen points, (0,0) would be the bottom left of your
+    // screen, and the top is the top right.
+    private bool TryConvertingEachScreenPointToId(ServerAction action) {
+
+        action.objectId = this.ConvertScreenPointToId(action.objectImageCoords,
             action.objectId);
 
-        return TryReceptacleObjectIdFromDirection(action);
+        return TryReceptacleObjectIdFromScreenPoint(action);
+
     }
 
     private bool TryObjectIdFromHeldObject(ServerAction action) {
         // Can't currently use direction for objects in player's hand, since held objects are currently invisible
         action.objectId = this.GetHeldObjectId(action.objectId);
 
-        // For receptacleObjectId (if needed), still using direction
-        return TryReceptacleObjectIdFromDirection(action);
+        // For receptacleObjectId (if needed), still using screen point
+        return TryReceptacleObjectIdFromScreenPoint(action);
     }
 
-    private bool TryReceptacleObjectIdFromDirection(ServerAction action) {
+    private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
         if (!this.actionComplete) {
-            action.receptacleObjectId = this.ConvertObjectDirectionToId(action.receptacleObjectDirection,
+            action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
@@ -815,27 +841,27 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void RotateLeft(ServerAction controlCommand) {
         ServerAction rotate = new ServerAction();
-        rotate.rotation.y = -90;
+        rotate.rotation.y = -ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void RotateRight(ServerAction controlCommand) {
         ServerAction rotate = new ServerAction();
-        rotate.rotation.y = 90;
+        rotate.rotation.y = ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void LookUp(ServerAction controlCommand) 
     {
         ServerAction rotate = new ServerAction();
-        rotate.horizon = -30;
+        rotate.horizon = -ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void LookDown(ServerAction controlCommand)
     {    
         ServerAction rotate = new ServerAction();
-        rotate.horizon = 30;
+        rotate.horizon = ROTATION_DEGREES;
         RotateLook(rotate);
     }
 

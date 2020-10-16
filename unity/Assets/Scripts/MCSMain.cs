@@ -7,6 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
+    private static string PATH_PREFIX = "MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
@@ -26,20 +27,20 @@ public class MCSMain : MonoBehaviour {
     private static float ISOMETRIC_PERFORMER_START_POSITION_Z = -4f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_X = 35.264f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_Y = -45f;
-    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 5.5f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 5f;
     private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_Z = 0.5f;
     private static float ISOMETRIC_WALL_BACK_POSITION_X = 0f;
-    private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2.5f;
+    private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2.25f;
     private static float ISOMETRIC_WALL_FRONT_POSITION_X = 0f;
-    private static float ISOMETRIC_WALL_FRONT_POSITION_Z = 2.5f;
-    private static float ISOMETRIC_WALL_LEFT_POSITION_X = -2.5f;
+    private static float ISOMETRIC_WALL_FRONT_POSITION_Z = 2.25f;
+    private static float ISOMETRIC_WALL_LEFT_POSITION_X = -2.25f;
     private static float ISOMETRIC_WALL_LEFT_POSITION_Z = 0f;
     private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X = 0.5f;
-    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z = 5.5f;
-    private static float ISOMETRIC_WALL_RIGHT_POSITION_X = 2.5f;
+    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z = 5f;
+    private static float ISOMETRIC_WALL_RIGHT_POSITION_X = 2.25f;
     private static float ISOMETRIC_WALL_RIGHT_POSITION_Z = 0f;
-    private static float ISOMETRIC_WALL_POSITION_Y = 0.05f;
-    private static float ISOMETRIC_WALL_SCALE_Y = 0.1f;
+    private static float ISOMETRIC_WALL_POSITION_Y = 0.0625f;
+    private static float ISOMETRIC_WALL_SCALE_Y = 0.125f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
     private static float LIGHT_Y_POSITION = 2.95f;
@@ -95,7 +96,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
+        TextAsset currentSceneFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
@@ -147,6 +148,12 @@ public class MCSMain : MonoBehaviour {
             this.lastStep++;
             Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                // update segmentation mask colors
+                ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
+                if (imageSynthesis != null && imageSynthesis.enabled) {
+                    imageSynthesis.UpdateGuidForColors(this.agentController.agentManager.consistentColors);
+                    imageSynthesis.OnSceneChange();
+                }
                 bool objectsWereShown = false;
                 List<MCSConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
                     objectConfig.GetGameObject() != null).ToList();
@@ -163,8 +170,6 @@ public class MCSMain : MonoBehaviour {
                     // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
                     this.physicsSceneManager.SetupScene();
                     // Notify ImageSynthesis so the objects will appear in the masks.
-                    ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
-                        .GetComponentInChildren<ImageSynthesis>();
                     if (imageSynthesis != null && imageSynthesis.enabled) {
                         imageSynthesis.OnSceneChange();
                     }
@@ -174,7 +179,7 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    // Custom Methods
+    // Custom Public Methods
 
     public void ChangeCurrentScene(MCSConfigScene scene) {
         if (scene == null && this.currentScene == null) {
@@ -200,6 +205,41 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.objects.ForEach(InitializeGameObject);
         }
 
+        this.AdjustRoomStructuralObjects();
+
+        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
+            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
+        }
+
+        GameObject controller = GameObject.Find("FPSController");
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
+            // Always keep the Y position on the floor.
+            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
+                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
+        }
+        else {
+            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
+        }
+
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
+            // Only permit rotating left or right (along the Y axis).
+            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                this.currentScene.performerStart.rotation.x, 0, 0);
+        }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                0, 0, 0);
+        }
+
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+    }
+
+    // Custom Private Methods
+
+    private void AdjustRoomStructuralObjects() {
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -411,10 +451,10 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
+                MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
+            controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
@@ -431,6 +471,7 @@ public class MCSMain : MonoBehaviour {
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
+        
     }
 
     private Collider AssignBoundingBox(
@@ -560,7 +601,7 @@ public class MCSMain : MonoBehaviour {
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
-                    Material material = Resources.Load<Material>("MCS/" + filename);
+                    Material material = Resources.Load<Material>(MCSMain.PATH_PREFIX + filename);
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -1034,7 +1075,7 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.version);
         string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
 
-        GameObject gameObject = Instantiate(Resources.Load("MCS/" + resourceFile, typeof(GameObject))) as GameObject;
+        GameObject gameObject = Instantiate(Resources.Load(MCSMain.PATH_PREFIX + resourceFile, typeof(GameObject))) as GameObject;
 
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
@@ -1052,7 +1093,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" +
+                    AnimationClip clip = Resources.Load<AnimationClip>(MCSMain.PATH_PREFIX +
                         animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
@@ -1074,7 +1115,7 @@ public class MCSMain : MonoBehaviour {
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/" + animatorDefinition.animatorFile);
+                    MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
@@ -1228,7 +1269,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
-        TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        TextAsset objectRegistryFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         MCSConfigObjectRegistry objectRegistry = JsonUtility
@@ -1428,6 +1469,18 @@ public class MCSMain : MonoBehaviour {
                 }
             });
 
+        // Shrouding an object will make it temporarily invisible.
+        bool shrouded = false;
+        objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
+            .ForEach((shroud) => {
+                shrouded = true;
+                gameOrParentObject.GetComponentInChildren<Renderer>().enabled = false;
+            });
+
+        if (!shrouded) {
+            gameOrParentObject.GetComponentInChildren<Renderer>().enabled = true;
+        }
+
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
             // Play the animation on the game object, not on the parent object.
             Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
@@ -1523,6 +1576,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigResize> resizes;
     public List<MCSConfigMove> rotates;
     public List<MCSConfigShow> shows;
+    public List<MCSConfigStepBeginEnd> shrouds;
     public List<MCSConfigTeleport> teleports;
     public List<MCSConfigMove> torques;
 

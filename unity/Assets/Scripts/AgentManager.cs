@@ -44,6 +44,7 @@ public class AgentManager : MonoBehaviour
 
     protected PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
+	public bool consistentColors = false;
 
 	void Awake() {
 
@@ -124,6 +125,7 @@ public class AgentManager : MonoBehaviour
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
         this.renderFlowImage = action.renderFlowImage;
+
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
@@ -463,8 +465,9 @@ public class AgentManager : MonoBehaviour
 				cid.name = agent.imageSynthesis.colorIds [key];
 				colors.Add (cid);
 			}
+
 			metadata.colors = colors.ToArray ();
-        }
+		}
         return metadata;
 	}
 
@@ -714,6 +717,7 @@ public class AgentManager : MonoBehaviour
 		this.currentSequenceId = controlCommand.sequenceId;
 		this.renderImage = controlCommand.renderImage;
 		activeAgentId = controlCommand.agentId;
+
 		if (controlCommand.action == "Reset") {
 			this.Reset (controlCommand);
 		} else if (controlCommand.action == "Initialize") {
@@ -1058,9 +1062,10 @@ public class ServerAction
 
     // MCS Additions
     public bool logs = false;
-    public Vector3 objectDirection;
-    public Vector3 receptacleObjectDirection;
+    public Vector2 objectImageCoords;
+    public Vector2 receptacleObjectImageCoords;
     public MCSConfigScene sceneConfig;
+	public bool consistentColors = false;
 
     public SimObjType ReceptableSimObjType()
 	{
