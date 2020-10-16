@@ -9104,7 +9104,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
                 
@@ -9141,7 +9142,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
 
@@ -9167,7 +9169,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
 
@@ -9198,7 +9201,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
 
@@ -9219,7 +9223,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
 
