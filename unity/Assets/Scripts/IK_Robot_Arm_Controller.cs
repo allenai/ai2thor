@@ -81,21 +81,32 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //     StopMotionOnContact = b;
     // }
 
+    //debug for gizmo draw
+    #if UNITY_EDITOR
+    public class GizmoDrawCapsule
+    {
+        public Vector3 p0;
+        public Vector3 p1;
+        public float radius;
+    }
+
+    List <GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
+    #endif
+
     // Update is called once per frame
     void Update()
     {
         // if(Input.GetKeyDown(KeyCode.Space))
         // {
-        //     IsArmColliding();
+        //     #if UNITY_EDITOR
+        //     debugCapsules.Clear();
+        //     #endif
+
+        //     bool result;
+        //     result = IsArmColliding();
+        //     print("Is the arm actively colliding RIGHT NOW?: " + result);
         // }
     }
-
-    //debug for gizmo draw
-    #if UNITY_EDITOR
-    Vector3 gizmo_p1;
-    Vector3 gizmo_p2;
-    float gizmo_radius;
-    #endif
 
     private void moveTargetSimulatePhisics(
         PhysicsRemoteFPSAgentController controller,
@@ -226,7 +237,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // that should prevent it from moving
         Physics.Simulate(fixedDeltaTime);
 
-        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
             previousArmPosition = getPosition(moveTransform);
 
@@ -237,11 +248,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         }
 
-        if (currentDistance <= eps && !staticCollided.collided) {
-            setPosition(moveTransform, targetPosition);
-            // must run Simulate() one more time to ensure colliders are triggered
-            Physics.Simulate(fixedDeltaTime);
-        }
+        // DISABLING JUMP TO FINAL POSITION as it can lead to clipping
+        //if (currentDistance <= eps && !staticCollided.collided) {
+        //    setPosition(moveTransform, targetPosition);
+        //    // must run Simulate() one more time to ensure colliders are triggered
+        //    Physics.Simulate(fixedDeltaTime);
+        //}
 
         Physics.autoSimulation = true;
         moveArmFinish(
@@ -256,6 +268,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public bool IsArmColliding()
     {
+        #if UNITY_EDITOR
+        debugCapsules.Clear();
+        #endif
+
         bool result = false;
 
         //create overlap box/capsule for each collider and check the result I guess
@@ -288,10 +304,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 //how to get transform.localRight?
             }
 
+            #if UNITY_EDITOR
             //debug draw
             Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            #endif
 
-            //point 0
             //center in world space + direction with magnitude (1/2 height - radius)
             var point0 = center + dir * (c.height/2 - radius);
 
@@ -300,11 +317,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             var point1 = center - dir * (c.height/2 - radius);
 
             #if UNITY_EDITOR
-            // print("p0 " + point0);
-            // print("p1 " + point1);
-            gizmo_p1 = point0;
-            gizmo_p2 = point1;
-            gizmo_radius = radius;
+            GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            gdc.p0 = point0;
+            gdc.p1 = point1;
+            gdc.radius = radius;
+            debugCapsules.Add(gdc);
             #endif
             
             //ok now finally let's make some overlap capsuuuules
@@ -315,13 +332,18 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         }
 
+        //also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders)
         {
-
+            if(Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            {
+                result = true;
+            }
         }
 
         return result;
     }
+
     public void OnTriggerExit(Collider col)
     {
         activeColliders.Remove(col);
@@ -377,6 +399,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void OnTriggerEnter(Collider col)
     {
         activeColliders.Add(col);
+        // XXX this can be removed once we confirm activeColliders remains
+        // consistent and works as expected
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -429,7 +453,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         float startingDistance = currentDistance;
 
-        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
             previousArmPosition = getPosition(moveTransform);
 
@@ -440,11 +464,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         }
 
-        if (currentDistance <= eps && !staticCollided.collided) {
-            // Maybe switch to this?
-            // addPosition(moveTransform, targetDirection * currentDistance);
-            setPosition(moveTransform, targetPosition);
-        }
+        // DISABLING JUMP since it can lead to clipping
+        //if (currentDistance <= eps && !staticCollided.collided) {
+        //    // Maybe switch to this?
+        //    // addPosition(moveTransform, targetDirection * currentDistance);
+        //    setPosition(moveTransform, targetPosition);
+        //}
 
         moveArmFinish(
             controller,
@@ -467,24 +492,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        if (staticCollided.collided) {
+        var staticCollisions = StaticCollisions();
+        if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
                 
                 //decide if we want to return to original position or last known position before collision
                 setPosition(moveTransform, positionReset);
 
                 //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                if(sc.simObjPhysics && !sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
 
                 //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                if(!sc.simObjPhysics && sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
-
-                staticCollided.collided = false;
 
                 actionSuccess = false;
         } else if (armOvershot) {
@@ -510,6 +535,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         string whichSpace = "arm", 
         bool restrictTargetPosition = false,
         bool disableRendering = false) {
+
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        activeColliders.Clear();
         
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
@@ -583,6 +611,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false,
         bool disableRendering = false) {
+
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        activeColliders.Clear();
             
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
@@ -830,12 +861,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        if(gizmo_radius > 0.0f)
+        if(debugCapsules.Count > 0)
         {
-            Gizmos.DrawWireSphere (gizmo_p1, gizmo_radius);
-            Gizmos.DrawWireSphere( gizmo_p2, gizmo_radius);
+            foreach (GizmoDrawCapsule thing in debugCapsules)
+            {
+                Gizmos.DrawWireSphere(thing.p0, thing.radius);
+                Gizmos.DrawWireSphere(thing.p1, thing.radius);
+            }
         }
-
     }
     #endif
 }
