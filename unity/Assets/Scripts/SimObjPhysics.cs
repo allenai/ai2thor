@@ -97,6 +97,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     //reference to this gameobject's rigidbody
     private Rigidbody myRigidbody; 
 
+    // properties initialized during Start()
+    public bool IsReceptacle;
+    public bool IsPickupable;
+    public bool IsMoveable;
+    public bool IsToggleable;
+    public bool IsOpenable;
+    public bool IsBreakable;
+    public bool IsFillable;
+    public bool IsDirtyable;
+    public bool IsCookable;
+    public bool IsSliceable;
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -222,22 +234,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsPickupable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-		}
-	}
-
-	//moveable objects can be pushed/pulled or shoved if another object collides with enough force to move it
-	public bool IsMoveable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
-		}
-	}
 
 	//if this pickupable object is being held by the agent right
 	public bool isPickedUp
@@ -251,7 +247,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//note some objects are not toggleable, but can still return the IsToggled meta value (ex: stove burners)
 	//stove burners are not toggleable directly, a stove knob controls them.
-	public bool IsToggleable
+	private bool isToggleable
 	{
 		get 
 		{ 
@@ -294,12 +290,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsOpenable
-	{
-		get { return this.GetComponent<CanOpen_Object>(); }
-	}
 
-	//this value only has meaning if IsOpenable == True because... it has to open to have an open percentage right?
 	public float OpenPercentage
 	{
 		get {return this.GetComponent<CanOpen_Object>().currentOpenPercentage;}
@@ -322,11 +313,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsBreakable
-	{
-		get{ return this.GetComponentInChildren<Break>(); }
-	}
-
 	public bool IsBroken
 	{
 		get
@@ -341,11 +327,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
-	}
-
-	public bool IsFillable
-	{
-		get{ return this.GetComponent<Fill>(); }
 	}
 
 	public bool IsFilled
@@ -364,11 +345,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsDirtyable
-	{
-		get{ return this.GetComponent<Dirty>(); }
-	}
-
 	public bool IsDirty
 	{
 		get
@@ -385,11 +361,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsCookable
-	{
-		get{ return this.GetComponent<CookObject>(); }
-	}
-
 	public bool IsCooked
 	{
 		get
@@ -404,12 +375,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
-	}
-
-	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
-	public bool IsSliceable
-	{
-		get{ return this.GetComponent<SliceObject>(); }
 	}
 
 	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
@@ -474,14 +439,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsReceptacle
-	{
-		get
-		{
-			return Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 &&
-			 ReceptacleTriggerBoxes != null;
-		}
-	}
 	
 	private void FindMySpawnPoints(bool ReturnPointsCloseToAgent)
 	{
@@ -768,6 +725,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 #endif
 
+    private void initializeProperties() {
+        this.IsReceptacle = Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && ReceptacleTriggerBoxes != null;
+        this.IsPickupable = this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+        this.IsMoveable = this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+        this.IsToggleable = this.isToggleable;
+        this.IsOpenable = this.GetComponent<CanOpen_Object>();
+        this.IsBreakable = this.GetComponentInChildren<Break>();
+        this.IsFillable = this.GetComponent<Fill>();
+        this.IsDirtyable = this.GetComponent<Dirty>();
+        this.IsCookable = this.GetComponent<CookObject>();
+        this.IsSliceable = this.GetComponent<SliceObject>();
+    }
+
     // Use this for initialization
     void Start()
 	{
@@ -839,6 +809,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         {
             myRigidbody.angularDrag = 0.01f;
         }
+
+        initializeProperties();
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
