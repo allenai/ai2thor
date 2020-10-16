@@ -148,6 +148,12 @@ public class MCSMain : MonoBehaviour {
             this.lastStep++;
             Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                // update segmentation mask colors
+                ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
+                if (imageSynthesis != null && imageSynthesis.enabled) {
+                    imageSynthesis.UpdateGuidForColors(this.agentController.agentManager.consistentColors);
+                    imageSynthesis.OnSceneChange();
+                }
                 bool objectsWereShown = false;
                 List<MCSConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
                     objectConfig.GetGameObject() != null).ToList();
@@ -164,8 +170,6 @@ public class MCSMain : MonoBehaviour {
                     // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
                     this.physicsSceneManager.SetupScene();
                     // Notify ImageSynthesis so the objects will appear in the masks.
-                    ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
-                        .GetComponentInChildren<ImageSynthesis>();
                     if (imageSynthesis != null && imageSynthesis.enabled) {
                         imageSynthesis.OnSceneChange();
                     }
@@ -438,6 +442,36 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
+
+        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
+            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
+        }
+
+        GameObject controller = GameObject.Find("FPSController");
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
+            // Always keep the Y position on the floor.
+            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
+                MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
+        }
+        else {
+            controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
+        }
+
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
+            // Only permit rotating left or right (along the Y axis).
+            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                this.currentScene.performerStart.rotation.x, 0, 0);
+        }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                0, 0, 0);
+        }
+
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+        
     }
 
     private Collider AssignBoundingBox(

@@ -205,6 +205,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
   - Changed `readyToEmit = true;` to `this.setReadyToEmit(true);` in `addAgents`, `ProcessControlCommand`, `Start`
   - Added Object Types: `Hollow`
+  - Added property `consistentColors`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
@@ -269,5 +270,6 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
   - Changed to always use the `Hidden/Depth` Shader
+  - Added property `guidForColors` and way to update it (`UpdateGuidForColors`). This is used to create random colors for object masks in `OnSceneChange`
 - `ImageSynthesis/Shaders/Depth`:
   - Changed the `frag` function to return pixels based on the camera's far clipping pane
