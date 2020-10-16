@@ -237,7 +237,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // that should prevent it from moving
         Physics.Simulate(fixedDeltaTime);
 
-        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
             previousArmPosition = getPosition(moveTransform);
 
@@ -248,11 +248,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         }
 
-        if (currentDistance <= eps && !staticCollided.collided) {
-            setPosition(moveTransform, targetPosition);
-            // must run Simulate() one more time to ensure colliders are triggered
-            Physics.Simulate(fixedDeltaTime);
-        }
+        // DISABLING JUMP TO FINAL POSITION as it can lead to clipping
+        //if (currentDistance <= eps && !staticCollided.collided) {
+        //    setPosition(moveTransform, targetPosition);
+        //    // must run Simulate() one more time to ensure colliders are triggered
+        //    Physics.Simulate(fixedDeltaTime);
+        //}
 
         Physics.autoSimulation = true;
         moveArmFinish(
@@ -398,6 +399,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void OnTriggerEnter(Collider col)
     {
         activeColliders.Add(col);
+        // XXX this can be removed once we confirm activeColliders remains
+        // consistent and works as expected
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -450,7 +453,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         float startingDistance = currentDistance;
 
-        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
             previousArmPosition = getPosition(moveTransform);
 
@@ -461,11 +464,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         }
 
-        if (currentDistance <= eps && !staticCollided.collided) {
-            // Maybe switch to this?
-            // addPosition(moveTransform, targetDirection * currentDistance);
-            setPosition(moveTransform, targetPosition);
-        }
+        // DISABLING JUMP since it can lead to clipping
+        //if (currentDistance <= eps && !staticCollided.collided) {
+        //    // Maybe switch to this?
+        //    // addPosition(moveTransform, targetDirection * currentDistance);
+        //    setPosition(moveTransform, targetPosition);
+        //}
 
         moveArmFinish(
             controller,
@@ -488,24 +492,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        if (staticCollided.collided) {
+        var staticCollisions = StaticCollisions();
+        if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
                 
                 //decide if we want to return to original position or last known position before collision
                 setPosition(moveTransform, positionReset);
 
                 //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                if(sc.simObjPhysics && !sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
 
                 //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                if(!sc.simObjPhysics && sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
-
-                staticCollided.collided = false;
 
                 actionSuccess = false;
         } else if (armOvershot) {
