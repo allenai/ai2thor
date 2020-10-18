@@ -112,7 +112,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Interact action for mouse left-click when nothing is picked up
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                if (this.PhysicsController.WhatAmIHolding() == null && this.PhysicsController.actionComplete)
+                if (this.PhysicsController.WhatAmIHolding() == null && this.PhysicsController.ReadyForCommand)
                 {
                     var closestObj = this.highlightedObject;
                     if (closestObj != null)
@@ -143,13 +143,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                else if (this.PhysicsController.actionComplete)
+                else if (this.PhysicsController.ReadyForCommand)
                 {
                     this.mouseDownThrow = true;
                     this.timerAtPress = Time.time;
                 }
 
-                if (highlightWhileHolding && this.highlightedObject != null && this.PhysicsController.WhatAmIHolding() != this.highlightedObject.gameObject && this.PhysicsController.actionComplete) {
+                if (highlightWhileHolding && this.highlightedObject != null && this.PhysicsController.WhatAmIHolding() != this.highlightedObject.gameObject && this.PhysicsController.ReadyForCommand) {
                      var closestObj = this.highlightedObject;
                     if (closestObj != null)
                     {
@@ -239,7 +239,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var clampedForceTime = Mathf.Min(diff * diff, MaxChargeThrowSeconds);
                         var force = clampedForceTime * MaxThrowForce / MaxChargeThrowSeconds;
 
-                        if (this.PhysicsController.actionComplete && (!this.highlightWhileHolding || (highlightedObject != null && this.PhysicsController.WhatAmIHolding() == highlightedObject.gameObject)))
+                        if (this.PhysicsController.ReadyForCommand && (!this.highlightWhileHolding || (highlightedObject != null && this.PhysicsController.WhatAmIHolding() == highlightedObject.gameObject)))
                         {
                             ServerAction action;
                             if (ThrowEnabled) {

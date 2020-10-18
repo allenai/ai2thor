@@ -15,7 +15,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject basketTrigger;
         public DroneObjectLauncher DroneObjectLauncher;
         public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
-        public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
+        private bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
         protected Vector3 thrust;
         public float dronePositionRandomNoiseSigma = 0f;
         //count of fixed updates for use in droneCurrentTime
@@ -24,6 +24,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         void Update () 
         {
             
+        }
+
+        protected override void resumePhysics() {
+            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            {
+                Time.timeScale = this.autoResetTimeScale;
+                Physics.autoSimulation = true;
+                physicsSceneManager.physicsSimulationPaused = false;
+                this.hasFixedUpdateHappened = false;
+            }
         }
 
         public override void Start()
@@ -88,6 +98,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //here, the in-editor axisAlignedBoundingBox metadata for drone objects seems to be offset by some number of updates.
             //it's unclear whether this is only an in-editor debug draw issue, or the actual metadata for the axis
             //aligned box is messed up, but yeah.
+
             if (hasFixedUpdateHappened)
             {   
                 Time.timeScale = 0;
@@ -113,6 +124,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     m_CharacterController.Move(thrust * Time.fixedDeltaTime);
                 }
             }
+
+            if (this.agentState == AgentState.PendingFixedUpdate) {
+                this.agentState = AgentState.ActionComplete;
+            }
+
         }
 
         //generates object metatada based on sim object's properties
@@ -480,9 +496,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //for use with the Drone to be able to launch an object into the air
         //Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
-        public void LaunchDroneObject(ServerAction action) 
+        public void LaunchDroneObject(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z)
         {
-            this.GetComponent<DroneFPSAgentController>().Launch(action);
+            this.GetComponent<DroneFPSAgentController>().Launch(moveMagnitude, objectName, objectRandom, x, y, z);
             actionFinished(true);
             fixupdateCnt = 0f;
         }
@@ -540,10 +556,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return caught_object_bool;
         }
 
-        public void Launch(ServerAction action)
+        public void Launch(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z)
         {
-            Vector3 LaunchAngle = new Vector3(action.x, action.y, action.z);
-            DroneObjectLauncher.Launch(action.moveMagnitude, LaunchAngle, action.objectName, action.objectRandom);
+            Vector3 LaunchAngle = new Vector3(x, y, z);
+            DroneObjectLauncher.Launch(moveMagnitude, LaunchAngle, objectName, objectRandom);
         }
 
         public void MoveLauncher(Vector3 position)
@@ -560,5 +576,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
+
     }
 }

@@ -37,19 +37,17 @@ public class AgentManager : MonoBehaviour
     private bool renderFlowImage;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	private bool readyToEmit;
     private bool ximageCapture = false;
-    private bool readyEmitXimage;
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
     private PhysicsSceneManager physicsSceneManager;
-    public int AdvancePhysicsStepCount = 0;
-    private bool droneMode = false;
     private FifoServer.Client fifoClient = null;
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
-    private float fixedDeltaTime;
+    private AgentState agentManagerState = AgentState.Emit;
+    private bool fastActionEmit;
+    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "EnableXimageCapture"};
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -120,9 +118,9 @@ public class AgentManager : MonoBehaviour
         #endif
 
         primaryAgent.actionDuration = this.actionDuration;
-		readyToEmit = true;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        StartCoroutine (EmitFrame());
 	}
 
 	private void initializePrimaryAgent()
@@ -197,6 +195,8 @@ public class AgentManager : MonoBehaviour
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
         this.renderFlowImage = action.renderFlowImage;
+        this.fastActionEmit = action.fastActionEmit;
+
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
@@ -230,7 +230,6 @@ public class AgentManager : MonoBehaviour
         primaryAgent.agentManager = this;
         primaryAgent.enabled = true;
         this.agents.Add(primaryAgent);
-        droneMode = true;//set flag for drone mode so the emitFrame syncs up with Drone's lateUpdate
     }
 
     //note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
@@ -242,7 +241,6 @@ public class AgentManager : MonoBehaviour
 		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
-		primaryAgent.actionComplete = true;
         this.agents.Add(primaryAgent);
     }
 
@@ -273,7 +271,7 @@ public class AgentManager : MonoBehaviour
 			ResetSceneBounds();
 		}
 
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void ResetSceneBounds() {
@@ -328,7 +326,7 @@ public class AgentManager : MonoBehaviour
 
     public void EnableXimageCapture() {
         this.ximageCapture = true;
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
     }
 
 	public void AddThirdPartyCamera(ServerAction action) {
@@ -357,7 +355,7 @@ public class AgentManager : MonoBehaviour
         }
         camera.orthographic = action.orthographic;
 
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void UpdateThirdPartyCamera(ServerAction action) {
@@ -386,7 +384,7 @@ public class AgentManager : MonoBehaviour
 				}
 			}
 		}
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	private void addAgent(ServerAction action) {
@@ -478,32 +476,8 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
-	public void setReadyToEmit(bool readyToEmit) {
-		this.readyToEmit = readyToEmit;
-	}
-
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
-
-    private void emitXimage() {
-
-		if (readyEmitXimage)
-        {
-            Debug.Log("Emitting using XImage");
-            readyEmitXimage = false;
-            readyToEmit = false;
-            Time.fixedDeltaTime = this.fixedDeltaTime;
-            MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-            createPayload(multiMeta, null, null, false);
-            string msg = sendPayload(multiMeta, null);
-            ProcessControlCommand(msg);
-        }
-
-    }
-    
-    void FixedUpdate() {
-        emitXimage();
-    }
 
     private void Update()
     {
@@ -511,23 +485,9 @@ public class AgentManager : MonoBehaviour
     }
 
     private void LateUpdate() {
-		int completeCount = agentCompleteCount();
 
-		int hasDroneAgentUpdatedCount = 0;
-
-        if(droneMode)
-        {
-            foreach (DroneFPSAgentController droneAgent in this.agents)
-            {
-                //get total count of all flight mode agents that have finished updating
-                if (droneAgent.hasFixedUpdateHappened)
-                {
-                    hasDroneAgentUpdatedCount++;
-                }
-            }
-        }
-
-		if (completeCount == agents.Count && completeCount > 0 && readyToEmit)
+/*
+		if (readyToEmit)
         {
             if (ximageCapture) {
                 // force FixedUpdate to get called
@@ -545,15 +505,8 @@ public class AgentManager : MonoBehaviour
                 //start emit frame for flying drone controller
                 if(droneMode)
                 {
-                    //make sure each agent in flightMode has updated at least once
-                    if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
-                    {
-                        readyToEmit = false;
-                        StartCoroutine (EmitFrame());
-                    }
-                }
-            }
 		}
+ */
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
@@ -566,17 +519,6 @@ public class AgentManager : MonoBehaviour
         //     AdvancePhysicsStepCount = 0;
         // }
 	}
-
-    private int agentCompleteCount() {
-
-		int count = 0;
-		foreach (BaseFPSAgentController agent in this.agents) {
-			if (agent.actionComplete) {
-				count++;
-			}
-		}
-        return count;
-    }
 
 	private byte[] captureScreen() {
 		if (tex.height != UnityEngine.Screen.height ||
@@ -728,7 +670,7 @@ public class AgentManager : MonoBehaviour
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
-            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
 
@@ -766,55 +708,95 @@ public class AgentManager : MonoBehaviour
     }
 
 
-	public IEnumerator EmitFrame() {
-
-		frameCounter += 1;
-
-		bool shouldRender = this.renderImage && serverSideScreenshot;
-
-		if (shouldRender) {
-			// we should only read the screen buffer after rendering is complete
-			yield return new WaitForEndOfFrame();
-		}
-
-        MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-		
-
-		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-        List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
-        createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
-
-
-
-
-
-
-		#if UNITY_WEBGL
-            JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
-            if (jsInterface != null) {
-                jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
+    private bool canEmit() {
+        bool emit = true;
+        foreach (BaseFPSAgentController agent in this.agents) {
+            if (agent.agentState != AgentState.Emit) {
+                emit = false;
+                break;
             }
-        #endif
+        }
+
+        return this.agentManagerState == AgentState.Emit && emit;
+    }
+
+
+	public IEnumerator EmitFrame() {
+        while (true) 
+        {
+            bool shouldRender = this.renderImage && serverSideScreenshot;
+			yield return new WaitForEndOfFrame();
+
+            frameCounter += 1;
+            if (this.agentManagerState == AgentState.ActionComplete) {
+                this.agentManagerState = AgentState.Emit;
+            }
+
+            foreach (BaseFPSAgentController agent in this.agents) {
+                if (agent.agentState == AgentState.ActionComplete) {
+                    agent.agentState = AgentState.Emit;
+                }
+            }
+
+            if (!this.canEmit()) 
+            {
+                continue;
+            }
+
+            if (this.ximageCapture) {
+                yield return null; // wait for image to swap
+            }
+
+            MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+
+            ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
+            List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+            createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
+
+            #if UNITY_WEBGL
+                JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
+                if (jsInterface != null) {
+                    jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
+                }
+            #endif
 
 
 
         #if !UNITY_WEBGL 
         string msg = sendPayload(multiMeta, renderPayload);
         ProcessControlCommand(msg);
+        while (canEmit() && this.fastActionEmit && this.serverType == serverTypes.FIFO) {
 
-        if(droneMode)
-        {
-            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
-            {
-                DroneFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<DroneFPSAgentController>();
-                Time.timeScale = agent_tmp.autoResetTimeScale;
-                Physics.autoSimulation = true;
-                physicsSceneManager.physicsSimulationPaused = false;
-                agent_tmp.hasFixedUpdateHappened = false;
-            }
+            MetadataPatch patch = this.activeAgent().generateMetadataPatch();
+            patch.agentId = this.activeAgentId;
+            byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
+            MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
+            this.fifoClient.SendEOM();
+            msg = this.fifoClient.ReceiveMessage();
+            ProcessControlCommand(msg);
         }
 
-        #endif
+            //if(droneMode)
+            //{
+            //    if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            //    {
+            //        DroneFPSAgentController agent_tmp = this.agents[0].GetComponent<DroneFPSAgentController>();
+            //        Time.timeScale = agent_tmp.autoResetTimeScale;
+            //        Physics.autoSimulation = true;
+            //        physicsSceneManager.physicsSimulationPaused = false;
+            //        agent_tmp.hasFixedUpdateHappened = false;
+            //    }
+            //}
+
+            #endif
+
+
+
+
+        }
+
+
     }
 
     private string sendPayload(MultiAgentMetadata multiMeta, List<KeyValuePair<string, byte[]>> renderPayload) {
@@ -942,31 +924,28 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private BaseFPSAgentController activeAgent() {
-		return this.agents.ToArray () [activeAgentId];
+		return this.agents[activeAgentId];
 	}
 
 	private void ProcessControlCommand(string msg)
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
+        #if UNITY_WEBGL
+		ServerAction controlCommand = new ServerAction();
+		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+        #else
         dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
-
+        #endif
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		if (controlCommand.action == "Reset") {
-			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "Initialize") {
-			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "AddThirdPartyCamera") {
-			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "EnableXimageCapture") {
-			this.EnableXimageCapture();
+		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
+            this.agentManagerState = AgentState.Processing;
+            ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
@@ -980,7 +959,6 @@ public class AgentManager : MonoBehaviour
 				this.activeAgent().updateImageSynthesis(true);
 			}
 			this.activeAgent().ProcessControlCommand (controlCommand);
-			readyToEmit = true;
 		}
 	}
 
@@ -1031,6 +1009,17 @@ public class ThirdPartyCameraMetadata
 	public Vector3 position;
 	public Vector3 rotation;
 	public float fieldOfView;
+}
+
+[Serializable]
+public class MetadataPatch
+{
+	public string lastAction;
+	public string errorMessage;
+	public string errorCode;
+	public bool lastActionSuccess;
+    public int agentId;
+    public System.Object actionReturn;
 }
 
 //adding AgentMetdata class so there is less confusing
@@ -1307,6 +1296,7 @@ public class ServerAction
 	public string receptacleObjectId;
 	public float gridSize;
 	public string[] excludeObjectIds;
+        public string [] objectIds;
 	public string objectId;
 	public int agentId;
 	public int thirdPartyCameraId;
@@ -1348,11 +1338,8 @@ public class ServerAction
 	public float startAgentsRotatedBy = 0f;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
-	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
-    public bool objectRandom;
-    public string objectName;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;
@@ -1386,7 +1373,6 @@ public class ServerAction
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
-    public bool useAgentTransform = false;
     public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;
@@ -1407,8 +1393,11 @@ public class ServerAction
 	public float g;
 	public float b;
 
-	public float intensity;//used for light?
+	//default time for objects to wait before returning actionFinished() if an action put them in motion
+	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float scale;
+    public string visibilityScheme = VisibilityScheme.Collider.ToString();
+    public bool fastActionEmit;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -1418,6 +1407,19 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
 	}
+
+    public VisibilityScheme GetVisibilityScheme() {
+        VisibilityScheme result = VisibilityScheme.Collider;
+        try 
+        {
+            result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
+        } 
+        catch (ArgumentException) { 
+            Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
+        }
+
+		return result;
+    }
 
 	public SimObjType GetSimObjType()
 	{
@@ -1464,6 +1466,12 @@ public enum ServerActionErrorCode  {
     MissingArguments
 }
 
+public enum VisibilityScheme {
+    Collider,
+    Distance
+}
+
+
 
 [Serializable]
 public class ControllerInitialization {
@@ -1504,5 +1512,9 @@ public class ShouldSerializeContractResolver : DefaultContractResolver
    }
 }
 
-
-
+public enum AgentState  {
+	Processing,
+    ActionComplete,
+    PendingFixedUpdate,
+	Emit
+}

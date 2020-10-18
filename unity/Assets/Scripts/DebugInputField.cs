@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using Newtonsoft.Json.Linq;
+
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -126,13 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         public void Execute(string command)
         {
-            if ((PhysicsController.enabled && !PhysicsController.actionComplete) ||
-                (StochasticController != null && StochasticController.enabled && !StochasticController.actionComplete)
+            if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
+                (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
-                Debug.Log("Cannot execute command while last action has not completed.");
-            }
-
-            if (StochasticController.enabled && !StochasticController.actionComplete) {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
@@ -165,7 +163,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-						PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
@@ -213,7 +210,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
-						PhysicsController.actionComplete = false;
                         action.fieldOfView = 60;
                         action.rotateStepDegrees = 45;
                         action.agentMode = "bot";
@@ -363,10 +359,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "lighti":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeLightIntensityExpRoom";
-                        action.intensity = 3;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeLightIntensityExpRoom";
+                        action["intensity"] = 3;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -461,7 +456,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
                         action.agentMode = "drone";
                         action.agentControllerType = "drone";
@@ -734,7 +728,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderObjectImage = true;
                         action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         //action.ssao = "default";
 
                         action.action = "Initialize";
@@ -908,7 +901,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "GarbageCan|+02.63|00.00|-01.48";
+                        action.objectId = "Book|+00.15|+01.10|+00.62";
+                        //action.rotation = new Vector3(0, 90, 0);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1149,10 +1143,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "rhs":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomizeHideSeekObjects";
-                        action.removeProb = float.Parse(splitcommand[1]);
-                        action.randomSeed = int.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeHideSeekObjects";
+                        action["removeProb"] = float.Parse(splitcommand[1]);
+                        action["randomSeed"] = int.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2296,7 +2290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.objectPoses[0] = new ObjectPose();
 
-                        action.objectPoses[0].objectName = "Potato_bb7defe9";
+                        action.objectPoses[0].objectName = "Book_3d15d052";
                         action.objectPoses[0].position = new Vector3(0, 0, 0);
                         action.objectPoses[0].rotation = new Vector3(0, 0, 0);
 
@@ -2476,24 +2470,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // Will fail if navmeshes are not setup
                     case "shortest_path":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetShortestPath";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPath";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3]), 
                                     float.Parse(splitcommand[4])
                                 );
-                            }
-                            else {
-                                action.useAgentTransform = true;
                             }
                         }
 
@@ -2502,24 +2493,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                      case "shortest_path_type":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetShortestPath";
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPath";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectType = splitcommand[1];
+                            action["objectType"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3]), 
                                     float.Parse(splitcommand[4])
                                 );
-                            }
-                            else {
-                                action.useAgentTransform = true;
                             }
                         }
 
@@ -2528,31 +2517,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "shortest_path_point":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetShortestPathToPoint";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPathToPoint";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
-                             action.useAgentTransform = false;
                             //ID of spawner
                             //action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 4) {
-                                action.useAgentTransform = true;
-                                action.x = float.Parse(splitcommand[1]);
-                                action.y = float.Parse(splitcommand[2]);
-                                action.z = float.Parse(splitcommand[3]);
+                                action["x"] = float.Parse(splitcommand[1]);
+                                action["y"] = float.Parse(splitcommand[2]);
+                                action["z"] = float.Parse(splitcommand[3]);
                             }
                             if (splitcommand.Length == 7) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[1]),
                                     float.Parse(splitcommand[2]), 
                                     float.Parse(splitcommand[3])
                                 );
-                                action.x = float.Parse(splitcommand[4]);
-                                action.y = float.Parse(splitcommand[5]);
-                                action.z = float.Parse(splitcommand[6]);
+                                action["x"] = float.Parse(splitcommand[4]);
+                                action["y"] = float.Parse(splitcommand[5]);
+                                action["z"] = float.Parse(splitcommand[6]);
                             }
                              if (splitcommand.Length < 4) {
                                 throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");

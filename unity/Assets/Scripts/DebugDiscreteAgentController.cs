@@ -78,7 +78,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // }
 
                 //if we press enter, select the input field
-                if (PhysicsController.actionComplete) {
+                if (PhysicsController.ReadyForCommand) {
                     if (Input.GetKeyDown(KeyCode.Return))
                     {
                         UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
