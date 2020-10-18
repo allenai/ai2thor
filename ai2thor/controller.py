@@ -403,6 +403,17 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+
+
+        has_image_synthesis = any([
+            unity_initialization_parameters.get(k, False) 
+            for k in ['renderDepthImage', 'renderClassImage', 'renderObjectImage', 'renderNormalsImage', 'renderFlowsImage']
+            ])
+        # XXX check for renderDepth,renderObject etc
+        if self.ximage_capture and (platform.system() != 'Linux' or unity_initialization_parameters.get('agentCount', 1) > 1 or has_image_synthesis):
+            raise ValueError("ximage_capture can only be used on Linux, single agent, and no ImageSynthesis plugins (depth, segmentation, etc.)")
+
+
         if download_only:
             self.download_binary()
         else:
@@ -936,10 +947,6 @@ class Controller(object):
         if height <= 0 or width <= 0:
             raise Exception("Screen resolution must be > 0x0")
 
-        # XXX check for renderDepth,renderObject etc
-        if self.ximage_capture and platform.system() != 'Linux':
-            raise ValueError("ximage_capture can only be used on Linux")
-
         if self.server.started:
             import warnings
             warnings.warn('start method depreciated. The server started when the Controller was initialized.')
@@ -974,7 +981,6 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
-        self.server.send({})
         self.stop_unity()
         self.server.stop()
         self.stop_container()

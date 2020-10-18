@@ -43,7 +43,7 @@ class X11:
         atexit.register(lambda: self._x11.cleanup())
 
     def __del__(self):
-        self._x11.cleanup()
+        self.cleanup()
 
     def get_image(self):
         return self._x11.get_xshm_image(self.window_id)
@@ -215,7 +215,9 @@ class X11:
             raise Exception("no free space found, cannot launch")
                                
     def cleanup(self):
-        self._x11.cleanup()
+        if self._x11:
+            self._x11.cleanup()
+            self._x11 = None
 
     def bind_window(self):
 
