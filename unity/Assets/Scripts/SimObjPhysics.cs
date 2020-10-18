@@ -97,6 +97,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     //reference to this gameobject's rigidbody
     private Rigidbody myRigidbody; 
 
+    // properties initialized during Start()
+    public bool IsReceptacle;
+    public bool IsPickupable;
+    public bool IsMoveable;
+    public bool IsToggleable;
+    public bool IsOpenable;
+    public bool IsBreakable;
+    public bool IsFillable;
+    public bool IsDirtyable;
+    public bool IsCookable;
+    public bool IsSliceable;
+	public bool canChangeTempToHot;
+	public bool canChangeTempToCold;
+    private Vector3 boundingBoxCachePosition;
+    private Quaternion boundingBoxCacheRotation;
+    private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
+    private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -145,6 +163,135 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public void RemoveFromContainedObjectReferences(SimObjPhysics t)
     {
         ContainedObjectReferences.Remove(t);
+    }
+
+
+    private void regenerateBoundingBoxes() {
+        Vector3 position = this.gameObject.transform.position;
+        Quaternion rotation = this.gameObject.transform.rotation;
+        if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
+            return;
+        }
+
+        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
+        this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
+            
+
+        boundingBoxCacheRotation = rotation;
+        boundingBoxCachePosition = position;
+    }
+
+    private AxisAlignedBoundingBox axisAlignedBoundigBox() {
+        AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+
+        //get all colliders on the sop, excluding colliders if they are not enabled
+        Collider[] cols = this.GetComponentsInChildren<Collider>();
+
+        //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
+        if(cols.Length == 0)
+        {
+            SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
+            if(sopc.IsBroken || sopc.IsSliced)
+            {
+                #if UNITY_EDITOR
+                Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
+                #endif
+                return b;
+            }
+
+            else
+            {
+                #if UNITY_EDITOR
+                Debug.Log("Something went wrong, no Colliders were found on" + this.name);
+                #endif
+                return b;
+            }
+        }
+
+        Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
+
+        foreach(Collider c in cols)
+        {
+            if(c.enabled)
+            bounding.Encapsulate(c.bounds);
+        }
+
+        //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+        List<float[]> cornerPoints = new List<float[]>();
+        float[] xs = new float[]{
+            bounding.center.x + bounding.size.x/2f,
+            bounding.center.x - bounding.size.x/2f
+        };
+        float[] ys = new float[]{
+            bounding.center.y + bounding.size.y/2f,
+            bounding.center.y - bounding.size.y/2f
+        };
+        float[] zs = new float[]{
+            bounding.center.z + bounding.size.z/2f,
+            bounding.center.z - bounding.size.z/2f
+        };
+        foreach(float x in xs) {
+            foreach (float y in ys) {
+                foreach (float z in zs) {
+                    cornerPoints.Add(new float[]{x, y, z});
+                }
+            }
+        }
+        b.cornerPoints = cornerPoints.ToArray();
+
+        b.center = bounding.center;//also return the center of this bounding box in world coordinates
+        b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+
+        return b;
+    }
+
+    private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
+      if(this.IsPickupable || this.IsMoveable) {
+        ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
+
+        if(this.BoundingBox== null)
+        {
+            Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
+            return b;
+        }
+
+        BoxCollider col = this.BoundingBox.GetComponent<BoxCollider>();
+        
+        List<Vector3> points = new List<Vector3>();
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
+        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
+
+        List<float[]> cornerPoints = new List<float[]>();
+        foreach(Vector3 p in points) {
+            cornerPoints.Add(new float[]{p.x, p.y, p.z});
+        }
+
+        b.cornerPoints = cornerPoints.ToArray();
+
+        return b;
+      }
+
+      return null;
+    }
+
+    public AxisAlignedBoundingBox AxisAlignedBoundingBox {
+        get {
+            this.regenerateBoundingBoxes();
+            return this.cachedAxisAlignedBoundingBox;
+        }
+    }
+
+    public ObjectOrientedBoundingBox ObjectOrientedBoundingBox {
+        get {
+            this.regenerateBoundingBoxes();
+            return this.cachedObjectOrientedBoundingBox;
+        }
     }
 
 	public void ClearContainedObjectReferences()
@@ -222,22 +369,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsPickupable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-		}
-	}
-
-	//moveable objects can be pushed/pulled or shoved if another object collides with enough force to move it
-	public bool IsMoveable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
-		}
-	}
 
 	//if this pickupable object is being held by the agent right
 	public bool isPickedUp
@@ -251,7 +382,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//note some objects are not toggleable, but can still return the IsToggled meta value (ex: stove burners)
 	//stove burners are not toggleable directly, a stove knob controls them.
-	public bool IsToggleable
+	private bool isToggleable
 	{
 		get 
 		{ 
@@ -294,12 +425,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsOpenable
-	{
-		get { return this.GetComponent<CanOpen_Object>(); }
-	}
 
-	//this value only has meaning if IsOpenable == True because... it has to open to have an open percentage right?
 	public float OpenPercentage
 	{
 		get {return this.GetComponent<CanOpen_Object>().currentOpenPercentage;}
@@ -322,11 +448,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsBreakable
-	{
-		get{ return this.GetComponentInChildren<Break>(); }
-	}
-
 	public bool IsBroken
 	{
 		get
@@ -341,11 +462,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
-	}
-
-	public bool IsFillable
-	{
-		get{ return this.GetComponent<Fill>(); }
 	}
 
 	public bool IsFilled
@@ -364,11 +480,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsDirtyable
-	{
-		get{ return this.GetComponent<Dirty>(); }
-	}
-
 	public bool IsDirty
 	{
 		get
@@ -385,11 +496,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public bool IsCookable
-	{
-		get{ return this.GetComponent<CookObject>(); }
-	}
-
 	public bool IsCooked
 	{
 		get
@@ -404,12 +510,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
-	}
-
-	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
-	public bool IsSliceable
-	{
-		get{ return this.GetComponent<SliceObject>(); }
 	}
 
 	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
@@ -456,33 +556,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	//can this object change other object's temps to hot?
-	public bool canChangeTempToHot
-	{
-		get
-		{
-			return DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-		}
-	}
-
-	//can this object change other object's temps to cold?
-	public bool canChangeTempToCold
-	{
-		get
-		{
-			return DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
-		}
-	}
-
-	public bool IsReceptacle
-	{
-		get
-		{
-			return Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 &&
-			 ReceptacleTriggerBoxes != null;
-		}
-	}
-	
 	private void FindMySpawnPoints(bool ReturnPointsCloseToAgent)
 	{
 		List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
@@ -768,6 +841,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 #endif
 
+    private void initializeProperties() {
+        this.IsReceptacle = Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && ReceptacleTriggerBoxes != null;
+        this.IsPickupable = this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+        this.IsMoveable = this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+        this.IsToggleable = this.isToggleable;
+        this.IsOpenable = this.GetComponent<CanOpen_Object>();
+        this.IsBreakable = this.GetComponentInChildren<Break>();
+        this.IsFillable = this.GetComponent<Fill>();
+        this.IsDirtyable = this.GetComponent<Dirty>();
+        this.IsCookable = this.GetComponent<CookObject>();
+        this.IsSliceable = this.GetComponent<SliceObject>();
+        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
+        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
+
+    }
+
     // Use this for initialization
     void Start()
 	{
@@ -839,6 +928,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         {
             myRigidbody.angularDrag = 0.01f;
         }
+
+        initializeProperties();
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)

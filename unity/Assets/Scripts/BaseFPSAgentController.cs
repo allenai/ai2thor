@@ -1262,10 +1262,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //object temperature to string
             objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
-            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
+            objMeta.pickupable = simObj.IsPickupable;
             objMeta.isPickedUp = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
 
-            objMeta.moveable = simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+            objMeta.moveable = simObj.IsMoveable;
 
             objMeta.objectId = simObj.ObjectID;
 
@@ -1277,49 +1277,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
-            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
-            {
-                objMeta.objectOrientedBoundingBox = GenerateObjectOrientedBoundingBox(simObj);
-            }
+
+            objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
             
-            //return world axis aligned bounds for this sim object
-            objMeta.axisAlignedBoundingBox = GenerateAxisAlignedBoundingBox(simObj);
+            objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
 
             return objMeta;
-        }
-
-        //generates an object oriented bounding box that encapsulates the sim object
-        //currently only works for Pickupable sim objects
-        public ObjectOrientedBoundingBox GenerateObjectOrientedBoundingBox(SimObjPhysics sop)
-        {
-            ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
-
-            if(sop.BoundingBox== null)
-            {
-                Debug.LogError(sop.transform.name + " is missing BoundingBox reference!");
-                return b;
-            }
-
-            BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
-            
-            List<Vector3> points = new List<Vector3>();
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
-            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
-
-            List<float[]> cornerPoints = new List<float[]>();
-            foreach(Vector3 p in points) {
-                cornerPoints.Add(new float[]{p.x, p.y, p.z});
-            }
-
-            b.cornerPoints = cornerPoints.ToArray();
-
-            return b;
         }
 
         public SceneBounds GenerateSceneBounds(Bounds bounding)
@@ -1353,77 +1316,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
-        //generates a world space bounding box that enncapsulates all active Colliders (trigger and non trigger) for a sim obj
-        public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
-        {
-            AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
-
-            //get all colliders on the sop, excluding colliders if they are not enabled
-            Collider[] cols = sop.GetComponentsInChildren<Collider>();
-
-            //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
-            if(cols.Length == 0)
-            {
-                SimObjPhysics sopc = sop.GetComponent<SimObjPhysics>();
-                if(sopc.IsBroken || sopc.IsSliced)
-                {
-                    #if UNITY_EDITOR
-                    Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + sop.name);
-                    #endif
-                    return b;
-                }
-
-                else
-                {
-                    #if UNITY_EDITOR
-                    Debug.Log("Something went wrong, no Colliders were found on" + sop.name);
-                    #endif
-                    return b;
-                }
-            }
-
-            Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
-
-            foreach(Collider c in cols)
-            {
-                if(c.enabled)
-                bounding.Encapsulate(c.bounds);
-            }
-
-            #if UNITY_EDITOR
-            //debug draw stuff
-            if(!gizmobounds.Contains(bounding))
-            gizmobounds.Add(bounding);
-            #endif
-
-            //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
-            List<float[]> cornerPoints = new List<float[]>();
-            float[] xs = new float[]{
-                bounding.center.x + bounding.size.x/2f,
-                bounding.center.x - bounding.size.x/2f
-            };
-            float[] ys = new float[]{
-                bounding.center.y + bounding.size.y/2f,
-                bounding.center.y - bounding.size.y/2f
-            };
-            float[] zs = new float[]{
-                bounding.center.z + bounding.size.z/2f,
-                bounding.center.z - bounding.size.z/2f
-            };
-            foreach(float x in xs) {
-                foreach (float y in ys) {
-                    foreach (float z in zs) {
-                        cornerPoints.Add(new float[]{x, y, z});
-                    }
-                }
-            }
-            b.cornerPoints = cornerPoints.ToArray();
-
-            b.center = bounding.center;//also return the center of this bounding box in world coordinates
-            b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
-
-            return b;
-        }
 		public virtual  MetadataPatch generateMetadataPatch()
 		{
             MetadataPatch patch = new MetadataPatch();
