@@ -15,9 +15,11 @@ public class MCSMain : MonoBehaviour {
     private static float FLOOR_SCALE_Y = 0.5f;
     private static float FLOOR_SCALE_Z = 11f;
     private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 13f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 2.25f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 13.0f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 4.5f;
+    private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
+    private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 3f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 13f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 6f;
     private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.0f;
     private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.0f;
     private static float ISOMETRIC_FLOOR_SCALE_X = 20f;
@@ -286,8 +288,8 @@ public class MCSMain : MonoBehaviour {
 
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();
-            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
-            this.currentScene.performerStart.position.z = -4.5f;
+            this.currentScene.performerStart.position.y = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y;
+            this.currentScene.performerStart.position.z = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
 
             if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
