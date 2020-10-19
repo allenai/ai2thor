@@ -24,6 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
+        public int AdvancePhysicsStepCount;
 
         public GameObject[] TargetCircles = null;
 
@@ -149,7 +150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.actionComplete) {
+            if (this.agentState == AgentState.ActionComplete) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -1916,7 +1917,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //pass in the timeStep to advance the physics simulation
             Physics.Simulate(action.timeStep);
-            agentManager.AdvancePhysicsStepCount++;
+            this.AdvancePhysicsStepCount++;
             actionFinished(true);
         }
 
@@ -3063,10 +3064,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
         //just a relative intensity value
-        public void ChangeLightIntensityExpRoom(ServerAction action)
+        public void ChangeLightIntensityExpRoom(float intensity)
         {
             //restrict this to [0-5]
-            if(action.intensity < 0 || action.intensity > 5)
+            if(intensity < 0 || intensity > 5)
             {
                 errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
                 actionFinished(false);
@@ -3074,7 +3075,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightIntensity(action.intensity);
+            ersm.ChangeLightIntensity(intensity);
             actionFinished(true);
         }
 
@@ -7532,8 +7533,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RandomizeHideSeekObjects(ServerAction action) {
-            System.Random rnd = new System.Random(action.randomSeed);
+        public void RandomizeHideSeekObjects(int randomSeed, float removeProb) {
+            System.Random rnd = new System.Random(randomSeed);
 
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
@@ -7542,7 +7543,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Transform child in physicsSceneManager.HideAndSeek.transform) {
-                child.gameObject.SetActive(rnd.NextDouble() > action.removeProb);
+                child.gameObject.SetActive(rnd.NextDouble() > removeProb);
             }
             physicsSceneManager.SetupScene();
             physicsSceneManager.ResetObjectIdToSimObjPhysics();

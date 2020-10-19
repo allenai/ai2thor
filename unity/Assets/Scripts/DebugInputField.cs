@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -127,13 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         public void Execute(string command)
         {
-            if ((PhysicsController.enabled && !PhysicsController.actionComplete) ||
-                (StochasticController != null && StochasticController.enabled && !StochasticController.actionComplete)
+            if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
+                (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
-                Debug.Log("Cannot execute command while last action has not completed.");
-            }
-
-            if (StochasticController.enabled && !StochasticController.actionComplete) {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
@@ -166,7 +163,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-						PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
@@ -214,9 +210,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
-						PhysicsController.actionComplete = false;
-                        action.fieldOfView = 90f;
-                        action.rotateStepDegrees = 30f;
+                        action.fieldOfView = 60;
+                        action.rotateStepDegrees = 45;
                         action.agentMode = "bot";
                         action.agentControllerType = "stochastic";
 
@@ -412,10 +407,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "lighti":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeLightIntensityExpRoom";
-                        action.intensity = 3;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeLightIntensityExpRoom";
+                        action["intensity"] = 3;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -510,7 +504,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
                         action.agentMode = "drone";
                         action.agentControllerType = "drone";
@@ -783,7 +776,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderObjectImage = true;
                         action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         //action.ssao = "default";
 
                         action.action = "Initialize";
@@ -1199,10 +1191,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "rhs":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomizeHideSeekObjects";
-                        action.removeProb = float.Parse(splitcommand[1]);
-                        action.randomSeed = int.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeHideSeekObjects";
+                        action["removeProb"] = float.Parse(splitcommand[1]);
+                        action["randomSeed"] = int.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

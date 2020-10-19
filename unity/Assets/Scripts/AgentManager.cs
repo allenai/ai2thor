@@ -37,16 +37,16 @@ public class AgentManager : MonoBehaviour
     private bool renderFlowImage;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	private bool readyToEmit;
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
     private PhysicsSceneManager physicsSceneManager;
-    public int AdvancePhysicsStepCount = 0;
-    private bool droneMode = false;
     private FifoServer.Client fifoClient = null;
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
+    private AgentState agentManagerState = AgentState.Emit;
+    private bool fastActionEmit;
+    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -118,9 +118,9 @@ public class AgentManager : MonoBehaviour
         #endif
 
         primaryAgent.actionDuration = this.actionDuration;
-		readyToEmit = true;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        StartCoroutine (EmitFrame());
 	}
 
 	private void initializePrimaryAgent()
@@ -227,6 +227,8 @@ public class AgentManager : MonoBehaviour
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
         this.renderFlowImage = action.renderFlowImage;
+        this.fastActionEmit = action.fastActionEmit;
+
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
@@ -260,7 +262,6 @@ public class AgentManager : MonoBehaviour
         primaryAgent.agentManager = this;
         primaryAgent.enabled = true;
         this.agents.Add(primaryAgent);
-        droneMode = true;//set flag for drone mode so the emitFrame syncs up with Drone's lateUpdate
     }
 
     //note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
@@ -272,7 +273,6 @@ public class AgentManager : MonoBehaviour
 		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
-		primaryAgent.actionComplete = true;
         this.agents.Add(primaryAgent);
     }
 
@@ -318,7 +318,7 @@ public class AgentManager : MonoBehaviour
 			ResetSceneBounds();
 		}
 
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void ResetSceneBounds() {
@@ -402,7 +402,7 @@ public class AgentManager : MonoBehaviour
         }
         camera.orthographic = action.orthographic;
 
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void UpdateThirdPartyCamera(ServerAction action) {
@@ -431,7 +431,7 @@ public class AgentManager : MonoBehaviour
 				}
 			}
 		}
-		readyToEmit = true;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	private void addAgent(ServerAction action) {
@@ -523,10 +523,6 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
-	public void setReadyToEmit(bool readyToEmit) {
-		this.readyToEmit = readyToEmit;
-	}
-
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
@@ -536,34 +532,15 @@ public class AgentManager : MonoBehaviour
     }
 
     private void LateUpdate() {
-		int completeCount = 0;
-		foreach (BaseFPSAgentController agent in this.agents) {
-			if (agent.actionComplete) {
-				completeCount++;
-			}
-		}
 
-		int hasDroneAgentUpdatedCount = 0;
-
-        if(droneMode)
-        {
-            foreach (DroneFPSAgentController droneAgent in this.agents)
-            {
-                //get total count of all flight mode agents that have finished updating
-                if (droneAgent.hasFixedUpdateHappened)
-                {
-                    hasDroneAgentUpdatedCount++;
-                }
-            }
-        }
-
-		if (completeCount == agents.Count && completeCount > 0 && readyToEmit)
+/*
+		if (readyToEmit)
         {
             //start emit frame for physics and stochastic controllers
 			if(!droneMode)
             {
-				readyToEmit = false;
-				StartCoroutine (EmitFrame());
+				//readyToEmit = false;
+				//StartCoroutine (EmitFrame());
 			}
 
             //start emit frame for flying drone controller
@@ -573,10 +550,11 @@ public class AgentManager : MonoBehaviour
 				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
-					StartCoroutine (EmitFrame());
+					//StartCoroutine (EmitFrame());
 				}
 			}
 		}
+ */
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
@@ -741,7 +719,7 @@ public class AgentManager : MonoBehaviour
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
-            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
 
@@ -779,147 +757,184 @@ public class AgentManager : MonoBehaviour
     }
 
 
-	public IEnumerator EmitFrame() {
-
-		frameCounter += 1;
-
-		bool shouldRender = this.renderImage && serverSideScreenshot;
-
-		if (shouldRender) {
-			// we should only read the screen buffer after rendering is complete
-			yield return new WaitForEndOfFrame();
-		}
-
-        MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-		
-
-		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-        List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
-        createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
-
-
-
-
-
-
-		#if UNITY_WEBGL
-            JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
-            if (jsInterface != null) {
-                jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
+    private bool canEmit() {
+        bool emit = true;
+        foreach (BaseFPSAgentController agent in this.agents) {
+            if (agent.agentState != AgentState.Emit) {
+                emit = false;
+                break;
             }
-        #endif
+        }
+
+        return this.agentManagerState == AgentState.Emit && emit;
+    }
+
+
+	public IEnumerator EmitFrame() {
+        while (true) 
+        {
+            bool shouldRender = this.renderImage && serverSideScreenshot;
+			yield return new WaitForEndOfFrame();
+
+            frameCounter += 1;
+            if (this.agentManagerState == AgentState.ActionComplete) {
+                this.agentManagerState = AgentState.Emit;
+            }
+
+            foreach (BaseFPSAgentController agent in this.agents) {
+                if (agent.agentState == AgentState.ActionComplete) {
+                    agent.agentState = AgentState.Emit;
+                }
+            }
+
+            if (!this.canEmit()) 
+            {
+                continue;
+            }
+
+            MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+
+            ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
+            List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+            createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
+
+            #if UNITY_WEBGL
+                JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
+                if (jsInterface != null) {
+                    jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
+                }
+            #endif
 
 
 
         #if !UNITY_WEBGL 
-		if (serverType == serverTypes.WSGI) {
-            WWWForm form = new WWWForm();
-            foreach(var item in renderPayload) {
-                form.AddBinaryData(item.Key, item.Value);
-            }
-            form.AddField("metadata", serializeMetadataJson(multiMeta));
-            form.AddField("token", robosimsClientToken);
-
-
-			if (this.sock == null) {
-				// Debug.Log("connecting to host: " + robosimsHost);
-				IPAddress host = IPAddress.Parse(robosimsHost);
-				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                try {
-				    this.sock.Connect(hostep);
+            if (serverType == serverTypes.WSGI) {
+                WWWForm form = new WWWForm();
+                foreach(var item in renderPayload) {
+                    form.AddBinaryData(item.Key, item.Value);
                 }
-                catch (SocketException e) {
-                    Debug.Log("Socket exception: " + e.ToString());
-                }
-			}
+                form.AddField("metadata", serializeMetadataJson(multiMeta));
+                form.AddField("token", robosimsClientToken);
 
-            if (this.sock != null && this.sock.Connected) {
-                byte[] rawData = form.data;
 
-                string request = "POST /train HTTP/1.1\r\n" +
-                "Content-Length: " + rawData.Length.ToString() + "\r\n";
-
-                foreach(KeyValuePair<string, string> entry in form.headers) {
-                    request += entry.Key + ": " + entry.Value + "\r\n";
-                }
-                request += "\r\n";
-
-                this.sock.Send(Encoding.ASCII.GetBytes(request));
-                this.sock.Send(rawData);
-
-                // waiting for a frame here keeps the Unity window in sync visually
-                // its not strictly necessary, but allows the interact() command to work properly
-                // and does not reduce the overall FPS
-                yield return new WaitForEndOfFrame();
-
-                byte[] headerBuffer = new byte[1024];
-                int bytesReceived = 0;
-                byte[] bodyBuffer = null;
-                int bodyBytesReceived = 0;
-                int contentLength = 0;
-
-                // read header
-                while (true) {
-                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
-                    if (received == 0) {
-                        Debug.LogError("0 bytes received attempting to read header - connection closed");
-                        break;
+                if (this.sock == null) {
+                    // Debug.Log("connecting to host: " + robosimsHost);
+                    IPAddress host = IPAddress.Parse(robosimsHost);
+                    IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+                    this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    try {
+                        this.sock.Connect(hostep);
                     }
-
-                    bytesReceived += received;;
-                    string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
-                    int offset = headerMsg.IndexOf("\r\n\r\n");
-                    if (offset > 0){
-                        contentLength = parseContentLength(headerMsg.Substring(0, offset));
-                        bodyBuffer = new byte[contentLength];
-                        bodyBytesReceived = bytesReceived - (offset + 4);
-                        Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
-                        break;
+                    catch (SocketException e) {
+                        Debug.Log("Socket exception: " + e.ToString());
                     }
                 }
 
-                // read body
-                while (bodyBytesReceived < contentLength) {
-                    // check for 0 bytes received
-                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
-                    if (received == 0) {
-                        Debug.LogError("0 bytes received attempting to read body - connection closed");
-                        break;
+                if (this.sock != null && this.sock.Connected) {
+                    byte[] rawData = form.data;
+
+                    string request = "POST /train HTTP/1.1\r\n" +
+                    "Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+                    foreach(KeyValuePair<string, string> entry in form.headers) {
+                        request += entry.Key + ": " + entry.Value + "\r\n";
+                    }
+                    request += "\r\n";
+
+                    this.sock.Send(Encoding.ASCII.GetBytes(request));
+                    this.sock.Send(rawData);
+
+                    // waiting for a frame here keeps the Unity window in sync visually
+                    // its not strictly necessary, but allows the interact() command to work properly
+                    // and does not reduce the overall FPS
+                    yield return new WaitForEndOfFrame();
+
+                    byte[] headerBuffer = new byte[1024];
+                    int bytesReceived = 0;
+                    byte[] bodyBuffer = null;
+                    int bodyBytesReceived = 0;
+                    int contentLength = 0;
+
+                    // read header
+                    while (true) {
+                        int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
+                        if (received == 0) {
+                            Debug.LogError("0 bytes received attempting to read header - connection closed");
+                            break;
+                        }
+
+                        bytesReceived += received;;
+                        string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                        int offset = headerMsg.IndexOf("\r\n\r\n");
+                        if (offset > 0){
+                            contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                            bodyBuffer = new byte[contentLength];
+                            bodyBytesReceived = bytesReceived - (offset + 4);
+                            Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                            break;
+                        }
                     }
 
-                    bodyBytesReceived += received;
-                    //Debug.Log("total bytes received: " + bodyBytesReceived);
-                }
+                    // read body
+                    while (bodyBytesReceived < contentLength) {
+                        // check for 0 bytes received
+                        int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
+                        if (received == 0) {
+                            Debug.LogError("0 bytes received attempting to read body - connection closed");
+                            break;
+                        }
 
-                string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+                        bodyBytesReceived += received;
+                        //Debug.Log("total bytes received: " + bodyBytesReceived);
+                    }
+
+                    string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+                    ProcessControlCommand(msg);
+                }
+            } else if (serverType == serverTypes.FIFO){
+                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                foreach(var item in renderPayload) {
+                    this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+                }
+                this.fifoClient.SendEOM();
+                string msg = this.fifoClient.ReceiveMessage();
                 ProcessControlCommand(msg);
-            }
-		} else if (serverType == serverTypes.FIFO){
-            byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
-            MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
-            foreach(var item in renderPayload) {
-                this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
-            }
-            this.fifoClient.SendEOM();
-            string msg = this.fifoClient.ReceiveMessage();
-            ProcessControlCommand(msg);
-		}
 
-        if(droneMode)
-        {
-            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
-            {
-                DroneFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<DroneFPSAgentController>();
-                Time.timeScale = agent_tmp.autoResetTimeScale;
-                Physics.autoSimulation = true;
-                physicsSceneManager.physicsSimulationPaused = false;
-                agent_tmp.hasFixedUpdateHappened = false;
+                while (canEmit() && this.fastActionEmit) {
+
+                    MetadataPatch patch = this.activeAgent().generateMetadataPatch();
+                    patch.agentId = this.activeAgentId;
+                    msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                    this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
+                    this.fifoClient.SendEOM();
+                    msg = this.fifoClient.ReceiveMessage();
+                    ProcessControlCommand(msg);
+                }
             }
+
+            //if(droneMode)
+            //{
+            //    if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            //    {
+            //        DroneFPSAgentController agent_tmp = this.agents[0].GetComponent<DroneFPSAgentController>();
+            //        Time.timeScale = agent_tmp.autoResetTimeScale;
+            //        Physics.autoSimulation = true;
+            //        physicsSceneManager.physicsSimulationPaused = false;
+            //        agent_tmp.hasFixedUpdateHappened = false;
+            //    }
+            //}
+
+            #endif
+
+
+
+
         }
 
-        #endif
+
     }
 
 	private int parseContentLength(string header) {
@@ -936,7 +951,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private BaseFPSAgentController activeAgent() {
-		return this.agents.ToArray () [activeAgentId];
+		return this.agents[activeAgentId];
 	}
 
 	private void ProcessControlCommand(string msg)
@@ -955,14 +970,9 @@ public class AgentManager : MonoBehaviour
         this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		if (controlCommand.action == "Reset") {
-			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "Initialize") {
-			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "AddThirdPartyCamera") {
-			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
+		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
+            this.agentManagerState = AgentState.Processing;
+            ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
@@ -976,7 +986,6 @@ public class AgentManager : MonoBehaviour
 				this.activeAgent().updateImageSynthesis(true);
 			}
 			this.activeAgent().ProcessControlCommand (controlCommand);
-			readyToEmit = true;
 		}
 	}
 
@@ -1027,6 +1036,17 @@ public class ThirdPartyCameraMetadata
 	public Vector3 position;
 	public Vector3 rotation;
 	public float fieldOfView;
+}
+
+[Serializable]
+public class MetadataPatch
+{
+	public string lastAction;
+	public string errorMessage;
+	public string errorCode;
+	public bool lastActionSuccess;
+    public int agentId;
+    public System.Object actionReturn;
 }
 
 //adding AgentMetdata class so there is less confusing
@@ -1371,11 +1391,8 @@ public class ServerAction
 	public float startAgentsRotatedBy = 0f;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
-	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
-    public bool objectRandom;
-    public string objectName;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;
@@ -1431,9 +1448,9 @@ public class ServerAction
 
 	//default time for objects to wait before returning actionFinished() if an action put them in motion
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
-	public float intensity;//used for light?
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
+    public bool fastActionEmit;
 
     public bool returnToStart = false;
 
@@ -1566,5 +1583,9 @@ public class ShouldSerializeContractResolver : DefaultContractResolver
    }
 }
 
-
-
+public enum AgentState  {
+	Processing,
+    ActionComplete,
+    PendingFixedUpdate,
+	Emit
+}
