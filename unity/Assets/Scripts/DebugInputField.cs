@@ -248,7 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-						PhysicsController.actionComplete = false;
+						//PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
