@@ -403,7 +403,7 @@
         "resourceFile": "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/prefabs/cubes/cube_1x1",
         "shape": "blank block cube",
         "mass": 0.66,
-        "materialRestrictions": ["block_blank", "metal", "plastic", "rubber", "wood"],
+        "materialRestrictions": ["block_blank", "wood"],
         "salientMaterials": ["wood"],
         "pickupable": true,
         "receptacle": true,
@@ -943,7 +943,7 @@
         "resourceFile": "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/prefabs/cylinders/cylinder_1x1",
         "shape": "blank block cylinder",
         "mass": 0.66,
-        "materialRestrictions": ["block_blank", "metal", "plastic", "rubber", "wood"],
+        "materialRestrictions": ["block_blank", "wood"],
         "salientMaterials": ["wood"],
         "pickupable": true,
         "receptacle": true,
@@ -2436,7 +2436,7 @@
         "id": "crib",
         "resourceFile": "UnityAssetStore/Custom/Crib",
         "shape": "crib",
-        "mass": 25,
+        "mass": 20,
         "materialRestrictions": ["wood"],
         "materials": ["wood 1", "mattress fabric"],
         "salientMaterials": ["wood"],
@@ -3003,7 +3003,7 @@
         "shape": "wardrobe",
         "mass": 100,
         "materialRestrictions": ["wood"],
-        "materials": [],
+        "materials": ["wood 5", "metal 2"],
         "salientMaterials": ["wood"],
         "kinematic": true,
         "receptacle": true,
@@ -3052,5 +3052,111 @@
             "y": 0.5,
             "z": 0.5
         }
+    }, {
+        "id": "cake",
+        "resourceFile": "Custom/Prefabs/cake",
+        "shape": "cake",
+        "mass": 0.5,
+        "salientMaterials": ["food"],
+        "materialRestrictions": ["no_material"],
+        "pickupable": true,
+        "boundingBox": {
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.22,
+                "y": 0.1,
+                "z": 0.22
+            }
+        },
+        "colliders": [{
+            "type": "box",
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.22,
+                "y": 0.1,
+                "z": 0.22
+            }
+        }],
+        "visibilityPoints": [{
+            "x": 0,
+            "y": 0,
+            "z": 0.11
+        }, {
+            "x": 0.08,
+            "y": 0,
+            "z": 0.08
+        }, {
+            "x": 0.11,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": 0.08,
+            "y": 0,
+            "z": -0.08
+        }, {
+            "x": 0,
+            "y": 0,
+            "z": -0.11
+        }, {
+            "x": -0.08,
+            "y": 0,
+            "z": -0.08
+        }, {
+            "x": -0.11,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": -0.08,
+            "y": 0,
+            "z": 0.08
+        }, {
+            "x": 0,
+            "y": 0.08,
+            "z": 0.11
+        }, {
+            "x": 0.08,
+            "y": 0.08,
+            "z": 0.08
+        }, {
+            "x": 0.11,
+            "y": 0.08,
+            "z": 0
+        }, {
+            "x": 0.08,
+            "y": 0.08,
+            "z": -0.08
+        }, {
+            "x": 0,
+            "y": 0.08,
+            "z": -0.11
+        }, {
+            "x": -0.08,
+            "y": 0.08,
+            "z": -0.08
+        }, {
+            "x": -0.11,
+            "y": 0.08,
+            "z": 0
+        }, {
+            "x": -0.08,
+            "y": 0.08,
+            "z": 0.08
+        }, {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": 0,
+            "y": 0.08,
+            "z": 0
+        }]
     }]
 }

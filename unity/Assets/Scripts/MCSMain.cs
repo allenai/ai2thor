@@ -471,7 +471,6 @@ public class MCSMain : MonoBehaviour {
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
-        
     }
 
     private Collider AssignBoundingBox(
@@ -726,19 +725,15 @@ public class MCSMain : MonoBehaviour {
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (visibilityPointsFromConfig.Count > 0) {
-            bool isCube = objectDefinition.id.Equals("cube");
             // Use the List constructor to copy the visibility points list from the object definition.
-            List<MCSConfigVector> points = new List<MCSConfigVector>(!isCube ? visibilityPointsFromConfig :
-                this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
+            List<MCSConfigVector> points = new List<MCSConfigVector>(visibilityPointsFromConfig);
             // For dynamically generated visibility points, set the scale of the visibility point parent component
             // to be the inverse of the object's scale when the object is first shown.
             MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
                 objectConfig.shows[0] : null;
             Vector3? scaleNull = null;
-            Vector3? scaleOverride = (isCube && showConfig != null) ? new Vector3(1f / showConfig.scale.GetX(),
-                1f / showConfig.scale.GetY(), 1f / showConfig.scale.GetZ()) : scaleNull;
-            visibilityPoints = this.AssignVisibilityPoints(gameObject, points, (scaleOverride.HasValue ?
-                scaleOverride : (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull)));
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, points,
+                (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull));
         }
 
         if (shouldAddSimObjPhysicsScript) {
@@ -1128,28 +1123,6 @@ public class MCSMain : MonoBehaviour {
     private GameObject CreateGameObject(MCSConfigGameObject objectConfig) {
         MCSConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type.ToUpper()];
         if (objectDefinition != null) {
-            if (objectDefinition.primitive) {
-                switch (objectConfig.type) {
-                    case "capsule":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Capsule), objectConfig,
-                            objectDefinition);
-                    case "cube":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cube), objectConfig,
-                            objectDefinition);
-                    case "cylinder":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cylinder), objectConfig,
-                            objectDefinition);
-                    case "plane":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Plane), objectConfig,
-                            objectDefinition);
-                    case "quad":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Quad), objectConfig,
-                            objectDefinition);
-                    case "sphere":
-                        return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Sphere), objectConfig,
-                            objectDefinition);
-                }
-            }
             return CreateCustomGameObject(objectConfig, objectDefinition);
         }
         return null;
@@ -1616,7 +1589,6 @@ public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string resourceFile;
     public string shape;
     public bool keepColliders;
-    public bool primitive;
     public bool visibilityPointsScaleOne;
     public MCSConfigCollider boundingBox = null;
     public MCSConfigSize scale = null;
