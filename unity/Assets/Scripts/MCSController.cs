@@ -55,7 +55,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private MCSRotationData lookRotationActionData; //stores look rotation direction
     private bool inputWasRotateLook = false;
 
-    private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
+    private int actionFrameCount;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -356,7 +356,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 controlCommand.action.Equals("LookUp") || 
                 controlCommand.action.Equals("LookDown");
 
-        framesUntilGridSnap = 0; //for movement and rotation
+        actionFrameCount = 0; //for movement and rotation
         
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
@@ -514,9 +514,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                     movementActionData.UniqueID,
                     movementActionData.maxDistanceToObject,
                     movementActionData.forceAction);
-            framesUntilGridSnap++;
-            if (framesUntilGridSnap == this.substeps) {
-                this.snapToGrid();
+            actionFrameCount++;
+            if (actionFrameCount == this.substeps) {
                 actionFinished(movementActionFinished);
             }
         } //for rotation
@@ -528,8 +527,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             }
             
             RotateLookBodyAcrossFrames(bodyRotationActionData);
-            framesUntilGridSnap++;
-            if (framesUntilGridSnap == this.substeps) {
+            actionFrameCount++;
+            if (actionFrameCount == this.substeps) {
                 actionFinished(true);
             }
         }
