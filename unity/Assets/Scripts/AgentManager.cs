@@ -745,6 +745,7 @@ public class AgentManager : MonoBehaviour
 
             if (this.ximageCapture) {
                 yield return null; // wait for image to swap
+                shouldRender = false;
             }
 
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
