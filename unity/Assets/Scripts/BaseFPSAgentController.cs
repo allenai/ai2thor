@@ -2933,6 +2933,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+
+            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(this.m_Camera);
+
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -2960,14 +2963,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //make sure to rotate just the Camera, not the whole agent
                     m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
-                    var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+                    bool isVisible = false;
+                    if (this.visibilityScheme == VisibilityScheme.Distance) {
+                        isVisible = isSimObjVisible(this.m_Camera, targetSOP, this.maxVisibleDistance, planes);
+                    } else {
+                        var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+                        isVisible = visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID);
+                    }
+
                     transform.rotation = rot;
-                    
-                    if (visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID)) {
-                        
+
+                    if (isVisible){
                         pos = p;
                         return true;
                     }
+
                     
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
