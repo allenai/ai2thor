@@ -6614,6 +6614,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void PositionsFromWhichItemIsInteractable(ServerAction action) {
+
+            //default to increments of 30 for horizon
+            if(action.horizon == 0)
+            {
+                action.horizon = 30;
+            }
+
+            //check if horizon is a multiple of 5
+            if(action.horizon % 5 != 0)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.horizon < 0 || action.horizon > 30)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
+                actionFinished(false);
+                return;
+            }
             Vector3[] positions = null;
             if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
@@ -6661,8 +6682,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = -1; k <= 2; k++) {
-                m_Camera.transform.localEulerAngles = new Vector3(30f * k, 0f, 0f);
+            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {
                         stand();
