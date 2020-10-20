@@ -20,9 +20,9 @@ public class MCSConfig {
         { "Custom/Materials/Pink", new string[] { "pink" } },
         { "Custom/Materials/Purple", new string[] { "purple" } },
         { "Custom/Materials/Red", new string[] { "red" } },
-        { "Custom/Materials/TAn", new string[] { "tan" } },
         { "Custom/Materials/Teal", new string[] { "teal" } },
         { "Custom/Materials/White", new string[] { "white" } },
+        { "Custom/Materials/Violet", new string[] { "violet" } },
         { "Custom/Materials/Yellow", new string[] { "yellow" } }
     };
 
