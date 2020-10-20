@@ -169,6 +169,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private void regenerateBoundingBoxes() {
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
+        // position and rotation will vary slightly due to floating point errors
+        // so we use a very small epsilon value for comparison instead of 
+        // checking equality
         if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
             return;
         }
