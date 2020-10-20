@@ -88,10 +88,15 @@ public class AgentManager : MonoBehaviour
         if (serverType == serverTypes.FIFO) {
             string  serverPipePath = LoadStringVariable (null, "FIFO_SERVER_PIPE_PATH");
             string  clientPipePath = LoadStringVariable (null, "FIFO_CLIENT_PIPE_PATH");
+            int shmKey = LoadIntVariable (0, "FIFO_SHM_KEY");
+            int shmSize = LoadIntVariable (0, "FIFO_SHM_SIZE");
             
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
-            this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
+            Debug.Log("client shm key: " + shmKey);
+            Debug.Log("client shm size: " + shmSize);
+            this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath, shmKey, shmSize);
+            Debug.Log("this.fifoclient hasshm" + this.fifoClient.hasShm);
 
         }
 
@@ -116,6 +121,7 @@ public class AgentManager : MonoBehaviour
         #if UNITY_WEBGL
         primaryAgent.SetAgentMode("default");
         #endif
+        Physics.autoSimulation = false;
 
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
@@ -565,7 +571,8 @@ public class AgentManager : MonoBehaviour
 				RenderTexture.active = agent.m_Camera.activeTexture;
 				agent.m_Camera.Render ();
 			}
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+            //byte[] image = captureScreen();
+            //payload.Add(new KeyValuePair<string, byte[]>("image", image));
 		}
 	}
 
@@ -669,6 +676,7 @@ public class AgentManager : MonoBehaviour
         multiMeta.sequenceId = this.currentSequenceId;
 
 		RenderTexture currentTexture = null;
+        shouldRender = false;
 
         if (shouldRender) {
             currentTexture = RenderTexture.active;
@@ -740,10 +748,13 @@ public class AgentManager : MonoBehaviour
 		}
 
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+
+        Physics.Simulate(0.02f);
 		
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
         List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+
         createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
 
 

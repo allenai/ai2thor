@@ -445,15 +445,15 @@ class Controller(object):
                 )
 
             event = self.reset(scene)
-            if event.metadata['lastActionSuccess']:
-                init_return = event.metadata['actionReturn']
-                self.server.set_init_params(init_return)
+            #if event.metadata['lastActionSuccess']:
+            #    init_return = event.metadata['actionReturn']
+            #    self.server.set_init_params(init_return)
 
-                print("Initialize return: {}".format(init_return))
-            else:
-                raise RuntimeError('Initialize action failure: {}'.format(
-                    event.metadata['errorMessage'])
-                )
+            #    print("Initialize return: {}".format(init_return))
+            #else:
+            #    raise RuntimeError('Initialize action failure: {}'.format(
+            #        event.metadata['errorMessage'])
+            #    )
 
     def _build_server(self, host, port, width, height):
 
@@ -471,6 +471,7 @@ class Controller(object):
             )
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
+                    shm_size=1024**2,
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
@@ -491,7 +492,7 @@ class Controller(object):
 
         event = self.step(action='GetScenesInBuild')
 
-        self._scenes_in_build = set(event.metadata['actionReturn'])
+        #self._scenes_in_build = set(event.metadata['actionReturn'])
 
         return self._scenes_in_build
 
@@ -499,18 +500,18 @@ class Controller(object):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
-        if scene not in self.scenes_in_build:
-            def key_sort_func(scene_name):
-                m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
-                last_val = m.group(3) if m.group(3) is not None else -1
-                return m.group(1), int(m.group(2)), int(last_val)
-            raise ValueError(
-                "\nScene '{}' not contained in build (scene names are case sensitive)."
-                "\nPlease choose one of the following scene names:\n\n{}".format(
-                    scene,
-                    ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
-                )
-            )
+        #if scene not in self.scenes_in_build:
+        #    def key_sort_func(scene_name):
+        #        m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
+        #        last_val = m.group(3) if m.group(3) is not None else -1
+        #        return m.group(1), int(m.group(2)), int(last_val)
+        #    raise ValueError(
+        #        "\nScene '{}' not contained in build (scene names are case sensitive)."
+        #        "\nPlease choose one of the following scene names:\n\n{}".format(
+        #            scene,
+        #            ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
+        #        )
+        #    )
 
         self.server.send(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = self.server.receive()
@@ -693,8 +694,8 @@ class Controller(object):
         self.server.send(action)
         self.last_event = self.server.receive()
 
-        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
-            raise ValueError(self.last_event.metadata['errorMessage'])
+        #if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
+        #    raise ValueError(self.last_event.metadata['errorMessage'])
 
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
@@ -719,7 +720,7 @@ class Controller(object):
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
         env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'False' if self.headless else 'True'
         for k,v in server_params.items():
-            env['AI2THOR_' + k.upper()] = v
+            env['AI2THOR_' + k.upper()] = str(v)
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)

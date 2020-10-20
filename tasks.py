@@ -2868,3 +2868,49 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
+
+@task
+def test_fifoshm(context):
+    import ai2thor.fifo_server
+    f = ai2thor.fifo_server.FifoSHMServer(300,300, (1024 ** 2))
+    f._shm_init()
+
+@task
+def start_fifo_client(context):
+    import msgpack
+    import ai2thor.tests.fifo_client
+    from ai2thor.fifo_server import FieldType
+    with open("/tmp/foo/shm.json") as fi:
+        shmkey = json.loads(fi.read())['shmkey']
+
+    f = ai2thor.tests.fifo_client.FifoClient('/tmp/foo/server.pipe', '/tmp/foo/client.pipe', shmkey, 1024**2)
+    sequenceId = 0
+    count = 100000
+    event = msgpack.dumps(dict(agents=[dict(position='1', screenWidth=300, screenHeight=300, thirdPartyCameras=[])], sequenceId=sequenceId))
+    s= time.time()
+    event = msgpack.dumps(dict())
+    for i in range(count):
+        f.send(FieldType.METADATA, event * 1000 * 300)
+        f.send_eom()
+        action = f.recv()
+        #sequenceId=action['sequenceId']
+        #print("got action %s" % action)
+    e = time.time() - s
+    print("fps %s" % (count/float(e)))
+
+@task
+def start_fifo_server(context):
+    import ai2thor.fifo_server
+    shutil.rmtree('/tmp/foo')
+    os.makedirs('/tmp/foo')
+    f = ai2thor.fifo_server.FifoServer(300, 300, 1024**2)
+    with open("/tmp/foo/shm.json",'w') as fi:
+        fi.write(json.dumps(dict(shmkey=f.shmkey)))
+    f.start()
+
+    action = dict(action='RotateRight')
+    while True:
+        msg = f.receive()
+        #f.send(action)
+        f._send_message(ai2thor.fifo_server.FieldType.END_OF_MESSAGE, b'')
+        #f.send(action)
