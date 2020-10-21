@@ -1935,10 +1935,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-                /* MCS Changed so grid snap is at the end of movement across 5 frames
-                if (!continuousMode) {
-                    this.snapToGrid();
-                }*/
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
@@ -2658,6 +2654,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults) {
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
+                    Debug.Log("RES = " + res.transform.name);
                     // Don't worry if we hit something thats in our hand.
                     if (ItemInHand != null && ItemInHand.transform == res.transform) {
                         continue;

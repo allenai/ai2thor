@@ -9,7 +9,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float STANDING_POSITION_Y = 0.4625f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
-    
+    public static float MOVE_MAX = 0.1f;
+
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
 
@@ -50,7 +51,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private bool movementActionFinished = false;
     private MCSMovementActionData movementActionData; //stores movement direction
     private bool inputWasMovement = false;
-    
+
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
     private bool inputWasRotateLook = false;
@@ -344,20 +345,20 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
         this.GetComponentInChildren<Camera>().cullingMask = this.cameraCullingMask;
 
-        inputWasMovement = 
-                controlCommand.action.Equals("MoveAhead") || 
+        this.inputWasMovement =
+                controlCommand.action.Equals("MoveAhead") ||
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
                 controlCommand.action.Equals("MoveRight");
-        inputWasRotateLook = 
+        this.inputWasRotateLook =
                 controlCommand.action.Equals("RotateLook") ||
                 controlCommand.action.Equals("RotateLeft") ||
                 controlCommand.action.Equals("RotateRight") ||
-                controlCommand.action.Equals("LookUp") || 
+                controlCommand.action.Equals("LookUp") ||
                 controlCommand.action.Equals("LookDown");
 
-        actionFrameCount = 0; //for movement and rotation
-        
+        this.actionFrameCount = 0; //for movement and rotation
+
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
 
@@ -466,22 +467,22 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         currentHorizonValue = (currentHorizonValue >= 270 ? (currentHorizonValue - 360) : currentHorizonValue);
 
         // Limiting where to look based on realistic expectation (for instance, a person can't turn
-        // their head 180 degrees)    
+        // their head 180 degrees)
         bool reset = false;
-        if ((Mathf.Round(currentHorizonValue) + response.horizon > maxHorizon) || 
+        if ((Mathf.Round(currentHorizonValue) + response.horizon > maxHorizon) ||
             (Mathf.Round(currentHorizonValue) + response.horizon < minHorizon))
         {
             Debug.Log("Value of horizon needs to be between " + minHorizon + " and " + maxHorizon +
                 ". Setting value to 0.");
             reset = true;
         }
-        
-        bodyRotationActionData = //left right
+
+        this.bodyRotationActionData = //left right
             new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)), false);
-        lookRotationActionData = !reset ? //if not reseting then free look up down
+        this.lookRotationActionData = !reset ? //if not reseting then free look up down
             new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f)), false) :
             new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero), true);
-        
+
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
     }
 
@@ -508,27 +509,29 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private void SimulatePhysicsOnce() {
         //for movement
-        if (inputWasMovement) {
+        if (this.inputWasMovement) {
             MatchAgentHeightToStructureBelow(false);
-            movementActionFinished = moveInDirection((movementActionData.direction / this.substeps), 
-                    movementActionData.UniqueID,
-                    movementActionData.maxDistanceToObject,
-                    movementActionData.forceAction);
-            actionFrameCount++;
-            if (actionFrameCount == this.substeps) {
-                actionFinished(movementActionFinished);
+            this.movementActionFinished = moveInDirection((this.movementActionData.direction / this.substeps),
+                    this.movementActionData.UniqueID,
+                    this.movementActionData.maxDistanceToObject,
+                    this.movementActionData.forceAction);
+            this.actionFrameCount++;
+            if (this.actionFrameCount == this.substeps) {
+                Debug.Log("MCS: Move Status = " + this.lastActionStatus);
+                actionFinished(this.movementActionFinished);
             }
         } //for rotation
-        else if (inputWasRotateLook) {
-            if (lookRotationActionData.reset) {
-                ResetLookRotation(lookRotationActionData);
+        else if (this.inputWasRotateLook) {
+            if (this.lookRotationActionData.reset) {
+                ResetLookRotation(this.lookRotationActionData);
             } else {
-                RotateLookAcrossFrames(lookRotationActionData);
+                RotateLookAcrossFrames(this.lookRotationActionData);
             }
-            
-            RotateLookBodyAcrossFrames(bodyRotationActionData);
-            actionFrameCount++;
-            if (actionFrameCount == this.substeps) {
+
+            RotateLookBodyAcrossFrames(this.bodyRotationActionData);
+            this.actionFrameCount++;
+            if (this.actionFrameCount == this.substeps) {
+                Debug.Log("MCS: Rotate Status = " + this.lastActionStatus);
                 actionFinished(true);
             }
         }
@@ -704,7 +707,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
         }
     }
-    
+
     public void Crawl(ServerAction action) {
         if (this.pose == PlayerPose.CRAWLING) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
@@ -714,10 +717,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
             startHeight += MatchAgentHeightToStructureBelow(true);
             Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, PlayerPose.CRAWLING);  
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, PlayerPose.CRAWLING);
         }
     }
-    
+
     public void LieDown(ServerAction action) {
         if (this.pose == PlayerPose.LYING) {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
@@ -726,10 +729,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
             startHeight += MatchAgentHeightToStructureBelow(true);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, PlayerPose.LYING);              
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, PlayerPose.LYING);
         }
-
-        
     }
 
     public override void Stand(ServerAction action) {
@@ -744,7 +745,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
             startHeight += MatchAgentHeightToStructureBelow(true);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, PlayerPose.STANDING); 
+            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, PlayerPose.STANDING);
         }
     }
 
@@ -754,16 +755,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
         RaycastHit hit;
         LayerMask layerMask = ~(1 << 10);
-        
+
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) && 
+        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) &&
             hit.collider.tag == "SimObjPhysics" &&
-            hit.transform.GetComponent<StructureObject>() == null) 
+            hit.transform.GetComponent<StructureObject>() == null)
         {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
             Debug.Log("Agent is Obstructed");
-            
         } else {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
@@ -778,43 +778,47 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
     public override void MoveLeft(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
+        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
+        this.movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
         this.inputDirection = "left";
-        this.serverActionMoveMagnitude = action.moveMagnitude;   
+        this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
     public override void MoveRight(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
+        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
+        this.movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
         this.inputDirection = "right";
-        this.serverActionMoveMagnitude = action.moveMagnitude;    
+        this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
     public override void MoveAhead(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
+        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
+        this.movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
         this.inputDirection = "forward";
-        this.serverActionMoveMagnitude = action.moveMagnitude; 
+        this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
     public override void MoveBack(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
+        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
+        this.movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
         this.inputDirection = "back";
-        this.serverActionMoveMagnitude = action.moveMagnitude; 
+        this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
     private float MatchAgentHeightToStructureBelow(bool poseChange) {
         float heightDifference;
-        heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y : 
+        heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y :
             pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
 
         //Raycast down
@@ -823,12 +827,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) && 
+        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
             (hit.transform.GetComponent<StructureObject>()!=null)) {
             //for pose changes on structures only
             if (poseChange)
                 return hit.point.y;
-            else 
+            else
             {
                 Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
                 this.transform.position = newHeight;
@@ -850,7 +854,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RotateLook(rotate);
     }
 
-    public override void LookUp(ServerAction controlCommand) 
+    public override void LookUp(ServerAction controlCommand)
     {
         ServerAction rotate = new ServerAction();
         rotate.horizon = -ROTATION_DEGREES;
@@ -858,42 +862,42 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void LookDown(ServerAction controlCommand)
-    {    
+    {
         ServerAction rotate = new ServerAction();
         rotate.horizon = ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
-    public void RotateLookAcrossFrames(MCSRotationData rotationActionData) 
+    public void RotateLookAcrossFrames(MCSRotationData rotationActionData)
     {
         Quaternion currentAngle = rotationActionData.startingRotation;
         Quaternion distance = rotationActionData.endRotation;
 
         bool upReset = distance.eulerAngles.x + currentAngle.eulerAngles.x > maxHorizon;
         bool downReset = distance.eulerAngles.x + currentAngle.eulerAngles.x < minHorizon;
-        
+
         float horizonChange = //this is because unity switches angles after 180 degrees. It sometimes switches to -180-0 or to 180-360.
-            distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 : 
+            distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 :
             distance.eulerAngles.x < minHorizon ? distance.eulerAngles.x + 360 : distance.eulerAngles.x;
-        
+
         Vector3 updatedRotation = new Vector3(horizonChange / this.substeps, 0, 0);
         m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + updatedRotation);
     }
 
-    public void RotateLookBodyAcrossFrames(MCSRotationData rotationActionData) 
+    public void RotateLookBodyAcrossFrames(MCSRotationData rotationActionData)
     {
         Quaternion currentAngle = rotationActionData.startingRotation;
         Quaternion distance = rotationActionData.endRotation;
 
         float rotationChange =
-            distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 : 
+            distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 :
             distance.eulerAngles.y < -90 ? distance.eulerAngles.y + 360 : distance.eulerAngles.y;
-        
+
         Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
 
-    public void ResetLookRotation(MCSRotationData rotationActionData) 
+    public void ResetLookRotation(MCSRotationData rotationActionData)
     {
         Quaternion currentAngle = rotationActionData.startingRotation;
         Quaternion endAngle = rotationActionData.endRotation;
