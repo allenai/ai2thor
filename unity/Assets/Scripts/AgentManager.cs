@@ -1246,7 +1246,11 @@ public class ArmMetadata {
 	//joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
     public JointMetadata[] joints;
 
+	//all objects currently held by the hand sphere
 	public List<String> HeldObjects;
+
+	//all sim objects that are both pickupable and inside the hand sphere
+	public List<String> PickupableObjectsInsideHandSphere;
 
 	//world coordinates of the center of the hand's sphere
 	public Vector3 HandSphereCenter;

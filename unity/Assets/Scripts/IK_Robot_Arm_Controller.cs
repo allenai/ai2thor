@@ -856,6 +856,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         meta.HandSphereRadius = magnetSphere.radius;
 
+        meta.PickupableObjectsInsideHandSphere = WhatObjectsAreInsideMagnetSphereAsObjectID();
+
         return meta;
     }
 
