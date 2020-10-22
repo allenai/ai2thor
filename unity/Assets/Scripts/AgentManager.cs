@@ -120,7 +120,9 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+		#if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
+		#endif
 	}
 
 	private void initializePrimaryAgent()
@@ -1464,6 +1466,7 @@ public class ServerAction
 
     public bool disableRendering = false;
 
+	//this restricts arm position to the hemisphere in front of the agent
     public bool restrictMovement = false;
 
 	//used to determine which coordinate space is used in Mid Level Arm actions
