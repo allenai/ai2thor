@@ -160,7 +160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private ServerAction currentServerAction;
+        private ServerAction currentServerAction = null;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -2494,7 +2494,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ResetAgentHandRotation(action);
             IsHandDefault = true;
         }
-        
+
         public void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();

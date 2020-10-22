@@ -33,10 +33,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //references to the joints of the mid level arm
     [SerializeField]
     private Transform FirstJoint = null;
-    [SerializeField]
-    private Transform SecondJoint = null;
-    [SerializeField]
-    private Transform ThirdJoint = null;
+    // [SerializeField]
+    // private Transform SecondJoint = null;
+    // [SerializeField]
+    // private Transform ThirdJoint = null;
     [SerializeField]
     private Transform FourthJoint = null;
 
@@ -45,13 +45,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
-    private bool StopMotionOnContact = false;
-    // Start is called before the first frame update
-
     [SerializeField]
-    private CapsuleCollider[] ArmCapsuleColliders;
+    private CapsuleCollider[] ArmCapsuleColliders = null;
     [SerializeField]
-    private BoxCollider[] ArmBoxColliders;
+    private BoxCollider[] ArmBoxColliders = null;
 
     // This value is wrong 0.6325f for the origin to shoulder, it should be the height of the z-oriented capsule, 0.34566f and we should get it dinamically
     private float originToShoulderLength;
@@ -522,7 +519,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
+        //print("target world pos: " + targetWorldPosition);
         var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
+        //print("local space target: " + targetArmPos);
+        //print("target arm pos z difference: " + (targetArmPos.z - originToShoulderLength));
+        //print("check target arm distance: " + targetArmPos.sqrMagnitude);
         return (targetArmPos.z - originToShoulderLength) >= 0.0f && targetArmPos.sqrMagnitude <= extendedArmLenth*extendedArmLenth;
     }
 
@@ -536,6 +537,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool restrictTargetPosition = false,
         bool disableRendering = false) {
 
+        //print("in moveArmTarget");
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         activeColliders.Clear();
         
@@ -567,14 +569,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
-            Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr" + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
+            Debug.Log("Invalid pos target " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
             return;
         }
         
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
-
         if (disableRendering) {
             moveTargetSimulatePhisics(
                 controller, 

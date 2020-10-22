@@ -1488,7 +1488,10 @@ public class ServerAction
         {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         } 
+		//including this pragma so the "ex variable declared but not used" warning stops yelling
+		#pragma warning disable 0168
         catch (ArgumentException ex) { 
+		#pragma warning restore 0168
             Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
         }
 
