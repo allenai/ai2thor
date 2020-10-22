@@ -6411,7 +6411,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) 
                     {
                         //if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false))
+                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, true))
                         {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
