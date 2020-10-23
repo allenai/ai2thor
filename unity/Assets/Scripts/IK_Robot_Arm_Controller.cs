@@ -176,8 +176,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
-        var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
-        return (targetArmPos.z - originToShoulderLength) >= 0.0f && targetArmPos.sqrMagnitude <= extendedArmLenth*extendedArmLenth;
+        var targetShoulderSpace = this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength);
+        return targetShoulderSpace.z >= 0.0f && 
+        // TODO revert to sqrMagnitude, easier to debug with magnitude
+               targetShoulderSpace.magnitude <= extendedArmLenth;
     }
 
     public void moveArmTarget(
@@ -190,6 +192,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
+        
 
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
@@ -218,8 +221,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             targetWorldPos = arm.transform.TransformPoint(target);
         }
 
+
+        // TODO Remove this after restrict movement is finalized
+        var targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
+
+        #if UNITY_EDITOR
+        Debug.Log("pos target  " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
+        #endif
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
-            Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr" + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
+            targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
+             Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
             return;
         }
@@ -357,6 +368,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public bool PickupObject()
     {
+        // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
+        // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
         //grab all sim objects that are currently colliding with magnet sphere
         foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
