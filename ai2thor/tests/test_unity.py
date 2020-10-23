@@ -76,7 +76,6 @@ def test_small_aspect():
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_fast_emit():
     fast_controller = UnityTestController(server_class=FifoServer, fastActionEmit=True)
     event = fast_controller.step(dict(action='RotateRight'))

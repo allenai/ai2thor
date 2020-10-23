@@ -6334,29 +6334,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             return false;
         }
-
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) {
-                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-                    float ViewPointRangeHigh = 1.0f;
-                    float ViewPointRangeLow = 0.0f;
-
-                    if (viewPoint.z > 0 &&
-                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
-                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-                    ) {
-                            return true;
-                    }
-                }
-            } else {
-                #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
-            }
-            return false;
-        }
         
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {
@@ -6372,7 +6349,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) 
                     {
                         //if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false))
+                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, true))
                         {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
@@ -6573,6 +6550,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void PositionsFromWhichItemIsInteractable(ServerAction action) {
+
+            //default to increments of 30 for horizon
+            if(action.horizon == 0)
+            {
+                action.horizon = 30;
+            }
+
+            //check if horizon is a multiple of 5
+            if(action.horizon % 5 != 0)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.horizon < 0 || action.horizon > 30)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
+                actionFinished(false);
+                return;
+            }
             Vector3[] positions = null;
             if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
@@ -6620,8 +6618,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = -1; k <= 2; k++) {
-                m_Camera.transform.localEulerAngles = new Vector3(30f * k, 0f, 0f);
+            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {
                         stand();

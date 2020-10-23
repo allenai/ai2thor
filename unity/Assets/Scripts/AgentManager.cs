@@ -120,7 +120,9 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+		#if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
+		#endif
 	}
 
 	private void initializePrimaryAgent()
@@ -219,6 +221,8 @@ public class AgentManager : MonoBehaviour
                 return;
             }
         }
+
+        Time.fixedDeltaTime = action.fixedDeltaTime;
         
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
@@ -1244,7 +1248,11 @@ public class ArmMetadata {
 	//joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
     public JointMetadata[] joints;
 
+	//all objects currently held by the hand sphere
 	public List<String> HeldObjects;
+
+	//all sim objects that are both pickupable and inside the hand sphere
+	public List<String> PickupableObjectsInsideHandSphere;
 
 	//world coordinates of the center of the hand's sphere
 	public Vector3 HandSphereCenter;
@@ -1464,6 +1472,7 @@ public class ServerAction
 
     public bool disableRendering = false;
 
+	//this restricts arm position to the hemisphere in front of the agent
     public bool restrictMovement = false;
 
 	//used to determine which coordinate space is used in Mid Level Arm actions
@@ -1485,7 +1494,10 @@ public class ServerAction
         {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         } 
+		//including this pragma so the "ex variable declared but not used" warning stops yelling
+		#pragma warning disable 0168
         catch (ArgumentException ex) { 
+		#pragma warning restore 0168
             Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
         }
 

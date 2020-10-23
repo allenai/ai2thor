@@ -19,25 +19,22 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //references to the joints of the mid level arm
     [SerializeField]
     private Transform FirstJoint = null;
-    [SerializeField]
-    private Transform SecondJoint = null;
-    [SerializeField]
-    private Transform ThirdJoint = null;
+    // [SerializeField]
+    // private Transform SecondJoint = null;
+    // [SerializeField]
+    // private Transform ThirdJoint = null;
     [SerializeField]
     private Transform FourthJoint = null;
 
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    private Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
-
-    private bool StopMotionOnContact = false;
-    // Start is called before the first frame update
+    public Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
     [SerializeField]
-    private CapsuleCollider[] ArmCapsuleColliders;
+    private CapsuleCollider[] ArmCapsuleColliders = null;
     [SerializeField]
-    private BoxCollider[] ArmBoxColliders;
+    private BoxCollider[] ArmBoxColliders = null;
 
     // This value is wrong 0.6325f for the origin to shoulder, it should be the height of the z-oriented capsule, 0.34566f and we should get it dinamically
     private float originToShoulderLength;
@@ -179,10 +176,53 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private bool shouldHalt() {
         return collisionListener.ShouldHalt();
     }
-    
+
+    private void moveArmFinish(
+        PhysicsRemoteFPSAgentController controller,
+        Transform moveTransform,
+        System.Action<Transform, Vector3> setPosition,
+        Vector3 targetPosition,
+        Vector3 positionReset,
+        bool armOvershot = false
+       
+    ) {
+        var actionSuccess = true;
+        var debugMessage = "";
+        var staticCollisions = collisionListener.StaticCollisions();
+        if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+                
+                //decide if we want to return to original position or last known position before collision
+                setPosition(moveTransform, positionReset);
+
+                //if we hit a sim object
+                if(sc.isSimObj)
+                {
+                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!sc.isSimObj)
+                {
+                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+
+                actionSuccess = false;
+        } else if (armOvershot) {
+            Debug.Log("stopping arm height - target was overshot");
+            debugMessage =  "arm height has overshot the target position";
+            actionSuccess = false;
+        }
+        controller.actionFinished(actionSuccess, debugMessage);
+    }
+
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
+        //print("target world pos: " + targetWorldPosition);
         var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
+        //print("local space target: " + targetArmPos);
+        //print("target arm pos z difference: " + (targetArmPos.z - originToShoulderLength));
+        //print("check target arm distance: " + targetArmPos.sqrMagnitude);
         return (targetArmPos.z - originToShoulderLength) >= 0.0f && targetArmPos.sqrMagnitude <= extendedArmLenth*extendedArmLenth;
     }
 
@@ -197,6 +237,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool disableRendering = false
     ) {
 
+        //print("in moveArmTarget");
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -225,19 +266,30 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
-            Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr" + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
+            Debug.Log("Invalid pos target " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
             return;
         }
         
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
+<<<<<<< HEAD
 
         var moveCall = ContinuousMovement
             .move(
                 controller,
                 collisionListener,
                 armTarget,
+=======
+        if (disableRendering) {
+            moveTargetSimulatePhisics(
+                controller, 
+                fixedDeltaTime, 
+                armTarget, 
+                (t) => t.position,
+                (t, pos) => t.position = pos,
+                (t, pos) => t.position += pos,
+>>>>>>> ae9d2f839b08ebf09b17d34f108c975311ca92b0
                 targetWorldPos,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
