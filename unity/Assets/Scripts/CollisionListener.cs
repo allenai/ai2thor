@@ -21,8 +21,6 @@ public class CollisionListener : MonoBehaviour
             get { return simObjPhysics != null; }
         }
     }
-    private StaticCollision staticCollided;
-
     private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
     public void RegisterCollision(Collider col, bool notifyParent = true) {
