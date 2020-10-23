@@ -226,11 +226,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         var targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
 
         #if UNITY_EDITOR
-        Debug.Log("pos target  " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
+        Debug.Log("pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
         #endif
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
-             Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr " + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
+             Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
             return;
         }
