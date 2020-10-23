@@ -5,20 +5,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class IK_Robot_Arm_Controller : MonoBehaviour
 {
-
-    //track what was hit while arm was moving
-    public class StaticCollided
-    {
-        //keep track of if we hit something
-        public bool collided = false;
-        //track which sim object was hit
-        public SimObjPhysics simObjPhysics;
-        //track which structural object was hit
-        public GameObject gameObject;
-    }
-
     private Transform armTarget;
-    private StaticCollided staticCollided;
     private Transform handCameraTransform;
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -28,7 +15,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
-    private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
     //references to the joints of the mid level arm
     [SerializeField]
@@ -58,6 +44,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private const float extendedArmLenth = 0.6325f;
 
+    private CollisionListener collisionListener;
+
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -68,7 +56,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         this.originToShoulderLength = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>().height;
 
-        staticCollided = new StaticCollided();
+        // staticCollided = new StaticCollided();
+
+        this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
         //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
         //magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
@@ -108,108 +98,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
-    private void moveTargetSimulatePhisics(
-        PhysicsRemoteFPSAgentController controller,
-        float fixedDeltaTime,
-        Transform moveTransform,
-        Vector3 targetPosition,
-        float unitsPerSecond,
-        bool returnToStartPositionIfFailed = false,
-        bool localPosition = true
-    )
-        {
-            const double eps = 1e-3;
-            staticCollided.collided = false;
-            staticCollided.simObjPhysics = null;
-            staticCollided.gameObject = null;
-            Physics.autoSimulation = false;
-
-            var actionSuccess = true;
-            var debugMessage = "";
-
-            System.Func<Transform, Vector3> getPosition = (t) => (localPosition ? t.localPosition : t.position);
-             System.Action<Transform, Vector3> setPosition = (t, pos) => {
-                if (localPosition) {
-                    t.localPosition = pos;
-                }
-                else {
-                    t.position = pos;
-                }
-            };
-            
-            System.Action<Transform, Vector3> addPosition = (t, pos) => {
-                if (localPosition) {
-                    t.localPosition += pos;
-                }
-                else {
-                    t.position += pos;
-                }
-            };
-
-            var originalPosition = getPosition(moveTransform);
-
-            var previousArmPosition = originalPosition;
-
-            Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
-            float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-            float startingDistance = currentDistance;
-            // running simulate once before we begin our movement loop to
-            // ensure that the arm is not in contact with any other object
-            // that should prevent it from moving
-            Physics.Simulate(fixedDeltaTime);
-
-            while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
-
-                previousArmPosition = getPosition(moveTransform);
-
-                addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
-
-                Physics.Simulate(fixedDeltaTime);
-
-                currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-            }
-
-            /*
-            DISABLING JUMP TO FINAL POSITION as it can lead to clipping
-            if (currentDistance <= eps && !staticCollided.collided) {
-                setPosition(moveTransform, targetPosition);
-                // must run Simulate() one more time to ensure colliders are triggered
-                Physics.Simulate(fixedDeltaTime);
-            }
-            */
-
-            var staticCollisions = StaticCollisions();
-
-
-            if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
-                
-                //decide if we want to return to original position or last known position before collision
-                setPosition(moveTransform, returnToStartPositionIfFailed ? originalPosition :previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime));
-
-                //if we hit a sim object
-                if(sc.simObjPhysics && !sc.gameObject)
-                {
-                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
-                }
-
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!sc.simObjPhysics && sc.gameObject)
-                {
-                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
-                }
-                actionSuccess = false;
-        } else if (currentDistance > startingDistance) {
-            Debug.Log("stopping arm height - target was overshot");
-            debugMessage =  "arm height has overshot the target position";
-            actionSuccess = false;
-        }
-        Physics.autoSimulation = true;
-        controller.actionFinished(actionSuccess, debugMessage);
-    }
-
     //overload
-    private void moveTargetSimulatePhisics(
+   private void moveTargetSimulatePhisics(
         PhysicsRemoteFPSAgentController controller,
         float fixedDeltaTime,
         Transform moveTransform,
@@ -222,20 +112,48 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool localPosition = true
     ) 
     {
+
+        var enumarator = moveTargetFixedUpdate(
+            controller, 
+                fixedDeltaTime, 
+                armTarget, 
+                getPosition,
+                setPosition,
+                addPosition,
+                targetPosition,
+                unitsPerSecond, 
+                returnToStartPositionIfFailed,
+                localPosition
+        );
+
+        while (enumarator.MoveNext()) {
+            Physics.Simulate(fixedDeltaTime);
+        }
+    }
+
+     private IEnumerator moveTargetFixedUpdate(
+        PhysicsRemoteFPSAgentController controller,
+        float fixedDeltaTime,
+        Transform moveTransform,
+        System.Func<Transform, Vector3> getPosition,
+        System.Action<Transform, Vector3> setPosition,
+        System.Action<Transform, Vector3> addPosition,
+        Vector3 targetPosition,
+        float unitsPerSecond,
+        bool returnToStartPositionIfFailed = false,
+        bool localPosition = true
+    )
+    {
         const double eps = 1e-3;
-        Physics.autoSimulation = false;
 
         var originalPosition = getPosition(moveTransform);
-
         var previousArmPosition = originalPosition;
-
         Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
+
+        yield return new WaitForFixedUpdate();
+
         float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         float startingDistance = currentDistance;
-        // running simulate once before we begin our movement loop to
-        // ensure that the arm is not in contact with any other object
-        // that should prevent it from moving
-        Physics.Simulate(fixedDeltaTime);
 
         while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
@@ -243,19 +161,18 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
 
-            Physics.Simulate(fixedDeltaTime);
+            yield return new WaitForFixedUpdate();
 
             currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
         }
 
-        // DISABLING JUMP TO FINAL POSITION as it can lead to clipping
+        // DISABLING JUMP since it can lead to clipping
         //if (currentDistance <= eps && !staticCollided.collided) {
+        //    // Maybe switch to this?
+        //    // addPosition(moveTransform, targetDirection * currentDistance);
         //    setPosition(moveTransform, targetPosition);
-        //    // must run Simulate() one more time to ensure colliders are triggered
-        //    Physics.Simulate(fixedDeltaTime);
         //}
 
-        Physics.autoSimulation = true;
         moveArmFinish(
             controller,
             moveTransform, 
@@ -344,141 +261,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         return result;
     }
 
-    public void OnTriggerExit(Collider col)
-    {
-        activeColliders.Remove(col);
-    }
-
-    public void OnTriggerStay(Collider col)
-    {
-        activeColliders.Add(col);
-    }
-
-    public List<StaticCollided> StaticCollisions() {
-        var staticCols = new List<StaticCollided>();
-        foreach(var col in activeColliders) {
-            if(col.GetComponentInParent<SimObjPhysics>())
-            {
-                //how does this handle nested sim objects? maybe it's fine?
-                SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
-                if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
-                {
-
-                    if(!col.isTrigger)
-                    {
-                        // #if UNITY_EDITOR
-                        // Debug.Log("Collided with static sim obj " + sop.name);
-                        // #endif
-                        var sc = new StaticCollided();
-                        sc.collided = true;
-                        sc.simObjPhysics = sop;
-                        staticCols.Add(sc);
-                    }
-                }
-            }
-
-            //also check if the collider hit was a structure?
-            else if(col.gameObject.tag == "Structure")
-            {                
-                if(!col.isTrigger)
-                {
-                    var sc = new StaticCollided();
-                    sc.collided = true;
-                    sc.gameObject = col.gameObject;
-                    staticCols.Add(sc);
-                }
-            }
-        }
-        return staticCols;
-    }
-
     private bool shouldHalt() {
-        return StaticCollisions().Count > 0;
-    }
-
-    public void OnTriggerEnter(Collider col)
-    {
-        activeColliders.Add(col);
-        // XXX this can be removed once we confirm activeColliders remains
-        // consistent and works as expected
-        if(col.GetComponentInParent<SimObjPhysics>())
-        {
-            //how does this handle nested sim objects? maybe it's fine?
-            SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
-            if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
-            {
-
-                if(!col.isTrigger)
-                {
-                    // #if UNITY_EDITOR
-                    // Debug.Log("Collided with static sim obj " + sop.name);
-                    // #endif
-                    staticCollided.collided = true;
-                    staticCollided.simObjPhysics = sop;
-                }
-            }
-        }
-
-        //also check if the collider hit was a structure?
-        else if(col.gameObject.tag == "Structure")
-        {                
-            if(!col.isTrigger)
-            {
-                staticCollided.collided = true;
-                staticCollided.gameObject = col.gameObject;
-            }
-        }
-    }
-
-    private IEnumerator moveTargetFixedUpdate(
-        PhysicsRemoteFPSAgentController controller,
-        Transform moveTransform,
-        System.Func<Transform, Vector3> getPosition,
-        System.Action<Transform, Vector3> setPosition,
-        System.Action<Transform, Vector3> addPosition,
-        Vector3 targetPosition,
-        float unitsPerSecond,
-        bool returnToStartPositionIfFailed = false,
-        bool localPosition = true
-    )
-    {
-        const double eps = 1e-3;
-
-        var originalPosition = getPosition(moveTransform);
-        var previousArmPosition = originalPosition;
-        Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
-
-        yield return new WaitForFixedUpdate();
-
-        float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        float startingDistance = currentDistance;
-
-        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
-
-            previousArmPosition = getPosition(moveTransform);
-
-            addPosition(moveTransform, targetDirection * unitsPerSecond * Time.fixedDeltaTime);
-
-            yield return new WaitForFixedUpdate();
-
-            currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        }
-
-        // DISABLING JUMP since it can lead to clipping
-        //if (currentDistance <= eps && !staticCollided.collided) {
-        //    // Maybe switch to this?
-        //    // addPosition(moveTransform, targetDirection * currentDistance);
-        //    setPosition(moveTransform, targetPosition);
-        //}
-
-        moveArmFinish(
-            controller,
-            moveTransform, 
-            setPosition, 
-            targetPosition, 
-            returnToStartPositionIfFailed ? originalPosition : previousArmPosition - (targetDirection * unitsPerSecond * Time.fixedDeltaTime), 
-            currentDistance > startingDistance
-        );
+        return collisionListener.ShouldHalt();
     }
 
     private void moveArmFinish(
@@ -492,7 +276,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        var staticCollisions = StaticCollisions();
+        var staticCollisions = collisionListener.StaticCollisions();
         if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
                 
@@ -500,13 +284,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 setPosition(moveTransform, positionReset);
 
                 //if we hit a sim object
-                if(sc.simObjPhysics && !sc.gameObject)
+                if(sc.isSimObj)
                 {
                     debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
 
                 //if we hit a structural object that isn't a sim object but still has static collision
-                if(!sc.simObjPhysics && sc.gameObject)
+                if(!sc.isSimObj)
                 {
                     debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
@@ -534,14 +318,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool returnToStartPositionIfFailed = false, 
         string whichSpace = "arm", 
         bool restrictTargetPosition = false,
-        bool disableRendering = false) {
+        bool disableRendering = false
+    ) {
 
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
-        activeColliders.Clear();
-        
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
+        collisionListener.Reset();
+
         var arm = this;
         
         // Move arm based on hand space or arm origin space
@@ -575,32 +357,55 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
 
-        if (disableRendering) {
-            moveTargetSimulatePhisics(
-                controller, 
-                fixedDeltaTime, 
-                armTarget, 
-                (t) => t.position,
-                (t, pos) => t.position = pos,
-                (t, pos) => t.position += pos,
+        var moveCall = ContinuousMovement
+            .move(
+                controller,
+                collisionListener,
+                armTarget,
                 targetWorldPos,
-                unitsPerSecond, 
-                returnToStartPositionIfFailed
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond,
+                returnToStartPositionIfFailed,
+                false
+        );
+
+        if (disableRendering) {
+            
+            ContinuousMovement.unrollSimulatePhysics(
+                moveCall,
+                fixedDeltaTime
             );
+
+
+            // moveTargetSimulatePhisics(
+            //     controller, 
+            //     fixedDeltaTime, 
+            //     armTarget, 
+            //     (t) => t.position,
+            //     (t, pos) => t.position = pos,
+            //     (t, pos) => t.position += pos,
+            //     targetWorldPos,
+            //     unitsPerSecond, 
+            //     returnToStartPositionIfFailed
+            // );
         }
         else {
             StartCoroutine(
-                moveTargetFixedUpdate(
-                    controller,
-                    armTarget,
-                    (t) => t.position,
-                    (t, pos) => t.position = pos,
-                    (t, pos) => t.position += pos,
-                    targetWorldPos,
-                    unitsPerSecond,
-                    returnToStartPositionIfFailed
-                    )
-                );
+                moveCall
+            );
+            // StartCoroutine(
+            //     moveTargetFixedUpdate(
+            //         controller,
+            //         Time.fixedDeltaTime,
+            //         armTarget,
+            //         (t) => t.position,
+            //         (t, pos) => t.position = pos,
+            //         (t, pos) => t.position += pos,
+            //         targetWorldPos,
+            //         unitsPerSecond,
+            //         returnToStartPositionIfFailed
+            //         )
+            //     );
         }
     }
 
@@ -613,7 +418,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool disableRendering = false) {
 
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
-        activeColliders.Clear();
+        collisionListener.Reset();
             
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
@@ -627,94 +432,86 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
 
         Vector3 target = new Vector3(0, targetY, 0);
-        if (disableRendering) {
-            moveTargetSimulatePhisics(
-                controller, 
-                fixedDeltaTime, 
+
+        var moveCall = ContinuousMovement
+            .move(
+                controller,
+                collisionListener,
                 this.transform,
-                (t) => t.localPosition,
-                (t, pos) => t.localPosition = pos,
-                (t, pos) => t.localPosition += pos,
                 target,
-                unitsPerSecond, 
-                returnToStartPositionIfFailed
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond,
+                returnToStartPositionIfFailed,
+                true
+        );
+
+        if (disableRendering) {
+            ContinuousMovement.unrollSimulatePhysics(
+                moveCall,
+                fixedDeltaTime
             );
+            // moveTargetSimulatePhisics(
+            //     controller, 
+            //     fixedDeltaTime, 
+            //     this.transform,
+            //     (t) => t.localPosition,
+            //     (t, pos) => t.localPosition = pos,
+            //     (t, pos) => t.localPosition += pos,
+            //     target,
+            //     unitsPerSecond, 
+            //     returnToStartPositionIfFailed
+            // );
         }
         else {
             StartCoroutine(
-                moveTargetFixedUpdate(
-                    controller, 
-                    this.transform, 
-                    (t) => t.localPosition,
-                    (t, pos) => t.localPosition = pos,
-                    (t, pos) => t.localPosition += pos,
-                    target, 
-                    unitsPerSecond, 
-                    returnToStartPositionIfFailed, 
-                    true
-                )
+                moveCall
             );
+            // StartCoroutine(
+            //     moveTargetFixedUpdate(
+            //         controller, 
+            //         Time.fixedDeltaTime,
+            //         this.transform, 
+            //         (t) => t.localPosition,
+            //         (t, pos) => t.localPosition = pos,
+            //         (t, pos) => t.localPosition += pos,
+            //         target, 
+            //         unitsPerSecond, 
+            //         returnToStartPositionIfFailed, 
+            //         true
+            //     )
+            // );
         }
     }
 
-    //axis and angle
-    public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
+    public void rotateHand(
+        PhysicsRemoteFPSAgentController controller,
+        Quaternion targetQuat,
+        float degreesPerSecond, 
+        bool disableRendering = false, 
+        float fixedDeltaTime = 0.02f, 
+        bool returnToStartPositionIfFailed = false
+    )
     {
+        collisionListener.Reset();
+        var rotate = ContinuousMovement.rotate(
+            controller,
+            collisionListener,
+            armTarget.transform,
+            armTarget.transform.rotation * targetQuat,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            degreesPerSecond,
+            returnToStartPositionIfFailed
+        );
 
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
-
-        float currentTime = 0.0f;
-
-        yield return new WaitForFixedUpdate();
-
-        var originalRot = armTarget.transform.rotation;
-
-        while (currentTime < time)
-        {
-            currentTime += Time.fixedDeltaTime;
-
-            //increment
-            var interp = currentTime/time;
-
-            if (staticCollided.collided != false) {
-            
-                //decide if we want to return to original rot or last known rot before collision
-                armTarget.transform.rotation = returnToStartPositionIfFailed ? originalRot : Quaternion.Slerp(armTarget.transform.rotation, targetQuat, (currentTime-Time.fixedDeltaTime)/time);
-
-                string debugMessage = "";
-
-                //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target rotation: '" + targetQuat.eulerAngles + "'.";
-
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target rotation: '" + targetQuat.eulerAngles + "'.";
-
-                staticCollided.collided = false;
-
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
-            //this currently shouldn't work for rotating an object because it will always be colliding with the held object....
-            // //if the option to stop moving when the sphere touches any sim object is wanted
-            // if(magnetSphereComp.isColliding && StopMotionOnContact)
-            // {
-            //     string debugMessage = "Some object was hit by the arm's hand";
-            //     controller.actionFinished(false, debugMessage);
-            //     yield break;
-            // }
-
-            armTarget.transform.rotation = Quaternion.Slerp(armTarget.transform.rotation, targetQuat, interp);
-            yield return new WaitForFixedUpdate();
-
+        if (disableRendering) {
+            ContinuousMovement.unrollSimulatePhysics(
+                rotate,
+                fixedDeltaTime
+            );
         }
-
-        controller.actionFinished(true);
-
+        else {
+            StartCoroutine(rotate);
+        }
     }
 
     public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID()
