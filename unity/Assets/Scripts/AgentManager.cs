@@ -221,6 +221,8 @@ public class AgentManager : MonoBehaviour
                 return;
             }
         }
+
+        Time.fixedDeltaTime = action.fixedDeltaTime;
         
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
