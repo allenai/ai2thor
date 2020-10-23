@@ -20,16 +20,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private Transform FirstJoint = null;
     [SerializeField]
-    private Transform SecondJoint = null;
-    [SerializeField]
-    private Transform ThirdJoint = null;
-    [SerializeField]
     private Transform FourthJoint = null;
 
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    private Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
+    public Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
     private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -55,8 +51,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
         this.originToShoulderLength = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>().height;
-
-        // staticCollided = new StaticCollided();
 
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
@@ -179,7 +173,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private bool shouldHalt() {
         return collisionListener.ShouldHalt();
     }
-    
+
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
         var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
