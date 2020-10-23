@@ -166,7 +166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         // Arm
-        private IK_Robot_Arm_Controller Arm;
+        protected IK_Robot_Arm_Controller Arm;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         //use as reference to the PhysicsSceneManager object

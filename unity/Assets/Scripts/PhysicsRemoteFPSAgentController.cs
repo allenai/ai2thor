@@ -1514,6 +1514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
                 bool handObjectCollides = isHandObjectColliding(true);
+                bool armCollides = false;
 
                 if (agentCollides) {
                     errorMessage = "Cannot teleport due to agent collision.";
@@ -1523,7 +1524,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log(errorMessage);
                 }
 
-                if (agentCollides || handObjectCollides) {
+                if(Arm != null)
+                {
+                    if(Arm.IsArmColliding())
+                    {
+                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
+                        armCollides = true;
+                        Debug.Log(errorMessage);
+                    }
+                }
+
+                if (agentCollides || handObjectCollides || armCollides) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
@@ -1532,7 +1543,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
