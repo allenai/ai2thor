@@ -43,7 +43,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    private Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
+    public Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
     [SerializeField]
     private CapsuleCollider[] ArmCapsuleColliders = null;

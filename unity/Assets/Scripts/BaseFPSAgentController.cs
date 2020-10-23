@@ -76,7 +76,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         public AgentState agentState = AgentState.Emit;
-
         public bool IsVisible
         {
 			get 
@@ -1901,9 +1900,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     foreach (Collider c in agent.GetComponentsInChildren<Collider>()) 
                     {
+                        //if this collider is not a child of the ItemInHand, toggle it
                         if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) 
                         {
-                            c.enabled = enableColliders;
+                            //if we are in arm mode, also do the ItemInHand collider re-enable check
+                            //for all objects that might be currently picked up by the arm
+                            if(Arm != null)
+                            {
+                                foreach(SimObjPhysics inArmHand in Arm.HeldObjects.Keys)
+                                {
+                                    //print("here");
+                                    if(!hasAncestor(c.transform.gameObject, inArmHand.transform.gameObject))
+                                    {
+                                        c.enabled = enableColliders;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
