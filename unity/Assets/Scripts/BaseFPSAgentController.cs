@@ -3113,7 +3113,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
 
-            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(this.m_Camera);
 
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
@@ -3144,6 +3143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     bool isVisible = false;
                     if (this.visibilityScheme == VisibilityScheme.Distance) {
+                        Plane[] planes = GeometryUtility.CalculateFrustumPlanes(this.m_Camera);
                         isVisible = isSimObjVisible(this.m_Camera, targetSOP, this.maxVisibleDistance, planes);
                     } else {
                         var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
