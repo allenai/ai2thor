@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 2433281640897831673}
   - component: {fileID: 4492823058425331622}
   - component: {fileID: 7217967414208391840}
+  - component: {fileID: 3005771958849600339}
   m_Layer: 10
   m_Name: FPSController
   m_TagString: Player
@@ -182,12 +183,11 @@ MonoBehaviour:
   DroneBasket: {fileID: 4893713080621194879}
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
+  agentState: 3
   agentManager: {fileID: 0}
-  excludeObjectIds: []
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
   m_CharacterController: {fileID: 0}
-  actionComplete: 0
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
@@ -205,6 +205,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 3e9ce1cb292fb6442984e83b779c6e72, type: 2}
   - {fileID: 2100000, guid: 7a57fbb1753fd1d40893e3d4e4c3a02b, type: 2}
   MyFaceMesh: {fileID: 256261900328249901}
+  AdvancePhysicsStepCount: 0
   TargetCircles:
   - {fileID: 5816710041462207104, guid: 9215b98f2bb6741b8bafa00989578d49, type: 3}
   - {fileID: 6545476784750854561, guid: aca5ccb301c25451183fa2ae1deceeb9, type: 3}
@@ -275,12 +276,11 @@ MonoBehaviour:
   DroneBasket: {fileID: 4893713080621194879}
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
+  agentState: 3
   agentManager: {fileID: 0}
-  excludeObjectIds: []
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
   m_CharacterController: {fileID: 0}
-  actionComplete: 0
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
@@ -351,12 +351,11 @@ MonoBehaviour:
   DroneBasket: {fileID: 4893713080621194879}
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
+  agentState: 3
   agentManager: {fileID: 0}
-  excludeObjectIds: []
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
   m_CharacterController: {fileID: 0}
-  actionComplete: 0
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
@@ -370,9 +369,21 @@ MonoBehaviour:
   DroneObjectLauncher: {fileID: 114390950229851692, guid: cdca5ee44bd7e45e9b82820e69a242f2,
     type: 3}
   caught_object: []
-  hasFixedUpdateHappened: 1
   dronePositionRandomNoiseSigma: 0
   fixupdateCnt: 0
+--- !u!114 &3005771958849600339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CascadeCollisionEventsToParent: 1
 --- !u!1 &100002
 GameObject:
   m_ObjectHideFlags: 0
@@ -4354,6 +4365,19 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!114 &5810261504294752219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6541060884949338445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CascadeCollisionEventsToParent: 1
 --- !u!1 &7970507070051039418
 GameObject:
   m_ObjectHideFlags: 0

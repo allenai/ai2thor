@@ -9073,21 +9073,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetMidLevelArmCollisions() {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
-                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
-                foreach(var sc in arm.StaticCollisions()){
-                    var element = new Dictionary<string, string>();
-                    if (sc.simObjPhysics != null) {
-                        element["objectType"] = "simObjPhysics";
-                        element["name"] = sc.simObjPhysics.objectID;
+                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
+                if (collisionListener != null) {
+                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                    foreach(var sc in collisionListener.StaticCollisions()){
+                        var element = new Dictionary<string, string>();
+                        if (sc.simObjPhysics != null) {
+                            element["objectType"] = "simObjPhysics";
+                            element["name"] = sc.simObjPhysics.objectID;
+                        }
+                        else
+                        {
+                            element["objectType"] = "gameObject";
+                            element["name"] = sc.gameObject.name;
+                        }
+                        collisions.Add(element);
                     }
-                    else
-                    {
-                        element["objectType"] = "gameObject";
-                        element["name"] = sc.gameObject.name;
-                    }
-                    collisions.Add(element);
+                    actionFinished(true, collisions);
                 }
-                actionFinished(true, collisions);
             }
             else
             {
@@ -9166,12 +9169,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
 
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
+
+                // TODO re-enable once collision listener listens for self-intersections with agent or arm
+                // Enabling this leads to inconcistencies because when holding an object and rotating to
+                // end up in a position where the object intersect the arm, self collisions are not checked so it 
+                // doesn't stop and ends self intersecting, and when trying to call this, it get's stuck forever 
+                // as arm.IsArmColliding() returns true
+                
+                // if(arm.IsArmColliding())
+                // {
+                //     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                //     actionFinished(false, errorMessage);
+                //     return;
+                // }
 
                 var target = new Quaternion();
                 //rotate around axis aliged x, y, z with magnitude based on vector3
@@ -9186,7 +9196,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnToStart));
+                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime, action.returnToStart);
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9286,6 +9296,101 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else 
             {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void RotateContinuous(float degrees, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            collisionListener.Reset();
+
+
+            // this.transform.Rotate()
+            var rotate = ContinuousMovement.rotate(
+                    this,
+                    this.GetComponentInParent<CollisionListener>(),
+                    this.transform,
+                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart
+            );
+
+            if(arm != null)
+            {
+                if(arm.IsArmColliding())
+                {
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment.Rotation of agent cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+            }
+
+            if (disableRendering) {
+                ContinuousMovement.unrollSimulatePhysics(
+                    rotate,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    rotate
+                );
+            }
+        }
+
+        // Signature does not work with debuginput field
+        // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        public void MoveContinuous(ServerAction action)
+        {
+            var direction = action.direction;
+            float speed = action.speed; 
+            bool returnToStart = action.returnToStart;
+            bool disableRendering = action.disableRendering;
+            float fixedDeltaTime = action.fixedDeltaTime;
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            var directionWorld = transform.TransformDirection(direction);
+            var targetPosition = transform.position + directionWorld;
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            collisionListener.Reset();
+
+            var move = ContinuousMovement.move(
+                    this,
+                    collisionListener,
+                    this.transform,
+                    targetPosition,
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart,
+                    false
+            );
+
+            if(arm != null)
+            {
+                if(arm.IsArmColliding())
+                {
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Movement of agent cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+            }
+
+            if (disableRendering) {
+                ContinuousMovement.unrollSimulatePhysics(
+                    move,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    move
+                );
             }
         }
         
