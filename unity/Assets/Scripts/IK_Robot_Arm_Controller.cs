@@ -98,91 +98,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
-    //overload
-   private void moveTargetSimulatePhisics(
-        PhysicsRemoteFPSAgentController controller,
-        float fixedDeltaTime,
-        Transform moveTransform,
-        System.Func<Transform, Vector3> getPosition,
-        System.Action<Transform, Vector3> setPosition,
-        System.Action<Transform, Vector3> addPosition,
-        Vector3 targetPosition,
-        float unitsPerSecond,
-        bool returnToStartPositionIfFailed = false,
-        bool localPosition = true
-    ) 
-    {
-
-        var enumarator = moveTargetFixedUpdate(
-            controller, 
-                fixedDeltaTime, 
-                armTarget, 
-                getPosition,
-                setPosition,
-                addPosition,
-                targetPosition,
-                unitsPerSecond, 
-                returnToStartPositionIfFailed,
-                localPosition
-        );
-
-        while (enumarator.MoveNext()) {
-            Physics.Simulate(fixedDeltaTime);
-        }
-    }
-
-     private IEnumerator moveTargetFixedUpdate(
-        PhysicsRemoteFPSAgentController controller,
-        float fixedDeltaTime,
-        Transform moveTransform,
-        System.Func<Transform, Vector3> getPosition,
-        System.Action<Transform, Vector3> setPosition,
-        System.Action<Transform, Vector3> addPosition,
-        Vector3 targetPosition,
-        float unitsPerSecond,
-        bool returnToStartPositionIfFailed = false,
-        bool localPosition = true
-    )
-    {
-        const double eps = 1e-3;
-
-        var originalPosition = getPosition(moveTransform);
-        var previousArmPosition = originalPosition;
-        Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
-
-        yield return new WaitForFixedUpdate();
-
-        float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        float startingDistance = currentDistance;
-
-        while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
-
-            previousArmPosition = getPosition(moveTransform);
-
-            addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
-
-            yield return new WaitForFixedUpdate();
-
-            currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        }
-
-        // DISABLING JUMP since it can lead to clipping
-        //if (currentDistance <= eps && !staticCollided.collided) {
-        //    // Maybe switch to this?
-        //    // addPosition(moveTransform, targetDirection * currentDistance);
-        //    setPosition(moveTransform, targetPosition);
-        //}
-
-        moveArmFinish(
-            controller,
-            moveTransform, 
-            setPosition, 
-            targetPosition, 
-            returnToStartPositionIfFailed ? originalPosition : previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime), 
-            currentDistance > startingDistance
-        );
-    }
-
     public bool IsArmColliding()
     {
         #if UNITY_EDITOR
@@ -375,37 +290,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 moveCall,
                 fixedDeltaTime
             );
-
-
-            // moveTargetSimulatePhisics(
-            //     controller, 
-            //     fixedDeltaTime, 
-            //     armTarget, 
-            //     (t) => t.position,
-            //     (t, pos) => t.position = pos,
-            //     (t, pos) => t.position += pos,
-            //     targetWorldPos,
-            //     unitsPerSecond, 
-            //     returnToStartPositionIfFailed
-            // );
         }
         else {
             StartCoroutine(
                 moveCall
             );
-            // StartCoroutine(
-            //     moveTargetFixedUpdate(
-            //         controller,
-            //         Time.fixedDeltaTime,
-            //         armTarget,
-            //         (t) => t.position,
-            //         (t, pos) => t.position = pos,
-            //         (t, pos) => t.position += pos,
-            //         targetWorldPos,
-            //         unitsPerSecond,
-            //         returnToStartPositionIfFailed
-            //         )
-            //     );
         }
     }
 
@@ -450,36 +339,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 moveCall,
                 fixedDeltaTime
             );
-            // moveTargetSimulatePhisics(
-            //     controller, 
-            //     fixedDeltaTime, 
-            //     this.transform,
-            //     (t) => t.localPosition,
-            //     (t, pos) => t.localPosition = pos,
-            //     (t, pos) => t.localPosition += pos,
-            //     target,
-            //     unitsPerSecond, 
-            //     returnToStartPositionIfFailed
-            // );
         }
         else {
             StartCoroutine(
                 moveCall
             );
-            // StartCoroutine(
-            //     moveTargetFixedUpdate(
-            //         controller, 
-            //         Time.fixedDeltaTime,
-            //         this.transform, 
-            //         (t) => t.localPosition,
-            //         (t, pos) => t.localPosition = pos,
-            //         (t, pos) => t.localPosition += pos,
-            //         target, 
-            //         unitsPerSecond, 
-            //         returnToStartPositionIfFailed, 
-            //         true
-            //     )
-            // );
         }
     }
 
