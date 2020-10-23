@@ -50,7 +50,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
-        this.originToShoulderLength = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>().height;
+        var shoulderCapsule = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>();
+        this.originToShoulderLength = (shoulderCapsule.height + shoulderCapsule.radius)  - (shoulderCapsule.center.z - shoulderCapsule.height/2.0f);
 
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
@@ -229,6 +230,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Debug.Log("pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
         #endif
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
+            var k = this.transform.position + this.transform.TransformPoint(new Vector3(0, 0, originToShoulderLength));
             targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
              Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
