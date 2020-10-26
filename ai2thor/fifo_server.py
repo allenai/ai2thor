@@ -81,9 +81,8 @@ class FifoServer(ai2thor.server.Server):
         files = defaultdict(list)
         while True:
             header = self.server_pipe.read(self.header_size) # message type + length
-            # XXX
-            # check if len == 0 to disconnect
-            # check if pid is dead
+            if len(header) == 0:
+                raise Exception("Unity process has exited - check Player.log for errors")
             
             if header[0] == FieldType.END_OF_MESSAGE.value:
                 #print("GOT EOM")
