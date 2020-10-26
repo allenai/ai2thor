@@ -223,6 +223,9 @@ public class AgentManager : MonoBehaviour
         }
 
         Time.fixedDeltaTime = action.fixedDeltaTime;
+        if (action.targetFrameRate > 0) {
+            Application.targetFrameRate = action.targetFrameRate;
+        }
         
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
@@ -1350,6 +1353,7 @@ public class ServerAction
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public float fixedDeltaTime = 0.02f;
+	public int targetFrameRate;
     public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
