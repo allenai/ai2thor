@@ -1526,12 +1526,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if(Arm != null)
                 {
+                    /*
                     if(Arm.IsArmColliding())
                     {
                         errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
                         armCollides = true;
                         Debug.Log(errorMessage);
                     }
+                    */
                 }
 
                 if (agentCollides || handObjectCollides || armCollides) {
@@ -9116,12 +9118,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
 
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
                 
                 arm.moveArmTarget(
                     this,
@@ -9154,12 +9158,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 arm.moveArmHeight(
@@ -9220,12 +9226,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 actionFinished(arm.PickupObject());
                 return;
@@ -9242,12 +9250,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 arm.DropObject();
                 //todo- only return after object(s) droped have finished moving
@@ -9333,12 +9343,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(arm != null)
             {
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment.Rotation of agent cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
             }
 
             if (disableRendering) {
@@ -9385,12 +9397,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(arm != null)
             {
+                /*
                 if(arm.IsArmColliding())
                 {
                     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Movement of agent cannot be done while stuck.";
                     actionFinished(false, errorMessage);
                     return;
                 }
+                */
             }
 
             if (disableRendering) {

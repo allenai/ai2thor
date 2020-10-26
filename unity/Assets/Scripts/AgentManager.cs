@@ -1261,6 +1261,7 @@ public class ArmMetadata {
 	public Vector3 HandSphereCenter;
 	//current radius of the hand sphere
 	public float HandSphereRadius;
+    public bool isColliding;
 }
 
 [Serializable]
