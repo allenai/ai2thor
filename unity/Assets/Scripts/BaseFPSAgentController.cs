@@ -30,7 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             protected set;
         }
         [SerializeField] protected bool IsHandDefault = true;
-        [SerializeField] protected GameObject ItemInHand = null; //current object in inventory
+        [SerializeField] public GameObject ItemInHand = null; //current object in inventory
         [SerializeField] public GameObject AgentHand = null;
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
@@ -298,7 +298,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected virtual void resumePhysics() {}
 
-        
+
 
         public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
