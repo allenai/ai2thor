@@ -3339,6 +3339,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (rotation.HasValue) {
                 target.transform.rotation = Quaternion.Euler(rotation.Value);
             }
+            Vector3 originalPos = target.transform.position;
+            target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
@@ -3395,13 +3397,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
             }
-
+            
+            target.transform.position = originalPos;
             target.transform.rotation = originalRotation;
             errorMessage = "spawn area not clear, can't place object at that point";
             actionFinished(false);
         }
-
-
 
         // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
         public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
@@ -6809,7 +6810,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ChangeOpenSpeed(ServerAction action) {
             foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
                 coo.animationTime = action.x;
-            }
+        }
             actionFinished(true);
         }
 

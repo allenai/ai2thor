@@ -128,6 +128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         public void Execute(string command)
         {
+
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
                 (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
