@@ -14,6 +14,7 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
+using Performance;
 
 public class AgentManager : MonoBehaviour
 {
@@ -48,6 +49,7 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
+    private FPSCounter fpsCounter;
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -111,6 +113,8 @@ public class AgentManager : MonoBehaviour
 	{
         //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
+
+        fpsCounter = this.GetComponent<FPSCounter>();
 
         //auto set agentMode to default for the web demo
         #if UNITY_WEBGL
@@ -223,6 +227,10 @@ public class AgentManager : MonoBehaviour
         }
 
         Time.fixedDeltaTime = action.fixedDeltaTime;
+
+        if (fpsCounter != null) {
+            fpsCounter.enabled = action.measureFPSAverage;
+        }
         
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
@@ -701,6 +709,8 @@ public class AgentManager : MonoBehaviour
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
 
+        multiMeta.frameRate = this.fpsCounter != null && this.fpsCounter.isActiveAndEnabled ? this.fpsCounter.Framerate : (int)( 1f / Time.unscaledDeltaTime);
+
 		RenderTexture currentTexture = null;
 
         if (shouldRender) {
@@ -1031,6 +1041,7 @@ public class MultiAgentMetadata {
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public int activeAgentId;
 	public int sequenceId;
+    public int frameRate;
 }
 
 [Serializable]
@@ -1350,6 +1361,7 @@ public class ServerAction
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public float fixedDeltaTime = 0.02f;
+    public bool measureFPSAverage = false;
     public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;

@@ -110,6 +110,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
+         public bool ReadyForDebugCommand {
+            get {
+                return this.agentState == AgentState.Emit || this.agentState == AgentState.ActionComplete;
+            }
+
+        }
+
 		protected float maxDownwardLookAngle = 60f;
 		protected float maxUpwardLookAngle = 30f;
 		//allow agent to push sim objects that can move, for physics
@@ -284,7 +291,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // TODO: Check if the reflection method call was successfull add that to the sent event data
                 this.jsInterface.SendAction(currentServerAction);
             }
-
+            
             lastActionSuccess = success;
 			this.agentState = newState;
 			this.actionReturn = actionReturn;
@@ -3336,6 +3343,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             camMan.SpawnCrack(action.randomSeed);
             actionFinished(true);
+        }
+
+        //in case you want to change the fixed delta time
+        public void ChangeFixedDeltaTime(ServerAction action) 
+        {
+            if (action.fixedDeltaTime > 0) 
+            {
+                Time.fixedDeltaTime = action.fixedDeltaTime;
+                actionFinished(true);
+            } 
+            
+            else 
+            {
+                errorMessage = "FixedDeltaTime must be > 0";
+                actionFinished(false);
+            }
         }
 
         public void OnTriggerStay(Collider other)

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 114699917896503758}
   - component: {fileID: 1277749598}
   - component: {fileID: 581457429757738957}
+  - component: {fileID: 7362429332428480577}
   m_Layer: 0
   m_Name: PhysicsSceneManager
   m_TagString: Untagged
@@ -76,7 +77,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agents: []
   actionDuration: 3
-  AdvancePhysicsStepCount: 0
   sceneBounds:
     m_Center: {x: Infinity, y: Infinity, z: Infinity}
     m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
@@ -851,6 +851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7a62ac128565b847a8f1bfbe60fb4e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  replacementObjectsToSpawn: []
   receptaclesToSpawn:
   - {fileID: 6910678159448101360, guid: f82ee8ea74ce0e14eb2addbb0bda3ac9, type: 3}
   - {fileID: 3815085148711982806, guid: ea1db902ba5e0554b8b3cd58fbd6203b, type: 3}
@@ -895,3 +896,28 @@ MonoBehaviour:
   - {fileID: 2100000, guid: b7babe292cedd6644bb0e057878a58c4, type: 2}
   - {fileID: 2100000, guid: 8d07f44645275464fa8e0a0a82043dfb, type: 2}
   - {fileID: 2100000, guid: a426c8270276e6f46b8f83b927bfe225, type: 2}
+--- !u!114 &7362429332428480577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1094466206569480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29fe9657fd6504c10bb971baa493a2be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GroupSampling: 1
+  SampleSize: 64
+  TargetText: {fileID: 0}
+  UpdateTextEvery: 6
+  Smoothed: 1
+  NumberBufferSize: 1000
+  UseSystemTick: 0
+  UseColors: 1
+  Good: {r: 0, g: 1, b: 0, a: 1}
+  Okay: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  Bad: {r: 1, g: 0, b: 0, a: 1}
+  OkayBelow: 60
+  BadBelow: 30

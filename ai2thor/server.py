@@ -24,13 +24,14 @@ class NumpyAwareEncoder(json.JSONEncoder):
 
 class MultiAgentEvent(object):
 
-    def __init__(self, active_agent_id, events):
+    def __init__(self, active_agent_id, events, frame_rate=0):
         self._active_event = events[active_agent_id]
         self.metadata = self._active_event.metadata
         self.screen_width = self._active_event.screen_width
         self.screen_height = self._active_event.screen_height
         self.events = events
         self.third_party_camera_frames = []
+        self.frame_rate = frame_rate
         # XXX add methods for depth,sem_seg
 
     @property
@@ -81,8 +82,9 @@ class Event(object):
     as the metadata sent about each object
     """
 
-    def __init__(self, metadata):
+    def __init__(self, metadata, frame_rate=0):
         self.metadata = metadata
+        self.frame_rate = frame_rate
         self.screen_width = metadata['screenWidth']
         self.screen_height = metadata['screenHeight']
 
@@ -313,7 +315,7 @@ class Server(object):
         events = []
 
         for i, a in enumerate(metadata['agents']):
-            e = Event(a)
+            e = Event(a, metadata['frameRate'])
             image_mapping = dict(
                 image=e.add_image,
                 image_depth=lambda x: e.add_image_depth(
@@ -356,7 +358,11 @@ class Server(object):
             events.append(e)
 
         if len(events) > 1:
-            self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
+            self.last_event = event = MultiAgentEvent(
+                metadata['activeAgentId'],
+                events,
+                metadata['frameRate']
+            )
         else:
             self.last_event = event = events[0]
 

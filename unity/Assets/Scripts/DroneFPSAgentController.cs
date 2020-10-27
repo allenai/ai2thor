@@ -508,22 +508,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
-        //in case you want to change the fixed delta time
-        public void ChangeFixedDeltaTime(ServerAction action) 
-        {
-            if (action.fixedDeltaTime > 0) 
-            {
-                Time.fixedDeltaTime = action.fixedDeltaTime;
-                actionFinished(true);
-            } 
-            
-            else 
-            {
-                errorMessage = "FixedDeltaTime must be >0";
-                actionFinished(false);
-            }
-        }
-
         public void ChangeDronePositionRandomNoiseSigma(ServerAction action) 
         {
             dronePositionRandomNoiseSigma = action.dronePositionRandomNoiseSigma;
