@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,10 +27,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool consistentColors = false;
         public string newSceneFile = "";
 
+        private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
+        private GameObject objectParent = null;
+
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
         void Start() 
         {
+            this.objectParent = GameObject.Find("Objects");
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             inputField = InputFieldObj.GetComponent<InputField>();
@@ -365,7 +370,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.action = "LieDown";
                             PhysicsController.ProcessControlCommand(action);
                         }
+
+                        if(Input.GetKeyDown(KeyCode.Slash))
+                        {
+                            foreach (Transform child in this.objectParent.transform) {
+                                this.positionByStep[child.name] = new string[100];
+                            }
+                            action.action = "Pass";
+                            StartCoroutine(PassThenRecordPosition(action, 0));
+                        }
                     }
+            }
+        }
+
+        IEnumerator PassThenRecordPosition(ServerAction action, int i) {
+            PhysicsController.ProcessControlCommand(action);
+            yield return 0;
+            foreach (Transform child in this.objectParent.transform) {
+                if (child.gameObject.activeSelf) {
+                    this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3);
+                }
+            }
+            if (i < 99) {
+                StartCoroutine(PassThenRecordPosition(action, i + 1));
+            }
+            else {
+                foreach (Transform child in this.objectParent.transform) {
+                    Debug.Log("POSITION BY STEP " + child.name + "\n" + String.Join("\n", this.positionByStep[child.name]));
+                }
             }
         }
     }
