@@ -174,6 +174,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
             return gameObject != null && gameObject.GetComponent<StructureObject>() != null;
+        }).Select(objectMetadata => {
+            // Performance optimization: Just say that all of the structural objects are visible all of the time so we
+            // don't have to add a lot of visibility points to each of them that will cause excessive raycasting.
+            objectMetadata.visible = true;
+            return objectMetadata;
         }).ToArray();
         metadata.objects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
