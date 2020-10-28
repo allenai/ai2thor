@@ -35,8 +35,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private BoxCollider[] ArmBoxColliders;
 
-    // This value is wrong 0.6325f for the origin to shoulder, it should be the height of the z-oriented capsule, 0.34566f and we should get it dinamically
-    private float originToShoulderLength;
+    private float originToShoulderLength = 0f;
 
     private const float extendedArmLenth = 0.6325f;
 
@@ -51,8 +50,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
         var shoulderCapsule = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>();
-        this.originToShoulderLength = (shoulderCapsule.height + shoulderCapsule.radius)  - (shoulderCapsule.center.z - shoulderCapsule.height/2.0f);
-
+        //calculating based on distance from origin of arm to the 2nd joint, which will always be constant
+        this.originToShoulderLength = Vector3.Distance(this.transform.FirstChildOrDefault(x => x.name == "robot_arm_2_jnt").position, this.transform.position);
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
         //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
@@ -178,9 +177,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
         var targetShoulderSpace = this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength);
-        return targetShoulderSpace.z >= 0.0f && 
-        // TODO revert to sqrMagnitude, easier to debug with magnitude
-               targetShoulderSpace.magnitude <= extendedArmLenth;
+        //check if not behind, check if not hyper extended
+        return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLenth;
     }
 
     public void moveArmTarget(
@@ -229,10 +227,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         #if UNITY_EDITOR
         Debug.Log("pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
         #endif
+        
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             var k = this.transform.position + this.transform.TransformPoint(new Vector3(0, 0, originToShoulderLength));
             targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
-             Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
             controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
             return;
         }

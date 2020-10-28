@@ -295,6 +295,7 @@ class Server(object):
         self.sequence_id = 0
         self.started = False
         self.client_token = None
+        self.unity_proc = None
 
         if add_depth_noise:
             assert width == height,\
