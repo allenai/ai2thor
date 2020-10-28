@@ -553,21 +553,21 @@ class Controller(object):
 
     def prune_releases(self):
         current_exec_path = self.executable_path()
-        for d in os.listdir(self.releases_dir()):
-            release = os.path.join(self.releases_dir(), d)
-
+        rdir = self.releases_dir()
+        # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
+        all_dirs = filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir)))
+        sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
-
-            if os.path.isdir(release):
-                try:
-                    lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
-                    fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    shutil.rmtree(release)
-                    fcntl.lockf(lf, fcntl.LOCK_UN)
-                    os.close(lf)
-                except Exception:
-                    pass
+            try:
+                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                shutil.rmtree(release)
+                fcntl.lockf(lf, fcntl.LOCK_UN)
+                os.close(lf)
+            except Exception:
+                pass
 
     def next_interact_command(self):
         current_buffer = ''
