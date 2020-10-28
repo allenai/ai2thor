@@ -540,38 +540,34 @@ public class InstantiatePrefabTest : MonoBehaviour
     //All adjustments to the Bounding Box must be done on the collider only using the
     //"Edit Collider" button if you need to change the size
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
-    public bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
-    {
-		int layermask;
+    public Collider ColliderHitByObjectInSpawnArea(
+        SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand
+    ) {
+        int layermask;
 
 		//first do a check to see if the area is clear
 
         //if spawning in the agent's hand, ignore collisions with the Agent
-		if(spawningInHand)
-		{
+		if (spawningInHand) {
 			layermask = 1 << 8;
-		}
-
-        //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
-		else
-		{
+		} else {
+            //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
 			layermask = (1 << 8) | (1 << 10);
 		}
 
         //get list of all active colliders of sim object, then toggle them off for now
         //disable all colliders of the object being placed
         List<Collider> colsToDisable = new List<Collider>();
-        foreach(Collider g in simObj.MyColliders)
-        {
+        foreach(Collider g in simObj.MyColliders) {
             //only track this collider if it's enabled by default
             //some objects, like houseplants, might have colliders in their simObj.MyColliders that are disabled
-            if(g.enabled)
-            colsToDisable.Add(g);
+            if(g.enabled) {
+                colsToDisable.Add(g);
+            }
         }
 
         //disable collision before moving to check the spawn area
-        foreach(Collider c in colsToDisable)
-        {
+        foreach (Collider c in colsToDisable) {
             c.enabled = false;
         }
 
@@ -588,24 +584,24 @@ public class InstantiatePrefabTest : MonoBehaviour
         BoxCollider bbcol = bb.GetComponent<BoxCollider>();
         Vector3 bbCenter = bbcol.center;
         Vector3 bbCenterTransformPoint = bb.transform.TransformPoint(bbCenter);
-        //keep track of all 8 corners of the OverlapBox
+        // keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
-        //bottom forward right
+        // bottom forward right
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
-        //bottom forward left
+        // bottom forward left
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
-        //bottom back left
+        // bottom back left
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
-        //bottom back right
+        // bottom back right
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
 
-        //top forward right
+        // top forward right
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
-        //top forward left
+        // top forward left
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
-        //top back left
+        // top back left
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
-        //top back right
+        // top back right
         corners.Add(bb.transform.TransformPoint(bbCenter+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
 
         SpawnCorners = corners;
@@ -624,36 +620,40 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.rotation = originalRot;
 
         //re-enable the collision after returning in place
-        foreach(Collider c in colsToDisable)
-        {
+        foreach(Collider c in colsToDisable) {
             c.enabled = true;
         }
 
         //spawn overlap box
-        Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
-                                                     bbcol.size / 2.0f, rotation, 
-                                                     layermask, QueryTriggerInteraction.Collide);
+        Collider[] hitColliders = Physics.OverlapBox(
+            bbCenterTransformPoint,
+            bbcol.size / 2.0f,
+            rotation, 
+            layermask,
+            QueryTriggerInteraction.Collide
+        );
 
-        int colliderCount = 0;
-        //if a collider was hit, then the space is not clear to spawn
+        // if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
             //filter out any AgentTriggerBoxes because those should be ignored now
             foreach(Collider c in hitColliders)
             {
-                if(c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>())
-                continue;
-
-                else
-                colliderCount++;
+                if(c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+                    continue;
+                } else {
+                    return c;
+                }
             }
-
-            if(colliderCount > 0)
-            return false;
 		}
 
         //nothing was hit, we are good!
-		return true;
+		return null;
+    }
+    public bool CheckSpawnArea(
+        SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand
+    ) {
+		return null == ColliderHitByObjectInSpawnArea(simObj, position, rotation, spawningInHand);
 	}
 
 #if UNITY_EDITOR

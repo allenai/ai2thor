@@ -687,6 +687,175 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
+        public void TeleportObject(
+            string objectId,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            } 
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            bool teleportSuccess = TeleportObject(
+                sop: sop,
+                position: position,
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                includeErrorMessage: true
+            );
+
+            if (teleportSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public void TeleportObject(
+            string objectId,
+            Vector3[] positions,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            } 
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool teleportSuccess = false;
+            foreach (Vector3 position in positions) {
+                teleportSuccess = TeleportObject(
+                    sop: sop,
+                    position: position,
+                    rotation: rotation,
+                    forceAction: forceAction,
+                    forceKinematic: forceKinematic,
+                    allowTeleportOutOfHand: allowTeleportOutOfHand,
+                    includeErrorMessage: true
+                );
+                if (teleportSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+            
+            if (teleportSuccess) {
+                // TODO: Do we want to wait for objects to stop moving when teleported?
+                // if (!forceKinematic) {
+                //     StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                //     return;
+                // }
+                actionFinished(true);
+                return;
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool TeleportObject(
+            SimObjPhysics sop,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction,
+            bool forceKinematic,
+            bool allowTeleportOutOfHand,
+            bool includeErrorMessage = false
+        ) {
+            bool sopInHand = ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>();
+            if (sopInHand && !allowTeleportOutOfHand) {
+                if (includeErrorMessage) {
+                    errorMessage = "Cannot teleport object in hand.";
+                }
+                return false;
+            }
+            Vector3 oldPosition = sop.transform.position;
+            Quaternion oldRotation = sop.transform.rotation;
+
+            sop.transform.position = position;
+            sop.transform.rotation = Quaternion.Euler(rotation);
+            if (forceKinematic) {
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            if (!forceAction) {
+                Collider colliderHitIfTeleported = UtilityFunctions.firstColliderObjectCollidingWith(sop.gameObject);
+                if (colliderHitIfTeleported != null) {
+                    sop.transform.position = oldPosition;
+                    sop.transform.rotation = oldRotation;
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfTeleported.gameObject);
+                    if (includeErrorMessage) {
+                        errorMessage = $"{sop.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after teleport.";
+                    }
+                    return false;
+                }
+            }
+
+            if (sopInHand) {
+                if (!forceKinematic) {
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) {
+                    ItemInHand.transform.parent = topObject.transform;
+                } else {
+                    ItemInHand.transform.parent = null;
+                }
+
+                DropContainedObjects(
+                    target: sop,
+                    reparentContainedObjects: true,
+                    forceKinematic: forceKinematic
+                );
+                sop.isInAgentHand = false;
+                ItemInHand = null;
+            }
+
+            return true;
+        }
+
+        public void TeleportObject(
+            string objectId,
+            float x,
+            float y,
+            float z,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false
+        ) {
+            TeleportObject(
+                objectId: objectId,
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand
+            );
+        }
+
+        /* For some reason this does not work with the new action dispatcher and the above needed to be added.
         public void TeleportObject(ServerAction action) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find object with id " + action.objectId;
@@ -721,6 +890,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             }
         }
+        */
 
         public void ChangeAgentColor(ServerAction action) {
             agentManager.UpdateAgentColor(this, new Color(action.x, action.y, action.z, 1.0f));
@@ -3328,11 +3498,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // find the object in the scene, disregard visibility
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            //make sure point we are moving the object to is valid
-            if(!agentManager.sceneBounds.Contains(position)) {
-                errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+            bool placeObjectSuccess = PlaceObjectAtPoint(
+                target: target,
+                position: position,
+                rotation: rotation,
+                forceKinematic: forceKinematic,
+                includeErrorMessage: true
+            );
+
+            if (placeObjectSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
                 actionFinished(false);
                 return;
+            }
+        }
+
+        public bool PlaceObjectAtPoint(
+            SimObjPhysics target, 
+            Vector3 position, 
+            Vector3? rotation, 
+            bool forceKinematic,
+            bool includeErrorMessage = false
+        ) {
+            //make sure point we are moving the object to is valid
+            if(!agentManager.sceneBounds.Contains(position)) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+                }
+                return false;
             }
 
             Quaternion originalRotation = target.transform.rotation;
@@ -3356,9 +3556,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
 
-            // Check spawn area here
-            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
+            // Check spawn area here            
+            target.transform.position = finalPos;
+            Collider colliderHitIfSpawned = UtilityFunctions.firstColliderObjectCollidingWith(
+                target.gameObject
+            );
+            
+            if (colliderHitIfSpawned == null) {
                 target.transform.position = finalPos;
 
                 // Additional stuff we need to do if placing item that is currently in hand
@@ -3389,6 +3593,53 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ItemInHand = null;
                     }
                 }
+                return true;
+            }
+            
+            target.transform.position = originalPos;
+            target.transform.rotation = originalRotation;
+            if (includeErrorMessage) {
+                SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfSpawned.gameObject);
+                errorMessage = (
+                    $"Spawn area not clear ({(hitSop != null ? hitSop.ObjectID : colliderHitIfSpawned.name)})" 
+                    + " is in the way), can't place object at that point"
+                );
+            }
+            return false;
+        }
+
+        public void PlaceObjectAtPoint(
+            string objectId,
+            Vector3[] positions,
+            Vector3? rotation = null,
+            bool forceKinematic = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
+                actionFinished(false);
+                return;
+            }
+
+            // find the object in the scene, disregard visibility
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool placeObjectSuccess = false;
+            
+            foreach (Vector3 position in positions) {
+                placeObjectSuccess = PlaceObjectAtPoint(
+                    target: target,
+                    position: position,
+                    rotation: rotation,
+                    forceKinematic: forceKinematic,
+                    includeErrorMessage: true
+                );
+                if (placeObjectSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+
+            if (placeObjectSuccess) {
                 if (!forceKinematic) {
                     StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                     return;
@@ -3396,12 +3647,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
                     return;
                 }
+            } else {
+                actionFinished(false);
+                return;
             }
-            
-            target.transform.position = originalPos;
-            target.transform.rotation = originalRotation;
-            errorMessage = "spawn area not clear, can't place object at that point";
-            actionFinished(false);
         }
 
         // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
