@@ -2,25 +2,8 @@ import os
 import sys
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
-import ai2thor.controller
-import ai2thor.fifo_server
-#ai2thor.controller.COMMIT_ID = 'b8013beff94c7f5505df0ddae4d6c7bcd2fd0cb5'
-
-import time
-import random
-
-c = ai2thor.controller.Controller(
-    scene='FloorPlan1_physics', gridSize=0.25,
-    width=900, height=900, agentMode='arm', fieldOfView=100, agentControllerType='mid-level', targetFrameRate=30, fixedDeltaTime=0.02)
-
-print(c.build_url())
-event = c.step(action='TeleportFull', x=-1, y=0.9009995460510254, z=1, rotation=dict(x=0, y=180, z=0), horizon=0)
-c.step('PausePhysicsAutoSim')
-event = c.step(action='MoveMidLevelArm', disableRendering=False, position=dict(x=0.01, y=0, z=0.01), speed = 2, returnToStart = False, handCameraSpace = False)
-event = c.step(action='MoveMidLevelArmHeight', disableRendering=False, y=0.9, speed = 2, returnToStart = False)
-
-pose = {'x': -1.0, 'y': 0.9009995460510254, 'z': 1, 'rotation': 135, 'horizon': 0}
-event = c.step(action='TeleportFull', x=pose['x'], y=pose['y'], z=pose['z'], rotation=dict(x=0.0, y=pose['rotation'], z=0.0), horizon=pose['horizon'])
+from arm_test.base import standard_pose, execute_actions
+import arm_test.base
 
 
 
@@ -532,19 +515,7 @@ actions = [{'action': 'MoveMidLevelArm',
   'returnToStart': False,
   'handCameraSpace': False},
  {}]
-counter = 0
-for a in actions:
-    if a == {} or a=={'action':''}:
-        continue
-    print("counter %s" % counter)
 
-    if(c.last_event.metadata['arm']['isColliding']):
-        print("done")
-        #break
-
-    a['disableRendering'] = True
-    a['returnToStart'] = True
-    c.step(a)
-    time.sleep(0.1)
-    counter +=1
+standard_pose()
+execute_actions(actions, disableRendering=True, returnToStart=True)
 
