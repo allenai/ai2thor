@@ -18,8 +18,22 @@ public class Manipulator_Clamp : MonoBehaviour
         currentCoordinates[0] = transform.position;
         currentCoordinates[1] = transform.eulerAngles;
         prevCoordinates = currentCoordinates;
-        rootJoint = transform.parent.parent.parent.GetChild(0);
-        shoulderJoint = transform.parent.parent.parent.GetChild(0).GetChild(1);
+
+        foreach (Transform transform in transform.parent.parent.parent) {
+            if (transform.name == "robot_arm_1_jnt")
+            {
+                rootJoint = transform;
+            }
+        }
+
+        foreach (Transform transform in rootJoint)
+        {
+            if (transform.name == "robot_arm_2_jnt")
+            {
+                shoulderJoint = transform;
+            }
+        }
+        
     }
     
     void Update()
