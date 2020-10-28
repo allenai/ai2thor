@@ -22,10 +22,10 @@ controller = ai2thor.controller.Controller(
 def upload_video(data):
     s3 = boto3.resource("s3")
     acl = 'public-read'
-    key = os.path.join(__file__.split('/')[-1].split('.')[0], str(uuid.uuid4()) + ".webm")
+    key = os.path.join(sys.argv[0].split('/')[-1].split('.')[0], str(uuid.uuid4()) + ".webm")
     print("Video is available at: https://ai2-thor-exproom-arm-test.s3-us-west-2.amazonaws.com/%s" % key)
     metadata = dict(
-            test=__file__.split('/')[-1].split('.')[0],
+            test=sys.argv[0].split('/')[-1].split('.')[0],
             build_url=controller.build_url()[0],
             user=getpass.getuser())
     for k,v in controller.initialization_parameters.items():
