@@ -51,9 +51,10 @@ class FifoServer(ai2thor.server.Server):
         self.form_field_map = {
             FieldType.RGB_IMAGE:'image',
             FieldType.DEPTH_IMAGE:'image_depth',
+            FieldType.CLASSES_IMAGE :'image_classes',
             FieldType.IDS_IMAGE:'image_ids',
             FieldType.NORMALS_IMAGE:'image_normals',
-            FieldType.FLOWS_IMAGE:'image_flows',
+            FieldType.FLOWS_IMAGE:'image_flow',
             FieldType.THIRD_PARTY_IMAGE:"image-thirdParty-camera"
         }
 
