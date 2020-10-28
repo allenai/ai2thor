@@ -119,6 +119,7 @@ namespace FifoServer {
         ClassesImage = 0x08,
         IDsImage = 0x09,
         ThirdPartyCameraImage = 0x0a,
+        MetadataPatch = 0x0b,
         EndOfMessage = 0xff
     }
 

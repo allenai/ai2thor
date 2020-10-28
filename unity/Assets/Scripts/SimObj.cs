@@ -655,10 +655,7 @@ public interface SimpleSimObj {
 	SimObjType ObjType { get; }
 	string ObjectID {get; set; }
 	List<string> ReceptacleObjectIds {get;}
-	bool IsReceptacle {get; }
 	bool IsOpen {get; }
-	bool IsPickupable {get; }
-	bool IsOpenable {get; }
 	bool Open(); 
 	bool Close();
 	GameObject gameObject {get; }

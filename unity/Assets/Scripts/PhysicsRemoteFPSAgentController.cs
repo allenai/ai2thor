@@ -24,6 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
+        public int AdvancePhysicsStepCount;
 
         public GameObject[] TargetCircles = null;
 
@@ -149,7 +150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.actionComplete) {
+            if (this.agentState == AgentState.ActionComplete) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -1513,6 +1514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
                 bool handObjectCollides = isHandObjectColliding(true);
+                bool armCollides = false;
 
                 if (agentCollides) {
                     errorMessage = "Cannot teleport due to agent collision.";
@@ -1522,7 +1524,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log(errorMessage);
                 }
 
-                if (agentCollides || handObjectCollides) {
+                if(Arm != null)
+                {
+                    /*
+                    if(Arm.IsArmColliding())
+                    {
+                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
+                        armCollides = true;
+                        Debug.Log(errorMessage);
+                    }
+                    */
+                }
+
+                if (agentCollides || handObjectCollides || armCollides) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
@@ -1531,7 +1545,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -1916,7 +1930,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //pass in the timeStep to advance the physics simulation
             Physics.Simulate(action.timeStep);
-            agentManager.AdvancePhysicsStepCount++;
+            this.AdvancePhysicsStepCount++;
             actionFinished(true);
         }
 
@@ -3063,10 +3077,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
         //just a relative intensity value
-        public void ChangeLightIntensityExpRoom(ServerAction action)
+        public void ChangeLightIntensityExpRoom(float intensity)
         {
             //restrict this to [0-5]
-            if(action.intensity < 0 || action.intensity > 5)
+            if(intensity < 0 || intensity > 5)
             {
                 errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
                 actionFinished(false);
@@ -3074,7 +3088,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightIntensity(action.intensity);
+            ersm.ChangeLightIntensity(intensity);
             actionFinished(true);
         }
 
@@ -6333,29 +6347,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             return false;
         }
-
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) {
-                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-                    float ViewPointRangeHigh = 1.0f;
-                    float ViewPointRangeLow = 0.0f;
-
-                    if (viewPoint.z > 0 &&
-                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
-                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-                    ) {
-                            return true;
-                    }
-                }
-            } else {
-                #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
-            }
-            return false;
-        }
         
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {
@@ -6371,7 +6362,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) 
                     {
                         //if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false))
+                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false) || 
+                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true))
                         {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
@@ -6572,6 +6564,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void PositionsFromWhichItemIsInteractable(ServerAction action) {
+
+            //default to increments of 30 for horizon
+            if(action.horizon == 0)
+            {
+                action.horizon = 30;
+            }
+
+            //check if horizon is a multiple of 5
+            if(action.horizon % 5 != 0)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.horizon < 0 || action.horizon > 30)
+            {
+                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
+                actionFinished(false);
+                return;
+            }
             Vector3[] positions = null;
             if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
@@ -6619,8 +6632,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = -1; k <= 2; k++) {
-                m_Camera.transform.localEulerAngles = new Vector3(30f * k, 0f, 0f);
+            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {
                         stand();
@@ -7532,8 +7545,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RandomizeHideSeekObjects(ServerAction action) {
-            System.Random rnd = new System.Random(action.randomSeed);
+        public void RandomizeHideSeekObjects(int randomSeed, float removeProb) {
+            System.Random rnd = new System.Random(randomSeed);
 
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
@@ -7542,7 +7555,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Transform child in physicsSceneManager.HideAndSeek.transform) {
-                child.gameObject.SetActive(rnd.NextDouble() > action.removeProb);
+                child.gameObject.SetActive(rnd.NextDouble() > removeProb);
             }
             physicsSceneManager.SetupScene();
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
@@ -9074,21 +9087,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetMidLevelArmCollisions() {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
-                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
-                foreach(var sc in arm.StaticCollisions()){
-                    var element = new Dictionary<string, string>();
-                    if (sc.simObjPhysics != null) {
-                        element["objectType"] = "simObjPhysics";
-                        element["name"] = sc.simObjPhysics.objectID;
+                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
+                if (collisionListener != null) {
+                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                    foreach(var sc in collisionListener.StaticCollisions()){
+                        var element = new Dictionary<string, string>();
+                        if (sc.simObjPhysics != null) {
+                            element["objectType"] = "simObjPhysics";
+                            element["name"] = sc.simObjPhysics.objectID;
+                        }
+                        else
+                        {
+                            element["objectType"] = "gameObject";
+                            element["name"] = sc.gameObject.name;
+                        }
+                        collisions.Add(element);
                     }
-                    else
-                    {
-                        element["objectType"] = "gameObject";
-                        element["name"] = sc.gameObject.name;
-                    }
-                    collisions.Add(element);
+                    actionFinished(true, collisions);
                 }
-                actionFinished(true, collisions);
             }
             else
             {
@@ -9102,11 +9118,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
 
+                /*
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
+                */
                 
                 arm.moveArmTarget(
                     this,
@@ -9139,11 +9158,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
+                /*
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 arm.moveArmHeight(
@@ -9165,11 +9187,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
 
-                if(arm.IsArmColliding())
-                {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
-                    return;
-                }
+
+                // TODO re-enable once collision listener listens for self-intersections with agent or arm
+                // Enabling this leads to inconcistencies because when holding an object and rotating to
+                // end up in a position where the object intersect the arm, self collisions are not checked so it 
+                // doesn't stop and ends self intersecting, and when trying to call this, it get's stuck forever 
+                // as arm.IsArmColliding() returns true
+                
+                // if(arm.IsArmColliding())
+                // {
+                //     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                //     actionFinished(false, errorMessage);
+                //     return;
+                // }
 
                 var target = new Quaternion();
                 //rotate around axis aliged x, y, z with magnitude based on vector3
@@ -9184,7 +9214,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnToStart));
+                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime, action.returnToStart);
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9196,11 +9226,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
+                /*
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 actionFinished(arm.PickupObject());
                 return;
@@ -9217,11 +9250,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
+                /*
                 if(arm.IsArmColliding())
                 {
-                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
                     return;
                 }
+                */
 
                 arm.DropObject();
                 //todo- only return after object(s) droped have finished moving
@@ -9282,6 +9318,105 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else 
             {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void RotateContinuous(float degrees, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            collisionListener.Reset();
+
+
+            // this.transform.Rotate()
+            var rotate = ContinuousMovement.rotate(
+                    this,
+                    this.GetComponentInParent<CollisionListener>(),
+                    this.transform,
+                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart
+            );
+
+            if(arm != null)
+            {
+                /*
+                if(arm.IsArmColliding())
+                {
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment.Rotation of agent cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+                */
+            }
+
+            if (disableRendering) {
+                ContinuousMovement.unrollSimulatePhysics(
+                    rotate,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    rotate
+                );
+            }
+        }
+
+        // Signature does not work with debuginput field
+        // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        public void MoveContinuous(ServerAction action)
+        {
+            var direction = action.direction;
+            float speed = action.speed; 
+            bool returnToStart = action.returnToStart;
+            bool disableRendering = action.disableRendering;
+            float fixedDeltaTime = action.fixedDeltaTime;
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            var directionWorld = transform.TransformDirection(direction);
+            var targetPosition = transform.position + directionWorld;
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            collisionListener.Reset();
+
+            var move = ContinuousMovement.move(
+                    this,
+                    collisionListener,
+                    this.transform,
+                    targetPosition,
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart,
+                    false
+            );
+
+            if(arm != null)
+            {
+                /*
+                if(arm.IsArmColliding())
+                {
+                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Movement of agent cannot be done while stuck.";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+                */
+            }
+
+            if (disableRendering) {
+                ContinuousMovement.unrollSimulatePhysics(
+                    move,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    move
+                );
             }
         }
         

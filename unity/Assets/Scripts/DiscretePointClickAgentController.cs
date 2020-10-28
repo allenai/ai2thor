@@ -49,7 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 highlightController.UpdateHighlightedObject(Input.mousePosition);
                 highlightController.MouseControls();
 
-                if (PhysicsController.actionComplete) {
+                if (PhysicsController.ReadyForCommand) {
                         float WalkMagnitude = 0.25f;
                         if (!handMode) {
                             if(Input.GetKeyDown(KeyCode.W))

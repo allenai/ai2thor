@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -127,13 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         public void Execute(string command)
         {
-            if ((PhysicsController.enabled && !PhysicsController.actionComplete) ||
-                (StochasticController != null && StochasticController.enabled && !StochasticController.actionComplete)
+            if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
+                (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
-                Debug.Log("Cannot execute command while last action has not completed.");
-            }
-
-            if (StochasticController.enabled && !StochasticController.actionComplete) {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
@@ -166,7 +163,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-						PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
@@ -214,9 +210,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
-						PhysicsController.actionComplete = false;
-                        action.fieldOfView = 90f;
-                        action.rotateStepDegrees = 30f;
+                        action.fieldOfView = 60;
+                        action.rotateStepDegrees = 45;
                         action.agentMode = "bot";
                         action.agentControllerType = "stochastic";
 
@@ -253,7 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-						PhysicsController.actionComplete = false;
+						//PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
@@ -412,10 +407,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "lighti":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeLightIntensityExpRoom";
-                        action.intensity = 3;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeLightIntensityExpRoom";
+                        action["intensity"] = 3;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -510,7 +504,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
                         action.agentMode = "drone";
                         action.agentControllerType = "drone";
@@ -783,7 +776,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderObjectImage = true;
                         action.renderFlowImage = true;
 
-						PhysicsController.actionComplete = false;
                         //action.ssao = "default";
 
                         action.action = "Initialize";
@@ -1199,10 +1191,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "rhs":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomizeHideSeekObjects";
-                        action.removeProb = float.Parse(splitcommand[1]);
-                        action.randomSeed = int.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeHideSeekObjects";
+                        action["removeProb"] = float.Parse(splitcommand[1]);
+                        action["randomSeed"] = int.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2744,7 +2736,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     case "mmla":
                     {
                         // Limit around -0.084
-                        //"mmla 0 0 -0.08 1.0 false wrist true"
+                        //"mmla 0 0 0.08 0.1 false wrist true"
                         ServerAction action = new ServerAction();
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
@@ -2759,19 +2751,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             
                              if (splitcommand.Length >= 5) {
                                  action.speed = float.Parse(splitcommand[4]);
+                             }     
+
+                             if(splitcommand.Length >= 6) {
+                                 action.coordinateSpace = splitcommand[5];
                              }
 
-                            if (splitcommand.Length >= 6) {
-                                 action.returnToStart = bool.Parse(splitcommand[5]);
-                             }
-
-                             if(splitcommand.Length >= 7) {
-                                 action.coordinateSpace = splitcommand[6];
+                             if (splitcommand.Length >= 7) {
+                                 action.returnToStart = bool.Parse(splitcommand[6]);
                              }
 
                              if(splitcommand.Length >= 8) {
                                  action.restrictMovement = bool.Parse(splitcommand[7]);
                              }
+
+                             if(splitcommand.Length >= 9) {
+                                 action.disableRendering = bool.Parse(splitcommand[8]);
+                             }
+
                         }
                         else {
                             Debug.LogError("Target x y z args needed for command");
@@ -2873,6 +2870,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "mc": 
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveContinuous";
+                        if (splitcommand.Length > 4)
+                        {
+                            action.direction = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
+                    case "rc": 
+                    {
+                        dynamic action = new JObject();
+                        action.action = "RotateContinuous";
+                        if (splitcommand.Length > 2)
+                        {
+                            action.degrees = float.Parse(splitcommand[1]);
+                            
+                             if (splitcommand.Length >= 3) {
+                                 action.speed = float.Parse(splitcommand[2]);
+                             }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
 
 				default:
                     {   
@@ -2900,15 +2933,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.action = "RotateMidLevelHand";
 
-                        //euler angle notation
-                        // action.degrees = 0;
-                        // action.rotation= new Vector3(0, 90, 0);
+                        if (splitcommand.Length > 4)
+                        {
+                            action.rotation = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+                        }
 
-                        //angle axis notation
-                        action.degrees = 74;
-                        action.rotation = new Vector3(1, 1, 0);
-
-                        action.timeStep=1.0f;
                         PhysicsController.ProcessControlCommand(action);      
 
                         break;

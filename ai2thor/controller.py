@@ -436,6 +436,9 @@ class Controller(object):
                     DeprecationWarning
                 )
 
+            if 'fastActionEmit' in self.initialization_parameters and self.server_class != ai2thor.fifo_server.FifoServer:
+                warnings.warn("fastAtionEmit is only available with the FifoServer");
+
             if 'continuousMode' in self.initialization_parameters:
                 warnings.warn(
                     "Warning: 'continuousMode' is deprecated and will be ignored,"
@@ -573,21 +576,21 @@ class Controller(object):
 
     def prune_releases(self):
         current_exec_path = self.executable_path()
-        for d in os.listdir(self.releases_dir()):
-            release = os.path.join(self.releases_dir(), d)
-
+        rdir = self.releases_dir()
+        # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
+        all_dirs = filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir)))
+        sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
-
-            if os.path.isdir(release):
-                try:
-                    lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
-                    fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    shutil.rmtree(release)
-                    fcntl.lockf(lf, fcntl.LOCK_UN)
-                    os.close(lf)
-                except Exception:
-                    pass
+            try:
+                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                shutil.rmtree(release)
+                fcntl.lockf(lf, fcntl.LOCK_UN)
+                os.close(lf)
+            except Exception:
+                pass
 
     def next_interact_command(self):
         current_buffer = ''
@@ -668,10 +671,12 @@ class Controller(object):
         if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
 
             force_visible = action.get('forceVisible', False)
-            if not force_visible and self.last_event.instance_detections2D and action['objectId'] not in self.last_event.instance_detections2D:
+            agent_id = action.get('agentId', 0)
+            instance_detections2D = self.last_event.events[agent_id].instance_detections2D
+            if not force_visible and instance_detections2D and action['objectId'] not in instance_detections2D:
                 should_fail = True
 
-            obj_metadata = self.last_event.get_object(action['objectId'])
+            obj_metadata = self.last_event.events[agent_id].get_object(action['objectId'])
             if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
