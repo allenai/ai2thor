@@ -72,9 +72,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject IKArm; //reference to the IK_Robot_Arm_Controller arm
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
+        public int fixedUpdateCount { get; protected set; }
+        public int updateCount { get; protected set; }
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        
         public AgentState agentState = AgentState.Emit;
         public bool IsVisible
         {
@@ -298,6 +301,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(success, AgentState.ActionComplete, actionReturn);
             this.resumePhysics();
 		}
+
+        // public virtual void actionFinished(bool success, string errorMessage, System.Object actionReturn=null) 
+		// {
+        //     this.errorMessage = errorMessage;
+        //     actionFinished(success, AgentState.ActionComplete, actionReturn);
+        //     this.resumePhysics();
+		// }
 
         protected virtual void resumePhysics() {}
 
@@ -3349,6 +3359,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 inHighFrictionArea = false;
             }
+        }
+
+
+        void Update() {
+            this.updateCount++;
+        }
+
+        void FixedUpdate() {
+            this.fixedUpdateCount++;
+        }
+
+        
+        // void Update() {
+        //     this.updateCount+= Time.frameCount;
+        // }
+
+        public void ResetUpdateCounters() {
+            this.fixedUpdateCount = 0;
+            this.updateCount = 0;
+        }
+
+        // public void SetUpdateCount(int count) {
+        //     this.updateCount = count;
+        // }
+
+        public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+            this.fixedUpdateCount = ContinuousMovement.unrollSimulatePhysics(
+                enumerator,
+                fixedDeltaTime
+            );
         }
 
         #if UNITY_EDITOR

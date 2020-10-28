@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
+using System.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
     public class ContinuousMovement {
 
-    public static void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+    public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+        var count = 0;
         while (enumerator.MoveNext()) {
             Physics.Simulate(fixedDeltaTime);
+            count++;
         }
+        return count;
     }
 
     public static IEnumerator rotate(
@@ -129,12 +133,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
 
-        // DISABLING JUMP since it can lead to clipping
-        //if (currentDistance <= eps && !staticCollided.collided) {
+        // // DISABLING JUMP since it can lead to clipping
+        // if (currentDistance <= epsilon && !collisionListener.ShouldHalt()) {
         //    // Maybe switch to this?
         //    // addPosition(moveTransform, targetDirection * currentDistance);
-        //    setPosition(moveTransform, targetPosition);
-        //}
+        //    setProp(moveTransform, target);
+        // }
 
         continuousMoveFinish(
             controller,
@@ -184,6 +188,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             debugMessage =  $" Has overshot the target ${typeof(T).ToString()}";
             actionSuccess = false;
         }
+        // To return colliders that ended colliding with object
+        // collisionListener.StaticCollisions().Select((col) => col.gameObject.name).ToArray()
         controller.actionFinished(actionSuccess, debugMessage);
     }
 

@@ -511,9 +511,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //in case you want to change the fixed delta time
         public void ChangeFixedDeltaTime(ServerAction action) 
         {
-            if (action.fixedDeltaTime > 0) 
+            var fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+            if (fixedDeltaTime > 0) 
             {
-                Time.fixedDeltaTime = action.fixedDeltaTime;
+                Time.fixedDeltaTime = fixedDeltaTime;
                 actionFinished(true);
             } 
             
