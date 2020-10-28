@@ -2375,8 +2375,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //randomly repositions sim objects in the current scene
-        public void InitialRandomSpawn(ServerAction action) 
-        {
+        public void InitialRandomSpawn(
+            int randomSeed = 0,
+            bool forceVisible = false,
+            bool placeStationary = true,
+            ObjectTypeCount[] numDuplicatesOfType = null,
+            String[] excludedReceptacles = null,
+            String[] excludedObjectIds = null,
+            int numPlacementAttempts = 5
+        ) {
+            if (numPlacementAttempts <= 0) {
+                errorMessage = "numPlacementAttempts must a positive integer.";
+                actionFinished(false);
+                return;
+            }
+
             //something is in our hand AND we are trying to spawn it. Quick drop the object
             if (ItemInHand != null) 
             {
@@ -2387,13 +2400,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
                 GameObject topObject = GameObject.Find("Objects");
-                if (topObject != null) 
-                {
+                if (topObject != null) {
                     ItemInHand.transform.parent = topObject.transform;
-                } 
-
-                else 
-                {
+                } else {
                     ItemInHand.transform.parent = null;
                 }
 
@@ -2404,27 +2413,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 ItemInHand = null;
             }
 
-            //default number of attempts if no value is passed in.
-            if (action.numPlacementAttempts == 0)
-            {
-                action.numPlacementAttempts = 5;
+            // default excludedReceptacles if null
+            if (excludedReceptacles == null) {
+                excludedReceptacles = new String[0];
             }
 
-            //default excludedReceptacles if null
-            if (action.excludedReceptacles == null)
-            {
-                action.excludedReceptacles = new String[0];
-            }
+            List<SimObjType> listOfExcludedReceptacleTypes = new List<SimObjType>();
 
-            List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
-
-            //check if strings used for excludedReceptacles are valid object types
-            foreach (string receptacleType in action.excludedReceptacles)
+            // check if strings used for excludedReceptacles are valid object types
+            foreach (string receptacleType in excludedReceptacles)
             {
                 try
                 {
                     SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
-                    listOfExcludedReceptacles.Add(objType);
+                    listOfExcludedReceptacleTypes.Add(objType);
                 }
 
                 catch (Exception)
@@ -2435,14 +2437,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
+            if (excludedObjectIds == null)  {
+                excludedObjectIds = new String[0];
+            }
+
+            HashSet<SimObjPhysics> excludedSimObjects = new HashSet<SimObjPhysics>();
+            foreach (String objectId in excludedObjectIds) {
+                Debug.Log($"{objectId} yar");
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                    errorMessage = "Cannot find sim object with id '" + objectId + "'";
+                    actionFinished(false);
+                    return;
+                }
+                excludedSimObjects.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+            }
+
             bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
-                action.randomSeed,
-                action.forceVisible,
-                action.numPlacementAttempts,
-                action.placeStationary,
-                action.numDuplicatesOfType,
-                listOfExcludedReceptacles
-                );
+                seed: randomSeed,
+                SpawnOnlyOutside: forceVisible,
+                maxPlacementAttempts: numPlacementAttempts,
+                StaticPlacement: placeStationary,
+                excludedSimObjects: excludedSimObjects,
+                numDuplicatesOfType: numDuplicatesOfType,
+                excludedReceptacleTypes: listOfExcludedReceptacleTypes
+            );
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
             actionFinished(success);
         }

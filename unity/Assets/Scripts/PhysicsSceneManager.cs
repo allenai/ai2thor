@@ -423,8 +423,9 @@ public class PhysicsSceneManager : MonoBehaviour
 		bool SpawnOnlyOutside,
 		int maxPlacementAttempts,
 		bool StaticPlacement,
+		HashSet<SimObjPhysics> excludedSimObjects,
         ObjectTypeCount[] numDuplicatesOfType,
-        List<SimObjType> excludedReceptacles
+        List<SimObjType> excludedReceptacleTypes
     )
     {
 		#if UNITY_EDITOR
@@ -440,7 +441,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			return false;
 		}
 
-        //initialize Unity's random with seed
+        // initialize Unity's random with seed
 		UnityEngine.Random.InitState(seed);
 
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
@@ -448,7 +449,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		int HowManyCouldntSpawn = RequiredObjects.Count;
 
-		//if we already spawned objects, lets just move them around
+		// if we already spawned objects, lets just move them around
 		if(SpawnedObjects.Count > 0)
 		{
 			HowManyCouldntSpawn = SpawnedObjects.Count;
@@ -469,19 +470,19 @@ public class PhysicsSceneManager : MonoBehaviour
                 requestedNumDuplicatesOfType[objType] = repeatCount.count;
             }
 
-            //now lets go through all pickupable sim objects that are in the current scene
+            // Now lets go through all pickupable sim objects that are in the current scene
             foreach (GameObject go in SpawnedObjects)
             {
                 SimObjPhysics sop = null;
                 sop = go.GetComponent<SimObjPhysics>();
 
-                //add object types in the current scene to the typeToObjectList if not already on it
+                // Add object types in the current scene to the typeToObjectList if not already on it
                 if (!typeToObjectList.ContainsKey(sop.ObjType))
                 {
                     typeToObjectList[sop.ObjType] = new List<SimObjPhysics>();
                 }
 
-                //Add this sim object to the list if the sim object's type matches the key in typeToObjectList
+                // Add this sim object to the list if the sim object's type matches the key in typeToObjectList
                 if (!requestedNumDuplicatesOfType.ContainsKey(sop.ObjType) ||
                     (typeToObjectList[sop.ObjType].Count < requestedNumDuplicatesOfType[sop.ObjType]))
                 {
@@ -489,12 +490,12 @@ public class PhysicsSceneManager : MonoBehaviour
                 }
             }
 
-            //keep track of the sim objects we are making duplicates of
+            // Keep track of the sim objects we are making duplicates of
             List<GameObject> simObjectDuplicates = new List<GameObject>();
-            //keep track of the sim objects that have not been duplicated
+            // Keep track of the sim objects that have not been duplicated
             List<GameObject> unduplicatedSimObjects = new List<GameObject>();
 
-            //ok now lets go through each object type in the dictionary
+            // Ok now lets go through each object type in the dictionary
             foreach (SimObjType sopType in typeToObjectList.Keys)
             {
                 //we found a matching SimObjType and the requested count of duplicates is bigger than how many of that
@@ -541,6 +542,11 @@ public class PhysicsSceneManager : MonoBehaviour
             //ok now simObjectDuplicates should have all the game objects, duplicated and unduplicated
             foreach (GameObject go in simObjectDuplicates)
 			{
+				if (excludedSimObjects.Contains(go.GetComponent<SimObjPhysics>())) {
+					HowManyCouldntSpawn--;
+					continue;
+				}
+
 				AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
 				SimObjType goObjType = go.GetComponent<SimObjPhysics>().ObjType;
@@ -582,11 +588,8 @@ public class PhysicsSceneManager : MonoBehaviour
 							AllowedToSpawnInAndExistsInScene[sop.ObjType].Add(sop);
 						}
 					}
-				}
-
-				//not found in dictionary!
-				else
-				{
+				} else {
+					//not found in dictionary!
 					#if UNITY_EDITOR
 					Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
 					#endif
@@ -604,7 +607,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene, seed))
 					{
                         //if the receptacle, sop, is in the list of receptacles to exclude, skip over it and try the other Receptacles
-                        if(excludedReceptacles.Contains(sop.Type))
+                        if(excludedReceptacleTypes.Contains(sop.Type))
                         {
                             continue;
                         }
@@ -670,8 +673,14 @@ public class PhysicsSceneManager : MonoBehaviour
 						//first shuffle the list so it's raaaandom
 						targetReceptacleSpawnPoints.Shuffle_(seed);
 
-                        if (spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxPlacementAttempts, 90, true))
-                        {
+                        if (spawner.PlaceObjectReceptacle(
+							targetReceptacleSpawnPoints,
+							go.GetComponent<SimObjPhysics>(),
+							StaticPlacement,
+							maxPlacementAttempts,
+							90,
+							true)
+						) {
                             HowManyCouldntSpawn--;
 							spawned = true;
 							break;
