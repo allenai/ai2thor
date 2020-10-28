@@ -2,12 +2,12 @@ import os
 import sys
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
+import ai2thor.controller
 
 import time
 import random
 
-from ai2thor.controller import Controller
-c = Controller(
+c = ai2thor.controller.Controller(
     scene='FloorPlan1_physics', gridSize=0.25,
     width=900, height=900, agentMode='arm', fieldOfView=100, agentControllerType='mid-level', targetFrameRate=30, fixedDeltaTime=0.02)
 

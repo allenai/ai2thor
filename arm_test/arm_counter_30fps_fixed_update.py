@@ -5,10 +5,10 @@ sys.path.insert(0, root_dir)
 
 import time
 import random
+import ai2thor.controller
 
-from ai2thor.controller import Controller
-c = Controller(
-    scene='FloorPlan1_physics', gridSize=0.25,
+c = ai2thor.controller.Controller(
+    scene='FloorPlan1_physics', gridSize=0.25, 
     width=900, height=900, agentMode='arm', fieldOfView=100, agentControllerType='mid-level', targetFrameRate=30, fixedDeltaTime=0.005)
 
 print(c.build_url())

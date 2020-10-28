@@ -2,6 +2,7 @@ import os
 import sys
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
+import ai2thor.controller
 
 import time
 import random
@@ -534,5 +535,5 @@ for a in actions:
     if a == {} or a=={'action':''}:
         continue
     c.step(a)
-    time.sleep(random.randint(0, 10)/float(10))
+    time.sleep(random.randint(0, 10)/float(100))
 
