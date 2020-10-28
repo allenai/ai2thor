@@ -1548,6 +1548,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void SimulatePhysicsForSeconds(float seconds, float deltaTime = 0.01f) {
+            if (seconds < 0.0f || deltaTime <= 0.0f) {
+                errorMessage = "$Seconds must be non-negative ({seconds}) and deltaTime must be positive ({deltaTiime}).";
+                actionFinished(false);
+                return;
+            }
+            bool oldPhysicsAutoSim = Physics.autoSimulation;
+
+            Physics.autoSimulation = false;
+            while (seconds > 0.0f) {
+                float timeStep = Math.Min(deltaTime, seconds);
+                Physics.Simulate(timeStep);
+                seconds -= timeStep;
+            }
+
+            Physics.autoSimulation = oldPhysicsAutoSim;
+
+            actionFinished(true);
+        }
+
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
 		protected void OnControllerColliderHit(ControllerColliderHit hit)

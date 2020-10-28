@@ -1006,7 +1006,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         break;
                     }  
-
+                case "spfs":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SimulatePhysicsForSeconds";
+                        action["seconds"] = 2.0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
