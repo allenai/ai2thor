@@ -746,7 +746,6 @@ public class AgentManager : MonoBehaviour
             }
             multiMeta.agents [i] = metadata;
             agent.ResetUpdateCounters();
-            // agent.SetUpdateCount(metadata.updateCount);
         }
 
         if (shouldRender) {

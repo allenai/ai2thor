@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
-using System.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson {
@@ -191,8 +190,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             debugMessage =  $" Has overshot the target ${typeof(T).ToString()}";
             actionSuccess = false;
         }
-        // To return colliders that ended colliding with object
-        // collisionListener.StaticCollisions().Select((col) => col.gameObject.name).ToArray()
         controller.actionFinished(actionSuccess, debugMessage);
     }
 
