@@ -222,7 +222,7 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-        Time.fixedDeltaTime = action.fixedDeltaTime;
+        Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
         }
@@ -729,6 +729,9 @@ public class AgentManager : MonoBehaviour
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
+            metadata.fixedUpdateCount = agent.fixedUpdateCount;
+            metadata.updateCount = agent.updateCount;
+            
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -742,6 +745,7 @@ public class AgentManager : MonoBehaviour
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
+            agent.ResetUpdateCounters();
         }
 
         if (shouldRender) {
@@ -1034,6 +1038,8 @@ public class MultiAgentMetadata {
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public int activeAgentId;
 	public int sequenceId;
+    public int fixedUpdateCount;
+    public int updateCount;
 }
 
 [Serializable]
@@ -1343,6 +1349,8 @@ public struct MetadataWrapper
     public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
+    public int updateCount;
+    public int fixedUpdateCount;
 }
 
 [Serializable]
@@ -1353,7 +1361,7 @@ public class ServerAction
 	public string quality;
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
-	public float fixedDeltaTime = 0.02f;
+	public float? fixedDeltaTime;
 	public int targetFrameRate;
     public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;

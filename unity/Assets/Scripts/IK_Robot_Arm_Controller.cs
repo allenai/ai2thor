@@ -251,8 +251,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         );
 
         if (disableRendering) {
-            
-            ContinuousMovement.unrollSimulatePhysics(
+            controller.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
@@ -301,7 +300,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         );
 
         if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
+            controller.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
@@ -334,7 +333,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         );
 
         if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
+            controller.unrollSimulatePhysics(
                 rotate,
                 fixedDeltaTime
             );
