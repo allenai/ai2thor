@@ -693,7 +693,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             bool forceAction = false,
             bool forceKinematic = false,
-            bool allowTeleportOutOfHand = false
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}";
@@ -709,6 +710,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 forceAction: forceAction,
                 forceKinematic: forceKinematic,
                 allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable,
                 includeErrorMessage: true
             );
 
@@ -732,7 +734,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             bool forceAction = false,
             bool forceKinematic = false,
-            bool allowTeleportOutOfHand = false
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}";
@@ -750,6 +753,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceAction: forceAction,
                     forceKinematic: forceKinematic,
                     allowTeleportOutOfHand: allowTeleportOutOfHand,
+                    makeUnbreakable: makeUnbreakable,
                     includeErrorMessage: true
                 );
                 if (teleportSuccess) {
@@ -779,6 +783,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction,
             bool forceKinematic,
             bool allowTeleportOutOfHand,
+            bool makeUnbreakable,
             bool includeErrorMessage = false
         ) {
             bool sopInHand = ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>();
@@ -806,6 +811,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         errorMessage = $"{sop.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after teleport.";
                     }
                     return false;
+                }
+            }
+
+            if (makeUnbreakable) {
+                if (sop.GetComponent<Break>()) {
+                    sop.GetComponent<Break>().Unbreakable = true;
                 }
             }
 
@@ -843,7 +854,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             bool forceAction = false,
             bool forceKinematic = false,
-            bool allowTeleportOutOfHand = false
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
         ) {
             TeleportObject(
                 objectId: objectId,
@@ -851,7 +863,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotation: rotation,
                 forceAction: forceAction,
                 forceKinematic: forceKinematic,
-                allowTeleportOutOfHand: allowTeleportOutOfHand
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable
             );
         }
 
@@ -1716,15 +1729,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
-                bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
+                bool agentCollides = isAgentCapsuleColliding(
+                    collidersToIgnore: collidersToIgnoreDuringMovement,
+                    includeErrorMessage: true
+                );
+                
                 bool handObjectCollides = isHandObjectColliding(true);
-
-                if (agentCollides) {
-                    errorMessage = "Cannot teleport due to agent collision.";
-                    Debug.Log(errorMessage);
-                } else if (handObjectCollides) {
+                if (handObjectCollides && !agentCollides) {
                     errorMessage = "Cannot teleport due to hand object collision.";
-                    Debug.Log(errorMessage);
                 }
 
                 if (agentCollides || handObjectCollides) {

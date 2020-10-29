@@ -1775,12 +1775,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
-                bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
-
-                if (agentCollides) {
-                    errorMessage = "Cannot teleport due to agent collision.";
-                    Debug.Log(errorMessage);
-                } 
+                bool agentCollides = isAgentCapsuleColliding(
+                    collidersToIgnore: collidersToIgnoreDuringMovement,
+                    includeErrorMessage: true
+                );
 
                 if (agentCollides) {
                     transform.position = oldPosition;
@@ -2840,12 +2838,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             );
         }
 
-        protected bool isAgentCapsuleColliding(HashSet<Collider> collidersToIgnore = null) {
+        protected bool isAgentCapsuleColliding(
+            HashSet<Collider> collidersToIgnore = null,
+            bool includeErrorMessage = false
+        ) {
             int layerMask = 1 << 8;
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
                 if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
                     collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
                 ) {
+                    if (includeErrorMessage) {
+                        SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+                        String collidedWithName;
+                        if (sop != null) {
+                            collidedWithName = sop.ObjectID;
+                        } else {
+                            collidedWithName = sop.gameObject.name;
+                        }
+                        errorMessage = $"Collided with: {collidedWithName}.";
+                    }
 #if UNITY_EDITOR
                     Debug.Log("Collided with: ");
                     Debug.Log(c);
