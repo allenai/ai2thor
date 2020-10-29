@@ -9323,7 +9323,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 else
-                arm.SetHandMagnetRadius(action.radius);
+                {
+                    arm.SetHandMagnetRadius(action.radius);
+                    actionFinished(true);
+                    return;
+                }
             }
 
             else 
