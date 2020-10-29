@@ -178,6 +178,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             // Performance optimization: Just say that all of the structural objects are visible all of the time so we
             // don't have to add a lot of visibility points to each of them that will cause excessive raycasting.
             objectMetadata.visible = true;
+            objectMetadata.visibleInCamera = true;
             return objectMetadata;
         }).ToArray();
         metadata.objects = metadata.objects.ToList().Where(objectMetadata => {
