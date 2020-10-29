@@ -140,9 +140,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Update is called once per frame
-        void Update() {
-        }
 
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
@@ -9131,7 +9128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this,
                     action.position, 
                     action.speed, 
-                    action.fixedDeltaTime, 
+                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.coordinateSpace, 
                     action.restrictMovement, 
@@ -9172,7 +9169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this, 
                     action.y, 
                     action.speed, 
-                    action.fixedDeltaTime, 
+                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.disableRendering
                 );
@@ -9214,7 +9211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime, action.returnToStart);
+                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9354,7 +9351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
+                this.unrollSimulatePhysics(
                     rotate,
                     fixedDeltaTime
                 );
@@ -9374,7 +9371,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = action.speed; 
             bool returnToStart = action.returnToStart;
             bool disableRendering = action.disableRendering;
-            float fixedDeltaTime = action.fixedDeltaTime;
+            float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
             var collisionListener = this.GetComponentInParent<CollisionListener>();
 
@@ -9408,7 +9405,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
+                this.unrollSimulatePhysics(
                     move,
                     fixedDeltaTime
                 );

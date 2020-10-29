@@ -9,10 +9,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
     public class ContinuousMovement {
 
-    public static void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+    public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+        var count = 0;
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = false;
         while (enumerator.MoveNext()) {
             Physics.Simulate(fixedDeltaTime);
+            count++;
         }
+        Physics.autoSimulation = previousAutoSimulate;
+        return count;
     }
 
     public static IEnumerator rotate(
@@ -129,12 +135,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
 
-        // DISABLING JUMP since it can lead to clipping
-        //if (currentDistance <= eps && !staticCollided.collided) {
+        // // DISABLING JUMP since it can lead to clipping
+        // if (currentDistance <= epsilon && !collisionListener.ShouldHalt()) {
         //    // Maybe switch to this?
         //    // addPosition(moveTransform, targetDirection * currentDistance);
-        //    setPosition(moveTransform, targetPosition);
-        //}
+        //    setProp(moveTransform, target);
+        // }
 
         continuousMoveFinish(
             controller,
