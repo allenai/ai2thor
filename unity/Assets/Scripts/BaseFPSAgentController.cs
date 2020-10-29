@@ -302,13 +302,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.resumePhysics();
 		}
 
-        // public virtual void actionFinished(bool success, string errorMessage, System.Object actionReturn=null) 
-		// {
-        //     this.errorMessage = errorMessage;
-        //     actionFinished(success, AgentState.ActionComplete, actionReturn);
-        //     this.resumePhysics();
-		// }
-
         protected virtual void resumePhysics() {}
 
         
@@ -3370,19 +3363,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.fixedUpdateCount++;
         }
 
-        
-        // void Update() {
-        //     this.updateCount+= Time.frameCount;
-        // }
-
         public void ResetUpdateCounters() {
             this.fixedUpdateCount = 0;
             this.updateCount = 0;
         }
-
-        // public void SetUpdateCount(int count) {
-        //     this.updateCount = count;
-        // }
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             this.fixedUpdateCount = ContinuousMovement.unrollSimulatePhysics(
