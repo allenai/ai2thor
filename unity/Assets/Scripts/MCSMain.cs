@@ -721,7 +721,7 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
             this.AssignRigidbody(gameObject, objectConfig.mass > 0 ? objectConfig.mass : objectDefinition.mass,
-                objectConfig.kinematic || objectDefinition.kinematic);
+                objectConfig.kinematic || objectDefinition.kinematic, objectDefinition.centerMassAtBottom);
             colliders = this.AssignColliders(gameObject, objectDefinition);
         }
 
@@ -833,7 +833,7 @@ public class MCSMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void AssignRigidbody(GameObject gameObject, float mass, bool kinematic) {
+    private void AssignRigidbody(GameObject gameObject, float mass, bool kinematic, bool centerMassAtBottom) {
         // Note that some prefabs may already have a Rigidbody component.
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         if (rigidbody == null) {
@@ -847,6 +847,9 @@ public class MCSMain : MonoBehaviour {
             CollisionDetectionMode.ContinuousDynamic;
         if (mass > 0) {
             rigidbody.mass = mass;
+        }
+        if (centerMassAtBottom) {
+            rigidbody.centerOfMass = new Vector3(0, 0, 0);
         }
     }
 
@@ -1590,6 +1593,7 @@ public class MCSConfigMove : MCSConfigStepBeginEnd {
 public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string resourceFile;
     public string shape;
+    public bool centerMassAtBottom;
     public bool keepColliders;
     public bool visibilityPointsScaleOne;
     public MCSConfigCollider boundingBox = null;
