@@ -12,10 +12,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
     public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
         var count = 0;
+        Physics.autoSimulation = false;
         while (enumerator.MoveNext()) {
             Physics.Simulate(fixedDeltaTime);
             count++;
         }
+        Physics.autoSimulation = true;
         return count;
     }
 
