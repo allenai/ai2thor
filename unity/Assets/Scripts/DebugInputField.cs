@@ -126,6 +126,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         #if UNITY_EDITOR
+        public IEnumerator ExecuteBatch(List<string> commands) {
+
+            foreach(var command in commands) {
+                while(PhysicsController.IsProcessing) {
+                    yield return new WaitForEndOfFrame();
+                }
+                Debug.Log("Executing Batch command: " + command);
+                Execute(command);
+            }
+
+
+        }
+
         public void Execute(string command)
         {
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
@@ -632,6 +645,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                case "reproarmstuck":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1");
+                    commands.Add("telefull");
+                    commands.Add("mmlah 0.5203709825292535 2 True");
+                    commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
                 case "ap":
                     {
@@ -2814,7 +2841,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-
                     case "pac":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
