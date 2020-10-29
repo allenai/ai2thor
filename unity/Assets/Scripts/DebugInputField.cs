@@ -2773,6 +2773,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else {
                             Debug.LogError("Target x y z args needed for command");
                         }
+                        action.disableRendering = true;
                         //action.stopArmMovementOnContact = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -2814,6 +2815,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "pac":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "DebugMidLevelArmCollisions";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                     case "mmlah":
                     {
                         ServerAction action = new ServerAction();
@@ -2837,6 +2845,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.y = 0.9f;
                             action.speed = 1.0f;
                         }
+
+                        action.disableRendering = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;

@@ -9114,6 +9114,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
+        public void DebugMidLevelArmCollisions() {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                var scs = arm.collisionListener.StaticCollisions();
+                Debug.Log("Total current active static arm collisions: " + scs.Count);
+                foreach(var sc  in scs) {
+                    Debug.Log("Arm static collision: " + sc.name);
+                }
+
+            }   
+
+            actionFinished(true);
+        }
+
         public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {

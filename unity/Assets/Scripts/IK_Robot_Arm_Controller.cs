@@ -39,7 +39,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private const float extendedArmLenth = 0.6325f;
 
-    private CollisionListener collisionListener;
+    public CollisionListener collisionListener;
 
     void Start()
     {

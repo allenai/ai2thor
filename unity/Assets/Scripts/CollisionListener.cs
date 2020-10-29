@@ -20,6 +20,16 @@ public class CollisionListener : MonoBehaviour
         public bool isSimObj {
             get { return simObjPhysics != null; }
         }
+
+        public string name {
+            get {
+                if (this.isSimObj) {
+                    return this.simObjPhysics.name;
+                } else {
+                    return this.gameObject.name;
+                }
+            }
+        }
     }
     private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
