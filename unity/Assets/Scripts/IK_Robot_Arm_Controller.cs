@@ -92,13 +92,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
-    public bool IsArmColliding()
-    {
-        #if UNITY_EDITOR
-        debugCapsules.Clear();
-        #endif
-
-        bool result = false;
+    public HashSet<Collider> currentArmCollisions() {
+        HashSet<Collider> colliders = new HashSet<Collider>();
 
         //create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in ArmCapsuleColliders)
@@ -151,9 +146,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             #endif
             
             //ok now finally let's make some overlap capsuuuules
-            if(Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            foreach(var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore))
             {
-                result = true;
+                colliders.Add(col);
             }
 
         }
@@ -161,13 +156,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders)
         {
-            if(Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            foreach(var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore))
             {
-                result = true;
+                colliders.Add(col);
             }
         }
+        return colliders;
+    }
 
-        return result;
+    public bool IsArmColliding()
+    {
+        #if UNITY_EDITOR
+        debugCapsules.Clear();
+        #endif
+
+        HashSet<Collider> colliders = currentArmCollisions();
+
+        return colliders.Count > 0;
     }
 
     private bool shouldHalt() {
