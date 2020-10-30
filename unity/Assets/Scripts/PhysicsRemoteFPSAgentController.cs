@@ -9142,6 +9142,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this,
                     action.position, 
                     action.speed, 
+                    action.waitForFixedUpdate,
                     action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.coordinateSpace, 
@@ -9183,6 +9184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this, 
                     action.y, 
                     action.speed, 
+                    action.waitForFixedUpdate,
                     action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.disableRendering

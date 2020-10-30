@@ -185,6 +185,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller,
         Vector3 target, 
         float unitsPerSecond,
+        bool waitForFixedUpdate,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false, 
         string whichSpace = "arm", 
@@ -246,6 +247,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 targetWorldPos,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
+                waitForFixedUpdate,
                 returnToStartPositionIfFailed,
                 false
         );
@@ -267,6 +269,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller, 
         float height, 
         float unitsPerSecond, 
+        bool waitForFixedUpdate,
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false,
         bool disableRendering = false) {
@@ -295,6 +298,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 target,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
+                waitForFixedUpdate,
                 returnToStartPositionIfFailed,
                 true
         );

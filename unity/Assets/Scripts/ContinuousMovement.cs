@@ -14,7 +14,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = false;
         while (enumerator.MoveNext()) {
-            Physics.Simulate(fixedDeltaTime);
+            // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+            // as autoSimulation is off
             count++;
         }
         Physics.autoSimulation = previousAutoSimulate;
@@ -28,6 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Quaternion targetRotation,
         float fixedDeltaTime,
         float unitsPerSecond,
+        bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false
     ) {
 
@@ -50,7 +52,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
             (target, current) => target,
             // Distance Metric
-            (target, current) => Quaternion.Angle(current, target)
+            (target, current) => Quaternion.Angle(current, target),
+            waitForFixedUpdate,
+            fixedDeltaTime
         );
     }
 
@@ -61,6 +65,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Vector3 targetPosition,
         float fixedDeltaTime,
         float unitsPerSecond,
+        bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false,
         bool localPosition = false
     ) {
@@ -78,7 +83,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         initialPosition : 
                         lastPosition - (direction * unitsPerSecond * fixedDeltaTime),
                 (target, current) => (target - current).normalized,
-                (target, current) => Vector3.SqrMagnitude(target - current)
+                (target, current) => Vector3.SqrMagnitude(target - current),
+                waitForFixedUpdate,
+                fixedDeltaTime
         );
 
         if (localPosition) {
@@ -110,13 +117,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
         Func<T, T, T> getDirection,
         Func<T, T, float> distanceMetric,
+        bool waitForFixedUpdate,
+        float fixedDeltaTime,
         double epsilon = 1e-3
     )
     {
         T originalProperty = getProp(moveTransform);
         var previousProperty = originalProperty;
 
-        yield return new WaitForFixedUpdate();
+        YieldInstruction yieldInstruction = waitForFixedUpdate ? (YieldInstruction)new WaitForFixedUpdate() : (YieldInstruction)new WaitForEndOfFrame();
+        var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+        yield return yieldInstruction;
 
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
@@ -124,13 +136,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         T directionToTarget = getDirection(target, currentProperty);
 
-        while ( currentDistance > epsilon && !collisionListener.ShouldHalt() && currentDistance <= startingDistance) {
+        while ( currentDistance > epsilon && !arm.IsArmColliding() && currentDistance <= startingDistance) {
 
             previousProperty = getProp(moveTransform);
 
             addToProp(moveTransform, directionToTarget);
 
-            yield return new WaitForFixedUpdate();
+            if (!Physics.autoSimulation) {
+                Physics.Simulate(fixedDeltaTime);
+            }
+
+            yield return yieldInstruction;
+
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
@@ -166,23 +183,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         var actionSuccess = true;
         var debugMessage = "";
         var staticCollisions = collisionListener.StaticCollisions();
-        if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
+        var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+        // staticCollisions are not firing at the right time, so using IsArmColliding instead
+        if (arm.IsArmColliding()){
+                //var sc = staticCollisions[0];
                 
                 //decide if we want to return to original property or last known property before collision
                 setProp(moveTransform, resetProp);
 
                 //if we hit a sim object
-                if(sc.isSimObj)
-                {
-                    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
-                }
+                //if(sc.isSimObj)
+                //{
+                //    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                //}
 
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!sc.isSimObj)
-                {
-                    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
-                }
+                ////if we hit a structural object that isn't a sim object but still has static collision
+                //if(!sc.isSimObj)
+                //{
+                //    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
+                //}
 
                 actionSuccess = false;
         } else if (overshoot) {
