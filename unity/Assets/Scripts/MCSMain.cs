@@ -92,6 +92,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject ceiling;
     private GameObject floor;
     private GameObject light;
+    private GameObject light2;
     private GameObject wallLeft;
     private GameObject wallRight;
     private GameObject wallFront;
@@ -112,6 +113,7 @@ public class MCSMain : MonoBehaviour {
         this.ceiling = GameObject.Find("Ceiling");
         this.floor = GameObject.Find("Floor");
         this.light = GameObject.Find("Point light");
+        this.light2 = GameObject.Find("Spot light");
         this.wallLeft = GameObject.Find("Wall Left");
         this.wallRight = GameObject.Find("Wall Right");
         this.wallFront = GameObject.Find("Wall Front");
@@ -377,6 +379,8 @@ public class MCSMain : MonoBehaviour {
         SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
         SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
 
+        this.light2.SetActive(false);
+
         if (this.currentScene.screenshot) {
             this.floor.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallLeft.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
@@ -431,6 +435,11 @@ public class MCSMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
                 MCSMain.LIGHT_Z_POSITION);
+
+            // Intuitive physics scenes have a second light source.
+            if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
+                this.light2.SetActive(true);
+            }
         }
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
