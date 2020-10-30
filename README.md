@@ -6,7 +6,9 @@ Original documentation:  https://github.com/allenai/ai2thor
 
 ### Editor
 
-The AI2-THOR v2.2.0 documetation instructs us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.  Note that the Unity Hub download from Unity's Downloads page may not actually work on Linux (see the [Linux Installation Instructions](#linux-installation-instructions) below).
+The CACI development team has worked on this Unity project with version 2018.X of the Unity Editor on both Linux and Mac.
+
+Note for Linux developers: The AI2-THOR v2.2.0 documetation instructs us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.  Note that the Unity Hub download from Unity's Downloads page may not actually work on Linux (see the [Linux Installation Instructions](#linux-installation-instructions) below).
 
 #### Linux Installation Instructions
 

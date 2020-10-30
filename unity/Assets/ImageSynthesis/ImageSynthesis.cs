@@ -24,10 +24,11 @@ public class ImageSynthesis : MonoBehaviour {
 	private CapturePass[] capturePasses = new CapturePass[] {
 		new CapturePass() { name = "_img" },
 		new CapturePass() { name = "_depth" },
-		new CapturePass() { name = "_id", supportsAntialiasing = false },
-		new CapturePass() { name = "_class", supportsAntialiasing = false },
-		new CapturePass() { name = "_normals"},
-		new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+		new CapturePass() { name = "_id", supportsAntialiasing = false }
+        // MCS optimization: Remove all unused cameras
+		// new CapturePass() { name = "_class", supportsAntialiasing = false },
+		// new CapturePass() { name = "_normals"},
+		// new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
 
 		//new CapturePass() { name = "_position" },

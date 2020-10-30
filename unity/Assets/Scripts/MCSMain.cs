@@ -395,41 +395,13 @@ public class MCSMain : MonoBehaviour {
         else {
             // Intuitive physics and isometric scenes don't have ceilings.
             if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
-                if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
-                    ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
-                        this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
-                }
                 AssignMaterial(this.ceiling, ceilingMaterial);
             }
 
-            if (floorSimObjPhysics.VisibilityPoints.Length == 0) {
-                floorSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.floor,
-                    this.GenerateCubeInternalVisibilityPoints(this.floor, null), null);
-            }
             AssignMaterial(this.floor, floorMaterial);
-
-            if (wallLeftSimObjPhysics.VisibilityPoints.Length == 0) {
-                wallLeftSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallLeft,
-                    this.GenerateCubeInternalVisibilityPoints(this.wallLeft, null), null);
-            }
             AssignMaterial(this.wallLeft, wallsMaterial);
-
-            if (wallRightSimObjPhysics.VisibilityPoints.Length == 0) {
-                wallRightSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallRight,
-                    this.GenerateCubeInternalVisibilityPoints(this.wallRight, null), null);
-            }
             AssignMaterial(this.wallRight, wallsMaterial);
-
-            if (wallFrontSimObjPhysics.VisibilityPoints.Length == 0) {
-                wallFrontSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallFront,
-                    this.GenerateCubeInternalVisibilityPoints(this.wallFront, null), null);
-            }
             AssignMaterial(this.wallFront, wallsMaterial);
-
-            if (wallBackSimObjPhysics.VisibilityPoints.Length == 0) {
-                wallBackSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallBack,
-                    this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), null);
-            }
             AssignMaterial(this.wallBack, wallsMaterial);
 
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
@@ -1168,77 +1140,6 @@ public class MCSMain : MonoBehaviour {
             // We need to set the animation time to zero because we keep the physics simulation paused.
             ai2thorCanOpenObjectScript.animationTime = 0;
         }
-    }
-
-    private MCSConfigVector GenerateCubeInternalVisibilityPoint(float x, float y, float z) {
-        MCSConfigVector point = new MCSConfigVector();
-        point.x = x;
-        point.y = y;
-        point.z = z;
-        return point;
-    }
-
-    private float calculateCubeGridValue(float size) {
-        float minGridValue = 2f;
-        float calculatedGrid = Mathf.Floor(size / MCSMain.CUBE_INTERNAL_GRID);
-
-        // Ensure visibility points still set for very small cubes
-        return Mathf.Max(calculatedGrid, minGridValue);
-    }
-
-    private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
-        GameObject gameObject,
-        MCSConfigGameObject objectConfig
-    ) {
-        MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
-            objectConfig.shows[0] : null;
-
-        float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
-        float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
-        float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
-
-        float xHalf = xSize / 2f;
-        float yHalf = ySize / 2f;
-        float zHalf = zSize / 2f;
-
-        float xGrid = calculateCubeGridValue(xSize);
-        float yGrid = calculateCubeGridValue(ySize);
-        float zGrid = calculateCubeGridValue(zSize);
-
-        float xSpan = xSize / xGrid;
-        float ySpan = ySize / yGrid;
-        float zSpan = zSize / zGrid;
-
-        List<MCSConfigVector> points = new List<MCSConfigVector>();
-
-        for (float x = 1; x < xGrid; ++x) {
-            for (float y = 1; y < yGrid; ++y) {
-                float xPosition = (x * xSpan) - xHalf;
-                float yPosition = (y * ySpan) - yHalf;
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, zHalf));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, -zHalf));
-            }
-        }
-
-        for (float y = 1; y < yGrid; ++y) {
-            for (float z = 1; z < zGrid; ++z) {
-                float yPosition = (y * ySpan) - yHalf;
-                float zPosition = (z * zSpan) - zHalf;
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xHalf, yPosition, zPosition));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(-xHalf, yPosition, zPosition));
-            }
-        }
-
-        for (float x = 1; x < xGrid; ++x) {
-            for (float z = 1; z < zGrid; ++z) {
-                float xPosition = (x * xSpan) - xHalf;
-                float zPosition = (z * zSpan) - zHalf;
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yHalf, zPosition));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, -yHalf, zPosition));
-            }
-        }
-
-        return points;
     }
 
     private void InitializeGameObject(MCSConfigGameObject objectConfig) {
