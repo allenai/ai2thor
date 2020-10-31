@@ -125,10 +125,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 //how to get transform.localRight?
             }
 
-            #if UNITY_EDITOR
-            //debug draw
-            Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
-            #endif
+            //debug draw forward of each joint
+            // #if UNITY_EDITOR
+            // //debug draw
+            // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            // #endif
 
             //center in world space + direction with magnitude (1/2 height - radius)
             var point0 = center + dir * (c.height/2 - radius);
@@ -137,13 +138,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //center in world space - direction with magnitude (1/2 height - radius)
             var point1 = center - dir * (c.height/2 - radius);
 
-            #if UNITY_EDITOR
-            GizmoDrawCapsule gdc = new GizmoDrawCapsule();
-            gdc.p0 = point0;
-            gdc.p1 = point1;
-            gdc.radius = radius;
-            debugCapsules.Add(gdc);
-            #endif
+            //debug draw ends of each capsule of each joint
+            // #if UNITY_EDITOR
+            // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            // gdc.p0 = point0;
+            // gdc.p1 = point1;
+            // gdc.radius = radius;
+            // debugCapsules.Add(gdc);
+            // #endif
             
             //ok now finally let's make some overlap capsuuuules
             foreach(var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore))
@@ -166,9 +168,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public bool IsArmColliding()
     {
-        #if UNITY_EDITOR
-        debugCapsules.Clear();
-        #endif
+        // #if UNITY_EDITOR
+        // debugCapsules.Clear();
+        // #endif
 
         HashSet<Collider> colliders = currentArmCollisions();
 
