@@ -426,7 +426,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 sop.Key.transform.parent = null;
             }
-            //rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+            
+            rb.WakeUp();
         }
 
         //clear all now dropped objects
