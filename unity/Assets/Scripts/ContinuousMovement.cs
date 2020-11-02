@@ -28,11 +28,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Transform moveTransform,
         Quaternion targetRotation,
         float fixedDeltaTime,
-        float unitsPerSecond,
+        float radiansPerSecond,
         bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false
     ) {
-
+        var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
         return updateTransformPropertyFixedUpdate(
             controller,
             collisionListener,
@@ -43,12 +43,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //  Set
             (t, target) => t.rotation = target,
             // AddTo
-            (t, target) => t.rotation = Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * unitsPerSecond),
+            (t, target) => t.rotation = Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond),
             // Resets/Rollbacks if collides
             (initialRotation, lastRotation, target) => 
                 returnToStartPropIfFailed? 
                     initialRotation : 
-                    Quaternion.RotateTowards(lastRotation, target, -fixedDeltaTime * unitsPerSecond),
+                    Quaternion.RotateTowards(lastRotation, target, -fixedDeltaTime * degreesPerSecond),
             // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
             (target, current) => target,
             // Distance Metric
