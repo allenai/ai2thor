@@ -287,8 +287,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //linear function that take height and adjusts targetY relative to min/max extents
         float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
 
-
-        Vector3 target = new Vector3(0, targetY, 0);
+        Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
         var moveCall = ContinuousMovement
             .move(

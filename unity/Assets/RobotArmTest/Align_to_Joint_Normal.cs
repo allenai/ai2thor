@@ -19,11 +19,6 @@ public class Align_to_Joint_Normal : MonoBehaviour
         joint2 = tip.position - mid.position;
         jointNormal = Vector3.Cross(joint1, joint2);
 
-        //if (Input.GetKeyDown("m"))
-        //{
-        //print("I am now initiating Operation Furnace. Please fucking work. Cross-vector is currently " + jointNormal + ".");
-        //transform.forward = jointNormal;
-
         if (isMidJointAngler == true)
         {
             positionAlignedJoint = tip;
@@ -34,21 +29,6 @@ public class Align_to_Joint_Normal : MonoBehaviour
             positionAlignedJoint = mid;
         }
 
-        transform.transform.LookAt(positionAlignedJoint, jointNormal);
-
-        //transform.rotation = Quaternion.FromToRotation(Vector3.forward, joint1);
-
-        //transform.rotation = Quaternion.FromToRotation(Vector3.right, crossVector);
-
-        //if (isMidJointAngler == true)
-        //{
-        //    transform.rotation = Quaternion.FromToRotation(Vector3.forward, joint2);
-        //}
-
-        //else
-        //{
-        //}
-
-        //}
+        transform.LookAt(positionAlignedJoint, jointNormal);
     }
 }
