@@ -80,7 +80,7 @@ def _webgl_local_build_path(prefix, source_dir="builds"):
 def _unity_version():
     import yaml
     with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
-        project_version = yaml.load(pf.read())
+        project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
 
     return project_version['m_EditorVersion']
 
