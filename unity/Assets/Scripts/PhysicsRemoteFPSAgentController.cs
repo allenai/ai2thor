@@ -748,6 +748,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Collider item in colliders_in_view) {
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
                     //now we have a reference to our sim object 
+                    if (!sop.GetComponentInChildren<Renderer>().enabled) {
+                        continue;
+                    }
                     if (sop != null && !testedSops.Contains(sop)) {
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
