@@ -159,7 +159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -275,12 +274,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
-
-            if (this.jsInterface)
-            {
-                // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction);
-            }
 
             lastActionSuccess = success;
 			this.agentState = newState;
@@ -1438,8 +1431,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #if UNITY_WEBGL
         public void ProcessControlCommand(ServerAction controlCommand)
         {
-            currentServerAction = controlCommand;
-
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
