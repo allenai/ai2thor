@@ -2202,6 +2202,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.moveMagnitude = 159f;
                         action.x = 0.5f;
                         action.y = 0.5f;
+                        action.autoSimulation = false;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
