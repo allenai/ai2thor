@@ -1986,6 +1986,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             pushAction.z = direction.z;
 
             pushAction.moveMagnitude = action.moveMagnitude;
+            pushAction.autoSimulation = action.autoSimulation;
 
             target.GetComponent<Rigidbody>().isKinematic = false;
             sopApplyForce(pushAction, target);
@@ -2177,6 +2178,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //apply force, return action finished immediately
             if(physicsSceneManager.physicsSimulationPaused)
             {
+                Debug.Log("this is the paused version!");
                 //print("autosimulation off");
                 sop.ApplyForce(action);
                 if(length >= 0.00001f)
@@ -2202,7 +2204,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //print("autosimulation true");
                 sop.ApplyForce(action);
-                StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
+                Debug.Log(action.autoSimulation);
+                if (action.autoSimulation)
+                {
+                    Debug.Log("this is not the faster version!");
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
+                }
+                else
+                {
+                    Debug.Log("this is the faster version!");
+                    StartCoroutine(checkPushObjectActionFast(sop));
+                }
             }
         }
 
@@ -4962,6 +4974,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             DefaultAgentHand();
+            actionFinished(true);
+        }
+
+        private IEnumerator checkPushObjectActionFast(SimObjPhysics targetSimObj)
+        {
+            if (targetSimObj != null)
+            {
+                Rigidbody rb = targetSimObj.GetComponentInChildren<Rigidbody>();
+                Physics.autoSimulation = false;
+                yield return null;
+
+                for (int i = 0; i < 200; i++)
+                {
+                    Physics.Simulate(0.02f);
+                    #if UNITY_EDITOR
+                    yield return null;
+                    #endif
+                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001)
+                    {
+                        break;
+                    }
+                }
+                Physics.autoSimulation = true;
+            }
+
             actionFinished(true);
         }
 

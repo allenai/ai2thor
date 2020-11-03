@@ -25,6 +25,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
+        prefabs = Resources.LoadAll("Drone_Objects_to_Spawn", typeof(object)).Cast<GameObject>().ToArray();
         //m_Started = true;
     }
 
