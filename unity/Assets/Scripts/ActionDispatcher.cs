@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using Newtonsoft.Json.Linq;
 
 
 /*
@@ -42,6 +43,28 @@ using UnityEngine;
 */
 public static class ActionDispatcher {
     private static Dictionary<Type, Dictionary<string, List<MethodInfo>>> methodDispatchTable = new Dictionary<Type, Dictionary<string, List<MethodInfo>>>();
+
+    // look through all methods on a target type and attempt to get the MethodInfo
+    // any ambiguous method will throw an exception.  This is used during testing.
+    public static List<string> FindAmbiguousActions(Type targetType) {
+        List<string> actions = new List<string>();
+        System.Reflection.MethodInfo[] allMethods = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+        HashSet<string> methodNames = new HashSet<string>();
+        foreach(var method in allMethods) {
+            methodNames.Add(method.Name);
+        }
+        foreach(var methodName in methodNames) {
+            try {
+                Dictionary<string, object> act = new Dictionary<string, object>();
+                act["action"] = methodName;
+                dynamic action = JObject.FromObject(act);
+                MethodInfo m = getDispatchMethod(targetType, action);
+            } catch(AmbiguousActionException) {
+                actions.Add(methodName);
+            }
+        }
+        return actions;
+    }
 
     // Find public/void methods that have matching Method names and idenitical parameter names,
     // but either different parameter order or parameter types which make dispatching
@@ -164,6 +187,15 @@ public static class ActionDispatcher {
             foreach (var method in actionMethods) {
                 int matchCount = 0;
                 ParameterInfo[] mParams = method.GetParameters();
+
+                // mixing a ServerAction action with non-server action creates an ambiguous situation
+                // if one parameter is missing from the overloaded method its not clear whether the caller
+                // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
+                // variant
+                if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
+                    throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+                }
+
                 // default to ServerAction method
                 // this is also necessary, to allow Initialize to be
                 // called in the AgentManager and an Agent, since we
@@ -272,6 +304,11 @@ public class MethodParamComparer: IComparer<MethodInfo> {
 
 [Serializable]
 public class InvalidActionException : Exception { }
+
+[Serializable]
+public class AmbiguousActionException : Exception { 
+    public AmbiguousActionException(string message) : base(message) {}
+}
 
 [Serializable]
 public class MissingArgumentsActionException : Exception {

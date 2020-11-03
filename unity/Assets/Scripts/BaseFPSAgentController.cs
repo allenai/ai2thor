@@ -1514,6 +1514,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError(errorMessage);
                 actionFinished(false);
             }
+            catch (AmbiguousActionException e)
+            {
+                errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
+                errorCode = ServerActionErrorCode.AmbiguousAction;
+                Debug.LogError(errorMessage);
+                actionFinished(false);
+            
+            }
             catch (InvalidActionException)
             {
                 errorMessage = "Invalid action: " + controlCommand.action;
@@ -3088,6 +3096,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         #endif
 
+        public void TestActionDispatchSAAmbig(ServerAction action) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig(float foo) {
+            actionFinished(true);
+        }
+
         public void TestActionDispatchNoopServerAction(ServerAction action) {
             actionFinished(true, "serveraction");
         }
@@ -3130,6 +3146,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void TestActionDispatchNoop() {
             actionFinished(true, "emptyargs");
         }
+
+        public void TestActionDispatchFindAmbiguous(string typeName) {
+            List<string> actions = ActionDispatcher.FindAmbiguousActions(Type.GetType(typeName));
+            actionFinished(true, actions);
+        }
+
         public void TestActionDispatchFindConflicts(string typeName) {
             Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
             actionFinished(true, conflicts);

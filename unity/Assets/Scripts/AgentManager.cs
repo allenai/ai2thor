@@ -1438,7 +1438,8 @@ public enum ServerActionErrorCode  {
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
 	InvalidAction,
-    MissingArguments
+    MissingArguments,
+	AmbiguousAction
 }
 
 public enum VisibilityScheme {

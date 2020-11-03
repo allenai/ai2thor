@@ -28,7 +28,6 @@ import uuid
 import tty
 import sys
 import termios
-import fcntl
 
 import zipfile
 
@@ -696,7 +695,7 @@ class Controller(object):
         self.server.send(action)
         self.last_event = self.server.receive()
 
-        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments', 'AmbiguousAction']:
             raise ValueError(self.last_event.metadata['errorMessage'])
 
         if raise_for_failure:
