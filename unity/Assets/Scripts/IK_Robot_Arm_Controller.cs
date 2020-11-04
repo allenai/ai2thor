@@ -34,6 +34,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private CapsuleCollider[] ArmCapsuleColliders;
     [SerializeField]
     private BoxCollider[] ArmBoxColliders;
+    [SerializeField]
+    private CapsuleCollider[] agentCapsuleCollider;
 
     private float originToShoulderLength = 0f;
 
@@ -95,8 +97,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public HashSet<Collider> currentArmCollisions() {
         HashSet<Collider> colliders = new HashSet<Collider>();
 
+        //add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
+        List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+        capsules.AddRange(ArmCapsuleColliders);
+        capsules.AddRange(agentCapsuleCollider);
+
+
         //create overlap box/capsule for each collider and check the result I guess
-        foreach (CapsuleCollider c in ArmCapsuleColliders)
+        foreach (CapsuleCollider c in capsules)
         {
             Vector3 center = c.transform.TransformPoint(c.center);
             float radius = c.radius;
