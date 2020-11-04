@@ -34,6 +34,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private CapsuleCollider[] ArmCapsuleColliders;
     [SerializeField]
     private BoxCollider[] ArmBoxColliders;
+    [SerializeField]
+    private CapsuleCollider[] agentCapsuleCollider;
 
     private float originToShoulderLength = 0f;
 
@@ -92,16 +94,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
-    public bool IsArmColliding()
-    {
-        #if UNITY_EDITOR
-        debugCapsules.Clear();
-        #endif
+    public HashSet<Collider> currentArmCollisions() {
+        HashSet<Collider> colliders = new HashSet<Collider>();
 
-        bool result = false;
+        //add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
+        List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+        capsules.AddRange(ArmCapsuleColliders);
+        capsules.AddRange(agentCapsuleCollider);
+
 
         //create overlap box/capsule for each collider and check the result I guess
-        foreach (CapsuleCollider c in ArmCapsuleColliders)
+        foreach (CapsuleCollider c in capsules)
         {
             Vector3 center = c.transform.TransformPoint(c.center);
             float radius = c.radius;
@@ -130,10 +133,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 //how to get transform.localRight?
             }
 
-            #if UNITY_EDITOR
-            //debug draw
-            Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
-            #endif
+            //debug draw forward of each joint
+            // #if UNITY_EDITOR
+            // //debug draw
+            // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            // #endif
 
             //center in world space + direction with magnitude (1/2 height - radius)
             var point0 = center + dir * (c.height/2 - radius);
@@ -142,18 +146,19 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //center in world space - direction with magnitude (1/2 height - radius)
             var point1 = center - dir * (c.height/2 - radius);
 
-            #if UNITY_EDITOR
-            GizmoDrawCapsule gdc = new GizmoDrawCapsule();
-            gdc.p0 = point0;
-            gdc.p1 = point1;
-            gdc.radius = radius;
-            debugCapsules.Add(gdc);
-            #endif
+            //debug draw ends of each capsule of each joint
+            // #if UNITY_EDITOR
+            // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            // gdc.p0 = point0;
+            // gdc.p1 = point1;
+            // gdc.radius = radius;
+            // debugCapsules.Add(gdc);
+            // #endif
             
             //ok now finally let's make some overlap capsuuuules
-            if(Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            foreach(var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore))
             {
-                result = true;
+                colliders.Add(col);
             }
 
         }
@@ -161,13 +166,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders)
         {
-            if(Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            foreach(var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore))
             {
-                result = true;
+                colliders.Add(col);
             }
         }
+        return colliders;
+    }
 
-        return result;
+    public bool IsArmColliding()
+    {
+        // #if UNITY_EDITOR
+        // debugCapsules.Clear();
+        // #endif
+
+        HashSet<Collider> colliders = currentArmCollisions();
+
+        return colliders.Count > 0;
     }
 
     private bool shouldHalt() {
@@ -418,7 +433,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 sop.Key.transform.parent = null;
             }
-            //rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+            
+            rb.WakeUp();
         }
 
         //clear all now dropped objects

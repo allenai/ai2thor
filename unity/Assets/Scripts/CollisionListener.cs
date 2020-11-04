@@ -76,7 +76,7 @@ public class CollisionListener : MonoBehaviour
         RegisterCollision(col, CascadeCollisionEventsToParent);
     }
 
-    private StaticCollision ColliderToStaticCollision(Collider col) {
+    private static StaticCollision ColliderToStaticCollision(Collider col) {
         StaticCollision sc = null;
         if(col.GetComponentInParent<SimObjPhysics>())
             {
@@ -98,7 +98,7 @@ public class CollisionListener : MonoBehaviour
             }
 
             //also check if the collider hit was a structure?
-            else if(col.gameObject.tag == "Structure")
+            else if(col.gameObject.CompareTag("Structure"))
             {                
                 if(!col.isTrigger)
                 {
@@ -109,16 +109,19 @@ public class CollisionListener : MonoBehaviour
         return sc;
     }
 
-   public List<StaticCollision> StaticCollisions() {
+   public static List<StaticCollision> StaticCollisions(IEnumerable<Collider> colliders) {
         var staticCols = new List<StaticCollision>();
-        foreach(var col in activeColliders) {
-
+        foreach(var col in colliders) {
             var staticCollision = ColliderToStaticCollision(col);
             if (staticCollision != null) {
                 staticCols.Add(staticCollision);
             }
         }
         return staticCols;
+   }
+
+   public List<StaticCollision> StaticCollisions() {
+       return StaticCollisions(this.activeColliders);
     }
 
     public bool ShouldHalt() {

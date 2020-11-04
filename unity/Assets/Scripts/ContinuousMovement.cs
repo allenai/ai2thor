@@ -28,11 +28,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Transform moveTransform,
         Quaternion targetRotation,
         float fixedDeltaTime,
-        float unitsPerSecond,
+        float radiansPerSecond,
         bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false
     ) {
-
+        var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
         return updateTransformPropertyFixedUpdate(
             controller,
             collisionListener,
@@ -43,12 +43,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //  Set
             (t, target) => t.rotation = target,
             // AddTo
-            (t, target) => t.rotation = Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * unitsPerSecond),
+            (t, target) => t.rotation = Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond),
             // Resets/Rollbacks if collides
             (initialRotation, lastRotation, target) => 
                 returnToStartPropIfFailed? 
                     initialRotation : 
-                    Quaternion.RotateTowards(lastRotation, target, -fixedDeltaTime * unitsPerSecond),
+                    Quaternion.RotateTowards(lastRotation, target, -fixedDeltaTime * degreesPerSecond),
             // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
             (target, current) => target,
             // Distance Metric
@@ -136,7 +136,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         T directionToTarget = getDirection(target, currentProperty);
 
-        while ( currentDistance > epsilon && !arm.IsArmColliding() && currentDistance <= startingDistance) {
+        var currentColliders = arm.currentArmCollisions();
+
+        while ( currentDistance > epsilon && CollisionListener.StaticCollisions(currentColliders).Count == 0 && currentDistance <= startingDistance) {
 
             previousProperty = getProp(moveTransform);
 
@@ -147,6 +149,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             yield return yieldInstruction;
+
+            currentColliders = arm.currentArmCollisions();
 
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
@@ -182,26 +186,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        var staticCollisions = collisionListener.StaticCollisions();
+        //var staticCollisions = collisionListener.StaticCollisions();
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
         // staticCollisions are not firing at the right time, so using IsArmColliding instead
-        if (arm.IsArmColliding()){
-                //var sc = staticCollisions[0];
+        var currentColliders = arm.currentArmCollisions();
+
+        var staticCollisions = CollisionListener.StaticCollisions(currentColliders);
+
+        if (staticCollisions.Count > 0){
+                var sc = staticCollisions[0];
                 
                 //decide if we want to return to original property or last known property before collision
                 setProp(moveTransform, resetProp);
 
                 //if we hit a sim object
-                //if(sc.isSimObj)
-                //{
-                //    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
-                //}
+                if(sc.isSimObj)
+                {
+                    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                }
 
-                ////if we hit a structural object that isn't a sim object but still has static collision
-                //if(!sc.isSimObj)
-                //{
-                //    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
-                //}
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!sc.isSimObj)
+                {
+                    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
+                }
 
                 actionSuccess = false;
         } else if (overshoot) {

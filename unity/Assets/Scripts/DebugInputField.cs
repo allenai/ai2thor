@@ -646,6 +646,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "debugarm":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    ArmMetadata armmeta = arm.GenerateMetadata();
+                    Debug.Log("last joint position");
+                    Vector3 rrpos = armmeta.joints[armmeta.joints.Length - 1].rootRelativePosition;
+                    Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
+                    break;
+                }
+
+                case "reproarmrot1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1.5 90");
+                    commands.Add("mmla 0.0 0.0 0.2 1.0");
+                    commands.Add("debugarm");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "reproarmrot2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1.5 45");
+                    commands.Add("mmla 0.0 0.0 0.2 1.0");
+                    commands.Add("debugarm");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
                 case "reproarmstuck":
                 {
                     List<string> commands = new List<string>();
@@ -2767,6 +2798,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
+                        action.disableRendering = false;
+                        action.waitForFixedUpdate = false;
                         //action.returnToStart = true;
                         if (splitcommand.Length > 4)
                         {
@@ -2800,7 +2833,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else {
                             Debug.LogError("Target x y z args needed for command");
                         }
-                        action.disableRendering = true;
                         //action.stopArmMovementOnContact = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -2872,8 +2904,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.speed = 1.0f;
                         }
 
-                        action.disableRendering = true;
-
+                        //action.disableRendering = true;
+                        action.waitForFixedUpdate = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2885,7 +2917,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.x = -1.0f;
                         action.y = 0.9009995460510254f;
                         action.z = 1;
-                        action.rotation = new Vector3(0, 135, 0);
+                        float rotation = 135.0f;
+						if (splitcommand.Length > 1 ) {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            rotation = float.Parse(splitcommand[4]);
+                        }
+
+                        action.rotation = new Vector3(0, rotation, 0);
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
