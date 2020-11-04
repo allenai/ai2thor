@@ -27,7 +27,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     public Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
-    private bool StopMotionOnContact = false;
+    //private bool StopMotionOnContact = false;
     // Start is called before the first frame update
 
     [SerializeField]
