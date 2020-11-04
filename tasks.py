@@ -16,9 +16,6 @@ import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
 
 
-UNITY_VERSION = "2019.4.2f1"
-
-
 def add_files(zipf, start_dir):
     for root, dirs, files in os.walk(start_dir):
         for f in files:
@@ -80,19 +77,34 @@ def _webgl_local_build_path(prefix, source_dir="builds"):
     )
 
 
+def _unity_version():
+    import yaml
+    with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
+        project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
+
+    return project_version['m_EditorVersion']
+
 def _build(unity_path, arch, build_dir, build_name, env={}):
+    import yaml
+        
     project_path = os.path.join(os.getcwd(), unity_path)
+    standalone_path = None
+
+    unity_version = _unity_version()
+
     if sys.platform.startswith('darwin'):
         unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
-            UNITY_VERSION
+            unity_version
         )
-        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(UNITY_VERSION)
+        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(unity_version)
     elif 'win' in sys.platform:
-        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(UNITY_VERSION)
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(unity_version)
         # TODO: Verify windows unity standalone path
-        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(UNITY_VERSION)
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith('linux'):
+        unity_hub_path = "{}/Unity/{}/Editor/Unity".format(os.environ['HOME'], unity_version)
 
-    if os.path.exists(standalone_path):
+    if standalone_path and os.path.exists(standalone_path):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path

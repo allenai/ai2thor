@@ -261,8 +261,34 @@ def test_teleport(controller):
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_find_ambiguous(controller):
+    event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+    known_ambig = ['TestActionDispatchSAAmbig']
+    assert event.metadata['actionReturn'] == known_ambig
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_find_ambiguous_stochastic(controller):
+    event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
+
+    known_ambig = ['TestActionDispatchSAAmbig']
+    assert event.metadata['actionReturn'] == known_ambig
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_server_action_ambiguous(controller):
+    exception_thrown = False
+    exception_message = None
+    try:
+        controller.step('TestActionDispatchSAAmbig')
+    except ValueError as e:
+        exception_thrown = True
+        exception_message = str(e)
+
+    assert exception_thrown
+    assert exception_message == 'Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted'
+
+@pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_conflicts_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
     known_conflicts = {
@@ -272,7 +298,7 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     }
     assert event.metadata['actionReturn'] == known_conflicts
     
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_conflicts_physics(controller):
     event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
     known_conflicts = {

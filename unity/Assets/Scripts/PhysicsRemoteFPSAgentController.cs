@@ -37,8 +37,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //forceVisible is true to activate, false to deactivate
-        public void ToggleHideAndSeekObjects(ServerAction action) {
-            if (physicsSceneManager.ToggleHideAndSeek(action.forceVisible)) {
+        public void ToggleHideAndSeekObjects(bool forceVisible = false) {
+            if (physicsSceneManager.ToggleHideAndSeek(forceVisible)) {
                 physicsSceneManager.ResetObjectIdToSimObjPhysics();
                 actionFinished(true);
             } else {
@@ -97,9 +97,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //change the mass/drag/angular drag values of a simobjphys that is pickupable or moveable
-        public void SetMassProperties(ServerAction action)
+        public void SetMassProperties(string objectId, float mass, float drag, float angularDrag)
         {
-            if(action.objectId == null)
+            if(objectId == null)
             {
                 errorMessage = "please give valid ObjectID for SetMassProperties() action";
                 actionFinished(false);
@@ -109,26 +109,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             foreach(SimObjPhysics sop in simObjects)
             {
-                if(sop.objectID == action.objectId)
+                if(sop.objectID == objectId)
                 {
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
                         Rigidbody rb = sop.GetComponent<Rigidbody>();
-                        rb.mass = action.mass;
-                        rb.drag = action.drag;
-                        rb.angularDrag = action.angularDrag;
+                        rb.mass = mass;
+                        rb.drag = drag;
+                        rb.angularDrag = angularDrag;
                         
                         actionFinished(true);
                         return;
                     }
 
-                    errorMessage = "object with ObjectID: " + action.objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed";
+                    errorMessage = "object with ObjectID: " + objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed";
                     actionFinished(false);
                     return;
                 }
             }
 
-            errorMessage = "object with ObjectID: " + action.objectId + ", could not be found in this scene";
+            errorMessage = "object with ObjectID: " + objectId + ", could not be found in this scene";
             actionFinished(false);
             return;
         }
@@ -171,15 +171,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //change the radius of the agent's capsule on the char controller component, and the capsule collider component
-        public void SetAgentRadius(ServerAction action)
+        public void SetAgentRadius(float agentRadius = 2.0f)
         {
-            m_CharacterController.radius = action.agentRadius;
+            m_CharacterController.radius = agentRadius;
             CapsuleCollider cap = GetComponent<CapsuleCollider>();
-            cap.radius = action.agentRadius;
+            cap.radius = agentRadius;
             actionFinished(true);
         }
 
-        public void ChangeColorOfMaterials(ServerAction action)
+        public void ChangeColorOfMaterials()
         {
             ColorChanger ColorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             ColorChangeComponent.RandomizeColor();
@@ -768,8 +768,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, goodPositions);
         }
 
-        public void PlaceFixedReceptacleAtLocation(ServerAction action) {
-            if (action.objectVariation < 0 || action.objectVariation > 4) {
+        public void PlaceFixedReceptacleAtLocation(int objectVariation, float x, float y, float z) {
+            if (objectVariation < 0 || objectVariation > 4) {
                 errorMessage = "Invalid receptacle variation.";
                 actionFinished(false);
                 return;
@@ -792,10 +792,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 GameObject recept = physicsSceneManager.ManipulatorReceptacles[i];
                 SimObjPhysics receptSop = recept.GetComponent<SimObjPhysics>();
 
-                if (action.objectVariation == i) {
+                if (objectVariation == i) {
                     recept.SetActive(true);
                     recept.GetComponent<Rigidbody>().isKinematic = true;
-                    recept.transform.position = new Vector3(action.x, action.y + yoffsets[i], action.z);
+                    recept.transform.position = new Vector3(x, y + yoffsets[i], z);
                     recept.transform.rotation = transform.rotation;
                     physicsSceneManager.AddToObjectsInScene(receptSop);
                     receptId = receptSop.ObjectID;
@@ -928,18 +928,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return (new Vector3(bc.size.x, 0f, bc.size.z) * 0.5f).magnitude;
         }
 
-        public void GetUnreachableSilhouetteForObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
+        public void GetUnreachableSilhouetteForObject(string objectId, float z) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
                 actionFinished(false);
                 return;
             }
-            if (action.z <= 0.0f) {
+            if (z <= 0.0f) {
                 errorMessage = "Interactable distance (z) must be > 0";
                 actionFinished(false);
                 return;
             }
-            SimObjPhysics targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             Vector3 savedObjectPosition = targetObject.transform.position;
             Quaternion savedObjectRotation = targetObject.transform.rotation;
@@ -952,7 +952,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float objectRad = GetXZRadiusOfObject(targetObject);
 
             var sb = new System.Text.StringBuilder();
-            int halfWidth = 1 + ((int) Math.Round((objectRad + action.z + m_CharacterController.radius) / gridSize));
+            int halfWidth = 1 + ((int) Math.Round((objectRad + z + m_CharacterController.radius) / gridSize));
             for (int i = 2 * halfWidth; i >= 0; i--) {
                 float zOffset = ((i - halfWidth) * gridSize);
 
@@ -965,7 +965,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.position = targetObject.transform.position + new Vector3(xOffset, 0f, zOffset);
                     if (isAgentCapsuleCollidingWith(targetObject.gameObject)) {
                         sb.Append("1");
-                    } else if(distanceToObject(targetObject) <= action.z) {
+                    } else if(distanceToObject(targetObject) <= z) {
                         sb.Append("2");
                     } else {
                         sb.Append("0");
@@ -1175,14 +1175,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void CollidersObjectCollidingWith(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
+        public void CollidersObjectCollidingWith(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
                 actionFinished(false);
                 return;
             }
             List<string> collidingWithNames = new List<string>();
-            GameObject go = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].gameObject;
+            GameObject go = physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject;
             foreach (Collider c in UtilityFunctions.collidersObjectCollidingWith(go)) {
                 collidingWithNames.Add(c.name);
 #if UNITY_EDITOR
@@ -1632,7 +1632,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         #endif
 
         //a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
-        public void NoOp(ServerAction action)
+        public void NoOp()
         {
             actionFinished(true);
         }

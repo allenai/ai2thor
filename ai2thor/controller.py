@@ -28,7 +28,6 @@ import uuid
 import tty
 import sys
 import termios
-import fcntl
 
 import zipfile
 
@@ -531,29 +530,7 @@ class Controller(object):
             max_num_repeats=1,
             remove_prob=0.5):
 
-        if random_seed is None:
-            random_seed = random.randint(0, 2**32)
-
-        exclude_object_ids = []
-
-        for obj in self.last_event.metadata['objects']:
-            pivot_points = self.receptacle_nearest_pivot_points
-            # don't put things in pot or pan currently
-            if (pivot_points and obj['receptacle'] and
-                    pivot_points[obj['objectId']].keys()) or obj['objectType'] in ['Pot', 'Pan']:
-
-                #print("no visible pivots for receptacle %s" % o['objectId'])
-                exclude_object_ids.append(obj['objectId'])
-
-        return self.step(dict(
-            action='RandomInitialize',
-            randomizeOpen=randomize_open,
-            uniquePickupableObjectTypes=unique_object_types,
-            excludeObjectIds=exclude_object_ids,
-            excludeReceptacleObjectPairs=exclude_receptacle_object_pairs,
-            maxNumRepeats=max_num_repeats,
-            removeProb=remove_prob,
-            randomSeed=random_seed))
+        raise Exception("RandomInitialize has been removed.  Use InitialRandomSpawn - https://ai2thor.allenai.org/ithor/documentation/actions/initialization/#object-position-randomization")
 
     def scene_names(self):
         scenes = []
@@ -696,7 +673,7 @@ class Controller(object):
         self.server.send(action)
         self.last_event = self.server.receive()
 
-        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments', 'AmbiguousAction']:
             raise ValueError(self.last_event.metadata['errorMessage'])
 
         if raise_for_failure:

@@ -528,20 +528,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //activate cracked camera effect with random seed
                  case "cc":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "CameraCrack";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CameraCrack";
 
                         //give me a seed
                         if(splitcommand.Length == 2)
                         {
-                            action.randomSeed = int.Parse(splitcommand[1]);
-                            action.forceVisible = false;
-                            action.numPlacementAttempts = 5;
+                            action["randomSeed"] = int.Parse(splitcommand[1]);
                         }
 
                         else
                         {
-                            action.randomSeed = 0;
+                            action["randomSeed"] = 0;
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -563,17 +561,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "rad":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetAgentRadius";
-                        action.agentRadius = 0.35f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetAgentRadius";
+                        action["agentRadius"] = 0.35f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "color":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeColorOfMaterials";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeColorOfMaterials";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -628,12 +626,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "smp":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetMassProperties";
-                        action.objectId = "Pot|+00.30|+00.96|+01.35";
-                        action.x = 100;
-                        action.y = 100;
-                        action.z = 100;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetMassProperties";
+                        action["objectId"] = "Pot|+00.30|+00.96|+01.35";
+                        action["mass"] = 100;
+                        action["drag"] = 100;
+                        action["angularDrag"] = 100;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -735,14 +733,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "pfrat":
                     {
-                        ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                        action.action = "PlaceFixedReceptacleAtLocation";
+                        action["action"] = "PlaceFixedReceptacleAtLocation";
                         if (splitcommand.Length > 1) {
-                            action.objectVariation = int.Parse(splitcommand[1]);
-                            action.x = float.Parse(splitcommand[2]);
-                            action.y = float.Parse(splitcommand[3]);
-                            action.z = float.Parse(splitcommand[4]);
+                            action["objectVariation"] = int.Parse(splitcommand[1]);
+                            action["x"] = float.Parse(splitcommand[2]);
+                            action["y"] = float.Parse(splitcommand[3]);
+                            action["z"] = float.Parse(splitcommand[4]);
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -901,12 +899,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "remove":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RemoveFromScene";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RemoveFromScene";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1150,21 +1148,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "thas":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ToggleHideAndSeekObjects";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleHideAndSeekObjects";
 
                         if(splitcommand.Length == 2)
                         {
                             if(splitcommand[1] == "t") 
-                            action.forceVisible = true;
+                            action["forceVisible"] = true;
 
                             if(splitcommand[1] == "f") 
-                            action.forceVisible = false;
+                            action["forceVisible"] = false;
                         }
 
                         else
                         {
-                            action.forceVisible = false;
+                            action["forceVisible"] = false;
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1239,10 +1237,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                 case "gusfo": {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetUnreachableSilhouetteForObject";
-                        action.objectId = splitcommand[1];
-                        action.z = float.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetUnreachableSilhouetteForObject";
+                        action["objectId"] = splitcommand[1];
+                        action["z"] = float.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2780,11 +2778,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     case "get_object_type_ids":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ObjectTypeToObjectIds";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ObjectTypeToObjectIds";
                         if (splitcommand.Length > 1)
                         {
-                            action.objectType = splitcommand[1];
+                            action["objectType"] = splitcommand[1];
                         }
 
                          PhysicsController.ProcessControlCommand(action);
