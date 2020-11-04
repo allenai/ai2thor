@@ -485,6 +485,14 @@ public class MCSMain : MonoBehaviour {
             BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
             boxCollider.center = Vector3.zero;
             boxCollider.size = Vector3.one;
+            // The assignToColliderItself flag is useful if you want to rotate the collider around the center.
+            // We may want to do this by default, but that will need more testing across all existing objects.
+            if (colliderDefinition.assignToColliderItself) {
+                boxCollider.center = gameObject.transform.localPosition;
+                boxCollider.size = gameObject.transform.localScale;
+                gameObject.transform.localPosition = Vector3.zero;
+                gameObject.transform.localScale = Vector3.one;
+            }
             LogVerbose("ASSIGN BOX COLLIDER TO GAME OBJECT " + gameObject.name);
             return boxCollider;
         }
@@ -1444,6 +1452,7 @@ public class MCSConfigAnimator {
 
 [Serializable]
 public class MCSConfigCollider : MCSConfigTransform {
+    public bool assignToColliderItself;
     public string type;
     public float height;
     public float radius;
