@@ -498,6 +498,13 @@ public class MCSMain : MonoBehaviour {
             return capsuleCollider;
         }
 
+        if (colliderDefinition.type.Equals("mesh")) {
+            MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
+            meshCollider.convex = true;
+            meshCollider.sharedMesh = gameObject.GetComponentInParent<MeshFilter>().sharedMesh;
+            return meshCollider;
+        }
+
         if (colliderDefinition.type.Equals("sphere")) {
             SphereCollider sphereCollider = gameObject.AddComponent<SphereCollider>();
             sphereCollider.center = Vector3.zero;
@@ -560,6 +567,10 @@ public class MCSMain : MonoBehaviour {
                 };
                 colliderObject.transform.parent = colliderParentObject.transform;
                 Collider collider = this.AssignCollider(colliderObject, colliderDefinition);
+                // If this uses a mesh collider, reset the parent's scale, else the collider won't be the correct size.
+                if (collider is MeshCollider) {
+                    colliderParentObject.transform.localScale = Vector3.one;
+                }
                 return collider;
             })).ToArray();
         }
