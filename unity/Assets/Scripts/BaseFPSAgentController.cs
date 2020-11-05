@@ -3085,6 +3085,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         #endif
 
+        public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig2(float foo) {
+            actionFinished(true);
+        }
+
         public void TestActionDispatchSAAmbig(ServerAction action) {
             actionFinished(true);
         }
@@ -3101,7 +3109,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(true, rvalue);
         }
 
-        public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
+        public void TestActionDispatchNoopAllDefault2(float param12, float param10=0.0f, float param11=1.0f) {
             actionFinished(true, "somedefault");
         }
 
@@ -3109,7 +3117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, "alldefault");
         }
 
-        public void TestActionDispatchNoop(bool param3,  string param4="foo") {
+        public void TestActionDispatchNoop2(bool param3,  string param4="foo") {
             actionFinished(true, "param3 param4/default " + param4);
         }
 

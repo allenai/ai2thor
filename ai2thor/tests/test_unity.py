@@ -269,15 +269,28 @@ def test_teleport(controller):
 def test_action_dispatch_find_ambiguous(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-    known_ambig = ['TestActionDispatchSAAmbig']
-    assert event.metadata['actionReturn'] == known_ambig
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
 
-    known_ambig = ['TestActionDispatchSAAmbig']
-    assert event.metadata['actionReturn'] == known_ambig
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    assert sorted(event.metadata['actionReturn']) == known_ambig
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_server_action_ambiguous2(controller):
+    exception_thrown = False
+    exception_message = None
+    try:
+        controller.step('TestActionDispatchSAAmbig2')
+    except ValueError as e:
+        exception_thrown = True
+        exception_message = str(e)
+
+    assert exception_thrown
+    assert 'Ambiguous action: TestActionDispatchSAAmbig2 Signature match found in the same class' == exception_message
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_server_action_ambiguous(controller):
@@ -350,12 +363,12 @@ def test_action_disptatch_two_param(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_two_param_with_default(controller):
-    event = controller.step(dict(action='TestActionDispatchNoop', param3=True, param4='foobar'))
+    event = controller.step(dict(action='TestActionDispatchNoop2', param3=True, param4='foobar'))
     assert event.metadata['actionReturn'] == 'param3 param4/default foobar'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_two_param_with_default_empty(controller):
-    event = controller.step(dict(action='TestActionDispatchNoop', param3=True))
+    event = controller.step(dict(action='TestActionDispatchNoop2', param3=True))
     assert event.metadata['actionReturn'] == 'param3 param4/default foo'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
@@ -375,7 +388,7 @@ def test_action_disptatch_all_default(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_some_default(controller):
-    event = controller.step(dict(action='TestActionDispatchNoopAllDefault', param12=9.0))
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault2', param12=9.0))
     assert event.metadata['actionReturn'] == 'somedefault'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
