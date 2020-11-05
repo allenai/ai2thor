@@ -128,7 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         YieldInstruction yieldInstruction = waitForFixedUpdate ? (YieldInstruction)new WaitForFixedUpdate() : (YieldInstruction)new WaitForEndOfFrame();
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-        yield return yieldInstruction;
+        // commenting out the WaitForEndOfFrame here since we shoudn't need 
+        // this as we already wait for a frame to pass when we execute each action
+        //yield return yieldInstruction;
 
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
