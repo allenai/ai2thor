@@ -453,7 +453,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public ArmMetadata GenerateMetadata() {
         var meta = new ArmMetadata();
-        meta.isColliding = this.IsArmColliding();
         //meta.handTarget = armTarget.position;
         var joint = FirstJoint;
         var joints = new List<JointMetadata>();

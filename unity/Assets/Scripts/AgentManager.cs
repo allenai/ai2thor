@@ -295,7 +295,6 @@ public class AgentManager : MonoBehaviour
        
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
-        this.registerAsThirdPartyCamera(handObj.GetComponentInChildren<Camera>());
     }
 
     //return reference to primary agent in case we need a reference to the primary
@@ -1267,7 +1266,6 @@ public class ArmMetadata {
 	public Vector3 HandSphereCenter;
 	//current radius of the hand sphere
 	public float HandSphereRadius;
-    public bool isColliding;
 }
 
 [Serializable]
