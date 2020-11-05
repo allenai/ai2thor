@@ -134,6 +134,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public void EndHabituation(ServerAction action) {
         this.GetComponentInChildren<Camera>().cullingMask = 0;
+        foreach (Transform child in GameObject.Find("Objects").transform) {
+            child.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        }
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
         this.actionFinished(false);
     }
