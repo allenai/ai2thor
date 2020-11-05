@@ -66,19 +66,21 @@ using Newtonsoft.Json.Linq;
             to the second method which has an optional forceThing parameter. i.e. if this
             case is not prevented, the optional value in the second method becomes required.
 
-    ALLOWED Ambiguous Action            
-    The subclass case below is permitted due to the fact that overriding a method 
-    with an additional optional parameter is common and its assumed that users want to
-    be able to have a more specific method with optional params. In this case, if the user calls
-    LookUp(0.0f), we will dispatch to the subclass and not raise an AmbiguousActionException
-    as the subclass is more specific and all parameter requirements have been satisfied.
-
+    case 3:
         methods:
             BaseClass
-                public void LookUp(float degrees)
+                public virtual void LookUp(float degrees)
             SubClass
                 public void LookUp(float degrees, bool forceThing=false)
-
+        reason:
+            This is similar to case #2, but the methods are spread across two classes.
+            The way to resolve this is to define the following methods:
+            Subclass
+                public override void LookUp(float degrees) 
+                public void LookUp(float degrees, bool forceThing)
+            
+            Within the override method, the author can dispatch to LookUp with a default 
+            value for forceThing.
 
 */
 public static class ActionDispatcher {
@@ -218,11 +220,12 @@ public static class ActionDispatcher {
 
                     if (signatureMatch)
                     {
-                        if (hierarchy.IndexOf(mi.DeclaringType) == hierarchy.IndexOf(methods[j].DeclaringType))
+                        // this happens if one method has a trailing optional value and all 
+                        // other parameter types match
+                        if (targetParams.Length != sourceParams.Length)
                         {
                             throw new AmbiguousActionException("Signature match found in the same class");
                         }
-
 
                         replaced = true;
                         if (hierarchy.IndexOf(mi.DeclaringType) < hierarchy.IndexOf(methods[j].DeclaringType))
@@ -230,7 +233,6 @@ public static class ActionDispatcher {
                             methods[j] = mi;
                         }
                     }
-
                 }
                 if (!replaced)
                 {
