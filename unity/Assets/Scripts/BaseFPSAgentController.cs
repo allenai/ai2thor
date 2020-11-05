@@ -2400,7 +2400,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ObjectTypeCount[] numDuplicatesOfType = null,
             String[] excludedReceptacles = null,
             String[] excludedObjectIds = null,
-            int numPlacementAttempts = 5
+            int numPlacementAttempts = 5,
+            bool allowFloor = false
         ) {
             if (numPlacementAttempts <= 0) {
                 errorMessage = "numPlacementAttempts must a positive integer.";
@@ -2426,7 +2427,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
-                ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//agent hand flag
+                ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; //agent hand flag
                 DefaultAgentHand();//also default agent hand
                 ItemInHand = null;
             }
@@ -2439,8 +2440,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             List<SimObjType> listOfExcludedReceptacleTypes = new List<SimObjType>();
 
             // check if strings used for excludedReceptacles are valid object types
-            foreach (string receptacleType in excludedReceptacles)
-            {
+            foreach (string receptacleType in excludedReceptacles) {
                 try
                 {
                     SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
@@ -2454,6 +2454,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     return;
                 }
             }
+            if (!allowFloor) {
+                listOfExcludedReceptacleTypes.Add(SimObjType.Floor);
+            }
 
             if (excludedObjectIds == null)  {
                 excludedObjectIds = new String[0];
@@ -2461,7 +2464,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> excludedSimObjects = new HashSet<SimObjPhysics>();
             foreach (String objectId in excludedObjectIds) {
-                Debug.Log($"{objectId} yar");
                 if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                     errorMessage = "Cannot find sim object with id '" + objectId + "'";
                     actionFinished(false);
@@ -2472,14 +2474,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
                 seed: randomSeed,
-                SpawnOnlyOutside: forceVisible,
+                spawnOnlyOutside: forceVisible,
                 maxPlacementAttempts: numPlacementAttempts,
-                StaticPlacement: placeStationary,
+                staticPlacement: placeStationary,
                 excludedSimObjects: excludedSimObjects,
                 numDuplicatesOfType: numDuplicatesOfType,
                 excludedReceptacleTypes: listOfExcludedReceptacleTypes
             );
+
+            if (success && !placeStationary) {
+                // Let things come to rest for 2 seconds.
+                bool autoSim = Physics.autoSimulation;
+                Physics.autoSimulation = false;
+                for (int i = 0; i < 100; i++) {
+                    Physics.Simulate(0.02f);
+                }
+                Physics.autoSimulation = Physics.autoSimulation;
+            }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
             actionFinished(success);
         }
 

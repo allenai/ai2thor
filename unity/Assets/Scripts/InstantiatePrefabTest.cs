@@ -163,7 +163,13 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
     //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
     //be randomized so that the random spawn is... random
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright)
+    public bool PlaceObjectReceptacle(
+        List<ReceptacleSpawnPoint> rsps,
+        SimObjPhysics sop, 
+        bool PlaceStationary,
+        int maxPlacementAttempts,
+        int degreeIncrement,
+        bool AlwaysPlaceUpright)
     {
         
         if(rsps == null)
@@ -275,8 +281,13 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
     }
 
-    public bool PlaceObject(SimObjPhysics sop, ReceptacleSpawnPoint rsp, bool PlaceStationary, int degreeIncrement, bool AlwaysPlaceUpright)
-	{
+    public bool PlaceObject(
+        SimObjPhysics sop,
+        ReceptacleSpawnPoint rsp,
+        bool PlaceStationary,
+        int degreeIncrement,
+        bool AlwaysPlaceUpright
+    ) {
         if(rsp.ParentSimObjPhys == sop)
         {
             #if UNITY_EDITOR

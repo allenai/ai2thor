@@ -2188,7 +2188,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //used to check if an specified sim object has come to rest
         //set useTimeout bool to use a faster time out
-        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length, bool useTimeout = false)
+        private IEnumerator checkIfObjectHasStoppedMoving(
+            SimObjPhysics sop,
+            float length,
+            bool useTimeout = false)
         {
             //yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
@@ -5298,7 +5301,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f) {
+        protected IEnumerator InteractAndWait(
+            CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f
+        ) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
