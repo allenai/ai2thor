@@ -336,6 +336,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float degreesPerSecond, 
         bool disableRendering = false, 
         float fixedDeltaTime = 0.02f, 
+        bool waitForFixedUpdate = false,
         bool returnToStartPositionIfFailed = false
     )
     {
@@ -347,6 +348,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             armTarget.transform.rotation * targetQuat,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
+            waitForFixedUpdate,
             returnToStartPositionIfFailed
         );
 
@@ -452,7 +454,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public ArmMetadata GenerateMetadata() {
         var meta = new ArmMetadata();
-        meta.isColliding = this.IsArmColliding();
         //meta.handTarget = armTarget.position;
         var joint = FirstJoint;
         var joints = new List<JointMetadata>();
