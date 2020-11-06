@@ -2975,6 +2975,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                              if (splitcommand.Length >= 3) {
                                  action.speed = float.Parse(splitcommand[2]);
                              }
+
+                             if (splitcommand.Length >= 4) {
+                                 action.disableRendering = bool.Parse(splitcommand[3]);
+                             }
+
+                             if (splitcommand.Length >= 5) {
+                                 action.returnToStart = bool.Parse(splitcommand[4]);
+                             }
                         }
 
                         PhysicsController.ProcessControlCommand(action);
