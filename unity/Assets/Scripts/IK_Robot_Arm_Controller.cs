@@ -329,6 +329,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float degreesPerSecond, 
         bool disableRendering = false, 
         float fixedDeltaTime = 0.02f, 
+        bool waitForFixedUpdate = false,
         bool returnToStartPositionIfFailed = false
     )
     {
@@ -340,6 +341,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             armTarget.transform.rotation * targetQuat,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
+            waitForFixedUpdate,
             returnToStartPositionIfFailed
         );
 
