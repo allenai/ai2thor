@@ -29,7 +29,7 @@ public class MCSMain : MonoBehaviour {
     private static float ISOMETRIC_PERFORMER_START_POSITION_Z = -4f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_X = 35.264f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_Y = -45f;
-    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 5f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 4f;
     private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_Z = 0.5f;
     private static float ISOMETRIC_WALL_BACK_POSITION_X = 0f;
     private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2.25f;
