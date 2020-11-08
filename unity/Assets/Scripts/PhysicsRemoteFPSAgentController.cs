@@ -4985,13 +4985,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = false;
                 yield return null;
 
-                for (int i = 0; i < 200; i++)
+                for (int i = 0; i < 100; i++)
                 {
                     Physics.Simulate(0.02f);
                     #if UNITY_EDITOR
                     yield return null;
                     #endif
-                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001)
+                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.001)
                     {
                         break;
                     }
