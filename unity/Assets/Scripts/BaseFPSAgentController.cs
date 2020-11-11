@@ -130,8 +130,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected CollisionFlags m_CollisionFlags;
 		protected Vector3 lastPosition;
 		protected string lastAction;
-		protected bool lastActionSuccess;
-		protected string errorMessage;
+		public bool lastActionSuccess;
+		public string errorMessage;
 		protected ServerActionErrorCode errorCode;
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;

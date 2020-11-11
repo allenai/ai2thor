@@ -128,10 +128,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         public IEnumerator ExecuteBatch(List<string> commands) {
 
+            string lastCommand = null;
             foreach(var command in commands) {
                 while(PhysicsController.IsProcessing) {
                     yield return new WaitForEndOfFrame();
                 }
+                if (lastCommand != null) {
+                    Debug.Log("Command Success: " + PhysicsController.lastActionSuccess);
+                    Debug.Log("ActionReturn: " + PhysicsController.actionReturn);
+                    Debug.Log("ErrorMessage: " + PhysicsController.errorMessage);
+                }
+                lastCommand = command;
                 Debug.Log("Executing Batch command: " + command);
                 Execute(command);
             }
@@ -675,7 +682,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
-                case "reproarmsphere3":
+                case "ras3":
                 {
                     GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
@@ -684,6 +691,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     go.AddComponent(typeof(MeshCollider));
                     MeshCollider mc  = go.GetComponent<MeshCollider>();
                     mc.convex = true;
+                    go.isStatic = true;
                     mc.isTrigger = true;
                     List<string> commands = new List<string>();
                     commands.Add("pp");
@@ -693,22 +701,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
-                case "reproarmsphere2":
+                case "sp":
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                    break;
+                }
+                case "ras2":
                 {
                     GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
                     go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    go.isStatic = true;
                     go.GetComponent<SphereCollider>().enabled = false;
                     go.AddComponent(typeof(MeshCollider));
                     List<string> commands = new List<string>();
                     commands.Add("pp");
                     commands.Add("rr");
                     commands.Add("inita");
-                    commands.Add("mmlah 1 1 True True");
+                    commands.Add("mmlah 1 0.5 True True");
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
-                case "reproarmsphere1":
+                case "ras1":
                 {
                     GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
@@ -720,6 +734,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     commands.Add("rr");
                     commands.Add("inita");
                     commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmstuck1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 0.3425926074842191 1 True True");
+                    commands.Add("telefull");
+                    commands.Add("telearm -0.366 0.0 0.3842");
+                    commands.Add("ld 10");
+                    //commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True");
+                    //commands.Add("mmlah 0.5203709825292535 2 True True");
+                    //commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True");
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
@@ -2957,6 +2987,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "telearm":
+                    {
+                        var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+						if (splitcommand.Length > 1 ) {
+                            float x = float.Parse(splitcommand[1]);
+                            float y = float.Parse(splitcommand[2]);
+                            float z = float.Parse(splitcommand[3]);
+                            armTarget.transform.position = new Vector3(x, y, z);
+                            Physics.Simulate(Time.fixedDeltaTime);
+                        }
+                        break;
+                    }
+
 
                     case "telefull":
                     {
