@@ -745,7 +745,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     commands.Add("inita");
                     commands.Add("mmlah 0.3425926074842191 1 True True");
                     commands.Add("telefull");
-                    commands.Add("telearm -0.366 0.0 0.3842");
+                    commands.Add("telearm -0.702 0.901 0.754");
                     commands.Add("ld 10");
                     //commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True");
                     //commands.Add("mmlah 0.5203709825292535 2 True True");
@@ -2998,6 +2998,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             armTarget.transform.position = new Vector3(x, y, z);
                             Physics.Simulate(Time.fixedDeltaTime);
                         }
+
                         break;
                     }
 
