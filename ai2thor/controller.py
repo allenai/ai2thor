@@ -562,13 +562,18 @@ class Controller(object):
             if current_exec_path.startswith(release):
                 continue
             try:
+                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                # we must try to get a lock here since its possible that a process could still
+                # be running with this release
+                fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
                 tmp_prune_dir = os.path.join(self.tmp_dir(), '-'.join([self.build_name(release), str(time.time()), str(random.random()), 'prune']))
                 os.rename(release, tmp_prune_dir)
                 shutil.rmtree(tmp_prune_dir)
-                # a FileNotFoundError can get thrown if two processes race to remove
-                # the same directory.  since the release is moved to tmp_dir() using os.rename
-                # which is atomic, this is safe to catch and ignore
-            except FileNotFoundError as e:
+
+                fcntl.lockf(lf, fcntl.LOCK_UN)
+                os.close(lf)
+            except Exception as e:
                 pass
 
     def next_interact_command(self):
@@ -818,17 +823,17 @@ class Controller(object):
             if not os.path.isfile(self.executable_path()):
                 zip_data = ai2thor.downloader.download(
                     url,
-                    self.build_name(),
+                    self.build_name(url),
                     sha256_build,
                     self.include_private_scenes
                     )
 
                 z = zipfile.ZipFile(io.BytesIO(zip_data))
                 # use tmpdir instead or a random number
-                extract_dir = os.path.join(self.tmp_dir(), self.build_name())
+                extract_dir = os.path.join(self.tmp_dir(), self.build_name(url))
                 logger.debug("Extracting zipfile %s" % os.path.basename(url))
                 z.extractall(extract_dir)
-                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
+                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name(url)))
                 # we can lose the executable permission when unzipping a build
                 os.chmod(self.executable_path(), 0o755)
             else:
