@@ -562,7 +562,8 @@ class Controller(object):
             if current_exec_path.startswith(release):
                 continue
             try:
-                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                lf_path = release + ".lock"
+                lf = os.open(lf_path, os.O_RDWR | os.O_CREAT)
                 # we must try to get a lock here since its possible that a process could still
                 # be running with this release
                 fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -573,6 +574,7 @@ class Controller(object):
 
                 fcntl.lockf(lf, fcntl.LOCK_UN)
                 os.close(lf)
+                os.unlink(lf_path)
             except Exception as e:
                 pass
 
