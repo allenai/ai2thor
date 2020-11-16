@@ -60,7 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //get all sim objets of action.type, then sets their temperature decay timers to value
-        public void SetRoomTempDecayTimeForType(ServerAction action) {
+        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp=0.0f) {
             //get all objects of type passed by action
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 
@@ -68,7 +68,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             foreach (SimObjPhysics sop in simObjects)
             {
-                if(sop.Type.ToString() == action.objectType)
+                if(sop.Type.ToString() == objectType)
                 {
                     simObjectsOfType.Add(sop);
                 }
@@ -76,21 +76,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //use SetHowManySecondsUntilRoomTemp to set them all
             foreach (SimObjPhysics sop in simObjectsOfType)
             {
-                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
             }
 
             actionFinished(true);
         }
 
         //get all sim objects and globally set the room temp decay time for all of them
-        public void SetGlobalRoomTempDecayTime(ServerAction action) {
+        public void SetGlobalRoomTempDecayTime(float TimeUntilRoomTemp=0.0f) {
             //get all objects 
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 
             //use SetHowManySecondsUntilRoomTemp to set them all
             foreach (SimObjPhysics sop in simObjects)
             {
-                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
             }
 
             actionFinished(true);
@@ -134,9 +134,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //sets whether this scene should allow objects to decay temperature to room temp over time or not
-        public void SetDecayTemperatureBool(ServerAction action)
+        public void SetDecayTemperatureBool(bool allowDecayTemperature)
         {
-            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = action.allowDecayTemperature;
+            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
             actionFinished(true);
         }
 
@@ -370,7 +370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
-                DefaultAgentHand(action);
+                DefaultAgentHand();
 
                 base.LookDown(action);
                 return;
@@ -423,7 +423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
-                DefaultAgentHand(action);
+                DefaultAgentHand();
 
                 base.LookUp(action);
             }
@@ -445,7 +445,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
-                DefaultAgentHand(action);
+                {
+                    DefaultAgentHand();
+                }
 
                 base.RotateRight(action);
             } 
@@ -467,7 +469,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 
                 base.RotateLeft(action);
             } 
@@ -722,8 +724,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void ChangeAgentColor(ServerAction action) {
-            agentManager.UpdateAgentColor(this, new Color(action.x, action.y, action.z, 1.0f));
+        // params are named x,y,z due to the action orignally using ServerAction.x,y,z
+        public void ChangeAgentColor(float x, float y, float z) {
+            agentManager.UpdateAgentColor(this, new Color(x, y, z, 1.0f));
             actionFinished(true);
         }
 
@@ -744,19 +747,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return closestPoint;
         }
 
-        public void PointsOverTableWhereHandCanBe(ServerAction action) {
+        public void PointsOverTableWhereHandCanBe(string objectId, float x, float z) {
             // Assumes InitializeTableSetting has been run before calling this
 
-            string tableId = action.objectId;
+            string tableId = objectId;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
                 actionFinished(false);
                 return;
             }
 
-            int xSteps = Convert.ToInt32(Math.Abs(action.x / 0.1f));
-            int zStart = Convert.ToInt32(Math.Abs(action.z / 0.1f));
+            int xSteps = Convert.ToInt32(Math.Abs(x / 0.1f));
+            int zStart = Convert.ToInt32(Math.Abs(z / 0.1f));
 
             DefaultAgentHand();
 
@@ -846,7 +849,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, receptId);
         }
 
-        public void PlaceBookWallAtLocation(ServerAction action) {
+        public void PlaceBookWallAtLocation(int objectVariation, float x, float y, float z, Vector3 rotation) {
             if (
                 physicsSceneManager.ManipulatorBooks == null || 
                 physicsSceneManager.ManipulatorBooks.Length == 0
@@ -856,7 +859,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (action.objectVariation < 0) {
+            if (objectVariation < 0) {
                 errorMessage = "objectVariation must be >= 0";
                 actionFinished(false);
                 return;
@@ -867,7 +870,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //uint which = (uint) Convert.ToUInt32(action.objectVariation);
             // List<bool> whichIncluded = new List<bool>();
             for (int i = 0; i < 5; i++) {
-                if (((action.objectVariation >> i) % 2) == 1) {
+                if (((objectVariation >> i) % 2) == 1) {
                     physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(true);
                 } else {
                     physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(false);
@@ -879,17 +882,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject allBooksObject = physicsSceneManager.ManipulatorBooks[0].transform.parent.gameObject;
 
-            allBooksObject.transform.position = new Vector3(action.x, action.y + yoffset, action.z);
+            allBooksObject.transform.position = new Vector3(x, y + yoffset, z);
             allBooksObject.transform.localRotation = Quaternion.Euler(
-                action.rotation.x,
-                action.rotation.y,
-                action.rotation.z
+                rotation.x,
+                rotation.y,
+                rotation.z
             );
 
             actionFinished(true);
         }
 
-        public void InitializeTableSetting(ServerAction action) {
+        public void InitializeTableSetting(int objectVariation) {
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             Vector3 newPosition = transform.position;
@@ -916,7 +919,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (action.objectVariation < 0 || action.objectVariation > 4) {
+            if (objectVariation < 0 || objectVariation > 4) {
                 errorMessage = "Invalid table variation.";
                 actionFinished(false);
                 return;
@@ -935,7 +938,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 GameObject table = physicsSceneManager.ManipulatorTables[i];
                 SimObjPhysics tableSop = table.GetComponent<SimObjPhysics>();
 
-                if (action.objectVariation == i) {
+                if (objectVariation == i) {
                     table.SetActive(true);
                     physicsSceneManager.AddToObjectsInScene(tableSop);
                     tableId = tableSop.ObjectID;
@@ -1503,7 +1506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 transform.position = targetTeleport;
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
@@ -1530,7 +1533,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 transform.position = targetTeleport;
 
                 //apply gravity after teleport so we aren't floating in the air
@@ -1913,7 +1916,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
-        public void PausePhysicsAutoSim(ServerAction action)
+        public void PausePhysicsAutoSim()
         {
             //print("ZA WARUDO!");
             Physics.autoSimulation = false;
@@ -1922,7 +1925,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
-        public void AdvancePhysicsStep(ServerAction action)
+        public void AdvancePhysicsStep(float timeStep=0.02f)
         {
             if(Physics.autoSimulation == true)
             {
@@ -1931,7 +1934,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if(action.timeStep <= 0.0f || action.timeStep > 0.05f)
+            if(timeStep <= 0.0f || timeStep > 0.05f)
             {
                 errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
                 actionFinished(false);
@@ -1950,13 +1953,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //pass in the timeStep to advance the physics simulation
-            Physics.Simulate(action.timeStep);
+            Physics.Simulate(timeStep);
             this.AdvancePhysicsStepCount++;
             actionFinished(true);
         }
 
         //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
-        public void UnpausePhysicsAutoSim(ServerAction action)
+        public void UnpausePhysicsAutoSim()
         {
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
@@ -2822,12 +2825,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //creates a grid startinng from the agent's current hand position and projects that grid
         //forward relative to the agent
         //grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
-        public void GetReceptacleCoordinatesExpRoom(ServerAction action)
+        public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount)
         {
             var agent = this.agentManager.agents[0];
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
-            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
             //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
             actionFinished(true, ret);
         }
@@ -2927,17 +2930,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //specify a screen by objectId in exp room and change material to objectVariation
-        public void ChangeScreenMaterialExpRoom(ServerAction action)
+        public void ChangeScreenMaterialExpRoom(string objectId, int objectVariation)
         {
             //only 5 material options at the moment
-            if(action.objectVariation < 0 || action.objectVariation > 4)
+            if(objectVariation < 0 || objectVariation > 4)
             {
                 errorMessage = "please use objectVariation [0, 4] inclusive";
                 actionFinished(false);
                 return;
             }
 
-            if(action.objectId == null)
+            if(objectId == null)
             {
                 errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
                 actionFinished(false);
@@ -2948,7 +2951,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //find the object in the scene, disregard visibility
             foreach(SimObjPhysics sop in VisibleSimObjs(true))
             {
-                if(sop.objectID == action.objectId)
+                if(sop.objectID == objectId)
                 {
                     target = sop;
                 }
@@ -2957,32 +2960,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(target == null)
             {
                 errorMessage = "no object with id: "+ 
-                action.objectId + " could be found during ChangeScreenMaterialExpRoom";
+                objectId + " could be found during ChangeScreenMaterialExpRoom";
                 actionFinished(false);
                 return;
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeScreenMaterial(target, action.objectVariation);
+            ersm.ChangeScreenMaterial(target, objectVariation);
             actionFinished(true);
         }
 
         //specify a screen in exp room by objectId and change material color to rgb
-        public void ChangeScreenColorExpRoom(ServerAction action)
+        public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b)
         {
             if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
+            r < 0 || r > 255 ||
+            g < 0 || g > 255 ||
+            b < 0 || b > 255)
             {
                 errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            if(action.objectId == null)
-            {
-                errorMessage = "please give valid objectId for ChangeScreenColorExpRoom action";
                 actionFinished(false);
                 return;
             }
@@ -2991,7 +2987,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //find the object in the scene, disregard visibility
             foreach(SimObjPhysics sop in VisibleSimObjs(true))
             {
-                if(sop.objectID == action.objectId)
+                if(sop.objectID == objectId)
                 {
                     target = sop;
                 }
@@ -2999,22 +2995,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(target == null)
             {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during ChangeScreenColorExpRoom";
+                errorMessage = "no object with id: "+ 
+                objectId + " could not be found during ChangeScreenColorExpRoom";
                 actionFinished(false);
                 return;
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeScreenColor(target, action.r, action.g, action.b);
+            ersm.ChangeScreenColor(target, r, g, b);
             actionFinished(true);
         }
 
         //change wall to material [variation]       
-        public void ChangeWallMaterialExpRoom(ServerAction action)
+        public void ChangeWallMaterialExpRoom(int objectVariation)
         {
             //only 5 material options at the moment
-            if(action.objectVariation < 0 || action.objectVariation > 4)
+            if(objectVariation < 0 || objectVariation > 4)
             {
                 errorMessage = "please use objectVariation [0, 4] inclusive";
                 actionFinished(false);
@@ -3022,7 +3018,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeWallMaterial(action.objectVariation);
+            ersm.ChangeWallMaterial(objectVariation);
             actionFinished(true);
         }
 

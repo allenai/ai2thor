@@ -327,10 +327,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "wallmaterial":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeWallMaterialExpRoom";
-                        action.objectVariation = 1;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeWallMaterialExpRoom";
+                        action["objectVariation"] = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -412,35 +411,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "screenm":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeScreenMaterialExpRoom";
-                        action.objectVariation = 3;
-                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeScreenMaterialExpRoom";
+                        action["objectVariation"] = 3;
+                        action["objectId"] = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
                  case "screenc":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeScreenColorExpRoom";
-                        action.r = 20f;
-                        action.g = 94f;
-                        action.b = 10f;
-                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeScreenColorExpRoom";
+                        action["r"] = 20f;
+                        action["g"] = 94f;
+                        action["b"] = 10f;
+                        action["objectId"] = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
                  case "grid":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "GetReceptacleCoordinatesExpRoom";
-                        action.gridSize = 0.1f;
-                        action.maxStepCount = 5;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReceptacleCoordinatesExpRoom";
+                        action["gridSize"] = 0.1f;
+                        action["maxStepCount"] = 5;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -585,28 +581,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "ap":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "AdvancePhysicsStep";
-                        action.timeStep = 0.02f; //max 0.05, min 0.01
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "AdvancePhysicsStep";
+                        action["timeStep"] = 0.02f; //max 0.05, min 0.01
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                     
                 case "up":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "UnpausePhysicsAutoSim";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "UnpausePhysicsAutoSim";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                     
                 case "its":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "InitializeTableSetting";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "InitializeTableSetting";
                         if (splitcommand.Length > 1) {
-                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action["objectVariation"] = int.Parse(splitcommand[1]);
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -614,12 +609,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "potwhcb":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "PointsOverTableWhereHandCanBe";
-                        action.objectId = splitcommand[1];
-                        action.x = float.Parse(splitcommand[2]);
-                        action.z = float.Parse(splitcommand[3]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PointsOverTableWhereHandCanBe";
+                        action["objectId"] = splitcommand[1];
+                        action["x"] = float.Parse(splitcommand[2]);
+                        action["z"] = float.Parse(splitcommand[3]);
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -641,15 +635,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "pbwal":
                     {
-                        ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                        action.action = "PlaceBookWallAtLocation";
+                        action["action"] = "PlaceBookWallAtLocation";
                         if (splitcommand.Length > 1) {
-                            action.objectVariation = int.Parse(splitcommand[1]);
-                            action.x = float.Parse(splitcommand[2]);
-                            action.y = float.Parse(splitcommand[3]);
-                            action.z = float.Parse(splitcommand[4]);
-                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                            action["objectVariation"] = int.Parse(splitcommand[1]);
+                            action["x"] = float.Parse(splitcommand[2]);
+                            action["y"] = float.Parse(splitcommand[3]);
+                            action["z"] = float.Parse(splitcommand[4]);
+                            action["rotation"] = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -879,8 +873,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
                 case "maom":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "MakeAllObjectsMoveable";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeAllObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1161,8 +1155,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "grp":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetReachablePositions";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         PhysicsController.ProcessControlCommand(action);
                         Debug.Log(PhysicsController.reachablePositions.Length);
@@ -1171,8 +1165,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "grpb":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetReachablePositions";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         StochasticController.ProcessControlCommand(action);
                         Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
@@ -2062,11 +2056,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //changes the time spent to decay to room temperature for all objects in this scene of given type
                 case "DecayTimeForType":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetRoomTempDecayTimeForType";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetRoomTempDecayTimeForType";
 
-                        action.TimeUntilRoomTemp = 20f;
-                        action.objectType = "Bread";
+                        action["TimeUntilRoomTemp"] = 20f;
+                        action["objectType"] = "Bread";
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2086,10 +2080,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
                 case "SetTempDecayBool":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetDecayTemperatureBool";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetDecayTemperatureBool";
 
-                        action.allowDecayTemperature = false;
+                        action["allowDecayTemperature"] = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

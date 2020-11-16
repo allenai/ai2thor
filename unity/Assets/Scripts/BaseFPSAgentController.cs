@@ -401,9 +401,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(ServerAction action) {
-            if(action.maxStepCount != 0) {
-                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+        public void GetReachablePositions(int maxStepCount = 0) {
+            if(maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, maxStepCount);
             } else {
                 reachablePositions = getReachablePositions();
             }
@@ -1015,7 +1015,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
         //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
         //this means that the isSceneAtRest bool will always be false
-        public void MakeAllObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable()
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
             {
@@ -1715,7 +1715,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 transform.position = targetTeleport;
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
@@ -2349,7 +2349,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        public void DefaultAgentHand(ServerAction action = null) {
+        public void DefaultAgentHand() {
             ResetAgentHandPosition();
             ResetAgentHandRotation();
             IsHandDefault = true;

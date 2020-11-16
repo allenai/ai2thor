@@ -124,7 +124,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             //only default hand if not manually Interacting with things
             if(!action.manualInteract)
-            DefaultAgentHand(action);
+            DefaultAgentHand();
 
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
