@@ -67,12 +67,27 @@ public class CollisionListener : MonoBehaviour
 
     public void OnTriggerStay(Collider col)
     {
+        #if UNITY_EDITOR
+        if(!activeColliders.Contains(col)) {
+         if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere"){
+             Debug.Log("got collision stay with " + col.gameObject.name + " this" + this.gameObject.name);
+         }
+        }
+        #endif
         this.
         RegisterCollision(col, CascadeCollisionEventsToParent);
     }
 
     public void OnTriggerEnter(Collider col)
     {
+        #if UNITY_EDITOR
+        if(!activeColliders.Contains(col)) {
+         if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere"){
+             Debug.Log("got collision enter with " + col.gameObject.name + " this" + this.gameObject.name);
+         }
+        }
+        #endif
+        //Debug.Log("got collision with " + col.gameObject.name + " this" + this.gameObject.name);
         RegisterCollision(col, CascadeCollisionEventsToParent);
     }
 

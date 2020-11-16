@@ -6,9 +6,12 @@ import time
 import boto3
 import getpass
 import ai2thor.controller
+import ai2thor.fifo_server
 import uuid
 import uuid
 import cv2
+from tasks import _local_build_path
+#ai2thor.controller.COMMIT_ID ='fd7cf8d59c5a01f5aadc7f9379b0f579e9139ace' 
 
 parser = argparse.ArgumentParser(description="Thor Arm Tester")
 parser.add_argument('--record-video', action='store_true')
@@ -16,8 +19,17 @@ args = parser.parse_args()
 
 from pprint import pprint
 controller = ai2thor.controller.Controller(
+#        port=8200, start_unity=False,
+    local_executable_path=_local_build_path(), 
+    server_class=ai2thor.fifo_server.FifoServer,
     scene='FloorPlan1_physics', gridSize=0.25,
-    width=900, height=900, agentMode='arm', fieldOfView=100, agentControllerType='mid-level', targetFrameRate=30, fixedDeltaTime=0.02)
+    width=900, height=900, 
+    agentMode='arm', 
+    #fastActionEmit=True,
+    #fieldOfView=100, 
+    agentControllerType='mid-level'
+    ) 
+    
 
 def upload_video(data):
     s3 = boto3.resource("s3")
@@ -53,13 +65,13 @@ def write_video(frames):
     upload_video(data)
 
 def standard_pose():
-    controller.step(action='TeleportFull', x=-1, y=0.9009995460510254, z=1, rotation=dict(x=0, y=180, z=0), horizon=0)
+    controller.step(action='TeleportFull', x=-1, y=0.9009995460510254, z=1, rotation=dict(x=0, y=180, z=0), horizon=10)
     controller.step('PausePhysicsAutoSim')
-    controller.step(action='MoveMidLevelArm', disableRendering=False, position=dict(x=0.01, y=0, z=0.01), speed = 2, returnToStart = False, handCameraSpace = False)
-    controller.step(action='MoveMidLevelArmHeight', disableRendering=False, y=0.9, speed = 2, returnToStart = False)
 
-    pose = {'x': -1.0, 'y': 0.9009995460510254, 'z': 1, 'rotation': 135, 'horizon': 0}
+    pose = {"x": -1.0, "y": 0.9009995460510254, "z": 1.0, "rotation": 0, "horizon": 10}
     controller.step(action='TeleportFull', x=pose['x'], y=pose['y'], z=pose['z'], rotation=dict(x=0.0, y=pose['rotation'], z=0.0), horizon=pose['horizon'])
+    controller.step(action='MoveMidLevelArm', disableRendering=False, position=dict(x=0.00, y=0, z=0.35), speed = 2, returnToStart = False, handCameraSpace = False)
+    controller.step(action='MoveMidLevelArmHeight', disableRendering=False, y=0.8, speed = 2, returnToStart = False)
 
 
 def execute_actions(actions, **kwargs):
@@ -71,5 +83,13 @@ def execute_actions(actions, **kwargs):
             a[k] = v
 
         controller.step(a)
-        frames.append(controller.last_event.cv2img)
-    write_video(frames)
+        print("success: %s" % controller.last_event.metadata['lastActionSuccess'])
+        print("return: %s" % controller.last_event.metadata['actionReturn'])
+        print("position: %s" % (controller.last_event.metadata['arm']['HandSphereCenter']))
+        for j in controller.last_event.metadata['arm']['joints']:
+            rot = ' '.join(map(lambda x: str(j['rotation'][x]), ['x', 'y', 'z', 'w']))
+            print("%s %s" % (j['name'], rot))
+            #print("%s %s" % (j['name'], j['position']))
+        print(controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere'])
+        #frames.append(controller.last_event.cv2img)
+#    write_video(frames)

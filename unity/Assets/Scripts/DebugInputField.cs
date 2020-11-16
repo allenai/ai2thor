@@ -42,6 +42,79 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return success;
         }
 
+        public IEnumerator moveArmHeightDebug(float height) {
+            CapsuleCollider cc = PhysicsController.GetComponent<CapsuleCollider>();
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            Vector3 cc_center = cc.center;
+            Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
+            Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
+
+            //linear function that take height and adjusts targetY relative to min/max extents
+            float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
+            Vector3 target = new Vector3(0, targetY, 0);
+            float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            double epsilon = 1e-3;
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - arm.transform.localPosition).normalized;
+                arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            }
+
+        }
+        public void dumpPosition(Transform to) {
+            Debug.Log("GameObject: " + to.gameObject.name);
+            Debug.Log(
+                to.position.x.ToString("0.####") + " " + 
+                to.position.y.ToString("0.####") + " " + 
+                to.position.z.ToString("0.####") + " "
+            );
+
+        }
+
+        public IEnumerator moveArmDebug(Vector3 targetArmBase)
+        {
+
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            //var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
+            var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
+            var animator = arm.gameObject.GetComponent<Animator>();
+            //animator.enabled = false;
+            var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+            var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+            Vector3 target = arm.transform.TransformPoint(targetArmBase);
+            float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            double epsilon = 1e-3;
+            Debug.Log("Starting arm movement");
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - armTarget.transform.position).normalized;
+                armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
+                dumpPosition(wristCol);
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+                //animator.Update(Time.fixedDeltaTime);
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            }
+            yield return new WaitForEndOfFrame();
+            Debug.Log("Ending arm movement");
+
+        }
+
         public void setControlMode(ControlMode mode) {
             setEnabledControlComponent(controlMode, false);
             controlMode = mode;
@@ -644,6 +717,64 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "msa":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.993f, 0.8023f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+                case "msr":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.87f, 0.6436f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+
+                case "mach": {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+
+                case "mafh":
+                {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+                    break;
+                }
+                case "macr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+                case "mafr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+
+                    break;
+                }
+                case "dumpwrist": {
+                    var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+                    dumpPosition(wristCol);
+                    break;
+                }
+
                 case "debugarm":
                 {
                     var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
@@ -653,7 +784,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
                     break;
                 }
+                case "posarm1":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+                    armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
+                    break;
+                }
 
+                
+                case "ras1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msr");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "ras2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msa");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
                 case "reproarmrot1":
                 {
                     List<string> commands = new List<string>();
