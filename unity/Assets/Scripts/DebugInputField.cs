@@ -126,6 +126,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         #if UNITY_EDITOR
+        // shortcut to execute no-parameter actions
+
+        private void ExecuteAction(string actionName) {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+            action["action"] = actionName;
+            PhysicsController.ProcessControlCommand(action);
+        }
+
         public void Execute(string command)
         {
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
@@ -764,24 +772,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "roco":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomlyOpenCloseObjects";
-                        action.randomSeed = (new System.Random()).Next(1, 1000000);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomlyOpenCloseObjects";
+                        action["randomSeed"] = (new System.Random()).Next(1, 1000000);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "crouch":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "Crouch";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Crouch");
                         break;
                     }
                 case "stand":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "Stand";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Stand");
                         break;
                     }
 
@@ -885,6 +889,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "Reset";
                         PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Reset");
                         break;
                     }
                     
@@ -994,32 +999,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "neutral":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToNeutral";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToNeutral");
                         break;
                     }
                 case "happy":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToHappy";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToHappy");
                         break;
                     }
 
                 case "mad":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToMad";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToMad");
                         break;
                     }
 
                 case "supermad":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToSuperMad";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToSuperMad");
                         break;
                     }
 
@@ -1250,9 +1247,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // Close visible objects
                 case "cvo":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseVisibleObjects";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("CloseVisibleObjects");
                         break;
                     }
 
