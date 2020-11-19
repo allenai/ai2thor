@@ -555,18 +555,28 @@ class Controller(object):
         current_exec_path = self.executable_path()
         rdir = self.releases_dir()
         # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
-        all_dirs = filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir)))
+        all_dirs = list(filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))))
         sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        makedirs(self.tmp_dir())
+
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
             try:
-                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                lf_path = release + ".lock"
+                lf = os.open(lf_path, os.O_RDWR | os.O_CREAT)
+                # we must try to get a lock here since its possible that a process could still
+                # be running with this release
                 fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                shutil.rmtree(release)
+
+                tmp_prune_dir = os.path.join(self.tmp_dir(), '-'.join([self.build_name(release), str(time.time()), str(random.random()), 'prune']))
+                os.rename(release, tmp_prune_dir)
+                shutil.rmtree(tmp_prune_dir)
+
                 fcntl.lockf(lf, fcntl.LOCK_UN)
                 os.close(lf)
-            except Exception:
+                os.unlink(lf_path)
+            except Exception as e:
                 pass
 
     def next_interact_command(self):
@@ -730,6 +740,9 @@ class Controller(object):
                 assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
                     ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
+    def tmp_dir(self):
+        return os.path.join(self.base_dir(), 'tmp')
+
     def releases_dir(self):
         return os.path.join(self.base_dir(), 'releases')
 
@@ -804,27 +817,26 @@ class Controller(object):
             raise Exception("Only 64bit currently supported")
 
         url, sha256_build = self.build_url()
-        tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
-        makedirs(tmp_dir)
-        download_lf = os.open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), os.O_RDWR | os.O_CREAT)
+        makedirs(self.tmp_dir())
+        download_lf = os.open(os.path.join(self.tmp_dir(), self.build_name(url) + ".lock"), os.O_RDWR | os.O_CREAT)
         try:
             fcntl.lockf(download_lf, fcntl.LOCK_EX)
 
             if not os.path.isfile(self.executable_path()):
                 zip_data = ai2thor.downloader.download(
                     url,
-                    self.build_name(),
+                    self.build_name(url),
                     sha256_build,
                     self.include_private_scenes
                     )
 
                 z = zipfile.ZipFile(io.BytesIO(zip_data))
                 # use tmpdir instead or a random number
-                extract_dir = os.path.join(tmp_dir, self.build_name())
+                extract_dir = os.path.join(self.tmp_dir(), self.build_name(url))
                 logger.debug("Extracting zipfile %s" % os.path.basename(url))
                 z.extractall(extract_dir)
-                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
+                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name(url)))
                 # we can lose the executable permission when unzipping a build
                 os.chmod(self.executable_path(), 0o755)
             else:
