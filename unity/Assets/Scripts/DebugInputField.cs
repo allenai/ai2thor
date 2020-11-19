@@ -838,6 +838,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
+                case "reproarmsphere3":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    go.GetComponent<SphereCollider>().enabled = false;
+                    go.AddComponent(typeof(MeshCollider));
+                    MeshCollider mc  = go.GetComponent<MeshCollider>();
+                    mc.convex = true;
+                    mc.isTrigger = true;
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmsphere2":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    go.GetComponent<SphereCollider>().enabled = false;
+                    go.AddComponent(typeof(MeshCollider));
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmsphere1":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
                 case "reproarmstuck":
                 {
                     List<string> commands = new List<string>();
