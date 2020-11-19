@@ -42,6 +42,79 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return success;
         }
 
+        public IEnumerator moveArmHeightDebug(float height) {
+            CapsuleCollider cc = PhysicsController.GetComponent<CapsuleCollider>();
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            Vector3 cc_center = cc.center;
+            Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
+            Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
+
+            //linear function that take height and adjusts targetY relative to min/max extents
+            float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
+            Vector3 target = new Vector3(0, targetY, 0);
+            float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            double epsilon = 1e-3;
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - arm.transform.localPosition).normalized;
+                arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            }
+
+        }
+        public void dumpPosition(Transform to) {
+            Debug.Log("GameObject: " + to.gameObject.name);
+            Debug.Log(
+                to.position.x.ToString("0.####") + " " + 
+                to.position.y.ToString("0.####") + " " + 
+                to.position.z.ToString("0.####") + " "
+            );
+
+        }
+
+        public IEnumerator moveArmDebug(Vector3 targetArmBase)
+        {
+
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            //var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
+            var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
+            var animator = arm.gameObject.GetComponent<Animator>();
+            //animator.enabled = false;
+            var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+            var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+            Vector3 target = arm.transform.TransformPoint(targetArmBase);
+            float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            double epsilon = 1e-3;
+            Debug.Log("Starting arm movement");
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - armTarget.transform.position).normalized;
+                armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
+                dumpPosition(wristCol);
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+                //animator.Update(Time.fixedDeltaTime);
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            }
+            yield return new WaitForEndOfFrame();
+            Debug.Log("Ending arm movement");
+
+        }
+
         public void setControlMode(ControlMode mode) {
             setEnabledControlComponent(controlMode, false);
             controlMode = mode;
@@ -135,8 +208,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("Executing Batch command: " + command);
                 Execute(command);
             }
+        }                
 
 
+        // shortcut to execute no-parameter actions
+        private void ExecuteAction(string actionName) {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+            action["action"] = actionName;
+            PhysicsController.ProcessControlCommand(action);
         }
 
         public void Execute(string command)
@@ -388,10 +467,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "wallmaterial":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeWallMaterialExpRoom";
-                        action.objectVariation = 1;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeWallMaterialExpRoom";
+                        action["objectVariation"] = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -473,35 +551,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "screenm":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeScreenMaterialExpRoom";
-                        action.objectVariation = 3;
-                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeScreenMaterialExpRoom";
+                        action["objectVariation"] = 3;
+                        action["objectId"] = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
                  case "screenc":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "ChangeScreenColorExpRoom";
-                        action.r = 20f;
-                        action.g = 94f;
-                        action.b = 10f;
-                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeScreenColorExpRoom";
+                        action["r"] = 20f;
+                        action["g"] = 94f;
+                        action["b"] = 10f;
+                        action["objectId"] = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
                  case "grid":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "GetReceptacleCoordinatesExpRoom";
-                        action.gridSize = 0.1f;
-                        action.maxStepCount = 5;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReceptacleCoordinatesExpRoom";
+                        action["gridSize"] = 0.1f;
+                        action["maxStepCount"] = 5;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -644,6 +719,64 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "msa":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.993f, 0.8023f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+                case "msr":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.87f, 0.6436f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+
+                case "mach": {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+
+                case "mafh":
+                {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+                    break;
+                }
+                case "macr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+                case "mafr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+
+                    break;
+                }
+                case "dumpwrist": {
+                    var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+                    dumpPosition(wristCol);
+                    break;
+                }
+
                 case "debugarm":
                 {
                     var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
@@ -653,7 +786,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
                     break;
                 }
+                case "posarm1":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+                    armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
+                    break;
+                }
 
+                
+                case "ras1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msr");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "ras2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msa");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
                 case "reproarmrot1":
                 {
                     List<string> commands = new List<string>();
@@ -739,28 +904,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "ap":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "AdvancePhysicsStep";
-                        action.timeStep = 0.02f; //max 0.05, min 0.01
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "AdvancePhysicsStep";
+                        action["timeStep"] = 0.02f; //max 0.05, min 0.01
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                     
                 case "up":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "UnpausePhysicsAutoSim";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "UnpausePhysicsAutoSim";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                     
                 case "its":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "InitializeTableSetting";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "InitializeTableSetting";
                         if (splitcommand.Length > 1) {
-                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action["objectVariation"] = int.Parse(splitcommand[1]);
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -768,12 +932,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "potwhcb":
                     {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "PointsOverTableWhereHandCanBe";
-                        action.objectId = splitcommand[1];
-                        action.x = float.Parse(splitcommand[2]);
-                        action.z = float.Parse(splitcommand[3]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PointsOverTableWhereHandCanBe";
+                        action["objectId"] = splitcommand[1];
+                        action["x"] = float.Parse(splitcommand[2]);
+                        action["z"] = float.Parse(splitcommand[3]);
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -795,15 +958,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "pbwal":
                     {
-                        ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                        action.action = "PlaceBookWallAtLocation";
+                        action["action"] = "PlaceBookWallAtLocation";
                         if (splitcommand.Length > 1) {
-                            action.objectVariation = int.Parse(splitcommand[1]);
-                            action.x = float.Parse(splitcommand[2]);
-                            action.y = float.Parse(splitcommand[3]);
-                            action.z = float.Parse(splitcommand[4]);
-                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                            action["objectVariation"] = int.Parse(splitcommand[1]);
+                            action["x"] = float.Parse(splitcommand[2]);
+                            action["y"] = float.Parse(splitcommand[3]);
+                            action["z"] = float.Parse(splitcommand[4]);
+                            action["rotation"] = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -924,24 +1087,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "roco":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomlyOpenCloseObjects";
-                        action.randomSeed = (new System.Random()).Next(1, 1000000);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomlyOpenCloseObjects";
+                        action["randomSeed"] = (new System.Random()).Next(1, 1000000);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "crouch":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "Crouch";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Crouch");
                         break;
                     }
                 case "stand":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "Stand";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Stand");
                         break;
                     }
 
@@ -1033,8 +1192,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
                 case "maom":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "MakeAllObjectsMoveable";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeAllObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1045,6 +1204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "Reset";
                         PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("Reset");
                         break;
                     }
                     
@@ -1154,32 +1314,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "neutral":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToNeutral";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToNeutral");
                         break;
                     }
                 case "happy":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToHappy";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToHappy");
                         break;
                     }
 
                 case "mad":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToMad";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToMad");
                         break;
                     }
 
                 case "supermad":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeAgentFaceToSuperMad";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ChangeAgentFaceToSuperMad");
                         break;
                     }
 
@@ -1315,8 +1467,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "grp":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetReachablePositions";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         PhysicsController.ProcessControlCommand(action);
                         Debug.Log(PhysicsController.reachablePositions.Length);
@@ -1325,8 +1477,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "grpb":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetReachablePositions";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         StochasticController.ProcessControlCommand(action);
                         Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
@@ -1410,9 +1562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // Close visible objects
                 case "cvo":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseVisibleObjects";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("CloseVisibleObjects");
                         break;
                     }
 
@@ -2216,11 +2366,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //changes the time spent to decay to room temperature for all objects in this scene of given type
                 case "DecayTimeForType":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetRoomTempDecayTimeForType";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetRoomTempDecayTimeForType";
 
-                        action.TimeUntilRoomTemp = 20f;
-                        action.objectType = "Bread";
+                        action["TimeUntilRoomTemp"] = 20f;
+                        action["objectType"] = "Bread";
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2240,10 +2390,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
                 case "SetTempDecayBool":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetDecayTemperatureBool";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetDecayTemperatureBool";
 
-                        action.allowDecayTemperature = false;
+                        action["allowDecayTemperature"] = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

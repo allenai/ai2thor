@@ -9,7 +9,6 @@ needed to control the in-game agent through ai2thor.server.
 import atexit
 from collections import deque, defaultdict
 from itertools import product
-import io
 import json
 import copy
 import logging
@@ -29,17 +28,17 @@ import tty
 import sys
 import termios
 
-import zipfile
 
 import numpy as np
 import ai2thor.docker
-import ai2thor.downloader
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 from ai2thor.build import COMMIT_ID
+import ai2thor.build
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
+from ai2thor.util import makedirs
 
 import warnings
 
@@ -347,11 +346,6 @@ def process_alive(pid):
 
     return True
 
-# python2.7 compatible makedirs
-def makedirs(directory):
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
-
 def distance(point1, point2):
     x_diff = (point1['x'] - point2['x']) ** 2
     z_diff = (point1['z'] - point2['z']) ** 2
@@ -371,6 +365,7 @@ class Controller(object):
             port=0,
             start_unity=True,
             local_executable_path=None,
+            local_build=False,
             width=300,
             height=300,
             x_display=None,
@@ -391,7 +386,11 @@ class Controller(object):
         self.unity_pid = None
         self.docker_enabled = docker_enabled
         self.container_id = None
-        self.local_executable_path = local_executable_path
+
+        if local_executable_path:
+            warnings.warn("local_executable_path is deprecated - use local_build=True")
+            local_build = True
+
         self.last_event = None
         self._scenes_in_build = None
         self.killing_unity = False
@@ -412,8 +411,14 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+        if local_build:
+            local_builds_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds")
+            self._build = ai2thor.build.Build(ai2thor.build.arch_platform_map[platform.system()], 'local', False, local_builds_dir)
+        else:
+            self._build = self.find_build()
+
         if download_only:
-            self.download_binary()
+            self._build.download()
         else:
 
             self.start(
@@ -540,33 +545,31 @@ class Controller(object):
 
         return scenes
 
-    def unlock_release(self):
-        if self.lock_file:
-            fcntl.lockf(self.lock_file, fcntl.LOCK_UN)
-            os.close(self.lock_file)
-
-    def lock_release(self):
-        build_dir = os.path.join(self.releases_dir(), self.build_name())
-        if os.path.isdir(build_dir):
-            self.lock_file = os.open(build_dir + ".lock", os.O_RDWR | os.O_CREAT)
-            fcntl.lockf(self.lock_file, fcntl.LOCK_SH)
-
     def prune_releases(self):
-        current_exec_path = self.executable_path()
-        rdir = self.releases_dir()
+        current_exec_path = self._build.executable_path
+        rdir = self.releases_dir
         # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
-        all_dirs = filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir)))
+        all_dirs = list(filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))))
         sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        makedirs(self.tmp_dir)
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
             try:
-                lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                lf_path = release + ".lock"
+                lf = os.open(lf_path, os.O_RDWR | os.O_CREAT)
+                # we must try to get a lock here since its possible that a process could still
+                # be running with this release
                 fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                shutil.rmtree(release)
+
+                tmp_prune_dir = os.path.join(self.tmp_dir, '-'.join([self.build_name(release), str(time.time()), str(random.random()), 'prune']))
+                os.rename(release, tmp_prune_dir)
+                shutil.rmtree(tmp_prune_dir)
+
                 fcntl.lockf(lf, fcntl.LOCK_UN)
                 os.close(lf)
-            except Exception:
+                os.unlink(lf_path)
+            except Exception as e:
                 pass
 
     def next_interact_command(self):
@@ -682,7 +685,7 @@ class Controller(object):
         return self.last_event
 
     def unity_command(self, width, height, headless):
-        command = self.executable_path()
+        command = self._build.executable_path
         if headless:
             command += " -batchmode"
         else:
@@ -730,110 +733,44 @@ class Controller(object):
                 assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
                     ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
-    def releases_dir(self):
-        return os.path.join(self.base_dir(), 'releases')
+    @property
+    def tmp_dir(self):
+        return os.path.join(self.base_dir, 'tmp')
 
+    @property
+    def releases_dir(self):
+        return os.path.join(self.base_dir, 'releases')
+
+    @property
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
-    def build_url(self):
+    def find_build(self):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
         arch = arch_platform_map[platform.system()]
         if COMMIT_ID:
-            ver_build = ai2thor.build.Build(arch, COMMIT_ID, self.include_private_scenes)
-            return (ver_build.url(), ver_build.sha256())
+            ver_build = ai2thor.build.Build(arch, COMMIT_ID, self.include_private_scenes, self.releases_dir)
+            return ver_build
         else:
-            url = None
-            sha256_build = None
+            found_build = None
             git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
             for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
-                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes)
+                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, self.releases_dir)
 
                 try:
-                    u = commit_build.url()
-                    if os.path.isfile(self.executable_path(url=u)):
-                        # don't need sha256 since we aren't going to download
-                        url = u
-                        break
-                    elif commit_build.exists():
-                        sha256_build = commit_build.sha256()
-                        url = u
+                    if os.path.isfile(commit_build.executable_path) or commit_build.exists():
+                        found_build = commit_build
                         break
                 except Exception:
                     pass
 
-            if url is None:
+            if found_build is None:
                 raise Exception("Couldn't find a suitable build url for platform: %s" % platform.system())
 
             # print("Got build for %s: " % (url))
 
-            return (url, sha256_build)
-
-    def build_name(self, url=None):
-        if url is None:
-            url, _ = self.build_url()
-        return os.path.splitext(os.path.basename(url))[0]
-
-    def executable_path(self, url=None):
-
-        if self.local_executable_path is not None:
-            return self.local_executable_path
-
-        target_arch = platform.system()
-
-        bn = self.build_name(url)
-        if target_arch == 'Linux':
-            return os.path.join(self.releases_dir(), bn, bn)
-        elif target_arch == 'Darwin':
-            return os.path.join(
-                self.releases_dir(),
-                bn,
-                bn + ".app",
-                "Contents/MacOS",
-                "AI2-Thor")
-        else:
-            raise Exception('unable to handle target arch %s' % target_arch)
-
-    def download_binary(self):
-
-        if self.local_executable_path:
-            return
-
-        if platform.architecture()[0] != '64bit':
-            raise Exception("Only 64bit currently supported")
-
-        url, sha256_build = self.build_url()
-        tmp_dir = os.path.join(self.base_dir(), 'tmp')
-        makedirs(self.releases_dir())
-        makedirs(tmp_dir)
-        download_lf = os.open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), os.O_RDWR | os.O_CREAT)
-        try:
-            fcntl.lockf(download_lf, fcntl.LOCK_EX)
-
-            if not os.path.isfile(self.executable_path()):
-                zip_data = ai2thor.downloader.download(
-                    url,
-                    self.build_name(),
-                    sha256_build,
-                    self.include_private_scenes
-                    )
-
-                z = zipfile.ZipFile(io.BytesIO(zip_data))
-                # use tmpdir instead or a random number
-                extract_dir = os.path.join(tmp_dir, self.build_name())
-                logger.debug("Extracting zipfile %s" % os.path.basename(url))
-                z.extractall(extract_dir)
-                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
-                # we can lose the executable permission when unzipping a build
-                os.chmod(self.executable_path(), 0o755)
-            else:
-                logger.debug("%s exists - skipping download" % self.executable_path())
-
-        finally:
-            fcntl.lockf(download_lf, fcntl.LOCK_UN)
-            os.close(download_lf)
-
+            return found_build
 
     def start(
             self,
@@ -899,10 +836,9 @@ class Controller(object):
 
                     self.check_x_display(env['DISPLAY'])
 
-            if not self.local_executable_path:
-                self.download_binary()
-                self.lock_release()
-                self.prune_releases()
+            self._build.download()
+            self._build.lock_sh()
+            self.prune_releases()
 
             unity_params = self.server.unity_params()
             self._start_unity_thread(env, width, height, unity_params, image_name)
@@ -919,7 +855,7 @@ class Controller(object):
         self.stop_unity()
         self.server.stop()
         self.stop_container()
-        self.unlock_release()
+        self._build.unlock()
 
     def stop_container(self):
         if self.container_id:
