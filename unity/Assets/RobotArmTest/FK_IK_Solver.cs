@@ -69,7 +69,7 @@ public class FK_IK_Solver : MonoBehaviour
             elbowPosition = overlapCenter + overlapRadius * (hintProjection - overlapCenter).normalized;
             armElbow.position = elbowPosition;
             armWrist.position = IKTarget.position;
-            armWrist.rotation = armWrist.rotation;
+            armWrist.rotation = IKTarget.rotation;
         }
 
         else
