@@ -553,6 +553,7 @@ class Controller(object):
         all_dirs = list(filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))))
         sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
         makedirs(self.tmp_dir)
+        makedirs(self.releases_dir)
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
