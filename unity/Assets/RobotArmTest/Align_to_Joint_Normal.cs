@@ -10,7 +10,7 @@ public class Align_to_Joint_Normal : MonoBehaviour
     public bool isMidJointAngler;
     Vector3 joint1;
     Vector3 joint2;
-    Vector3 jointNormal;
+    Vector3 jointNormal, jointTangent;
     Transform positionAlignedJoint;
 
     void Update()
@@ -22,13 +22,15 @@ public class Align_to_Joint_Normal : MonoBehaviour
         if (isMidJointAngler == true)
         {
             positionAlignedJoint = tip;
+            jointTangent = Vector3.Cross(joint2, jointNormal);
         }
 
         else
         {
             positionAlignedJoint = mid;
+            jointTangent = Vector3.Cross(joint1, jointNormal);
         }
 
-        transform.LookAt(positionAlignedJoint, jointNormal);
+        transform.LookAt(positionAlignedJoint, jointTangent);
     }
 }
