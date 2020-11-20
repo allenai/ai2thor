@@ -402,6 +402,7 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.server_class = server_class
+        self._build = None
 
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -411,11 +412,11 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-        if local_build:
-            local_builds_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds")
-            self._build = ai2thor.build.Build(ai2thor.build.arch_platform_map[platform.system()], 'local', False, local_builds_dir)
-        else:
-            self._build = self.find_build()
+        self._build = self.find_build(local_build)
+
+        if self._build is None:
+            raise Exception("Couldn't find a suitable build for platform: %s" % platform.system())
+
 
         if download_only:
             self._build.download()
@@ -548,10 +549,12 @@ class Controller(object):
     def prune_releases(self):
         current_exec_path = self._build.executable_path
         rdir = self.releases_dir
+        makedirs(self.tmp_dir)
+        makedirs(self.releases_dir)
+
         # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
         all_dirs = list(filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))))
         sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
-        makedirs(self.tmp_dir)
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
@@ -745,28 +748,34 @@ class Controller(object):
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
-    def find_build(self):
+    def find_build(self, local_build):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
         arch = arch_platform_map[platform.system()]
+
         if COMMIT_ID:
             ver_build = ai2thor.build.Build(arch, COMMIT_ID, self.include_private_scenes, self.releases_dir)
             return ver_build
         else:
-            found_build = None
             git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
-            for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
-                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, self.releases_dir)
+            commits = subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n")
+
+            rdir = self.releases_dir
+            found_build = None
+
+            if local_build:
+                rdir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds")
+                commits = ['local'] + commits # we add the commits to the list to allow the ci_build to succeed
+
+            for commit_id in commits:
+                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, rdir)
 
                 try:
-                    if os.path.isfile(commit_build.executable_path) or commit_build.exists():
+                    if os.path.isfile(commit_build.executable_path) or (not local_build and commit_build.exists()):
                         found_build = commit_build
                         break
                 except Exception:
                     pass
-
-            if found_build is None:
-                raise Exception("Couldn't find a suitable build url for platform: %s" % platform.system())
 
             # print("Got build for %s: " % (url))
 

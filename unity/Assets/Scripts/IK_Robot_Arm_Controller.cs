@@ -31,11 +31,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     // Start is called before the first frame update
 
     [SerializeField]
-    private CapsuleCollider[] ArmCapsuleColliders;
+    public CapsuleCollider[] ArmCapsuleColliders;
     [SerializeField]
-    private BoxCollider[] ArmBoxColliders;
+    public BoxCollider[] ArmBoxColliders;
     [SerializeField]
-    private CapsuleCollider[] agentCapsuleCollider;
+    private CapsuleCollider[] agentCapsuleCollider = null;
 
     private float originToShoulderLength = 0f;
 

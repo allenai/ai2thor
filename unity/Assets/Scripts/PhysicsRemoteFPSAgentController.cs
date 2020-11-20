@@ -1465,7 +1465,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void TeleportFull(ServerAction action) {
-            Debug.Log("TeleportFull Happening ////////////////////////////////////////");
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
@@ -1496,7 +1495,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
+                //default high level hand when teleporting
                 DefaultAgentHand();
+
+                //if in arm mode, set colliders of arm to trigger so upon teleporting, they don't collide and move
+                //anything that the arm might be clipped into
+                //note- this should not affect the isArmColliding check, which uses physics overlap casts based on the dimensions of arm colliders
+                ToggleArmColliders(Arm, true);
+
+
+                //here we actually teleport 
                 transform.position = targetTeleport;
 
                 //apply gravity after teleport so we aren't floating in the air
@@ -1526,14 +1534,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if(Arm != null)
                 {
-                    /*
                     if(Arm.IsArmColliding())
                     {
                         errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
                         armCollides = true;
-                        Debug.Log(errorMessage);
                     }
-                    */
                 }
 
                 if (agentCollides || handObjectCollides || armCollides) {
@@ -1545,6 +1550,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+
+                    //reset arm colliders on fail actionFinish
+                    ToggleArmColliders(Arm, false);
+
+
                     actionFinished(false, errorMessage);
                     return;
                 }
@@ -1555,7 +1565,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.Move(v);
 
             snapAgentToGrid();
+
+            //reset arm colliders on actionFinish
+            ToggleArmColliders(Arm, false);
+
             actionFinished(true);
+        }
+
+        public void ToggleArmColliders(IK_Robot_Arm_Controller Arm, bool value)
+        {
+            if(Arm != null)
+            {
+                foreach(CapsuleCollider c in Arm.ArmCapsuleColliders)
+                {
+                    c.isTrigger = value;
+                }
+
+                foreach(BoxCollider b in Arm.ArmBoxColliders)
+                {
+                    b.isTrigger = value;
+                }
+            }
         }
 
         public override void Teleport(ServerAction action) {
