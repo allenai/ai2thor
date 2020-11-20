@@ -801,6 +801,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     List<string> commands = new List<string>();
                     commands.Add("pp");
+                    commands.Add("rr");
                     commands.Add("inita");
                     commands.Add("telefull -1.0 0.9009995460510254 1 135");
                     commands.Add("ld 20");
