@@ -160,12 +160,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string[] collidedObjects;// container for collided objects
         protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
 		protected Quaternion targetRotation;
+    
+        #if UNITY_WEBGL
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
 		}
+        #endif
 
         // Arm
         protected IK_Robot_Arm_Controller Arm;
