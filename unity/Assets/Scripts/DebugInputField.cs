@@ -717,9 +717,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "pp":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PausePhysicsAutoSim";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("PausePhysicsAutoSim");
                         break;
                     }
 
