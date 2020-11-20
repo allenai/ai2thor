@@ -85,10 +85,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
             //var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
-            var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
-            var animator = arm.gameObject.GetComponent<Animator>();
+            //var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
+            //var animator = arm.gameObject.GetComponent<Animator>();
             //animator.enabled = false;
-            var armTarget = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+            var armTarget = arm.transform.Find("FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
             var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
             Vector3 target = arm.transform.TransformPoint(targetArmBase);
             float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
@@ -98,6 +98,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 Vector3 direction = (target - armTarget.transform.position).normalized;
                 armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
+
+                GameObject.Find("FK_IK_rig").GetComponent<FK_IK_Solver>().ManipulateArm();
+
                 dumpPosition(wristCol);
 
                 if (!Physics.autoSimulation)

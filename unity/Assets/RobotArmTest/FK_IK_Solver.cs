@@ -15,7 +15,6 @@ public class FK_IK_Solver : MonoBehaviour
     float p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD, overlapParameter, overlapRadius;
     Vector3 overlapCenter, hintProjection, elbowPosition;
 
-    // Start is called before the first frame update
     void Start()
     {
         bone1Length = (armShoulder.position - armRoot.position).magnitude;
@@ -23,18 +22,11 @@ public class FK_IK_Solver : MonoBehaviour
         bone3Length = (armWrist.position - armElbow.position).magnitude;
         IKHint = IKPole.GetChild(0);
     }
-
-    // Update is called once per frame
-    void Update()
+    
+    public void ManipulateArm()
     {
         if (isIKDriven == true)
         {
-            if (transform.GetChild(0).gameObject.activeSelf == true)
-            {
-                transform.GetChild(0).gameObject.SetActive(false);
-                transform.GetChild(1).gameObject.SetActive(true);
-            }
-
             IKPole.parent.position = IKTarget.position;
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
 
@@ -64,8 +56,6 @@ public class FK_IK_Solver : MonoBehaviour
             //Find elbow position by projecting IK_Hint position onto overlap-plane, and then moving the ring of overlap's center-point in the ring-center-to-projected-IK_Hint direction vector by a magnitude of the ring's radius
             overlapParameter = FindParameter(p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD);
             hintProjection = new Vector3(p3x + overlapA * overlapParameter, p3y + overlapB * overlapParameter, p3z + overlapC * overlapParameter);
-            //hintProjectionParameter = (overlapD - overlapA * p3x - overlapB * p3y - overlapC * p3z) / (Mathf.Pow(overlapA, 2) + Mathf.Pow(overlapB, 2) + Mathf.Pow(overlapC, 2));
-            //hintProjectionTest.position = hintProjection;
             elbowPosition = overlapCenter + overlapRadius * (hintProjection - overlapCenter).normalized;
             armElbow.position = elbowPosition;
             armWrist.position = IKTarget.position;
@@ -74,12 +64,6 @@ public class FK_IK_Solver : MonoBehaviour
 
         else
         {
-            if (transform.GetChild(1).gameObject.activeSelf == true)
-            {
-                transform.GetChild(1).gameObject.SetActive(false);
-                transform.GetChild(0).gameObject.SetActive(true);
-            }
-
             armRoot.position = FKRootTarget.position;
             armRoot.rotation = FKRootTarget.rotation;
             armShoulder.position = FKShoulderTarget.position;
