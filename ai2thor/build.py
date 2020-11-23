@@ -38,6 +38,7 @@ def boto_auth():
 base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PUBLIC_S3_BUCKET
 private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 
+
 class ExternalBuild(object):
     def __init__(self, executable_path):
         self.executable_path = executable_path
@@ -45,7 +46,7 @@ class ExternalBuild(object):
     def download(self):
         pass
 
-    def unload(self):
+    def unlock(self):
         pass
 
     def lock_sh(self):
