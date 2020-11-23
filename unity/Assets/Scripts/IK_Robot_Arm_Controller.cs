@@ -46,8 +46,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
-        armTarget = this.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
-        // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
+        armTarget = this.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+        //handCameraTransform = this.GetComponentInChildren<Camera>().transform;
         //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
@@ -58,7 +58,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
         //magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
-        // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
+        //PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
     }
 
     //NOTE: removing this for now, will add back if functionality is required later
