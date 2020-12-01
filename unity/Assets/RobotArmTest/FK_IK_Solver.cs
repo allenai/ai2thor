@@ -22,13 +22,14 @@ public class FK_IK_Solver : MonoBehaviour
         bone3Length = (armWrist.position - armElbow.position).magnitude;
         IKHint = IKPole.GetChild(0);
     }
-    
+
+    //void Update()
     public void ManipulateArm()
     {
         if (isIKDriven == true)
         {
-            IKPole.parent.position = IKTarget.position;
-            IKPole.parent.forward = IKTarget.position - armShoulder.position;
+            IKPole.parent.position = IKTarget.parent.position;
+            IKPole.parent.forward = IKTarget.parent.position - armShoulder.position;
 
             p1x = armShoulder.position.x;
             p1y = armShoulder.position.y;
@@ -75,7 +76,7 @@ public class FK_IK_Solver : MonoBehaviour
         }
 
         //Align individual arm components to their correct joint-angles 
-        AlignToJointNormal(armRoot.GetChild(1), armRoot, armShoulder, armElbow, false);
+        AlignToJointNormal(armRoot.GetChild(0), armRoot, armShoulder, armElbow, false);
         AlignToJointNormal(armShoulder.GetChild(0), armRoot, armShoulder, armElbow, true);
         AlignToJointNormal(armShoulder.GetChild(1), armShoulder, armElbow, armWrist, false);
         AlignToJointNormal(armElbow.GetChild(0), armShoulder, armElbow, armWrist, true);
