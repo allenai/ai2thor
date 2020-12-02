@@ -2853,3 +2853,128 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
+
+@task
+def test_det(ctx):
+    import ai2thor.util.metrics as metrics
+    import ai2thor.controller
+    import numpy as np
+    import math
+    from pprint import pprint
+    BASE_DIR = "unity/builds"
+    BASE_ADR = "{}/thor-local-OSXIntel64.app/Contents/MacOS/AI2-Thor".format(BASE_DIR)
+    SCENE_NAME = "FloorPlan1_physics"
+    num_trials = 10
+
+    width = 300
+    height = 300
+    fov = 100
+
+    def act(controller):
+        controller.step(action='MoveAhead')
+
+    def vec_to_np_array(vec):
+        return np.array([vec['x'], vec['y'], vec['z']])
+
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        scene=SCENE_NAME, gridSize=0.25,
+        width=width,
+        height=height,
+        agentMode='arm',
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    # class ObjectPositionVarianceAverage(object):
+    #     def __init__(self):
+    #         print("init")
+    #         self.trials = []
+    #         self.object_ids = []
+    #
+    #     def init_trials(self, num_trials, metadata):
+    #         objects = metadata["objects"]
+    #         self.object_ids = sorted([o['objectId'] for o in objects])
+    #         num_objects = len(object_ids)
+    #         self.trials = np.empty([num_trials, num_objects, 3])
+    #
+    #     def update_trial(self, trial_index, metadata):
+    #         objects = metadata["objects"]
+    #         object_pos_map = {o['objectId']: vec_to_np_array(o['position']) for o in objects}
+    #         for object_index in range(len(object_ids)):
+    #             object_id = self.object_ids[object_index]
+    #             self.trials[trial_index][object_index] = object_pos_map[object_id]
+    #
+    #     def compute(self, n=None):
+    #         return np.mean(np.var(trials[:n], axis=0))
+    #
+    #
+    # def run_trials(controller, number, metric, compute_running_metric=False):
+    #
+    #     # objects = controller.last_event.metadata["objects"]
+    #     # object_ids = sorted([o['objectId'] for o in objects])
+    #     #
+    #     # num_objects = len(object_ids)
+    #     #
+    #     # trials = np.empty([num_trials, num_objects, 3])
+    #
+    #     metric.init_trials(number, controller.last_event.metadata)
+    #
+    #     for trial_index in range(number):
+    #         try:
+    #             print('before')
+    #             yield controller, metric.compute(n=trial_index) if compute_running_metric else math.nan
+    #
+    #             metric.update_with_trial(trial_index, controller.last_event.metadata)
+    #
+    #             # objects = controller.last_event.metadata['objects']
+    #             # object_pos_map = {o['objectId']: vec_to_np_array(o['position']) for o in objects}
+    #             #
+    #             # for object_index in range(len(object_ids)):
+    #             #     object_id = object_ids[object_index]
+    #             #     trials[trial_index][object_index] = object_pos_map[object_id]
+    #
+    #             controller.reset()
+    #             print('after')
+    #         except RuntimeError as e:
+    #             print(e)
+    #
+    #     yield controller, metric.compute()
+    #     print("end")
+
+
+    objects = controller.last_event.metadata["objects"]
+
+    object_pos_map = {o['objectId']: o['position'] for o in objects }
+    object_ids = sorted(object_pos_map.keys())
+
+    num_objects = len(object_ids)
+
+    trials = np.empty([num_trials, num_objects, 3])
+
+    for trial_index in range(num_trials):
+        act(controller)
+        objects = controller.last_event.metadata['objects']
+        object_pos_map = {o['objectId']: vec_to_np_array(o['position']) for o in objects}
+
+        for object_index in range(len(object_ids)):
+            object_id = object_ids[object_index]
+            trials[trial_index][object_index] = object_pos_map[object_id]
+
+        controller.reset(scene=SCENE_NAME)
+
+
+    # var = np.var(trials, axis=0);
+    # print("mean {} var {} mmena {}".format(np.mean(trials, axis=0), var, np.mean(var)))
+    # trials = np.empty([num_trials, num_objects, 3])
+    variance = np.mean(np.var(trials, axis=0))
+    print(variance)
+
+    from ai2thor.util.trials import trial_runner, ObjectPositionVarianceAverage
+
+    for controller, metric in trial_runner(controller, 10, ObjectPositionVarianceAverage()):
+        print("running metric: {}".format(metric))
+        controller.step(action='MoveAhead')
+    print(" final {} ".format(metric))
