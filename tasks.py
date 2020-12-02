@@ -2853,10 +2853,10 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     print("After teleport: {}".format(evt.metadata['agent']['position']))
 
 @task
-def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm"):
+def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100):
     import ai2thor.controller
     import random
-    num_trials = 10
+    num_trials = n
     width = 300
     height = 300
     fov = 100
@@ -2885,7 +2885,7 @@ def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm"):
     look_actions = ["LookUp", "LookDown"]
     all_actions = move_actions + rotate_actions + look_actions
 
-    sample_number = 100
+    sample_number = samples
     action_tuples = [
         ("move", move_actions, sample_number),
         ("rotate", rotate_actions, sample_number),
