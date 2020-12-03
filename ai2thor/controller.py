@@ -392,7 +392,7 @@ class Controller(object):
             local_build = True
 
         self.last_event = None
-        self.current_scene_name = None
+        self.scene = None
         self._scenes_in_build = None
         self.killing_unity = False
         self.quality = quality
@@ -504,10 +504,10 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    def reset(self, scene=''):
+    def reset(self, scene=None):
         # Case for just resetting the current scene
-        if scene == '' and self.current_scene_name is not None:
-            scene = self.current_scene_name
+        if scene is None and self.scene is not None:
+            scene = self.scene
 
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
@@ -530,7 +530,7 @@ class Controller(object):
         
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
 
-        self.current_scene_name = scene
+        self.scene = scene
 
         return self.last_event
 

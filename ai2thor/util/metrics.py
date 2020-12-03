@@ -2,7 +2,6 @@ from pprint import pprint
 import json
 import math
 import copy
-import numpy as np
 
 
 def vector_distance(v0, v1):
