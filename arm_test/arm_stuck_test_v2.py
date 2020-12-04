@@ -23,5 +23,5 @@ actions = [{'action': 'RotateContinuous', 'degrees': 45, 'disableRendering': Tru
 
 standard_pose()
 execute_actions(actions, disableRendering=True, returnToStart=True)
-event = arm_test.base.controller.step('MoveMidLevelArmHeight', y=0.49074136446614885, disableRendering=True, returnToStart=True, speed=2.0)
+event = arm_test.base.controller.step('MoveMidLevelArmHeight', y=0.69074136446614885, disableRendering=True, returnToStart=True, speed=2.0)
 assert event.metadata['lastActionSuccess'], "MoveMidLevelArmHeight failed; arm is stuck"
