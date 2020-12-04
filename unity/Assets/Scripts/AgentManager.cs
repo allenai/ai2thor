@@ -1473,7 +1473,7 @@ public class ServerAction
 
     public bool returnToStart = false;
 
-    public float speed;
+    public float speed = 1.0f;
 
     public bool handCameraSpace = false;
 

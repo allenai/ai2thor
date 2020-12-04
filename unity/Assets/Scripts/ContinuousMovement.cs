@@ -164,7 +164,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         if (returnToStartPropIfFailed) {
             resetProp = originalProperty;
         }
-
         continuousMoveFinish(
             controller,
             collisionListener,
@@ -173,6 +172,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target, 
             resetProp
         );
+
+        // we call this one more time in the event that the arm collided and was reset
+        ikSolver.ManipulateArm();
+        if (!Physics.autoSimulation) {
+            Physics.Simulate(fixedDeltaTime);
+        }
+
     }
 
     private static void continuousMoveFinish<T>(
