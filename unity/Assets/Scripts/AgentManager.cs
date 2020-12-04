@@ -324,6 +324,12 @@ public class AgentManager : MonoBehaviour
 		return (fov <= min || fov > max) ? defaultVal : fov;
 	}
 
+    private void updateImageSynthesis(bool status) {
+        foreach(var agent in this.agents) {
+            agent.updateImageSynthesis(status);
+        }
+    }
+
     private void updateThirdPartyCameraImageSynthesis(bool status) {
         if (status) 
         {
@@ -946,10 +952,11 @@ public class AgentManager : MonoBehaviour
                 this.renderObjectImage = true;
             }
 
-			if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) {
-				this.activeAgent().updateImageSynthesis(true);
+            if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
+            {
+                updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
-			}
+            }
 			this.activeAgent().ProcessControlCommand (controlCommand);
 		}
 	}
