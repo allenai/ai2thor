@@ -378,7 +378,7 @@ class Controller(object):
             add_depth_noise=False,
             download_only=False,
             include_private_scenes=False,
-            server_class=ai2thor.wsgi_server.WsgiServer,
+            server_class=ai2thor.fifo_server.FifoServer,
             **unity_initialization_parameters
     ):
         self.receptacle_nearest_pivot_points = {}
