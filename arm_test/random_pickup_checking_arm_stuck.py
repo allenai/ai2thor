@@ -1,18 +1,18 @@
+import datetime
 import ai2thor.controller
 import ai2thor
 import random
 import copy
-import datetime
+import time
 
 MAX_TESTS = 300
 MAX_EP_LEN = 1000
-SCREEN_SIZE = 224#900
 scene_names = ['FloorPlan{}_physics'.format(i + 1) for i in range(30)]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 controller = ai2thor.controller.Controller(
     scene=scene_names[0], gridSize=0.25,
-    width=SCREEN_SIZE, height=SCREEN_SIZE, agentMode='arm', fieldOfView=100,
+    width=900, height=900, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
 )
@@ -150,11 +150,25 @@ for i in range(MAX_TESTS):
     controller.step('PausePhysicsAutoSim')
     all_commands = []
     before = datetime.datetime.now()
-    while len(all_commands) <= (MAX_EP_LEN):
+    for j in range(MAX_EP_LEN):
         command = random.choice(set_of_actions)
         execute_command(controller, command, ADITIONAL_ARM_ARGS)
         all_commands.append(command)
         last_event_success = controller.last_event.metadata['lastActionSuccess']
+
+        pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
+        picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
+        if len(pickupable) > 0 and len(picked_up_before) == 0:
+            cmd = 'p'
+            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            all_commands.append(cmd)
+            if controller.last_event.metadata['lastActionSuccess'] is False:
+                print('Failed to pick up ')
+                print('scene name', controller.last_event.metadata['sceneName'])
+                print('initial pose', initial_pose)
+                print('list of actions', all_commands)
+                break
+
 
         if not last_event_success:
             # If last action failed Make sure it is not stuck
@@ -163,6 +177,7 @@ for i in range(MAX_TESTS):
             for a in all_actions:
                 execute_command(controller, a, ADITIONAL_ARM_ARGS)
                 all_commands.append(a)
+
                 if controller.last_event.metadata['lastActionSuccess']:
                     break
             if not controller.last_event.metadata['lastActionSuccess']:
@@ -177,4 +192,5 @@ for i in range(MAX_TESTS):
     seconds = time_diff.total_seconds()
     all_timers.append(len(all_commands) / seconds)
     print('FPS', sum(all_timers) / len(all_timers))
+
 
