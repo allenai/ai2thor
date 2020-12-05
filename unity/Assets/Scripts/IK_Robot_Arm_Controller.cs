@@ -51,7 +51,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
-        var shoulderCapsule = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>();
         //calculating based on distance from origin of arm to the 2nd joint, which will always be constant
         this.originToShoulderLength = Vector3.Distance(this.transform.FirstChildOrDefault(x => x.name == "robot_arm_2_jnt").position, this.transform.position);
         this.collisionListener = this.GetComponentInParent<CollisionListener>();

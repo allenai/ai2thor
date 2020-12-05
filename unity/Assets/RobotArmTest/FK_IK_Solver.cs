@@ -23,6 +23,7 @@ public class FK_IK_Solver : MonoBehaviour
         IKHint = IKPole.GetChild(0);
     }
 
+    //Use update when testing in Unity Game Mode
     //void Update()
     public void ManipulateArm()
     {
