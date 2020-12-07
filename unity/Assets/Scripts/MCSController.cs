@@ -243,9 +243,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
         ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
 
-        // Each SimObjPhysics object should have a MeshFilter component.
-        MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
-
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
 
         Transform recBox = simObj.BoundingBox == null && simObj.transform.parent != null &&
@@ -307,7 +304,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
             // Update our hand's position so that the object we want to hold doesn't clip our body.
             // TODO MCS-77 We may want to change how this function is used.
-            this.UpdateHandPositionToHoldObject(target);
+            // FIXME Broken with UnityAssetStore/RuslanSelivanov/OpeningBoxes objects like suitcase_1 and chest_1.
+            //       See https://machinecommonsense.slack.com/archives/CTR31V12M/p1606964208273900
+            // this.UpdateHandPositionToHoldObject(target);
 
             // Check if the object to be picked up is currently inside a receptacle.
             // If so, we'll need to manually update that receptacle's list of contained objects since the
@@ -697,6 +696,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void UpdateHandPositionToHoldObject(SimObjPhysics target) {
+        // Each SimObjPhysics object should have a MeshFilter component.
         MeshFilter meshFilter = target.gameObject.GetComponentInChildren<MeshFilter>();
         if (meshFilter != null) {
             // Move the player's hand on the Y axis corresponding to the size of the target object so that the object,

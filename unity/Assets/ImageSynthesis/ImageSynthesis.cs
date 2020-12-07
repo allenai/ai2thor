@@ -233,9 +233,10 @@ public class ImageSynthesis : MonoBehaviour {
 
 
         SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
-		SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
-		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
-		SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
+        // MCS optimization: Remove all unused cameras
+        // SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
+        // SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
+        // SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
         #if UNITY_EDITOR
             for(int i = 0; i < capturePasses.Length; i++)
