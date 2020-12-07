@@ -7,7 +7,7 @@ public class Adjust_Slider : MonoBehaviour
     public Transform robotArmRoot;
     Vector3 localStartingPoint;
     float minThreshold = -0.32f;
-    float maxThreshold = 0.28f;
+    float maxThreshold = 0.15f;
     
     void Start()
     {

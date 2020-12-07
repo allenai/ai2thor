@@ -15,7 +15,8 @@ public class FK_IK_Solver : MonoBehaviour
     float p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD, overlapParameter, overlapRadius;
     Vector3 overlapCenter, hintProjection, elbowPosition;
 
-    void Start()
+    // this must be Awake vs Start since when the Arm is activated, Start() will not have been called
+    void Awake()
     {
         bone1Length = (armShoulder.position - armRoot.position).magnitude;
         bone2Length = (armElbow.position - armShoulder.position).magnitude;

@@ -1360,7 +1360,6 @@ public class ServerAction
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public float? fixedDeltaTime;
-    public bool waitForFixedUpdate = true;
 	public int targetFrameRate;
     public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
@@ -1474,7 +1473,7 @@ public class ServerAction
 
     public bool returnToStart = false;
 
-    public float speed;
+    public float speed = 1.0f;
 
     public bool handCameraSpace = false;
 
