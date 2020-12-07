@@ -29,7 +29,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Quaternion targetRotation,
         float fixedDeltaTime,
         float radiansPerSecond,
-        bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false
     ) {
         var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
@@ -42,19 +41,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             (t) => t.rotation,
             //  Set
             (t, target) => t.rotation = target,
-            // AddTo
-            (t, target) => t.rotation = Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond),
-            // Resets/Rollbacks if collides
-            (initialRotation, lastRotation, target) => 
-                returnToStartPropIfFailed? 
-                    initialRotation : 
-                    Quaternion.RotateTowards(lastRotation, target, -fixedDeltaTime * degreesPerSecond),
+            // Next
+            (t, target) => Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond),
             // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
             (target, current) => target,
             // Distance Metric
             (target, current) => Quaternion.Angle(current, target),
-            waitForFixedUpdate,
-            fixedDeltaTime
+            fixedDeltaTime,
+            returnToStartPropIfFailed
         );
     }
 
@@ -65,34 +59,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Vector3 targetPosition,
         float fixedDeltaTime,
         float unitsPerSecond,
-        bool waitForFixedUpdate,
         bool returnToStartPropIfFailed = false,
         bool localPosition = false
     ) {
-        Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Action<Transform, Vector3>,IEnumerator> moveClosure = 
-            (get, set, add) => updateTransformPropertyFixedUpdate(
+        Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>,IEnumerator> moveClosure = 
+            (get, set, next) => updateTransformPropertyFixedUpdate(
                 controller,
                 collisionListener,
                 moveTransform,
                 targetPosition,
                 get,
                 set,
-                add,
-                (initialPosition, lastPosition, direction) => 
-                    returnToStartPropIfFailed? 
-                        initialPosition : 
-                        lastPosition - (direction * unitsPerSecond * fixedDeltaTime),
+                next,
                 (target, current) => (target - current).normalized,
                 (target, current) => Vector3.SqrMagnitude(target - current),
-                waitForFixedUpdate,
-                fixedDeltaTime
+                fixedDeltaTime,
+                returnToStartPropIfFailed
         );
 
         if (localPosition) {
             return moveClosure(
                 (t) => t.localPosition,
                 (t, pos) => t.localPosition = pos,
-                (t, direction) => t.localPosition += direction * unitsPerSecond * fixedDeltaTime
+                (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime
             );
         }
         else {
@@ -100,7 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return moveClosure(
                 (t) => t.position,
                 (t, pos) => t.position = pos,
-                (t, direction) => t.position += direction * unitsPerSecond * fixedDeltaTime
+                (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime
             );
         }
     }
@@ -112,21 +101,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         T target,
         Func<Transform, T> getProp,
         Action<Transform, T> setProp,
-        Action<Transform, T> addToProp,
-        Func<T, T, T, T> resetProperty,
+        Func<Transform, T, T> nextProp,
         // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
         Func<T, T, T> getDirection,
         Func<T, T, float> distanceMetric,
-        bool waitForFixedUpdate,
         float fixedDeltaTime,
+        bool returnToStartPropIfFailed,
         double epsilon = 1e-3
     )
     {
         T originalProperty = getProp(moveTransform);
         var previousProperty = originalProperty;
 
-        YieldInstruction yieldInstruction = waitForFixedUpdate ? (YieldInstruction)new WaitForFixedUpdate() : (YieldInstruction)new WaitForEndOfFrame();
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+        var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
 
         // commenting out the WaitForEndOfFrame here since we shoudn't need 
         // this as we already wait for a frame to pass when we execute each action
@@ -134,46 +122,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
-        float startingDistance = currentDistance;
 
         T directionToTarget = getDirection(target, currentProperty);
 
         var currentColliders = arm.currentArmCollisions();
 
-        while ( currentDistance > epsilon && CollisionListener.StaticCollisions(currentColliders).Count == 0 && currentDistance <= startingDistance) {
+        while ( currentDistance > epsilon && CollisionListener.StaticCollisions(currentColliders).Count == 0) {
 
             previousProperty = getProp(moveTransform);
 
-            addToProp(moveTransform, directionToTarget);
+            T next = nextProp(moveTransform, directionToTarget);
+            float nextDistance = distanceMetric(target, next);
+
+            // allows for snapping behaviour to target when the target is close
+            if (nextDistance <= epsilon ||
+
+                // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                // this can happen if the speed it set high
+                nextDistance > distanceMetric(target, getProp(moveTransform))) 
+            {
+                setProp(moveTransform, target);
+            } else {
+                setProp(moveTransform, next);
+            }
+
+            // this will be a NOOP for Rotate/Move/Height actions
+            ikSolver.ManipulateArm();
 
             if (!Physics.autoSimulation) {
                 Physics.Simulate(fixedDeltaTime);
             }
 
-            yield return yieldInstruction;
+            yield return new WaitForEndOfFrame();
 
             currentColliders = arm.currentArmCollisions();
-
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
 
-        // // DISABLING JUMP since it can lead to clipping
-        // if (currentDistance <= epsilon && !collisionListener.ShouldHalt()) {
-        //    // Maybe switch to this?
-        //    // addPosition(moveTransform, targetDirection * currentDistance);
-        //    setProp(moveTransform, target);
-        // }
-
+        T resetProp = previousProperty;
+        if (returnToStartPropIfFailed) {
+            resetProp = originalProperty;
+        }
         continuousMoveFinish(
             controller,
             collisionListener,
             moveTransform, 
             setProp, 
             target, 
-            resetProperty(originalProperty, previousProperty, directionToTarget), 
-            currentDistance > startingDistance
+            resetProp
         );
+
+        // we call this one more time in the event that the arm collided and was reset
+        ikSolver.ManipulateArm();
+        if (!Physics.autoSimulation) {
+            Physics.Simulate(fixedDeltaTime);
+        }
+
     }
 
     private static void continuousMoveFinish<T>(
@@ -182,9 +187,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Transform moveTransform,
         System.Action<Transform, T> setProp,
         T target,
-        T resetProp,
-        bool overshoot = false
-       
+        T resetProp
     ) {
         var actionSuccess = true;
         var debugMessage = "";
@@ -214,16 +217,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 actionSuccess = false;
-        } else if (overshoot) {
-            Debug.Log("stopping - target was overshot");
-            debugMessage =  $" Has overshot the target ${typeof(T).ToString()}";
-            actionSuccess = false;
         }
         controller.actionFinished(actionSuccess, debugMessage);
     }
 
-        
-
     }
-
 }

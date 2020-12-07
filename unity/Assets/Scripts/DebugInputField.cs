@@ -2998,7 +2998,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
                         action.disableRendering = false;
-                        action.waitForFixedUpdate = false;
                         //action.returnToStart = true;
                         if (splitcommand.Length > 4)
                         {
@@ -3084,7 +3083,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "MoveMidLevelArmHeight";
                         action.disableRendering = false;
-                        action.waitForFixedUpdate = false;
 
                         if(splitcommand.Length > 1)
                         {
