@@ -2626,8 +2626,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach(StructureObject so in structureObjs)
             {
-                if(so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling)
-                {
+                if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
+                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
+                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
+                ) {
                     structureObjsList.Add(so);
                 }
             }

@@ -1526,9 +1526,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "map":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ToggleMapView";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("ToggleMapView");
                         break;
                     }
                 case "nopfwoiv":
