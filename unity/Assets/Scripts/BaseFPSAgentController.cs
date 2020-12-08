@@ -3070,7 +3070,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return true;
             }
             else {
-                errorMessage = "Path to target could not be found";
+                errorMessage = $"Could not find path between {startHit.position}" +
+                    " and {targetHit.position} using the NavMesh.";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
@@ -3079,7 +3080,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 position, float x, float y, float z, float allowedError = 0.01f
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            if (SafelyComputeNavMeshPath(position, new Vector3(x,y,z), path, allowedError)) {
+            if (SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError)) {
                 actionFinished(true, path);
             } else {
                 actionFinished(false);
