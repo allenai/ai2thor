@@ -2995,7 +2995,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         protected float getFloorY(float x, float start_y, float z) {
-            int layerMask = ~(1 << 10 | 1 << 9);
+            int layerMask = ~(LayerMask.GetMask("Agent") | LayerMask.GetMask("SimObjInvisible"));
 
             float y = start_y;
             RaycastHit hit;
@@ -3008,7 +3008,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         
         protected float getFloorY(float x, float z) {
-            int layerMask = ~(1 << 10);
+            int layerMask = ~LayerMask.GetMask("Agent");
 
             Ray ray = new Ray(transform.position, -transform.up);
             RaycastHit hit;
