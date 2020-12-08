@@ -24,8 +24,12 @@ public class FK_IK_Solver : MonoBehaviour
         IKHint = IKPole.GetChild(0);
     }
 
-    //Use update when testing in Unity Game Mode
+    //Uncomment this when testing in Unity Game Mode
     //void Update()
+    //{
+    //    ManipulateArm();
+    //}
+
     public void ManipulateArm()
     {
         if (isIKDriven == true)
