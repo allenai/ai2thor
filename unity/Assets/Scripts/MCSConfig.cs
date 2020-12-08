@@ -8,6 +8,7 @@ public class MCSConfig {
         { "Custom/Materials/Blue", new string[] { "blue" } },
         { "Custom/Materials/Brown", new string[] { "brown" } },
         { "Custom/Materials/Cyan", new string[] { "cyan" } },
+        { "Custom/Materials/GoldenRod", new string[] { "goldenrod" } },
         { "Custom/Materials/Green", new string[] { "green" } },
         { "Custom/Materials/Grey", new string[] { "grey" } },
         { "Custom/Materials/Indigo", new string[] { "indigo" } },
@@ -20,6 +21,7 @@ public class MCSConfig {
         { "Custom/Materials/Pink", new string[] { "pink" } },
         { "Custom/Materials/Purple", new string[] { "purple" } },
         { "Custom/Materials/Red", new string[] { "red" } },
+        { "Custom/Materials/Silver", new string[] { "silver" } },
         { "Custom/Materials/Teal", new string[] { "teal" } },
         { "Custom/Materials/White", new string[] { "white" } },
         { "Custom/Materials/Violet", new string[] { "violet" } },
@@ -77,12 +79,14 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Fabrics/CarpetDark 1", new string[] { "brown" } },
         { "AI2-THOR/Materials/Fabrics/CarpetDarkGreen", new string[] { "green" } },
         { "AI2-THOR/Materials/Fabrics/CarpetGreen", new string[] { "green" } },
+        { "AI2-THOR/Materials/Fabrics/CarpetWhite", new string[] { "white" } },
         { "AI2-THOR/Materials/Fabrics/CarpetWhite 3", new string[] { "white" } },
         { "AI2-THOR/Materials/Fabrics/HotelCarpet", new string[] { "red" } },
         { "AI2-THOR/Materials/Fabrics/HotelCarpet3", new string[] { "red", "black" } },
         { "AI2-THOR/Materials/Fabrics/RUG2", new string[] { "red", "blue" } },
         { "AI2-THOR/Materials/Fabrics/Rug3", new string[] { "blue", "red" } },
         { "AI2-THOR/Materials/Fabrics/RUG4", new string[] { "red", "yellow" } },
+        { "AI2-THOR/Materials/Fabrics/Rug5", new string[] { "white" } },
         { "AI2-THOR/Materials/Fabrics/Rug6", new string[] { "green", "purple", "red" } },
         { "AI2-THOR/Materials/Fabrics/RUG7", new string[] { "red", "blue" } },
         { "AI2-THOR/Materials/Fabrics/RugPattern224", new string[] { "green", "brown", "white" } }
@@ -119,18 +123,44 @@ public class MCSConfig {
     };
 
     public static Dictionary<string, string[]> SOFA_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Blue", new string[] { "blue" } },
         { "AI2-THOR/Materials/Fabrics/Sofa1_Brown", new string[] { "brown" } },
-        { "AI2-THOR/Materials/Fabrics/Sofa1_Red", new string[] { "red" } }
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa1_Gold", new string[] { "yellow" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Red", new string[] { "red" } },
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa1_Salmon", new string[] { "red" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa1_White", new string[] { "white" } }
     };
 
     public static Dictionary<string, string[]> SOFA_CHAIR_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Fabrics/SofaChair1_Black", new string[] { "black" } },
-        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } }
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Blue", new string[] { "blue" } },
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } },
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/SofaChair1_Gold", new string[] { "yellow" } },
+        // { "AI2-THOR/Materials/Fabrics/SofaChair1_Salmon", new string[] { "red" } },
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_White", new string[] { "white" } }
     };
 
     public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } },
         { "AI2-THOR/Materials/Fabrics/Sofa2_White", new string[] { "white" } }
+    };
+
+    public static Dictionary<string, string[]> SOFA_3_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa3_Blue", new string[] { "blue" } },
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa3_Blue_Light", new string[] { "blue" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa3_Brown", new string[] { "brown" } },
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa3_Brown_Pattern", new string[] { "brown", "green" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa3_Green_Dark", new string[] { "green" } },
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa3_Green_Pattern", new string[] { "green", "white" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa2_Red", new string[] { "red" } }
+        // Future Eval
+        // { "AI2-THOR/Materials/Fabrics/Sofa3_White_Pattern", new string[] { "white", "blue" } }
     };
 
     public static Dictionary<string, string[]> WALL_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
@@ -183,7 +213,8 @@ public class MCSConfig {
         { "wood", WOOD_MATERIAL_REGISTRY },
         { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
         { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
-        { "sofa_2", SOFA_2_MATERIAL_REGISTRY}
+        { "sofa_2", SOFA_2_MATERIAL_REGISTRY},
+        { "sofa_3", SOFA_3_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
