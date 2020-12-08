@@ -7188,29 +7188,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return so;
         }
 
-        protected float getFloorY(float x, float start_y, float z) {
-            int layerMask = ~(1 << 10 | 1 << 9);
-
-            float y = start_y;
-            RaycastHit hit;
-            Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
-            if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
-                errorMessage = "Could not find the floor";
-                return float.NegativeInfinity;
-            }
-            return hit.point.y;
-        }
-        protected float getFloorY(float x, float z) {
-            int layerMask = ~(1 << 10);
-
-            Ray ray = new Ray(transform.position, -transform.up);
-            RaycastHit hit;
-            if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
-                errorMessage = "Could not find the floor";
-                return float.NegativeInfinity;
-            }
-            return getFloorY(x, hit.point.y + 0.1f, z);
-        }
 
         public void CreateObjectOnFloor(ServerAction action) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
