@@ -24,43 +24,66 @@ public class FK_IK_Solver : MonoBehaviour
         IKHint = IKPole.GetChild(0);
     }
     
+    //Uncomment this when testing in Unity
+    void Update()
+    {
+      ManipulateArm();
+    }
+
     public void ManipulateArm()
     {
+        //Check if arm is driven by IK or FK
         if (isIKDriven == true)
         {
+            //Adjust pole position 
             IKPole.parent.position = IKTarget.position;
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
 
-            p1x = armShoulder.position.x;
-            p1y = armShoulder.position.y;
-            p1z = armShoulder.position.z;
-            p2x = IKTarget.position.x;
-            p2y = IKTarget.position.y;
-            p2z = IKTarget.position.z;
-            p3x = IKHint.position.x;
-            p3y = IKHint.position.y;
-            p3z = IKHint.position.z;
+            //Check if manipulator location is reachable by arm
+            if ((IKTarget.position - armShoulder.position).sqrMagnitude >= Mathf.Pow(bone2Length + bone3Length, 2))
+            {
+                Vector3 armDirectionVector = (IKTarget.position - armShoulder.position).normalized;
+                armElbow.position = armShoulder.position + armDirectionVector * bone1Length;
+                armWrist.position = armElbow.position + armDirectionVector * bone2Length;
+                armWrist.rotation = IKTarget.rotation;
+            }
 
-            //Define plane created by ring of overlap between spheres of extent for both shoulder-to-elbow and wrist-to-elbow bone-lengths at shoulder's and wrist's current positions, respectively
-            overlapA = 2 * p2x - 2 * p1x;
-            overlapB = 2 * p2y - 2 * p1y;
-            overlapC = 2 * p2z - 2 * p1z;
-            overlapD = Mathf.Pow(bone2Length, 2) - Mathf.Pow(bone3Length, 2) - Mathf.Pow(p1x, 2) - Mathf.Pow(p1y, 2) - Mathf.Pow(p1z, 2) + Mathf.Pow(p2x, 2) + Mathf.Pow(p2y, 2) + Mathf.Pow(p2z, 2);
+            else
+            {
+                //Define variables to optimize logic
+                p1x = armShoulder.position.x;
+                p1y = armShoulder.position.y;
+                p1z = armShoulder.position.z;
+                p2x = IKTarget.position.x;
+                p2y = IKTarget.position.y;
+                p2z = IKTarget.position.z;
+                p3x = IKHint.position.x;
+                p3y = IKHint.position.y;
+                p3z = IKHint.position.z;
 
-            //Find center of ring of overlap by projecting shoulder position onto overlap-plane, since the center will always be on the direct line between shoulder and wrist, which has the same direction vector as the overlap-plane normal
-            overlapParameter = FindParameter(p1x, p1y, p1z, overlapA, overlapB, overlapC, overlapD);
-            overlapCenter = new Vector3(p1x + overlapA * overlapParameter, p1y + overlapB * overlapParameter, p1z + overlapC * overlapParameter);
+                //Define plane created by ring of overlap between spheres of extent for both shoulder-to-elbow and wrist-to-elbow bone-lengths at shoulder's and wrist's current positions, respectively
+                overlapA = 2 * p2x - 2 * p1x;
+                overlapB = 2 * p2y - 2 * p1y;
+                overlapC = 2 * p2z - 2 * p1z;
+                overlapD = Mathf.Pow(bone2Length, 2) - Mathf.Pow(bone3Length, 2) - Mathf.Pow(p1x, 2) - Mathf.Pow(p1y, 2) - Mathf.Pow(p1z, 2) + Mathf.Pow(p2x, 2) + Mathf.Pow(p2y, 2) + Mathf.Pow(p2z, 2);
 
-            //Find radius of ring of overlap via Pythagorean Theorem using shoulder-to-elbow bone length as hypotenuse, and shoulder-to-overlap-center distance as adjacent
-            overlapRadius = Mathf.Sqrt(Mathf.Pow(bone2Length, 2) - (overlapCenter - armShoulder.position).sqrMagnitude);
+                //Find center of ring of overlap by projecting shoulder position onto overlap-plane, since the center will always be on the direct line between shoulder and wrist, which has the same direction vector as the overlap-plane normal
+                overlapParameter = FindParameter(p1x, p1y, p1z, overlapA, overlapB, overlapC, overlapD);
+                overlapCenter = new Vector3(p1x + overlapA * overlapParameter, p1y + overlapB * overlapParameter, p1z + overlapC * overlapParameter);
 
-            //Find elbow position by projecting IK_Hint position onto overlap-plane, and then moving the ring of overlap's center-point in the ring-center-to-projected-IK_Hint direction vector by a magnitude of the ring's radius
-            overlapParameter = FindParameter(p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD);
-            hintProjection = new Vector3(p3x + overlapA * overlapParameter, p3y + overlapB * overlapParameter, p3z + overlapC * overlapParameter);
-            elbowPosition = overlapCenter + overlapRadius * (hintProjection - overlapCenter).normalized;
-            armElbow.position = elbowPosition;
-            armWrist.position = IKTarget.position;
-            armWrist.rotation = IKTarget.rotation;
+                //Find radius of ring of overlap via Pythagorean Theorem using shoulder-to-elbow bone length as hypotenuse, and shoulder-to-overlap-center distance as adjacent
+                overlapRadius = Mathf.Sqrt(Mathf.Pow(bone2Length, 2) - (overlapCenter - armShoulder.position).sqrMagnitude);
+
+                //Find elbow position by projecting IK_Hint position onto overlap-plane, and then moving the ring of overlap's center-point in the ring-center-to-projected-IK_Hint direction vector by a magnitude of the ring's radius
+                overlapParameter = FindParameter(p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD);
+                hintProjection = new Vector3(p3x + overlapA * overlapParameter, p3y + overlapB * overlapParameter, p3z + overlapC * overlapParameter);
+                elbowPosition = overlapCenter + overlapRadius * (hintProjection - overlapCenter).normalized;
+
+                //Move joint transforms to calculated positions
+                armElbow.position = elbowPosition;
+                armWrist.position = IKTarget.position;
+                armWrist.rotation = IKTarget.rotation;
+            }
         }
 
         else
