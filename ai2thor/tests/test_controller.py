@@ -37,7 +37,7 @@ class FakeQueue(object):
         return True
 
 def controller():
-    c = ai2thor.controller.Controller(download_only=True, local_executable_path='unity-local-path')
+    c = ai2thor.controller.Controller(download_only=True, local_build=True)
     c.server = FakeServer()
     return c
 
@@ -60,11 +60,6 @@ def test_key_for_point():
 def test_scene_names():
     c = controller()
     assert len(c.scene_names()) == 120
-
-def test_local_executable_path():
-    c = controller()
-    c.local_executable_path = 'FOO'
-    assert c.executable_path() == 'FOO'
 
 def test_invalid_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='InvalidAction', errorMessage='Invalid method: moveaheadbadmethod'))
@@ -134,7 +129,7 @@ def test_last_action():
 def test_unity_command():
     c = controller()
     assert c.unity_command(650, 550, False) == [
-        c.executable_path(),
+        c._build.executable_path,
         '-screen-fullscreen', 
         '0',
         '-screen-quality', 
@@ -144,9 +139,9 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_executable_path='unity-local-path')
+    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_build=True)
     assert c.unity_command(650, 550, False) == [
-        c.executable_path(),
+        c._build.executable_path,
         '-screen-fullscreen', 
         '1',
         '-screen-quality', 

@@ -324,6 +324,28 @@ public class AgentManager : MonoBehaviour
 		return (fov <= min || fov > max) ? defaultVal : fov;
 	}
 
+    private void updateImageSynthesis(bool status) {
+        foreach(var agent in this.agents) {
+            agent.updateImageSynthesis(status);
+        }
+    }
+
+    private void updateThirdPartyCameraImageSynthesis(bool status) {
+        if (status) 
+        {
+            foreach(var camera in this.thirdPartyCameras)
+            {
+                GameObject gameObject = camera.gameObject;
+                var imageSynthesis = gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                if (imageSynthesis == null){
+                    gameObject.AddComponent(typeof(ImageSynthesis));
+                }
+                imageSynthesis = gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                imageSynthesis.enabled = status;
+            }
+        }
+    }
+
 	public void AddThirdPartyCamera(ServerAction action) {
 		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
 		gameObject.AddComponent(typeof(Camera));
@@ -930,9 +952,11 @@ public class AgentManager : MonoBehaviour
                 this.renderObjectImage = true;
             }
 
-			if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) {
-				this.activeAgent().updateImageSynthesis(true);
-			}
+            if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
+            {
+                updateImageSynthesis(true);
+                updateThirdPartyCameraImageSynthesis(true);
+            }
 			this.activeAgent().ProcessControlCommand (controlCommand);
 		}
 	}
@@ -1438,7 +1462,8 @@ public enum ServerActionErrorCode  {
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
 	InvalidAction,
-    MissingArguments
+    MissingArguments,
+	AmbiguousAction
 }
 
 public enum VisibilityScheme {

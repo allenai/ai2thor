@@ -16,9 +16,6 @@ import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
 
 
-UNITY_VERSION = "2019.4.2f1"
-
-
 def add_files(zipf, start_dir):
     for root, dirs, files in os.walk(start_dir):
         for f in files:
@@ -54,45 +51,40 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     print("pushed build %s to %s" % (bucket, build_archive_name))
 
 
-def _local_build_path(prefix="local"):
-    if platform.system() == "Darwin":
-        suffix = "OSXIntel64.app"
-        build_path = "unity/builds/thor-{}-{}/Contents/MacOS/AI2-Thor".format(
-            prefix,
-            suffix
-        )
-    elif platform.system() == "Linux":
-        suffix = "Linux64"
-        build_path = "unity/builds/thor-{}-{}".format(prefix, suffix)
-    else:
-        raise RuntimeError("Unsupported platform '{}'. Only '{}' and '{}' supported".format(
-            platform.system(), "Linux", "Darwin")
-        )
-    return os.path.join(
-        os.getcwd(),
-        build_path
-    )
-
-
 def _webgl_local_build_path(prefix, source_dir="builds"):
     return os.path.join(
         os.getcwd(), "unity/{}/thor-{}-WebGL/".format(source_dir, prefix)
     )
 
 
+def _unity_version():
+    import yaml
+    with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
+        project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
+
+    return project_version['m_EditorVersion']
+
 def _build(unity_path, arch, build_dir, build_name, env={}):
+    import yaml
+        
     project_path = os.path.join(os.getcwd(), unity_path)
+    standalone_path = None
+
+    unity_version = _unity_version()
+
     if sys.platform.startswith('darwin'):
         unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
-            UNITY_VERSION
+            unity_version
         )
-        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(UNITY_VERSION)
+        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(unity_version)
     elif 'win' in sys.platform:
-        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(UNITY_VERSION)
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(unity_version)
         # TODO: Verify windows unity standalone path
-        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(UNITY_VERSION)
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith('linux'):
+        unity_hub_path = "{}/Unity/{}/Editor/Unity".format(os.environ['HOME'], unity_version)
 
-    if os.path.exists(standalone_path):
+    if standalone_path and os.path.exists(standalone_path):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
@@ -337,12 +329,14 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build_name = local_build_name(prefix, arch)
+    build = ai2thor.build.Build(arch, 'local', False)
     env = dict()
     if os.path.isdir('unity/Assets/Private/Scenes'):
         env['INCLUDE_PRIVATE_SCENES'] = 'true'
 
-    if _build("unity", arch, "builds", build_name, env=env):
+    build_dir = os.path.join("builds", build.name)
+
+    if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -851,10 +845,6 @@ def ci_build(context):
 
 def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
-    import subprocess
-    import boto3
-
-    github_url = "https://github.com/allenai/ai2thor"
 
     commit_id = git_commit_id()
     commit_build = ai2thor.build.Build(arch, commit_id, include_private_scenes)
@@ -992,7 +982,6 @@ def build(context, local=False):
             raise Exception("Error with thread")
 
     generate_quality_settings(context)
-    # 
 
 @task
 def interact(
@@ -1028,7 +1017,7 @@ def interact(
             port=port,
             width=width,
             height=height,
-            local_executable_path=_local_build_path() if local_build else None,
+            local_build=local_build,
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
             save_image_per_frame=True,
@@ -1119,7 +1108,7 @@ def get_depth(
         env = ai2thor.controller.Controller(
             width=600,
             height=600,
-            local_executable_path=_local_build_path() if local_build else None
+            local_build=local_build
         )
 
     if scene is not None:
@@ -1425,10 +1414,7 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 
     import ai2thor.controller
 
-    controller = ai2thor.controller.BFSController()
-    controller.local_executable_path = (
-        "unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64"
-    )
+    controller = ai2thor.controller.BFSController(local_build=True)
     controller.start()
     for i in range(int(start_scene), int(end_scene)):
         print("working on floorplan %s" % i)
@@ -1543,8 +1529,7 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
-    env = ai2thor.controller.Controller()
-    env.local_executable_path = _local_build_path()
+    env = ai2thor.controller.Controller(local_build=True)
     if editor_mode:
         env.start(
             8200,
@@ -1957,7 +1942,7 @@ def create_robothor_dataset(
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
@@ -2229,7 +2214,7 @@ def shortest_path_to_object(
     controller = ai2thor.controller.Controller(
         width=300,
         height=300,
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
@@ -2349,7 +2334,7 @@ def fix_dataset_object_types(ctx, input_file, output_file, editor_mode=False, lo
         controller = ai2thor.controller.Controller(
             width=300,
             height=300,
-            local_executable_path=_local_build_path() if local_build else None,
+            local_build=local_build,
             start_unity=False if editor_mode else True,
             scene=scene,
             port=8200,
@@ -2386,7 +2371,7 @@ def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, lo
     controller = ai2thor.controller.Controller(
         width=300,
         height=300,
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
@@ -2458,7 +2443,7 @@ def visualize_shortest_paths(
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         port=8200,
         host='127.0.0.1',
@@ -2594,7 +2579,7 @@ def fill_in_dataset(
     controller = ai2thor.controller.Controller(
         width=300,
         height=300,
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         port=8200,
         host='127.0.0.1',
@@ -2665,7 +2650,7 @@ def test_teleport(ctx, editor_mode=False, local_build=False):
         gridSize=0.25,
         port=8200,
         host='127.0.0.1',
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
         continuousMode=True,
@@ -2794,7 +2779,7 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
         gridSize=0.25,
         port=8200,
         host='127.0.0.1',
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
         continuousMode=True,
@@ -2828,7 +2813,7 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
         gridSize=gridSize,
         port=8200,
         host='127.0.0.1',
-        local_executable_path=_local_build_path() if local_build else None,
+        local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
         continuousMode=True,

@@ -4,38 +4,11 @@ import os
 import json
 import pytest
 import jsonschema
-import ai2thor.controller
+from ai2thor.controller import Controller
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 import glob
 import re
-class UnityTestController(ai2thor.controller.Controller):
-
-    def __init__(self,**kwargs):
-        base_path = os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
-        build_path = None
-        local_build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/AI2-Thor'
-        newest_build_time = 0
-        if os.path.isfile(os.path.join(base_path, local_build_path)):
-            newest_build_time = os.stat(os.path.join(base_path, 'thor-local-OSXIntel64.app')).st_mtime
-            build_path = local_build_path
-
-        for g in glob.glob(base_path + "/*"):
-            if os.path.isdir(g):
-                base = os.path.basename(g)
-                if re.match(r'^thor-OSXIntel64-[0-9a-z]+$', base):
-                    mtime = os.stat(g).st_mtime
-                    if mtime > newest_build_time:
-                        newest_build_time = mtime
-                        build_path = os.path.join(base, base + '.app', 'Contents/MacOS/AI2-Thor')
-
-        print("selected executable %s" % build_path)
-        kwargs['local_executable_path'] = os.path.join(base_path, build_path)
-        kwargs['scene'] = 'FloorPlan28'
-        super().__init__(**kwargs)
-
-    def prune_releases(self):
-        pass
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -51,8 +24,13 @@ class ThirdPartyCameraMetadata:
     fieldOfView = 'fieldOfView'
 
 
-wsgi_controller = UnityTestController(server_class=WsgiServer)
-fifo_controller = UnityTestController(server_class=FifoServer)
+def build_controller(**args):
+    default_args = dict(scene='FloorPlan28', local_build=True)
+    default_args.update(args)
+    return Controller(**default_args)
+
+wsgi_controller = build_controller(server_class=WsgiServer)
+fifo_controller = build_controller(server_class=FifoServer)
 
 def teardown_module(module):
     wsgi_controller.stop()
@@ -64,24 +42,24 @@ def assert_near(point1, point2, error_message=''):
         assert round(point1[k], 3) == round(point2[k], 3), error_message
 
 def test_stochastic_controller():
-    controller = UnityTestController(agentControllerType='stochastic')
+    controller = build_controller(agentControllerType='stochastic')
     controller.reset('FloorPlan28')
     assert controller.last_event.metadata['lastActionSuccess']
 
 def test_rectangle_aspect():
-    controller = UnityTestController(width=600, height=300)
+    controller = build_controller(width=600, height=300)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
 
 def test_small_aspect():
-    controller = UnityTestController(width=128, height=64)
+    controller = build_controller(width=128, height=64)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
 
 def test_fast_emit():
-    fast_controller = UnityTestController(server_class=FifoServer, fastActionEmit=True)
+    fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
     event = fast_controller.step(dict(action='RotateRight'))
     event_fast_emit = fast_controller.step(dict(action='TestFastEmit', rvalue='foo'))
     event_no_fast_emit = fast_controller.step(dict(action='LookUp'))
@@ -265,8 +243,47 @@ def test_teleport(controller):
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_find_ambiguous(controller):
+    event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    assert sorted(event.metadata['actionReturn']) == known_ambig
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_find_ambiguous_stochastic(controller):
+    event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
+
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    assert sorted(event.metadata['actionReturn']) == known_ambig
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_server_action_ambiguous2(controller):
+    exception_thrown = False
+    exception_message = None
+    try:
+        controller.step('TestActionDispatchSAAmbig2')
+    except ValueError as e:
+        exception_thrown = True
+        exception_message = str(e)
+
+    assert exception_thrown
+    assert 'Ambiguous action: TestActionDispatchSAAmbig2 Signature match found in the same class' == exception_message
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_action_dispatch_server_action_ambiguous(controller):
+    exception_thrown = False
+    exception_message = None
+    try:
+        controller.step('TestActionDispatchSAAmbig')
+    except ValueError as e:
+        exception_thrown = True
+        exception_message = str(e)
+
+    assert exception_thrown
+    assert exception_message == 'Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted'
+
+@pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_conflicts_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
     known_conflicts = {
@@ -276,7 +293,7 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     }
     assert event.metadata['actionReturn'] == known_conflicts
     
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_conflicts_physics(controller):
     event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
     known_conflicts = {
@@ -324,12 +341,12 @@ def test_action_disptatch_two_param(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_two_param_with_default(controller):
-    event = controller.step(dict(action='TestActionDispatchNoop', param3=True, param4='foobar'))
+    event = controller.step(dict(action='TestActionDispatchNoop2', param3=True, param4='foobar'))
     assert event.metadata['actionReturn'] == 'param3 param4/default foobar'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_two_param_with_default_empty(controller):
-    event = controller.step(dict(action='TestActionDispatchNoop', param3=True))
+    event = controller.step(dict(action='TestActionDispatchNoop2', param3=True))
     assert event.metadata['actionReturn'] == 'param3 param4/default foo'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
@@ -349,7 +366,7 @@ def test_action_disptatch_all_default(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_action_disptatch_some_default(controller):
-    event = controller.step(dict(action='TestActionDispatchNoopAllDefault', param12=9.0))
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault2', param12=9.0))
     assert event.metadata['actionReturn'] == 'somedefault'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
