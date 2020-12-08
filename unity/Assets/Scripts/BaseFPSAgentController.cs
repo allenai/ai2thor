@@ -3047,11 +3047,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                if (!startWasHit) {
-                    errorMessage = $"Closest point on NavMesh was too far from the agent: " + 
-                    $" (startPosition={startPosition}, closest navmesh position {startHit.position}) and" +
-                    $" (targetPosition={targetPosition}, closest navmesh position {targetHit.position}).";
-                }
+                errorMessage = $"Closest point on NavMesh was too far from the agent: " + 
+                    $" (startPosition={startPosition.ToString("F3")}," +
+                    $" closest navmesh position {startHit.position.ToString("F3")}) and" +
+                    $" (targetPosition={targetPosition.ToString("F3")}," +
+                    $" closest navmesh position {targetHit.position.ToString("F3")}).";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
