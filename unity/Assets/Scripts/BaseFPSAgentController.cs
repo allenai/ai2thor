@@ -2644,13 +2644,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, reachablePositions);
         }
 
-        private void getShortestPath(string objectType, string objectId,  Vector3 startPosition, Quaternion startRotation) {
+        private void getShortestPath(
+            string objectType,
+            string objectId,
+            Vector3 startPosition,
+            Quaternion startRotation,
+            float allowedError
+        ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
             }
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
                 actionFinishedEmit(true, path);
@@ -2663,16 +2669,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
+        public void GetShortestPath(
+            Vector3 position,
+            Vector3 rotation,
+            string objectType = null,
+            string objectId = null,
+            float allowedError = 0.01f
+        ) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
         }
 
-        public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
+        public void GetShortestPath(
+            Vector3 position,
+            string objectType = null,
+            string objectId = null,
+            float allowedError = 0.01f
+        ) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
         }
 
-        public void GetShortestPath(string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
+        public void GetShortestPath(string objectType = null, string objectId = null, float allowedError = 0.01f) {
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
         }
 
         private bool GetPathFromReachablePositions(
@@ -2938,7 +2955,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SimObjPhysics targetSOP,
             Vector3 initialPosition,
             Quaternion initialRotation,
-            float allowedError = 0.01f,
+            float allowedError,
             bool visualize = false
         ) {
             var targetTransform = targetSOP.transform;
@@ -3110,7 +3127,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 var textMesh = go.GetComponentInChildren<TextMesh>();
                 textMesh.text = i.ToString();
 
-                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
+                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity, 0.1f);
 
                 var lineRenderer = go.GetComponentInChildren<LineRenderer>();
 
