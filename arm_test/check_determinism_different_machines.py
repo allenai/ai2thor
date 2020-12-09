@@ -1,4 +1,5 @@
 import datetime
+import json
 import pdb
 
 import ai2thor.controller
@@ -7,10 +8,13 @@ import random
 import copy
 import time
 
-MAX_TESTS = 300
+MAX_TESTS = 20
 MAX_EP_LEN = 100
 scene_names = ['FloorPlan{}_physics'.format(i + 1) for i in range(30)]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
+
+nan = float('nan')
+inf = float('inf')
 
 controller = ai2thor.controller.Controller(
     scene=scene_names[0], gridSize=0.25,
@@ -172,64 +176,93 @@ def two_dict_equal(dict1, dict2):
 def get_current_full_state(controller):
     return {'agent_position':controller.last_event.metadata['agent']['position'], 'agent_rotation':controller.last_event.metadata['agent']['rotation'], 'arm_state': controller.last_event.metadata['arm']['joints'], 'held_object': controller.last_event.metadata['arm']['HeldObjects']}
 
-all_timers = []
 
-for i in range(MAX_TESTS):
-    reachable_positions = reset_the_scene_and_get_reachables()
+def random_tests():
+    all_timers = []
 
-    initial_location = random.choice(reachable_positions)
-    initial_rotation = random.choice([i for i in range(0, 360, 45)])
-    event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-    initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-    controller.step('PausePhysicsAutoSim')
-    all_commands = []
-    before = datetime.datetime.now()
-    for j in range(MAX_EP_LEN):
-        command = random.choice(set_of_actions)
-        execute_command(controller, command, ADITIONAL_ARM_ARGS)
-        all_commands.append(command)
-        last_event_success = controller.last_event.metadata['lastActionSuccess']
+    all_dict = {}
 
-        pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
-        picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
-        if len(pickupable) > 0 and len(picked_up_before) == 0:
-            cmd = 'p'
-            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
-            all_commands.append(cmd)
-            if controller.last_event.metadata['lastActionSuccess'] is False:
-                print('Failed to pick up ')
-                print('scene name', controller.last_event.metadata['sceneName'])
-                print('initial pose', initial_pose)
-                print('list of actions', all_commands)
-                break
+    for i in range(MAX_TESTS):
+        reachable_positions = reset_the_scene_and_get_reachables()
 
+        initial_location = random.choice(reachable_positions)
+        initial_rotation = random.choice([i for i in range(0, 360, 45)])
+        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        controller.step('PausePhysicsAutoSim')
+        all_commands = []
+        before = datetime.datetime.now()
+        for j in range(MAX_EP_LEN):
+            command = random.choice(set_of_actions)
+            execute_command(controller, command, ADITIONAL_ARM_ARGS)
+            all_commands.append(command)
+            last_event_success = controller.last_event.metadata['lastActionSuccess']
 
-    after = datetime.datetime.now()
-    time_diff = after - before
-    seconds = time_diff.total_seconds()
-    all_timers.append(len(all_commands) / seconds)
-
-    final_state = get_current_full_state(controller) # made sure this does not require deep copy
-    print('FPS', sum(all_timers) / len(all_timers))
+            pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
+            picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
+            if len(pickupable) > 0 and len(picked_up_before) == 0:
+                cmd = 'p'
+                execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+                all_commands.append(cmd)
+                if controller.last_event.metadata['lastActionSuccess'] is False:
+                    print('Failed to pick up ')
+                    print('scene name', controller.last_event.metadata['sceneName'])
+                    print('initial pose', initial_pose)
+                    print('list of actions', all_commands)
+                    break
 
 
+        after = datetime.datetime.now()
+        time_diff = after - before
+        seconds = time_diff.total_seconds()
+        all_timers.append(len(all_commands) / seconds)
+
+        final_state = get_current_full_state(controller) # made sure this does not require deep copy
+        scene_name = controller.last_event.metadata['sceneName']
+
+        #TODO only when pick up has happened
+        dict_to_add = ({'initial_location': initial_location,
+               'initial_rotation': initial_rotation,
+               'all_commands': all_commands,
+               'final_state': final_state,
+               'initial_pose': initial_pose,
+               'scene_name': scene_name
+               })
+        all_dict[len(all_dict)] = dict_to_add
+        # print('FPS', sum(all_timers) / len(all_timers))
+    return all_dict
+def determinism_test(all_tests):
     # Redo the actions 20 times:
     # only do this if an object is picked up
-    picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
-    if len(picked_up_before) > 0:
-        for _ in range(10):
-            controller.reset(controller.last_event.metadata['sceneName'])
-            event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-            controller.step('PausePhysicsAutoSim')
-            for cmd in all_commands:
-                execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
-                last_event_success = controller.last_event.metadata['lastActionSuccess']
-            current_state = get_current_full_state(controller)
-            if not two_dict_equal(final_state, current_state):
-                print('not deterministic')
-                print('scene name', controller.last_event.metadata['sceneName'])
-                print('initial pose', initial_pose)
-                print('list of actions', all_commands)
-                pdb.set_trace()
+    for test_point in all_tests.values():
+        initial_location = test_point['initial_location']
+        initial_rotation = test_point['initial_rotation']
+        all_commands = test_point['all_commands']
+        final_state = test_point['final_state']
+        initial_pose = test_point['initial_pose']
+        scene_name = test_point['scene_name']
+
+        controller.reset(scene_name)
+        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        controller.step('PausePhysicsAutoSim')
+        for cmd in all_commands:
+            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            last_event_success = controller.last_event.metadata['lastActionSuccess']
+        current_state = get_current_full_state(controller)
+        if not two_dict_equal(final_state, current_state):
+            print('not deterministic')
+            print('scene name', controller.last_event.metadata['sceneName'])
+            print('initial pose', initial_pose)
+            print('list of actions', all_commands)
+            pdb.set_trace()
+
+if __name__ == '__main__':
+    all_dict = random_tests()
+    with open('determinism_json.json' ,'w') as f:
+        json.dump(all_dict, f)
+
+    with open('determinism_json.json' ,'r') as f:
+        all_dict = json.load(f)
+    determinism_test(all_dict)
 
 
