@@ -99,9 +99,46 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         //add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
         List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+        //add in all agent and arm capsules by default
         capsules.AddRange(ArmCapsuleColliders);
         capsules.AddRange(agentCapsuleCollider);
 
+        List<BoxCollider> boxes = new List<BoxCollider>();
+        //add in all agent and arm boxes by default
+        boxes.AddRange(ArmBoxColliders);
+
+        List<SphereCollider> spheres = new List<SphereCollider>();
+        //if arm ever has sphere colliders on it, add them in by defualt here
+
+        //for all held objects currently picked up, make sure to add their
+        //colliders which are the trigger colliders referenced on pickup
+        foreach(KeyValuePair<SimObjPhysics, Transform> objs in HeldObjects)
+        {
+            Collider[] childColliders = objs.Value.GetComponentsInChildren<Collider>();
+            foreach(Collider c in childColliders)
+            {
+                if(c.GetType() == typeof(BoxCollider))
+                {
+                    print("adding box collider from held objs");
+                    boxes.Add(c.GetComponent<BoxCollider>());
+                }
+
+                if(c.GetType() == typeof(CapsuleCollider))
+                {
+                    print("adding capsule collider from held objs");
+                    capsules.Add(c.GetComponent<CapsuleCollider>());
+                }
+
+                if(c.GetType() == typeof(SphereCollider))
+                {
+                    print("adding sphere collider from held objs");
+                    spheres.Add(c.GetComponent<SphereCollider>());
+                }
+            }
+        }
+
+        //do overlap casts for all primitive capsue, box, and sphere colliders that are part of the arm
+        //this should also include colliders of any objects picked up by the arm
 
         //create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in capsules)
@@ -164,13 +201,25 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         //also check if the couple of box colliders are colliding
-        foreach (BoxCollider b in ArmBoxColliders)
+        foreach (BoxCollider b in boxes)
         {
             foreach(var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore))
             {
                 colliders.Add(col);
             }
         }
+
+        foreach(SphereCollider s in spheres)
+        {
+            Vector3 center = s.transform.TransformPoint(s.center);
+            float radius = s.radius;
+
+            foreach (var col in Physics.OverlapSphere(center, radius, 1 << 8, QueryTriggerInteraction.Ignore))
+            {
+                colliders.Add(col);
+            }
+        }
+
         return colliders;
     }
 
@@ -207,7 +256,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool disableRendering = false
     ) {
         
-
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
