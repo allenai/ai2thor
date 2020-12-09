@@ -1442,59 +1442,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "fu":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyUp";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyUp";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fd":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyDown";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyDown";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fa":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyAhead";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyAhead";
+                        action["moveMagnitude"] = 2f;
 
-                        action.moveMagnitude = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
                 case "fl":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyLeft";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyLeft";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fr":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyRight";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyRight";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fb":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyBack";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyBack";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
