@@ -1288,7 +1288,6 @@ public class ServerAction
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public float fixedDeltaTime = 0.02f;
-    public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
