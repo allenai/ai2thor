@@ -2351,10 +2351,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MoveHandForce(ServerAction action) {
-            Vector3 direction = transform.forward * action.z +
-                transform.right * action.x +
-                transform.up * action.y;
+        public void MoveHandForce(float x, float y, float z) {
+            Vector3 direction = transform.forward * z +
+                transform.right * x +
+                transform.up * y;
             Vector3 target = AgentHand.transform.position +
                 direction;
             if (ItemInHand == null) {
@@ -2627,12 +2627,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
         // x, y, z coordinates should specify how far to move in that direction, so
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
-        public void MoveHand(ServerAction action) {
+        public void MoveHand(float x, float y, float z) {
             //get new direction relative to Agent forward facing direction (not the camera)
             Vector3 newPos = AgentHand.transform.position +
-                transform.forward * action.z +
-                transform.right * action.x +
-                transform.up * action.y;
+                transform.forward * z +
+                transform.right * x +
+                transform.up * y;
             StartCoroutine(waitForNFramesAndReturn(1, moveHandToXYZ(newPos.x, newPos.y, newPos.z)));
         }
 
@@ -2640,76 +2640,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //pass in x,y,z of 0 if no movement is desired on that axis
         //pass in x,y,z of + for positive movement along that axis
         //pass in x,y,z of - for negative movement along that axis
-        public void MoveHandDelta(ServerAction action) {
+        public void MoveHandDelta(float x, float y, float z, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.forward * action.z) + (m_Camera.transform.up * action.y) + (m_Camera.transform.right * action.x);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.forward * z) + (m_Camera.transform.up * y) + (m_Camera.transform.right * x);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandAhead(ServerAction action) {
+        public void MoveHandAhead(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandLeft(ServerAction action) {
+        public void MoveHandLeft(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandDown(ServerAction action) {
+        public void MoveHandDown(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandUp(ServerAction action) {
+        public void MoveHandUp(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.up * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandRight(ServerAction action) {
+        public void MoveHandRight(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.right * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandBack(ServerAction action) {
+        public void MoveHandBack(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
         //uh this kinda does what MoveHandDelta does but in more steps, splitting direction and magnitude into
         //two separate params in case someone wants it that way
-        public void MoveHandMagnitude(ServerAction action) {
+        public void MoveHandMagnitude(float moveMagnitude, float x=0.0f, float y=0.0f, float z=0.0f) {
             Vector3 newPos = AgentHand.transform.position;
 
             //get new direction relative to Agent's (camera's) forward facing 
-            if (action.x > 0) {
-                newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
+            if (x > 0) {
+                newPos = newPos + (m_Camera.transform.right * moveMagnitude);
             }
 
-            if (action.x < 0) {
-                newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
+            if (x < 0) {
+                newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
             }
 
-            if (action.y > 0) {
-                newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
+            if (y > 0) {
+                newPos = newPos + (m_Camera.transform.up * moveMagnitude);
             }
 
-            if (action.y < 0) {
-                newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);
+            if (y < 0) {
+                newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
             }
 
-            if (action.z > 0) {
-                newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);
+            if (z > 0) {
+                newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
             }
 
-            if (action.z < 0) {
-                newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
+            if (z < 0) {
+                newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
             }
 
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));

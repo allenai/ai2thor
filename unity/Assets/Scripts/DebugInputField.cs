@@ -1911,16 +1911,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //pass in move magnitude or default is 0.25 units
 				case "mha":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveHandAhead";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandAhead";
 
 						if(splitcommand.Length > 1)
 						{
-							action.moveMagnitude = float.Parse(splitcommand[1]);
+							action["moveMagnitude"] = float.Parse(splitcommand[1]);
 						}
 
 						else
-						    action.moveMagnitude = 0.1f;
+						    action["moveMagnitude"] = 0.1f;
 						
 						// action.x = 0f;
 						// action.y = 0f;
@@ -1934,17 +1934,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units               
                 case "mhb":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandBack";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandBack";
 
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = 0f;
@@ -1957,16 +1957,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhl":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandLeft";                  
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandLeft";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = -1f;
                         // action.y = 0f;
@@ -1979,16 +1979,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhr":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandRight";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandRight";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 1f;
                         // action.y = 0f;
@@ -2001,16 +2001,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhu":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandUp";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandUp";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = 1f;
@@ -2023,16 +2023,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhd":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandDown";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandDown";
                         
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = -1f;
