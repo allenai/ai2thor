@@ -152,26 +152,25 @@ def two_list_equal(l1, l2):
 
 def two_dict_equal(dict1, dict2):
     assert len(dict1) == len(dict2), print('different len', dict1, dict2)
+    equal = True
     for k in dict1:
         val1 = dict1[k]
         val2 = dict2[k]
+        assert type(val1) == type(val2), print('different type', dict1, dict2)
         if type(val1) == dict:
-            if not two_dict_equal(val1, val2):
-                print('not equal', val1, val2)
-                return False
+            equal = two_dict_equal(val1, val2)
         elif type(val1) == list:
-            if not two_list_equal(val1, val2):
-                print('not equal', val1, val2)
-                return False
+            equal = two_list_equal(val1, val2)
         elif val1 != val1: # Either nan or -inf
-            if not val2 != val2:
-                print('not equal', val1, val2)
-                return False
+            equal = val2 != val2
+        elif type(val1) == float:
+            equal = abs(val1 - val2) < 0.001
         else:
-            if not (val1 == val2):
-                print('not equal', val1, val2)
-                return False
-    return True
+            equal = (val1 == val2)
+        if not equal:
+            print('not equal', val1, val2)
+            return equal
+    return equal
 
 def get_current_full_state(controller):
     return {'agent_position':controller.last_event.metadata['agent']['position'], 'agent_rotation':controller.last_event.metadata['agent']['rotation'], 'arm_state': controller.last_event.metadata['arm']['joints'], 'held_object': controller.last_event.metadata['arm']['HeldObjects']}
@@ -183,6 +182,7 @@ def random_tests():
     all_dict = {}
 
     for i in range(MAX_TESTS):
+        print('test number', i)
         reachable_positions = reset_the_scene_and_get_reachables()
 
         initial_location = random.choice(reachable_positions)
@@ -234,7 +234,7 @@ def random_tests():
 def determinism_test(all_tests):
     # Redo the actions 20 times:
     # only do this if an object is picked up
-    for test_point in all_tests.values():
+    for k, test_point in all_tests.items():
         initial_location = test_point['initial_location']
         initial_rotation = test_point['initial_rotation']
         all_commands = test_point['all_commands']
@@ -255,11 +255,13 @@ def determinism_test(all_tests):
             print('initial pose', initial_pose)
             print('list of actions', all_commands)
             pdb.set_trace()
+        else:
+            print('test {} passed'.format(k))
 
 if __name__ == '__main__':
-    all_dict = random_tests()
-    with open('determinism_json.json' ,'w') as f:
-        json.dump(all_dict, f)
+    # all_dict = random_tests()
+    # with open('determinism_json.json' ,'w') as f:
+    #     json.dump(all_dict, f)
 
     with open('determinism_json.json' ,'r') as f:
         all_dict = json.load(f)
