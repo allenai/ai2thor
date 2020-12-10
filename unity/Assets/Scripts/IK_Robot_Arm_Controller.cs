@@ -119,19 +119,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 if(c.GetType() == typeof(BoxCollider))
                 {
-                    print("adding box collider from held objs");
                     boxes.Add(c.GetComponent<BoxCollider>());
                 }
 
                 if(c.GetType() == typeof(CapsuleCollider))
                 {
-                    print("adding capsule collider from held objs");
                     capsules.Add(c.GetComponent<CapsuleCollider>());
                 }
 
                 if(c.GetType() == typeof(SphereCollider))
                 {
-                    print("adding sphere collider from held objs");
                     spheres.Add(c.GetComponent<SphereCollider>());
                 }
             }
@@ -143,57 +140,59 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in capsules)
         {
-            Vector3 center = c.transform.TransformPoint(c.center);
-            float radius = c.radius;
-            //direction of CapsuleCollider's orientation in local space
-            Vector3 dir = new Vector3();
-            //x just in case
-            if(c.direction == 0)
-            {
-                //get world space direction of this capsule's local right vector
-                dir = c.transform.right;
-            }
+            // Vector3 center = c.transform.TransformPoint(c.center);
+            // float radius = c.radius;
+            // //direction of CapsuleCollider's orientation in local space
+            // Vector3 dir = new Vector3();
+            // //x just in case
+            // if(c.direction == 0)
+            // {
+            //     //get world space direction of this capsule's local right vector
+            //     dir = c.transform.right;
+            // }
 
-            //y just in case
-            if(c.direction == 1)
-            {
-                //get world space direction of this capsule's local up vector
-                dir = c.transform.up;
-            }
+            // //y just in case
+            // if(c.direction == 1)
+            // {
+            //     //get world space direction of this capsule's local up vector
+            //     dir = c.transform.up;
+            // }
 
-            //z because all arm colliders have direction z by default
-            if(c.direction == 2)
-            {
-                //get world space direction of this capsul's local forward vector
-                dir = c.transform.forward;
-                //this doesn't work because transform.right is in world space already,
-                //how to get transform.localRight?
-            }
+            // //z because all arm colliders have direction z by default
+            // if(c.direction == 2)
+            // {
+            //     //get world space direction of this capsul's local forward vector
+            //     dir = c.transform.forward;
+            //     //this doesn't work because transform.right is in world space already,
+            //     //how to get transform.localRight?
+            // }
 
-            //debug draw forward of each joint
-            // #if UNITY_EDITOR
-            // //debug draw
-            // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
-            // #endif
+            // //debug draw forward of each joint
+            // // #if UNITY_EDITOR
+            // // //debug draw
+            // // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            // // #endif
 
-            //center in world space + direction with magnitude (1/2 height - radius)
-            var point0 = center + dir * (c.height/2 - radius);
+            // //center in world space + direction with magnitude (1/2 height - radius)
+            // var point0 = center + dir * (c.height/2 - radius);
 
-            //point 1
-            //center in world space - direction with magnitude (1/2 height - radius)
-            var point1 = center - dir * (c.height/2 - radius);
+            // //point 12
+            // //center in world space - direction with magnitude (1/2 height - radius)
+            // var point1 = center - dir * (c.height/2 - radius);
 
-            //debug draw ends of each capsule of each joint
-            // #if UNITY_EDITOR
-            // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
-            // gdc.p0 = point0;
-            // gdc.p1 = point1;
-            // gdc.radius = radius;
-            // debugCapsules.Add(gdc);
-            // #endif
-            
+            // //debug draw ends of each capsule of each joint
+            // // #if UNITY_EDITOR
+            // // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            // // gdc.p0 = point0;
+            // // gdc.p1 = point1;
+            // // gdc.radius = radius;
+            // // debugCapsules.Add(gdc);
+            // // #endif
+            ConvertCollider.ConvertedCapsule cCap = new ConvertCollider.ConvertedCapsule();
+            cCap = ConvertCollider.ConvertCapsule(c);
+
             //ok now finally let's make some overlap capsuuuules
-            foreach(var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore))
+            foreach(var col in Physics.OverlapCapsule(cCap.p1, cCap.p2, cCap.radius, 1 << 8, QueryTriggerInteraction.Ignore))
             {
                 colliders.Add(col);
             }
@@ -203,7 +202,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //also check if the couple of box colliders are colliding
         foreach (BoxCollider b in boxes)
         {
-            foreach(var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore))
+            //<ClassName>.<Member Whatever>
+            ConvertCollider.ConvertedBox cBox = new ConvertCollider.ConvertedBox();
+            cBox = ConvertCollider.ConvertBox(b);
+
+            foreach(var col in Physics.OverlapBox(cBox.center, cBox.halfExtents, cBox.orientation, 1 << 8, QueryTriggerInteraction.Ignore))
             {
                 colliders.Add(col);
             }
@@ -211,10 +214,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         foreach(SphereCollider s in spheres)
         {
-            Vector3 center = s.transform.TransformPoint(s.center);
-            float radius = s.radius;
+            ConvertCollider.ConvertedCapsule cCap = new ConvertCollider.ConvertedCapsule();
+            cCap = ConvertCollider.ConvertCapsule(s);
 
-            foreach (var col in Physics.OverlapSphere(center, radius, 1 << 8, QueryTriggerInteraction.Ignore))
+            foreach (var col in Physics.OverlapSphere(cCap.p1, cCap.radius, 1 << 8, QueryTriggerInteraction.Ignore))
             {
                 colliders.Add(col);
             }
