@@ -159,7 +159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -275,12 +274,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
-
-            if (this.jsInterface)
-            {
-                // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction);
-            }
 
             lastActionSuccess = success;
 			this.agentState = newState;
@@ -408,9 +401,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(ServerAction action) {
-            if(action.maxStepCount != 0) {
-                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+        public void GetReachablePositions(int maxStepCount = 0) {
+            if(maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, maxStepCount);
             } else {
                 reachablePositions = getReachablePositions();
             }
@@ -781,8 +774,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return dist;
         }
 
-        public void DistanceToObject(ServerAction action) {
-            float dist = distanceToObject(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId]);
+        public void DistanceToObject(string objectId) {
+            float dist = distanceToObject(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
             #if UNITY_EDITOR
             Debug.Log(dist);
             #endif
@@ -863,8 +856,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        public void DisableObject(ServerAction action) {
-            string objectId = action.objectId;
+        public void DisableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
                 actionFinished(true);
@@ -873,8 +865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void EnableObject(ServerAction action) {
-            string objectId = action.objectId;
+        public void EnableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
                 actionFinished(true);
@@ -884,36 +875,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         
         //remove a given sim object from the scene. Pass in the object's objectID string to remove it.
-        public void RemoveFromScene(ServerAction action) {
+        public void RemoveFromScene(string objectId) {
             //pass name of object in from action.objectId
-            if (action.objectId == null) {
+            if (objectId == null) {
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
             }
 
             //see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].transform.gameObject.SetActive(false);
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
                 physicsSceneManager.SetupScene();
                 actionFinished(true);
                 return;
             }
 
-            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
+            errorMessage = objectId + " could not be found in this scene, so it can't be removed";
             actionFinished(false);
         }
 
         //remove a list of given sim object from the scene.
-        public void RemoveObjsFromScene(ServerAction action) {
-            if (action.objectIds == null || action.objectIds[0] == null)
+        public void RemoveObjsFromScene(string[] objectIds) {
+            if (objectIds == null || objectIds[0] == null)
             {
                 errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
                 actionFinished(false);
                 return;
             }
             bool fail = false;
-            foreach (string objIds in action.objectIds)
+            foreach (string objIds in objectIds)
             {
                 if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
                 {
@@ -1024,7 +1015,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
         //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
         //this means that the isSceneAtRest bool will always be false
-        public void MakeAllObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable()
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
             {
@@ -1440,8 +1431,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #if UNITY_WEBGL
         public void ProcessControlCommand(ServerAction controlCommand)
         {
-            currentServerAction = controlCommand;
-
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1514,6 +1503,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError(errorMessage);
                 actionFinished(false);
             }
+            catch (AmbiguousActionException e)
+            {
+                errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
+                errorCode = ServerActionErrorCode.AmbiguousAction;
+                Debug.LogError(errorMessage);
+                actionFinished(false);
+            
+            }
             catch (InvalidActionException)
             {
                 errorMessage = "Invalid action: " + controlCommand.action;
@@ -1539,12 +1536,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //no op action
-        public void Pass(ServerAction action) {
+        public void Pass() {
             actionFinished(true);
         }
 
         //no op action
-        public void Done(ServerAction action) {
+        public void Done() {
             actionFinished(true);
         }
 
@@ -1738,7 +1735,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 transform.position = targetTeleport;
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
@@ -1909,7 +1906,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void VisibleRange(ServerAction action) {
+        public void VisibleRange() {
             actionFinished(true, visibleRange());
         }
 
@@ -2370,13 +2367,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        public void DefaultAgentHand(ServerAction action = null) {
-            ResetAgentHandPosition(action);
-            ResetAgentHandRotation(action);
+        public void DefaultAgentHand() {
+            ResetAgentHandPosition();
+            ResetAgentHandRotation();
             IsHandDefault = true;
         }
 
-        public void ResetAgentHandPosition(ServerAction action = null) {
+        public void ResetAgentHandPosition() {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             if (sop != null) {
@@ -2384,7 +2381,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void ResetAgentHandRotation(ServerAction action = null) {
+        public void ResetAgentHandRotation() {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             if (sop != null) {
@@ -2503,12 +2500,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //not sure what this does, maybe delete?
-        public void SetTopLevelView(ServerAction action) {
-            inTopLevelView = action.topView;
+        public void SetTopLevelView(bool topView = false) {
+            inTopLevelView = topView;
             actionFinished(true);
         }
 
-        public void ToggleMapView(ServerAction action) {
+        public void ToggleMapView() {
 
             SyncTransform[] syncInChildren;
 
@@ -2520,7 +2517,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
                     (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
                     (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
-		) {
+                ) {
                     structureObjsList.Add(so);
                 }
             }
@@ -2650,13 +2647,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objectIds.ToArray();
         }
 
-        public void ObjectTypeToObjectIds(ServerAction action) {
+        public void ObjectTypeToObjectIds(string objectType) {
             try {
-                var objectIds = objectTypeToObjectIds(action.objectType);
+                var objectIds = objectTypeToObjectIds(objectType);
                 actionFinished(true, objectIds.ToArray());
             }   
             catch (ArgumentException exception) {
-                errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
+                errorMessage = "Invalid object type '" + objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
         }
@@ -2690,7 +2687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return sop;
         }
 
-        public void VisualizeGrid(ServerAction action) {
+        public void VisualizeGrid() {
             var reachablePositions = getReachablePositions(1.0f, 10000, true);
             actionFinished(true, reachablePositions);
         }
@@ -3105,12 +3102,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, results.ToArray());
         }
 
-        public void CameraCrack(ServerAction action)
+        public void CameraCrack(int randomSeed = 0)
         {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
 
-            camMan.SpawnCrack(action.randomSeed);
+            camMan.SpawnCrack(randomSeed);
             actionFinished(true);
         }
 
@@ -3152,6 +3149,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         #endif
 
+        public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig2(float foo) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig(ServerAction action) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig(float foo) {
+            actionFinished(true);
+        }
+
         public void TestActionDispatchNoopServerAction(ServerAction action) {
             actionFinished(true, "serveraction");
         }
@@ -3160,7 +3173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(true, rvalue);
         }
 
-        public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
+        public void TestActionDispatchNoopAllDefault2(float param12, float param10=0.0f, float param11=1.0f) {
             actionFinished(true, "somedefault");
         }
 
@@ -3168,7 +3181,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, "alldefault");
         }
 
-        public void TestActionDispatchNoop(bool param3,  string param4="foo") {
+        public void TestActionDispatchNoop2(bool param3,  string param4="foo") {
             actionFinished(true, "param3 param4/default " + param4);
         }
 
@@ -3194,6 +3207,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void TestActionDispatchNoop() {
             actionFinished(true, "emptyargs");
         }
+
+        public void TestActionDispatchFindAmbiguous(string typeName) {
+            List<string> actions = ActionDispatcher.FindAmbiguousActions(Type.GetType(typeName));
+            actionFinished(true, actions);
+        }
+
         public void TestActionDispatchFindConflicts(string typeName) {
             Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
             actionFinished(true, conflicts);

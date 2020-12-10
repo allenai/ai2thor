@@ -45,15 +45,17 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe = None
         self.raw_metadata = None
         self.raw_files = None
+        self._last_action_message = None
         # allows us to map the enum to form field names
         # for backwards compatibility
         # this can be removed when the wsgi server is removed
         self.form_field_map = {
             FieldType.RGB_IMAGE:'image',
             FieldType.DEPTH_IMAGE:'image_depth',
+            FieldType.CLASSES_IMAGE :'image_classes',
             FieldType.IDS_IMAGE:'image_ids',
             FieldType.NORMALS_IMAGE:'image_normals',
-            FieldType.FLOWS_IMAGE:'image_flows',
+            FieldType.FLOWS_IMAGE:'image_flow',
             FieldType.THIRD_PARTY_IMAGE:"image-thirdParty-camera"
         }
 
@@ -82,7 +84,7 @@ class FifoServer(ai2thor.server.Server):
         while True:
             header = self.server_pipe.read(self.header_size) # message type + length
             if len(header) == 0:
-                raise Exception("Unity process has exited - check Player.log for errors")
+                raise Exception("Unity process has exited - check Player.log for errors. Last action message: %s" % self._last_action_message)
             
             if header[0] == FieldType.END_OF_MESSAGE.value:
                 #print("GOT EOM")
@@ -130,6 +132,9 @@ class FifoServer(ai2thor.server.Server):
         header = self._create_header(message_type, body)
         #print("len header %s" % len(header))
         #print("sending body %s" % body)
+
+        # used for debugging in case of an error
+        self._last_action_message = body
 
         self.client_pipe.write(header + body + self.eom_header)
         self.client_pipe.flush()
