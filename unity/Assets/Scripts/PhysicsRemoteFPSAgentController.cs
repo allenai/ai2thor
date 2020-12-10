@@ -25,8 +25,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public int AdvancePhysicsStepCount;
-
         public GameObject[] TargetCircles = null;
+        //these object types can have a placeable surface mesh associated ith it
+        //this is to be used with ScreenToWorldTarget to filter out raycasts correctly
+        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>()
+        {
+            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
+            SimObjType.CounterTop, SimObjType.Shelf
+        };
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
@@ -4383,7 +4389,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            if(target == null)
+            //if no target was found in the layers above, try the SimObjInvisible layer. 
+            //additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
+            //PlaceableSurfaces on it, also make sure to check again
+            if(target == null || hasPlaceableSurface.Contains(target.Type))
             {
                 if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore))
                 {
@@ -4396,7 +4405,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
                             return false;
                         }
-
                         //it is within viewport, so we are good, assign as target
                         target = hit.transform.GetComponentInParent<SimObjPhysics>();
                     }
