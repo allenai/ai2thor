@@ -89,7 +89,8 @@ def get_shortest_path_to_object_type(
         controller,
         object_type,
         initial_position,
-        initial_rotation=None
+        initial_rotation=None,
+        allowed_error=None
 ):
     """
     Computes the shortest path to an object from an initial position using a controller
@@ -97,22 +98,32 @@ def get_shortest_path_to_object_type(
     :param object_type: string that represents the type of the object
     :param initial_position: dict(x=float, y=float, z=float) with the desired initial rotation
     :param initial_rotation: dict(x=float, y=float, z=float) representing rotation around axes or None
+    :param allowed_error: a floating point number describing the total amount of error allowed in specifying
+        the start and end point in the shortest path computation. This number should be non-zero to allow for
+        floating point issues and can be made larger to make this method more robust to edge cases where
+        ai2thor "thinks" no path exists (this comes at the cost of some added noise to the start/end positions of the
+        path). Passing `None` to this argument (the default) will result in THOR choosing it to be some small value,
+        note that this value will not be exactly 0 to be robust to floating point inaccuracies.
+
     """
-    args = dict(
+    kwargs = dict(
         action='GetShortestPath',
         objectType=object_type,
-        position=initial_position
+        position=initial_position,
     )
     if initial_rotation is not None:
-        args['rotation'] = initial_rotation
-    event = controller.step(args)
+        kwargs['rotation'] = initial_rotation
+    if allowed_error is not None:
+        kwargs['allowedError'] = allowed_error
+
+    event = controller.step(kwargs)
     if event.metadata['lastActionSuccess']:
         return event.metadata['actionReturn']['corners']
     else:
-        print(event.metadata['errorMessage'])
         raise ValueError(
-            "Unable to find shortest path for object type '{}'".format(
-                object_type
+            "Unable to find shortest path for object type '{}' due to error '{}'.".format(
+                object_type,
+                event.metadata['errorMessage']
             )
         )
 
@@ -120,28 +131,35 @@ def get_shortest_path_to_object_type(
 def get_shortest_path_to_point(
         controller,
         initial_position,
-        target_position
+        target_position,
+        allowed_error=None
     ):
     """
     Computes the shortest path to a point from an initial position using an agent controller
     :param controller: agent controller
     :param initial_position: dict(x=float, y=float, z=float) with the desired initial rotation
     :param target_position: dict(x=float, y=float, z=float) representing target position
+    :param allowed_error: See documentation of the `get_shortest_path_to_object_type` method.
     :return:
     """
-    event = controller.step(
-            action='GetShortestPathToPoint',
-            position=initial_position,
-            x=target_position['x'],
-            y=target_position['y'],
-            z=target_position['z']
-        )
+    kwargs = dict(
+        action='GetShortestPathToPoint',
+        position=initial_position,
+        x=target_position['x'],
+        y=target_position['y'],
+        z=target_position['z'],
+    )
+    if allowed_error is not None:
+        kwargs['allowedError'] = allowed_error
+
+    event = controller.step(kwargs)
     if event.metadata['lastActionSuccess']:
         return event.metadata['actionReturn']['corners']
     else:
         raise ValueError(
-            "Unable to find shortest path to point '{}'".format(
-                target_position
+            "Unable to find shortest path to point '{}'  due to error '{}'.".format(
+                target_position,
+                event.metadata['errorMessage']
             )
         )
 

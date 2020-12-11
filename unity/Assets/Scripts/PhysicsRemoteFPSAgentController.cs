@@ -25,8 +25,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public int AdvancePhysicsStepCount;
-
         public GameObject[] TargetCircles = null;
+        //these object types can have a placeable surface mesh associated ith it
+        //this is to be used with ScreenToWorldTarget to filter out raycasts correctly
+        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>()
+        {
+            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
+            SimObjType.CounterTop, SimObjType.Shelf
+        };
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
@@ -2035,8 +2041,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 while(Time.time - startTime < waitTime)
                 {
-                    if(sop == null)
-                    break;
+                    if(sop == null) {
+                        break;
+                    }
 
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
@@ -2050,10 +2057,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         rb.Sleep();
                         stoppedMoving = true;
                         break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
                     }
-
-                    else
-                    yield return new WaitForFixedUpdate();
                 }
 
                 //so we never stopped moving and we are using the timeout
@@ -2357,10 +2363,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MoveHandForce(ServerAction action) {
-            Vector3 direction = transform.forward * action.z +
-                transform.right * action.x +
-                transform.up * action.y;
+        public void MoveHandForce(float x, float y, float z) {
+            Vector3 direction = transform.forward * z +
+                transform.right * x +
+                transform.up * y;
             Vector3 target = AgentHand.transform.position +
                 direction;
             if (ItemInHand == null) {
@@ -2633,12 +2639,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
         // x, y, z coordinates should specify how far to move in that direction, so
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
-        public void MoveHand(ServerAction action) {
+        public void MoveHand(float x, float y, float z) {
             //get new direction relative to Agent forward facing direction (not the camera)
             Vector3 newPos = AgentHand.transform.position +
-                transform.forward * action.z +
-                transform.right * action.x +
-                transform.up * action.y;
+                transform.forward * z +
+                transform.right * x +
+                transform.up * y;
             StartCoroutine(waitForNFramesAndReturn(1, moveHandToXYZ(newPos.x, newPos.y, newPos.z)));
         }
 
@@ -2646,76 +2652,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //pass in x,y,z of 0 if no movement is desired on that axis
         //pass in x,y,z of + for positive movement along that axis
         //pass in x,y,z of - for negative movement along that axis
-        public void MoveHandDelta(ServerAction action) {
+        public void MoveHandDelta(float x, float y, float z, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.forward * action.z) + (m_Camera.transform.up * action.y) + (m_Camera.transform.right * action.x);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.forward * z) + (m_Camera.transform.up * y) + (m_Camera.transform.right * x);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandAhead(ServerAction action) {
+        public void MoveHandAhead(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandLeft(ServerAction action) {
+        public void MoveHandLeft(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandDown(ServerAction action) {
+        public void MoveHandDown(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandUp(ServerAction action) {
+        public void MoveHandUp(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.up * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandRight(ServerAction action) {
+        public void MoveHandRight(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (m_Camera.transform.right * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
-        public void MoveHandBack(ServerAction action) {
+        public void MoveHandBack(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, action.forceVisible));
+            newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
         //uh this kinda does what MoveHandDelta does but in more steps, splitting direction and magnitude into
         //two separate params in case someone wants it that way
-        public void MoveHandMagnitude(ServerAction action) {
+        public void MoveHandMagnitude(float moveMagnitude, float x=0.0f, float y=0.0f, float z=0.0f) {
             Vector3 newPos = AgentHand.transform.position;
 
             //get new direction relative to Agent's (camera's) forward facing 
-            if (action.x > 0) {
-                newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
+            if (x > 0) {
+                newPos = newPos + (m_Camera.transform.right * moveMagnitude);
             }
 
-            if (action.x < 0) {
-                newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
+            if (x < 0) {
+                newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
             }
 
-            if (action.y > 0) {
-                newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
+            if (y > 0) {
+                newPos = newPos + (m_Camera.transform.up * moveMagnitude);
             }
 
-            if (action.y < 0) {
-                newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);
+            if (y < 0) {
+                newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
             }
 
-            if (action.z > 0) {
-                newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);
+            if (z > 0) {
+                newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
             }
 
-            if (action.z < 0) {
-                newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
+            if (z < 0) {
+                newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
             }
 
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
@@ -2791,8 +2797,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //SetUpRotationBoxChecks();
 
                 //if this is rotated too much, drop any contained object if held item is a receptacle
-                if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95)
-                    DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+                if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
+                    DropContainedObjects(
+                        target: ItemInHand.GetComponent<SimObjPhysics>(),
+                        reparentContainedObjects: true,
+                        forceKinematic: false
+                    );
+                }
 
                 actionFinished(true);
             } else {
@@ -3310,53 +3321,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
-        public void PlaceObjectAtPoint(ServerAction action)
-        {
-            if(action.objectId == null)
-            {
-                errorMessage = "please give valid objectId for PlaceObjectAtPoint action";
+        public void PlaceObjectAtPoint(
+            string objectId,
+            Vector3 position,
+            Vector3? rotation = null,
+            bool forceKinematic = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
                 actionFinished(false);
                 return;
             }
 
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.objectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no object with id: "+ 
-                action.objectId + " could be found during PlaceObjectAtPoint";
-                actionFinished(false);
-                return;
-            }
+            // find the object in the scene, disregard visibility
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             //make sure point we are moving the object to is valid
-            if(!agentManager.sceneBounds.Contains(action.position))
-            {
-                errorMessage = "position coordinate is not within scene bounds";
+            if(!agentManager.sceneBounds.Contains(position)) {
+                errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
                 actionFinished(false);
                 return;
             }
 
-            Quaternion original_r = target.transform.rotation;
-            Quaternion r = new Quaternion();
-
-            if(action.rotation != Vector3.zero)
-            {
-                r = Quaternion.Euler(action.rotation.x, action.rotation.y, action.rotation.z);
-                target.transform.rotation = r;
-            }
-
-            else
-            {
-                r = target.transform.rotation;
+            Quaternion originalRotation = target.transform.rotation;
+            if (rotation.HasValue) {
+                target.transform.rotation = Quaternion.Euler(rotation.Value);
             }
 
             //ok let's get the distance from the simObj to the bottom most part of its colliders
@@ -3369,30 +3358,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;//offset in case the surface below isn't completely flat
+            float offset = distFromSopToBottomPoint + 0.005f; // Offset in case the surface below isn't completely flat
 
-            Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
 
-
-            //check spawn area here
+            // Check spawn area here
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if(ipt.CheckSpawnArea(target, finalPos, r, false))
-            {
+            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
                 target.transform.position = finalPos;
-                //target.transform.rotation = r; rotation is now set before checking spawn in order to get the correct bottomPoint given the object's orientation
 
-                //aditional stuff we need to do if placing item that is currently in hand
-                if(ItemInHand != null)
-                {
-                    if(ItemInHand.transform.gameObject == target.transform.gameObject)
-                    {
+                // Additional stuff we need to do if placing item that is currently in hand
+                if (ItemInHand != null) {
+                    if(ItemInHand.transform.gameObject == target.transform.gameObject) {
                         Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                        rb.isKinematic = false;
+                        rb.isKinematic = forceKinematic;
                         rb.constraints = RigidbodyConstraints.None;
                         rb.useGravity = true;
 
-                        //change collision detection mode while falling so that obejcts don't phase through colliders.
-                        //this is reset to discrete on SimObjPhysics.cs's update 
+                        // change collision detection mode while falling so that obejcts don't phase through colliders.
+                        // this is reset to discrete on SimObjPhysics.cs's update 
                         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
                         GameObject topObject = GameObject.Find("Objects");
@@ -3402,22 +3386,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ItemInHand.transform.parent = null;
                         }
 
-                        DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
-                        ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                        DropContainedObjects(
+                            target: target,
+                            reparentContainedObjects: true,
+                            forceKinematic: forceKinematic
+                        );
+                        target.isInAgentHand = false;
                         ItemInHand = null;
                     }
                 }
-
-                StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
-                return;
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
             }
 
-            target.transform.rotation = original_r;
+            target.transform.rotation = originalRotation;
             errorMessage = "spawn area not clear, can't place object at that point";
             actionFinished(false);
         }
 
-        //same as PlaceObjectAtPoint(ServerAction action) but without a server action
+
+
+        // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
         public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
         {
             SimObjPhysics target = null;
@@ -4177,16 +4171,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void PutObject(ServerAction action) {
-            action.objectId = action.receptacleObjectId;
-            action.receptacleObjectId = null;
-            PlaceHeldObject(action);
+        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true){
+            PlaceHeldObject(x, y, forceAction, placeStationary);
+        }
+
+        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true){
+            PlaceHeldObject(objectId, forceAction, placeStationary);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle
-        public void PlaceHeldObject(ServerAction action) {
+        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
+            SimObjPhysics targetReceptacle = null;
+
+            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
+            {
+                //error message is set insice ScreenToWorldTarget
+                actionFinished(false);
+                return;
+            }
+
+            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        }
+
+        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f) 
+        {
+            //get the target receptacle based on the action object ID
+            SimObjPhysics targetReceptacle = null;
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+            
+            //if object is in the scene and visible, assign it to 'target'
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceAction)) 
+            {
+                targetReceptacle = sop;
+            }
+
+            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        }
+
+        private void placeHeldObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
             // #if UNITY_EDITOR
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             // #endif
@@ -4198,35 +4227,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            //get the target receptacle based on the action object ID
-            SimObjPhysics targetReceptacle = null;
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref targetReceptacle, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    targetReceptacle = sop;
-                }
-            }
 
             if (targetReceptacle == null) {
                 errorMessage = "No valid Receptacle found";
@@ -4296,7 +4296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
-            if (!action.forceAction) {
+            if (!forceAction) {
                 //check if the item we are holding can even be placed in the action.ObjectID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
                     //find the Object Type in the PlacementRestrictions dictionary
@@ -4311,7 +4311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            bool onlyPointsCloseToAgent = true;
+            bool onlyPointsCloseToAgent = !forceAction;
 
             //if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
             //the Agent can't see the bottom of the receptacle if it's placed too high on a table
@@ -4329,9 +4329,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
-            if (action.randomSeed != 0) {
+            if (randomSeed != 0) {
                 List<ReceptacleSpawnPoint> randomizedSpawnPoints = new List<ReceptacleSpawnPoint>();
-                float maxDistance = action.z;
+                float maxDistance = z;
                 if (maxDistance == 0.0f) {
                     maxDistance = maxVisibleDistance;
                 }
@@ -4341,10 +4341,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         randomizedSpawnPoints.Add(sp);
                     }
                 }
-                randomizedSpawnPoints.Shuffle_(action.randomSeed);
+                randomizedSpawnPoints.Shuffle_(randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
+            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
@@ -4389,7 +4389,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            if(target == null)
+            //if no target was found in the layers above, try the SimObjInvisible layer. 
+            //additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
+            //PlaceableSurfaces on it, also make sure to check again
+            if(target == null || hasPlaceableSurface.Contains(target.Type))
             {
                 if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore))
                 {
@@ -4402,7 +4405,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
                             return false;
                         }
-
                         //it is within viewport, so we are good, assign as target
                         target = hit.transform.GetComponentInParent<SimObjPhysics>();
                     }
@@ -4551,7 +4553,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
                 ItemInHand = null;
-                DropContainedObjects(target);
+                DropContainedObjects(
+                    target: target,
+                    reparentContainedObjects: true,
+                    forceKinematic: false
+                );
                 return false;
             }
 
@@ -4599,41 +4605,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void DropContainedObjects(SimObjPhysics target) {
+        public void DropContainedObjects(
+            SimObjPhysics target, 
+            bool reparentContainedObjects,
+            bool forceKinematic
+        ) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                 //print("dropping contained objects");
-                GameObject topObject = GameObject.Find("Objects");
+                GameObject topObject = null;
 
                 foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
-                    //print(sop.name);
-                    //for every object that is contained by this object...
-                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    // for every object that is contained by this object turn off
+                    // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    sop.isInAgentHand = false; // Agent hand flag
+
+                    if (reparentContainedObjects) {
+                        if (topObject == null) {
+                            topObject = GameObject.Find("Objects");
+                        }
+                        sop.transform.SetParent(topObject.transform);
+                    }
+
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    
-                    rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    rb.isKinematic = forceKinematic;
+                    if (!forceKinematic) {
+                        rb.useGravity = true;
+                        rb.constraints = RigidbodyConstraints.None;
+                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    }
 
-                    sop.isInAgentHand = false;//agent hand flag
-                    sop.transform.SetParent(topObject.transform);
                 }
-
                 target.ClearContainedObjectReferences();
             }
         }
 
         public void DropContainedObjectsStationary(SimObjPhysics target) {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-
-                foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
-                    //print(sop.name);
-                    //for every object that is contained by this object...
-                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.isInAgentHand = false;//agent hand flag
-                }
-                target.ClearContainedObjectReferences();
-            }
+            DropContainedObjects(target: target, reparentContainedObjects: false, forceKinematic: true);
+            return;
         }
 
         // private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
@@ -4726,7 +4735,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // TODO: Need a parameter to control how much randomness we introduce.
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
-                    DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+                    DropContainedObjects(
+                        target: ItemInHand.GetComponent<SimObjPhysics>(),
+                        reparentContainedObjects: true,
+                        forceKinematic: false
+                    );
 
                     //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
                     if(!physicsSceneManager.physicsSimulationPaused)
@@ -7165,29 +7178,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return so;
         }
 
-        protected float getFloorY(float x, float start_y, float z) {
-            int layerMask = ~(1 << 10 | 1 << 9);
-
-            float y = start_y;
-            RaycastHit hit;
-            Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
-            if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
-                errorMessage = "Could not find the floor";
-                return float.NegativeInfinity;
-            }
-            return hit.point.y;
-        }
-        protected float getFloorY(float x, float z) {
-            int layerMask = ~(1 << 10);
-
-            Ray ray = new Ray(transform.position, -transform.up);
-            RaycastHit hit;
-            if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
-                errorMessage = "Could not find the floor";
-                return float.NegativeInfinity;
-            }
-            return getFloorY(x, hit.point.y + 0.1f, z);
-        }
 
         public void CreateObjectOnFloor(ServerAction action) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
@@ -8565,7 +8555,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if(targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
                         {
                             //drop contained objects as well
-                            DropContainedObjects(targetsop);
+                            DropContainedObjects(
+                                target: targetsop,
+                                reparentContainedObjects: true,
+                                forceKinematic: false
+                            );
                         }
 
                         targetsop.isInAgentHand = false;

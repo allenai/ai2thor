@@ -1213,12 +1213,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     
                 case "poap":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PlaceObjectAtPoint";
-                        action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "Book|+00.15|+01.10|+00.62";
-                        //action.rotation = new Vector3(0, 90, 0);
-                        PhysicsController.ProcessControlCommand(action);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PlaceObjectAtPoint";
+
+                        BaseFPSAgentController agent = AManager.agents[0];
+
+                        GameObject itemInHand = AManager.agents[0].ItemInHand;
+                        if (itemInHand != null) {
+                            itemInHand.SetActive(false);
+                        }
+
+                        RaycastHit hit;
+                        Ray ray = agent.m_Camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
+                        bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, (1 << 8) | (1 << 10));
+
+                        if (itemInHand != null) {
+                            itemInHand.SetActive(true);
+                        }
+
+                        if (raycastDidHit) {
+                            SimObjPhysics sop = null;
+                            if (itemInHand != null) {
+                                sop = itemInHand.GetComponent<SimObjPhysics>();
+                            } else {
+                                SimObjPhysics[] allSops = GameObject.FindObjectsOfType<SimObjPhysics>();
+                                sop = allSops[UnityEngine.Random.Range(0, allSops.Length)];
+                            }
+                            action["position"] = hit.point;
+                            action["objectId"] = sop.ObjectID;
+                            
+                            Debug.Log(action);
+                            PhysicsController.ProcessControlCommand(action);
+                        } else {
+                            agent.actionFinished(false);
+                        }
+
                         break;
                     }
 
@@ -1760,59 +1789,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "fu":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyUp";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyUp";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fd":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyDown";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyDown";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fa":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyAhead";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyAhead";
+                        action["moveMagnitude"] = 2f;
 
-                        action.moveMagnitude = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
                 case "fl":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyLeft";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyLeft";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fr":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyRight";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyRight";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
 
                 case "fb":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyBack";
-
-                        action.moveMagnitude = 2f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "FlyBack";
+                        action["moveMagnitude"] = 2f;
                         DroneController.ProcessControlCommand(action);
                         break;
                     }
@@ -2234,16 +2258,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //pass in move magnitude or default is 0.25 units
 				case "mha":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveHandAhead";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandAhead";
 
 						if(splitcommand.Length > 1)
 						{
-							action.moveMagnitude = float.Parse(splitcommand[1]);
+							action["moveMagnitude"] = float.Parse(splitcommand[1]);
 						}
 
 						else
-						    action.moveMagnitude = 0.1f;
+						    action["moveMagnitude"] = 0.1f;
 						
 						// action.x = 0f;
 						// action.y = 0f;
@@ -2257,17 +2281,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units               
                 case "mhb":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandBack";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandBack";
 
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = 0f;
@@ -2280,16 +2304,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhl":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandLeft";                  
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandLeft";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = -1f;
                         // action.y = 0f;
@@ -2302,16 +2326,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhr":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandRight";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandRight";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 1f;
                         // action.y = 0f;
@@ -2324,16 +2348,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhu":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandUp";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandUp";
 
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = 1f;
@@ -2346,16 +2370,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//pass in move magnitude or default is 0.25 units
                 case "mhd":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandDown";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveHandDown";
                         
                         if (splitcommand.Length > 1)
                         {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.1f;
+                            action["moveMagnitude"] = 0.1f;
 						
                         // action.x = 0f;
                         // action.y = -1f;
@@ -2850,7 +2874,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action["y"] = float.Parse(splitcommand[2]);
                                 action["z"] = float.Parse(splitcommand[3]);
                             }
-                            if (splitcommand.Length == 7) {
+                            if (splitcommand.Length >= 7) {
                                 action["position"] = new Vector3(
                                     float.Parse(splitcommand[1]),
                                     float.Parse(splitcommand[2]), 
@@ -2860,6 +2884,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action["y"] = float.Parse(splitcommand[5]);
                                 action["z"] = float.Parse(splitcommand[6]);
                             }
+                            if (splitcommand.Length >= 8) {
+                                action["allowedError"] = float.Parse(splitcommand[7]);
+                            }
+
+
                              if (splitcommand.Length < 4) {
                                 throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
                             }
