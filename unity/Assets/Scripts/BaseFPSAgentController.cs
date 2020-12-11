@@ -1973,6 +1973,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return visible;
         }
 
+        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false)
+        {
+            ServerAction action = new ServerAction();
+            action.objectId = objectId;
+            action.forceVisible = forceVisible;
+            return VisibleSimObjs(action);
+        }
+
+
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
         {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();

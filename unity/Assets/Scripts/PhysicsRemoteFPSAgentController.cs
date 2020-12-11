@@ -4177,16 +4177,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void PutObject(ServerAction action) {
-            action.objectId = action.receptacleObjectId;
-            action.receptacleObjectId = null;
-            PlaceHeldObject(action);
+        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true){
+            PlaceHeldObject(x, y, forceAction, placeStationary);
+        }
+
+        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true){
+            PlaceHeldObject(objectId, forceAction, placeStationary);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle
-        public void PlaceHeldObject(ServerAction action) {
+        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
+            SimObjPhysics targetReceptacle = null;
+
+            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
+            {
+                //error message is set insice ScreenToWorldTarget
+                actionFinished(false);
+                return;
+            }
+
+            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        }
+
+        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f) 
+        {
+            //get the target receptacle based on the action object ID
+            SimObjPhysics targetReceptacle = null;
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+            
+            //if object is in the scene and visible, assign it to 'target'
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceAction)) 
+            {
+                targetReceptacle = sop;
+            }
+
+            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        }
+
+        private void placeHeldObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
             // #if UNITY_EDITOR
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             // #endif
@@ -4198,35 +4233,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            //get the target receptacle based on the action object ID
-            SimObjPhysics targetReceptacle = null;
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref targetReceptacle, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    targetReceptacle = sop;
-                }
-            }
 
             if (targetReceptacle == null) {
                 errorMessage = "No valid Receptacle found";
@@ -4296,7 +4302,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
-            if (!action.forceAction) {
+            if (!forceAction) {
                 //check if the item we are holding can even be placed in the action.ObjectID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
                     //find the Object Type in the PlacementRestrictions dictionary
@@ -4329,9 +4335,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
-            if (action.randomSeed != 0) {
+            if (randomSeed != 0) {
                 List<ReceptacleSpawnPoint> randomizedSpawnPoints = new List<ReceptacleSpawnPoint>();
-                float maxDistance = action.z;
+                float maxDistance = z;
                 if (maxDistance == 0.0f) {
                     maxDistance = maxVisibleDistance;
                 }
@@ -4341,10 +4347,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         randomizedSpawnPoints.Add(sp);
                     }
                 }
-                randomizedSpawnPoints.Shuffle_(action.randomSeed);
+                randomizedSpawnPoints.Shuffle_(randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
+            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
