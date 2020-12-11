@@ -42,7 +42,7 @@ This will create a build beneath the directory 'unity/builds/thor-local-OSXIntel
 
 ```python
 controller = ai2thor.controller.Controller(
-    local_executable_path="<BASE_DIR>/unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64"
+    local_executable_path="<BASE_DIR>/unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/AI2-Thor"
 )
 ```
 
