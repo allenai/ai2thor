@@ -2943,6 +2943,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action=null) {
+            var startPosition = this.transform.position;
+            var startRotation = this.transform.rotation;
+            if (!useAgentTransform) {
+                startPosition = action.position;
+                startRotation = Quaternion.Euler(action.rotation);
+            }
+
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath);
+        }
+
         
         private void getShortestPath(
             string objectType,
