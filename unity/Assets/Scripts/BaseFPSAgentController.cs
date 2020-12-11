@@ -76,6 +76,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         public AgentState agentState = AgentState.Emit;
 
+        public const float DefaultAllowedErrorInShortestPath = 0.0001f;
+
         public bool IsVisible
         {
 			get 
@@ -2674,7 +2676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 rotation,
             string objectType = null,
             string objectId = null,
-            float allowedError = 0.01f
+            float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
         }
@@ -2683,12 +2685,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 position,
             string objectType = null,
             string objectId = null,
-            float allowedError = 0.01f
+            float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
         }
 
-        public void GetShortestPath(string objectType = null, string objectId = null, float allowedError = 0.01f) {
+        public void GetShortestPath(
+            string objectType = null,
+            string objectId = null,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
             getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
         }
 
@@ -3094,7 +3100,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
         public void GetShortestPathToPoint(
-            Vector3 position, float x, float y, float z, float allowedError = 0.01f
+            Vector3 position, float x, float y, float z, float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
             if (SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError)) {
@@ -3104,7 +3110,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void GetShortestPathToPoint(float x, float y, float z, float allowedError = 0.01f) {
+        public void GetShortestPathToPoint(
+            float x,
+            float y,
+            float z,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
             var startPosition = this.transform.position;
             GetShortestPathToPoint(startPosition, x, y, z, allowedError);
         }

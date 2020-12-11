@@ -90,7 +90,7 @@ def get_shortest_path_to_object_type(
         object_type,
         initial_position,
         initial_rotation=None,
-        allowed_error=0.01
+        allowed_error=None
 ):
     """
     Computes the shortest path to an object from an initial position using a controller
@@ -102,17 +102,21 @@ def get_shortest_path_to_object_type(
         the start and end point in the shortest path computation. This number should be non-zero to allow for
         floating point issues and can be made larger to make this method more robust to edge cases where
         ai2thor "thinks" no path exists (this comes at the cost of some added noise to the start/end positions of the
-        path not).
+        path). Passing `None` to this argument (the default) will result in THOR choosing it to be some small value,
+        note that this value will not be exactly 0 to be robust to floating point inaccuracies.
+
     """
-    args = dict(
+    kwargs = dict(
         action='GetShortestPath',
         objectType=object_type,
         position=initial_position,
-        allowedError=allowed_error
     )
     if initial_rotation is not None:
-        args['rotation'] = initial_rotation
-    event = controller.step(args)
+        kwargs['rotation'] = initial_rotation
+    if allowed_error is not None:
+        kwargs['allowedError'] = allowed_error
+
+    event = controller.step(kwargs)
     if event.metadata['lastActionSuccess']:
         return event.metadata['actionReturn']['corners']
     else:
@@ -128,7 +132,7 @@ def get_shortest_path_to_point(
         controller,
         initial_position,
         target_position,
-        allowed_error=0.01
+        allowed_error=None
     ):
     """
     Computes the shortest path to a point from an initial position using an agent controller
@@ -138,14 +142,17 @@ def get_shortest_path_to_point(
     :param allowed_error: See documentation of the `get_shortest_path_to_object_type` method.
     :return:
     """
-    event = controller.step(
-            action='GetShortestPathToPoint',
-            position=initial_position,
-            x=target_position['x'],
-            y=target_position['y'],
-            z=target_position['z'],
-            allowedError=allowed_error,
-        )
+    kwargs = dict(
+        action='GetShortestPathToPoint',
+        position=initial_position,
+        x=target_position['x'],
+        y=target_position['y'],
+        z=target_position['z'],
+    )
+    if allowed_error is not None:
+        kwargs['allowedError'] = allowed_error
+
+    event = controller.step(kwargs)
     if event.metadata['lastActionSuccess']:
         return event.metadata['actionReturn']['corners']
     else:

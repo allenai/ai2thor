@@ -2545,7 +2545,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action["y"] = float.Parse(splitcommand[2]);
                                 action["z"] = float.Parse(splitcommand[3]);
                             }
-                            if (splitcommand.Length == 7) {
+                            if (splitcommand.Length >= 7) {
                                 action["position"] = new Vector3(
                                     float.Parse(splitcommand[1]),
                                     float.Parse(splitcommand[2]), 
@@ -2555,6 +2555,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action["y"] = float.Parse(splitcommand[5]);
                                 action["z"] = float.Parse(splitcommand[6]);
                             }
+                            if (splitcommand.Length >= 8) {
+                                action["allowedError"] = float.Parse(splitcommand[7]);
+                            }
+
+
                              if (splitcommand.Length < 4) {
                                 throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
                             }
