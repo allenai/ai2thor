@@ -29,6 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Quaternion targetRotation,
         float fixedDeltaTime,
         float radiansPerSecond,
+        bool eventCollisions,
         bool returnToStartPropIfFailed = false
     ) {
         var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
@@ -48,6 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Distance Metric
             (target, current) => Quaternion.Angle(current, target),
             fixedDeltaTime,
+            eventCollisions,
             returnToStartPropIfFailed
         );
     }
@@ -59,6 +61,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Vector3 targetPosition,
         float fixedDeltaTime,
         float unitsPerSecond,
+        bool eventCollisions,
         bool returnToStartPropIfFailed = false,
         bool localPosition = false
     ) {
@@ -74,6 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 (target, current) => (target - current).normalized,
                 (target, current) => Vector3.SqrMagnitude(target - current),
                 fixedDeltaTime,
+                eventCollisions,
                 returnToStartPropIfFailed
         );
 
@@ -106,6 +110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Func<T, T, T> getDirection,
         Func<T, T, float> distanceMetric,
         float fixedDeltaTime,
+        bool eventCollisions,
         bool returnToStartPropIfFailed,
         double epsilon = 1e-3
     )
@@ -123,9 +128,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
 
+        var currentColliders = arm.currentArmCollisions();
         T directionToTarget = getDirection(target, currentProperty);
 
-        while ( currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
+        while ( currentDistance > epsilon && ((eventCollisions && collisionListener.StaticCollisions().Count == 0) || CollisionListener.StaticCollisions(currentColliders).Count == 0)) {
 
             previousProperty = getProp(moveTransform);
 
@@ -154,6 +160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return new WaitForEndOfFrame();
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
+            currentColliders = arm.currentArmCollisions();
         }
 
         T resetProp = previousProperty;
@@ -166,7 +173,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             moveTransform, 
             setProp, 
             target, 
-            resetProp
+            resetProp,
+            eventCollisions
         );
 
         // we call this one more time in the event that the arm collided and was reset
@@ -183,13 +191,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Transform moveTransform,
         System.Action<Transform, T> setProp,
         T target,
-        T resetProp
+        T resetProp,
+        bool eventCollisions
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-        var staticCollisions = collisionListener.StaticCollisions();
+        List<CollisionListener.StaticCollision> staticCollisions = null;
+        if (eventCollisions) {
+            staticCollisions = collisionListener.StaticCollisions();
+        } else {
+            var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            var currentColliders = arm.currentArmCollisions();
+            staticCollisions = CollisionListener.StaticCollisions(currentColliders);
+        }
 
         if (staticCollisions.Count > 0){
                 var sc = staticCollisions[0];

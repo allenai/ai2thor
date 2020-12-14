@@ -583,6 +583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //enable arm component
                 if (whichMode == "arm") {
+                    Debug.Log("initializing arm");
                     IKArm.SetActive(true);
                     Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
                     var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
@@ -590,6 +591,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     pos.z = 0.4f; // pulls the arm in from being fully extended
                     armTarget.transform.localPosition = pos;
                     var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
+                    Debug.Log("running manipulate arm");
                     ikSolver.ManipulateArm();
                 }
             }

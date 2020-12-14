@@ -9162,6 +9162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this,
                     action.position, 
                     action.speed, 
+                    action.eventCollisions,
                     action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.coordinateSpace, 
@@ -9203,6 +9204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this, 
                     action.y, 
                     action.speed, 
+                    action.eventCollisions,
                     action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
                     action.returnToStart, 
                     action.disableRendering
@@ -9245,7 +9247,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
+                arm.rotateHand(this, target, action.speed, action.eventCollisions, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
+                    
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9356,7 +9359,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateContinuous(float degrees, float speed, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        public void RotateContinuous(float degrees, bool eventCollisions = false, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
@@ -9373,6 +9376,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
                     disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                     speed,
+                    eventCollisions,
                     returnToStart
             );
 
@@ -9426,6 +9430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     targetPosition,
                     disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                     speed,
+                    action.eventCollisions,
                     returnToStart,
                     false
             );
