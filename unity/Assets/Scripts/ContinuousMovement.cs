@@ -125,9 +125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         T directionToTarget = getDirection(target, currentProperty);
 
-        var currentColliders = arm.currentArmCollisions();
-
-        while ( currentDistance > epsilon && CollisionListener.StaticCollisions(currentColliders).Count == 0) {
+        while ( currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
 
             previousProperty = getProp(moveTransform);
 
@@ -154,8 +152,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             yield return new WaitForEndOfFrame();
-
-            currentColliders = arm.currentArmCollisions();
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
@@ -191,12 +187,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     ) {
         var actionSuccess = true;
         var debugMessage = "";
-        //var staticCollisions = collisionListener.StaticCollisions();
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
-        // staticCollisions are not firing at the right time, so using IsArmColliding instead
-        var currentColliders = arm.currentArmCollisions();
 
-        var staticCollisions = CollisionListener.StaticCollisions(currentColliders);
+        var staticCollisions = collisionListener.StaticCollisions();
 
         if (staticCollisions.Count > 0){
                 var sc = staticCollisions[0];

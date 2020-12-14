@@ -10,7 +10,8 @@ fi
 echo "__version__ = '$TRAVIS_TAG'" >> ai2thor/_version.py
 
 pip3 install -e .
-pip3 install twine wheel invoke
+# pinning keyring to 21.4.0 due to version conflict created see(https://travis-ci.community/t/cant-deploy-to-pypi-anymore-pkg-resources-contextualversionconflict-importlib-metadata-0-18/10494/4)
+pip3 install twine wheel invoke keyring==21.4.0
 
 invoke build-pip $TRAVIS_TAG && invoke deploy-pip
 

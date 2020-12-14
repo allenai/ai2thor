@@ -378,7 +378,7 @@ class Controller(object):
             add_depth_noise=False,
             download_only=False,
             include_private_scenes=False,
-            server_class=ai2thor.wsgi_server.WsgiServer,
+            server_class=ai2thor.fifo_server.FifoServer,
             **unity_initialization_parameters
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -386,10 +386,6 @@ class Controller(object):
         self.unity_pid = None
         self.docker_enabled = docker_enabled
         self.container_id = None
-
-        if local_executable_path:
-            warnings.warn("local_executable_path is deprecated - use local_build=True")
-            local_build = True
 
         self.last_event = None
         self.scene = None
@@ -405,7 +401,6 @@ class Controller(object):
         self.server_class = server_class
         self._build = None
 
-
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
             has_object_actions=True,
@@ -413,11 +408,13 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-        self._build = self.find_build(local_build)
+        if local_executable_path:
+            self._build = ai2thor.build.ExternalBuild(local_executable_path)
+        else:
+            self._build = self.find_build(local_build)
 
         if self._build is None:
             raise Exception("Couldn't find a suitable build for platform: %s" % platform.system())
-
 
         if download_only:
             self._build.download()

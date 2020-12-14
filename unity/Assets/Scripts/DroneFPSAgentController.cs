@@ -63,8 +63,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void LateUpdate()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-            ServerAction action = new ServerAction();
-            VisibleSimObjPhysics = VisibleSimObjs(action);
+            VisibleSimObjPhysics = VisibleSimObjs(false);
             #endif
         }
 
@@ -347,7 +346,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //Flying Drone Agent Controls
-        public Vector3 GetFlyingOrientation(ServerAction action, int targetOrientation) {
+        public Vector3 GetFlyingOrientation(float moveMagnitude, int targetOrientation) {
             Vector3 m;
             int currentRotation = (int) Math.Round(transform.rotation.eulerAngles.y, 0);
             Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3>();
@@ -369,7 +368,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m = actionOrientation[targetOrientation];
             }
 
-            m *= action.moveMagnitude;
+            m *= moveMagnitude;
 
             return m;
         }
@@ -400,13 +399,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //change what timeScale is automatically reset to on emitFrame when in FlightMode
-        public void ChangeAutoResetTimeScale(ServerAction action)
+        public void ChangeAutoResetTimeScale(float timeScale)
         {
-            autoResetTimeScale = action.timeScale;
+            autoResetTimeScale = timeScale;
             actionFinished(true);
         }
 
-        public void FlyRandomStart(ServerAction action)
+        public void FlyRandomStart(float y)
         {   
             System.Random rnd = new System.Random();
             Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
@@ -414,7 +413,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             var thrust_dt_drone = Random_output[0];
             var thrust_dt_launcher = Random_output[1];
-            thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.y, thrust_dt_launcher.z);
+            thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, y, thrust_dt_launcher.z);
             transform.position = thrust_dt_drone;
 
             this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
@@ -422,14 +421,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }   
 
         //move drone and launcher to some start position
-        public void FlyAssignStart(ServerAction action)
+        // using the 'position' variable name is an artificat from using ServerAction.position for the thrust_dt
+        public void FlyAssignStart(Vector3 position, float x, float y, float z)
         {   
             //drone uses action.position
-            Vector3 thrust_dt = action.position;
+            Vector3 thrust_dt = position;
             transform.position = thrust_dt;
 
             //use action.x,y,z for launcher
-            Vector3 launcherPosition = new Vector3(action.x, action.y, action.z);
+            Vector3 launcherPosition = new Vector3(x, y, z);
             Vector3 thrust_dt_launcher = launcherPosition;
             this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
 
@@ -437,57 +437,57 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //Flying Drone Agent Controls
-        public void FlyTo(ServerAction action)
+        public void FlyTo(float x, float y, float z, Vector3 rotation, float horizon)
         {   
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-            m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-            thrust += new Vector3(action.x, action.y, action.z);
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+            thrust += new Vector3(x, y, z);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyAhead(ServerAction action) 
+        public void FlyAhead(float moveMagnitude) 
         {
-            thrust += GetFlyingOrientation(action, 0);
+            thrust += GetFlyingOrientation(moveMagnitude, 0);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyBack(ServerAction action) 
+        public void FlyBack(float moveMagnitude) 
         {
-            thrust += GetFlyingOrientation(action, 180);
+            thrust += GetFlyingOrientation(moveMagnitude, 180);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyLeft(ServerAction action) 
+        public void FlyLeft(float moveMagnitude) 
         {
-            thrust += GetFlyingOrientation(action, 270);
+            thrust += GetFlyingOrientation(moveMagnitude, 270);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyRight(ServerAction action) 
+        public void FlyRight(float moveMagnitude) 
         {
-            thrust += GetFlyingOrientation(action, 90);
+            thrust += GetFlyingOrientation(moveMagnitude, 90);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyUp(ServerAction action) 
+        public void FlyUp(float moveMagnitude) 
         {
             //Vector3 targetPosition = transform.position + transform.up * action.moveMagnitude;
             //transform.position = targetPosition;
-            thrust += new Vector3(0, action.moveMagnitude, 0);
+            thrust += new Vector3(0, moveMagnitude, 0);
             actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyDown(ServerAction action) 
+        public void FlyDown(float moveMagnitude) 
         {
             //Vector3 targetPosition = transform.position + -transform.up * action.moveMagnitude;
             //transform.position = targetPosition;
-            thrust += new Vector3(0, -action.moveMagnitude, 0);
+            thrust += new Vector3(0, -moveMagnitude, 0);
             actionFinished(true);
         }
 
@@ -501,20 +501,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //spawn a launcher object at action.position coordinates
-        public void SpawnDroneLauncher(ServerAction action)
+        public void SpawnDroneLauncher(Vector3 position)
         {
 
-            this.GetComponent<DroneFPSAgentController>().SpawnLauncher(action.position);
+            this.GetComponent<DroneFPSAgentController>().SpawnLauncher(position);
             actionFinished(true);
         }
 
         //in case you want to change the fixed delta time
-        public void ChangeFixedDeltaTime(ServerAction action) 
+        public void ChangeFixedDeltaTime(float? fixedDeltaTime=null) 
         {
-            var fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-            if (fixedDeltaTime > 0) 
+            var fdtime = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
+            if (fdtime > 0) 
             {
-                Time.fixedDeltaTime = fixedDeltaTime;
+                Time.fixedDeltaTime = fdtime;
                 actionFinished(true);
             } 
             
@@ -525,9 +526,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void ChangeDronePositionRandomNoiseSigma(ServerAction action) 
+        public void ChangeDronePositionRandomNoiseSigma(float dronePositionRandomNoiseSigma = 0.0f) 
         {
-            dronePositionRandomNoiseSigma = action.dronePositionRandomNoiseSigma;
+            this.dronePositionRandomNoiseSigma = dronePositionRandomNoiseSigma;
             actionFinished(true);
         }
 
