@@ -1,4 +1,6 @@
 import datetime
+import pdb
+
 import ai2thor.controller
 import ai2thor
 import random
@@ -7,7 +9,6 @@ import time
 
 MAX_TESTS = 300
 MAX_EP_LEN = 1000
-MAX_CONSECUTIVE_FAILURE = 10
 # scene_indices = [i + 1 for i in range(30)] #Only kitchens
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
@@ -109,10 +110,11 @@ def execute_command(controller, command,action_dict_addition):
 
 
     elif command in ['u', 'j']:
-        if base_position['h'] > 1:
-            base_position['h'] = 1
-        elif base_position['h'] < 0:
-            base_position['h'] = 0
+        #TODO change this everywhere
+        # if base_position['h'] > 1:
+        #     base_position['h'] = 1
+        # elif base_position['h'] < 0:
+        #     base_position['h'] = 0
 
 
         event = controller.step(action='MoveMidLevelArmHeight', y=base_position['h'],**action_dict_addition)
@@ -129,11 +131,39 @@ def get_current_arm_state(controller):
     joints=(event.metadata['arm']['joints'])
     arm=joints[-1]
     assert arm['name'] == 'robot_arm_4_jnt'
-    xyz_dict = arm['rootRelativePosition']
+    xyz_dict = arm['rootRelativePosition'].copy()
     height_arm = joints[0]['position']['y']
     xyz_dict['h'] = (height_arm - h_min) / (h_max - h_min)
     #     print_error([x['position']['y'] for x in joints])
     return xyz_dict
+
+def two_list_equal(l1, l2):
+    dict1 = {i: v for (i,v) in enumerate(l1)}
+    dict2 = {i: v for (i,v) in enumerate(l2)}
+    return two_dict_equal(dict1, dict2)
+
+
+def two_dict_equal(dict1, dict2, threshold):
+    assert len(dict1) == len(dict2), print('different len', dict1, dict2)
+    equal = True
+    for k in dict1:
+        val1 = dict1[k]
+        val2 = dict2[k]
+        assert type(val1) == type(val2) or (type(val1) in [int, float] and type(val2) in [int, float]), (print('different type', dict1, dict2))
+        if type(val1) == dict:
+            equal = two_dict_equal(val1, val2)
+        elif type(val1) == list:
+            equal = two_list_equal(val1, val2)
+        elif val1 != val1: # Either nan or -inf
+            equal = val2 != val2
+        elif type(val1) == float:
+            equal = abs(val1 - val2) < threshold
+        else:
+            equal = (val1 == val2)
+        if not equal:
+            print('not equal', val1, val2)
+            return equal
+    return equal
 
 def reset_the_scene_and_get_reachables(scene_name=None):
     if scene_name is None:
@@ -157,9 +187,39 @@ for i in range(MAX_TESTS):
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
         command = random.choice(set_of_actions)
+        before_action_arm_value = get_current_arm_state(controller)#.copy() #TODO this is important
         execute_command(controller, command, ADITIONAL_ARM_ARGS)
         all_commands.append(command)
         last_event_success = controller.last_event.metadata['lastActionSuccess']
+        after_action_arm_value = get_current_arm_state(controller)
+
+        if last_event_success and command in ['w','z', 'a', 's', '3', '4', 'u', 'j']:
+            expected_arm_position = before_action_arm_value.copy()
+            move_arm_value = ADITIONAL_ARM_ARGS['move_constant']
+            if command == 'w':
+                expected_arm_position['z'] += move_arm_value
+            elif command == 'z':
+                expected_arm_position['z'] -= move_arm_value
+            elif command == 's':
+                expected_arm_position['x'] += move_arm_value
+            elif command == 'a':
+                expected_arm_position['x'] -= move_arm_value
+            elif command == '3':
+                expected_arm_position['y'] += move_arm_value
+            elif command == '4':
+                expected_arm_position['y'] -= move_arm_value
+            elif command == 'u':
+                expected_arm_position['h'] += move_arm_value
+            elif command == 'j':
+                expected_arm_position['h'] -= move_arm_value
+            # expected_arm_position['h'] = max(min(expected_arm_position['h'], 1), 0) # remove this, we want the action to fail
+        else:
+            expected_arm_position = before_action_arm_value.copy()
+
+        # this means the result value is closer to the expected pose with an arm movement margin
+        if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=ADITIONAL_ARM_ARGS['move_constant'] / 2):
+            print('before', before_action_arm_value, '\n after', after_action_arm_value, '\n expected', expected_arm_position, '\n action', command, 'success', last_event_success)
+            pdb.set_trace()
 
         pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
         picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
@@ -174,26 +234,7 @@ for i in range(MAX_TESTS):
                 print('list of actions', all_commands)
                 break
 
-        if last_event_success:
-            failed_action_pool  = []
-        if not last_event_success:
-            failed_action_pool.append(1)
-            if len(failed_action_pool) > MAX_CONSECUTIVE_FAILURE:
-                # If last action failed Make sure it is not stuck
-                all_actions = copy.copy(set_of_actions)
-                random.shuffle(all_actions)
-                for a in all_actions:
-                    execute_command(controller, a, ADITIONAL_ARM_ARGS)
-                    all_commands.append(a)
 
-                    if controller.last_event.metadata['lastActionSuccess']:
-                        break
-                if not controller.last_event.metadata['lastActionSuccess']:
-                    print('This means we are stuck')
-                    print('scene name', controller.last_event.metadata['sceneName'])
-                    print('initial pose', initial_pose)
-                    print('list of actions', all_commands)
-                    break
 
 
 
