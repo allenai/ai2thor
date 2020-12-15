@@ -121,10 +121,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
         var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
 
-        // commenting out the WaitForEndOfFrame here since we shoudn't need 
-        // this as we already wait for a frame to pass when we execute each action
-        //yield return yieldInstruction;
-
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
 
@@ -157,7 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.Simulate(fixedDeltaTime);
             }
 
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForFixedUpdate();
 
             currentDistance = distanceMetric(target, getProp(moveTransform));
             currentColliders = arm.currentArmCollisions();
