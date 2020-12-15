@@ -1508,56 +1508,86 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void TeleportFull(ServerAction action) {
-            targetTeleport = new Vector3(action.x, action.y, action.z);
+        public void TeleportFull(
+            float? x = null,
+            float? y = null,
+            float? z = null,
+            Dictionary<string, float> rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            // DEPRECIATED. Equivalent to Teleport. Maintained for backwards compatible.
+            Teleport(x, y, z, rotation, horizon, standing, forceAction);
+        }
 
-            if (action.forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+        private void Teleport(
+            Vector3 agentPosition,
+            Vector3 agentRotation,
+            bool standing,
+            float horizon
+        ) {
+            // teleports the agent without doing any checks.
+            DefaultAgentHand();
+            transform.position = agentPosition;
+            transform.rotation = Quaternion.Euler(agentRotation);
+            m_Camera.transform.localPosition = standing ? standingLocalCameraPosition : crouchingLocalCameraPosition;
+            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+
+            // apply gravity after teleport so we aren't floating in the air
+            Vector3 v = new Vector3();
+            v.y = Physics.gravity.y * this.m_GravityMultiplier;
+            m_CharacterController.Move(v);
+        }
+
+        public void Teleport(
+            float? x = null,
+            float? y = null,
+            float? z = null,
+            Dictionary<string, float> rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            // keeps default values if unspecified
+            // Unity 2020.2+ supports C# 8.0
+            // Here, the null checks could be cleaned up with ??=
+            x = x is null ? transform.position.x : x;
+            y = y is null ? transform.position.y : y;
+            z = z is null ? transform.position.z : z;
+            standing = standing is null ? isStanding() : standing;
+            horizon = horizon is null ? transform.localEulerAngles.x : horizon;
+            Vector3 targetPosition = new Vector3((float) x, (float) y, (float) z);
+            Vector3 targetRotation = new Vector3(
+                rotation.ContainsKey("x") ? rotation["x"] : transform.localEulerAngles.x,
+                rotation.ContainsKey("y") ? rotation["y"] : transform.localEulerAngles.y,
+                rotation.ContainsKey("z") ? rotation["z"] : transform.localEulerAngles.z
+            );
+
+            if (forceAction) {
+                Teleport(targetPosition, targetRotation, (bool) standing, (float) horizon);
             } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
+                // position out of bounds
+                if (!agentManager.SceneBounds.Contains(targetPosition)) {
                     errorMessage = "Teleport target out of scene bounds.";
                     actionFinished(false);
                     return;
                 }
 
+                // store the old values in case of failure
                 Vector3 oldPosition = transform.position;
                 Quaternion oldRotation = transform.rotation;
-                Vector3 oldLocalHandPosition = new Vector3();
-                Quaternion oldLocalHandRotation = new Quaternion();
-                if (ItemInHand != null) {
-                    oldLocalHandPosition = ItemInHand.transform.localPosition;
-                    oldLocalHandRotation = ItemInHand.transform.localRotation;
-                }
+                Vector3 oldLocalHandPosition = ItemInHand.transform.localPosition;
+                Quaternion oldLocalHandRotation = ItemInHand.transform.localRotation;
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
-                DefaultAgentHand();
-                transform.position = targetTeleport;
+                // move the agent
+                Teleport(targetPosition, targetRotation, (bool) standing, (float) horizon);
 
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-
+                // teleport failure checks
                 bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
                 bool handObjectCollides = isHandObjectColliding(true);
-
                 if (agentCollides) {
                     errorMessage = "Cannot teleport due to agent collision.";
                     Debug.Log(errorMessage);
@@ -1565,9 +1595,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Cannot teleport due to hand object collision.";
                     Debug.Log(errorMessage);
                 }
-
                 if (agentCollides || handObjectCollides) {
-                    if (ItemInHand != null) {
+                    // undo the teleport action
+                    if (!(ItemInHand is null)) {
+                        // Unity 2020.2+ supports C# 8.0
+                        // Here, the is null checks could be cleaned up with ?.
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
                     }
@@ -1579,22 +1611,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
             }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
             snapAgentToGrid();
             actionFinished(true);
-        }
-
-        public override void Teleport(ServerAction action) {
-            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
-            action.standing = isStanding();
-            if (!action.rotateOnTeleport) {
-                action.rotation = transform.eulerAngles;
-            }
-            TeleportFull(action);
         }
 
         protected HashSet<Collider> allAgentColliders() {
