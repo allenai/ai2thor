@@ -1442,6 +1442,7 @@ public class ServerAction
 	public bool renderObjectImage;
 	public bool renderNormalsImage;
     public bool renderFlowImage;
+    public bool eventCollisions;
 	public float cameraY = 0.675f;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	//public string ssao = "default";
