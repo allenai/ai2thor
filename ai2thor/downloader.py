@@ -9,7 +9,7 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
 logger = logging.getLogger(__name__)
 
-def download(url, build_name, sha256_digest, include_private_scenes=False):
+def download(url, sha256_digest, include_private_scenes=False):
 
     auth = None
     if include_private_scenes:
@@ -22,7 +22,7 @@ def download(url, build_name, sha256_digest, include_private_scenes=False):
     total_bytes = 0
 
     widgets = [
-        build_name, ": ", Bar(marker="|", left="[", right=" "),
+        url.split('/')[-1], ": ", Bar(marker="|", left="[", right=" "),
         Percentage(), " ", FileTransferSpeed(), "]  of {0}MB".format(str(round(size / 1024 / 1024, 2))[:4])]
 
     pbar = ProgressBar(widgets=widgets, maxval=size).start()

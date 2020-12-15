@@ -327,7 +327,7 @@ class Server(object):
                 image_ids=e.add_image_ids,
                 image_classes=e.add_image_classes,
                 image_normals=e.add_image_normals,
-                image_flows=e.add_image_flows
+                image_flow=e.add_image_flows
             )
 
             for key in image_mapping.keys():

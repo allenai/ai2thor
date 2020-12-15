@@ -114,17 +114,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         // NOOP action to allow evaluation to know that the episode has finished
-        public void Stop(ServerAction action) 
+        public void Stop() 
         {
             //i don't know why, but we have two no-op actions so here we go
-            base.Pass(action);
+            base.Pass();
         }
 
         public override void Rotate(ServerAction action)
         {
             //only default hand if not manually Interacting with things
             if(!action.manualInteract)
-            DefaultAgentHand(action);
+            DefaultAgentHand();
 
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 

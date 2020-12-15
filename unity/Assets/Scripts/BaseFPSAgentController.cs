@@ -76,6 +76,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         public AgentState agentState = AgentState.Emit;
 
+        public const float DefaultAllowedErrorInShortestPath = 0.0001f;
+
         public bool IsVisible
         {
 			get 
@@ -159,7 +161,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -275,12 +276,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
-
-            if (this.jsInterface)
-            {
-                // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction);
-            }
 
             lastActionSuccess = success;
 			this.agentState = newState;
@@ -408,9 +403,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(ServerAction action) {
-            if(action.maxStepCount != 0) {
-                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+        public void GetReachablePositions(int maxStepCount = 0) {
+            if(maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, maxStepCount);
             } else {
                 reachablePositions = getReachablePositions();
             }
@@ -781,8 +776,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return dist;
         }
 
-        public void DistanceToObject(ServerAction action) {
-            float dist = distanceToObject(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId]);
+        public void DistanceToObject(string objectId) {
+            float dist = distanceToObject(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
             #if UNITY_EDITOR
             Debug.Log(dist);
             #endif
@@ -863,8 +858,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        public void DisableObject(ServerAction action) {
-            string objectId = action.objectId;
+        public void DisableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
                 actionFinished(true);
@@ -873,8 +867,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void EnableObject(ServerAction action) {
-            string objectId = action.objectId;
+        public void EnableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
                 actionFinished(true);
@@ -884,36 +877,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         
         //remove a given sim object from the scene. Pass in the object's objectID string to remove it.
-        public void RemoveFromScene(ServerAction action) {
+        public void RemoveFromScene(string objectId) {
             //pass name of object in from action.objectId
-            if (action.objectId == null) {
+            if (objectId == null) {
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
             }
 
             //see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].transform.gameObject.SetActive(false);
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
                 physicsSceneManager.SetupScene();
                 actionFinished(true);
                 return;
             }
 
-            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
+            errorMessage = objectId + " could not be found in this scene, so it can't be removed";
             actionFinished(false);
         }
 
         //remove a list of given sim object from the scene.
-        public void RemoveObjsFromScene(ServerAction action) {
-            if (action.objectIds == null || action.objectIds[0] == null)
+        public void RemoveObjsFromScene(string[] objectIds) {
+            if (objectIds == null || objectIds[0] == null)
             {
                 errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
                 actionFinished(false);
                 return;
             }
             bool fail = false;
-            foreach (string objIds in action.objectIds)
+            foreach (string objIds in objectIds)
             {
                 if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
                 {
@@ -1024,7 +1017,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
         //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
         //this means that the isSceneAtRest bool will always be false
-        public void MakeAllObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable()
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
             {
@@ -1440,8 +1433,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #if UNITY_WEBGL
         public void ProcessControlCommand(ServerAction controlCommand)
         {
-            currentServerAction = controlCommand;
-
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1514,6 +1505,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError(errorMessage);
                 actionFinished(false);
             }
+            catch (AmbiguousActionException e)
+            {
+                errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
+                errorCode = ServerActionErrorCode.AmbiguousAction;
+                Debug.LogError(errorMessage);
+                actionFinished(false);
+            
+            }
             catch (InvalidActionException)
             {
                 errorMessage = "Invalid action: " + controlCommand.action;
@@ -1539,12 +1538,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //no op action
-        public void Pass(ServerAction action) {
+        public void Pass() {
             actionFinished(true);
         }
 
         //no op action
-        public void Done(ServerAction action) {
+        public void Done() {
             actionFinished(true);
         }
 
@@ -1738,7 +1737,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
-                DefaultAgentHand(action);
+                DefaultAgentHand();
                 transform.position = targetTeleport;
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
@@ -1909,7 +1908,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void VisibleRange(ServerAction action) {
+        public void VisibleRange() {
             actionFinished(true, visibleRange());
         }
 
@@ -1993,6 +1992,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             return visible;
         }
+
+        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false)
+        {
+            ServerAction action = new ServerAction();
+            action.objectId = objectId;
+            action.forceVisible = forceVisible;
+            return VisibleSimObjs(action);
+        }
+
 
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
         {
@@ -2370,13 +2378,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        public void DefaultAgentHand(ServerAction action = null) {
-            ResetAgentHandPosition(action);
-            ResetAgentHandRotation(action);
+        public void DefaultAgentHand() {
+            ResetAgentHandPosition();
+            ResetAgentHandRotation();
             IsHandDefault = true;
         }
 
-        public void ResetAgentHandPosition(ServerAction action = null) {
+        public void ResetAgentHandPosition() {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             if (sop != null) {
@@ -2384,7 +2392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void ResetAgentHandRotation(ServerAction action = null) {
+        public void ResetAgentHandRotation() {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             if (sop != null) {
@@ -2503,12 +2511,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //not sure what this does, maybe delete?
-        public void SetTopLevelView(ServerAction action) {
-            inTopLevelView = action.topView;
+        public void SetTopLevelView(bool topView = false) {
+            inTopLevelView = topView;
             actionFinished(true);
         }
 
-        public void ToggleMapView(ServerAction action) {
+        public void ToggleMapView() {
 
             SyncTransform[] syncInChildren;
 
@@ -2517,8 +2525,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach(StructureObject so in structureObjs)
             {
-                if(so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling)
-                {
+                if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
+                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
+                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
+                ) {
                     structureObjsList.Add(so);
                 }
             }
@@ -2586,6 +2596,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
         }
+
          public void VisualizePath(ServerAction action) {
             var path = action.positions;
             if (path == null || path.Count == 0) {
@@ -2648,13 +2659,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objectIds.ToArray();
         }
 
-        public void ObjectTypeToObjectIds(ServerAction action) {
+        public void ObjectTypeToObjectIds(string objectType) {
             try {
-                var objectIds = objectTypeToObjectIds(action.objectType);
+                var objectIds = objectTypeToObjectIds(objectType);
                 actionFinished(true, objectIds.ToArray());
             }   
             catch (ArgumentException exception) {
-                errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
+                errorMessage = "Invalid object type '" + objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
         }
@@ -2688,18 +2699,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return sop;
         }
 
-        public void VisualizeGrid(ServerAction action) {
+        public void VisualizeGrid() {
             var reachablePositions = getReachablePositions(1.0f, 10000, true);
             actionFinished(true, reachablePositions);
         }
 
-        private void getShortestPath(string objectType, string objectId,  Vector3 startPosition, Quaternion startRotation) {
+        private void getShortestPath(
+            string objectType,
+            string objectId,
+            Vector3 startPosition,
+            Quaternion startRotation,
+            float allowedError
+        ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
             }
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
                 actionFinishedEmit(true, path);
@@ -2712,16 +2729,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
+        public void GetShortestPath(
+            Vector3 position,
+            Vector3 rotation,
+            string objectType = null,
+            string objectId = null,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
         }
 
-        public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
+        public void GetShortestPath(
+            Vector3 position,
+            string objectType = null,
+            string objectId = null,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
         }
 
-        public void GetShortestPath(string objectType = null, string objectId = null) {
-            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
+        public void GetShortestPath(
+            string objectType = null,
+            string objectId = null,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
         }
 
         private bool GetPathFromReachablePositions(
@@ -2996,7 +3028,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return false;
         }
 
-        private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation, bool visualize = false) {
+        private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(
+            SimObjPhysics targetSOP,
+            Vector3 initialPosition,
+            Quaternion initialRotation,
+            float allowedError,
+            bool visualize = false
+        ) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
@@ -3019,9 +3057,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var sopPos = targetSOP.transform.position;
             //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
-            //make sure navmesh agent is active
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(initialPosition, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
+            bool pathSuccess = SafelyComputeNavMeshPath(initialPosition, fixedPosition, path, allowedError);
             
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -3031,38 +3067,128 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
-            
-
-            //disable navmesh agent
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
 
             return path;
         }
 
-        public void GetShortestPathToPoint(Vector3 position, float x, float y, float z) {
-            Vector3 startPosition = position;
-            var targetPosition = new Vector3(x, y, z);
+        protected float getFloorY(float x, float start_y, float z) {
+            int layerMask = ~(LayerMask.GetMask("Agent") | LayerMask.GetMask("SimObjInvisible"));
 
-            var path = new UnityEngine.AI.NavMeshPath();
+            float y = start_y;
+            RaycastHit hit;
+            Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
+            if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
+                errorMessage = "Could not find the floor";
+                return float.NegativeInfinity;
+            }
+            return hit.point.y;
+        }
+        
+        protected float getFloorY(float x, float z) {
+            int layerMask = ~LayerMask.GetMask("Agent");
+
+            Ray ray = new Ray(transform.position, -transform.up);
+            RaycastHit hit;
+            if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
+                errorMessage = "Could not find the floor";
+                return float.NegativeInfinity;
+            }
+            return getFloorY(x, hit.point.y + 0.1f, z);
+        }
+
+        protected bool SafelyComputeNavMeshPath(
+            Vector3 start,
+            Vector3 target,
+            UnityEngine.AI.NavMeshPath path,
+            float allowedError
+        ) {
+            float floorY = Math.Min(
+                getFloorY(start.x, start.y, start.z),
+                getFloorY(target.x, target.y, target.z)
+            );
+            Vector3 startPosition = new Vector3(start.x, floorY, start.z);
+            Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
+
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                // VisualizePath(startPosition, path);
+
+            NavMeshHit startHit;
+            bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                startPosition, out startHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+            );
+
+            NavMeshHit targetHit;
+            bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                targetPosition, out targetHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+            );
+
+            if (!startWasHit || !targetWasHit) {
+                if (!startWasHit) {
+                    errorMessage = $"No point on NavMesh near {startPosition}.";
+                }
+                if (!targetWasHit) {
+                    errorMessage = $"No point on NavMesh near {targetPosition}.";
+                }
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                actionFinished(true, path);
-                return;
+                return false;
+            }
+
+            float startOffset = Vector3.Distance(
+                startHit.position, 
+                new Vector3(startPosition.x, startHit.position.y, startPosition.z)
+            );
+            float targetOffset = Vector3.Distance(
+                targetHit.position, 
+                new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
+            );
+            if (startOffset > allowedError && targetOffset > allowedError) {
+                errorMessage = $"Closest point on NavMesh was too far from the agent: " + 
+                    $" (startPosition={startPosition.ToString("F3")}," +
+                    $" closest navmesh position {startHit.position.ToString("F3")}) and" +
+                    $" (targetPosition={targetPosition.ToString("F3")}," +
+                    $" closest navmesh position {targetHit.position.ToString("F3")}).";
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                return false;
+            }
+
+            #if UNITY_EDITOR
+            Debug.Log($"Attempting to find path from {startHit.position} to {targetHit.position}.");
+            #endif
+            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
+                startHit.position, targetHit.position,  UnityEngine.AI.NavMesh.AllAreas, path
+            );
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+                #if UNITY_EDITOR
+                VisualizePath(startHit.position, path);
+                #endif
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                return true;
             }
             else {
-                errorMessage = "Path to target could not be found";
+                errorMessage = $"Could not find path between {startHit.position}" +
+                    " and {targetHit.position} using the NavMesh.";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                return false;
+            }
+        }
+        public void GetShortestPathToPoint(
+            Vector3 position, float x, float y, float z, float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
+            var path = new UnityEngine.AI.NavMeshPath();
+            if (SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError)) {
+                actionFinished(true, path);
+            } else {
                 actionFinished(false);
-                return;
             }
         }
 
-        public void GetShortestPathToPoint(float x, float y, float z) {
+        public void GetShortestPathToPoint(
+            float x,
+            float y,
+            float z,
+            float allowedError = DefaultAllowedErrorInShortestPath
+        ) {
             var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, x, y, z);
+            GetShortestPathToPoint(startPosition, x, y, z, allowedError);
         }
 
         public void VisualizeShortestPaths(ServerAction action) {
@@ -3083,7 +3209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 var textMesh = go.GetComponentInChildren<TextMesh>();
                 textMesh.text = i.ToString();
 
-                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
+                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity, 0.1f);
 
                 var lineRenderer = go.GetComponentInChildren<LineRenderer>();
 
@@ -3103,12 +3229,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, results.ToArray());
         }
 
-        public void CameraCrack(ServerAction action)
+        public void CameraCrack(int randomSeed = 0)
         {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
 
-            camMan.SpawnCrack(action.randomSeed);
+            camMan.SpawnCrack(randomSeed);
             actionFinished(true);
         }
 
@@ -3150,6 +3276,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         #endif
 
+        public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig2(float foo) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig(ServerAction action) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchSAAmbig(float foo) {
+            actionFinished(true);
+        }
+
         public void TestActionDispatchNoopServerAction(ServerAction action) {
             actionFinished(true, "serveraction");
         }
@@ -3158,7 +3300,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(true, rvalue);
         }
 
-        public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
+        public void TestActionDispatchNoopAllDefault2(float param12, float param10=0.0f, float param11=1.0f) {
             actionFinished(true, "somedefault");
         }
 
@@ -3166,7 +3308,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, "alldefault");
         }
 
-        public void TestActionDispatchNoop(bool param3,  string param4="foo") {
+        public void TestActionDispatchNoop2(bool param3,  string param4="foo") {
             actionFinished(true, "param3 param4/default " + param4);
         }
 
@@ -3192,6 +3334,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void TestActionDispatchNoop() {
             actionFinished(true, "emptyargs");
         }
+
+        public void TestActionDispatchFindAmbiguous(string typeName) {
+            List<string> actions = ActionDispatcher.FindAmbiguousActions(Type.GetType(typeName));
+            actionFinished(true, actions);
+        }
+
         public void TestActionDispatchFindConflicts(string typeName) {
             Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
             actionFinished(true, conflicts);
