@@ -1550,7 +1550,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void SimulatePhysicsForSeconds(float seconds, float deltaTime = 0.01f) {
             if (seconds < 0.0f || deltaTime <= 0.0f) {
-                errorMessage = "$Seconds must be non-negative ({seconds}) and deltaTime must be positive ({deltaTiime}).";
+                errorMessage = $"Seconds must be non-negative ({seconds}) and deltaTime must be positive ({deltaTiime}).";
                 actionFinished(false);
                 return;
             }
