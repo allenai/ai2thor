@@ -31,8 +31,20 @@ public class CollisionListener : MonoBehaviour
             }
         }
     }
-    private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
+    private HashSet<Collider> activeColliders = new HashSet<Collider>();
+    public static bool useMassThreshold = false;
+    public static float massThreshold = 10f;
+
+    public void Set_massThreshold (float f)
+    {
+        massThreshold = f;
+    }
+
+    public void Set_useMassThreshold(bool b)
+    {
+        useMassThreshold = b;
+    }
     public void RegisterCollision(Collider col, bool notifyParent = true) {
         activeColliders.Add(col);
         if (notifyParent && this.transform.parent != null) {
@@ -108,6 +120,19 @@ public class CollisionListener : MonoBehaviour
                         sc = new StaticCollision();
                         sc.simObjPhysics = sop;
                         sc.gameObject = col.gameObject;
+                    }
+                }
+
+                //if instead it is a moveable or pickupable sim object
+                else if (useMassThreshold)
+                {
+                    //if a moveable or pickupable object is too heavy for the arm to move
+                    //flag it as a static collision so the arm will stop
+                    if(sop.Mass > massThreshold)
+                    {
+                        sc = new StaticCollision();
+                        sc.simObjPhysics = sop;
+                        sc.gameObject = col.gameObject;                    
                     }
                 }
             }

@@ -359,6 +359,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.agentMode = "arm";
                         action.agentControllerType = "mid-level";
 
+                        action.useMassThreshold = true;
+                        //action.massThreshold = 10f;
+
 
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
@@ -3131,7 +3134,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.y = 0.9f;
                             action.speed = 1.0f;
                         }
-
+                        action.disableRendering = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
