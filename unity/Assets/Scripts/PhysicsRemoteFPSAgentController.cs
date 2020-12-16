@@ -1533,7 +1533,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             DefaultAgentHand();
             transform.position = agentPosition;
             transform.rotation = Quaternion.Euler(agentRotation);
-            m_Camera.transform.localPosition = standing ? standingLocalCameraPosition : crouchingLocalCameraPosition;
+            standing ?  stand() : crouch();
             m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
 
             // apply gravity after teleport so we aren't floating in the air
