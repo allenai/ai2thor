@@ -99,8 +99,27 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     full_env["UNITY_BUILD_NAME"] = target_path
     result_code = subprocess.check_call(command, shell=True, env=full_env)
     print("Exited with code {}".format(result_code))
-    return result_code == 0
+    success = result_code == 0
+    if success:
+        generate_build_metadata(os.path.join(project_path, build_dir))
+    return success
 
+
+def generate_build_metadata(full_build_dir):
+
+    # this server_types metadata is maintained
+    # to allow future versions of the Python API
+    # to launch older versions of the Unity build
+    # and know whether the Fifo server is available
+    server_types = ['WSGI']
+    try:
+        import ai2thor.fifo_server
+        server_types.append('FIFO')
+    except Exception as e:
+        pass
+
+    with open(os.path.join(full_build_dir, 'metadata.json'), "w") as f:
+        f.write(json.dumps(dict(server_types=server_types)))
 
 def class_dataset_images_for_scene(scene_name):
     import ai2thor.controller
