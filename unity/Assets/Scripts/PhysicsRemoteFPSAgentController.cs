@@ -1582,6 +1582,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
+                // maxUpwardLookAngle corresponds to a negative horizon.
+                // consider (-35.5 horizon < -30 horizon) for looking too far up
+                // or (65 horizon > 60 horizon) for looking too far down.
+                if ((horizon < -maxUpwardLookAngle) ||
+                    (horizon > maxDownwardLookAngle)
+                ) {
+                    errorMessage = "Horizon must be between " + (-maxUpwardLookAngle) + " and " + maxDownwardLookAngle + ".";
+                    actionFinished(false);
+                    return;
+                }
 
                 // store the old values in case of failure
                 Vector3 oldPosition = transform.position;
