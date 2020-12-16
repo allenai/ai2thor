@@ -1533,8 +1533,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             DefaultAgentHand();
             transform.position = agentPosition;
             transform.rotation = Quaternion.Euler(agentRotation);
-            standing ?  stand() : crouch();
             m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+            if (standing) {
+                stand();
+            } else {
+                crouch();
+            }
 
             // apply gravity after teleport so we aren't floating in the air
             Vector3 v = new Vector3();
@@ -1582,10 +1586,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // store the old values in case of failure
                 Vector3 oldPosition = transform.position;
                 Quaternion oldRotation = transform.rotation;
-                Vector3 oldLocalHandPosition = ItemInHand.transform.localPosition;
-                Quaternion oldLocalHandRotation = ItemInHand.transform.localRotation;
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
+
+                // after upgrading to unity 2020.2+, can clean up with ?. operator
+                Vector3 oldLocalHandPosition = new Vector3();
+                Quaternion oldLocalHandRotation = new Quaternion();
+                if (ItemInHand != null) {
+                    oldLocalHandPosition = ItemInHand.transform.localPosition;
+                    oldLocalHandRotation = ItemInHand.transform.localRotation;
+                }
 
                 // move the agent
                 Teleport(targetPosition, targetRotation, (bool) standing, (float) horizon);
@@ -1602,7 +1612,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 if (agentCollides || handObjectCollides) {
                     // undo the teleport action
-                    if (!(ItemInHand is null)) {
+                    if (ItemInHand != null) {
                         // Unity 2020.2+ supports C# 8.0
                         // Here, the is null checks could be cleaned up with ?.
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
