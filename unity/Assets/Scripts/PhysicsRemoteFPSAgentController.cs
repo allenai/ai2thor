@@ -1592,6 +1592,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
+                // Only can change yaw on this agent.
+                if ((rotation.ContainsKey("x") && rotation["x"] != 0f) ||
+                    (rotation.ContainsKey("z") && rotation["z"] != 0f)
+                ) {
+                    errorMessage = "rotation['x'] and rotation['z'] must be 0 with this agent.";
+                    actionFinished(false);
+                    return;
+                }
 
                 // store the old values in case of failure
                 Vector3 oldPosition = transform.position;
