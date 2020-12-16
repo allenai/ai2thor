@@ -1508,6 +1508,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        // DEPRECIATED. Equivalent to Teleport. Maintained for backwards compatible.
+        // Compared to base, this one supports standing.
         public void TeleportFull(
             float? x = null,
             float? y = null,
@@ -1517,17 +1519,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? standing = null,
             bool forceAction = false
         ) {
-            // DEPRECIATED. Equivalent to Teleport. Maintained for backwards compatible.
             Teleport(x, y, z, rotation, horizon, standing, forceAction);
         }
 
+        // Teleport's private helper that teleports the agent without doing any checks.
         private void Teleport(
             Vector3 agentPosition,
             Vector3 agentRotation,
             bool standing,
             float horizon
         ) {
-            // teleports the agent without doing any checks.
+            // moves the agent and its camera
             DefaultAgentHand();
             transform.position = agentPosition;
             transform.rotation = Quaternion.Euler(agentRotation);
@@ -1540,6 +1542,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.Move(v);
         }
 
+        // Teleports the agent to a different pose.
+        // Considers both isStanding and objects in the hand, neither of which the base considers.
         public void Teleport(
             float? x = null,
             float? y = null,
