@@ -1585,8 +1585,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // maxUpwardLookAngle corresponds to a negative horizon.
                 // consider (-35.5 horizon < -30 horizon) for looking too far up
                 // or (65 horizon > 60 horizon) for looking too far down.
-                if ((horizon < -maxUpwardLookAngle) ||
-                    (horizon > maxDownwardLookAngle)
+                if ((Mathf.Round((float) horizon) < -maxUpwardLookAngle) ||
+                    (Mathf.Round((float) horizon) > maxDownwardLookAngle)
                 ) {
                     errorMessage = "Horizon must be between " + (-maxUpwardLookAngle) + " and " + maxDownwardLookAngle + ".";
                     actionFinished(false);
