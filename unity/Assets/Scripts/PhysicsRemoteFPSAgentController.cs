@@ -1560,6 +1560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             y = y is null ? transform.position.y : y;
             z = z is null ? transform.position.z : z;
             standing = standing is null ? isStanding() : standing;
+            rotation = rotation is null ? new Dictionary<string, float>() : rotation;
             horizon = horizon is null ? transform.localEulerAngles.x : horizon;
             Vector3 targetPosition = new Vector3((float) x, (float) y, (float) z);
             Vector3 targetRotation = new Vector3(
