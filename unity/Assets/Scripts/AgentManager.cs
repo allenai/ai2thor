@@ -213,7 +213,22 @@ public class AgentManager : MonoBehaviour
             {
                 //set up physics controller
                 SetUpArmController(true);
+
+				if(action.useMassThreshold)
+				{
+					if(action.massThreshold > 0.0)
+					SetUpMassThreshold(action.massThreshold);
+
+					else
+					{
+						var error = "massThreshold must have nonzero value if useMassThreshold = True";
+						Debug.Log(error);
+						primaryAgent.actionFinished(false, error);
+						return;
+					}
+				}
             }
+
             else {
                 var error = "unsupported";
                 Debug.Log(error);
@@ -297,6 +312,15 @@ public class AgentManager : MonoBehaviour
         handObj.gameObject.SetActive(true);
     }
 
+	//on initialization of agentMode = "arm" and agentControllerType = "mid-level"
+	//if mass threshold should be used to prevent arm from knocking over objects that
+	//are too big (table, sofa, shelf, etc) use this
+	private void SetUpMassThreshold(float massThreshold)
+	{
+		CollisionListener.useMassThreshold = true;
+		CollisionListener.massThreshold = massThreshold;
+	}
+	
     //return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent()
     {
@@ -1514,6 +1538,17 @@ public class ServerAction
 	//used to determine which coordinate space is used in Mid Level Arm actions
 	//valid options are relative to: world, wrist, armBase
 	public string coordinateSpace = "armBase";
+
+	//if agent is using arm mode, determines if a mass threshold should be used
+	//for when the arm hits heavy objects. If threshold is used, the arm will
+	//collide and stop moving when hitting a heavy enough sim object rather than
+	//move through it (this is for when colliding with pickupable and moveable sim objs)
+	public bool useMassThreshold;
+
+	//the mass threshold for how massive a pickupable/moveable sim object needs to be
+	//for the arm to detect collisions and stop moving
+	public float massThreshold;
+	
 
     public SimObjType ReceptableSimObjType()
 	{
