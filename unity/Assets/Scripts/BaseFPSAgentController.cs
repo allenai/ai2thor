@@ -284,7 +284,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			if (!this.IsProcessing)
 			{
-				Debug.LogError ("ActionFinished called with agentState not in processing ");
+				Debug.LogWarning ("ActionFinished called with agentState not in processing ");
 			}
 
             lastActionSuccess = success;
