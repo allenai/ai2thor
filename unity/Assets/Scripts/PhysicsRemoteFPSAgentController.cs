@@ -2247,31 +2247,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
-            
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
-                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
-                targetMoveYHeightToAgentHeight.y = transform.position.y;
-                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
-                    errorMessage = "Target " + action.objectId + " is obstructed.";
-                    Debug.Log(errorMessage);
-                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                    actionFinished(false);
-                    return;
-                }
-                
-            }
-            
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = "Target " + action.objectId + " is not visible";
-                Debug.Log(errorMessage);
-                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
-                actionFinished(false);
-                return;
-            }
-
-            //print(target.name);
 
             if (!target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
@@ -2297,6 +2272,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
+                actionFinished(false);
+                return;
+            }
+
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
+                targetMoveYHeightToAgentHeight.y = transform.position.y;
+                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                errorMessage = "Target " + action.objectId + " is not visible";
+                Debug.Log(errorMessage);
+                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 actionFinished(false);
                 return;
             }
