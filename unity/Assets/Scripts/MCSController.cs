@@ -11,8 +11,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float LYING_POSITION_Y = 0.1f;
     public static float MOVE_MAX = 0.1f;
 
-    public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
-    public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
+    public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
 
     // TODO MCS-95 Make the room size configurable in the scene configuration file.
     // The room dimensions are always 10x10 so the distance from corner to corner is around 14.15
@@ -242,9 +242,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
         ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
-
-        // Each SimObjPhysics object should have a MeshFilter component.
-        MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
 
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
 
@@ -695,24 +692,29 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void UpdateHandPositionToHoldObject(SimObjPhysics target) {
-        MeshFilter meshFilter = target.gameObject.GetComponentInChildren<MeshFilter>();
-        if (meshFilter != null) {
-            // Move the player's hand on the Y axis corresponding to the size of the target object so that the object,
-            // once held, is shown at the bottom of the player's camera view.
-            float handY = (meshFilter.mesh.bounds.size.y * meshFilter.transform.localScale.y);
-            // Move the player's hand on the Z axis corresponding to the size of the target object so that the object,
-            // once held, never collides with the player's body.
-            float handZ = (meshFilter.mesh.bounds.size.z / 2.0f * meshFilter.transform.localScale.z);
-            if (!GameObject.ReferenceEquals(meshFilter.gameObject, target.gameObject)) {
-                handY = (handY * target.gameObject.transform.localScale.y) + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y);
-                handZ = (handZ * target.gameObject.transform.localScale.z) - (meshFilter.transform.localPosition.z * meshFilter.transform.localScale.z);
-            }
-            this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
-                (handY + MCSController.DISTANCE_HELD_OBJECT_Y) * -1,
-                (handZ + MCSController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
-        } else {
-            Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
-        }
+        float positionY = target.BoundingBox.transform.localPosition.y;
+        float positionZ = target.BoundingBox.transform.localPosition.z;
+        float sizeY = target.BoundingBox.transform.localScale.y;
+        float sizeZ = target.BoundingBox.transform.localScale.z;
+
+        BoxCollider boundingBoxCollider = target.BoundingBox.GetComponent<BoxCollider>();
+        positionY = positionY + (boundingBoxCollider.center.y * target.BoundingBox.transform.localScale.y);
+        positionZ = positionZ + (boundingBoxCollider.center.z * target.BoundingBox.transform.localScale.z);
+        sizeY = sizeY * boundingBoxCollider.size.y;
+        sizeZ = sizeZ * boundingBoxCollider.size.z;
+
+        float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.AgentHand.transform.parent.localScale.y);
+        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.AgentHand.transform.parent.localScale.z);
+        positionY = positionY * multiplierY;
+        positionZ = positionZ * multiplierZ;
+        sizeY = sizeY * multiplierY;
+        sizeZ = sizeZ * multiplierZ;
+
+        this.AgentHand.transform.localPosition = new Vector3(
+            this.AgentHand.transform.localPosition.x,
+            -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y),
+            ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z)
+        );
     }
 
     public void Crawl(ServerAction action) {

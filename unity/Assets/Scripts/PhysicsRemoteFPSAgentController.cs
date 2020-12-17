@@ -2689,8 +2689,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>()==null||
-                            (res.transform.GetComponent<StructureObject>()!=null && !ShootRay45DegreesUp(this.inputDirection, this.serverActionMoveMagnitude)))
+                        if ((res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>() == null) ||
+                            (res.transform.GetComponent<StructureObject>() != null))
                         {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
