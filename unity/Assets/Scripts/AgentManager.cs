@@ -317,9 +317,8 @@ public class AgentManager : MonoBehaviour
 	//are too big (table, sofa, shelf, etc) use this
 	private void SetUpMassThreshold(float massThreshold)
 	{
-		CollisionListener cl = primaryAgent.GetComponent<CollisionListener>();
-		cl.Set_useMassThreshold(true);
-		cl.Set_massThreshold(massThreshold);
+		CollisionListener.useMassThreshold = true;
+		CollisionListener.massThreshold = massThreshold;
 	}
 	
     //return reference to primary agent in case we need a reference to the primary

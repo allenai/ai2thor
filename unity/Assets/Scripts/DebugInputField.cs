@@ -360,7 +360,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.agentControllerType = "mid-level";
 
                         action.useMassThreshold = true;
-                        //action.massThreshold = 10f;
+                        action.massThreshold = 10f;
 
 
                         AManager.Initialize(action);
