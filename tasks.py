@@ -46,7 +46,7 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
 
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
-    with open(json_path, "r") as f:
+    with open(json_path, "rb") as f:
         s3.Object(bucket, json_key).put(Body=f, ACL=acl, ContentType='application/json')
 
     with open(build_archive_name, "rb") as af:
