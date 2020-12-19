@@ -37,10 +37,17 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
         bucket = PRIVATE_S3_BUCKET 
         acl = 'private'
 
+    # json is generated during inside of _build
+    json_path = os.path.splitext(build_archive_name)[0] + '.json'
+
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
+    json_key = "builds/%s" % (os.path.basename(json_path),)
 
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
+
+    with open(json_path, "r") as f:
+        s3.Object(bucket, json_key).put(Body=f, ACL=acl, ContentType='application/json')
 
     with open(build_archive_name, "rb") as af:
         s3.Object(bucket, key).put(Body=af, ACL=acl)
@@ -101,11 +108,11 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     print("Exited with code {}".format(result_code))
     success = result_code == 0
     if success:
-        generate_build_metadata(os.path.join(project_path, build_dir))
+        generate_build_metadata(os.path.join(project_path, build_dir + ".json"))
     return success
 
 
-def generate_build_metadata(full_build_dir):
+def generate_build_metadata(metadata_path):
 
     # this server_types metadata is maintained
     # to allow future versions of the Python API
@@ -118,7 +125,7 @@ def generate_build_metadata(full_build_dir):
     except Exception as e:
         pass
 
-    with open(os.path.join(full_build_dir, 'metadata.json'), "w") as f:
+    with open(os.path.join(metadata_path), "w") as f:
         f.write(json.dumps(dict(server_types=server_types)))
 
 def class_dataset_images_for_scene(scene_name):
