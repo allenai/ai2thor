@@ -805,30 +805,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "putr":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PutObject";
-                        action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
-                        action.randomSeed = int.Parse(splitcommand[1]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PutObject";
+                        action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                        action["randomSeed"] = int.Parse(splitcommand[1]);
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = false; 
+                        action["placeStationary"] = false; 
 
                         //set this true to ignore Placement Restrictions
-                        action.forceAction = true;
+                        action["forceAction"] = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "put":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PutObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.receptacleObjectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         }
 
                         else
@@ -837,11 +837,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = true; 
-                        action.x = 0.5f;
-                        action.y = 0.5f;
+                        action["placeStationary"] = true; 
+                        action["x"] = 0.5f;
+                        action["y"] = 0.5f;
                         //set this true to ignore Placement Restrictions
-                        action.forceAction = true;
+                        action["forceAction"] = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -850,24 +850,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //put an object down with stationary false
                 case "putf":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PutObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.receptacleObjectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         }
 
                         else
-                            action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                            action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = false; 
+                        action["placeStationary"] = false; 
 
                         //set this true to ignore Placement Restrictions
-                        action.forceAction = true;
+                        action["forceAction"] = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
