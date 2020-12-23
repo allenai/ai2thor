@@ -19,6 +19,7 @@ controller = ai2thor.controller.Controller(
     width=900, height=900, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
+    useMassThreshold = True, massThreshold = 10,
 )
 
 
@@ -88,5 +89,6 @@ for i in range(MAX_TESTS):
                 print('initial pose', initial_pose)
                 print('list of actions', all_commands)
                 pdb.set_trace()
+                break
 
 

@@ -20,7 +20,11 @@ controller = ai2thor.controller.Controller(
     width=900, height=900, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
+    useMassThreshold = True, massThreshold = 10, #TODO we need to add this everywhere
 )
+
+
+
 
 
 def reset_the_scene_and_get_reachables(scene_name=None):
@@ -36,20 +40,27 @@ for i in range(MAX_TESTS):
 
     failed_action_pool = []
 
+    all_commands = []
+    all_exact_command = []
+
     initial_location = random.choice(reachable_positions)
     initial_rotation = random.choice([i for i in range(0, 360, 45)])
     event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
     initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+    all_exact_command.append(initial_pose)
     controller.step('PausePhysicsAutoSim')
-    all_commands = []
+
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
         command = random.choice(set_of_actions)
         before_action_arm_value = get_current_arm_state(controller)#.copy() #TODO this is important
+        before_full = copy.deepcopy(controller.last_event.metadata['arm'])
         output_of_command = execute_command(controller, command, ADITIONAL_ARM_ARGS)
+        all_exact_command.append(output_of_command)
         all_commands.append(command)
         last_event_success = controller.last_event.metadata['lastActionSuccess']
         after_action_arm_value = get_current_arm_state(controller)
+        after_full = copy.deepcopy(controller.last_event.metadata['arm'])
 
         if last_event_success and command in ['w','z', 'a', 's', '3', '4', 'u', 'j']:
             expected_arm_position = before_action_arm_value.copy()
@@ -72,11 +83,17 @@ for i in range(MAX_TESTS):
                 expected_arm_position['h'] -= move_arm_value
             # expected_arm_position['h'] = max(min(expected_arm_position['h'], 1), 0) # remove this, we want the action to fail
             # this means the result value is closer to the expected pose with an arm movement margin
-            if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=ADITIONAL_ARM_ARGS['move_constant']):
-                pass
+            # if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=ADITIONAL_ARM_ARGS['move_constant']):
+
                 # print('Arm movement error')
                 # print('before', before_action_arm_value, '\n after', after_action_arm_value, '\n expected', expected_arm_position, '\n action', command, 'success', last_event_success)
                 # pdb.set_trace()
+
+            if command in ['u', 'j'] and not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=0.01):
+
+                print('Arm height movement error')
+                print('before', before_action_arm_value, '\n after', after_action_arm_value, '\n expected', expected_arm_position, '\n action', command, 'success', last_event_success)
+                pdb.set_trace()
         else:
             expected_arm_position = before_action_arm_value.copy()
             if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=0.001):#TODO ADITIONAL_ARM_ARGS['move_constant'] / 2):
@@ -89,7 +106,8 @@ for i in range(MAX_TESTS):
         picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
         if len(pickupable) > 0 and len(picked_up_before) == 0:
             cmd = 'p'
-            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            output_of_command = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            all_exact_command.append(output_of_command)
             all_commands.append(cmd)
             if controller.last_event.metadata['lastActionSuccess'] is False:
                 print('Failed to pick up ')

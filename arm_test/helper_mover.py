@@ -104,11 +104,15 @@ def execute_command(controller, command,action_dict_addition):
 def get_current_arm_state(controller):
     h_min = 0.450998873
     h_max = 1.8009994
+    agent_base_location = 0.9009995460510254
     event = controller.last_event
+    offset = event.metadata['agent']['position']['y'] - agent_base_location
+    h_max += offset
+    h_min += offset
     joints=(event.metadata['arm']['joints'])
     arm=joints[-1]
     assert arm['name'] == 'robot_arm_4_jnt'
-    xyz_dict = arm['rootRelativePosition'].copy()
+    xyz_dict = copy.deepcopy(arm['rootRelativePosition'])
     height_arm = joints[0]['position']['y']
     xyz_dict['h'] = (height_arm - h_min) / (h_max - h_min)
     #     print_error([x['position']['y'] for x in joints])

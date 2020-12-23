@@ -21,6 +21,7 @@ controller = ai2thor.controller.Controller(
     width=900, height=900, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
+    useMassThreshold = True, massThreshold = 10,
 )
 
 
