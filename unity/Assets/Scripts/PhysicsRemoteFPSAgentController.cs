@@ -3717,9 +3717,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MakeObjectsOfTypeUnbreakable(ServerAction action)
+        public void MakeObjectsOfTypeUnbreakable(string objectType)
         {
-            if(action.objectType == null)
+            if(objectType == null)
             {
                 errorMessage = "no object type specified for MakeOBjectsOfTypeUnbreakable()";
                 actionFinished(false);
@@ -3728,7 +3728,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics[] simObjs= GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
             foreach(SimObjPhysics sop in simObjs)
             {
-                if(sop.Type.ToString() == action.objectType) 
+                if(sop.Type.ToString() == objectType) 
                 {
                     if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
                     {
@@ -3818,7 +3818,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {
                         if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
                         {
-                            StartCoroutine(ToggleObject(sop, SetObjectStates.isToggled));
+                            StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                             animating.Add(sop);
                             animatingType[sop] = "toggleable";
                         }
@@ -3851,7 +3851,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {
                             if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
                             {
-                                StartCoroutine(ToggleObject(sop, SetObjectStates.isToggled));
+                                StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                                 animating.Add(sop);
                                 animatingType[sop] = "toggleable";
                             }
@@ -4801,8 +4801,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return toReturn;
         }
 
-        public void ObjectsInBox(ServerAction action) {
-            HashSet<SimObjPhysics> objects = objectsInBox(action.x, action.z);
+        public void ObjectsInBox(float x, float z) {
+            HashSet<SimObjPhysics> objects = objectsInBox(x, z);
             objectIdsInBox = new string[objects.Count];
             int i = 0;
             foreach (SimObjPhysics so in objects) 
@@ -5334,65 +5334,71 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ToggleObjectOn(ServerAction action)
+        public void ToggleObjectOn(string objectId, bool forceAction=false)
         {
-            ToggleObject(action, true, action.forceAction);
+            toggleObject(objectId, true, forceAction);
         }
 
-        public void ToggleObjectOff(ServerAction action)
+        public void ToggleObjectOff(string objectId, bool forceAction=false)
         {
-            ToggleObject(action, false, action.forceAction);
+            toggleObject(objectId, false, forceAction);
         }
 
+        public void ToggleObjectOn(float x, float y, bool forceAction=false)
+        {
+            toggleObject(x, y, true, forceAction);
+        }
 
-        public void ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
+        public void ToggleObjectOff(float x, float y, bool forceAction=false)
+        {
+            toggleObject(x, y, false, forceAction);
+        }
+
+        private void toggleObject(float x, float y, bool toggleOn, bool forceAction)
         {
             SimObjPhysics target = null;
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
             //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
+            if(!ScreenToWorldTarget(x, y, ref target, !forceAction))
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+                //error message is set insice ScreenToWorldTarget
+                actionFinished(false);
+                return;
             }
+            
+            toggleObject(target, toggleOn, forceAction);
+        }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
+        private void toggleObject(string objectId, bool toggleOn, bool forceAction)
+        {
+            SimObjPhysics target = null;
+            bool forceVisible = forceAction;
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+            
+            //if object is in the scene and visible, assign it to 'target'
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceVisible)) 
             {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = sop;
             }
 
             if (!target)
             {
 
                 //target not found in currently visible objects, report not found
-                errorMessage = "object not found: " + action.objectId;
+                errorMessage = "object not found: " + objectId;
                 actionFinished(false);
                 return;
             }
             
-            ToggleObject(target, toggleOn, forceAction);
+            toggleObject(target, toggleOn, forceAction);
         }
 
         //specific ToggleObject that is used for SetObjectStatesForLotsOfObjects
-        public IEnumerator ToggleObject(SimObjPhysics target, bool toggleOn)
+        private IEnumerator toggleObject(SimObjPhysics target, bool toggleOn)
         {
             if(target.GetComponent<CanToggleOnOff>())
             {
@@ -5422,7 +5428,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public bool ToggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
+        private bool toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
         {
             if (!forceAction && target.isInteractable == false)
             {
@@ -7292,8 +7298,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return randomlyCreateAndPlaceObjectOnFloor(objectType, objectVariation, getReachablePositions());
         }
 
-        public void RandomlyCreateAndPlaceObjectOnFloor(ServerAction action) {
-            SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(action.objectType, action.objectVariation);
+        public void RandomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation = 0) {
+            SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(objectType, objectVariation);
             if (!objectCreated) {
                 errorMessage = "Failed to randomly create object. " + errorMessage;
                 actionFinished(false);
@@ -7354,8 +7360,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void WorldToViewportPoint(ServerAction action) {
-            Vector3 point = m_Camera.WorldToViewportPoint(action.position);
+        public void WorldToViewportPoint(Vector3 position) {
+            Vector3 point = m_Camera.WorldToViewportPoint(position);
             if (point.x < 0f || point.x > 1.0f || point.y < 0f || point.y > 1.0f) {
                 errorMessage = "Point not in viewport.";
                 actionFinished(false);
@@ -7398,13 +7404,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return percent;
         }
 
-        public void ApproxPercentScreenObjectOccupies(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
+        public void ApproxPercentScreenObjectOccupies(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
                 actionFinished(false);
                 return;
             }
-            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             actionFinished(true, approxPercentScreenObjectOccupies(sop));
         }
 
@@ -7660,9 +7666,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(InteractAndWait(toInteractWith, simplifyPhysics));
         }
 
-        public void GetApproximateVolume(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+        public void GetApproximateVolume(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
                 Bounds objBounds = new Bounds(
@@ -7677,7 +7683,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (!hasActiveRenderer) {
-                    errorMessage = "Cannot get bounds for " + action.objectId + " as it has no attached (and active) renderers.";
+                    errorMessage = "Cannot get bounds for " + objectId + " as it has no attached (and active) renderers.";
                     actionFinished(false);
                     return;
                 }
@@ -7689,12 +7695,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
                 actionFinished(true);
             } else {
-                errorMessage = "Invalid objectId " + action.objectId;
+                errorMessage = "Invalid objectId " + objectId;
                 actionFinished(false);
             }
         }
 
-        public void GetVolumeOfAllObjects(ServerAction action) {
+        public void GetVolumeOfAllObjects() {
             List<string> objectIds = new List<string>();
             List<float> volumes = new List<float>();
             foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
@@ -7752,30 +7758,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MakeObjectTransparent(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        public void MakeObjectTransparent(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 changeObjectBlendMode(
-                    physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId],
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objectId],
                     StandardShaderUtils.BlendMode.Fade,
                     0.4f
                 );
                 actionFinished(true);
             } else {
-                errorMessage = "Invalid objectId " + action.objectId;
+                errorMessage = "Invalid objectId " + objectId;
                 actionFinished(false);
             }
         }
 
-        public void MakeObjectOpaque(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        public void MakeObjectOpaque(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 changeObjectBlendMode(
-                    physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId],
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objectId],
                     StandardShaderUtils.BlendMode.Opaque,
                     1.0f
                 );
                 actionFinished(true);
             } else {
-                errorMessage = "Invalid objectId " + action.objectId;
+                errorMessage = "Invalid objectId " + objectId;
                 actionFinished(false);
             }
         }

@@ -530,9 +530,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "crazydiamond":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "MakeObjectsOfTypeUnbreakable";
-                        action.objectType = "Egg";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeObjectsOfTypeUnbreakable";
+                        action["objectType"] = "Egg";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -1131,9 +1131,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "rspawnfloor": 
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "RandomlyCreateAndPlaceObjectOnFloor";
-                        action.objectType = splitcommand[1];
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomlyCreateAndPlaceObjectOnFloor";
+                        action["objectType"] = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1303,10 +1303,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // Get objects in box
                 case "oib":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ObjectsInBox";
-                        action.x = float.Parse(splitcommand[1]);
-                        action.z = float.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ObjectsInBox";
+                        action["x"] = float.Parse(splitcommand[1]);
+                        action["z"] = float.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         foreach (string s in PhysicsController.objectIdsInBox) {
                             Debug.Log(s);
@@ -2217,20 +2217,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "toggleon":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ToggleObjectOn";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleObjectOn";
                         if (splitcommand.Length > 1)
                         {
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         }
 
                         else
                         {
                             //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            action["x"] = 0.5f;
+                            action["y"] = 0.5f;
                         }
 
-                        action.x = 0.5f;
-                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2238,22 +2238,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "toggleoff":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "ToggleObjectOff";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleObjectOff";
                         if (splitcommand.Length > 1)
                         {
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         }
                         else
                         {
                             //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            action["x"] = 0.5f;
+                            action["y"] = 0.5f;
                         }
 
-                        action.x = 0.5f;
-                        action.y = 0.5f;
                         //action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
-                        action.forceVisible = true;
-                        action.forceAction = true;
+                        action["forceVisible"] = true;
+                        action["forceAction"] = true;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
