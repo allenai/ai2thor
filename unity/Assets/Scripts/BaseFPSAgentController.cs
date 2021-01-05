@@ -128,10 +128,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public CharacterController m_CharacterController;
 		protected CollisionFlags m_CollisionFlags;
 		protected Vector3 lastPosition;
-		protected string lastAction;
-		protected bool lastActionSuccess;
-		protected string errorMessage;
-		protected ServerActionErrorCode errorCode;
+
+        // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
+		public string lastAction;
+		public bool lastActionSuccess;
+		public string errorMessage;
+		public ServerActionErrorCode errorCode;
+
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
