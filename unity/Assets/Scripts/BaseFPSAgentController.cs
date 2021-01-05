@@ -130,10 +130,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 lastPosition;
 
         // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
-		public string lastAction;
-		public bool lastActionSuccess;
-		public string errorMessage;
-		public ServerActionErrorCode errorCode;
+        public string lastAction;
+        public bool lastActionSuccess;
+        public string errorMessage;
+        public ServerActionErrorCode errorCode;
 
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
