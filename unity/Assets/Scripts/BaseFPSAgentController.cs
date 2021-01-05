@@ -2392,7 +2392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             bool allowFloor = false
         ) {
             if (numPlacementAttempts <= 0) {
-                errorMessage = "numPlacementAttempts must a positive integer.";
+                errorMessage = "numPlacementAttempts must be a positive integer.";
                 actionFinished(false);
                 return;
             }
