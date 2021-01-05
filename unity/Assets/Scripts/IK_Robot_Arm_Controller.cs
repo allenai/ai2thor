@@ -224,7 +224,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller,
         Vector3 target, 
         float unitsPerSecond,
-        bool eventCollisions,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false, 
         string whichSpace = "arm", 
@@ -286,7 +285,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 targetWorldPos,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
-                eventCollisions,
                 returnToStartPositionIfFailed,
                 false
         );
@@ -308,7 +306,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller, 
         float height, 
         float unitsPerSecond, 
-        bool eventCollisions,
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false,
         bool disableRendering = false) {
@@ -336,7 +333,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 target,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
-                eventCollisions,
                 returnToStartPositionIfFailed,
                 true
         );
@@ -358,7 +354,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller,
         Quaternion targetQuat,
         float degreesPerSecond, 
-        bool eventCollisions,
         bool disableRendering = false, 
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false
@@ -372,7 +367,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             armTarget.transform.rotation * targetQuat,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
-            eventCollisions,
             returnToStartPositionIfFailed
         );
 
