@@ -386,6 +386,8 @@ class Controller(object):
         self.unity_pid = None
         self.docker_enabled = docker_enabled
         self.container_id = None
+        self.width = width
+        self.height = height
 
         self.last_event = None
         self._scenes_in_build = None
@@ -500,7 +502,7 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    def reset(self, scene='FloorPlan_Train1_1'):
+    def reset(self, scene='FloorPlan_Train1_1', **init_params):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
@@ -519,7 +521,22 @@ class Controller(object):
 
         self.server.send(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = self.server.receive()
-        
+
+        # update the initialization parameters
+        init_params = init_params.copy()
+
+        # width and height are updates in 'ChangeResolution', not 'Initialize'
+        if 'width' in init_params or 'height' in init_params:
+            if 'width' in init_params:
+                self.width = init_params['width']
+                del init_params['width']
+            if 'height' in init_params:
+                self.height = init_params['height']
+                del init_params['height']
+            self.step(action='ChangeResolution', x=self.width, y=self.height)
+
+        # updates the initialization parameters
+        self.initialization_parameters.update(init_params)
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
 
         return self.last_event
