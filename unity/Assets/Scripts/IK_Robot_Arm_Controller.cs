@@ -492,17 +492,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             Vector3 vectorRot;
 
             //local rotation currently relative to immediate parent joint
-            joint.GetChild(0).localRotation.ToAngleAxis(out angleRot, out vectorRot);
+            joint.GetChild(0).localRotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //world relative rotation
-            joint.GetChild(0).rotation.ToAngleAxis(out angleRot, out vectorRot);
-            //Debug.Log("Hi there " + joint.name + " " + vectorRot);
+            joint.GetChild(0).rotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //rotation relative to root joint/agent
             //root forward and agent forward are always the same
-            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);
+            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             joints.Add(jointMeta);
