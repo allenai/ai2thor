@@ -224,7 +224,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller,
         Vector3 target, 
         float unitsPerSecond,
-        bool eventCollisions,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false, 
         string whichSpace = "arm", 
@@ -286,7 +285,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 targetWorldPos,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
-                eventCollisions,
                 returnToStartPositionIfFailed,
                 false
         );
@@ -308,7 +306,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller, 
         float height, 
         float unitsPerSecond, 
-        bool eventCollisions,
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false,
         bool disableRendering = false) {
@@ -336,7 +333,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 target,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond,
-                eventCollisions,
                 returnToStartPositionIfFailed,
                 true
         );
@@ -358,7 +354,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         PhysicsRemoteFPSAgentController controller,
         Quaternion targetQuat,
         float degreesPerSecond, 
-        bool eventCollisions,
         bool disableRendering = false, 
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false
@@ -372,7 +367,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             armTarget.transform.rotation * targetQuat,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
-            eventCollisions,
             returnToStartPositionIfFailed
         );
 
@@ -492,21 +486,22 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             Vector3 vectorRot;
 
             //local rotation currently relative to immediate parent joint
-            joint.localRotation.ToAngleAxis(out angleRot, out vectorRot);
+            joint.GetChild(0).localRotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //world relative rotation
-            joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
+            joint.GetChild(0).rotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //rotation relative to root joint/agent
             //root forward and agent forward are always the same
-            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);
+            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
             jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             joints.Add(jointMeta);
             joint = joint.Find("robot_arm_" + i + "_jnt");
         }
+
         meta.joints = joints.ToArray();
 
         //metadata for any objects currently held by the hand on the arm

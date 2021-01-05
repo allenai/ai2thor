@@ -350,17 +350,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
                         //action.agentMode = "bot";
-                        action.fieldOfView = 90f;
+                        //action.fieldOfView = 90f;
                         //action.cameraY = 2.0f;
-                        action.snapToGrid = true;
+                        //action.snapToGrid = true;
                         // action.rotateStepDegrees = 45;
                         action.action = "Initialize";
 
                         action.agentMode = "arm";
                         action.agentControllerType = "mid-level";
 
-                        action.useMassThreshold = true;
-                        action.massThreshold = 10f;
+                        //action.useMassThreshold = true;
+                        //action.massThreshold = 10f;
 
 
                         AManager.Initialize(action);
@@ -791,6 +791,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
                     break;
                 }
+
+                case "debugarmjoints":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    ArmMetadata armmeta = arm.GenerateMetadata();
+                    foreach (JointMetadata jm in armmeta.joints)
+                    {
+                        Debug.Log(jm.name);
+                        Debug.Log(jm.rotation);
+                    }
+
+                    break;
+                }
+
                 case "posarm1":
                 {
                     var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
@@ -799,7 +813,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     break;
                 }
 
-                
+                case "slide3":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull 0.25 0.9014922380447388 1.5 360 10");
+                    //commands.Add("mc 0.0 0.0 0.2 1");
+                    commands.Add("mmlah 0.38 1 true true false");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    //run debugarmjoints to get rotation metadata
+                    break;
+                }                
+
                 case "ras1":
                 {
                     List<string> commands = new List<string>();
@@ -813,6 +839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     StartCoroutine(ExecuteBatch(commands));
                     break;
                 }
+
                 case "ras2":
                 {
                     List<string> commands = new List<string>();
@@ -3127,6 +3154,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             if(splitcommand.Length > 4) 
                                 action.disableRendering = bool.Parse(splitcommand[4]);
+
+                            if(splitcommand.Length > 5)
+                                action.restrictMovement = bool.Parse(splitcommand[5]);
+                            
                         }
 
                         else
@@ -3147,14 +3178,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.y = 0.9009995460510254f;
                         action.z = 1;
                         float rotation = 135.0f;
-						if (splitcommand.Length > 1 ) {
+                        int horizon = 0;
+						if (splitcommand.Length > 1  && splitcommand.Length < 5) {
                             action.x = float.Parse(splitcommand[1]);
                             action.y = float.Parse(splitcommand[2]);
                             action.z = float.Parse(splitcommand[3]);
                             rotation = float.Parse(splitcommand[4]);
                         }
 
+                        else if(splitcommand.Length > 5)
+                        {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            rotation = float.Parse(splitcommand[4]);
+                            horizon = int.Parse(splitcommand[5]);
+                        }
+
                         action.rotation = new Vector3(0, rotation, 0);
+                        action.horizon = horizon;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -3192,6 +3234,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                              }
                         }
 
+                        action.disableRendering = true;
+                        action.restrictMovement = false;
+                        action.returnToStart = true;
+                        action.speed = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     } 
