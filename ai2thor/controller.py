@@ -526,7 +526,9 @@ class Controller(object):
         init_params = init_params.copy()
 
         # width and height are updates in 'ChangeResolution', not 'Initialize'
-        if 'width' in init_params or 'height' in init_params:
+        if ('width' in init_params and  init_params['width'] != self.width) or (
+            'height' in init_params and init_params['height'] != self.height
+        ):
             if 'width' in init_params:
                 self.width = init_params['width']
                 del init_params['width']
