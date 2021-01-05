@@ -48,6 +48,9 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
+	public const float DEFAULT_FOV = 90;
+    public const float MAX_FOV = 180;
+    public const float MIN_FOV = 0;
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -319,11 +322,6 @@ public class AgentManager : MonoBehaviour
 		ResetSceneBounds();
 	}
 
-	// If fov is <= min or > max, return defaultVal, else return fov
-	private float ClampFieldOfView(float fov, float defaultVal = 90f, float min = 0f, float max = 180f) {
-		return (fov <= min || fov > max) ? defaultVal : fov;
-	}
-
     private void updateImageSynthesis(bool status) {
         foreach(var agent in this.agents) {
             agent.updateImageSynthesis(status);
@@ -346,63 +344,168 @@ public class AgentManager : MonoBehaviour
         }
     }
 
-	public void AddThirdPartyCamera(ServerAction action) {
-		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
-		gameObject.AddComponent(typeof(Camera));
-		Camera camera = gameObject.GetComponentInChildren<Camera>();
+    // helper that can be used when converting Dictionary<string, float> to a Vector3.
+    private Vector3 parseDictAsVector3(
+        Dictionary<string, float> dict,
+        float defaultX,
+        float defaultY,
+        float defaultZ) {
+            return new Vector3(
+                dict.ContainsKey("x") ? dict["x"] : defaultX,
+                dict.ContainsKey("y") ? dict["y"] : defaultY,
+                dict.ContainsKey("z") ? dict["z"] : defaultZ
+            );
+    }
 
-		camera.cullingMask = ~(1 << 11);
+    private void setCameraProperties(
+        Camera camera,
+        Dictionary<string, float> position,
+        Dictionary<string, float> rotation,
+        float fieldOfView,
+        string skyboxColor,
+        bool? orthographic,
+        float? orthographicSize
+    ) {
+        // keeps positions at default values, if unspecified.
+        Vector3 oldPos = camera.gameObject.transform.position;
+        Vector3 targetPosition = position == null ? oldPos : parseDictAsVector3(position, oldPos.x, oldPos.y, oldPos.z);
+        camera.gameObject.transform.position = targetPosition;
 
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage)
-		{
-			gameObject.AddComponent(typeof(ImageSynthesis));
-		}
+        // keeps rotations at default values, if unspecified.
+        Vector3 oldRot = camera.gameObject.transform.localEulerAngles;
+        Vector3 targetRotation = rotation == null ? oldRot : parseDictAsVector3(rotation, oldRot.x, oldRot.y, oldRot.z);
+        camera.gameObject.transform.eulerAngles = targetRotation;
 
-		this.thirdPartyCameras.Add(camera);
-		gameObject.transform.eulerAngles = action.rotation;
-		gameObject.transform.position = action.position;
-
-		// default to 90 fov on third party camera if value is too small or large
-		camera.fieldOfView = ClampFieldOfView(action.fieldOfView);
-
-        if (action.orthographic) {
-			// NOTE: orthographicSize uses the original fieldOfView value passed in
-			// TODO: this is an odd overload of the argument, consider adding another parameter
-            camera.orthographicSize = action.fieldOfView;
+        // updates the camera's perspective
+        camera.fieldOfView = fieldOfView;
+        if (orthographic != null) {
+            camera.orthographic = (bool) orthographic;
+            if (orthographic == true && orthographicSize != null) {
+                camera.orthographicSize = (float) orthographicSize;
+            }
         }
-        camera.orthographic = action.orthographic;
 
-		this.agentManagerState = AgentState.ActionComplete;
-	}
+        // supports a solid color skybox, which work well with videos and images
+        // (i.e., white/black background)
+        if (skyboxColor == "default") {
+            camera.clearFlags = CameraClearFlags.Skybox;
+        } else if (skyboxColor != null) {
+            Color color;
+            ColorUtility.TryParseHtmlString(skyboxColor, out color);
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = color;
+        }
+    }
 
-	public void UpdateThirdPartyCamera(ServerAction action) {
-		if (action.thirdPartyCameraId <= thirdPartyCameras.Count) {
-			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
-			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
-			thirdPartyCamera.gameObject.transform.position = action.position;
+    // helper used to provide an error message and fail the action in the metadata
+    private void actionError(string errorMessage, string actionName) {
+        // update metadata
+        primaryAgent.errorMessage = errorMessage;
+        primaryAgent.lastAction = actionName;
+        primaryAgent.lastActionSuccess = false;
+        primaryAgent.errorCode = ServerActionErrorCode.Undefined;
 
-			// keep existing fieldOfView if we have one and are not passed a new one
-			// 0 gets passed for null
-			if(thirdPartyCamera.fieldOfView == 0 || action.fieldOfView != 0) {
-				// default to 90 fov on third party camera if value passed in is too small or large
-				thirdPartyCamera.fieldOfView = ClampFieldOfView(action.fieldOfView);
-			}
+        // end action
+        agentManagerState = AgentState.ActionComplete;
+    }
 
-			// set the skybox to default, white, or black (other colors can be added as needed)
-			if (action.skyboxColor == null) {
-				// default blue-ish skybox that shows the ground
-				thirdPartyCamera.clearFlags = CameraClearFlags.Skybox;
-			} else {
-				thirdPartyCamera.clearFlags = CameraClearFlags.SolidColor;
-				if (action.skyboxColor == "white") {
-					thirdPartyCamera.backgroundColor = Color.white;
-				} else {
-					thirdPartyCamera.backgroundColor = Color.black;
-				}
-			}
-		}
-		this.agentManagerState = AgentState.ActionComplete;
-	}
+    // helper used to update success of agent metadata
+    private void actionSuccess(string actionName) {
+        // update metadata
+        primaryAgent.errorMessage = "";
+        primaryAgent.lastAction = actionName;
+        primaryAgent.lastActionSuccess = true;
+        primaryAgent.errorCode = ServerActionErrorCode.Undefined;
+
+        // end action
+        agentManagerState = AgentState.ActionComplete;
+    }
+
+    public void AddThirdPartyCamera(
+        Dictionary<string, float> position = null,
+        Dictionary<string, float> rotation = null,
+        float? fieldOfView = null,
+        string skyboxColor = null,
+        bool orthographic = false,
+        float? orthographicSize = null
+    ) {
+        // dynamic way of getting the method name, in case it ever changes
+        string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+        // require position and rotation to be specified in Vector3 style
+        if (position == null || rotation == null) {
+            actionError("Must pass in both rotation (xyz dictionary) and position (xyz dictionary).", actionName);
+            return;
+        } else if (
+            !position.ContainsKey("x") || !position.ContainsKey("y") || !position.ContainsKey("z") ||
+            !rotation.ContainsKey("x") || !rotation.ContainsKey("y") || !rotation.ContainsKey("z")
+        ) {
+            actionError("Must specify xyz keys for both position and rotation.", actionName);
+            return;
+        }
+
+        // bound the FOV
+        if (fieldOfView <= MIN_FOV) {
+            actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
+            return;
+        } else if (fieldOfView >= MAX_FOV) {
+            actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
+            return;
+        }
+
+        GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
+        gameObject.AddComponent(typeof(Camera));
+        Camera camera = gameObject.GetComponentInChildren<Camera>();
+
+        camera.cullingMask = ~(1 << 11);
+
+        if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
+            gameObject.AddComponent(typeof(ImageSynthesis));
+        }
+
+        thirdPartyCameras.Add(camera);
+        setCameraProperties(
+            camera: camera,
+            position: position,
+            rotation: rotation,
+            fieldOfView: fieldOfView == null ? DEFAULT_FOV : (float) fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize
+        );
+        actionSuccess(actionName);
+    }
+
+    public void UpdateThirdPartyCamera(
+        int thirdPartyCameraId = 0,
+        Dictionary<string, float> position = null,
+        Dictionary<string, float> rotation = null,
+        float? fieldOfView = null,
+        string skyboxColor = null,
+        bool? orthographic = null,
+        float? orthographicSize = null
+    ) {
+        // dynamic way of getting the method name, in case it ever changes
+        string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+        // count is out of bounds
+        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
+            actionError($"thirdPartyCameraId (int: default=0) must be >= 0 and < len(thirdPartyCameras)={thirdPartyCameras.Count}.", actionName);
+            return;
+        }
+
+        Camera thirdPartyCamera = thirdPartyCameras.ToArray()[thirdPartyCameraId];
+        setCameraProperties(
+            camera: thirdPartyCamera,
+            position: position,
+            rotation: rotation,
+            fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float) fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize
+        );
+        actionSuccess(actionName);
+    }
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
