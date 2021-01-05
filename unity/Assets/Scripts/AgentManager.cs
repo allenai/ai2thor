@@ -444,13 +444,19 @@ public class AgentManager : MonoBehaviour
             return;
         }
 
-        // bound the FOV
-        if (fieldOfView <= MIN_FOV) {
-            actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
-            return;
-        } else if (fieldOfView >= MAX_FOV) {
-            actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
-            return;
+        // For backwards compatibility, when fieldOfView=0, that used to mean use DEFAULT_FOV.
+        // However, fieldOfView is now nullable, so fieldOfView=null would be cleaner.
+        if (fieldOfView == 0) {
+            fieldOfView = DEFAULT_FOV;
+        } else {
+            // bound the FOV
+            if (fieldOfView < MIN_FOV) {
+                actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
+                return;
+            } else if (fieldOfView >= MAX_FOV) {
+                actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
+                return;
+            }
         }
 
         GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
