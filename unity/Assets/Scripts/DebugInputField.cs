@@ -910,6 +910,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Ray ray = agent.m_Camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
                         bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, (1 << 8) | (1 << 10));
 
+                        print("where did the ray land? " + hit.point);
                         if (itemInHand != null) {
                             itemInHand.SetActive(true);
                         }
@@ -922,7 +923,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 SimObjPhysics[] allSops = GameObject.FindObjectsOfType<SimObjPhysics>();
                                 sop = allSops[UnityEngine.Random.Range(0, allSops.Length)];
                             }
-                            action["position"] = hit.point;
+                            //adding y offset to position so that the downward raycast used in PlaceObjectAtPoint correctly collides with surface below point
+                            action["position"] = hit.point + new Vector3(0, 0.5f, 0); 
                             action["objectId"] = sop.ObjectID;
                             
                             Debug.Log(action);

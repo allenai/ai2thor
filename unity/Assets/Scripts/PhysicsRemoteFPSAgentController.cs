@@ -3583,6 +3583,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 originalPos = target.transform.position;
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
+            bool wasInHand = false;
+            if(ItemInHand)
+            {
+                if(ItemInHand.transform.gameObject == target.transform.gameObject)
+                {
+                    wasInHand = true;
+                }
+            }
+
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
@@ -3606,39 +3615,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (colliderHitIfSpawned == null) {
                 target.transform.position = finalPos;
 
-                // Additional stuff we need to do if placing item that is currently in hand
-                if (ItemInHand != null) {
-                    if(ItemInHand.transform.gameObject == target.transform.gameObject) {
-                        Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                        rb.isKinematic = forceKinematic;
-                        rb.constraints = RigidbodyConstraints.None;
-                        rb.useGravity = true;
+                // Additional stuff we need to do if placing item that was in hand
+                if (wasInHand) {
 
-                        // change collision detection mode while falling so that obejcts don't phase through colliders.
-                        // this is reset to discrete on SimObjPhysics.cs's update 
-                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.isKinematic = forceKinematic;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
 
-                        GameObject topObject = GameObject.Find("Objects");
-                        if (topObject != null) {
-                            ItemInHand.transform.parent = topObject.transform;
-                        } else {
-                            ItemInHand.transform.parent = null;
-                        }
+                    // change collision detection mode while falling so that obejcts don't phase through colliders.
+                    // this is reset to discrete on SimObjPhysics.cs's update 
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
-                        DropContainedObjects(
-                            target: target,
-                            reparentContainedObjects: true,
-                            forceKinematic: forceKinematic
-                        );
-                        target.isInAgentHand = false;
-                        ItemInHand = null;
+                    GameObject topObject = GameObject.Find("Objects");
+                    if (topObject != null) {
+                        ItemInHand.transform.parent = topObject.transform;
+                    } else {
+                        ItemInHand.transform.parent = null;
                     }
+
+                    DropContainedObjects(
+                        target: target,
+                        reparentContainedObjects: true,
+                        forceKinematic: forceKinematic
+                    );
+                    target.isInAgentHand = false;
+                    ItemInHand = null;
+                
                 }
                 return true;
             }
             
             target.transform.position = originalPos;
             target.transform.rotation = originalRotation;
+
+            //if the original position was in agent hand, reparent object to agent hand
+            if(wasInHand)
+            {
+                target.transform.SetParent(AgentHand.transform);
+                ItemInHand = target.gameObject;
+                target.isInAgentHand = true;
+                target.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            
             if (includeErrorMessage) {
                 SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfSpawned.gameObject);
                 errorMessage = (
