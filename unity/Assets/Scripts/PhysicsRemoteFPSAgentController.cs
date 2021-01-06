@@ -695,6 +695,188 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
+        public void TeleportObject(
+            string objectId,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            } 
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            bool teleportSuccess = TeleportObject(
+                sop: sop,
+                position: position,
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable,
+                includeErrorMessage: true
+            );
+
+            if (teleportSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public void TeleportObject(
+            string objectId,
+            Vector3[] positions,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            } 
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool teleportSuccess = false;
+            foreach (Vector3 position in positions) {
+                teleportSuccess = TeleportObject(
+                    sop: sop,
+                    position: position,
+                    rotation: rotation,
+                    forceAction: forceAction,
+                    forceKinematic: forceKinematic,
+                    allowTeleportOutOfHand: allowTeleportOutOfHand,
+                    makeUnbreakable: makeUnbreakable,
+                    includeErrorMessage: true
+                );
+                if (teleportSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+            
+            if (teleportSuccess) {
+                // TODO: Do we want to wait for objects to stop moving when teleported?
+                // if (!forceKinematic) {
+                //     StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                //     return;
+                // }
+                actionFinished(true);
+                return;
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool TeleportObject(
+            SimObjPhysics sop,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction,
+            bool forceKinematic,
+            bool allowTeleportOutOfHand,
+            bool makeUnbreakable,
+            bool includeErrorMessage = false
+        ) {
+            bool sopInHand = ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>();
+            if (sopInHand && !allowTeleportOutOfHand) {
+                if (includeErrorMessage) {
+                    errorMessage = "Cannot teleport object in hand.";
+                }
+                return false;
+            }
+            Vector3 oldPosition = sop.transform.position;
+            Quaternion oldRotation = sop.transform.rotation;
+
+            sop.transform.position = position;
+            sop.transform.rotation = Quaternion.Euler(rotation);
+            if (forceKinematic) {
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            if (!forceAction) {
+                Collider colliderHitIfTeleported = UtilityFunctions.firstColliderObjectCollidingWith(sop.gameObject);
+                if (colliderHitIfTeleported != null) {
+                    sop.transform.position = oldPosition;
+                    sop.transform.rotation = oldRotation;
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfTeleported.gameObject);
+                    if (includeErrorMessage) {
+                        errorMessage = $"{sop.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after teleport.";
+                    }
+                    return false;
+                }
+            }
+
+            if (makeUnbreakable) {
+                if (sop.GetComponent<Break>()) {
+                    sop.GetComponent<Break>().Unbreakable = true;
+                }
+            }
+
+            if (sopInHand) {
+                if (!forceKinematic) {
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) {
+                    ItemInHand.transform.parent = topObject.transform;
+                } else {
+                    ItemInHand.transform.parent = null;
+                }
+
+                DropContainedObjects(
+                    target: sop,
+                    reparentContainedObjects: true,
+                    forceKinematic: forceKinematic
+                );
+                sop.isInAgentHand = false;
+                ItemInHand = null;
+            }
+
+            return true;
+        }
+
+        public void TeleportObject(
+            string objectId,
+            float x,
+            float y,
+            float z,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            TeleportObject(
+                objectId: objectId,
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable
+            );
+        }
+
+        /* For some reason this does not work with the new action dispatcher and the above needed to be added.
         public void TeleportObject(ServerAction action) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find object with id " + action.objectId;
@@ -729,6 +911,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             }
         }
+        */
 
         // params are named x,y,z due to the action orignally using ServerAction.x,y,z
         public void ChangeAgentColor(float x, float y, float z) {
@@ -1555,15 +1738,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
-                bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
+                bool agentCollides = isAgentCapsuleColliding(
+                    collidersToIgnore: collidersToIgnoreDuringMovement,
+                    includeErrorMessage: true
+                );
+                
                 bool handObjectCollides = isHandObjectColliding(true);
-
-                if (agentCollides) {
-                    errorMessage = "Cannot teleport due to agent collision.";
-                    Debug.Log(errorMessage);
-                } else if (handObjectCollides) {
+                if (handObjectCollides && !agentCollides) {
                     errorMessage = "Cannot teleport due to hand object collision.";
-                    Debug.Log(errorMessage);
                 }
 
                 if (agentCollides || handObjectCollides) {
@@ -1930,12 +2112,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
-        public void AdvancePhysicsStep(float timeStep=0.02f)
-        {
-            if(Physics.autoSimulation == true)
-            {
-                errorMessage = "AdvancePhysicsStep can only be called if Physics Autosimulation is currently paused! Either use the PausePhysicsAutoSim() action first, or if you already used it, Physics Autosimulation has been turned back on already.";
+        public void AdvancePhysicsStep(
+            float timeStep = 0.02f,
+            float? simSeconds = null,
+            bool allowAutoSimulation = false
+        ) {
+            if ((!allowAutoSimulation) && Physics.autoSimulation) {
+                errorMessage = (
+                    "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
+                    "paused or if you have passed allowAutoSimulation=true! Either use the" +
+                    " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
+                    " AutoSimulation has been turned back on already."
+                );
                 actionFinished(false);
                 return;
             }
@@ -1946,21 +2134,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-            
-            //update the lastVelocity value for all rigidbodies in scene that are SimObjects manually
-            Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-            foreach(Rigidbody rb in rbs)
-            {
-                if(rb.GetComponentInParent<SimObjPhysics>())
-                {
-                    SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                    sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                }
+
+            if (!simSeconds.HasValue) {
+                simSeconds = timeStep;
+            }
+            if (simSeconds.Value < 0.0f) {
+                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
+                actionFinished(false);
+                return;
             }
 
-            //pass in the timeStep to advance the physics simulation
-            Physics.Simulate(timeStep);
-            this.AdvancePhysicsStepCount++;
+            bool oldPhysicsAutoSim = Physics.autoSimulation;
+            Physics.autoSimulation = false;
+
+            while (simSeconds.Value > 0.0f) {
+                simSeconds = simSeconds.Value - timeStep;
+                if (simSeconds.Value <= 0) {
+                    // This is necessary to keep lastVelocity up-to-date for all sim objects and is
+                    // called just before the last physics simulation step.
+                    Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+                    foreach (Rigidbody rb in rbs) {
+                        if (rb.GetComponentInParent<SimObjPhysics>()) {
+                            SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                            sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                        }
+                    }
+                }
+
+                // pass in the timeStep to advance the physics simulation
+                Physics.Simulate(timeStep);
+                this.AdvancePhysicsStepCount++;
+            }
+
+            Physics.autoSimulation = oldPhysicsAutoSim;
             actionFinished(true);
         }
 
@@ -2015,7 +2221,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //used to check if an specified sim object has come to rest
         //set useTimeout bool to use a faster time out
-        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length, bool useTimeout = false)
+        private IEnumerator checkIfObjectHasStoppedMoving(
+            SimObjPhysics sop,
+            float length,
+            bool useTimeout = false)
         {
             //yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
@@ -3330,17 +3539,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // find the object in the scene, disregard visibility
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            //make sure point we are moving the object to is valid
-            if(!agentManager.sceneBounds.Contains(position)) {
-                errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+            bool placeObjectSuccess = PlaceObjectAtPoint(
+                target: target,
+                position: position,
+                rotation: rotation,
+                forceKinematic: forceKinematic,
+                includeErrorMessage: true
+            );
+
+            if (placeObjectSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
                 actionFinished(false);
                 return;
+            }
+        }
+
+        public bool PlaceObjectAtPoint(
+            SimObjPhysics target, 
+            Vector3 position, 
+            Vector3? rotation, 
+            bool forceKinematic,
+            bool includeErrorMessage = false
+        ) {
+            //make sure point we are moving the object to is valid
+            if(!agentManager.sceneBounds.Contains(position)) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+                }
+                return false;
             }
 
             Quaternion originalRotation = target.transform.rotation;
             if (rotation.HasValue) {
                 target.transform.rotation = Quaternion.Euler(rotation.Value);
             }
+            Vector3 originalPos = target.transform.position;
+            target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
@@ -3356,9 +3597,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
 
-            // Check spawn area here
-            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
+            // Check spawn area here            
+            target.transform.position = finalPos;
+            Collider colliderHitIfSpawned = UtilityFunctions.firstColliderObjectCollidingWith(
+                target.gameObject
+            );
+            
+            if (colliderHitIfSpawned == null) {
                 target.transform.position = finalPos;
 
                 // Additional stuff we need to do if placing item that is currently in hand
@@ -3389,6 +3634,53 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ItemInHand = null;
                     }
                 }
+                return true;
+            }
+            
+            target.transform.position = originalPos;
+            target.transform.rotation = originalRotation;
+            if (includeErrorMessage) {
+                SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfSpawned.gameObject);
+                errorMessage = (
+                    $"Spawn area not clear ({(hitSop != null ? hitSop.ObjectID : colliderHitIfSpawned.name)})" 
+                    + " is in the way), can't place object at that point"
+                );
+            }
+            return false;
+        }
+
+        public void PlaceObjectAtPoint(
+            string objectId,
+            Vector3[] positions,
+            Vector3? rotation = null,
+            bool forceKinematic = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
+                actionFinished(false);
+                return;
+            }
+
+            // find the object in the scene, disregard visibility
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool placeObjectSuccess = false;
+            
+            foreach (Vector3 position in positions) {
+                placeObjectSuccess = PlaceObjectAtPoint(
+                    target: target,
+                    position: position,
+                    rotation: rotation,
+                    forceKinematic: forceKinematic,
+                    includeErrorMessage: true
+                );
+                if (placeObjectSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+
+            if (placeObjectSuccess) {
                 if (!forceKinematic) {
                     StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                     return;
@@ -3396,14 +3688,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
                     return;
                 }
+            } else {
+                actionFinished(false);
+                return;
             }
-
-            target.transform.rotation = originalRotation;
-            errorMessage = "spawn area not clear, can't place object at that point";
-            actionFinished(false);
         }
-
-
 
         // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
         public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
@@ -5046,7 +5335,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f) {
+        protected IEnumerator InteractAndWait(
+            CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f
+        ) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -6825,7 +7116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ChangeOpenSpeed(ServerAction action) {
             foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
                 coo.animationTime = action.x;
-            }
+        }
             actionFinished(true);
         }
 

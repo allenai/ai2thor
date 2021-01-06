@@ -45,8 +45,10 @@ public static class ListExtensions
 	}
 
 	public static IList<T> Shuffle_<T>(this IList<T> list, int seed) {
-		System.Random rng = new System.Random(seed);
+		return list.Shuffle_(new System.Random(seed));
+	}
 
+	public static IList<T> Shuffle_<T>(this IList<T> list, System.Random rng) {
 		int n = list.Count;
 		while (n > 1) {  
 			n--;  

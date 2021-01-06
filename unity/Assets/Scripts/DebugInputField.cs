@@ -136,6 +136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Execute(string command)
         {
+
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
                 (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
@@ -937,47 +938,53 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "InitialRandomSpawn";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "InitialRandomSpawn";
+
+                        // List<string> excludedObjectIds = new List<string>();
+                        // foreach (SimObjPhysics sop in AManager.agents[0].VisibleSimObjs(false)) {
+                        //     excludedObjectIds.Add(sop.ObjectID);
+                        // }
+                        // action["excludedObjectIds"] = excludedObjectIds.ToArray();
 
                         //give me a seed
                         if(splitcommand.Length == 2)
                         {
-                            action.randomSeed = int.Parse(splitcommand[1]);
-                            action.forceVisible = false;
-                            action.numPlacementAttempts = 5;
+                            action["randomSeed"] = int.Parse(splitcommand[1]);
+                            action["forceVisible"] = false;
+                            action["numPlacementAttempts"] = 5;
                         }
 
                         //should objects be spawned only in immediately visible areas?
                         else if(splitcommand.Length == 3)
                         {
-                            action.randomSeed = int.Parse(splitcommand[1]);
+                            action["randomSeed"] = int.Parse(splitcommand[1]);
 
                             if(splitcommand[2] == "t") 
-                            action.forceVisible = true;
+                            action["forceVisible"] = true;
 
                             if(splitcommand[2] == "f") 
-                            action.forceVisible = false;
+                            action["forceVisible"] = false;
                         }
 
                         else if(splitcommand.Length == 4)
                         {
-                            action.randomSeed = int.Parse(splitcommand[1]);
+                            action["randomSeed"] = int.Parse(splitcommand[1]);
 
                             if(splitcommand[2] == "t") 
-                            action.forceVisible = true;
+                            action["forceVisible"] = true;
 
                             if(splitcommand[2] == "f") 
-                            action.forceVisible = false;
+                            action["forceVisible"] = false;
 
-                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
+                            action["numPlacementAttempts"] = int.Parse(splitcommand[3]);
                         }
 
                         else
                         {
-                            action.randomSeed = 0;
-                            action.forceVisible = false;//true;
-                            action.numPlacementAttempts = 20;
+                            action["randomSeed"] = 0;
+                            action["forceVisible"] = false;//true;
+                            action["numPlacementAttempts"] = 20;
                         }
 
                         // ObjectTypeCount otc = new ObjectTypeCount();
@@ -989,14 +996,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         String[] excludeThese = new String[1];
                         excludeThese[0] = "CounterTop";
-                        action.excludedReceptacles = excludeThese;
+                        action["excludedReceptacles"] = excludeThese;
 
-                        action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action["placeStationary"] = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
-                    }  
-
+                    } 
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
