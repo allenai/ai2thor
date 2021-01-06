@@ -169,36 +169,31 @@ def test_add_third_party_camera(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_update_third_party_camera(controller):
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
 
+    # update camera pose
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
     expectedInitialFieldOfView = 45.0
-    expectedFieldOfView2 = 55.0
-    expectedFieldOfViewDefault = 90.0
-    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
-
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, position=expectedPosition, rotation=expectedRotation))
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
     assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should have been updated')
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
 
-    # 0 is a special case, since nullable float does not get encoded properly, we need to pass 0 as null
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should have been updated'
+    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when <= 0'
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=expectedFieldOfView2))
+    changeFOV = 55.0
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=changeFOV))
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView2, 'fieldOfView should have been updated'
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == changeFOV, 'fieldOfView should have been updated'
 
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when <= 0'
 
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when >= 180'
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
