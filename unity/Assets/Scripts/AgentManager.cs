@@ -421,6 +421,19 @@ public class AgentManager : MonoBehaviour
         agentManagerState = AgentState.ActionComplete;
     }
 
+    // returns true if the FOV is in the correct range, otherwise returns false
+    // and provides an action error.
+    private bool checkFOV(float fov, string actionName) {
+        if (fov <= MIN_FOV) {
+            actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
+            return false;
+        } else if (fov >= MAX_FOV) {
+            actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
+            return false;
+        }
+        return true;
+    }
+
     public void AddThirdPartyCamera(
         Dictionary<string, float> position = null,
         Dictionary<string, float> rotation = null,
@@ -432,6 +445,11 @@ public class AgentManager : MonoBehaviour
         // dynamic way of getting the method name, in case it ever changes
         string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
 
+        // adds error if fieldOfView is out of bounds
+        if (fieldOfView != null && !checkFOV((float) fieldOfView, actionName)) {
+            return;
+        }
+
         // require position and rotation to be specified in Vector3 style
         if (position == null || rotation == null) {
             actionError("Must pass in both rotation (xyz dictionary) and position (xyz dictionary).", actionName);
@@ -442,21 +460,6 @@ public class AgentManager : MonoBehaviour
         ) {
             actionError("Must specify xyz keys for both position and rotation.", actionName);
             return;
-        }
-
-        // For backwards compatibility, when fieldOfView=0, that used to mean use DEFAULT_FOV.
-        // However, fieldOfView is now nullable, so fieldOfView=null would be cleaner.
-        if (fieldOfView == 0) {
-            fieldOfView = DEFAULT_FOV;
-        } else {
-            // bound the FOV
-            if (fieldOfView < MIN_FOV) {
-                actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
-                return;
-            } else if (fieldOfView >= MAX_FOV) {
-                actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
-                return;
-            }
         }
 
         GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
@@ -493,6 +496,11 @@ public class AgentManager : MonoBehaviour
     ) {
         // dynamic way of getting the method name, in case it ever changes
         string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+
+        // adds error if fieldOfView is out of bounds
+        if (fieldOfView != null && !checkFOV((float) fieldOfView, actionName)) {
+            return;
+        }
 
         // count is out of bounds
         if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
