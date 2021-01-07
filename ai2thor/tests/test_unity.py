@@ -4,6 +4,7 @@ import os
 import json
 import pytest
 import jsonschema
+import numpy as np
 from ai2thor.controller import Controller
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
@@ -45,6 +46,14 @@ def test_stochastic_controller():
     controller = build_controller(agentControllerType='stochastic')
     controller.reset('FloorPlan28')
     assert controller.last_event.metadata['lastActionSuccess']
+
+# Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
+# up with the same frame
+def test_multi_agent_with_third_party_camera():
+    controller = build_controller(server_class=FifoServer, agentCount=2)
+    assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
+    event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
+    assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
 
 def test_rectangle_aspect():
     controller = build_controller(width=600, height=300)

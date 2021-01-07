@@ -334,19 +334,22 @@ class Server(object):
                 if key in files:
                     image_mapping[key](files[key][i])
 
-            third_party_image_mapping = dict(
-                image=e.add_image,
-                image_thirdParty_depth=lambda x: e.add_third_party_image_depth(
+            third_party_image_mapping = {
+                # if we want to convert this param to underscores in Unity, we will need to 
+                # keep the mapping with the dash for bacwkwards compatibility with older
+                # Unity builds
+                'image-thirdParty-camera':e.add_third_party_camera_image,
+                'image_thirdParty_depth':lambda x: e.add_third_party_image_depth(
                     x,
                     depth_format=self.depth_format,
                     camera_near_plane=self.camera_near_plane,
                     camera_far_plane=self.camera_far_plane
                 ),
-                image_thirdParty_image_ids=e.add_third_party_image_ids,
-                image_thirdParty_classes=e.add_third_party_image_classes,
-                image_thirdParty_normals=e.add_third_party_image_normals,
-                image_thirdParty_flows=e.add_third_party_image_flows
-            )
+                'image_thirdParty_image_ids':e.add_third_party_image_ids,
+                'image_thirdParty_classes':e.add_third_party_image_classes,
+                'image_thirdParty_normals':e.add_third_party_image_normals,
+                'image_thirdParty_flows':e.add_third_party_image_flows
+            }
 
             if a['thirdPartyCameras'] is not None:
                 for ti, t in enumerate(a['thirdPartyCameras']):
@@ -360,10 +363,4 @@ class Server(object):
         else:
             self.last_event = event = events[0]
 
-        for img in files.get('image-thirdParty-camera', []):
-            self.last_event.add_third_party_camera_image(img)
-
         return self.last_event
-
-
-
