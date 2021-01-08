@@ -55,6 +55,16 @@ def test_multi_agent_with_third_party_camera():
     event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
 
+# Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
+def test_third_party_camera_with_image_synthesis():
+    controller = build_controller(server_class=FifoServer, renderObjectImage=True, renderDepthImage=True, renderClassImage=True)
+    event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
+    assert len(event.third_party_depth_frames) == 1
+    assert len(event.third_party_class_segmentation_frames) == 1
+    assert len(event.third_party_camera_frames) == 1
+    assert len(event.third_party_instance_segmentation_frames) == 1
+
+
 def test_rectangle_aspect():
     controller = build_controller(width=600, height=300)
     controller.reset('FloorPlan28')
