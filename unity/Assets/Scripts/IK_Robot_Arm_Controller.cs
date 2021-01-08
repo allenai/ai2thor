@@ -25,7 +25,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
+    public Dictionary<SimObjPhysics, List<Collider>> HeldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
 
     //private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -416,11 +416,19 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             sop.transform.SetParent(magnetSphere.transform);
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
 
-            //move colliders to be children of arm? stop arm from moving?
-            Transform cols = sop.transform.Find("TriggerColliders"); 
-            cols.SetParent(FourthJoint);
-            pickedUp = true;
+            //ok new plan, clone the "myColliders" of the sop and
+            //then set them all to isTrigger = True
+            //and parent them to the correct joint
+            List<Collider> cols = new List<Collider>();
 
+            foreach (Collider c in sop.MyColliders)
+            {
+                Collider clone = Instantiate(c, c.transform.position, c.transform.rotation, FourthJoint);
+                clone.isTrigger = true;
+                cols.Add(clone);
+            }
+
+            pickedUp = true;
             HeldObjects.Add(sop, cols);
         }
 
@@ -432,15 +440,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void DropObject()
     {
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(KeyValuePair<SimObjPhysics, Transform> sop in HeldObjects) 
+        foreach(KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) 
         {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
 
-            //move colliders back to the sop
-            //magnetSphere.transform.Find("TriggerColliders").transform.SetParent(sop.Key.transform);
-            sop.Value.transform.SetParent(sop.Key.transform);
+            //delete cloned colliders
+            foreach (Collider c in sop.Value)
+            {
+                Destroy(c.gameObject);
+            }
 
             GameObject topObject = GameObject.Find("Objects");
 
@@ -511,7 +521,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         if(HeldObjects != null)
         {
-            foreach(KeyValuePair<SimObjPhysics, Transform> sop in HeldObjects) 
+            foreach(KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) 
             {
                 HeldObjectIDs.Add(sop.Key.objectID);
             }
