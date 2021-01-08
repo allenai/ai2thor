@@ -67,6 +67,21 @@ def test_small_aspect():
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
 
+def test_reset():
+    controller = build_controller()
+    width = 520
+    height = 310
+    event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=True)
+    assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
+    assert event.depth_frame is not None, 'depth frame should have rendered!'
+    assert event.depth_frame.shape == (height, width), "depth frame dimensions are wrong!"
+
+    width = 300
+    height = 300
+    event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=False)
+    assert event.depth_frame is None, "depth frame shouldn't have rendered!"
+    assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
+
 def test_fast_emit():
     fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
     event = fast_controller.step(dict(action='RotateRight'))
@@ -90,7 +105,6 @@ def test_fast_emit_disabled(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_lookdown(controller):
-
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
     horizon = controller.last_event.metadata['agent']['cameraHorizon']
