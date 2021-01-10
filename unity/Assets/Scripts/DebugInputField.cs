@@ -2200,25 +2200,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "dirpush":
 					{
-						ServerAction action = new ServerAction();
-						action.action = "DirectionalPush";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "DirectionalPush";
 
-                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
-                        {
-                            action.objectId = splitcommand[1];
-                            action.moveMagnitude = 10f;//4000f;
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3) {
+                            action["objectId"] = splitcommand[1];
+                            action["moveMagnitude"] = 10;
+                        } else if (splitcommand.Length > 2) {
+                            action["objectId"] = splitcommand[1];
+                            action["moveMagnitude"] = float.Parse(splitcommand[2]);
+                        } else {
+                            action["moveMagnitude"] = 159f;
                         }
 
-                        else if(splitcommand.Length > 2)
-                        {
-                            action.objectId = splitcommand[1];
-                            action.moveMagnitude = float.Parse(splitcommand[2]);
-                        }
-
-                        action.pushAngle = 279f;
-                        action.moveMagnitude = 159f;
-                        action.x = 0.5f;
-                        action.y = 0.5f;
+                        action["pushAngle"] = 279f;
+                        action["x"] = 0.5f;
+                        action["y"] = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
@@ -2227,20 +2224,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ToggleObjectOn";
-                        if (splitcommand.Length > 1)
-                        {
+                        if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
-                        }
-
-                        else
-                        {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                        } else {
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
                         }
-
                         PhysicsController.ProcessControlCommand(action);
-
                         break;
                     }
 
