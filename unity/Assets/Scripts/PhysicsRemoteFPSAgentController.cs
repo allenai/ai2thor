@@ -6936,44 +6936,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return allVisible;
-
         }
 
-        public void PositionsFromWhichItemIsInteractable(ServerAction action) {
-
-            //default to increments of 30 for horizon
-            if(action.horizon == 0)
-            {
-                action.horizon = 30;
+        // get the poses with which the agent can interact with 'objectId'
+        public void GetInteractivePositions(
+            float horizonIncrement = 30,
+            string objectId = null,
+            Vector3[] positions = null
+        ) {
+            // horizon checks
+            if ((float) horizonIncrement % 5 != 0) {
+                errorMessage = "horizonIncrement value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+                actionFinished(false);
+                return;
             }
-
-            //check if horizon is a multiple of 5
-            if(action.horizon % 5 != 0)
-            {
-                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+            if ((float) horizonIncrement < 0 || (float) horizonIncrement > 30) {
+                errorMessage = "horizonIncrement for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
                 actionFinished(false);
                 return;
             }
 
-            if(action.horizon < 0 || action.horizon > 30)
-            {
-                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
-                actionFinished(false);
-                return;
-            }
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
+            if (positions == null || positions.Length == 0) {
                 positions = getReachablePositions();
             }
 
+            // save current pose
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 actionFinished(false);
                 return;
@@ -6983,7 +6976,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.gameObject.SetActive(false);
             }
 
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
@@ -7008,16 +7001,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
+            // for each horizon...
+            for (float h = -30; h <= 60; h += horizonIncrement) {
+                m_Camera.transform.localEulerAngles = new Vector3(h, 0f, 0f);
+
+                // for each standing and crouching position...
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {
                         stand();
                     } else {
                         crouch();
                     }
-                    for (int i = 0; i < 4; i++) { // 4 rotations
-                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+
+                    // for each rotation
+                    for (float rotation = 0; rotation < 360; rotation += rotateStepDegrees) {
+                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+
+                        // for each position
                         foreach (Vector3 p in filteredPositions) {
                             transform.position = p;
 
@@ -7025,9 +7025,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 goodLocationsDict["x"].Add(p.x);
                                 goodLocationsDict["y"].Add(p.y);
                                 goodLocationsDict["z"].Add(p.z);
-                                goodLocationsDict["rotation"].Add(90.0f * i);
+                                goodLocationsDict["rotation"].Add(rotation);
                                 goodLocationsDict["standing"].Add((1 - j) * 1.0f);
-                                goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                                goodLocationsDict["horizon"].Add(h);
 
 #if UNITY_EDITOR
                                 // In the editor, draw lines indicating from where the object was visible.
@@ -7039,6 +7039,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            // restore old agent position
             if (wasStanding) {
                 stand();
             } else {
@@ -7057,8 +7058,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
             actionFinished(true, goodLocationsDict);
-        } 
-        
+        }
+
+        // alias to GetInteractivePositions, currently around for backwards compatibility
+        public void PositionsFromWhichItemIsInteractable(
+            // supported for backwards compatibility. 'horizon' is now 'horizonIncrement' on 'GetInteractivePositions'.
+            float horizon = 30,
+            string objectId = null,
+            Vector3[] positions = null
+        ) {
+            GetInteractivePositions(horizonIncrement: horizon, objectId: objectId, positions: positions);
+        }
+
         public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
