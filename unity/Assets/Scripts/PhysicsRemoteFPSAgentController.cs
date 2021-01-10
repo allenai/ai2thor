@@ -5829,100 +5829,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void OpenObject(ServerAction action) {
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
+        public void OpenObject(
+            string objectId = null,
+            float? x = null,
+            float? y = null,
+            bool forceAction = false,
+            float? openness = null,
+
+            // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+            float? moveMagnitude = null
+        ) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                openness = moveMagnitude;
+            } else if (openness == null) {
+                openness = 1;
             }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
+
+            // pass in percentage open if desired
+            if (openness > 1 || openness < 0) {
+                errorMessage = "openness must be in [0, 1]";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            // no target object specified, so instead try and use x/y screen coordinates
+            if (objectId == null) {
+                if(!ScreenToWorldTarget(x, y, ref target, !forceAction)) {
+                    // error message is set insice ScreenToWorldTarget
                     actionFinished(false);
                     return;
                 }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            } else {
+                // an objectId was given, so find that target in the scene if it exists
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
                     actionFinished(false);
                     return;
                 }
                 
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
+                // if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
                     target = sop;
                 }
             }
-            
 
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
-                }
-
-                if(!target.GetComponent<CanOpen_Object>())
-                {
-                    errorMessage = "object must be Openable to open";
-                    actionFinished(false);
-                    return;
-                }
-
-                if (target.GetComponent<CanOpen_Object>()) {
-                    CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-                    //check to make sure object is closed
-                    if (codd.isOpen) {
-                        errorMessage = "Object already open and can't be opened again until closed fully";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type)) {
-                        if (target.GetComponent<CanToggleOnOff>().isOn) {
-                            errorMessage = "Target must be OFF to open!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    //pass in percentage open if desired
-                    if (action.moveMagnitude > 0.0f) 
-                    {
-                        if(action.moveMagnitude > 1.0)
-                        {
-                            errorMessage = "cannot open past 100%, please use moveMagnitude value in range (0.0, 1.0]";
-                            actionFinished(false);
-                            return;
-                        }
-
-                        // //if this fails, invalid percentage given
-                        // if (!codd.SetOpenPercent(action.moveMagnitude)) {
-                        //     errorMessage = "Please give an open percentage between 0.0f and 1.0f";
-                        //     actionFinished(false);
-                        //     return;
-                        // }
-                        StartCoroutine(InteractAndWait(codd, false, action.moveMagnitude));
-                        return;
-                    }
-
-                    StartCoroutine(InteractAndWait(codd));
-                }
-            }
-
-            //target not found in currently visible objects, report not found
-            else {
-                errorMessage = "object not found: " + action.objectId;
+            if (target == null) {
+                errorMessage = "object not found: " + objectId;
                 actionFinished(false);
             }
+
+            if (!forceAction && target.isInteractable == false) {
+                actionFinished(false);
+                errorMessage = "object is visible but occluded by something: " + objectId;
+                return;
+            }
+
+            if(!target.GetComponent<CanOpen_Object>()) {
+                errorMessage = "object must be Openable to open";
+                actionFinished(false);
+                return;
+            }
+
+            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+
+            // check to make sure object is closed
+            if (codd.isOpen) {
+                errorMessage = "Object already open and can't be opened again until closed fully";
+                actionFinished(false);
+                return;
+            }
+
+            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type)) {
+                if (target.GetComponent<CanToggleOnOff>().isOn) {
+                    errorMessage = "Target must be OFF to open!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            StartCoroutine(InteractAndWait(codd, false, openness));
         }
 
         //open an object without returning actionFinished since this is used in the setup function
