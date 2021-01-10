@@ -1886,65 +1886,54 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ApplyForceObject(action);
         }
 
-        public void DirectionalPush(
-            string objectId = null,
-            float? x = null,
-            float? y = null,
-            float? moveMagnitude = null,
-            float? pushAngle = null,
-            bool forceAction = false
-        ) {
-            if (ItemInHand != null && objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+        //pass in a magnitude and an angle offset to push an object relative to agent forward
+        public void DirectionalPush(ServerAction action)
+        {
+            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
-            if (pushAngle == null) {
-                errorMessage = "pushAngle must be specified";
+            //the direction vecctor to push the target object defined by action.PushAngle 
+            //degrees clockwise from the agent's forward, the PushAngle must be less than 360
+            if(action.pushAngle <= 0 || action.pushAngle >= 360)
+            {
+                errorMessage = "please give a PushAngle between 0 and 360.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
-
-            if (moveMagnitude == null) {
-                errorMessage = "moveMagnitude must be specified";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            // the direction vector to push the target object defined by pushAngle 
-            // degrees clockwise from the agent's forward, the PushAngle must be less than 360
-            pushAngle = Mathf.Abs((float) pushAngle % 360);
 
             SimObjPhysics target = null;
 
-            if(objectId == null) {
-                if (x == null || y == null) {
-                    errorMessage = "Must specify either (x and y) or objectId";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-                if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
-                    // error message is set insice ScreenToWorldTarget
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                {
+                    //error message is set insice ScreenToWorldTarget
                     actionFinished(false);
                     return;
                 }
             }
 
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
                     actionFinished(false);
                     return;
                 }
                 
-                // if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceVisible: forceAction)) {
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
@@ -1964,6 +1953,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            //print(target.name);
+
             if (!target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
@@ -1971,31 +1962,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            bool canBePushed = (
-                target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable);
+            bool canbepushed = false;
 
-            if (!canBePushed) {
+            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                canbepushed = true;
+
+            if (!canbepushed) {
                 errorMessage = "Target Primary Property type incompatible with push/pull";
                 actionFinished(false);
                 return;
             }
 
-            if (!forceAction && target.isInteractable == false) {
+            if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
             }
 
-            // find the Direction to push the object based on PushAngle
+            //find the Direction to push the object basec on action.PushAngle
             Vector3 agentForward = transform.forward;
-            float pushAngleInRadians = ((float) pushAngle) * Mathf.PI / -180; //using -180 so positive PushAngle values go clockwise
+            float pushAngleInRadians = action.pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+
+            Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
+            agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
 
             ServerAction pushAction = new ServerAction();
-            pushAction.x = agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians);
-            pushAction.y = 0;
-            pushAction.z = agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians);
-            pushAction.moveMagnitude = (float) moveMagnitude;
+            pushAction.x = direction.x;
+            pushAction.y = direction.y;
+            pushAction.z = direction.z;
+
+            pushAction.moveMagnitude = action.moveMagnitude;
 
             target.GetComponent<Rigidbody>().isKinematic = false;
             sopApplyForce(pushAction, target);
