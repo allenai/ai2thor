@@ -710,6 +710,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        // alias to RandomColors, supported for backwards compatibility
+        public void ChangeColorOfMaterials() {
+            RandomColors();
+        }
+
+        public void RandomColors() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.RandomizeColor();
+            actionFinished(true);
+        }
+
+        public void ResetColors() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.ResetColors();
+            actionFinished(true);
+        }
+
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
         //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
         //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
@@ -1973,8 +1990,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return visible;
         }
 
-        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false)
-        {
+        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false) {
             ServerAction action = new ServerAction();
             action.objectId = objectId;
             action.forceVisible = forceVisible;
@@ -1982,8 +1998,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
-        public SimObjPhysics[] VisibleSimObjs(ServerAction action)
-        {
+        public SimObjPhysics[] VisibleSimObjs(ServerAction action) {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
 
             //go through array of sim objects visible to the camera

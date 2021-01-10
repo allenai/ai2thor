@@ -188,13 +188,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeColorOfMaterials()
-        {
-            ColorChanger ColorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            ColorChangeComponent.RandomizeColor();
-            actionFinished(true);
-        }
-
         //EDITOR DEBUG SCRIPTS:
         //////////////////////////////////////////////////////////////////////
         #if UNITY_EDITOR
