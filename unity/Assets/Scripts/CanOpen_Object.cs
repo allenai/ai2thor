@@ -211,8 +211,7 @@ public class CanOpen_Object : MonoBehaviour {
     }
 
     private void setisOpen(float openPercentage) {
-        //print("set is open happening");
-		isOpen = !isOpen;
+		isOpen = openPercentage != 0;
         currentOpenPercentage = openPercentage;
         SwitchActiveBoundingBox();
 	}
