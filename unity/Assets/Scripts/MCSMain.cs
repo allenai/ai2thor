@@ -1343,6 +1343,13 @@ public class MCSMain : MonoBehaviour {
             objectsWereShown = true;
         });
 
+        objectConfig.togglePhysics.Where(toggle => toggle.stepBegin == step).ToList().ForEach((toggle) => {
+            Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
+            if (rigidbody != null) {
+                this.AssignRigidbody(gameOrParentObject, rigidbody.mass, !rigidbody.isKinematic, false);
+            }
+        });
+
         objectConfig.resizes.Where(resize => resize.stepBegin <= step && resize.stepEnd >= step && resize.size != null)
             .ToList().ForEach((resize) => {
                 // Set the scale on the game object, not on the parent object.
@@ -1397,6 +1404,10 @@ public class MCSMain : MonoBehaviour {
                 // If the animator does not exist on this game object, then it must use legacy animations.
                 objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
             }
+        });
+
+        objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
+            this.AssignMaterials(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
         });
 
         return objectsWereShown;
@@ -1462,6 +1473,11 @@ public class MCSConfigAnimator {
 }
 
 [Serializable]
+public class MCSConfigChangeMaterial : MCSConfigStepBegin {
+    public List<string> materials;
+}
+
+[Serializable]
 public class MCSConfigCollider : MCSConfigTransform {
     public bool assignToColliderItself;
     public string type;
@@ -1478,6 +1494,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public bool structure;
     public string type;
     public List<MCSConfigAction> actions;
+    public List<MCSConfigChangeMaterial> changeMaterials;
     public List<MCSConfigMove> forces;
     public List<MCSConfigStepBegin> hides;
     public List<MCSConfigMove> moves;
@@ -1486,6 +1503,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigShow> shows;
     public List<MCSConfigStepBeginEnd> shrouds;
     public List<MCSConfigTeleport> teleports;
+    public List<MCSConfigStepBegin> togglePhysics;
     public List<MCSConfigMove> torques;
 
     private GameObject gameObject;
