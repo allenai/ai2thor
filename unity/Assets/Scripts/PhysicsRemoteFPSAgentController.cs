@@ -5161,33 +5161,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // sim object that they target.
         private SimObjPhysics getTargetObject(
                 string objectId = null,
-                float? x = null,
-                float? y = null,
                 bool forceAction = false
         ) {
-            SimObjPhysics target = null;
-            if (objectId == null) {
-                if (x == null || y == null) {
-                    errorMessage = "Must pass in either (x and y) or objectId.";
-                    return null;
-                }
+            // an objectId was given, so find that target in the scene if it exists
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                return null;
+            }
 
-                // no target object specified, so instead try and use x/y screen coordinates
-                if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
-                    // error message is set insice ScreenToWorldTarget
-                    return null;
-                }
-            } else {
-                // an objectId was given, so find that target in the scene if it exists
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    return null;
-                }
-                
-                // if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
-                    target = sop;
-                }
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
+                target = sop;
+            }
+            return target;
+        }
+
+        // Helper method that parses (x and y) parameters to return the
+        // sim object that they target.
+        private SimObjPhysics getTargetObject(
+            float? x,
+            float? y,
+            bool forceAction
+        ) {
+            if (x == null || y == null) {
+                errorMessage = "Must pass in both (x and y).";
+                return null;
+            }
+
+            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
+            if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
+                // error message is set insice ScreenToWorldTarget
+                return null;
             }
             return target;
         }
@@ -5195,11 +5201,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // syntactic sugar for open object with openness = 0.
         public void CloseObject(
             string objectId = null,
+            bool forceAction = false
+        ) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
+        }
+
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(
             float? x = null,
             float? y = null,
             bool forceAction = false
         ) {
-            OpenObject(objectId: objectId, x: x, y: y, forceAction: forceAction, openness: 0);
+            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
         protected SimObjPhysics getOpenableOrCloseableObjectNearLocation(
@@ -5289,13 +5302,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (so != null && (action.forceAction || objectIsCurrentlyVisible(so, maxVisibleDistance))) {
                 if (open) {
                     OpenObject(objectId: so.ObjectID, forceAction: true);
+                } else if (action.objectId == null) {
+                    CloseObject(x: action.x, y: action.y, forceAction: action.forceAction);
                 } else {
-                    CloseObject(
-                        objectId: action.objectId,
-                        x: action.x,
-                        y: action.y,
-                        forceAction: action.forceAction
-                    );
+                    CloseObject(objectId: action.objectId, forceAction: action.forceAction);
                 }
             } else if (so == null) {
                 errorMessage = "Object at location is not interactable.";
@@ -5808,30 +5818,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void OpenObject(
-            string objectId = null,
-            float? x = null,
-            float? y = null,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        // private helper used with OpenObject commands
+        private void openObject(
+            SimObjPhysics target,
+            float openness,
+            bool forceAction
         ) {
-            // backwards compatibility support
-            if (moveMagnitude != null) {
-                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
-                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
-            }
-
-            // pass in percentage open if desired
             if (openness > 1 || openness < 0) {
                 errorMessage = "openness must be in [0:1]";
                 actionFinished(false);
                 return;
             }
 
-            SimObjPhysics target = getTargetObject(objectId: objectId, x: x, y: y, forceAction: forceAction);
             if (target == null) {
-                errorMessage = "object not found!";
+                errorMessage = "Object not found!";
                 actionFinished(false);
                 return;
             }
@@ -5859,6 +5859,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             StartCoroutine(InteractAndWait(codd, false, openness));
+        }
+    
+        // helper with OpenObject that supports moveMagnitude as a backwards compatible argument.
+        private float parseMoveMagnitude(float openness, float? moveMagnitude) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
+            }
+            return openness;
+        }
+
+        public void OpenObject(
+            string objectId = null,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            openness = parseMoveMagnitude(openness: openness, moveMagnitude: moveMagnitude);
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction);
+        }
+
+        public void OpenObject(
+            float? x = null,
+            float? y = null,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            openness = parseMoveMagnitude(openness: openness, moveMagnitude: moveMagnitude);
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction);
         }
 
         //open an object without returning actionFinished since this is used in the setup function
