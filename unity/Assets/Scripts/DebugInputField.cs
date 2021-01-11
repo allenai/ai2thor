@@ -2347,23 +2347,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				case "close":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CloseObject";
 
-                        if (splitcommand.Length > 1)
-                        {
-                            action.objectId = splitcommand[1];
-                        }
-                  
-						else
-						{
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        } else {
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                            action["x"] = 0.5f;
+                            action["y"] = 0.5f;
 						}
 
-                        action.x = 0.5f;
-                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
-
                         break;
                     }
                    
