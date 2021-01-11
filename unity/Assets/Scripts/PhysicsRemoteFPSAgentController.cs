@@ -5851,7 +5851,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
-            // TODO: is this necessary?
+            // This is a style choice that applies to Microwaves and Laptops,
+            // where it doesn't make a ton of sense to open them, while they are in use.
             if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
                 errorMessage = "Target must be OFF to open!";
                 actionFinished(false);
