@@ -5404,6 +5404,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.isKinematic = false;
                 }
             }
+            actionFinished(errorMessage.Length == 0);
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
@@ -5858,7 +5859,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             StartCoroutine(InteractAndWait(codd, false, openness));
-            actionFinished(errorMessage.Length == 0);
         }
 
         //open an object without returning actionFinished since this is used in the setup function
