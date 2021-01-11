@@ -5820,7 +5820,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             // backwards compatibility support
             if (moveMagnitude != null) {
-                openness = (float) moveMagnitude;
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
             }
 
             // pass in percentage open if desired

@@ -2323,10 +2323,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					{
                         Dictionary<string, object> action = new Dictionary<string, object>();
 						action["action"] = "OpenObject";
+						action["forceAction"] = true;
 
                         if (splitcommand.Length == 1) {
                             // try opening object in front of the agent
-                            action["moveMagnitude"] = 0.5f;
+                            action["openness"] = 0.5f;
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
                         } else if (splitcommand.Length == 2) {
@@ -2335,7 +2336,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         } else if (splitcommand.Length == 3) {
                             // give the open percentage as 3rd param, from 0.0 to 1.0
 							action["objectId"] = splitcommand[1];
-							action["moveMagnitude"] = float.Parse(splitcommand[2]);
+							action["openness"] = float.Parse(splitcommand[2]);
 						} else {
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
 						}
