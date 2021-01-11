@@ -153,59 +153,45 @@ public class CanOpen_Object : MonoBehaviour {
                 {"easetype", "linear"}
             };
 
-            // we are on the last loop here
+            // we are on the last moving part here
             if (i == MovingParts.Length - 1) {
                 args["onComplete"] = "setisOpen";
                 args["onCompleteTarget"] = gameObject;
                 args["oncompleteparams"] = isOpen ? 0f : openPercentage;
             }
 
-            if (isOpen) {
-                // it's open? close it
-                if (movementType == MovementType.Rotate) {
-                    args["rotation"] = closedPositions[i];
-                    iTween.RotateTo(MovingParts[i], args);
-				} else if(movementType == MovementType.Slide) {
-                    args["position"] = closedPositions[i];
-                    iTween.MoveTo(MovingParts[i], args);
-				} else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY || movementType == MovementType.ScaleZ) {
-                    args["scale"] = closedPositions[i];
-                    iTween.ScaleTo(MovingParts[i], args);
-                }
-            } else {
-                // oh it's closed? let's open it
-				if (movementType == MovementType.Rotate) {
-                    args["rotation"] = openPositions[i] * openPercentage;
-                    iTween.RotateTo(MovingParts[i], args);
-				} else if (movementType == MovementType.Slide) {
-                    // this is used to determine which components of openPosition need to be scaled
-                    // default to open position without percentage open modifiers
-                    Vector3 lerpToPosition = openPositions[i];
+            // let's open the object!
+            if (movementType == MovementType.Rotate) {
+                args["rotation"] = openPositions[i] * openPercentage;
+                iTween.RotateTo(MovingParts[i], args);
+            } else if (movementType == MovementType.Slide) {
+                // this is used to determine which components of openPosition need to be scaled
+                // default to open position without percentage open modifiers
+                Vector3 lerpToPosition = openPositions[i];
 
-                    // some x, y, z components don't change when sliding open
-                    // only apply openPercentage modifier to components of vector3 that actually change
-                    if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
-                        lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openPercentage) + closedPositions[i].x;
-                    }
-                    if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
-                        lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openPercentage) + closedPositions[i].y;
-                    }
-                    if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
-                        lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openPercentage) + closedPositions[i].z;
-                    }
-                    args["position"] = lerpToPosition;
-                    iTween.MoveTo(MovingParts[i], args);
-				} else if (movementType == MovementType.ScaleY) {
-                    args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z);
-                    iTween.ScaleTo(MovingParts[i], args);
-                } else if (movementType == MovementType.ScaleX) {
-                    // we are on the last loop here
-                    args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z);
-                    iTween.ScaleTo(MovingParts[i], args);
-                } else if (movementType == MovementType.ScaleZ) {
-                    args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage);
-                    iTween.ScaleTo(MovingParts[i], args);
+                // some x, y, z components don't change when sliding open
+                // only apply openPercentage modifier to components of vector3 that actually change
+                if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
+                    lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openPercentage) + closedPositions[i].x;
                 }
+                if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
+                    lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openPercentage) + closedPositions[i].y;
+                }
+                if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
+                    lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openPercentage) + closedPositions[i].z;
+                }
+                args["position"] = lerpToPosition;
+                iTween.MoveTo(MovingParts[i], args);
+            } else if (movementType == MovementType.ScaleY) {
+                args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z);
+                iTween.ScaleTo(MovingParts[i], args);
+            } else if (movementType == MovementType.ScaleX) {
+                // we are on the last loop here
+                args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z);
+                iTween.ScaleTo(MovingParts[i], args);
+            } else if (movementType == MovementType.ScaleZ) {
+                args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage);
+                iTween.ScaleTo(MovingParts[i], args);
             }
         }
     }

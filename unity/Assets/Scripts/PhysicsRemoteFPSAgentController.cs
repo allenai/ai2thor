@@ -5851,13 +5851,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
-            /*
-            if (codd.isOpen) {
-                errorMessage = "Object already open and can't be opened again until closed fully";
-                actionFinished(false);
-                return;
-            }*/
-
+            // TODO: is this necessary?
             if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
                 errorMessage = "Target must be OFF to open!";
                 actionFinished(false);
