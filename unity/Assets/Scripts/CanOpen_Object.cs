@@ -157,7 +157,6 @@ public class CanOpen_Object : MonoBehaviour {
 
             // we are on the last moving part here
             if (i == MovingParts.Length - 1) {
-                args["onComplete"] = "setisOpen";
                 args["onCompleteTarget"] = gameObject;
                 args["oncompleteparams"] = isOpen ? 0f : openPercentage;
             }
@@ -196,6 +195,8 @@ public class CanOpen_Object : MonoBehaviour {
                 iTween.ScaleTo(MovingParts[i], args);
             }
         }
+
+        setisOpen(openPercentage: openPercentage);
     }
 
     private void setisOpen(float openPercentage) {
