@@ -5373,14 +5373,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             openableObject.Interact(openPercent);
             yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
             yield return null;
-            bool success = true;
 
             if (ignoreAgentInTransition) {
                 GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
 
                 // check for collision failure
                 if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
-                    success = false;
                     errorMessage = "Object failed to open/close successfully.";
 
                     // failure: reset the openness!
