@@ -5366,7 +5366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // just in-case there's a failure, we can undo it
+            // just incase there's a failure, we can undo it
             float startOpenness = openableObject.currentOpenPercentage;
 
             // open the object to openPercent
@@ -5818,12 +5818,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
+            errorMessage += '1';
             // backwards compatibility support
             if (moveMagnitude != null) {
                 // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
                 openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
             }
 
+            errorMessage += '1';
             // pass in percentage open if desired
             if (openness > 1 || openness < 0) {
                 errorMessage = "openness must be in [0:1]";
@@ -5831,24 +5833,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            errorMessage += '1';
             SimObjPhysics target = getTargetObject(objectId: objectId, x: x, y: y, forceAction: forceAction);
             if (target == null) {
+                errorMessage = "object not found!";
                 actionFinished(false);
                 return;
             }
 
+            errorMessage += '1';
             if (!forceAction && !target.isInteractable) {
                 errorMessage = "object is visible but occluded by something: " + target.ObjectID;
                 actionFinished(false);
                 return;
             }
 
+            errorMessage += '1';
             if(!target.GetComponent<CanOpen_Object>()) {
                 errorMessage = $"{target.ObjectID} is not an Openable object";
                 actionFinished(false);
                 return;
             }
 
+            errorMessage += '1';
             CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
             // This is a style choice that applies to Microwaves and Laptops,
@@ -5858,13 +5865,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+            errorMessage += '1';
 
             StartCoroutine(InteractAndWait(codd, false, openness));
+            actionFinished(true);
         }
 
         //open an object without returning actionFinished since this is used in the setup function
         public IEnumerator openObject(SimObjPhysics target, bool open)
         {
+            errorMessage += "2";
             if(target.GetComponent<CanOpen_Object>())
             {
                 CanOpen_Object coo = target.GetComponent<CanOpen_Object>();
