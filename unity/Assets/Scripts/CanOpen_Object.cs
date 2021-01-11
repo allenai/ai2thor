@@ -21,6 +21,7 @@ public class CanOpen_Object : MonoBehaviour {
 
     [SerializeField]
     public float currentOpenPercentage = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
+    private float startOpenness; // used to reset on failure
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -146,6 +147,7 @@ public class CanOpen_Object : MonoBehaviour {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
+        startOpenness = currentOpenPercentage;
         for (int i = 0; i < MovingParts.Length; i++) {
             Hashtable args = new Hashtable() {
                 {"islocal", true},
@@ -270,40 +272,9 @@ public class CanOpen_Object : MonoBehaviour {
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
     public void Reset() {
         if (!canReset) {
-            Hashtable args = new Hashtable() {
-                {"islocal", true},
-                {"time", animationTime},
-                {"easetype", "linear"}
-            };
-
-            for (int i = 0; i < MovingParts.Length; i++) {
-                // we are still open, trying to close, but hit something - reset to open
-                if(isOpen) {
-                    if (movementType == MovementType.Rotate) {
-                        args["rotation"] = openPositions[i] * currentOpenPercentage;
-                        iTween.RotateTo(MovingParts[i], args);
-                    } else if (movementType == MovementType.Slide) {
-                        args["position"] = openPositions[i] * currentOpenPercentage;
-                        iTween.MoveTo(MovingParts[i], args);
-                    } else if (movementType == MovementType.ScaleY) {
-                        args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * currentOpenPercentage, openPositions[i].z);
-                        iTween.ScaleTo(MovingParts[i], args);
-                    }
-                } else {
-                    if (movementType == MovementType.Rotate) {
-                        args["rotation"] = closedPositions[i];
-                        iTween.RotateTo(MovingParts[i], args);
-                    } else if (movementType == MovementType.Slide) {
-                        args["position"] = closedPositions[i];
-                        iTween.MoveTo(MovingParts[i], args);
-                    } else if(movementType == MovementType.ScaleY) {
-                        args["scale"] = closedPositions[i];
-                        iTween.ScaleTo(MovingParts[i], args);
-                    }
-                }
-			}
+            Interact(openPercentage: startOpenness);
             StartCoroutine("CanResetToggle");
-		}
+        }
     }
 
 	private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
