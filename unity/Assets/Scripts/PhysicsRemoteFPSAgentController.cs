@@ -5160,7 +5160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Helper method that parses objectId and (x and y) parameters to return the
         // sim object that they target.
         private SimObjPhysics getTargetObject(
-                string objectId = null,
+                string objectId,
                 bool forceAction = false
         ) {
             // an objectId was given, so find that target in the scene if it exists
@@ -5180,15 +5180,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
         private SimObjPhysics getTargetObject(
-            float? x,
-            float? y,
+            float x,
+            float y,
             bool forceAction
         ) {
-            if (x == null || y == null) {
-                errorMessage = "Must pass in both (x and y).";
-                return null;
-            }
-
             // no target object specified, so instead try and use x/y screen coordinates
             SimObjPhysics target = null;
             if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
@@ -5200,7 +5195,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // syntactic sugar for open object with openness = 0.
         public void CloseObject(
-            string objectId = null,
+            string objectId,
             bool forceAction = false
         ) {
             OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
@@ -5208,8 +5203,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // syntactic sugar for open object with openness = 0.
         public void CloseObject(
-            float? x = null,
-            float? y = null,
+            float x,
+            float y,
             bool forceAction = false
         ) {
             OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
@@ -5869,7 +5864,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void OpenObject(
-            string objectId = null,
+            string objectId,
             bool forceAction = false,
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
@@ -5879,8 +5874,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void OpenObject(
-            float? x = null,
-            float? y = null,
+            float x,
+            float y,
             bool forceAction = false,
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.

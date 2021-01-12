@@ -90,6 +90,7 @@ class Event(object):
         self.depth_frame = None
         self.normals_frame = None
         self.flow_frame = None
+        self.unity_proc = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
