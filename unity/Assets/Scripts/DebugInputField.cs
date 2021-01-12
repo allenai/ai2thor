@@ -1257,28 +1257,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                // Force open object
-                case "foo":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "OpenObject";
-                        action.forceAction = true;
-                        action.objectId = splitcommand[1];
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                // Force close object
-                case "fco":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseObject";
-                        action.forceAction = true;
-                        action.objectId = splitcommand[1];
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-                
                 // Close visible objects
                 case "cvo":
                     {
