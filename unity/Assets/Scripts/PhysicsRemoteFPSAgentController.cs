@@ -5822,8 +5822,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private void openObject(
             SimObjPhysics target,
             float openness,
-            bool forceAction
+            bool forceAction,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
+            }
+
             if (openness > 1 || openness < 0) {
                 errorMessage = "openness must be in [0:1]";
                 actionFinished(false);
@@ -5860,16 +5867,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             StartCoroutine(InteractAndWait(codd, false, openness));
         }
-    
-        // helper with OpenObject that supports moveMagnitude as a backwards compatible argument.
-        private float parseMoveMagnitude(float openness, float? moveMagnitude) {
-            // backwards compatibility support
-            if (moveMagnitude != null) {
-                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
-                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
-            }
-            return openness;
-        }
 
         public void OpenObject(
             string objectId = null,
@@ -5877,9 +5874,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            openness = parseMoveMagnitude(openness: openness, moveMagnitude: moveMagnitude);
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            openObject(target: target, openness: openness, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction, moveMagnitude: moveMagnitude);
         }
 
         public void OpenObject(
@@ -5889,9 +5885,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            openness = parseMoveMagnitude(openness: openness, moveMagnitude: moveMagnitude);
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            openObject(target: target, openness: openness, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction, moveMagnitude: moveMagnitude);
         }
 
         //open an object without returning actionFinished since this is used in the setup function
