@@ -515,7 +515,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "color":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RandomColors";
+                        action["action"] = "RandomizeColors";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

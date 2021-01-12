@@ -61,19 +61,25 @@ public class ColorChanger : MonoBehaviour {
 
         origColors = new Color[allMaterials.Length];
         for (int i = 0; i < allMaterials.Length; i++) {
-            origColors[i] = allMaterials[i].color;
+            if (allMaterials[i].HasProperty("_Color")) {
+                origColors[i] = allMaterials[i].color;
+            }
         }
     }
 
     public void RandomizeColor() {
         for (int i = 0; i < allMaterials.Length; i++) {
-            allMaterials[i].color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
+            if (allMaterials[i].HasProperty("_Color")) {
+                allMaterials[i].color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
+            }
         }
     }
 
     public void ResetColors() {
         for (int i = 0; i < allMaterials.Length; i++) {
-            allMaterials[i].color = origColors[i];
+            if (allMaterials[i].HasProperty("_Color")) {
+                allMaterials[i].color = origColors[i];
+            }
         }
     }
 }
