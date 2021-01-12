@@ -185,8 +185,6 @@ def test_simobj_filter(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_add_third_party_camera(controller):
-
-
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
@@ -281,24 +279,17 @@ def test_open(controller):
     objects = controller.last_event.metadata['objects']
     obj_to_open = next(obj for obj in objects if obj['objectType'] == 'Fridge')
 
-    # just openning up a bit, since it's a random object, the agent could
-    # potentially collide with it
-    test_openness = 0.1
-    event = controller.step(action='OpenObject', objectId=obj_to_open['objectId'], openness=test_openness, forceAction=True, raise_for_failure=True)
-    opened_obj = next(obj for obj in event.metadata['objects'] if obj['name'] == obj_to_open['name'])
-    assert abs(opened_obj['openPercent'] - test_openness) < 1e-2, 'Incorrect openness!'
-    assert opened_obj['isOpen'], 'isOpen incorrectly reported!'
-
-    test_openness = 0.05
-    event = controller.step(action='OpenObject', objectId=opened_obj['objectId'], openness=test_openness, forceAction=True, raise_for_failure=True)
-    opened_obj = next(obj for obj in event.metadata['objects'] if obj['name'] == obj_to_open['name'])
-    assert abs(opened_obj['openPercent'] - test_openness) < 1e-2, 'Incorrect openness!'
-    assert opened_obj['isOpen'], 'isOpen incorrectly reported!'
-
-    event = controller.step('CloseObject', objectId=opened_obj['objectId'])
-    opened_obj = next(obj for obj in event.metadata['objects'] if obj['name'] == obj_to_open['name'])
-    assert opened_obj['openPercent'] == 0, 'CloseObject has non-0 openPercent!'
-    assert not opened_obj['isOpen'], 'isOpen incorrectly reported!'
+    for openness in [0.5, 0.7, 0]:
+        event = controller.step(
+            action='OpenObject',
+            objectId=obj_to_open['objectId'],
+            openness=openness,
+            forceAction=True,
+            raise_for_failure=True)
+        opened_obj = next(obj for obj in event.metadata['objects']
+                          if obj['name'] == obj_to_open['name'])
+        assert abs(opened_obj['openPercent'] - openness) < 1e-3, 'Incorrect openness!'
+        assert opened_obj['isOpen'] == (openness != 0), 'isOpen incorrectly reported!'
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous(controller):
