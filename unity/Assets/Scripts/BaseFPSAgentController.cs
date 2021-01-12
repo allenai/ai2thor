@@ -710,12 +710,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        // alias to RandomColors, supported for backwards compatibility
+        // alias to RandomizeColors, supported for backwards compatibility
         public void ChangeColorOfMaterials() {
-            RandomColors();
+            RandomizeColors();
         }
 
-        public void RandomColors() {
+        public void RandomizeColors() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.RandomizeColor();
             actionFinished(true);
