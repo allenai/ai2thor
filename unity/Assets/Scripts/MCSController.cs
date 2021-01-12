@@ -211,8 +211,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             } else {
                 errorMessage = "No object found in hand.";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                actionFinished(false);
                 return previousObjectId;
             }
         }
@@ -426,16 +426,16 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
-            actionFinished(false);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
             return;
         }
 
         if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
             errorMessage = "Receptacle Object ID appears to be invalid.";
             Debug.Log(errorMessage);
-            actionFinished(false);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
             return;
         }
 
@@ -525,7 +525,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                     this.movementActionData.forceAction);
             this.actionFrameCount++;
             if (this.actionFrameCount == this.substeps) {
-                Debug.Log("MCS: Move Status = " + this.lastActionStatus);
                 actionFinished(this.movementActionFinished);
             }
         } //for rotation
@@ -539,7 +538,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             this.actionFrameCount++;
             if (this.actionFrameCount == this.substeps) {
-                Debug.Log("MCS: Rotate Status = " + this.lastActionStatus);
                 actionFinished(true);
             }
         }
@@ -585,8 +583,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
-            actionFinished(false);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
             return;
         }
 
