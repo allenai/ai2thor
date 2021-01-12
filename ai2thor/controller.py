@@ -688,6 +688,7 @@ class Controller(object):
         if should_fail:
             new_event = copy.deepcopy(self.last_event)
             new_event.metadata['lastActionSuccess'] = False
+            new_event.metadata['errorMessage'] = "FAILURE SHORT-CIRCUITED IN controller.py!!"
             self.last_event = new_event
             return new_event
 
