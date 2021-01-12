@@ -515,10 +515,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "color":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ChangeColorOfMaterials";
+                        action["action"] = "RandomColors";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                case "resetcolor":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ResetColors";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();

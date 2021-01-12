@@ -1,9 +1,8 @@
 ﻿using System.Linq;
 using UnityEngine;
  
-public class ColorChanger : MonoBehaviour
-{
-    //Define all material types
+public class ColorChanger : MonoBehaviour {
+    // Define all material types
     public Material[] alarmClockMaterials;
     public Material[] appleMaterials;
     public Material[] basketballMaterials;
@@ -50,35 +49,31 @@ public class ColorChanger : MonoBehaviour
     Material[] quickMaterials;
 
     Material[] allMaterials;
+    Color[] origColors;
 
-    public void Start()
-    {
+    public void Start() {
         targetMaterials = alarmClockMaterials.Concat(appleMaterials).Concat(basketballMaterials).Concat(bowlMaterials).Concat(garbageBinMaterials).Concat(houseplantMaterials).Concat(pillowMaterials).Concat(sprayBottleMaterials).ToArray();
         backgroundMaterials = bedMaterials.Concat(boxMaterials).Concat(cellphoneMaterials).Concat(cupMaterials).Concat(floorLampMaterials).Concat(penPencilMaterials).Concat(plateMaterials).Concat(potMaterials).Concat(statueMaterials).Concat(watchMaterials).ToArray();
         furnitureMaterials = armchairMaterials.Concat(bedMaterials).Concat(chairMaterials).Concat(coffeeTableMaterials).Concat(deskMaterials).Concat(diningTableMaterials).Concat(dresserMaterials).Concat(officeChairMaterials).Concat(shelvingUnitMaterials).Concat(sideTableMaterials).Concat(sofaMaterials).ToArray();
         quickMaterials = ceramicMaterials.Concat(fabricMaterials).Concat(glassMaterials).Concat(lightMaterials).Concat(metalMaterials).Concat(miscMaterials).Concat(plasticMaterials).Concat(woodMaterials).ToArray();
 
         allMaterials = targetMaterials.Concat(backgroundMaterials).Concat(furnitureMaterials).Concat(quickMaterials).ToArray();
-        //print(allMaterials[allMaterials.Length - 1]);
+
+        origColors = new Color[allMaterials.Length];
+        for (int i = 0; i < allMaterials.Length; i++) {
+            origColors[i] = allMaterials[i].color;
+        }
     }
 
-    public void Update()
-    {
-        // MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
-
-        //for (int i = 0; i < quickMaterials.Length; i++)
-        //{
-        //    quickMaterials[i].color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
-        //}
-    }
-
-    public void RandomizeColor()
-    {
-        //MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
-
-        for (int i = 0; i < allMaterials.Length; i++)
-        {
+    public void RandomizeColor() {
+        for (int i = 0; i < allMaterials.Length; i++) {
             allMaterials[i].color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
+        }
+    }
+
+    public void ResetColors() {
+        for (int i = 0; i < allMaterials.Length; i++) {
+            allMaterials[i].color = origColors[i];
         }
     }
 }
