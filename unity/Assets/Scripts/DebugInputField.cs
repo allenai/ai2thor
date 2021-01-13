@@ -2295,13 +2295,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    //opens given object the given percent, default is 100% open
-                    //open <object ID> percent
-				case "open":
-					{
+                    // opens given object the given percent, default is 100% open
+                    // open <object ID> percent
+                case "open":
+                    {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-						action["action"] = "OpenObject";
-						action["forceAction"] = true;
+                        action["action"] = "OpenObject";
+                        action["forceAction"] = true;
 
                         if (splitcommand.Length == 1) {
                             // try opening object in front of the agent
@@ -2313,17 +2313,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action["objectId"] = splitcommand[1];
                         } else if (splitcommand.Length == 3) {
                             // give the open percentage as 3rd param, from 0.0 to 1.0
-							action["objectId"] = splitcommand[1];
-							action["openness"] = float.Parse(splitcommand[2]);
-						} else {
+                            action["objectId"] = splitcommand[1];
+                            action["openness"] = float.Parse(splitcommand[2]);
+                        } else {
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-						}
+                        }
 
-						PhysicsController.ProcessControlCommand(action);                  
-						break;
-					}
+                        PhysicsController.ProcessControlCommand(action);                  
+                        break;
+                    }
 
-				case "close":
+                case "close":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "CloseObject";
@@ -2334,15 +2334,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
-						}
+                        }
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                    
-                    //pass in object id of a receptacle, and this will report any other sim objects inside of it
-                    //this works for cabinets, drawers, countertops, tabletops, etc.
-				case "contains":
+                    // pass in object id of a receptacle, and this will report any other sim objects inside of it
+                    // this works for cabinets, drawers, countertops, tabletops, etc.
+                case "contains":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "Contains";
