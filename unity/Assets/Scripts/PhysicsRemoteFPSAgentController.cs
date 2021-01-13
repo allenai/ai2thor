@@ -5164,7 +5164,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // no target object specified, so instead try and use x/y screen coordinates
             SimObjPhysics target = null;
             if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
-                // error message is set insice ScreenToWorldTarget
+                // error message is set inside ScreenToWorldTarget
                 return null;
             }
             return target;
