@@ -840,7 +840,9 @@ class Controller(object):
                     break
             except Exception:
                 pass
-
+        
+        if commit_build and commit_build.commit_id != commits[0]:
+            warnings.warn("Build for the most recent commit: %s is not available.  Using commit build %s" % (commits[0], commit_build.commit_id))
 
         #print("Got build for %s: " % (found_build.url))
         return found_build
