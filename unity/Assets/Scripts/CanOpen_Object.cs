@@ -121,7 +121,7 @@ public class CanOpen_Object : MonoBehaviour {
         }   
     #endif
 
-    public void Interact(float openPercentage = 1.0f) {
+    public void Interact(float openness = 1.0f) {
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
@@ -144,7 +144,7 @@ public class CanOpen_Object : MonoBehaviour {
 
             // let's open the object!
             if (movementType == MovementType.Rotate) {
-                args["rotation"] = openPositions[i] * openPercentage;
+                args["rotation"] = openPositions[i] * openness;
                 iTween.RotateTo(MovingParts[i], args);
             } else if (movementType == MovementType.Slide) {
                 // this is used to determine which components of openPosition need to be scaled
@@ -152,37 +152,37 @@ public class CanOpen_Object : MonoBehaviour {
                 Vector3 lerpToPosition = openPositions[i];
 
                 // some x, y, z components don't change when sliding open
-                // only apply openPercentage modifier to components of vector3 that actually change
+                // only apply openness modifier to components of vector3 that actually change
                 if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
-                    lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openPercentage) + closedPositions[i].x;
+                    lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openness) + closedPositions[i].x;
                 }
                 if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
-                    lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openPercentage) + closedPositions[i].y;
+                    lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openness) + closedPositions[i].y;
                 }
                 if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
-                    lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openPercentage) + closedPositions[i].z;
+                    lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openness) + closedPositions[i].z;
                 }
                 args["position"] = lerpToPosition;
                 iTween.MoveTo(MovingParts[i], args);
             } else if (movementType == MovementType.ScaleY) {
-                args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z);
+                args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openness, openPositions[i].z);
                 iTween.ScaleTo(MovingParts[i], args);
             } else if (movementType == MovementType.ScaleX) {
                 // we are on the last loop here
-                args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z);
+                args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openness, openPositions[i].y, openPositions[i].z);
                 iTween.ScaleTo(MovingParts[i], args);
             } else if (movementType == MovementType.ScaleZ) {
-                args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage);
+                args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openness);
                 iTween.ScaleTo(MovingParts[i], args);
             }
         }
 
-        setIsOpen(openPercentage: openPercentage);
+        setIsOpen(openness: openness);
     }
 
-    private void setIsOpen(float openPercentage) {
-        isOpen = openPercentage != 0;
-        currentOpenness = openPercentage;
+    private void setIsOpen(float openness) {
+        isOpen = openness != 0;
+        currentOpenness = openness;
         SwitchActiveBoundingBox();
     }
 
@@ -229,7 +229,7 @@ public class CanOpen_Object : MonoBehaviour {
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
     public void Reset() {
         if (!canReset) {
-            Interact(openPercentage: startOpenness);
+            Interact(openness: startOpenness);
             StartCoroutine("CanResetToggle");
         }
     }

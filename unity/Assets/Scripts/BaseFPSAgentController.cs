@@ -1183,7 +1183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isOpen = simObj.IsOpen;
-                objMeta.openPercent = simObj.OpenPercentage;
+                objMeta.openness = simObj.openness;
             }
 
             objMeta.toggleable = simObj.IsToggleable;

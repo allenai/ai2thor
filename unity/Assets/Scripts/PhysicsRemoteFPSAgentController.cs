@@ -4128,7 +4128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (SetObjectStates.stateChange == "openable") {
                         CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
                         if (coo != null) {
-                            StartCoroutine(InteractAndWait(openableObject: coo, openPercent: SetObjectStates.isOpen ? 1 : 0));
+                            StartCoroutine(InteractAndWait(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
                             animatingType[sop] = "openable";
                             animating.Add(sop);
                         }
@@ -4153,7 +4153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (SetObjectStates.stateChange == "openable") {
                             CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
                             if (coo != null) {
-                                StartCoroutine(InteractAndWait(openableObject: coo, openPercent: SetObjectStates.isOpen ? 1 : 0));
+                                StartCoroutine(InteractAndWait(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
                                 animating.Add(sop);
                                 animatingType[sop] = "openable";
                             }  
@@ -5102,7 +5102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(InteractAndWait(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
-                            openPercent: 0,
+                            openness: 0,
                             markActionFinished: false
                         ));
                     }
@@ -5123,7 +5123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(InteractAndWait(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
-                            openPercent: 1,
+                            openness: 1,
                             markActionFinished: false
                         ));
                     }
@@ -5314,7 +5314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected IEnumerator InteractAndWait(
             CanOpen_Object openableObject,
             bool freezeContained = false,
-            float openPercent = 1.0f,
+            float openness = 1.0f,
             bool ignoreAgentInTransition = true,
             bool markActionFinished = true
         ) {
@@ -5354,8 +5354,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // just incase there's a failure, we can undo it
             float startOpenness = openableObject.currentOpenness;
 
-            // open the object to openPercent
-            openableObject.Interact(openPercent);
+            // open the object to openness
+            openableObject.Interact(openness);
             yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
             yield return null;
 
@@ -5367,7 +5367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Object failed to open/close successfully.";
 
                     // failure: reset the openness!
-                    openableObject.Interact(openPercentage: startOpenness);
+                    openableObject.Interact(openness: startOpenness);
                     yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
                     yield return null;
                 }
@@ -7832,7 +7832,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(InteractAndWait(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
-                            openPercent: randOpenness ? (float) rndOpenness.NextDouble() : 1,
+                            openness: randOpenness ? (float) rndOpenness.NextDouble() : 1,
                             markActionFinished: false
                         ));
                     }

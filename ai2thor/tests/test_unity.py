@@ -288,7 +288,7 @@ def test_open(controller):
             raise_for_failure=True)
         opened_obj = next(obj for obj in event.metadata['objects']
                           if obj['name'] == obj_to_open['name'])
-        assert abs(opened_obj['openPercent'] - openness) < 1e-3, 'Incorrect openness!'
+        assert abs(opened_obj['openness'] - openness) < 1e-3, 'Incorrect openness!'
         assert opened_obj['isOpen'] == (openness != 0), 'isOpen incorrectly reported!'
 
 @pytest.mark.parametrize("controller", [fifo_controller])
