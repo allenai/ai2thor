@@ -5255,10 +5255,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float y,
             float z,
             float openness = 1,
-            bool requireVisible = false
+            bool requireVisible = false,
+            float radius = 0.25f
         ) {
             SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
-                open: true, x: x, y: y, z: z, forceAction: false
+                open: true, x: x, y: y, forceAction: false, radius: radius
             );
             if (sop != null) {
                 OpenObject(objectId: sop.ObjectID, forceAction: !requireVisible, openness: openness);
