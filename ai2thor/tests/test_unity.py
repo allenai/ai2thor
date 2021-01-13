@@ -279,6 +279,11 @@ def test_open(controller):
     objects = controller.last_event.metadata['objects']
     obj_to_open = next(obj for obj in objects if obj['objectType'] == 'Fridge')
 
+    # helper that returns obj_to_open from a new event
+    def get_object(event, object_id):
+        return next(obj for obj in event.metadata['objects']
+                    if obj['objectId'] == object_id)
+
     for openness in [0.5, 0.7, 0]:
         event = controller.step(
             action='OpenObject',
@@ -286,10 +291,46 @@ def test_open(controller):
             openness=openness,
             forceAction=True,
             raise_for_failure=True)
-        opened_obj = next(obj for obj in event.metadata['objects']
-                          if obj['name'] == obj_to_open['name'])
+        opened_obj = get_object(event, obj_to_open['objectId'])
         assert abs(opened_obj['openness'] - openness) < 1e-3, 'Incorrect openness!'
         assert opened_obj['isOpen'] == (openness != 0), 'isOpen incorrectly reported!'
+
+    # test bad openness values
+    for bad_openness in [-0.5, 1.5]:
+        event = controller.step(
+            action='OpenObject',
+            objectId=obj_to_open['objectId'],
+            openness=bad_openness,
+            forceAction=True)
+        assert not event.metadata['lastActionSuccess'], '0.0 > Openness > 1.0 should fail!'
+
+    # test backwards compatibility on moveMagnitude, where moveMagnitude
+    # is now `openness`, but when moveMagnitude = 0 that corresponds to openness = 1.
+    event = controller.step(
+        action='OpenObject',
+        objectId=obj_to_open['objectId'],
+        forceAction=True,
+        moveMagnitude=0)
+    opened_obj = get_object(event, obj_to_open['objectId'])
+    assert abs(opened_obj['openness'] - 1) < 1e-3, 'moveMagnitude=0 must have openness=1'
+    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
+
+    # another moveMagnitude check
+    test_openness = 0.65
+    event = controller.step(
+        action='OpenObject',
+        objectId=obj_to_open['objectId'],
+        forceAction=True,
+        moveMagnitude=test_openness)
+    opened_obj = get_object(event, obj_to_open['objectId'])
+    assert abs(opened_obj['openness'] - test_openness) < 1e-3, 'moveMagnitude is not working!'
+    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
+
+    # a CloseObject specific check
+    event = controller.step(action='CloseObject', objectId=obj_to_open['objectId'], forceAction=True)
+    obj = get_object(event, obj_to_open['objectId'])
+    assert abs(obj['openness'] - 0) < 1e-3, 'CloseObject openness should be 0'
+    assert not obj['isOpen'], 'CloseObject should report isOpen==false!'
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous(controller):
