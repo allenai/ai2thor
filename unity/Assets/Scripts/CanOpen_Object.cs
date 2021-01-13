@@ -34,7 +34,7 @@ public class CanOpen_Object : MonoBehaviour {
     public bool isOpen = false;
 
 	[SerializeField]
-    public bool canReset = true;
+    public bool isCurrentlyResetting = true;
 
 	protected enum MovementType { Slide, Rotate, ScaleX, ScaleY, ScaleZ};
 
@@ -122,8 +122,8 @@ public class CanOpen_Object : MonoBehaviour {
     #endif
 
     public void Interact(float openness = 1.0f) {
-        //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
-        //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
+        // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
+        // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
         if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false) {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
@@ -201,8 +201,8 @@ public class CanOpen_Object : MonoBehaviour {
         return isOpen;
     }
 
-    //for use in OnTriggerEnter ignore check
-    //return true if it should ignore the object hit. Return false to cause this object to reset to the original position
+    // for use in OnTriggerEnter ignore check
+    // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
     public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol) {
         for (int i = 0; i < arrayOfCol.Length; i++) {
             if(other.GetComponentInParent<CanOpen_Object>().transform) {
@@ -228,9 +228,9 @@ public class CanOpen_Object : MonoBehaviour {
     // note: reset can interrupt the Interact() itween call because
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
     public void Reset() {
-        if (!canReset) {
+        if (!isCurrentlyResetting) {
             Interact(openness: startOpenness);
-            StartCoroutine("CanResetToggle");
+            StartCoroutine("updateReset");
         }
     }
 
@@ -267,7 +267,7 @@ public class CanOpen_Object : MonoBehaviour {
 		}
 
 		//if hitting another object that has double doors, do some checks 
-		if (other.GetComponentInParent<CanOpen_Object>() && canReset == true) {
+		if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
 			if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
 				//don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
 				return;
@@ -285,20 +285,20 @@ public class CanOpen_Object : MonoBehaviour {
                     #if UNITY_EDITOR
                         Debug.Log(gameObject.name + " hit " + other.name + " on "+ other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
                     #endif
-					canReset = false;
+					isCurrentlyResetting = false;
 					Reset();
 				}
 			}
 		}
 	}
 
-    // resets the CanReset boolean once the reset tween is done. This checks for iTween instanes, once there are none this object can be used again
-    IEnumerator CanResetToggle() {
+    // resets the isCurrentlyResetting boolean once the reset tween is done. This checks for iTween instances, once there are none this object can be used again
+    private IEnumerator updateReset() {
         while (true) {
             if (GetiTweenCount() != 0) {
                 yield return new WaitForEndOfFrame();
             } else {
-                canReset = true;
+                isCurrentlyResetting = true;
                 yield break;
             }
         }
