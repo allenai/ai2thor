@@ -128,17 +128,6 @@ public class CanOpen_Object : MonoBehaviour {
         }   
     #endif
 
-	// public bool SetOpenPercent(float val)
-    // {
-    //     print("set open percent is happening");
-    //     if (val >= 0.0 && val <= 1.0) {
-    //         openPercentage = val;
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    // }
-    
     public void Interact(float openPercentage = 1.0f) {
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
@@ -158,7 +147,6 @@ public class CanOpen_Object : MonoBehaviour {
             // we are on the last moving part here
             if (i == MovingParts.Length - 1) {
                 args["onCompleteTarget"] = gameObject;
-                args["oncompleteparams"] = isOpen ? 0f : openPercentage;
             }
 
             // let's open the object!
