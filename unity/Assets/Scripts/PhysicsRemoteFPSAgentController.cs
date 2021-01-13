@@ -5354,6 +5354,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             openableObject.Interact(openness);
             yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
             yield return null;
+            bool succeeded = true;
 
             if (ignoreAgentInTransition) {
                 GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
@@ -5361,6 +5362,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // check for collision failure
                 if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
                     errorMessage = "Object failed to open/close successfully.";
+                    succeeded = false;
 
                     // failure: reset the openness!
                     openableObject.Interact(openness: startOpenness);
@@ -5368,7 +5370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yield return null;
                 }
 
-                // reenables all previously disabled colliders
+                // re-enables all previously disabled colliders
                 foreach (Collider c in collidersDisabled) {
                     c.enabled = true;
                 }
@@ -5387,7 +5389,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (markActionFinished) {
-                actionFinished(errorMessage.Length == 0);
+                actionFinished(succeeded);
             }
         }
 
