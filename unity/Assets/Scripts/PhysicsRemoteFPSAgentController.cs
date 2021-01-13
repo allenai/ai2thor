@@ -5122,39 +5122,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //try and close all visible objects
+        // try and close all visible objects
         public void CloseVisibleObjects(bool simplifyPhysics = false) {
-            List<CanOpen_Object> coos = new List<CanOpen_Object>();
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (coo.isOpen) {
-                        coos.Add(coo);
+                        StartCoroutine(InteractAndWait(
+                            openableObject: coo,
+                            freezeContained: simplifyPhysics,
+                            openPercent: 0,
+                            markActionFinished: false
+                        ));
                     }
                 }
             }
-            if (coos.Count != 0) {
-                StartCoroutine(InteractAndWait(coos, simplifyPhysics));
-            } else {
-                errorMessage = "No objects to close.";
-                actionFinished(false);
-            }
+
+            // While there are no objects to close, it was technically successful at closing all 0 objects.
+            actionFinished(true);
         }
 
-        //trya nd open all visible objects
+        // try and open all visible objects
         public void OpenVisibleObjects(bool simplifyPhysics = false) {
-            List<CanOpen_Object> coos = new List<CanOpen_Object>();
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (!coo.isOpen) {
-                        coos.Add(coo);
+                        StartCoroutine(InteractAndWait(
+                            openableObject: coo,
+                            freezeContained: simplifyPhysics,
+                            openPercent: 1,
+                            markActionFinished: false
+                        ));
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(coos, simplifyPhysics));
+
+            // While there are no objects to open, it was technically successful at opening all 0 objects.
+            actionFinished(true);
         }
 
         // Helper method that parses objectId and (x and y) parameters to return the
@@ -5338,11 +5345,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             CanOpen_Object openableObject,
             bool freezeContained = false,
             float openPercent = 1.0f,
-            bool ignoreAgentInTransition = true
+            bool ignoreAgentInTransition = true,
+            bool markActionFinished = true
         ) {
             if (openableObject == null) {
-                errorMessage = "Must pass in openable object!";
-                actionFinished(false);
+                if (markActionFinished) {
+                    errorMessage = "Must pass in openable object!";
+                    actionFinished(false);
+                }
                 yield break;
             }
 
@@ -5409,7 +5419,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.isKinematic = false;
                 }
             }
-            actionFinished(errorMessage.Length == 0);
+
+            if (markActionFinished) {
+                actionFinished(errorMessage.Length == 0);
+            }
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
@@ -5441,76 +5454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected IEnumerator InteractAndWait(List<CanOpen_Object> coos, bool freezeContained = false) {
-            bool ignoreAgentInTransition = true;
-
-            List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
-            }
-
-            Dictionary<string, Transform> objectIdToOldParent = null;
-            List<SimObjPhysics> targets = null;
-            if (freezeContained) {
-                targets = new List<SimObjPhysics>();
-                objectIdToOldParent = new Dictionary<string, Transform>();
-                foreach (CanOpen_Object coo in coos) {
-                    SimObjPhysics target = ancestorSimObjPhysics(coo.gameObject);
-                    targets.Add(target);
-                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                        objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
-                        toReParent.transform.parent = coo.transform;
-                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
-                    }
-                }
-            }
-            
-            foreach (CanOpen_Object coo in coos) {
-                coo.Interact();
-            }
-
-            for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
-                yield return null;
-            }
-
-            if (ignoreAgentInTransition) {
-                foreach (CanOpen_Object coo in coos) {
-                    GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
-                    if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
-                        coo.Interact();
-                    }
-                }
-
-                for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
-                    yield return null;
-                }
-
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
-                }
-            }
-
-            if (freezeContained) {
-                foreach (string objectId in objectIdToOldParent.Keys) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                    rb.isKinematic = false;
-                }
-            }
-
-            actionFinished(true);
-        }
-
-        //swap an object's materials out to the cooked version of the object
+        // swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
             //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
@@ -7916,23 +7860,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // End code for calculating the volume of a mesh
 
-        public void RandomlyOpenCloseObjects(int randomSeed = 0, bool simplifyPhysics = false) {
-            System.Random rnd = new System.Random(randomSeed);
-            List<CanOpen_Object> toInteractWith = new List<CanOpen_Object>();
+        // @pOpen is the probability of opening an openable object.
+        // @randOpenness specifies if the openness for each opened object should be random, between 0% : 100%, or always 100%.
+        public void RandomlyOpenCloseObjects(
+                int? randomSeed = null,
+                bool simplifyPhysics = false,
+                float pOpen = 0.5f,
+                bool randOpenness = true
+        ) {
+            System.Random rnd;
+            System.Random rndOpenness;
+            if (randomSeed == null) {
+                // truly random!
+                rnd = new System.Random();
+                rndOpenness = new System.Random();
+            } else {
+                rnd = new System.Random((int) randomSeed);
+                rndOpenness = new System.Random(((int) randomSeed) + 42);
+            }
+
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo != null) {
-                    if (rnd.NextDouble() < 0.5) {
-                        if (!coo.isOpen) {
-                            toInteractWith.Add(coo);
-                        }
-
-                    } else if (coo.isOpen) {
-                        toInteractWith.Add(coo);
+                    // randomly opens an object to a random openness
+                    if (rnd.NextDouble() < pOpen) {
+                        StartCoroutine(InteractAndWait(
+                            openableObject: coo,
+                            freezeContained: simplifyPhysics,
+                            openPercent: randOpenness ? (float) rndOpenness.NextDouble() : 1,
+                            markActionFinished: false
+                        ));
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(toInteractWith, simplifyPhysics));
+            actionFinished(true);
         }
 
         public void GetApproximateVolume(string objectId) {
