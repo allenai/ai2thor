@@ -4108,66 +4108,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        //find all objects in scene of type specified by SetObjectStates.objectType
-        //toggle them to the bool if applicable: isOpen, isToggled, isBroken etc.
-        protected IEnumerator SetStateOfAnimatedObjects(SetObjectStates SetObjectStates)
-        {
+        // find all objects in scene of type specified by SetObjectStates.objectType
+        // toggle them to the bool if applicable: isOpen, isToggled, isBroken etc.
+        protected IEnumerator SetStateOfAnimatedObjects(SetObjectStates SetObjectStates) {
             List<SimObjPhysics> animating = new List<SimObjPhysics>();
             Dictionary<SimObjPhysics, string> animatingType = new Dictionary<SimObjPhysics, string>();
 
             //in this case, we will try and set isToggled for all toggleable objects in the entire scene
-            if(SetObjectStates.objectType == null)
-            {
-                foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                {
-                    if(SetObjectStates.stateChange == "toggleable")
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
-                        {
+            if (SetObjectStates.objectType == null) {
+                foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                    if (SetObjectStates.stateChange == "toggleable") {
+                        if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>()) {
                             StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                             animating.Add(sop);
                             animatingType[sop] = "toggleable";
                         }
                     }
 
-                    if(SetObjectStates.stateChange == "openable")
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
-                        {
-                            StartCoroutine(openObject(sop, SetObjectStates.isOpen));
+                    if (SetObjectStates.stateChange == "openable") {
+                        CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+                        if (coo != null) {
+                            StartCoroutine(InteractAndWait(openableObject: coo, openPercent: SetObjectStates.isOpen ? 1 : 0));
                             animatingType[sop] = "openable";
                             animating.Add(sop);
                         }
                     }
                 }
-            }
-
-            //in this case, we will only try and set states for objects of the specified objectType
-            else
-            {
+            } else {
+                // in this case, we will only try and set states for objects of the specified objectType
                 SimObjType sot = (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType);
 
-                //for every sim obj in scene, find objects of type specified first
-                foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                {
-                    //ok we found an object with type specified, now toggle it 
-                    if(sop.ObjType == sot)
-                    {
-                        if(SetObjectStates.stateChange == "toggleable")
-                        {
-                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
-                            {
+                // for every sim obj in scene, find objects of type specified first
+                foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                    // ok we found an object with type specified, now toggle it 
+                    if (sop.ObjType == sot) {
+                        if (SetObjectStates.stateChange == "toggleable") {
+                            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>()) {
                                 StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                                 animating.Add(sop);
                                 animatingType[sop] = "toggleable";
                             }
                         }
 
-                        if(SetObjectStates.stateChange == "openable")
-                        {
-                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
-                            {
-                                StartCoroutine(openObject(sop, SetObjectStates.isOpen));
+                        if (SetObjectStates.stateChange == "openable") {
+                            CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+                            if (coo != null) {
+                                StartCoroutine(InteractAndWait(openableObject: coo, openPercent: SetObjectStates.isOpen ? 1 : 0));
                                 animating.Add(sop);
                                 animatingType[sop] = "openable";
                             }  
@@ -4176,45 +4162,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if(animating.Count > 0)
-            {
-                //we have now started the toggle for all objects in the ObjectStates array
+            if (animating.Count > 0) {
+                // we have now started the toggle for all objects in the ObjectStates array
                 int numStillGoing= animating.Count;
-                while(numStillGoing > 0)
-                {
-                    foreach(SimObjPhysics sop in animating)
-                    {
-                        if(animatingType.ContainsKey(sop))
-                        {
-                            if(animatingType[sop] == "toggleable")
-                            {
-                                if(sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0)
-                                {
-                                    numStillGoing--;
-                                }
-                            }
-
-                            else if(animatingType[sop] == "openable")
-                            {
-                                if(sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0)
-                                {
-                                    numStillGoing--;
-                                }
-                            }
+                while (numStillGoing > 0) {
+                    foreach (SimObjPhysics sop in animating) {
+                        if (animatingType.ContainsKey(sop) &&
+                            (animatingType[sop] == "toggleable" || animatingType[sop] == "openable") && 
+                            sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0
+                        ) {
+                            numStillGoing--;
                         }
                     }
-                    //someone is still animating
-                    if(numStillGoing > 0)
-                    {
+                    // someone is still animating
+                    if (numStillGoing > 0) {
                         numStillGoing = animating.Count;
                     }
 
-                    //hold your horses, wait a frame so we don't miss the timing
+                    // hold your horses, wait a frame so we don't miss the timing
                     yield return null;
                 }
             }
 
-            //ok none of the objects that were actively toggling have any itweens going, so we are done!
+            // ok none of the objects that were actively toggling have any itweens going, so we are done!
             actionFinished(true);
         }
     
@@ -5277,68 +5247,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return null;
         }
 
-        private void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
-            float x = action.x;
-            float y = 1.0f - action.y;
-            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
-            RaycastHit hit;
-            int layerMask = 3 << 8;
-            if (ItemInHand != null) {
-                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                    c.enabled = false;
-                }
-            }
-            bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
-            if (ItemInHand != null) {
-                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                    c.enabled = true;
-                }
-            }
-            if (!raycastDidHit) {
-                Debug.Log("There don't seem to be any objects in that area.");
-                errorMessage = "No openable object at location.";
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics so = ancestorSimObjPhysics(hit.transform.gameObject);
-            if (so != null && (action.forceAction || objectIsCurrentlyVisible(so, maxVisibleDistance))) {
-                if (open) {
-                    OpenObject(objectId: so.ObjectID, forceAction: true);
-                } else if (action.objectId == null) {
-                    CloseObject(x: action.x, y: action.y, forceAction: action.forceAction);
-                } else {
-                    CloseObject(objectId: action.objectId, forceAction: action.forceAction);
-                }
-            } else if (so == null) {
-                errorMessage = "Object at location is not interactable.";
-                actionFinished(false);
+        // opens an object at an x/y/z location
+        // @requireVisible, must the object be AI2-THOR "visible"
+        //   (i.e., within visibility distance and visible to the agent).
+        public void OpenObjectAtLocation(
+            float x,
+            float y,
+            float z,
+            float openness = 1,
+            bool requireVisible = false
+        ) {
+            SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
+                open: true, x: x, y: y, z: z, forceAction: false
+            );
+            if (sop != null) {
+                OpenObject(objectId: sop.ObjectID, forceAction: !requireVisible, openness: openness);
             } else {
-                errorMessage = so.ObjectID + " is too far away.";
+                errorMessage = "No openable object found within a radius about given point.";
                 actionFinished(false);
             }
         }
 
-        public void OpenObjectAtLocation(ServerAction action) {
-            if (action.z > 0) {
-                SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
-                    true, action.x, action.y, action.z, false
-                );
-                if (sop != null) {
-                    OpenObject(objectId: sop.ObjectID, forceAction: true);
-                } else {
-                    errorMessage = "No openable object found within a radius about given point.";
-                    actionFinished(false);
-                }
-
-            } else {
-                OpenOrCloseObjectAtLocation(true, action);
-            }
-            return;
-        }
-
-        public void CloseObjectAtLocation(ServerAction action) {
-            OpenOrCloseObjectAtLocation(false, action);
-            return;
+        // same as OpenObjectAtLocation, but with an openness default of 0.
+        public void CloseObjectAtLocation(
+            float x,
+            float y,
+            float z,
+            float openness = 0,
+            bool requireVisible = false
+        ) {
+            OpenObjectAtLocation(x: x, y: y, z: z, openness: openness, requireVisible: requireVisible);
         }
 
         protected IEnumerator InteractAndWait(
@@ -5826,31 +5764,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
             openObject(target: target, openness: openness, forceAction: forceAction, moveMagnitude: moveMagnitude);
-        }
-
-        //open an object without returning actionFinished since this is used in the setup function
-        public IEnumerator openObject(SimObjPhysics target, bool open)
-        {
-            if(target.GetComponent<CanOpen_Object>())
-            {
-                CanOpen_Object coo = target.GetComponent<CanOpen_Object>();
-
-                //skip if it's already in the specified state
-                if(coo.isOpen == open)
-                {
-                    yield break;
-                }
-
-                //if object needs to be in the Off toggle state to open...
-                if(open && coo.WhatReceptaclesMustBeOffToOpen().Contains(target.Type))
-                {
-                    //if the object is on and we are trying to open it.. do nothing
-                    if(target.GetComponent<CanToggleOnOff>().isOn)
-                    yield break;
-                }
-
-                coo.Interact();
-            }
         }
 
         //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
