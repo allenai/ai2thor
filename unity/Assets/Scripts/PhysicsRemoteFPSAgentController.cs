@@ -5247,37 +5247,68 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return null;
         }
 
-        // opens an object at an x/y/z location
-        // @requireVisible, must the object be AI2-THOR "visible"
-        //   (i.e., within visibility distance and visible to the agent).
-        public void OpenObjectAtLocation(
-            float x,
-            float y,
-            float z,
-            float openness = 1,
-            bool requireVisible = false,
-            float radius = 0.25f
-        ) {
-            SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
-                open: true, x: x, y: y, forceAction: false, radius: radius
-            );
-            if (sop != null) {
-                OpenObject(objectId: sop.ObjectID, forceAction: !requireVisible, openness: openness);
+        // H&S action
+        private void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
+            float x = action.x;
+            float y = 1.0f - action.y;
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+            RaycastHit hit;
+            int layerMask = 3 << 8;
+            if (ItemInHand != null) {
+                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                    c.enabled = false;
+                }
+            }
+            bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
+            if (ItemInHand != null) {
+                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                    c.enabled = true;
+                }
+            }
+            if (!raycastDidHit) {
+                Debug.Log("There don't seem to be any objects in that area.");
+                errorMessage = "No openable object at location.";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics so = ancestorSimObjPhysics(hit.transform.gameObject);
+            if (so != null && (
+                    action.forceAction || objectIsCurrentlyVisible(so, maxVisibleDistance)
+                )) {
+                if (open) {
+                    OpenObject(objectId: so.ObjectID, forceAction: true);
+                } else {
+                    CloseObject(objectId: so.ObjectID, forceAction: true);
+                }
+            } else if (so == null) {
+                errorMessage = "Object at location is not interactable.";
+                actionFinished(false);
             } else {
-                errorMessage = "No openable object found within a radius about given point.";
+                errorMessage = so.ObjectID + " is too far away.";
                 actionFinished(false);
             }
         }
 
-        // same as OpenObjectAtLocation, but with an openness default of 0.
-        public void CloseObjectAtLocation(
-            float x,
-            float y,
-            float z,
-            float openness = 0,
-            bool requireVisible = false
-        ) {
-            OpenObjectAtLocation(x: x, y: y, z: z, openness: openness, requireVisible: requireVisible);
+        // H&S action
+        public void OpenObjectAtLocation(ServerAction action) {
+            if (action.z > 0) {
+                SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
+                    true, action.x, action.y, action.z, false
+                );
+                if (sop != null) {
+                    OpenObject(objectId: sop.ObjectID, forceAction: true);
+                } else {
+                    errorMessage = "No openable object found within a radius about given point.";
+                    actionFinished(false);
+                }
+            } else {
+                OpenOrCloseObjectAtLocation(true, action);
+            }
+        }
+
+        // H&S action
+        public void CloseObjectAtLocation(ServerAction action) {
+            OpenOrCloseObjectAtLocation(false, action);
         }
 
         protected IEnumerator InteractAndWait(
