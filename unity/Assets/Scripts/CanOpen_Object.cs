@@ -259,7 +259,7 @@ public class CanOpen_Object : MonoBehaviour {
 
 		// if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
         // ..., reset position and report failed action
-        // NOTE: hitting the agent and resetting is now handled by the InteractAndWait coroutine in PhysicsRemote
+        // NOTE: hitting the agent and resetting is now handled by the OpenAnimation coroutine in PhysicsRemote
 
 		//// If the thing your colliding with is one of your (grand)-children then don't worry about it
 		if (hasAncestor(other.transform.gameObject, gameObject)) {

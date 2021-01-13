@@ -4128,7 +4128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (SetObjectStates.stateChange == "openable") {
                         CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
                         if (coo != null) {
-                            StartCoroutine(InteractAndWait(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
+                            StartCoroutine(OpenAnimation(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
                             animatingType[sop] = "openable";
                             animating.Add(sop);
                         }
@@ -4153,7 +4153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (SetObjectStates.stateChange == "openable") {
                             CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
                             if (coo != null) {
-                                StartCoroutine(InteractAndWait(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
+                                StartCoroutine(OpenAnimation(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
                                 animating.Add(sop);
                                 animatingType[sop] = "openable";
                             }  
@@ -5099,7 +5099,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (coo.isOpen) {
-                        StartCoroutine(InteractAndWait(
+                        StartCoroutine(OpenAnimation(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
                             openness: 0,
@@ -5120,7 +5120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (!coo.isOpen) {
-                        StartCoroutine(InteractAndWait(
+                        StartCoroutine(OpenAnimation(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
                             openness: 1,
@@ -5311,7 +5311,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             OpenOrCloseObjectAtLocation(false, action);
         }
 
-        protected IEnumerator InteractAndWait(
+        // previously named InteractAndWait
+        protected IEnumerator OpenAnimation(
             CanOpen_Object openableObject,
             bool freezeContained = false,
             float openness = 1.0f,
@@ -5774,7 +5775,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            StartCoroutine(InteractAndWait(codd, false, openness));
+            StartCoroutine(OpenAnimation(openableObject: codd, openness: openness));
         }
 
         public void OpenObject(
@@ -7829,7 +7830,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (coo != null) {
                     // randomly opens an object to a random openness
                     if (rnd.NextDouble() < pOpen) {
-                        StartCoroutine(InteractAndWait(
+                        StartCoroutine(OpenAnimation(
                             openableObject: coo,
                             freezeContained: simplifyPhysics,
                             openness: randOpenness ? (float) rndOpenness.NextDouble() : 1,
