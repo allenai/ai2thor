@@ -40,6 +40,7 @@ class FifoServer(ai2thor.server.Server):
     header_format = '!BI'
     header_size = struct.calcsize(header_format)
     field_types = {f.value: f for f in FieldType}
+    server_type = 'FIFO'
 
     def __init__(self, width, height, depth_format=ai2thor.server.DepthFormat.Meters, add_depth_noise=False):
 
@@ -183,7 +184,6 @@ class FifoServer(ai2thor.server.Server):
     # params to pass up to unity
     def unity_params(self):
         params = dict(
-            server_type='FIFO',
             fifo_server_pipe_path=self.server_pipe_path,
             fifo_client_pipe_path=self.client_pipe_path
         )
