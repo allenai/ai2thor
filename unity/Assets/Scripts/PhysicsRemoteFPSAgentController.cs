@@ -5303,7 +5303,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             OpenOrCloseObjectAtLocation(false, action);
         }
 
-        // previously named InteractAndWait
+        // Helper used with OpenObject commands, which controls the physics
+        // of actually opening an object. Instead of calling this directly,
+        // one is recommended to call openObject, which runs more checks.
+        // Previously named InteractAndWait.
         private protected IEnumerator openAnimation(
             CanOpen_Object openableObject,
             bool markActionFinished,
@@ -5337,10 +5340,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectIdToOldParent = new Dictionary<string, Transform>();
 
                 foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                    SimObjPhysics simObj = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    objectIdToOldParent[objectId] = simObj.transform.parent;
-                    simObj.transform.parent = openableObject.transform;
-                    simObj.GetComponent<Rigidbody>().isKinematic = true;
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    objectIdToOldParent[objectId] = toReParent.transform.parent;
+                    toReParent.transform.parent = openableObject.transform;
+                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
                 }
             }
 
