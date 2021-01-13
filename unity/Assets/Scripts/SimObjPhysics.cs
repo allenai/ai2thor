@@ -349,20 +349,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	//this is not used.... maybe get rid of?
-	public bool Open()
-	{
-		// XXX need to implement
-		return false;
-	}
-
-	//this is also not used... also maybe get rid of?
-	public bool Close()
-	{
-		// XXX need to implement
-		return false;
-	}
-
 	//return mass of object
 	public float Mass
 	{
