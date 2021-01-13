@@ -4126,9 +4126,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (SetObjectStates.stateChange == "openable") {
-                        CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
-                        if (coo != null) {
-                            StartCoroutine(OpenAnimation(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
+                        if (sop.GetComponent<CanOpen_Object>()) {
+                            openObject(
+                                target: sop,
+                                openness: SetObjectStates.isOpen ? 1 : 0,
+                                forceAction: true,
+                                markActionFinished: false
+                            );
                             animatingType[sop] = "openable";
                             animating.Add(sop);
                         }
@@ -4151,9 +4155,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         if (SetObjectStates.stateChange == "openable") {
-                            CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
-                            if (coo != null) {
-                                StartCoroutine(OpenAnimation(openableObject: coo, openness: SetObjectStates.isOpen ? 1 : 0));
+                            if (sop.GetComponent<CanOpen_Object>()) {
+                                openObject(
+                                    target: sop,
+                                    openness: SetObjectStates.isOpen ? 1 : 0,
+                                    forceAction: true,
+                                    markActionFinished: false);
                                 animating.Add(sop);
                                 animatingType[sop] = "openable";
                             }  
@@ -5094,38 +5101,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // try and close all visible objects
         public void CloseVisibleObjects(bool simplifyPhysics = false) {
-            foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
-                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
-                if (coo) {
-                    //if object is open, add it to be closed.
-                    if (coo.isOpen) {
-                        StartCoroutine(OpenAnimation(
-                            openableObject: coo,
-                            freezeContained: simplifyPhysics,
-                            openness: 0,
-                            markActionFinished: false
-                        ));
-                    }
-                }
-            }
-
-            // While there are no objects to close, it was technically successful at closing all 0 objects.
-            actionFinished(true);
+            OpenVisibleObjects(simplifyPhysics: simplifyPhysics, openness: 0);
         }
 
         // try and open all visible objects
-        public void OpenVisibleObjects(bool simplifyPhysics = false) {
+        public void OpenVisibleObjects(bool simplifyPhysics = false, float openness = 1) {
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (!coo.isOpen) {
-                        StartCoroutine(OpenAnimation(
-                            openableObject: coo,
-                            freezeContained: simplifyPhysics,
-                            openness: 1,
-                            markActionFinished: false
-                        ));
+                        openObject(
+                            target: so,
+                            openness: openness,
+                            forceAction: true,
+                            markActionFinished: false,
+                            simplifyPhysics: simplifyPhysics
+                        );
                     }
                 }
             }
@@ -5312,12 +5304,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // previously named InteractAndWait
-        protected IEnumerator OpenAnimation(
+        private protected IEnumerator openAnimation(
             CanOpen_Object openableObject,
+            bool markActionFinished,
             bool freezeContained = false,
             float openness = 1.0f,
-            bool ignoreAgentInTransition = true,
-            bool markActionFinished = true
+            bool ignoreAgentInTransition = true
         ) {
             if (openableObject == null) {
                 if (markActionFinished) {
@@ -5733,6 +5725,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target,
             float openness,
             bool forceAction,
+            bool markActionFinished,
+            bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             // backwards compatibility support
@@ -5743,25 +5737,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (openness > 1 || openness < 0) {
                 errorMessage = "openness must be in [0:1]";
-                actionFinished(false);
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
                 return;
             }
 
             if (target == null) {
                 errorMessage = "Object not found!";
-                actionFinished(false);
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
                 return;
             }
 
             if (!forceAction && !target.isInteractable) {
                 errorMessage = "object is visible but occluded by something: " + target.ObjectID;
-                actionFinished(false);
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
                 return;
             }
 
             if(!target.GetComponent<CanOpen_Object>()) {
                 errorMessage = $"{target.ObjectID} is not an Openable object";
-                actionFinished(false);
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
                 return;
             }
 
@@ -5771,11 +5773,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // where it doesn't make a ton of sense to open them, while they are in use.
             if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
                 errorMessage = "Target must be OFF to open!";
-                actionFinished(false);
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
                 return;
             }
 
-            StartCoroutine(OpenAnimation(openableObject: codd, openness: openness));
+            StartCoroutine(openAnimation(
+                openableObject: codd,
+                freezeContained: simplifyPhysics,
+                openness: openness,
+                markActionFinished: markActionFinished
+            ));
         }
 
         public void OpenObject(
@@ -5785,7 +5794,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            openObject(target: target, openness: openness, forceAction: forceAction, moveMagnitude: moveMagnitude);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
         }
 
         public void OpenObject(
@@ -5796,7 +5811,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            openObject(target: target, openness: openness, forceAction: forceAction, moveMagnitude: moveMagnitude);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
         }
 
         //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
@@ -7826,16 +7847,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
-                if (coo != null) {
+                if (so.GetComponent<CanOpen_Object>()) {
                     // randomly opens an object to a random openness
                     if (rnd.NextDouble() < pOpen) {
-                        StartCoroutine(OpenAnimation(
-                            openableObject: coo,
-                            freezeContained: simplifyPhysics,
+                        openObject(
+                            target: so,
                             openness: randOpenness ? (float) rndOpenness.NextDouble() : 1,
+                            forceAction: true,
+                            simplifyPhysics: simplifyPhysics,
                             markActionFinished: false
-                        ));
+                        );
                     }
                 }
             }
