@@ -20,7 +20,7 @@ public class CanOpen_Object : MonoBehaviour {
     public float animationTime = 0.2f;
 
     [SerializeField]
-    public float currentOpenPercentage = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
+    public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
     private float startOpenness; // used to reset on failure
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
@@ -78,7 +78,7 @@ public class CanOpen_Object : MonoBehaviour {
         #endif
 
         if(!isOpen)
-        currentOpenPercentage = 0.0f;
+        currentOpenness = 0.0f;
 	}
 
 	// Update is called once per frame
@@ -129,7 +129,7 @@ public class CanOpen_Object : MonoBehaviour {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
-        startOpenness = currentOpenPercentage;
+        startOpenness = currentOpenness;
         for (int i = 0; i < MovingParts.Length; i++) {
             Hashtable args = new Hashtable() {
                 {"islocal", true},
@@ -182,7 +182,7 @@ public class CanOpen_Object : MonoBehaviour {
 
     private void setIsOpen(float openPercentage) {
         isOpen = openPercentage != 0;
-        currentOpenPercentage = openPercentage;
+        currentOpenness = openPercentage;
         SwitchActiveBoundingBox();
     }
 

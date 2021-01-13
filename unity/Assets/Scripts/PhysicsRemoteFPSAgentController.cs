@@ -5352,7 +5352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // just incase there's a failure, we can undo it
-            float startOpenness = openableObject.currentOpenPercentage;
+            float startOpenness = openableObject.currentOpenness;
 
             // open the object to openPercent
             openableObject.Interact(openPercent);

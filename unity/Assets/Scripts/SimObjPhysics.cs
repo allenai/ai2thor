@@ -431,7 +431,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public float OpenPercentage
 	{
-		get {return this.GetComponent<CanOpen_Object>().currentOpenPercentage;}
+		get {return this.GetComponent<CanOpen_Object>().currentOpenness;}
 	}
 
 	public bool IsOpen
