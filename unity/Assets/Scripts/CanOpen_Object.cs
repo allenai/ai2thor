@@ -45,13 +45,6 @@ public class CanOpen_Object : MonoBehaviour {
 	private List<SimObjType> MustBeOffToOpen = new List<SimObjType>()
 	{SimObjType.Microwave};
 
-    // these objects, when hitting another sim object, should reset their state because it would cause clipping. Specifically used
-    // for things like Laptops or Books that can open but are also pickupable and moveable. This should not include static
-    // things in the scene like cabinets or drawers that have fixed positions
-    // private List<SimObjType> ResetPositionIfPickupableAndOpenable = new List<SimObjType>()
-    // {SimObjType.Book, SimObjType.Laptop};
-
-
     [Header("References for the Open or Closed bounding box for openable and pickupable objects")]
     // the bounding box to use when this object is in the open state
     [SerializeField]
@@ -193,27 +186,6 @@ public class CanOpen_Object : MonoBehaviour {
         SwitchActiveBoundingBox();
     }
 
-    // private void UpdateOpenOrCloseBoundingBox() {
-    //     if (ResetPositionIfPickupableAndOpenable.Contains(gameObject.GetComponent<SimObjPhysics>().Type)) {
-    //         if (ClosedBoundingBox!= null && OpenBoundingBox != null) {
-    //             //SwitchActiveBoundingBox();
-
-    //             PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-    //             //if the agent is holding this object RIGHT NOW, then update the rotation box checkers
-    //             if (agent.WhatAmIHolding() == gameObject) {
-    //                 agent.SetUpRotationBoxChecks();
-    //             }
-    //         }
-    //         #if UNITY_EDITOR
-    //             else {
-    //                 Debug.Log("Closed/Open Bounding box references are null!");
-    //             }
-    //         #endif
-    //     }
-    //     //check if this object is in the ResetPositionIfPickupableAndOpenable list
-    //     //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
-    // }
-
     private void SwitchActiveBoundingBox() {
         // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
         // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
@@ -224,10 +196,6 @@ public class CanOpen_Object : MonoBehaviour {
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
         sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
     }
-
-    // public float GetOpenPercent() {
-    //     return isOpen ? currentOpenPercentage : 0.0f;
-    // }
 
     public bool GetisOpen() {
         return isOpen;
@@ -277,29 +245,21 @@ public class CanOpen_Object : MonoBehaviour {
     }
 
 	public void OnTriggerEnter(Collider other) {
-		if(other.CompareTag("Receptacle")) {
+		if (other.CompareTag("Receptacle")) {
             return;
         }
-		//note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
-		//when colliding with another rigidbody that is kinematic. For some reason, if the other object
-		//has a trigger collider even though THIS object only has a kinematic rigidbody, this
-		//function is still called so we'll use that here:
+		// note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
+		// when colliding with another rigidbody that is kinematic. For some reason, if the other object
+		// has a trigger collider even though THIS object only has a kinematic rigidbody, this
+		// function is still called so we'll use that here:
 
-		//The Agent has a trigger Capsule collider, and other cabinets/drawers have
-		//a trigger collider, so this is used to reset the position if the agent or another
-		//cabinet or drawer is in the way of this object opening/closing
+		// The Agent has a trigger Capsule collider, and other cabinets/drawers have
+		// a trigger collider, so this is used to reset the position if the agent or another
+		// cabinet or drawer is in the way of this object opening/closing
 
-		//if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
-        //..., reset position and report failed action
-        //NOTE: hitting the agent and resetting is now handled by the InteractAndWait coroutine in PhysicsRemote
-		// if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
-		// {
-        //     #if UNITY_EDITOR
-		// 	Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-        //     #endif
-		// 	canReset = false;
-		// 	Reset();
-		// }
+		// if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
+        // ..., reset position and report failed action
+        // NOTE: hitting the agent and resetting is now handled by the InteractAndWait coroutine in PhysicsRemote
 
 		//// If the thing your colliding with is one of your (grand)-children then don't worry about it
 		if (hasAncestor(other.transform.gameObject, gameObject)) {
@@ -313,16 +273,15 @@ public class CanOpen_Object : MonoBehaviour {
 				return;
 			}
 
-			//oh it was something else RESET! DO IT!
+			// oh it was something else RESET! DO IT!
 			else {
-				//check the collider hit's parent for itween instances
-				//if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
-				//object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
-				//this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
+				// check the collider hit's parent for itween instances
+				// if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
+				// object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
+				// this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
 				if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0 
                     && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)//check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
 				{
-					//print(other.GetComponentInParent<CanOpen>().transform.name);
                     #if UNITY_EDITOR
                         Debug.Log(gameObject.name + " hit " + other.name + " on "+ other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
                     #endif
