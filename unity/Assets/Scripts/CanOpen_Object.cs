@@ -67,7 +67,7 @@ public class CanOpen_Object : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//init Itween in all doors to prep for animation
+		// init Itween in all doors to prep for animation
 		if(MovingParts != null) {
 			foreach (GameObject go in MovingParts) {
                 iTween.Init(go);
@@ -196,14 +196,14 @@ public class CanOpen_Object : MonoBehaviour {
             }
         }
 
-        setisOpen(openPercentage: openPercentage);
+        setIsOpen(openPercentage: openPercentage);
     }
 
-    private void setisOpen(float openPercentage) {
-		isOpen = openPercentage != 0;
+    private void setIsOpen(float openPercentage) {
+        isOpen = openPercentage != 0;
         currentOpenPercentage = openPercentage;
         SwitchActiveBoundingBox();
-	}
+    }
 
     // private void UpdateOpenOrCloseBoundingBox() {
     //     if (ResetPositionIfPickupableAndOpenable.Contains(gameObject.GetComponent<SimObjPhysics>().Type)) {
