@@ -1105,7 +1105,7 @@ public class ObjectMetadata
 	///
 	public bool openable;
 	public bool isOpen;
-	public float openPercent;//if the object is openable, what is the current open percent? value from 0 to 1.0
+	public float openness; // if the object is openable, what is the current openness? It's a normalized percentage from [0:1]
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent

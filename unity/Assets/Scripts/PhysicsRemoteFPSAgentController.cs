@@ -2550,9 +2550,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics so = ancestorSimObjPhysics(hit.transform.gameObject);
             if (so != null) {
-                action.objectId = so.ObjectID;
-                action.forceAction = true;
-                OpenObject(action);
+                OpenObject(objectId: so.ObjectID, forceAction: true);
             } else {
                 errorMessage = hit.transform.gameObject.name + " is not interactable.";
                 actionFinished(false);
@@ -4103,66 +4101,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        //find all objects in scene of type specified by SetObjectStates.objectType
-        //toggle them to the bool if applicable: isOpen, isToggled, isBroken etc.
-        protected IEnumerator SetStateOfAnimatedObjects(SetObjectStates SetObjectStates)
-        {
+        // find all objects in scene of type specified by SetObjectStates.objectType
+        // toggle them to the bool if applicable: isOpen, isToggled, isBroken etc.
+        protected IEnumerator SetStateOfAnimatedObjects(SetObjectStates SetObjectStates) {
             List<SimObjPhysics> animating = new List<SimObjPhysics>();
             Dictionary<SimObjPhysics, string> animatingType = new Dictionary<SimObjPhysics, string>();
 
             //in this case, we will try and set isToggled for all toggleable objects in the entire scene
-            if(SetObjectStates.objectType == null)
-            {
-                foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                {
-                    if(SetObjectStates.stateChange == "toggleable")
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
-                        {
+            if (SetObjectStates.objectType == null) {
+                foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                    if (SetObjectStates.stateChange == "toggleable") {
+                        if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>()) {
                             StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                             animating.Add(sop);
                             animatingType[sop] = "toggleable";
                         }
                     }
 
-                    if(SetObjectStates.stateChange == "openable")
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
-                        {
-                            StartCoroutine(openObject(sop, SetObjectStates.isOpen));
+                    if (SetObjectStates.stateChange == "openable") {
+                        if (sop.GetComponent<CanOpen_Object>()) {
+                            openObject(
+                                target: sop,
+                                openness: SetObjectStates.isOpen ? 1 : 0,
+                                forceAction: true,
+                                markActionFinished: false
+                            );
                             animatingType[sop] = "openable";
                             animating.Add(sop);
                         }
                     }
                 }
-            }
-
-            //in this case, we will only try and set states for objects of the specified objectType
-            else
-            {
+            } else {
+                // in this case, we will only try and set states for objects of the specified objectType
                 SimObjType sot = (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType);
 
-                //for every sim obj in scene, find objects of type specified first
-                foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                {
-                    //ok we found an object with type specified, now toggle it 
-                    if(sop.ObjType == sot)
-                    {
-                        if(SetObjectStates.stateChange == "toggleable")
-                        {
-                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
-                            {
+                // for every sim obj in scene, find objects of type specified first
+                foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                    // ok we found an object with type specified, now toggle it 
+                    if (sop.ObjType == sot) {
+                        if (SetObjectStates.stateChange == "toggleable") {
+                            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>()) {
                                 StartCoroutine(toggleObject(sop, SetObjectStates.isToggled));
                                 animating.Add(sop);
                                 animatingType[sop] = "toggleable";
                             }
                         }
 
-                        if(SetObjectStates.stateChange == "openable")
-                        {
-                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
-                            {
-                                StartCoroutine(openObject(sop, SetObjectStates.isOpen));
+                        if (SetObjectStates.stateChange == "openable") {
+                            if (sop.GetComponent<CanOpen_Object>()) {
+                                openObject(
+                                    target: sop,
+                                    openness: SetObjectStates.isOpen ? 1 : 0,
+                                    forceAction: true,
+                                    markActionFinished: false);
                                 animating.Add(sop);
                                 animatingType[sop] = "openable";
                             }  
@@ -4171,45 +4162,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if(animating.Count > 0)
-            {
-                //we have now started the toggle for all objects in the ObjectStates array
+            if (animating.Count > 0) {
+                // we have now started the toggle for all objects in the ObjectStates array
                 int numStillGoing= animating.Count;
-                while(numStillGoing > 0)
-                {
-                    foreach(SimObjPhysics sop in animating)
-                    {
-                        if(animatingType.ContainsKey(sop))
-                        {
-                            if(animatingType[sop] == "toggleable")
-                            {
-                                if(sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0)
-                                {
-                                    numStillGoing--;
-                                }
-                            }
-
-                            else if(animatingType[sop] == "openable")
-                            {
-                                if(sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0)
-                                {
-                                    numStillGoing--;
-                                }
-                            }
+                while (numStillGoing > 0) {
+                    foreach (SimObjPhysics sop in animating) {
+                        if (animatingType.ContainsKey(sop) &&
+                            (animatingType[sop] == "toggleable" || animatingType[sop] == "openable") && 
+                            sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0
+                        ) {
+                            numStillGoing--;
                         }
                     }
-                    //someone is still animating
-                    if(numStillGoing > 0)
-                    {
+                    // someone is still animating
+                    if (numStillGoing > 0) {
                         numStillGoing = animating.Count;
                     }
 
-                    //hold your horses, wait a frame so we don't miss the timing
+                    // hold your horses, wait a frame so we don't miss the timing
                     yield return null;
                 }
             }
 
-            //ok none of the objects that were actively toggling have any itweens going, so we are done!
+            // ok none of the objects that were actively toggling have any itweens going, so we are done!
             actionFinished(true);
         }
     
@@ -5117,106 +5092,84 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //try and close all visible objects
+        // try and close all visible objects
         public void CloseVisibleObjects(bool simplifyPhysics = false) {
-            List<CanOpen_Object> coos = new List<CanOpen_Object>();
-            foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
-                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
-                if (coo) {
-                    //if object is open, add it to be closed.
-                    if (coo.isOpen) {
-                        coos.Add(coo);
-                    }
-                }
-            }
-            if (coos.Count != 0) {
-                StartCoroutine(InteractAndWait(coos, simplifyPhysics));
-            } else {
-                errorMessage = "No objects to close.";
-                actionFinished(false);
-            }
+            OpenVisibleObjects(simplifyPhysics: simplifyPhysics, openness: 0);
         }
 
-        //trya nd open all visible objects
-        public void OpenVisibleObjects(bool simplifyPhysics = false) {
-            List<CanOpen_Object> coos = new List<CanOpen_Object>();
+        // try and open all visible objects
+        public void OpenVisibleObjects(bool simplifyPhysics = false, float openness = 1) {
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo) {
                     //if object is open, add it to be closed.
                     if (!coo.isOpen) {
-                        coos.Add(coo);
+                        openObject(
+                            target: so,
+                            openness: openness,
+                            forceAction: true,
+                            markActionFinished: false,
+                            simplifyPhysics: simplifyPhysics
+                        );
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(coos, simplifyPhysics));
+
+            // While there are no objects to open, it was technically successful at opening all 0 objects.
+            actionFinished(true);
         }
 
-        public void CloseObject(ServerAction action) {
+        // Helper method that parses objectId and (x and y) parameters to return the
+        // sim object that they target.
+        private SimObjPhysics getTargetObject(
+                string objectId,
+                bool forceAction = false
+        ) {
+            // an objectId was given, so find that target in the scene if it exists
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                return null;
+            }
+
+            // if object is in the scene and visible, assign it to 'target'
             SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
+                target = sop;
             }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+            return target;
+        }
+
+        // Helper method that parses (x and y) parameters to return the
+        // sim object that they target.
+        private SimObjPhysics getTargetObject(
+            float x,
+            float y,
+            bool forceAction
+        ) {
+            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
+            if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
+                // error message is set inside ScreenToWorldTarget
+                return null;
             }
+            return target;
+        }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(
+            string objectId,
+            bool forceAction = false
+        ) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
+        }
 
-            if (target) {
-
-                if (!action.forceAction && target.isInteractable == false) {
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    actionFinished(false);
-                }
-
-                if (target.GetComponent<CanOpen_Object>()) {
-                    CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-                    //if object is open, close it
-                    if (codd.isOpen) {
-                        // codd.Interact();
-                        // actionFinished(true);
-                        StartCoroutine(InteractAndWait(codd, action.simplifyPhysics));
-                    } else {
-                        errorMessage = "object already closed: " + action.objectId;
-                        actionFinished(false);
-                    }
-                }
-
-                else
-                {
-                    errorMessage = "target must be Openable to close";
-                    actionFinished(false);
-                    return;
-                }
-
-            } else {
-                Debug.Log("Target object not in sight");
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
-            }
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(
+            float x,
+            float y,
+            bool forceAction = false
+        ) {
+            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
         protected SimObjPhysics getOpenableOrCloseableObjectNearLocation(
@@ -5279,6 +5232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return null;
         }
 
+        // H&S action
         private void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
             float x = action.x;
             float y = 1.0f - action.y;
@@ -5306,12 +5260,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (so != null && (
                     action.forceAction || objectIsCurrentlyVisible(so, maxVisibleDistance)
                 )) {
-                action.objectId = so.ObjectID;
-                action.forceAction = true;
                 if (open) {
-                    OpenObject(action);
+                    OpenObject(objectId: so.ObjectID, forceAction: true);
                 } else {
-                    CloseObject(action);
+                    CloseObject(objectId: so.ObjectID, forceAction: true);
                 }
             } else if (so == null) {
                 errorMessage = "Object at location is not interactable.";
@@ -5322,39 +5274,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        // H&S action
         public void OpenObjectAtLocation(ServerAction action) {
             if (action.z > 0) {
                 SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
                     true, action.x, action.y, action.z, false
                 );
                 if (sop != null) {
-                    action.objectId = sop.ObjectID;
-                    action.forceVisible = true;
-                    OpenObject(action);
+                    OpenObject(objectId: sop.ObjectID, forceAction: true);
                 } else {
                     errorMessage = "No openable object found within a radius about given point.";
                     actionFinished(false);
                 }
-
             } else {
                 OpenOrCloseObjectAtLocation(true, action);
             }
-            return;
         }
 
+        // H&S action
         public void CloseObjectAtLocation(ServerAction action) {
             OpenOrCloseObjectAtLocation(false, action);
-            return;
         }
 
-        protected IEnumerator InteractAndWait(
-            CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f
+        // Helper used with OpenObject commands, which controls the physics
+        // of actually opening an object. Instead of calling this directly,
+        // one is recommended to call openObject, which runs more checks.
+        // Previously named InteractAndWait.
+        private protected IEnumerator openAnimation(
+            CanOpen_Object openableObject,
+            bool markActionFinished,
+            bool freezeContained = false,
+            float openness = 1.0f,
+            bool ignoreAgentInTransition = true
         ) {
-            bool ignoreAgentInTransition = true;
+            if (openableObject == null) {
+                if (markActionFinished) {
+                    errorMessage = "Must pass in openable object!";
+                    actionFinished(false);
+                }
+                yield break;
+            }
 
+            // disables all colliders in the scene
             List<Collider> collidersDisabled = new List<Collider>();
             if (ignoreAgentInTransition) {
-                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+                foreach (Collider c in GetComponentsInChildren<Collider>()) {
                     if (c.enabled) {
                         collidersDisabled.Add(c);
                         c.enabled = false;
@@ -5362,47 +5326,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            // stores the object id of each object within this openableObject
             Dictionary<string, Transform> objectIdToOldParent = null;
-            SimObjPhysics target = null;
             if (freezeContained) {
-                target = ancestorSimObjPhysics(coo.gameObject);
+                SimObjPhysics target = ancestorSimObjPhysics(openableObject.gameObject);
                 objectIdToOldParent = new Dictionary<string, Transform>();
+
                 foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
                     SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
-                    toReParent.transform.parent = coo.transform;
+                    objectIdToOldParent[objectId] = toReParent.transform.parent;
+                    toReParent.transform.parent = openableObject.transform;
                     toReParent.GetComponent<Rigidbody>().isKinematic = true;
                 }
             }
 
-            bool success = false;
-            if (coo != null) {
-                coo.Interact(openPercent);
-            }
+            // just incase there's a failure, we can undo it
+            float startOpenness = openableObject.currentOpenness;
 
-            yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
-            success = true;
+            // open the object to openness
+            openableObject.Interact(openness);
+            yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
             yield return null;
+            bool succeeded = true;
 
             if (ignoreAgentInTransition) {
-                GameObject openedObject = null;
-                openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
+                GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
 
-                if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
-                    success = false;
-                    if (coo != null) {
-                        coo.Interact(openPercent);
-                    }
+                // check for collision failure
+                if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
+                    errorMessage = "Object failed to open/close successfully.";
+                    succeeded = false;
 
-                    yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
+                    // failure: reset the openness!
+                    openableObject.Interact(openness: startOpenness);
+                    yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
                     yield return null;
                 }
 
+                // re-enables all previously disabled colliders
                 foreach (Collider c in collidersDisabled) {
                     c.enabled = true;
                 }
             }
 
+            // stops any object located within this openableObject from moving
             if (freezeContained) {
                 foreach (string objectId in objectIdToOldParent.Keys) {
                     SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -5414,11 +5381,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (!success) {
-                errorMessage = "Object failed to open/close successfully.";
+            if (markActionFinished) {
+                actionFinished(succeeded);
             }
-
-            actionFinished(success);
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
@@ -5450,76 +5415,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected IEnumerator InteractAndWait(List<CanOpen_Object> coos, bool freezeContained = false) {
-            bool ignoreAgentInTransition = true;
-
-            List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
-            }
-
-            Dictionary<string, Transform> objectIdToOldParent = null;
-            List<SimObjPhysics> targets = null;
-            if (freezeContained) {
-                targets = new List<SimObjPhysics>();
-                objectIdToOldParent = new Dictionary<string, Transform>();
-                foreach (CanOpen_Object coo in coos) {
-                    SimObjPhysics target = ancestorSimObjPhysics(coo.gameObject);
-                    targets.Add(target);
-                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                        objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
-                        toReParent.transform.parent = coo.transform;
-                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
-                    }
-                }
-            }
-            
-            foreach (CanOpen_Object coo in coos) {
-                coo.Interact();
-            }
-
-            for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
-                yield return null;
-            }
-
-            if (ignoreAgentInTransition) {
-                foreach (CanOpen_Object coo in coos) {
-                    GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
-                    if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
-                        coo.Interact();
-                    }
-                }
-
-                for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
-                    yield return null;
-                }
-
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
-                }
-            }
-
-            if (freezeContained) {
-                foreach (string objectId in objectIdToOldParent.Keys) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                    rb.isKinematic = false;
-                }
-            }
-
-            actionFinished(true);
-        }
-
-        //swap an object's materials out to the cooked version of the object
+        // swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
             //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
@@ -5822,125 +5718,104 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void OpenObject(ServerAction action) {
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
+        // private helper used with OpenObject commands
+        private void openObject(
+            SimObjPhysics target,
+            float openness,
+            bool forceAction,
+            bool markActionFinished,
+            bool simplifyPhysics = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
             }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
+
+            if (openness > 1 || openness < 0) {
+                errorMessage = "openness must be in [0:1]";
+                if (markActionFinished) {
                     actionFinished(false);
-                    return;
                 }
+                return;
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
+            if (target == null) {
+                errorMessage = "Object not found!";
+                if (markActionFinished) {
                     actionFinished(false);
-                    return;
                 }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                return;
             }
-            
 
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
+            if (!forceAction && !target.isInteractable) {
+                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
+                if (markActionFinished) {
                     actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
                 }
+                return;
+            }
 
-                if(!target.GetComponent<CanOpen_Object>())
-                {
-                    errorMessage = "object must be Openable to open";
+            if(!target.GetComponent<CanOpen_Object>()) {
+                errorMessage = $"{target.ObjectID} is not an Openable object";
+                if (markActionFinished) {
                     actionFinished(false);
-                    return;
                 }
-
-                if (target.GetComponent<CanOpen_Object>()) {
-                    CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-                    //check to make sure object is closed
-                    if (codd.isOpen) {
-                        errorMessage = "Object already open and can't be opened again until closed fully";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type)) {
-                        if (target.GetComponent<CanToggleOnOff>().isOn) {
-                            errorMessage = "Target must be OFF to open!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    //pass in percentage open if desired
-                    if (action.moveMagnitude > 0.0f) 
-                    {
-                        if(action.moveMagnitude > 1.0)
-                        {
-                            errorMessage = "cannot open past 100%, please use moveMagnitude value in range (0.0, 1.0]";
-                            actionFinished(false);
-                            return;
-                        }
-
-                        // //if this fails, invalid percentage given
-                        // if (!codd.SetOpenPercent(action.moveMagnitude)) {
-                        //     errorMessage = "Please give an open percentage between 0.0f and 1.0f";
-                        //     actionFinished(false);
-                        //     return;
-                        // }
-                        StartCoroutine(InteractAndWait(codd, false, action.moveMagnitude));
-                        return;
-                    }
-
-                    StartCoroutine(InteractAndWait(codd));
-                }
+                return;
             }
 
-            //target not found in currently visible objects, report not found
-            else {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
+            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+
+            // This is a style choice that applies to Microwaves and Laptops,
+            // where it doesn't make a ton of sense to open them, while they are in use.
+            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
+                errorMessage = "Target must be OFF to open!";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
             }
+
+            StartCoroutine(openAnimation(
+                openableObject: codd,
+                freezeContained: simplifyPhysics,
+                openness: openness,
+                markActionFinished: markActionFinished
+            ));
         }
 
-        //open an object without returning actionFinished since this is used in the setup function
-        public IEnumerator openObject(SimObjPhysics target, bool open)
-        {
-            if(target.GetComponent<CanOpen_Object>())
-            {
-                CanOpen_Object coo = target.GetComponent<CanOpen_Object>();
+        public void OpenObject(
+            string objectId,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
+        }
 
-                //skip if it's already in the specified state
-                if(coo.isOpen == open)
-                {
-                    yield break;
-                }
-
-                //if object needs to be in the Off toggle state to open...
-                if(open && coo.WhatReceptaclesMustBeOffToOpen().Contains(target.Type))
-                {
-                    //if the object is on and we are trying to open it.. do nothing
-                    if(target.GetComponent<CanToggleOnOff>().isOn)
-                    yield break;
-                }
-
-                coo.Interact();
-            }
+        public void OpenObject(
+            float x,
+            float y,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
         }
 
         //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
@@ -7950,23 +7825,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // End code for calculating the volume of a mesh
 
-        public void RandomlyOpenCloseObjects(int randomSeed = 0, bool simplifyPhysics = false) {
-            System.Random rnd = new System.Random(randomSeed);
-            List<CanOpen_Object> toInteractWith = new List<CanOpen_Object>();
-            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
-                if (coo != null) {
-                    if (rnd.NextDouble() < 0.5) {
-                        if (!coo.isOpen) {
-                            toInteractWith.Add(coo);
-                        }
+        // @pOpen is the probability of opening an openable object.
+        // @randOpenness specifies if the openness for each opened object should be random, between 0% : 100%, or always 100%.
+        public void RandomlyOpenCloseObjects(
+                int? randomSeed = null,
+                bool simplifyPhysics = false,
+                float pOpen = 0.5f,
+                bool randOpenness = true
+        ) {
+            System.Random rnd;
+            System.Random rndOpenness;
+            if (randomSeed == null) {
+                // truly random!
+                rnd = new System.Random();
+                rndOpenness = new System.Random();
+            } else {
+                rnd = new System.Random((int) randomSeed);
+                rndOpenness = new System.Random(((int) randomSeed) + 42);
+            }
 
-                    } else if (coo.isOpen) {
-                        toInteractWith.Add(coo);
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (so.GetComponent<CanOpen_Object>()) {
+                    // randomly opens an object to a random openness
+                    if (rnd.NextDouble() < pOpen) {
+                        openObject(
+                            target: so,
+                            openness: randOpenness ? (float) rndOpenness.NextDouble() : 1,
+                            forceAction: true,
+                            simplifyPhysics: simplifyPhysics,
+                            markActionFinished: false
+                        );
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(toInteractWith, simplifyPhysics));
+            actionFinished(true);
         }
 
         public void GetApproximateVolume(string objectId) {

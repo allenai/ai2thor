@@ -1265,28 +1265,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                // Force open object
-                case "foo":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "OpenObject";
-                        action.forceAction = true;
-                        action.objectId = splitcommand[1];
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                // Force close object
-                case "fco":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseObject";
-                        action.forceAction = true;
-                        action.objectId = splitcommand[1];
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-                
                 // Close visible objects
                 case "cvo":
                     {
@@ -2325,64 +2303,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    //opens given object the given percent, default is 100% open
-                    //open <object ID> percent
-				case "open":
-					{
-						ServerAction action = new ServerAction();
-						action.action = "OpenObject";
-
-                        //default open 100%
-						if (splitcommand.Length > 1 && splitcommand.Length < 3)
-                        {
-                            action.objectId = splitcommand[1];
-                        }
-
-						//give the open percentage as 3rd param, from 0.0 to 1.0
-						else if(splitcommand.Length > 2)
-						{
-							action.objectId = splitcommand[1];
-							action.moveMagnitude = float.Parse(splitcommand[2]);
-						}
-
-						else
-						{
-                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-						}
-
-                        action.moveMagnitude = 0.5f;
-                        action.x = 0.5f;
-                        action.y = 0.5f;
-						PhysicsController.ProcessControlCommand(action);                  
-
-						break;
-					}
-
-				case "close":
+                    // opens given object the given percent, default is 100% open
+                    // open <object ID> percent
+                case "open":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "CloseObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenObject";
+                        action["forceAction"] = true;
 
-                        if (splitcommand.Length > 1)
-                        {
-                            action.objectId = splitcommand[1];
-                        }
-                  
-						else
-						{
+                        if (splitcommand.Length == 1) {
+                            // try opening object in front of the agent
+                            action["openness"] = 0.5f;
+                            action["x"] = 0.5f;
+                            action["y"] = 0.5f;
+                        } else if (splitcommand.Length == 2) {
+                            // default open 100%
+                            action["objectId"] = splitcommand[1];
+                        } else if (splitcommand.Length == 3) {
+                            // give the open percentage as 3rd param, from 0.0 to 1.0
+                            action["objectId"] = splitcommand[1];
+                            action["openness"] = float.Parse(splitcommand[2]);
+                        } else {
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-						}
+                        }
 
-                        action.x = 0.5f;
-                        action.y = 0.5f;
+                        PhysicsController.ProcessControlCommand(action);                  
+                        break;
+                    }
+
+                case "close":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CloseObject";
+
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        } else {
+                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                            action["x"] = 0.5f;
+                            action["y"] = 0.5f;
+                        }
+
                         PhysicsController.ProcessControlCommand(action);
-
                         break;
                     }
                    
-                    //pass in object id of a receptacle, and this will report any other sim objects inside of it
-                    //this works for cabinets, drawers, countertops, tabletops, etc.
-				case "contains":
+                    // pass in object id of a receptacle, and this will report any other sim objects inside of it
+                    // this works for cabinets, drawers, countertops, tabletops, etc.
+                case "contains":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "Contains";
