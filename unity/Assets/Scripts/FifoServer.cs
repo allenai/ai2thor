@@ -26,7 +26,12 @@ namespace FifoServer {
             {"image_classes", FieldType.ClassesImage},
             {"image_flow", FieldType.FlowsImage},
             {"image_ids", FieldType.IDsImage},
-            {"image-thirdParty-camera", FieldType.ThirdPartyCameraImage}
+            {"image-thirdParty-camera", FieldType.ThirdPartyCameraImage},
+            {"image_thirdParty_depth", FieldType.ThirdPartyDepth},
+            {"image_thirdParty_normals", FieldType.ThirdPartyNormals},
+            {"image_thirdParty_classes", FieldType.ThirdPartyClasses},
+            {"image_thirdParty_image_ids", FieldType.ThirdPartyImageIds},
+            {"image_thirdParty_flow", FieldType.ThirdPartyFlow}
 
         };
 
@@ -120,6 +125,11 @@ namespace FifoServer {
         IDsImage = 0x09,
         ThirdPartyCameraImage = 0x0a,
         MetadataPatch = 0x0b,
+        ThirdPartyDepth = 0x0c,
+        ThirdPartyNormals = 0x0d,
+        ThirdPartyImageIds = 0x0e,
+        ThirdPartyClasses = 0x0f,
+        ThirdPartyFlow = 0x10,
         EndOfMessage = 0xff
     }
 

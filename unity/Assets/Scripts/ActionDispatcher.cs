@@ -322,7 +322,7 @@ public static class ActionDispatcher {
         }  else {
             for(int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
-                // allows for passing in a ServerAtion as a dynamic to ProcessControlCommand
+                // allows for passing in a ServerAction as a dynamic to ProcessControlCommand
                 if (serverCommand.GetType() == pi.ParameterType){
                     arguments[i] = serverCommand;
                 } else if (serverCommand.ContainsKey(pi.Name)) {

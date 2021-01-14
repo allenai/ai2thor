@@ -107,17 +107,22 @@ public class Contains : MonoBehaviour
 
 		BoxCollider b = this.GetComponent<BoxCollider>();
 
-		//debug
-		//coll = b;
-
 		//get center of this box in world space
 		Vector3 worldCenter = b.transform.TransformPoint(b.center);
 
-        //DEBUG: Check if colliders are at correct spots
-        //Debug.Log(transform.parent.name + "'s collider is now at (" + b.transform.position.x + ", " + b.transform.position.y + ", " + b.transform.position.z + ").");
-
 		//size of this receptacle box, but we need to scale by transform
-		Vector3 worldHalfExtents = b.transform.TransformVector(b.transform.InverseTransformDirection(b.size * 0.5f));
+		Vector3 worldHalfExtents = new Vector3(b.size.x * b.transform.lossyScale.x / 2, b.size.y * b.transform.lossyScale.y / 2, b.size.z * b.transform.lossyScale.z / 2);
+
+		//////////////////////////////////////////////////
+        //uncomment to debug "draw" where the OverlapBox goes
+        // GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);	
+        // Destroy(surrogateGeo.GetComponent<Collider>());	
+        // surrogateGeo.name = transform.parent.gameObject + "_dimensions";	
+        // surrogateGeo.transform.position = worldCenter;	
+        // surrogateGeo.transform.rotation = b.transform.rotation;	
+        // surrogateGeo.transform.localScale = worldHalfExtents * 2;	
+        // surrogateGeo.transform.parent = b.transform;	
+		////////////////////////////////////////////////////
 
 		//ok now create an overlap box using these values and return all contained objects
 		foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation))

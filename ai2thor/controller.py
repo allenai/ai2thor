@@ -12,7 +12,6 @@ from itertools import product
 import json
 import copy
 import logging
-import fcntl
 import math
 import time
 import random
@@ -30,15 +29,14 @@ import termios
 
 
 import numpy as np
-import ai2thor.docker
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
-from ai2thor.build import COMMIT_ID
 import ai2thor.build
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
-from ai2thor.util import makedirs
+from ai2thor.util import makedirs, atomic_write
+from ai2thor.util.lock import LockEx
 
 import warnings
 
@@ -366,6 +364,8 @@ class Controller(object):
             start_unity=True,
             local_executable_path=None,
             local_build=False,
+            commit_id=ai2thor.build.COMMIT_ID,
+            branch=None,
             width=300,
             height=300,
             x_display=None,
@@ -373,7 +373,6 @@ class Controller(object):
             scene='FloorPlan_Train1_1',
             image_dir='.',
             save_image_per_frame=False,
-            docker_enabled=False,
             depth_format=DepthFormat.Meters,
             add_depth_noise=False,
             download_only=False,
@@ -384,8 +383,9 @@ class Controller(object):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
-        self.docker_enabled = docker_enabled
         self.container_id = None
+        self.width = width
+        self.height = height
 
         self.last_event = None
         self.scene = None
@@ -408,18 +408,19 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-        if local_executable_path:
+        if not start_unity:
+            self._build = ai2thor.build.EditorBuild()
+        elif local_executable_path:
             self._build = ai2thor.build.ExternalBuild(local_executable_path)
         else:
-            self._build = self.find_build(local_build)
+            self._build = self.find_build(local_build, commit_id, branch)
 
         if self._build is None:
             raise Exception("Couldn't find a suitable build for platform: %s" % platform.system())
 
-        if download_only:
-            self._build.download()
-        else:
+        self._build.download()
 
+        if not download_only:
             self.start(
                 port=port,
                 start_unity=start_unity,
@@ -453,9 +454,10 @@ class Controller(object):
             event = self.reset(scene)
             if event.metadata['lastActionSuccess']:
                 init_return = event.metadata['actionReturn']
-                self.server.set_init_params(init_return)
-
-                print("Initialize return: {}".format(init_return))
+                # older builds don't send actionReturn on Initialize
+                if init_return:
+                    self.server.set_init_params(init_return)
+                    logging.info("Initialize return: {}".format(init_return))
             else:
                 raise RuntimeError('Initialize action failure: {}'.format(
                     event.metadata['errorMessage'])
@@ -466,6 +468,11 @@ class Controller(object):
         if self.server is not None:
             return
 
+        if self.server_class.server_type not in self._build.server_types:
+            warnings.warn("server_type: %s not available in build: %s, defaulting to WSGI" % (self.server_class.server_type, self._build.url))
+            self.server_class = ai2thor.wsgi_server.WsgiServer
+
+
         if self.server_class == ai2thor.wsgi_server.WsgiServer:
             self.server = ai2thor.wsgi_server.WsgiServer(
                 host,
@@ -473,16 +480,14 @@ class Controller(object):
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
-                height=height
-            )
+                height=height)
+
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height)
-        else:
-            raise ValueError("Invalid server class: %s" % self.server_class)
 
     def __enter__(self):
         return self
@@ -492,24 +497,26 @@ class Controller(object):
 
     @property
     def scenes_in_build(self):
-        if self._scenes_in_build:
+        if self._scenes_in_build is not None:
             return self._scenes_in_build
 
-        event = self.step(action='GetScenesInBuild')
+        try:
+            event = self.step(action='GetScenesInBuild')
+            self._scenes_in_build = set(event.metadata['actionReturn'])
+        except ValueError as e:
+            # will happen for old builds without GetScenesInBuild
+            self._scenes_in_build = set()
 
-        self._scenes_in_build = set(event.metadata['actionReturn'])
 
         return self._scenes_in_build
 
-    def reset(self, scene=None):
-        # Case for just resetting the current scene
-        if scene is None and self.scene is not None:
-            scene = self.scene
-
+    def reset(self, scene='FloorPlan_Train1_1', **init_params):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
-        if scene not in self.scenes_in_build:
+        # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
+        # for old builds
+        if self.scenes_in_build and scene not in self.scenes_in_build:
             def key_sort_func(scene_name):
                 m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
                 last_val = m.group(3) if m.group(3) is not None else -1
@@ -524,7 +531,24 @@ class Controller(object):
 
         self.server.send(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = self.server.receive()
-        
+
+        # update the initialization parameters
+        init_params = init_params.copy()
+
+        # width and height are updates in 'ChangeResolution', not 'Initialize'
+        if ('width' in init_params and  init_params['width'] != self.width) or (
+            'height' in init_params and init_params['height'] != self.height
+        ):
+            if 'width' in init_params:
+                self.width = init_params['width']
+                del init_params['width']
+            if 'height' in init_params:
+                self.height = init_params['height']
+                del init_params['height']
+            self.step(action='ChangeResolution', x=self.width, y=self.height)
+
+        # updates the initialization parameters
+        self.initialization_parameters.update(init_params)
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
 
         self.scene = scene
@@ -550,6 +574,22 @@ class Controller(object):
 
         return scenes
 
+    def _prune_release(self, release):
+        try:
+            # we must try to get a lock here since its possible that a process could still
+            # be running with this release
+            lock = LockEx(release, blocking=False)
+            lock.lock()
+            tmp_prune_dir = os.path.join(self.tmp_dir, '-'.join([os.path.basename(release), str(time.time()), str(random.random()), 'prune']))
+            os.rename(release, tmp_prune_dir)
+            shutil.rmtree(tmp_prune_dir)
+
+            lock.unlock()
+            lock.unlink()
+            return True
+        except BlockingIOError:
+            return False
+
     def prune_releases(self):
         current_exec_path = self._build.executable_path
         rdir = self.releases_dir
@@ -562,22 +602,7 @@ class Controller(object):
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
-            try:
-                lf_path = release + ".lock"
-                lf = os.open(lf_path, os.O_RDWR | os.O_CREAT)
-                # we must try to get a lock here since its possible that a process could still
-                # be running with this release
-                fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
-
-                tmp_prune_dir = os.path.join(self.tmp_dir, '-'.join([self.build_name(release), str(time.time()), str(random.random()), 'prune']))
-                os.rename(release, tmp_prune_dir)
-                shutil.rmtree(tmp_prune_dir)
-
-                fcntl.lockf(lf, fcntl.LOCK_UN)
-                os.close(lf)
-                os.unlink(lf_path)
-            except Exception as e:
-                pass
+            self._prune_release(release)
 
     def next_interact_command(self):
         current_buffer = ''
@@ -652,33 +677,12 @@ class Controller(object):
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
-        should_fail = False
         self.last_action = action
-
-        if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
-
-            force_visible = action.get('forceVisible', False)
-            agent_id = action.get('agentId', 0)
-            instance_detections2D = self.last_event.events[agent_id].instance_detections2D
-            if not force_visible and instance_detections2D and action['objectId'] not in instance_detections2D:
-                should_fail = True
-
-            obj_metadata = self.last_event.events[agent_id].get_object(action['objectId'])
-            if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
-                should_fail = True
-
 
         rotation = action.get('rotation')
         if rotation is not None and type(rotation) != dict:
             action['rotation'] = {}
             action['rotation']['y'] = rotation
-
-        if should_fail:
-            new_event = copy.deepcopy(self.last_event)
-            new_event.metadata['lastActionSuccess'] = False
-            self.last_event = new_event
-            return new_event
-
 
         self.server.send(action)
         self.last_event = self.server.receive()
@@ -707,27 +711,16 @@ class Controller(object):
         # get environment variables
 
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
+        env['AI2THOR_SERVER_TYPE'] = self.server.server_type
         env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'False' if self.headless else 'True'
-        for k,v in server_params.items():
+        for k, v in server_params.items():
             env['AI2THOR_' + k.upper()] = v
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
-
-        if image_name is not None:
-            self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
-            atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
-        else:
-            self.server.unity_proc = proc = subprocess.Popen(command, env=env)
-            self.unity_pid = proc.pid
-            atexit.register(lambda: proc.poll() is None and proc.kill())
-
-    def check_docker(self):
-        if self.docker_enabled:
-            assert ai2thor.docker.has_docker(), "Docker enabled, but could not find docker binary in path"
-            assert ai2thor.docker.nvidia_version() is not None,\
-                "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only \
-                    compatible with hosts with Nvidia cards with a driver installed"
+        self.server.unity_proc = proc = subprocess.Popen(command, env=env)
+        self.unity_pid = proc.pid
+        atexit.register(lambda: proc.poll() is None and proc.kill())
 
     def check_x_display(self, x_display):
         with open(os.devnull, "w") as dn:
@@ -749,41 +742,92 @@ class Controller(object):
         return os.path.join(self.base_dir, 'releases')
 
     @property
+    def cache_dir(self):
+        return os.path.join(self.base_dir, 'cache')
+
+    @property
+    def commits_cache_dir(self):
+        return os.path.join(self.cache_dir, 'commits')
+
+    @property
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
-    def find_build(self, local_build):
+    def _cache_commit_filename(self, branch):
+        return os.path.join(self.commits_cache_dir, branch + ".json")
+
+    def _cache_commit_history(self, branch, payload):
+        makedirs(self.commits_cache_dir)
+        cache_filename = self._cache_commit_filename(branch)
+        atomic_write(cache_filename, json.dumps(payload))
+
+    def _get_cache_commit_history(self, branch):
+        cache_filename = self._cache_commit_filename(branch)
+        payload = None
+        if os.path.exists(cache_filename):
+            with open(cache_filename, "r") as f:
+                payload = json.loads(f.read())
+
+        return payload
+
+    def _branch_commits(self, branch):
+        import requests
+        payload = []
+        try:
+            res = requests.get('https://api.github.com/repos/allenai/ai2thor/commits?sha=%s' % branch)
+            if res.status_code == 404:
+                raise ValueError("Invalid branch name: %s" % branch)
+            elif res.status_code == 200:
+                payload = res.json()
+                self._cache_commit_history(branch, payload)
+            else:
+                res.raise_for_status()
+        except requests.exceptions.ConnectionError as e:
+            payload = self._get_cache_commit_history(branch)
+            if payload:
+                warnings.warn("Unable to connect to github.com: %s - using cached commit history for %s" % (e, branch ))
+            else:
+                raise Exception("Unable to get commit history for branch %s and no cached history exists: %s" % (branch, e))
+
+        return [c['sha'] for c in payload]
+        
+    def find_build(self, local_build, commit_id, branch):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
         arch = arch_platform_map[platform.system()]
 
-        if COMMIT_ID:
-            ver_build = ai2thor.build.Build(arch, COMMIT_ID, self.include_private_scenes, self.releases_dir)
+        if branch:
+            commits = self._branch_commits(branch)
+        elif commit_id:
+            ver_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, self.releases_dir)
+            ver_build.exists()
             return ver_build
         else:
             git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
             commits = subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n")
 
-            rdir = self.releases_dir
-            found_build = None
+        rdir = self.releases_dir
+        found_build = None
 
-            if local_build:
-                rdir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds")
-                commits = ['local'] + commits # we add the commits to the list to allow the ci_build to succeed
+        if local_build:
+            rdir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds")
+            commits = ['local'] + commits  # we add the commits to the list to allow the ci_build to succeed
 
-            for commit_id in commits:
-                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, rdir)
+        for commit_id in commits:
+            commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes, rdir)
 
-                try:
-                    if os.path.isfile(commit_build.executable_path) or (not local_build and commit_build.exists()):
-                        found_build = commit_build
-                        break
-                except Exception:
-                    pass
+            try:
+                if os.path.isfile(commit_build.executable_path) or (not local_build and commit_build.exists()):
+                    found_build = commit_build
+                    break
+            except Exception:
+                pass
+        
+        if commit_build and commit_build.commit_id != commits[0]:
+            warnings.warn("Build for the most recent commit: %s is not available.  Using commit build %s" % (commits[0], commit_build.commit_id))
 
-            # print("Got build for %s: " % (url))
-
-            return found_build
+        #print("Got build for %s: " % (found_build.url))
+        return found_build
 
     def start(
             self,
@@ -828,28 +872,17 @@ class Controller(object):
 
         image_name = None
 
-        if self.docker_enabled:
-            self.check_docker()
-            host = ai2thor.docker.bridge_gateway()
-
-
         self.server.start()
+        if platform.system() == 'Linux':
+            if x_display:
+                env['DISPLAY'] = ':' + x_display
+            elif 'DISPLAY' not in env:
+                env['DISPLAY'] = ':0.0'
+
+            self.check_x_display(env['DISPLAY'])
 
         if start_unity:
-            if platform.system() == 'Linux':
 
-                if self.docker_enabled:
-                    image_name = ai2thor.docker.build_image()
-                else:
-
-                    if x_display:
-                        env['DISPLAY'] = ':' + x_display
-                    elif 'DISPLAY' not in env:
-                        env['DISPLAY'] = ':0.0'
-
-                    self.check_x_display(env['DISPLAY'])
-
-            self._build.download()
             self._build.lock_sh()
             self.prune_releases()
 
@@ -867,13 +900,7 @@ class Controller(object):
     def stop(self):
         self.stop_unity()
         self.server.stop()
-        self.stop_container()
         self._build.unlock()
-
-    def stop_container(self):
-        if self.container_id:
-            ai2thor.docker.kill_container(self.container_id)
-            self.container_id = None
 
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
