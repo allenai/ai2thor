@@ -6947,6 +6947,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float[] horizons = null,
             bool[] standings = null
         ) {
+            if (360 % rotateStepDegrees != 0) {
+                errorMessage = "360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.";
+                actionFinished(false);
+                return;
+            }
+
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "objectId appears to be invalid.";
                 actionFinished(false);
@@ -6981,9 +6987,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // populate the rotations based on rotateStepDegrees
             if (rotations == null) {
+                // Consider the case where one does not want to move on a perfect grid, and is currently moving
+                //  with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
+                // This may happen if the agent starts by teleports with the rotation of 10 degrees.
+                float offset = transform.rotation.y % rotateStepDegrees;
+
                 rotations = new float[(int) (360 / rotateStepDegrees)];
                 int i = 0;
-                for (float rotation = 0; rotation < 360; rotation += rotateStepDegrees) {
+
+                // Examples:
+                // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
+                // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
+                for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
                     rotations[i++] = rotation;
                 }
             }
@@ -7021,18 +7036,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
                 foreach (bool standing in standings) {
-                    if (standing) stand(); else crouch();
+                    if (standing) {
+                        stand();
+                     } else {
+                         crouch();
+                     }
 
                     foreach (float rotation in rotations) {
-                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+                        Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                        transform.rotation = Quaternion.Euler(rotationVector);
 
                         foreach (Vector3 position in filteredPositions) {
                             transform.position = position;
+
+                            // Each of these values is directly compatible with TeleportFull
+                            // and should be used with .step(action='TeleportFull', **interactable_positions[0])
                             if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
                                 validAgentPoses["x"].Add(position.x);
                                 validAgentPoses["y"].Add(position.y);
                                 validAgentPoses["z"].Add(position.z);
-                                validAgentPoses["rotation"].Add(rotation);
+                                validAgentPoses["rotation"].Add(rotationVector);
                                 validAgentPoses["standing"].Add(standing);
                                 validAgentPoses["horizon"].Add(horizon);
 
@@ -7047,7 +7070,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // restore old agent pose
-            if (wasStanding) stand(); else crouch();
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
             transform.position = oldPosition;
             transform.rotation = oldRotation;
             m_Camera.transform.localEulerAngles = oldHorizon;
@@ -7070,13 +7097,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] positions = null
         ) {
             // set horizons using the horizon as an increment
-            float[] horizons = new float[(int) ((maxDownwardLookAngle + maxUpwardLookAngle) / horizon)];
-            int i = 0;
-            for (float h = -maxUpwardLookAngle; h < maxDownwardLookAngle; h += horizon) {
-                horizons[i++] = h;
+            List<float> horizons = new List<float>();
+            for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
+                horizons.Add(h);
             }
 
-            GetInteractablePositions(objectId: objectId, positions: positions, horizons: horizons);
+            GetInteractablePositions(objectId: objectId, positions: positions, horizons: horizons.ToArray());
         }
 
         public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
