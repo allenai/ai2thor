@@ -48,7 +48,7 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
-	public const float DEFAULT_FOV = 90;
+    public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
 
