@@ -39,7 +39,6 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
 
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
-
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
     with open(build_archive_name, "rb") as af:
@@ -99,8 +98,27 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     full_env["UNITY_BUILD_NAME"] = target_path
     result_code = subprocess.check_call(command, shell=True, env=full_env)
     print("Exited with code {}".format(result_code))
-    return result_code == 0
+    success = result_code == 0
+    if success:
+        generate_build_metadata(os.path.join(project_path, build_dir, "metadata.json"))
+    return success
 
+
+def generate_build_metadata(metadata_path):
+
+    # this server_types metadata is maintained
+    # to allow future versions of the Python API
+    # to launch older versions of the Unity build
+    # and know whether the Fifo server is available
+    server_types = ['WSGI']
+    try:
+        import ai2thor.fifo_server
+        server_types.append('FIFO')
+    except Exception as e:
+        pass
+
+    with open(os.path.join(metadata_path), "w") as f:
+        f.write(json.dumps(dict(server_types=server_types)))
 
 def class_dataset_images_for_scene(scene_name):
     import ai2thor.controller
@@ -523,19 +541,6 @@ def build_sha256(path):
     return m.hexdigest()
 
 
-def build_docker(version):
-
-    subprocess.check_call(
-        "docker build --quiet --rm --no-cache -t  ai2thor/ai2thor-base:{version} .".format(
-            version=version
-        ),
-        shell=True,
-    )
-
-    subprocess.check_call(
-        "docker push ai2thor/ai2thor-base:{version}".format(version=version), shell=True
-    )
-
 def git_commit_id():
     commit_id = (
         subprocess.check_output("git log -n 1 --format=%H", shell=True)
@@ -946,8 +951,6 @@ def build(context, local=False):
 
     builds = {"Docker": {"tag": version}}
     threads = []
-    # dp = Process(target=build_docker, args=(version,))
-    # dp.start()
 
     for include_private_scenes in (True, False):
         for arch in platform_map.keys():
