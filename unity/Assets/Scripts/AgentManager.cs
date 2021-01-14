@@ -1191,7 +1191,7 @@ public class ObjectMetadata
 	///
 	public bool openable;
 	public bool isOpen;
-	public float openness; // if the object is openable, what is the current openness? It's a normalized percentage from [0:1]
+	public float openPercent;//if the object is openable, what is the current open percent? value from 0 to 1.0
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
@@ -1416,7 +1416,7 @@ public class ServerAction
 	public string receptacleObjectId;
 	public float gridSize;
 	public string[] excludeObjectIds;
-    public string [] objectIds;
+        public string [] objectIds;
 	public string objectId;
 	public int agentId;
 	public int thirdPartyCameraId;

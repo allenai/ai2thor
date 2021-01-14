@@ -656,5 +656,7 @@ public interface SimpleSimObj {
 	string ObjectID {get; set; }
 	List<string> ReceptacleObjectIds {get;}
 	bool IsOpen {get; }
+	bool Open(); 
+	bool Close();
 	GameObject gameObject {get; }
 }

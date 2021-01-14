@@ -224,7 +224,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Execute(string command)
         {
-
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
                 (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
@@ -654,18 +653,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "color":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RandomizeColors";
+                        action["action"] = "ChangeColorOfMaterials";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                case "resetcolor":
-                    {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ResetColors";
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
@@ -678,9 +669,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "crazydiamond":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MakeObjectsOfTypeUnbreakable";
-                        action["objectType"] = "Egg";
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeObjectsOfTypeUnbreakable";
+                        action.objectType = "Egg";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -1162,30 +1153,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "putr":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "PutObject";
-                        action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
-                        action["randomSeed"] = int.Parse(splitcommand[1]);
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                        action.randomSeed = int.Parse(splitcommand[1]);
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action["placeStationary"] = false; 
+                        action.placeStationary = false; 
 
                         //set this true to ignore Placement Restrictions
-                        action["forceAction"] = true;
+                        action.forceAction = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "put":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "PutObject";
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action["objectId"] = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
@@ -1194,11 +1185,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action["placeStationary"] = true; 
-                        action["x"] = 0.5f;
-                        action["y"] = 0.5f;
+                        action.placeStationary = true; 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         //set this true to ignore Placement Restrictions
-                        action["forceAction"] = true;
+                        action.forceAction = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -1207,24 +1198,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //put an object down with stationary false
                 case "putf":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "PutObject";
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action["objectId"] = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
-                            action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                            action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action["placeStationary"] = false; 
+                        action.placeStationary = false; 
 
                         //set this true to ignore Placement Restrictions
-                        action["forceAction"] = true;
+                        action.forceAction = true;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -1266,7 +1257,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Ray ray = agent.m_Camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
                         bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, (1 << 8) | (1 << 10));
 
-                        print("where did the ray land? " + hit.point);
                         if (itemInHand != null) {
                             itemInHand.SetActive(true);
                         }
@@ -1279,8 +1269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 SimObjPhysics[] allSops = GameObject.FindObjectsOfType<SimObjPhysics>();
                                 sop = allSops[UnityEngine.Random.Range(0, allSops.Length)];
                             }
-                            //adding y offset to position so that the downward raycast used in PlaceObjectAtPoint correctly collides with surface below point
-                            action["position"] = hit.point + new Vector3(0, 0.5f, 0); 
+                            action["position"] = hit.point;
                             action["objectId"] = sop.ObjectID;
                             
                             Debug.Log(action);
@@ -1296,53 +1285,47 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "InitialRandomSpawn";
-
-                        // List<string> excludedObjectIds = new List<string>();
-                        // foreach (SimObjPhysics sop in AManager.agents[0].VisibleSimObjs(false)) {
-                        //     excludedObjectIds.Add(sop.ObjectID);
-                        // }
-                        // action["excludedObjectIds"] = excludedObjectIds.ToArray();
+                        ServerAction action = new ServerAction();
+                        action.action = "InitialRandomSpawn";
 
                         //give me a seed
                         if(splitcommand.Length == 2)
                         {
-                            action["randomSeed"] = int.Parse(splitcommand[1]);
-                            action["forceVisible"] = false;
-                            action["numPlacementAttempts"] = 5;
+                            action.randomSeed = int.Parse(splitcommand[1]);
+                            action.forceVisible = false;
+                            action.numPlacementAttempts = 5;
                         }
 
                         //should objects be spawned only in immediately visible areas?
                         else if(splitcommand.Length == 3)
                         {
-                            action["randomSeed"] = int.Parse(splitcommand[1]);
+                            action.randomSeed = int.Parse(splitcommand[1]);
 
                             if(splitcommand[2] == "t") 
-                            action["forceVisible"] = true;
+                            action.forceVisible = true;
 
                             if(splitcommand[2] == "f") 
-                            action["forceVisible"] = false;
+                            action.forceVisible = false;
                         }
 
                         else if(splitcommand.Length == 4)
                         {
-                            action["randomSeed"] = int.Parse(splitcommand[1]);
+                            action.randomSeed = int.Parse(splitcommand[1]);
 
                             if(splitcommand[2] == "t") 
-                            action["forceVisible"] = true;
+                            action.forceVisible = true;
 
                             if(splitcommand[2] == "f") 
-                            action["forceVisible"] = false;
+                            action.forceVisible = false;
 
-                            action["numPlacementAttempts"] = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
                         }
 
                         else
                         {
-                            action["randomSeed"] = 0;
-                            action["forceVisible"] = false;//true;
-                            action["numPlacementAttempts"] = 20;
+                            action.randomSeed = 0;
+                            action.forceVisible = false;//true;
+                            action.numPlacementAttempts = 20;
                         }
 
                         // ObjectTypeCount otc = new ObjectTypeCount();
@@ -1354,13 +1337,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         String[] excludeThese = new String[1];
                         excludeThese[0] = "CounterTop";
-                        action["excludedReceptacles"] = excludeThese;
+                        action.excludedReceptacles = excludeThese;
 
-                        action["placeStationary"] = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
-                    } 
+                    }  
+
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
@@ -1495,9 +1479,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "rspawnfloor": 
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RandomlyCreateAndPlaceObjectOnFloor";
-                        action["objectType"] = splitcommand[1];
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyCreateAndPlaceObjectOnFloor";
+                        action.objectType = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1613,6 +1597,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                // Force open object
+                case "foo":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "OpenObject";
+                        action.forceAction = true;
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Force close object
+                case "fco":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseObject";
+                        action.forceAction = true;
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
                 // Close visible objects
                 case "cvo":
                     {
@@ -1645,10 +1651,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // Get objects in box
                 case "oib":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ObjectsInBox";
-                        action["x"] = float.Parse(splitcommand[1]);
-                        action["z"] = float.Parse(splitcommand[2]);
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectsInBox";
+                        action.x = float.Parse(splitcommand[1]);
+                        action.z = float.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         foreach (string s in PhysicsController.objectIdsInBox) {
                             Debug.Log(s);
@@ -2559,20 +2565,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "toggleon":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ToggleObjectOn";
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleObjectOn";
                         if (splitcommand.Length > 1)
                         {
-                            action["objectId"] = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         else
                         {
                             //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
-                            action["x"] = 0.5f;
-                            action["y"] = 0.5f;
                         }
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2580,22 +2586,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "toggleoff":
                     {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ToggleObjectOff";
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleObjectOff";
                         if (splitcommand.Length > 1)
                         {
-                            action["objectId"] = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
                         else
                         {
                             //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
-                            action["x"] = 0.5f;
-                            action["y"] = 0.5f;
                         }
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         //action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
-                        action["forceVisible"] = true;
-                        action["forceAction"] = true;
+                        action.forceVisible = true;
+                        action.forceAction = true;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2651,54 +2657,64 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    // opens given object the given percent, default is 100% open
-                    // open <object ID> percent
-                case "open":
-                    {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "OpenObject";
-                        action["forceAction"] = true;
+                    //opens given object the given percent, default is 100% open
+                    //open <object ID> percent
+				case "open":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "OpenObject";
 
-                        if (splitcommand.Length == 1) {
-                            // try opening object in front of the agent
-                            action["openness"] = 0.5f;
-                            action["x"] = 0.5f;
-                            action["y"] = 0.5f;
-                        } else if (splitcommand.Length == 2) {
-                            // default open 100%
-                            action["objectId"] = splitcommand[1];
-                        } else if (splitcommand.Length == 3) {
-                            // give the open percentage as 3rd param, from 0.0 to 1.0
-                            action["objectId"] = splitcommand[1];
-                            action["openness"] = float.Parse(splitcommand[2]);
-                        } else {
-                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                        //default open 100%
+						if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
+                            action.objectId = splitcommand[1];
                         }
 
-                        PhysicsController.ProcessControlCommand(action);                  
-                        break;
-                    }
+						//give the open percentage as 3rd param, from 0.0 to 1.0
+						else if(splitcommand.Length > 2)
+						{
+							action.objectId = splitcommand[1];
+							action.moveMagnitude = float.Parse(splitcommand[2]);
+						}
 
-                case "close":
-                    {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "CloseObject";
-
-                        if (splitcommand.Length > 1) {
-                            action["objectId"] = splitcommand[1];
-                        } else {
+						else
+						{
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-                            action["x"] = 0.5f;
-                            action["y"] = 0.5f;
-                        }
+						}
 
+                        action.moveMagnitude = 0.5f;
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+						PhysicsController.ProcessControlCommand(action);                  
+
+						break;
+					}
+
+				case "close":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseObject";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+                  
+						else
+						{
+                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+						}
+
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
+
                         break;
                     }
                    
-                    // pass in object id of a receptacle, and this will report any other sim objects inside of it
-                    // this works for cabinets, drawers, countertops, tabletops, etc.
-                case "contains":
+                    //pass in object id of a receptacle, and this will report any other sim objects inside of it
+                    //this works for cabinets, drawers, countertops, tabletops, etc.
+				case "contains":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "Contains";

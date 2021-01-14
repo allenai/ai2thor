@@ -405,34 +405,6 @@ public class PhysicsSceneManager : MonoBehaviour
         return !shouldFail;
     }
 
-	public System.Collections.Generic.IEnumerator<SimObjPhysics> GetValidReceptaclesForSimObj(
-		SimObjPhysics simObj, List<SimObjPhysics> receptaclesInScene
-	) {
-		SimObjType goObjType = simObj.ObjType;
-		bool typeFoundInDictionary = ReceptacleRestrictions.PlacementRestrictions.ContainsKey(goObjType);
-		if(typeFoundInDictionary) {
-			List<SimObjType> typesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(ReceptacleRestrictions.PlacementRestrictions[goObjType]);
-
-			//remove from list if receptacle isn't in this scene
-			//compare to receptacles that exist in scene, get the ones that are the same
-			foreach(SimObjPhysics receptacleSop in receptaclesInScene)
-			{
-				// don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
-
-				if (receptacleSop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) { 
-					if (typesOfObjectsPrefabIsAllowedToSpawnIn.Contains(receptacleSop.ObjType)) {
-						yield return receptacleSop;
-					}
-				}
-			}
-		} else {
-			//not found in dictionary!
-			#if UNITY_EDITOR
-			Debug.Log(simObj.ObjectID +"'s Type is not in the ReceptacleRestrictions dictionary!");
-			#endif
-		}
-	}
-
     //use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
     // //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
     // public bool RandomSpawnRequiredSceneObjects(ServerAction action)
@@ -449,12 +421,11 @@ public class PhysicsSceneManager : MonoBehaviour
     //excludedReceptacles - 
 	public bool RandomSpawnRequiredSceneObjects(
 		int seed,
-		bool spawnOnlyOutside,
+		bool SpawnOnlyOutside,
 		int maxPlacementAttempts,
-		bool staticPlacement,
-		HashSet<SimObjPhysics> excludedSimObjects,
+		bool StaticPlacement,
         ObjectTypeCount[] numDuplicatesOfType,
-        List<SimObjType> excludedReceptacleTypes
+        List<SimObjType> excludedReceptacles
     )
     {
 		#if UNITY_EDITOR
@@ -470,15 +441,17 @@ public class PhysicsSceneManager : MonoBehaviour
 			return false;
 		}
 
-        // initialize Unity's random with seed
+        //initialize Unity's random with seed
 		UnityEngine.Random.InitState(seed);
 
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
+		Dictionary<SimObjType, List<SimObjPhysics>> AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
 		int HowManyCouldntSpawn = RequiredObjects.Count;
 
-		// if we already spawned objects, lets just move them around
-		if (SpawnedObjects.Count > 0) {
+		//if we already spawned objects, lets just move them around
+		if(SpawnedObjects.Count > 0)
+		{
 			HowManyCouldntSpawn = SpawnedObjects.Count;
 
             Dictionary<SimObjType, List<SimObjPhysics>> typeToObjectList = new Dictionary<SimObjType, List<SimObjPhysics>>();
@@ -497,19 +470,19 @@ public class PhysicsSceneManager : MonoBehaviour
                 requestedNumDuplicatesOfType[objType] = repeatCount.count;
             }
 
-            // Now lets go through all pickupable sim objects that are in the current scene
+            //now lets go through all pickupable sim objects that are in the current scene
             foreach (GameObject go in SpawnedObjects)
             {
                 SimObjPhysics sop = null;
                 sop = go.GetComponent<SimObjPhysics>();
 
-                // Add object types in the current scene to the typeToObjectList if not already on it
+                //add object types in the current scene to the typeToObjectList if not already on it
                 if (!typeToObjectList.ContainsKey(sop.ObjType))
                 {
                     typeToObjectList[sop.ObjType] = new List<SimObjPhysics>();
                 }
 
-                // Add this sim object to the list if the sim object's type matches the key in typeToObjectList
+                //Add this sim object to the list if the sim object's type matches the key in typeToObjectList
                 if (!requestedNumDuplicatesOfType.ContainsKey(sop.ObjType) ||
                     (typeToObjectList[sop.ObjType].Count < requestedNumDuplicatesOfType[sop.ObjType]))
                 {
@@ -517,12 +490,12 @@ public class PhysicsSceneManager : MonoBehaviour
                 }
             }
 
-            // Keep track of the sim objects we are making duplicates of
-            List<GameObject> gameObjsToPlaceInReceptacles = new List<GameObject>();
-            // Keep track of the sim objects that have not been duplicated
+            //keep track of the sim objects we are making duplicates of
+            List<GameObject> simObjectDuplicates = new List<GameObject>();
+            //keep track of the sim objects that have not been duplicated
             List<GameObject> unduplicatedSimObjects = new List<GameObject>();
 
-            // Ok now lets go through each object type in the dictionary
+            //ok now lets go through each object type in the dictionary
             foreach (SimObjType sopType in typeToObjectList.Keys)
             {
                 //we found a matching SimObjType and the requested count of duplicates is bigger than how many of that
@@ -532,7 +505,7 @@ public class PhysicsSceneManager : MonoBehaviour
                 {
                     foreach (SimObjPhysics sop in typeToObjectList[sopType])
                     {
-                        gameObjsToPlaceInReceptacles.Add(sop.gameObject);
+                        simObjectDuplicates.Add(sop.gameObject);
                     }
 
                     int numExtra = requestedNumDuplicatesOfType[sopType] - typeToObjectList[sopType].Count;
@@ -546,7 +519,7 @@ public class PhysicsSceneManager : MonoBehaviour
                         copy.name += "_random_copy_" + j;
                         copy.ObjectID = sop.ObjectID + "_copy_" + j;
                         copy.objectID = copy.ObjectID;
-                        gameObjsToPlaceInReceptacles.Add(copy.gameObject);
+                        simObjectDuplicates.Add(copy.gameObject);
                     }
                 }
 
@@ -560,131 +533,177 @@ public class PhysicsSceneManager : MonoBehaviour
                 }
             }
 
-			System.Random rng = new System.Random(seed);
-            gameObjsToPlaceInReceptacles.AddRange(unduplicatedSimObjects);
-			gameObjsToPlaceInReceptacles.Shuffle_(rng);
+            unduplicatedSimObjects.Shuffle_(seed);
+            simObjectDuplicates.AddRange(unduplicatedSimObjects);
 
-			Dictionary<SimObjType, List<SimObjPhysics>> objTypeToReceptacles = new Dictionary<SimObjType, List<SimObjPhysics>>();
-			foreach (SimObjPhysics receptacleSop in GatherAllReceptaclesInScene()) {
+			List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
+			ReceptaclesInScene = GatherAllReceptaclesInScene();
 
-				SimObjType receptType = receptacleSop.ObjType;
-				if (
-					(!excludedReceptacleTypes.Contains(receptacleSop.Type)) && (
-						(!spawnOnlyOutside) || ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(receptacleSop.ObjType)
-					)
-				) {
-					if (!objTypeToReceptacles.ContainsKey(receptacleSop.ObjType)) {
-						objTypeToReceptacles[receptacleSop.ObjType] = new List<SimObjPhysics>();
-					}
-					objTypeToReceptacles[receptacleSop.ObjType].Add(receptacleSop);
-				}
-			}
+            //ok now simObjectDuplicates should have all the game objects, duplicated and unduplicated
+            foreach (GameObject go in simObjectDuplicates)
+			{
+				AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
-			InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
-            foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles) {
-				SimObjPhysics sopToPlaceInReceptacle = gameObjToPlaceInReceptacle.GetComponent<SimObjPhysics>();
+				SimObjType goObjType = go.GetComponent<SimObjPhysics>().ObjType;
 
-				if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
-					HowManyCouldntSpawn--;
-					continue;
-				}
+				bool typefoundindictionary = ReceptacleRestrictions.PlacementRestrictions.ContainsKey(goObjType);
+				if(typefoundindictionary)
+				{
+					TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(ReceptacleRestrictions.PlacementRestrictions[goObjType]);
 
-				bool spawned = false;
-				foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
-					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
-			
-					// check if the target Receptacle is an ObjectSpecificReceptacle
-					// if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
-					// this is specifically for things like spawning a mug inside a coffee maker
-					if(receptacleSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
-					{
-						ObjectSpecificReceptacle osr = receptacleSop.GetComponent<ObjectSpecificReceptacle>();
-
-						if (osr.HasSpecificType(sopToPlaceInReceptacle.ObjType))
-						{
-							//in the random spawn function, we need this additional check because there isn't a chance for
-							//the physics update loop to fully update osr.isFull() correctly, which can cause multiple objects
-							//to be placed on the same spot (ie: 2 pots on the same burner)
-							if (osr.attachPoint.transform.childCount > 0) {
-								break;
-							}
-
-							// perform additional checks if this is a Stove Burner! 
-							if (receptacleSop.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
-								if (
-									StoveTopCheckSpawnArea(
-										sopToPlaceInReceptacle,
-										osr.attachPoint.transform.position,
-										osr.attachPoint.transform.rotation,
-										false) == true
-								) {
-									//print("moving object now");
-									gameObjToPlaceInReceptacle.transform.position = osr.attachPoint.position;
-									gameObjToPlaceInReceptacle.transform.SetParent(osr.attachPoint.transform);
-									gameObjToPlaceInReceptacle.transform.localRotation = Quaternion.identity;
-									
-									gameObjToPlaceInReceptacle.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
-									gameObjToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
-
-									HowManyCouldntSpawn--;
-									spawned = true;
-
-									break;
-								}
-							} else { //for everything else (coffee maker, toilet paper holder, etc) just place it if there is nothing attached
-								gameObjToPlaceInReceptacle.transform.position = osr.attachPoint.position;
-								gameObjToPlaceInReceptacle.transform.SetParent(osr.attachPoint.transform);
-								gameObjToPlaceInReceptacle.transform.localRotation = Quaternion.identity;
-
-								Rigidbody rb = gameObjToPlaceInReceptacle.GetComponent<Rigidbody>();
-								rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-								rb.isKinematic = true;
+					//remove from list if receptacle isn't in this scene
+					//compare to receptacles that exist in scene, get the ones that are the same
 					
-								HowManyCouldntSpawn--;
-								spawned = true;
-								break;
+					foreach(SimObjPhysics sop in ReceptaclesInScene)
+					{
+						// don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
+						bool allowed = false;
+						if (sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) 
+                        { 
+							if(SpawnOnlyOutside)
+							{
+								if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+								{
+									allowed = true;
+								}
+							}
+							else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+							{
+								allowed = true;
 							}
 						}
+
+						if (allowed) 
+                        {
+							if (!AllowedToSpawnInAndExistsInScene.ContainsKey(sop.ObjType)) 
+                            {
+								AllowedToSpawnInAndExistsInScene[sop.ObjType] = new List<SimObjPhysics>();
+							}
+                            
+							AllowedToSpawnInAndExistsInScene[sop.ObjType].Add(sop);
+						}
 					}
-
-					targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints(false);
-
-					// first shuffle the list so it's raaaandom
-					targetReceptacleSpawnPoints.Shuffle_(rng);
-					if (spawner.PlaceObjectReceptacle(
-						targetReceptacleSpawnPoints,
-						sopToPlaceInReceptacle,
-						staticPlacement,
-						maxPlacementAttempts,
-						90,
-						true
-					)) {
-						HowManyCouldntSpawn--;
-						spawned = true;
-						break;
-					} 
 				}
 
-				if (!spawned) {
+				//not found in dictionary!
+				else
+				{
 					#if UNITY_EDITOR
-					Debug.Log(gameObjToPlaceInReceptacle.name + " could not be spawned.");
+					Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
 					#endif
-					//go.GetComponent<SimpleSimObj>().IsDisabled = true;
-					if (!originalObjects.Contains(gameObjToPlaceInReceptacle))
-					{
-						gameObjToPlaceInReceptacle.SetActive(false);
-						Destroy(gameObjToPlaceInReceptacle);
-					}
+					break;
 				}
 
+				// Now we have an updated list of receptacles in the scene that are also in the list
+				// of valid receptacles for this given game object "go" that we are currently checking this loop
+				if(AllowedToSpawnInAndExistsInScene.Count > 0)
+				{
+					InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
+					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
+			
+					bool spawned = false;
+					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene, seed))
+					{
+                        //if the receptacle, sop, is in the list of receptacles to exclude, skip over it and try the other Receptacles
+                        if(excludedReceptacles.Contains(sop.Type))
+                        {
+                            continue;
+                        }
+
+						//check if the target Receptacle is an ObjectSpecificReceptacle
+						//if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
+						//this is specifically for things like spawning a mug inside a coffee maker
+						if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
+						{
+							ObjectSpecificReceptacle osr = sop.GetComponent<ObjectSpecificReceptacle>();
+
+							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType))
+							{
+								//in the random spawn function, we need this additional check because there isn't a chance for
+								//the physics update loop to fully update osr.isFull() correctly, which can cause multiple objects
+								//to be placed on the same spot (ie: 2 pots on the same burner)
+								if(osr.attachPoint.transform.childCount > 0)
+								{
+									break;
+								}
+
+								//perform additional checks if this is a Stove Burner! 
+								if(sop.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner)
+								{
+									if(StoveTopCheckSpawnArea(go.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
+									osr.attachPoint.transform.rotation, false) == true)
+									{
+										//print("moving object now");
+										go.transform.position = osr.attachPoint.position;
+										go.transform.SetParent(osr.attachPoint.transform);
+										go.transform.localRotation = Quaternion.identity;
+										
+										go.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
+										go.GetComponent<Rigidbody>().isKinematic = true;
+
+										HowManyCouldntSpawn--;
+										spawned = true;
+
+										break;
+									}
+								}
+
+								//for everything else (coffee maker, toilet paper holder, etc) just place it if there is nothing attached
+								else
+								{
+										go.transform.position = osr.attachPoint.position;
+										go.transform.SetParent(osr.attachPoint.transform);
+										go.transform.localRotation = Quaternion.identity;
+
+										Rigidbody rb = go.GetComponent<Rigidbody>();
+										rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+										rb.isKinematic = true;
+							
+										HowManyCouldntSpawn--;
+										spawned = true;
+										break;
+								}
+							}
+						}
+
+						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
+
+						//first shuffle the list so it's raaaandom
+						targetReceptacleSpawnPoints.Shuffle_(seed);
+
+                        if (spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxPlacementAttempts, 90, true))
+                        {
+                            HowManyCouldntSpawn--;
+							spawned = true;
+							break;
+						} 
+					}
+					
+					if (!spawned) 
+                    {
+						#if UNITY_EDITOR
+						Debug.Log(go.name + " could not be spawned.");
+                        #endif
+                        //go.GetComponent<SimpleSimObj>().IsDisabled = true;
+                        if (!originalObjects.Contains(go))
+                        {
+                            go.SetActive(false);
+                            Destroy(go);
+                        }
+                    }
+                }
 			}
-		} else  {
+		} 
+
+        else 
+        {
             ///XXX: add exception in at some point
 			throw new NotImplementedException();
 		}
 
 		#if UNITY_EDITOR
-		if(HowManyCouldntSpawn > 0) {
+		if(HowManyCouldntSpawn > 0)
+		{
 			Debug.Log(HowManyCouldntSpawn + " object(s) could not be spawned into the scene!");
 		}
 
@@ -799,10 +818,8 @@ public class PhysicsSceneManager : MonoBehaviour
 		return result;//we are good to spawn, return true
 	}
 
-	public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(
-		Dictionary<SimObjType, List<SimObjPhysics>> dict,
-		int seed
-	) {
+	public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(Dictionary<SimObjType, List<SimObjPhysics>> dict, int seed)
+	{
 		List<SimObjType> types = new List<SimObjType>();
 		Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
 		foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict) {
@@ -829,37 +846,6 @@ public class PhysicsSceneManager : MonoBehaviour
 			}
 		}
 		return shuffledSopList;
-	}
-
-	public IEnumerable<SimObjPhysics> IterShuffleSimObjPhysicsDictList(
-		Dictionary<SimObjType, List<SimObjPhysics>> dict,
-		System.Random rng
-	) {
-		List<SimObjType> types = new List<SimObjType>();
-		Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
-		foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict) {
-			types.Add(pair.Key);
-			indDict[pair.Key] = pair.Value.Count - 1;
-		}
-		types.Sort();
-		types.Shuffle_(rng);
-		foreach (SimObjType t in types) {
-			dict[t].Shuffle_(rng);
-		}
-
-		bool changed = true;
-		List<SimObjPhysics> shuffledSopList = new List<SimObjPhysics>();
-		while (changed) {
-			changed = false;
-			foreach (SimObjType type in types) {
-				int i = indDict[type];
-				if (i >= 0) {
-					changed = true;
-					yield return dict[type][i];
-					indDict[type]--;
-				}
-			}
-		}
 	}
 
 #if UNITY_EDITOR

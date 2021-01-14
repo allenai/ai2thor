@@ -128,8 +128,6 @@ class MultipartFormParser(object):
 
 class WsgiServer(ai2thor.server.Server):
 
-    server_type = 'WSGI'
-
     def __init__(
             self,
             host,
@@ -154,7 +152,6 @@ class WsgiServer(ai2thor.server.Server):
         self.last_rate_timestamp = time.time()
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
-        self.unity_proc = None
         self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded, request_handler=ThorRequestHandler)
         # used to ensure that we are receiving frames for the action we sent
         super().__init__(width, height, depth_format, add_depth_noise)
@@ -166,21 +163,13 @@ class WsgiServer(ai2thor.server.Server):
         @app.route('/train', methods=['post'])
         def train():
 
-            action_returns = []
-
             if request.headers['Content-Type'].split(';')[0] == 'multipart/form-data':
                 form = MultipartFormParser(request.get_data(), MultipartFormParser.get_boundary(request.headers))
                 metadata = json.loads(form.form['metadata'][0])
-                # backwards compatibility
-                if 'actionReturns' in form.form and len(form.form['actionReturns'][0]) > 0:
-                    action_returns = json.loads(form.form['actionReturns'][0])
                 token = form.form['token'][0]
             else:
                 form = request
                 metadata = json.loads(form.form['metadata'])
-                # backwards compatibility
-                if 'actionReturns' in form.form and len(form.form['actionReturns']) > 0:
-                    action_returns = json.loads(form.form['actionReturns'])
                 token = form.form['token']
 
             if self.client_token and token != self.client_token:
@@ -192,10 +181,6 @@ class WsgiServer(ai2thor.server.Server):
                 self.last_rate_timestamp = now
                 # import datetime
                 # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
-
-            for i, a in enumerate(metadata['agents']):
-                if 'actionReturn' not in a and i < len(action_returns):
-                    a['actionReturn'] = action_returns[i]
 
             event = self.create_event(metadata, form.files)
 
@@ -234,7 +219,7 @@ class WsgiServer(ai2thor.server.Server):
     def unity_params(self):
         host, port = self.wsgi_server.socket.getsockname()
 
-        params = dict(host=host, port=str(port))
+        params = dict(host=host, port=str(port), server_type='WSGI')
         return params
     
     def stop(self):

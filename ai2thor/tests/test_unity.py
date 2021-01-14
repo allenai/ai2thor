@@ -4,7 +4,6 @@ import os
 import json
 import pytest
 import jsonschema
-import numpy as np
 from ai2thor.controller import Controller
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
@@ -43,29 +42,6 @@ def assert_near(point1, point2, error_message=''):
     for k in point1.keys():
         assert round(point1[k], 3) == round(point2[k], 3), error_message
 
-def test_stochastic_controller():
-    controller = build_controller(agentControllerType='stochastic')
-    controller.reset('FloorPlan28')
-    assert controller.last_event.metadata['lastActionSuccess']
-
-# Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
-# up with the same frame
-def test_multi_agent_with_third_party_camera():
-    controller = build_controller(server_class=FifoServer, agentCount=2)
-    assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
-    event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
-    assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
-
-# Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
-def test_third_party_camera_with_image_synthesis():
-    controller = build_controller(server_class=FifoServer, renderObjectImage=True, renderDepthImage=True, renderClassImage=True)
-    event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
-    assert len(event.third_party_depth_frames) == 1
-    assert len(event.third_party_class_segmentation_frames) == 1
-    assert len(event.third_party_camera_frames) == 1
-    assert len(event.third_party_instance_segmentation_frames) == 1
-
-
 def test_rectangle_aspect():
     controller = build_controller(width=600, height=300)
     controller.reset('FloorPlan28')
@@ -77,21 +53,6 @@ def test_small_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
-
-def test_reset():
-    controller = build_controller()
-    width = 520
-    height = 310
-    event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=True)
-    assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
-    assert event.depth_frame is not None, 'depth frame should have rendered!'
-    assert event.depth_frame.shape == (height, width), "depth frame dimensions are wrong!"
-
-    width = 300
-    height = 300
-    event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=False)
-    assert event.depth_frame is None, "depth frame shouldn't have rendered!"
-    assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
 
 def test_fast_emit():
     fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
@@ -116,6 +77,7 @@ def test_fast_emit_disabled(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_lookdown(controller):
+
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
     horizon = controller.last_event.metadata['agent']['cameraHorizon']
@@ -186,6 +148,8 @@ def test_simobj_filter(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_add_third_party_camera(controller):
+
+
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
@@ -274,64 +238,6 @@ def test_teleport(controller):
     controller.step(dict(action='Teleport', x=-2.0, z=-2.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_open(controller):
-    objects = controller.last_event.metadata['objects']
-    obj_to_open = next(obj for obj in objects if obj['objectType'] == 'Fridge')
-
-    # helper that returns obj_to_open from a new event
-    def get_object(event, object_id):
-        return next(obj for obj in event.metadata['objects']
-                    if obj['objectId'] == object_id)
-
-    for openness in [0.5, 0.7, 0]:
-        event = controller.step(
-            action='OpenObject',
-            objectId=obj_to_open['objectId'],
-            openness=openness,
-            forceAction=True,
-            raise_for_failure=True)
-        opened_obj = get_object(event, obj_to_open['objectId'])
-        assert abs(opened_obj['openness'] - openness) < 1e-3, 'Incorrect openness!'
-        assert opened_obj['isOpen'] == (openness != 0), 'isOpen incorrectly reported!'
-
-    # test bad openness values
-    for bad_openness in [-0.5, 1.5]:
-        event = controller.step(
-            action='OpenObject',
-            objectId=obj_to_open['objectId'],
-            openness=bad_openness,
-            forceAction=True)
-        assert not event.metadata['lastActionSuccess'], '0.0 > Openness > 1.0 should fail!'
-
-    # test backwards compatibility on moveMagnitude, where moveMagnitude
-    # is now `openness`, but when moveMagnitude = 0 that corresponds to openness = 1.
-    event = controller.step(
-        action='OpenObject',
-        objectId=obj_to_open['objectId'],
-        forceAction=True,
-        moveMagnitude=0)
-    opened_obj = get_object(event, obj_to_open['objectId'])
-    assert abs(opened_obj['openness'] - 1) < 1e-3, 'moveMagnitude=0 must have openness=1'
-    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
-
-    # another moveMagnitude check
-    test_openness = 0.65
-    event = controller.step(
-        action='OpenObject',
-        objectId=obj_to_open['objectId'],
-        forceAction=True,
-        moveMagnitude=test_openness)
-    opened_obj = get_object(event, obj_to_open['objectId'])
-    assert abs(opened_obj['openness'] - test_openness) < 1e-3, 'moveMagnitude is not working!'
-    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
-
-    # a CloseObject specific check
-    event = controller.step(action='CloseObject', objectId=obj_to_open['objectId'], forceAction=True)
-    obj = get_object(event, obj_to_open['objectId'])
-    assert abs(obj['openness'] - 0) < 1e-3, 'CloseObject openness should be 0'
-    assert not obj['isOpen'], 'CloseObject should report isOpen==false!'
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous(controller):

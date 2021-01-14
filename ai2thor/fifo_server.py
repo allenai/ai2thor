@@ -28,19 +28,13 @@ class FieldType(IntEnum):
     IDS_IMAGE = 9
     THIRD_PARTY_IMAGE = 10
     METADATA_PATCH = 11
-    THIRD_PARTY_DEPTH = 12
-    THIRD_PARTY_NORMALS = 13
-    THIRD_PARTY_IMAGE_IDS = 14
-    THIRD_PARTY_CLASSES = 15
-    THIRD_PARTY_FLOW = 16
     END_OF_MESSAGE = 255
 
 
 class FifoServer(ai2thor.server.Server):
     header_format = '!BI'
     header_size = struct.calcsize(header_format)
-    field_types = {f.value: f for f in FieldType}
-    server_type = 'FIFO'
+    field_types = {f.value:f for f in FieldType}
 
     def __init__(self, width, height, depth_format=ai2thor.server.DepthFormat.Meters, add_depth_noise=False):
 
@@ -56,18 +50,13 @@ class FifoServer(ai2thor.server.Server):
         # for backwards compatibility
         # this can be removed when the wsgi server is removed
         self.form_field_map = {
-            FieldType.RGB_IMAGE: 'image',
-            FieldType.DEPTH_IMAGE: 'image_depth',
-            FieldType.CLASSES_IMAGE: 'image_classes',
-            FieldType.IDS_IMAGE: 'image_ids',
-            FieldType.NORMALS_IMAGE: 'image_normals',
-            FieldType.FLOWS_IMAGE: 'image_flow',
-            FieldType.THIRD_PARTY_IMAGE: 'image-thirdParty-camera',
-            FieldType.THIRD_PARTY_DEPTH: 'image_thirdParty_depth',
-            FieldType.THIRD_PARTY_NORMALS: 'image_thirdParty_normals',
-            FieldType.THIRD_PARTY_IMAGE_IDS: 'image_thirdParty_image_ids',
-            FieldType.THIRD_PARTY_CLASSES: 'image_thirdParty_classes',
-            FieldType.THIRD_PARTY_FLOW: 'image_thirdParty_flow'
+            FieldType.RGB_IMAGE:'image',
+            FieldType.DEPTH_IMAGE:'image_depth',
+            FieldType.CLASSES_IMAGE :'image_classes',
+            FieldType.IDS_IMAGE:'image_ids',
+            FieldType.NORMALS_IMAGE:'image_normals',
+            FieldType.FLOWS_IMAGE:'image_flow',
+            FieldType.THIRD_PARTY_IMAGE:"image-thirdParty-camera"
         }
 
         self.image_fields = {
@@ -77,12 +66,7 @@ class FifoServer(ai2thor.server.Server):
             FieldType.NORMALS_IMAGE,
             FieldType.DEPTH_IMAGE,
             FieldType.RGB_IMAGE,
-            FieldType.THIRD_PARTY_IMAGE,
-            FieldType.THIRD_PARTY_DEPTH,
-            FieldType.THIRD_PARTY_NORMALS,
-            FieldType.THIRD_PARTY_IMAGE_IDS,
-            FieldType.THIRD_PARTY_CLASSES,
-            FieldType.THIRD_PARTY_FLOW
+            FieldType.THIRD_PARTY_IMAGE
             }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b'')
@@ -176,6 +160,7 @@ class FifoServer(ai2thor.server.Server):
         # need to switch this to msgpack
         self._send_message(FieldType.ACTION, json.dumps(action, cls=ai2thor.server.NumpyAwareEncoder).encode('utf8'))
     
+
     def start(self):
         os.mkfifo(self.server_pipe_path)
         os.mkfifo(self.client_pipe_path)
@@ -184,6 +169,7 @@ class FifoServer(ai2thor.server.Server):
     # params to pass up to unity
     def unity_params(self):
         params = dict(
+            server_type='FIFO',
             fifo_server_pipe_path=self.server_pipe_path,
             fifo_client_pipe_path=self.client_pipe_path
         )

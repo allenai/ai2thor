@@ -53,20 +53,6 @@ public static class UtilityFunctions {
         float expandBy = 0.0f,
         bool useBoundingBoxInChecks=false
      ) {
-        return null != firstColliderObjectCollidingWith(
-            go: go,
-            ignoreGameObjects: ignoreGameObjects,
-            expandBy: expandBy,
-            useBoundingBoxInChecks: useBoundingBoxInChecks
-        );
-    }
-
-    public static Collider firstColliderObjectCollidingWith(
-        GameObject go,
-        List<GameObject> ignoreGameObjects = null,
-        float expandBy = 0.0f,
-        bool useBoundingBoxInChecks=false
-     ) {
         if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
         }
@@ -82,7 +68,7 @@ public static class UtilityFunctions {
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
-                    return c;
+                    return true;
                 }
             }
         }
@@ -92,18 +78,18 @@ public static class UtilityFunctions {
             }
             foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
-                    return c;
+                    return true;
                 }
             }
         }
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
-                    return c;
+                    return true;
                 }
             }
         }
-        return null;
+        return false;
     }
 
     public static Collider[] collidersObjectCollidingWith(
