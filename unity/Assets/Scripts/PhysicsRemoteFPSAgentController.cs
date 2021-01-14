@@ -6938,113 +6938,116 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
-        // get the poses with which the agent can interact with 'objectId'
-        public void GetInteractivePositions(
-            float horizonIncrement = 30,
-            string objectId = null,
-            Vector3[] positions = null
+        // Get the poses with which the agent can interact with 'objectId'
+        // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
+        public void GetInteractablePositions(
+            string objectId,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null
         ) {
-            // horizon checks
-            if ((float) horizonIncrement % 5 != 0) {
-                errorMessage = "horizonIncrement value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "objectId appears to be invalid.";
                 actionFinished(false);
                 return;
             }
-            if ((float) horizonIncrement < 0 || (float) horizonIncrement > 30) {
-                errorMessage = "horizonIncrement for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
-                actionFinished(false);
-                return;
-            }
+            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            if (positions == null || positions.Length == 0) {
-                positions = getReachablePositions();
-            }
-
-            // save current pose
+            // save current agent pose
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
-
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(false);
             }
 
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            // Populate default standings. Note that these are boolean because that's
+            // the most natural integration with Teleport
+            if (standings == null) {
+                standings = new bool[] {false, true};
+            }
+
+            // populate default horizons
+            if (horizons == null) {
+                horizons = new float[] {-30, 0, 30, 60};
+            }
+
+            // populate the positions by those that are reachable
+            if (positions == null) {
+                positions = getReachablePositions();
+            }
+
+            // populate the rotations based on rotateStepDegrees
+            if (rotations == null) {
+                rotations = new float[(int) (360 / rotateStepDegrees)];
+                int i = 0;
+                for (float rotation = 0; rotation < 360; rotation += rotateStepDegrees) {
+                    rotations[i++] = rotation;
+                }
+            }
 
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
             Bounds objectBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
                 objectBounds.Encapsulate(vp.position);
             }
             float fudgeFactor = objectBounds.extents.magnitude;
-
             List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
+                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
             ).ToList();
 
-            Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
+            // set each key to store a list
+            Dictionary<string, List<object>> validAgentPoses = new Dictionary<string, List<object>>();
             string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
             foreach (string key in keys) {
-                goodLocationsDict[key] = new List<float>();
+                validAgentPoses[key] = new List<object>();
             }
 
-            // for each horizon...
-            for (float h = -30; h <= 60; h += horizonIncrement) {
-                m_Camera.transform.localEulerAngles = new Vector3(h, 0f, 0f);
+            // iterate over each reasonable agent pose
+            foreach (float horizon in horizons) {
+                // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                    errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
+                    actionFinished(success: false);
+                }
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
-                // for each standing and crouching position...
-                for (int j = 0; j < 2; j++) { // Standing / Crouching
-                    if (j == 0) {
-                        stand();
-                    } else {
-                        crouch();
-                    }
+                foreach (bool standing in standings) {
+                    if (standing) stand(); else crouch();
 
-                    // for each rotation
-                    for (float rotation = 0; rotation < 360; rotation += rotateStepDegrees) {
+                    foreach (float rotation in rotations) {
                         transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
 
-                        // for each position
-                        foreach (Vector3 p in filteredPositions) {
-                            transform.position = p;
-
+                        foreach (Vector3 position in filteredPositions) {
+                            transform.position = position;
                             if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
-                                goodLocationsDict["x"].Add(p.x);
-                                goodLocationsDict["y"].Add(p.y);
-                                goodLocationsDict["z"].Add(p.z);
-                                goodLocationsDict["rotation"].Add(rotation);
-                                goodLocationsDict["standing"].Add((1 - j) * 1.0f);
-                                goodLocationsDict["horizon"].Add(h);
+                                validAgentPoses["x"].Add(position.x);
+                                validAgentPoses["y"].Add(position.y);
+                                validAgentPoses["z"].Add(position.z);
+                                validAgentPoses["rotation"].Add(rotation);
+                                validAgentPoses["standing"].Add(standing);
+                                validAgentPoses["horizon"].Add(horizon);
 
-#if UNITY_EDITOR
-                                // In the editor, draw lines indicating from where the object was visible.
-                                Debug.DrawLine(p, p + transform.forward * (gridSize * 0.5f), Color.red, 20f);
-#endif
+                                #if UNITY_EDITOR
+                                    // In the editor, draw lines indicating from where the object was visible.
+                                    Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+                                #endif
                             }
                         }
                     }
                 }
             }
 
-            // restore old agent position
-            if (wasStanding) {
-                stand();
-            } else {
-                crouch();
-            }
+            // restore old agent pose
+            if (wasStanding) stand(); else crouch();
             transform.position = oldPosition;
             transform.rotation = oldRotation;
             m_Camera.transform.localEulerAngles = oldHorizon;
@@ -7052,22 +7055,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.gameObject.SetActive(true);
             }
 
-#if UNITY_EDITOR
-            Debug.Log(goodLocationsDict["x"].Count);
-            Debug.Log(goodLocationsDict["x"]);
-#endif
+            #if UNITY_EDITOR
+                Debug.Log(validAgentPoses["x"].Count);
+                Debug.Log(validAgentPoses["x"]);
+            #endif
 
-            actionFinished(true, goodLocationsDict);
+            actionFinished(true, validAgentPoses);
         }
 
-        // alias to GetInteractivePositions, currently around for backwards compatibility
+        [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePositions instead.", error: false)]
         public void PositionsFromWhichItemIsInteractable(
-            // supported for backwards compatibility. 'horizon' is now 'horizonIncrement' on 'GetInteractivePositions'.
-            float horizon = 30,
-            string objectId = null,
+            string objectId,
+            float horizon = 30,  // note that horizon was treated as a horizonIncrement
             Vector3[] positions = null
         ) {
-            GetInteractivePositions(horizonIncrement: horizon, objectId: objectId, positions: positions);
+            // set horizons using the horizon as an increment
+            float[] horizons = new float[(int) ((maxDownwardLookAngle + maxUpwardLookAngle) / horizon)];
+            int i = 0;
+            for (float h = -maxUpwardLookAngle; h < maxDownwardLookAngle; h += horizon) {
+                horizons[i++] = h;
+            }
+
+            GetInteractablePositions(objectId: objectId, positions: positions, horizons: horizons);
         }
 
         public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
