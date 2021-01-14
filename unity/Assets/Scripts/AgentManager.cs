@@ -351,7 +351,8 @@ public class AgentManager : MonoBehaviour
         float fieldOfView,
         string skyboxColor,
         bool? orthographic,
-        float? orthographicSize
+        float? orthographicSize,
+        string actionName
     ) {
         // update the position and rotation
         camera.gameObject.transform.position = position;
@@ -366,15 +367,24 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-        // supports a solid color skybox, which work well with videos and images
-        // (i.e., white/black background)
+        // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
+        bool actionFailed = false;
         if (skyboxColor == "default") {
             camera.clearFlags = CameraClearFlags.Skybox;
         } else if (skyboxColor != null) {
             Color color;
-            ColorUtility.TryParseHtmlString(skyboxColor, out color);
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = color;
+            bool successfullyParsed = ColorUtility.TryParseHtmlString(skyboxColor, out color);
+            if (successfullyParsed) {
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = color;
+            } else {
+                actionError(errorMessage: "Invalid skyboxColor! Cannot be parsed as an HTML color.", actionName: actionName);
+                actionFailed = true;
+            }
+        }
+
+        if (!actionFailed) {
+            actionSuccess(actionName: actionName);
         }
     }
 
@@ -446,9 +456,9 @@ public class AgentManager : MonoBehaviour
             fieldOfView: fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            actionName: "AddThirdPartyCamera"
         );
-        actionSuccess(actionName: "AddThirdPartyCamera");
     }
 
     // helper that can be used when converting Dictionary<string, float> to a Vector3.
@@ -492,15 +502,16 @@ public class AgentManager : MonoBehaviour
             return;
         }
 
+        Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
+
         // keeps positions at default values, if unspecified.
-        Vector3 oldPosition = thirdPartyCameras[thirdPartyCameraId].gameObject.transform.position;
+        Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
         Vector3 targetPosition = parseDictAsVector3(dict: position, defaultsOnNull: oldPosition);
 
         // keeps rotations at default values, if unspecified.
-        Vector3 oldRotation = thirdPartyCameras[thirdPartyCameraId].gameObject.transform.localEulerAngles;
+        Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
         Vector3 targetRotation = parseDictAsVector3(dict: rotation, defaultsOnNull: oldRotation);
 
-        Camera thirdPartyCamera = thirdPartyCameras.ToArray()[thirdPartyCameraId];
         updateCameraProperties(
             camera: thirdPartyCamera,
             position: targetPosition,
@@ -508,9 +519,9 @@ public class AgentManager : MonoBehaviour
             fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float) fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            actionName: "UpdateThirdPartyCamera"
         );
-        actionSuccess(actionName: "UpdateThirdPartyCamera");
     }
 
 	private void addAgent(ServerAction action) {
