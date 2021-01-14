@@ -344,37 +344,18 @@ public class AgentManager : MonoBehaviour
         }
     }
 
-    // helper that can be used when converting Dictionary<string, float> to a Vector3.
-    private Vector3 parseDictAsVector3(
-        Dictionary<string, float> dict,
-        float defaultX,
-        float defaultY,
-        float defaultZ) {
-            return new Vector3(
-                dict.ContainsKey("x") ? dict["x"] : defaultX,
-                dict.ContainsKey("y") ? dict["y"] : defaultY,
-                dict.ContainsKey("z") ? dict["z"] : defaultZ
-            );
-    }
-
-    private void setCameraProperties(
+    private void updateCameraProperties(
         Camera camera,
-        Dictionary<string, float> position,
-        Dictionary<string, float> rotation,
+        Vector3 position,
+        Vector3 rotation,
         float fieldOfView,
         string skyboxColor,
         bool? orthographic,
         float? orthographicSize
     ) {
-        // keeps positions at default values, if unspecified.
-        Vector3 oldPos = camera.gameObject.transform.position;
-        Vector3 targetPosition = position == null ? oldPos : parseDictAsVector3(position, oldPos.x, oldPos.y, oldPos.z);
-        camera.gameObject.transform.position = targetPosition;
-
-        // keeps rotations at default values, if unspecified.
-        Vector3 oldRot = camera.gameObject.transform.localEulerAngles;
-        Vector3 targetRotation = rotation == null ? oldRot : parseDictAsVector3(rotation, oldRot.x, oldRot.y, oldRot.z);
-        camera.gameObject.transform.eulerAngles = targetRotation;
+        // update the position and rotation
+        camera.gameObject.transform.position = position;
+        camera.gameObject.transform.eulerAngles = rotation;
 
         // updates the camera's perspective
         camera.fieldOfView = fieldOfView;
@@ -397,7 +378,7 @@ public class AgentManager : MonoBehaviour
         }
     }
 
-    // helper used to provide an error message and fail the action in the metadata
+    // Helper used to provide an error message and fail the action in the metadata from the agent manager
     private void actionError(string errorMessage, string actionName) {
         // update metadata
         primaryAgent.errorMessage = errorMessage;
@@ -409,7 +390,7 @@ public class AgentManager : MonoBehaviour
         agentManagerState = AgentState.ActionComplete;
     }
 
-    // helper used to update success of agent metadata
+    // Helper used to update success of agent metadata from the agent manager
     private void actionSuccess(string actionName) {
         // update metadata
         primaryAgent.errorMessage = "";
@@ -421,44 +402,29 @@ public class AgentManager : MonoBehaviour
         agentManagerState = AgentState.ActionComplete;
     }
 
-    // returns true if the FOV is in the correct range, otherwise returns false
-    // and provides an action error.
-    private bool checkFOV(float fov, string actionName) {
+    // Returns true if the FOV is in the correct range, otherwise false.
+    // It updates the error message as well.
+    private bool fovInBounds(float fov, string actionName) {
         if (fov <= MIN_FOV) {
-            actionError($"fieldOfView must be > {MIN_FOV}.", actionName);
+            actionError(errorMessage: $"fieldOfView must be > {MIN_FOV}.", actionName: actionName);
             return false;
         } else if (fov >= MAX_FOV) {
-            actionError($"fieldOfView must be < {MAX_FOV}.", actionName);
+            actionError(errorMessage: $"fieldOfView must be < {MAX_FOV}.", actionName: actionName);
             return false;
         }
         return true;
     }
 
     public void AddThirdPartyCamera(
-        Dictionary<string, float> position = null,
-        Dictionary<string, float> rotation = null,
-        float? fieldOfView = null,
+        Vector3 position,
+        Vector3 rotation,
+        float fieldOfView = DEFAULT_FOV,
         string skyboxColor = null,
         bool orthographic = false,
         float? orthographicSize = null
     ) {
-        // dynamic way of getting the method name, in case it ever changes
-        string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-
         // adds error if fieldOfView is out of bounds
-        if (fieldOfView != null && !checkFOV((float) fieldOfView, actionName)) {
-            return;
-        }
-
-        // require position and rotation to be specified in Vector3 style
-        if (position == null || rotation == null) {
-            actionError("Must pass in both rotation (xyz dictionary) and position (xyz dictionary).", actionName);
-            return;
-        } else if (
-            !position.ContainsKey("x") || !position.ContainsKey("y") || !position.ContainsKey("z") ||
-            !rotation.ContainsKey("x") || !rotation.ContainsKey("y") || !rotation.ContainsKey("z")
-        ) {
-            actionError("Must specify xyz keys for both position and rotation.", actionName);
+        if (!fovInBounds(fov: fieldOfView, actionName: "AddThirdPartyCamera")) {
             return;
         }
 
@@ -466,25 +432,43 @@ public class AgentManager : MonoBehaviour
         gameObject.AddComponent(typeof(Camera));
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
+        // set up returned image
         camera.cullingMask = ~(1 << 11);
-
         if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
 
         thirdPartyCameras.Add(camera);
-        setCameraProperties(
+        updateCameraProperties(
             camera: camera,
             position: position,
             rotation: rotation,
-            fieldOfView: fieldOfView == null ? DEFAULT_FOV : (float) fieldOfView,
+            fieldOfView: fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
             orthographicSize: orthographicSize
         );
-        actionSuccess(actionName);
+        actionSuccess(actionName: "AddThirdPartyCamera");
     }
 
+    // helper that can be used when converting Dictionary<string, float> to a Vector3.
+    private Vector3 parseDictAsVector3(
+        Dictionary<string, float> dict,
+        Vector3 defaultsOnNull
+    ) {
+        if (dict == null) {
+            return defaultsOnNull;
+        }
+
+        return new Vector3(
+            x: dict.ContainsKey("x") ? dict["x"] : defaultsOnNull.x,
+            y: dict.ContainsKey("y") ? dict["y"] : defaultsOnNull.y,
+            z: dict.ContainsKey("z") ? dict["z"] : defaultsOnNull.z
+        );
+    }
+
+    // note that using a using a Dictionary<string, float> allows for only x, y, or z
+    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
     public void UpdateThirdPartyCamera(
         int thirdPartyCameraId = 0,
         Dictionary<string, float> position = null,
@@ -494,37 +478,45 @@ public class AgentManager : MonoBehaviour
         bool? orthographic = null,
         float? orthographicSize = null
     ) {
-        // dynamic way of getting the method name, in case it ever changes
-        string actionName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-
         // adds error if fieldOfView is out of bounds
-        if (fieldOfView != null && !checkFOV((float) fieldOfView, actionName)) {
+        if (!fovInBounds(fov: (float) fieldOfView, actionName: "UpdateThirdPartyCamera")) {
             return;
         }
 
         // count is out of bounds
         if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
-            actionError($"thirdPartyCameraId (int: default=0) must be >= 0 and < len(thirdPartyCameras)={thirdPartyCameras.Count}.", actionName);
+            actionError(
+                errorMessage: $"thirdPartyCameraId (int: default=0) must be >= 0 and < len(thirdPartyCameras)={thirdPartyCameras.Count}.",
+                actionName: "UpdateThirdPartyCamera"
+            );
             return;
         }
 
+        // keeps positions at default values, if unspecified.
+        Vector3 oldPosition = thirdPartyCameras[thirdPartyCameraId].gameObject.transform.position;
+        Vector3 targetPosition = parseDictAsVector3(dict: position, defaultsOnNull: oldPosition);
+
+        // keeps rotations at default values, if unspecified.
+        Vector3 oldRotation = thirdPartyCameras[thirdPartyCameraId].gameObject.transform.localEulerAngles;
+        Vector3 targetRotation = parseDictAsVector3(dict: rotation, defaultsOnNull: oldRotation);
+
         Camera thirdPartyCamera = thirdPartyCameras.ToArray()[thirdPartyCameraId];
-        setCameraProperties(
+        updateCameraProperties(
             camera: thirdPartyCamera,
-            position: position,
-            rotation: rotation,
+            position: targetPosition,
+            rotation: targetRotation,
             fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float) fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
             orthographicSize: orthographicSize
         );
-        actionSuccess(actionName);
+        actionSuccess(actionName: "UpdateThirdPartyCamera");
     }
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
-		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
+		//disable ambient occlusion on primary agent because it causes issues with multiple main cameras
 		//primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);

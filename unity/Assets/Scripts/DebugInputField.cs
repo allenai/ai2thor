@@ -738,8 +738,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "atpc":
                     {
                         AManager.AddThirdPartyCamera(
-                            position: new Dictionary<string, float>() {{"x", 0}, {"y", 0}, {"z", 0}},
-                            rotation: new Dictionary<string, float>() {{"x", 0}, {"y", 0}, {"z", 0}}
+                            position: Vector3.zero,
+                            rotation: Vector3.zero
                         );
                         break;
                     }
