@@ -6945,12 +6945,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] positions = null,
             float[] rotations = null,
             float[] horizons = null,
-            bool[] standings = null
+            bool[] standings = null,
+            float? maxDistance = null
         ) {
             if (360 % rotateStepDegrees != 0) {
                 errorMessage = "360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.";
                 actionFinished(false);
                 return;
+            }
+
+            // default "visibility" distance
+            float maxDistanceFloat;
+            if (maxDistance == null) {
+                maxDistanceFloat = maxVisibleDistance;
+            } else if ((float) maxDistance <= 0) {
+                errorMessage = "maxDistance must be >= 0 meters from the object.";
+                actionFinished(false);
+                return;
+            } else {
+                maxDistanceFloat = (float) maxDistance;
             }
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
@@ -6992,12 +7005,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // This may happen if the agent starts by teleports with the rotation of 10 degrees.
                 float offset = transform.rotation.y % rotateStepDegrees;
 
-                rotations = new float[(int) (360 / rotateStepDegrees)];
-                int i = 0;
-
                 // Examples:
                 // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
                 // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
+                rotations = new float[(int) (360 / rotateStepDegrees)];
+                int i = 0;
                 for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
                     rotations[i++] = rotation;
                 }
@@ -7016,7 +7028,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             float fudgeFactor = objectBounds.extents.magnitude;
             List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
+                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxDistanceFloat + fudgeFactor + gridSize)
             ).ToList();
 
             // set each key to store a list
@@ -7051,7 +7063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
-                            if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
+                            if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
                                 validAgentPoses["x"].Add(position.x);
                                 validAgentPoses["y"].Add(position.y);
                                 validAgentPoses["z"].Add(position.z);
