@@ -388,16 +388,20 @@ public class AgentManager : MonoBehaviour
         }
     }
 
-    // Helper used to provide an error message and fail the action in the metadata from the agent manager
-    private void actionError(string errorMessage, string actionName) {
+    private void actionError(string errorMessage, string actionName, ServerActionErrorCode errorCode) {
         // update metadata
         primaryAgent.errorMessage = errorMessage;
         primaryAgent.lastAction = actionName;
         primaryAgent.lastActionSuccess = false;
-        primaryAgent.errorCode = ServerActionErrorCode.Undefined;
+        primaryAgent.errorCode = errorCode;
 
         // end action
         agentManagerState = AgentState.ActionComplete;
+    }
+
+    // Helper used to provide an error message and fail the action in the metadata from the agent manager
+    private void actionError(string errorMessage, string actionName) {
+        actionError(errorMessage, actionName, ServerActionErrorCode.Undefined);
     }
 
     // Helper used to update success of agent metadata from the agent manager
@@ -1062,7 +1066,14 @@ public class AgentManager : MonoBehaviour
 
 		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
             this.agentManagerState = AgentState.Processing;
-            ActionDispatcher.Dispatch(this, controlCommand);
+            try{
+                ActionDispatcher.Dispatch(this, controlCommand);
+            } catch (MissingArgumentsActionException e)
+            {
+                string errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
+                Debug.LogError(errorMessage);
+                actionError(errorMessage, controlCommand.action.ToString(), ServerActionErrorCode.MissingArguments);
+            }
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
