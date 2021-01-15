@@ -6870,16 +6870,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["objectSeen"] = objectSeen ? 1 : 0;
             toReturn["positionsTried"] = positionsTried;
 
-            if (wasStanding) {
-                stand();
-            } else {
-                crouch();
-            }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
             actionFinished(true, toReturn);
         }
 
@@ -6941,14 +6931,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // returns null on failure.
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private Dictionary<string, List<object>> getInteractablePositions(
+        private Dictionary<string, List<object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
             float[] rotations = null,
             float[] horizons = null,
             bool[] standings = null,
-            float? maxDistance = null
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
         ) {
             if (360 % rotateStepDegrees != 0) {
                 errorMessage = "360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.";
@@ -7045,45 +7036,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // iterate over each reasonable agent pose
-            foreach (float horizon in horizons) {
-                // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-                if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                    errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
-                    if (markActionFinished) {
-                        actionFinished(success: false);
+            while (validAgentPoses[keys[0]].Count < maxPoses) {
+                foreach (float horizon in horizons) {
+                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                        errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
+                        if (markActionFinished) {
+                            actionFinished(success: false);
+                        }
+                        return null;
                     }
-                    return null;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
+                    m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
-                foreach (bool standing in standings) {
-                    if (standing) {
-                        stand();
-                     } else {
-                         crouch();
-                     }
+                    foreach (bool standing in standings) {
+                        if (standing) {
+                            stand();
+                        } else {
+                            crouch();
+                        }
 
-                    foreach (float rotation in rotations) {
-                        Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                        transform.rotation = Quaternion.Euler(rotationVector);
+                        foreach (float rotation in rotations) {
+                            Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                            transform.rotation = Quaternion.Euler(rotationVector);
 
-                        foreach (Vector3 position in filteredPositions) {
-                            transform.position = position;
+                            foreach (Vector3 position in filteredPositions) {
+                                transform.position = position;
 
-                            // Each of these values is directly compatible with TeleportFull
-                            // and should be used with .step(action='TeleportFull', **interactable_positions[0])
-                            if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
-                                validAgentPoses["x"].Add(position.x);
-                                validAgentPoses["y"].Add(position.y);
-                                validAgentPoses["z"].Add(position.z);
-                                validAgentPoses["rotation"].Add(rotation);
-                                validAgentPoses["standing"].Add(standing);
-                                validAgentPoses["horizon"].Add(horizon);
+                                // Each of these values is directly compatible with TeleportFull
+                                // and should be used with .step(action='TeleportFull', **interactable_positions[0])
+                                if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
+                                    validAgentPoses["x"].Add(position.x);
+                                    validAgentPoses["y"].Add(position.y);
+                                    validAgentPoses["z"].Add(position.z);
+                                    validAgentPoses["rotation"].Add(rotation);
+                                    validAgentPoses["standing"].Add(standing);
+                                    validAgentPoses["horizon"].Add(horizon);
 
-                                #if UNITY_EDITOR
-                                    // In the editor, draw lines indicating from where the object was visible.
-                                    Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
-                                #endif
+                                    #if UNITY_EDITOR
+                                        // In the editor, draw lines indicating from where the object was visible.
+                                        Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+                                    #endif
+                                }
                             }
                         }
                     }
@@ -7117,7 +7110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Get the poses with which the agent can interact with 'objectId'
         // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
-        public void GetInteractablePositions(
+        public void GetInteractablePoses(
             string objectId,
             Vector3[] positions = null,
             float[] rotations = null,
@@ -7125,7 +7118,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool[] standings = null,
             float? maxDistance = null
         ) {
-            getInteractablePositions(
+            getInteractablePoses(
                 objectId: objectId,
                 markActionFinished: true,
                 positions: positions, rotations: rotations, horizons: horizons, standings: standings,
@@ -7134,27 +7127,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePositions instead.", error: false)]
-        public void PositionsFromWhichItemIsInteractable(
-            string objectId,
-            float horizon = 30,  // note that horizon was treated as a horizonIncrement
-            Vector3[] positions = null
-        ) {
+        public void PositionsFromWhichItemIsInteractable(string objectId, float horizon = 30, Vector3[] positions = null) {
             // set horizons using the horizon as an increment
             List<float> horizons = new List<float>();
             for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
                 horizons.Add(h);
             }
-            GetInteractablePositions(objectId: objectId, positions: positions, horizons: horizons.ToArray());
+            GetInteractablePoses(objectId: objectId, positions: positions, horizons: horizons.ToArray());
         }
 
         // private helper for NumberOfPositionsFromWhichItemIsVisible
-        private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null) {
-            Dictionary<string, List<object>> interactablePositions = getInteractablePositions(
+        private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null, int maxPoses = int.MaxValue) {
+            Dictionary<string, List<object>> interactablePositions = getInteractablePoses(
                 objectId: objectId,
                 positions: positions,
                 maxDistance: 1e5f,          // super large number for maximum distance!
                 horizons: new float[] {0},  // don't care about every horizon here, just horizon=0
-                markActionFinished: false
+                markActionFinished: false,
+                maxPoses: maxPoses
             );
 
             // object id might have been invalid, causing failure
