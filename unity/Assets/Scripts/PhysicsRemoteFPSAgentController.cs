@@ -7193,7 +7193,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectId: objectId,
                 positions: positions,
                 maxDistance: 1e5f,                                                // super large number for maximum distance!
-                horizons: new float[] { m_Camera.transform.localEulerAngles.x },  // don't care about every horizon here, just horizon=0
+                horizons: new float[] { m_Camera.transform.localEulerAngles.x },  // don't care about every horizon here, just horizon={current horizon}
                 markActionFinished: false,
                 maxPoses: maxPoses
             );
