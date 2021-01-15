@@ -480,3 +480,28 @@ def test_change_resolution(controller):
     assert event.screen_height == 400
     event = controller.step(dict(action='ChangeResolution', x=300, y=300), raise_for_failure=True)
 
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_interactable_poses(controller):
+    controller.reset('FloorPlan28')
+    fridgeId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Fridge')
+    event = controller.step('GetInteractablePoses', objectId=fridgeId)
+    poses = event.metadata['actionReturn']
+    assert len(poses) > 490, "Should have around 494 interactable poses next to the fridge!"
+
+    # teleport to a random pose
+    pose = poses[len(poses) // 2]
+    event = controller.step('TeleportFull', **pose)
+
+    # assumes 1 fridge in the scene
+    fridge = next(obj for obj in controller.last_event.metadata['objects']
+                  if obj['objectType'] == 'Fridge')
+    assert fridge['visible'], "Object is not interactable!"
+
+    # tests that teleport correctly works with **syntax
+    assert abs(pose['x'] - event.metadata['agent']['position']['x']) < 1e-3, "Agent x position off!"
+    assert abs(pose['z'] - event.metadata['agent']['position']['z']) < 1e-3, "Agent z position off!"
+    assert abs(pose['rotation'] - event.metadata['agent']['rotation']['y']) < 1e-3, "Agent rotation off!"
+    assert abs(pose['horizon'] - event.metadata['agent']['cameraHorizon']) < 1e-3, "Agent horizon off!"
+    assert pose['standing'] == event.metadata['agent']['isStanding'], "Agent's isStanding is off!"
