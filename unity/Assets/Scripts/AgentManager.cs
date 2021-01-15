@@ -1066,10 +1066,9 @@ public class AgentManager : MonoBehaviour
 
 		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
             this.agentManagerState = AgentState.Processing;
-            try{
+            try {
                 ActionDispatcher.Dispatch(this, controlCommand);
-            } catch (MissingArgumentsActionException e)
-            {
+            } catch (MissingArgumentsActionException e) {
                 string errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
                 Debug.LogError(errorMessage);
                 actionError(errorMessage, controlCommand.action.ToString(), ServerActionErrorCode.MissingArguments);
