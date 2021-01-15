@@ -7192,8 +7192,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
                 objectId: objectId,
                 positions: positions,
-                maxDistance: 1e5f,          // super large number for maximum distance!
-                horizons: new float[] {0},  // don't care about every horizon here, just horizon=0
+                maxDistance: 1e5f,                                                // super large number for maximum distance!
+                horizons: new float[] { m_Camera.transform.localEulerAngles.x },  // don't care about every horizon here, just horizon=0
                 markActionFinished: false,
                 maxPoses: maxPoses
             );
