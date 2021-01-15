@@ -541,19 +541,6 @@ def build_sha256(path):
     return m.hexdigest()
 
 
-def build_docker(version):
-
-    subprocess.check_call(
-        "docker build --quiet --rm --no-cache -t  ai2thor/ai2thor-base:{version} .".format(
-            version=version
-        ),
-        shell=True,
-    )
-
-    subprocess.check_call(
-        "docker push ai2thor/ai2thor-base:{version}".format(version=version), shell=True
-    )
-
 def git_commit_id():
     commit_id = (
         subprocess.check_output("git log -n 1 --format=%H", shell=True)
@@ -964,8 +951,6 @@ def build(context, local=False):
 
     builds = {"Docker": {"tag": version}}
     threads = []
-    # dp = Process(target=build_docker, args=(version,))
-    # dp.start()
 
     for include_private_scenes in (True, False):
         for arch in platform_map.keys():

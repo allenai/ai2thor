@@ -1200,7 +1200,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isOpen = simObj.IsOpen;
-                objMeta.openPercent = simObj.OpenPercentage;
+                objMeta.openness = simObj.openness;
             }
 
             objMeta.toggleable = simObj.IsToggleable;
@@ -3108,12 +3108,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                startPosition, out startHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+                startPosition, out startHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
 
             NavMeshHit targetHit;
             bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                targetPosition, out targetHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+                targetPosition, out targetHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
 
             if (!startWasHit || !targetWasHit) {
@@ -3159,8 +3159,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return true;
             }
             else {
-                errorMessage = $"Could not find path between {startHit.position}" +
-                    " and {targetHit.position} using the NavMesh.";
+                errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
+                    $" and {targetHit.position.ToString("F3")} using the NavMesh.";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
