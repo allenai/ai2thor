@@ -1513,7 +1513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
                 Quaternion oldRotation = sop.transform.rotation;
-                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round(sop.transform.rotation.y + 90f % 360), 0.0f));;
+                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round(sop.transform.eulerAngles.y + 90f % 360), 0.0f));;
                 if (!action.forceAction) {
                     if (action.maxAgentsDistance > 0.0f) {
                         for (int i = 0; i < agentManager.agents.Count; i++) {
@@ -7006,14 +7006,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // populate the rotations based on rotateStepDegrees
             if (rotations == null) {
                 // Consider the case where one does not want to move on a perfect grid, and is currently moving
-                //  with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
+                // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
                 // This may happen if the agent starts by teleports with the rotation of 10 degrees.
-                float offset = transform.rotation.y % rotateStepDegrees;
+                int offset = (int) Math.Round(transform.eulerAngles.y % rotateStepDegrees);
 
                 // Examples:
                 // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
                 // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
-                rotations = new float[(int) (360 / rotateStepDegrees)];
+                rotations = new float[(int) Math.Round(360 / rotateStepDegrees)];
                 int i = 0;
                 for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
                     rotations[i++] = rotation;
