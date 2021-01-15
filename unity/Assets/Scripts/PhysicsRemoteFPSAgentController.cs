@@ -1513,7 +1513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
                 Quaternion oldRotation = sop.transform.rotation;
-                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round(sop.transform.eulerAngles.y + 90f % 360), 0.0f));;
+                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round((sop.transform.eulerAngles.y + 90f) % 360), 0.0f));;
                 if (!action.forceAction) {
                     if (action.maxAgentsDistance > 0.0f) {
                         for (int i = 0; i < agentManager.agents.Count; i++) {
