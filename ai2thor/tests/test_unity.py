@@ -200,7 +200,7 @@ def test_update_third_party_camera():
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == changeFOV, 'fieldOfView should have been updated'
 
     expectedPosition.update(expectedPosition2)
-    expectedRotation.update(expectedPosition2)
+    expectedRotation.update(expectedRotation2)
     assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should been slightly updated')
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should been slightly updated')
 
