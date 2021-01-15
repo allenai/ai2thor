@@ -6949,6 +6949,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return null;
             }
 
+            if (maxPoses <= 0) {
+                errorMessage = "maxPoses must be > 0.";
+                if (markActionFinished) {
+                    actionFinished(success: false);
+                }
+                return null;
+            }
+
             // default "visibility" distance
             float maxDistanceFloat;
             if (maxDistance == null) {
@@ -7036,50 +7044,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // iterate over each reasonable agent pose
-            while (validAgentPoses[keys[0]].Count < maxPoses) {
-                foreach (float horizon in horizons) {
-                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                        errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
-                        if (markActionFinished) {
-                            actionFinished(success: false);
-                        }
-                        return null;
+            bool stopEarly = false;
+            foreach (float horizon in horizons) {
+                // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                    errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
+                    if (markActionFinished) {
+                        actionFinished(success: false);
                     }
-                    m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
+                    return null;
+                }
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
-                    foreach (bool standing in standings) {
-                        if (standing) {
-                            stand();
-                        } else {
-                            crouch();
-                        }
+                foreach (bool standing in standings) {
+                    if (standing) {
+                        stand();
+                    } else {
+                        crouch();
+                    }
 
-                        foreach (float rotation in rotations) {
-                            Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                            transform.rotation = Quaternion.Euler(rotationVector);
+                    foreach (float rotation in rotations) {
+                        Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                        transform.rotation = Quaternion.Euler(rotationVector);
 
-                            foreach (Vector3 position in filteredPositions) {
-                                transform.position = position;
+                        foreach (Vector3 position in filteredPositions) {
+                            transform.position = position;
 
-                                // Each of these values is directly compatible with TeleportFull
-                                // and should be used with .step(action='TeleportFull', **interactable_positions[0])
-                                if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
-                                    validAgentPoses["x"].Add(position.x);
-                                    validAgentPoses["y"].Add(position.y);
-                                    validAgentPoses["z"].Add(position.z);
-                                    validAgentPoses["rotation"].Add(rotation);
-                                    validAgentPoses["standing"].Add(standing);
-                                    validAgentPoses["horizon"].Add(horizon);
+                            // Each of these values is directly compatible with TeleportFull
+                            // and should be used with .step(action='TeleportFull', **interactable_positions[0])
+                            if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
+                                validAgentPoses["x"].Add(position.x);
+                                validAgentPoses["y"].Add(position.y);
+                                validAgentPoses["z"].Add(position.z);
+                                validAgentPoses["rotation"].Add(rotation);
+                                validAgentPoses["standing"].Add(standing);
+                                validAgentPoses["horizon"].Add(horizon);
 
-                                    #if UNITY_EDITOR
-                                        // In the editor, draw lines indicating from where the object was visible.
-                                        Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
-                                    #endif
+                                if (validAgentPoses["x"].Count >= maxPoses) {
+                                    stopEarly = true;
+                                    break;
                                 }
+
+                                #if UNITY_EDITOR
+                                    // In the editor, draw lines indicating from where the object was visible.
+                                    Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+                                #endif
                             }
                         }
+                        if (stopEarly) {
+                            break;
+                        }
                     }
+                    if (stopEarly) {
+                        break;
+                    }
+                }
+                if (stopEarly) {
+                    break;
                 }
             }
 
