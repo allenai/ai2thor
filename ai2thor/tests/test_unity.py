@@ -152,8 +152,6 @@ def test_simobj_filter(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_add_third_party_camera(controller):
-
-
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
@@ -167,8 +165,13 @@ def test_add_third_party_camera(controller):
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_update_third_party_camera(controller):
+def test_update_third_party_camera():
+    controller = build_controller(server_class=FifoServer)
+    expectedPosition = dict(x=1.2, y=2.3, z=3.4)
+    expectedRotation = dict(x=30, y=40, z=50)
+    expectedFieldOfView = 45.0
+
+    e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
     assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
 
     # update camera pose

@@ -493,7 +493,7 @@ public class AgentManager : MonoBehaviour
         float? orthographicSize = null
     ) {
         // adds error if fieldOfView is out of bounds
-        if (!fovInBounds(fov: (float) fieldOfView, actionName: "UpdateThirdPartyCamera")) {
+        if (fieldOfView !=null && !fovInBounds(fov: (float) fieldOfView, actionName: "UpdateThirdPartyCamera")) {
             return;
         }
 
