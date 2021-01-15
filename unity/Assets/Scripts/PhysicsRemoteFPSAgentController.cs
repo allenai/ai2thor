@@ -7166,16 +7166,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // for backwards compatibility, PositionsFromWhichItemIsInteractable returns
-            // Dictionary<string, List<object>> instead of List<Dictionary<string, object>>,
+            // Dictionary<string, float> instead of List<Dictionary<string, object>>,
             // where the latter is cleaner in python.
-            Dictionary<string, List<object>> d = new Dictionary<string, List<object>>();
+            Dictionary<string, List<float>> d = new Dictionary<string, List<float>>();
             string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
             foreach (string key in keys) {
-                d[key] = new List<object>();
+                d[key] = new List<float>();
             }
             foreach(Dictionary<string, object> pose in interactablePoses) {
                 foreach (string key in keys) {
-                    d[key].Add(pose[key]);
+                    if (key == "standing") {
+                        // standing is converted from true => 1 to false => 0, for backwards compatibility
+                        d[key].Add((bool) pose[key] ? 1 : 0);
+                    } else {
+                        // all other keys have float outputs
+                        d[key].Add((float) pose[key]);
+                    }
                 }
             }
             actionFinished(true, d);
