@@ -6931,7 +6931,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // returns null on failure.
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private Dictionary<string, List<object>> getInteractablePoses(
+        private List<Dictionary<string, object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
@@ -7037,11 +7037,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ).ToList();
 
             // set each key to store a list
-            Dictionary<string, List<object>> validAgentPoses = new Dictionary<string, List<object>>();
+            List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
             string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
-            foreach (string key in keys) {
-                validAgentPoses[key] = new List<object>();
-            }
 
             // iterate over each reasonable agent pose
             bool stopEarly = false;
@@ -7073,14 +7070,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
                             if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
-                                validAgentPoses["x"].Add(position.x);
-                                validAgentPoses["y"].Add(position.y);
-                                validAgentPoses["z"].Add(position.z);
-                                validAgentPoses["rotation"].Add(rotation);
-                                validAgentPoses["standing"].Add(standing);
-                                validAgentPoses["horizon"].Add(horizon);
+                                validAgentPoses.Add(new Dictionary<string, object> {
+                                    ["x"] = position.x,
+                                    ["y"] = position.y,
+                                    ["z"] = position.z,
+                                    ["rotation"] = rotation,
+                                    ["standing"] = standing,
+                                    ["horizon"] = horizon
+                                });
 
-                                if (validAgentPoses["x"].Count >= maxPoses) {
+                                if (validAgentPoses.Count >= maxPoses) {
                                     stopEarly = true;
                                     break;
                                 }
@@ -7118,8 +7117,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             #if UNITY_EDITOR
-                Debug.Log(validAgentPoses["x"].Count);
-                Debug.Log(validAgentPoses["x"]);
+                Debug.Log(validAgentPoses.Count);
+                Debug.Log(validAgentPoses);
             #endif
 
             if (markActionFinished) {
@@ -7154,12 +7153,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
                 horizons.Add(h);
             }
-            GetInteractablePoses(objectId: objectId, positions: positions, horizons: horizons.ToArray());
+            List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
+                objectId: objectId,
+                markActionFinished: false,
+                positions: positions,
+                horizons: horizons.ToArray()
+            );
+
+            if (interactablePoses == null) {
+                actionFinished(false);
+                return;
+            }
+
+            // for backwards compatibility, PositionsFromWhichItemIsInteractable returns
+            // Dictionary<string, List<object>> instead of List<Dictionary<string, object>>,
+            // where the latter is cleaner in python.
+            Dictionary<string, List<object>> d = new Dictionary<string, List<object>>();
+            string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
+            foreach (string key in keys) {
+                d[key] = new List<object>();
+            }
+            foreach(Dictionary<string, object> pose in interactablePoses) {
+                foreach (string key in keys) {
+                    d[key].Add(pose[key]);
+                }
+            }
+            actionFinished(true, d);
         }
 
         // private helper for NumberOfPositionsFromWhichItemIsVisible
         private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null, int maxPoses = int.MaxValue) {
-            Dictionary<string, List<object>> interactablePositions = getInteractablePoses(
+            List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
                 objectId: objectId,
                 positions: positions,
                 maxDistance: 1e5f,          // super large number for maximum distance!
@@ -7170,9 +7194,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // object id might have been invalid, causing failure
             if (markActionFinished) {
-                actionFinished(success: interactablePositions != null);
+                actionFinished(success: interactablePoses != null);
             }
-            return interactablePositions == null ? 0 : interactablePositions.Count;
+            return interactablePoses == null ? 0 : interactablePoses.Count;
         }
 
         // Similar to GetInteractablePositions, but with horizon=0 and maxDistance like infinity
