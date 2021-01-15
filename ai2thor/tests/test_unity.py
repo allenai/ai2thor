@@ -167,14 +167,15 @@ def test_add_third_party_camera(controller):
 
 def test_update_third_party_camera():
     controller = build_controller(server_class=FifoServer)
+
+    # add a new camera
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
-
     e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
     assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
 
-    # update camera pose
+    # update camera pose fully
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
     expectedInitialFieldOfView = 45.0
@@ -184,19 +185,30 @@ def test_update_third_party_camera():
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
-    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when <= 0'
-
+    # partially update the camera pose
     changeFOV = 55.0
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=changeFOV))
+    expectedPosition2 = dict(x=3.2, z=5)
+    expectedRotation2 = dict(y=90)
+    e = controller.step(
+        action=Actions.UpdateThirdPartyCamera,
+        thirdPartyCameraId=0,
+        fieldOfView=changeFOV,
+        position=expectedPosition2,
+        rotation=expectedRotation2
+    )
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == changeFOV, 'fieldOfView should have been updated'
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
-    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when <= 0'
+    expectedPosition.update(expectedPosition2)
+    expectedRotation.update(expectedPosition2)
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should been slightly updated')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should been slightly updated')
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
-    assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail when >= 180'
+    for fov in [-1, 181, 0]:
+        e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=fov))
+        assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail outside of (0, 180)'
+        assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should not have updated')
+        assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should not have updated')
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
