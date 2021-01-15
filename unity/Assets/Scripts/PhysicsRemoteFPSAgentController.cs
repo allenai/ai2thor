@@ -7146,7 +7146,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePositions instead.", error: false)]
+        [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePoses instead.", error: false)]
         public void PositionsFromWhichItemIsInteractable(string objectId, float horizon = 30, Vector3[] positions = null) {
             // set horizons using the horizon as an increment
             List<float> horizons = new List<float>();
