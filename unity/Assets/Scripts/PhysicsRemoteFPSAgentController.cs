@@ -8615,7 +8615,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.gameObject.SetActive(true);
                 objectIdToPositionsVisibleFrom.Add(
                     sop.ObjectID,
-                    numVisiblePositions(objectId: sop, markActionFinished: false, positions: positions)
+                    numVisiblePositions(objectId: sop.ObjectID, markActionFinished: false, positions: positions)
                 );
 
                 #if UNITY_EDITOR
