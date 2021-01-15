@@ -6938,10 +6938,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
-        // Get the poses with which the agent can interact with 'objectId'
-        // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
-        public void GetInteractablePositions(
+        // returns null on failure.
+        // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
+        // may encounter with basic agent navigation commands (excluding teleport).
+        private Dictionary<string, List<object>> getInteractablePositions(
             string objectId,
+            bool markActionFinished,
             Vector3[] positions = null,
             float[] rotations = null,
             float[] horizons = null,
@@ -6950,8 +6952,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (360 % rotateStepDegrees != 0) {
                 errorMessage = "360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.";
-                actionFinished(false);
-                return;
+                if (markActionFinished) {
+                    actionFinished(success: false);
+                }
+                return null;
             }
 
             // default "visibility" distance
@@ -6960,8 +6964,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxDistanceFloat = maxVisibleDistance;
             } else if ((float) maxDistance <= 0) {
                 errorMessage = "maxDistance must be >= 0 meters from the object.";
-                actionFinished(false);
-                return;
+                if (markActionFinished) {
+                    actionFinished(success: false);
+                }
+                return null;
             } else {
                 maxDistanceFloat = (float) maxDistance;
             }
@@ -6969,7 +6975,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "objectId appears to be invalid.";
                 actionFinished(false);
-                return;
+                return null;
             }
             SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
@@ -7043,7 +7049,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
                 if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
                     errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
-                    actionFinished(success: false);
+                    if (markActionFinished) {
+                        actionFinished(success: false);
+                    }
+                    return null;
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
@@ -7067,7 +7076,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 validAgentPoses["x"].Add(position.x);
                                 validAgentPoses["y"].Add(position.y);
                                 validAgentPoses["z"].Add(position.z);
-                                validAgentPoses["rotation"].Add(rotationVector);
+                                validAgentPoses["rotation"].Add(rotation);
                                 validAgentPoses["standing"].Add(standing);
                                 validAgentPoses["horizon"].Add(horizon);
 
@@ -7099,7 +7108,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log(validAgentPoses["x"]);
             #endif
 
-            actionFinished(true, validAgentPoses);
+            if (markActionFinished) {
+                actionFinished(success: true, actionReturn: validAgentPoses);
+            }
+
+            return validAgentPoses;
+        }
+
+        // Get the poses with which the agent can interact with 'objectId'
+        // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
+        public void GetInteractablePositions(
+            string objectId,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null,
+            float? maxDistance = null
+        ) {
+            getInteractablePositions(
+                objectId: objectId,
+                markActionFinished: true,
+                positions: positions, rotations: rotations, horizons: horizons, standings: standings,
+                maxDistance: maxDistance
+            );
         }
 
         [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePositions instead.", error: false)]
@@ -7113,76 +7144,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
                 horizons.Add(h);
             }
-
             GetInteractablePositions(objectId: objectId, positions: positions, horizons: horizons.ToArray());
         }
 
-        public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
-            bool wasStanding = isStanding();
-            Vector3 oldPosition = transform.position;
-            Quaternion oldRotation = transform.rotation;
+        // private helper for NumberOfPositionsFromWhichItemIsVisible
+        private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null) {
+            Dictionary<string, List<object>> interactablePositions = getInteractablePositions(
+                objectId: objectId,
+                positions: positions,
+                maxDistance: 1e5f,          // super large number for maximum distance!
+                horizons: new float[] {0},  // don't care about every horizon here, just horizon=0
+                markActionFinished: false
+            );
 
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(false);
+            // object id might have been invalid, causing failure
+            if (markActionFinished) {
+                actionFinished(success: interactablePositions != null);
             }
-
-            int numTimesVisible = 0;
-            for (int j = 0; j < 2; j++) { // Standing / Crouching
-                if (j == 0) {
-                    stand();
-                } else {
-                    crouch();
-                }
-                for (int i = 0; i < 4; i++) { // 4 rotations
-                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
-                    foreach (Vector3 p in positions) {
-                        transform.position = p;
-
-                        if (objectIsCurrentlyVisible(theObject, 1000f)) {
-                            numTimesVisible += 1;
-                        }
-                    }
-                }
-            }
-
-            if (wasStanding) {
-                stand();
-            } else {
-                crouch();
-            }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
-
-#if UNITY_EDITOR
-            Debug.Log(4 * 2 * positions.Length);
-            Debug.Log(numTimesVisible);
-#endif
-
-            return numTimesVisible;
+            return interactablePositions == null ? 0 : interactablePositions.Count;
         }
-        public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
-                positions = getReachablePositions();
-            }
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-
-            int numTimesVisible = NumberOfPositionsFromWhichItemIsVisibleHelper(theObject, positions);
-
-            actionIntReturn = numTimesVisible;
-            actionFinished(true, numTimesVisible);
+        // Similar to GetInteractablePositions, but with horizon=0 and maxDistance like infinity
+        public void NumberOfPositionsFromWhichItemIsVisible(string objectId, Vector3[] positions = null) {
+            numVisiblePositions(objectId: objectId, positions: positions, markActionFinished: true);
         }
 
         public void TogglePhysics() {
@@ -8596,35 +8580,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             StartCoroutine(CoverSurfacesWithHelper(100, newObjects, reachablePositions));
         }
+    
 
-        public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            }
-            else {
-#if UNITY_EDITOR
-                List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
-                foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
-                    if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
-                        toReEnable.Add(sop);
-                        sop.gameObject.SetActive(false);
+        public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(
+            string objectType,
+            Vector3[] positions
+        ) {
+            #if UNITY_EDITOR
+                if (positions == null || positions.Length == 0) {
+                    List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
+                    foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                        if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
+                            toReEnable.Add(sop);
+                            sop.gameObject.SetActive(false);
+                        }
+                    }
+                    foreach (SimObjPhysics sop in toReEnable) {
+                        sop.gameObject.SetActive(true);
                     }
                 }
-#endif
-                positions = getReachablePositions();
-#if UNITY_EDITOR
-                foreach (SimObjPhysics sop in toReEnable) {
-                    sop.gameObject.SetActive(true);
-                }
-#endif
-            }
+            #endif
 
-            string objectType = action.objectType;
 
             List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
             foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
+                if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                     objectsOfType.Add(sop);
                     sop.gameObject.SetActive(false);
                 }
@@ -8635,12 +8615,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.gameObject.SetActive(true);
                 objectIdToPositionsVisibleFrom.Add(
                     sop.ObjectID,
-                    NumberOfPositionsFromWhichItemIsVisibleHelper(sop, positions)
+                    numVisiblePositions(objectId: sop, markActionFinished: false, positions: positions)
                 );
-#if UNITY_EDITOR
-                Debug.Log(sop.ObjectID);
-                Debug.Log(objectIdToPositionsVisibleFrom[sop.ObjectID]);
-#endif
+
+                #if UNITY_EDITOR
+                    Debug.Log(sop.ObjectID);
+                    Debug.Log(objectIdToPositionsVisibleFrom[sop.ObjectID]);
+                #endif
                 sop.gameObject.SetActive(false);
             }
 
