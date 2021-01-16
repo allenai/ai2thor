@@ -862,7 +862,7 @@ def ci_build(context):
 
             for p in procs:
                 if p:
-                    logger.info("joining proc %s for %s %s" % (proc.pid, build["branch"], build["commit_id"]))
+                    logger.info("joining proc %s for %s %s" % (p.pid, build["branch"], build["commit_id"]))
                     p.join()
             
 
