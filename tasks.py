@@ -751,8 +751,7 @@ def travis_build(build_id):
 
     return res.json()
 
-@task
-def pending_travis_build(context):
+def pending_travis_build():
     import requests
 
     res = requests.get(
