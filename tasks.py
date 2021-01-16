@@ -707,12 +707,20 @@ def clean():
 def link_build_cache(branch):
     library_path = os.path.join("unity", "Library")
 
-    if os.path.exists(library_path):
+    if os.path.lexists(library_path):
         os.unlink(library_path)
 
-    branch_cache_dir = os.path.join(os.environ["HOME"], "cache", branch, "Library")
-    os.makedirs(branch_cache_dir, exist_ok=True)
-    os.symlink(branch_cache_dir, library_path)
+    cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+    master_cache_dir = os.path.join(cache_base_dir, 'master')
+    branch_cache_dir = os.path.join(cache_base_dir, branch)
+    # use the master cache as a starting point to avoid
+    # having to re-import all assets, which can take up to 1 hour
+    if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
+        subprocess.check_call("cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True)
+
+    branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
+    os.makedirs(branch_library_cache_dir, exist_ok=True)
+    os.symlink(branch_library_cache_dir, library_path)
 
 def travis_build(build_id):
     import requests
