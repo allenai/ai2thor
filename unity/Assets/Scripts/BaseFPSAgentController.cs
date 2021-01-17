@@ -265,13 +265,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.Emit, actionReturn);
+		public void actionFinishedEmit(bool success, System.Object actionReturn=null, bool stopActionNow = false) {
+            actionFinished(
+                success: success,
+                newState: AgentState.Emit,
+                actionReturn: actionReturn,
+                stopActionNow: stopActionNow
+            );
 		}
 
-		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
-		{
+		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn = null, bool stopActionNow = false) {
 			if (!this.IsProcessing)
 			{
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
@@ -282,13 +285,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
-
+            if (stopActionNow) {
+                throw new StopActionNow();
+            }
         }
 
-		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.ActionComplete, actionReturn);
+		public virtual void actionFinished(bool success, System.Object actionReturn = null, bool stopActionNow = false) {
+            actionFinished(
+                success: success,
+                newState: AgentState.ActionComplete,
+                actionReturn: actionReturn,
+                stopActionNow: stopActionNow
+            );
             this.resumePhysics();
+		}
+
+		public virtual void actionFinished(bool success, string errorMessage, System.Object actionReturn = null, bool stopActionNow = false) {
+            this.errorMessage = errorMessage;
+            actionFinished(
+                success: success,
+                actionReturn: actionReturn,
+                stopActionNow: stopActionNow
+            );
 		}
 
         protected virtual void resumePhysics() {}
@@ -1528,7 +1546,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorCode = ServerActionErrorCode.AmbiguousAction;
                 Debug.LogError(errorMessage);
                 actionFinished(false);
-            
             }
             catch (InvalidActionException)
             {
@@ -1536,7 +1553,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorCode = ServerActionErrorCode.InvalidAction;
                 Debug.LogError(errorMessage);
                 actionFinished(false);
-            
+            }
+            catch (TargetInvocationException e) when (e.InnerException is StopActionNow)
+            {
+                // short circuiting, which terminates an action immediately
+                // note that this should only be thrown inside of actionFinished
+                Debug.Log("StopActionNow thrown!");
             }
             catch (Exception e)
             {
@@ -1548,9 +1570,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             #if UNITY_EDITOR
-            if (errorMessage != "") {
-                Debug.Log(errorMessage);
-            }
+                if (errorMessage != "") {
+                    Debug.Log(errorMessage);
+                }
             #endif
         }
 

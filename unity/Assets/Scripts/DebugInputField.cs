@@ -2020,6 +2020,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
+                    // do nothing action
+                case "pass":
+                case "done":
+                case "noop":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "NoOp";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    // StopActionNow test!
+                case "san":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenObject";
+                        action["x"] = 1.5;
+                        action["y"] = 0.5;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
 					//move hand up, relative to agent's facing
 					//pass in move magnitude or default is 0.25 units
                 case "mhu":

@@ -379,6 +379,9 @@ public class MethodParamComparer: IComparer<MethodInfo> {
 public class InvalidActionException : Exception { }
 
 [Serializable]
+public class StopActionNow : Exception { }
+
+[Serializable]
 public class AmbiguousActionException : Exception { 
     public AmbiguousActionException(string message) : base(message) {}
 }
