@@ -290,7 +290,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public virtual void actionFinished(bool success, System.Object actionReturn = null, bool stopActionNow = false) {
+		public virtual void actionFinished(bool success, System.Object actionReturn = null, string errorMessage = null, bool stopActionNow = false) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
             actionFinished(
                 success: success,
                 newState: AgentState.ActionComplete,
@@ -298,15 +301,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 stopActionNow: stopActionNow
             );
             this.resumePhysics();
-		}
-
-		public virtual void actionFinished(bool success, string errorMessage, System.Object actionReturn = null, bool stopActionNow = false) {
-            this.errorMessage = errorMessage;
-            actionFinished(
-                success: success,
-                actionReturn: actionReturn,
-                stopActionNow: stopActionNow
-            );
 		}
 
         protected virtual void resumePhysics() {}
