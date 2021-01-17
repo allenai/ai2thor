@@ -872,7 +872,7 @@ def ci_build(context):
             
 
             
-        logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
+            logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
