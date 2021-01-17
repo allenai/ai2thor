@@ -721,15 +721,19 @@ def link_build_cache(branch):
     if os.path.lexists(library_path):
         os.unlink(library_path)
 
+    # this takes takes care of branches with '/' in it
+    # to avoid implicitly creating directories under the cache dir
+    encoded_branch = re.sub(r'[^a-zA-Z0-9_\-.]', '_', re.sub('_', '__', branch))
+
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
     master_cache_dir = os.path.join(cache_base_dir, 'master')
-    branch_cache_dir = os.path.join(cache_base_dir, branch)
+    branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
     # use the master cache as a starting point to avoid
     # having to re-import all assets, which can take up to 1 hour
     if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
-        logger.info("copying master cache for %s" % branch)
+        logger.info("copying master cache for %s" % encoded_branch)
         subprocess.check_call("cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True)
-        logger.info("copying master cache complete for %s" % branch)
+        logger.info("copying master cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
     os.makedirs(branch_library_cache_dir, exist_ok=True)
@@ -867,7 +871,7 @@ def ci_build(context):
             
 
             
-        logger.info("build complete %s %s" % (proc.pid, build["branch"], build["commit_id"]))
+        logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
