@@ -265,18 +265,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinishedEmit(bool success, System.Object actionReturn=null, bool stopActionNow = false) {
-            actionFinished(
-                success: success,
-                newState: AgentState.Emit,
-                actionReturn: actionReturn,
-                stopActionNow: stopActionNow
-            );
+		public void actionFinishedEmit(bool success, object actionReturn = null) {
+            actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
 		}
 
-		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn = null, bool stopActionNow = false) {
-			if (!this.IsProcessing)
-			{
+		protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
+			if (!this.IsProcessing) {
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
 
@@ -285,23 +279,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
-            if (stopActionNow) {
-                throw new StopActionNow();
-            }
         }
 
-		public virtual void actionFinished(bool success, System.Object actionReturn = null, string errorMessage = null, bool stopActionNow = false) {
+		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
             if (errorMessage != null) {
                 this.errorMessage = errorMessage;
             }
-            actionFinished(
-                success: success,
-                newState: AgentState.ActionComplete,
-                actionReturn: actionReturn,
-                stopActionNow: stopActionNow
-            );
+            actionFinished(success: success, newState: AgentState.ActionComplete, actionReturn: actionReturn);
             this.resumePhysics();
 		}
+
+        // immediately stops the execution of an action.
+        public void haltAction(bool success, object actionReturn = null, string errorMessage = null) {
+            actionFinished(success: success, actionReturn: actionReturn, errorMessage: errorMessage);
+            throw new StopActionNow();
+        }
 
         protected virtual void resumePhysics() {}
 
