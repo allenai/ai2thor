@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 import json
+import re
 import time
 import zipfile
 import threading
@@ -14,6 +15,16 @@ import boto3
 import platform
 import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s [%(process)d] %(funcName)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def add_files(zipf, start_dir):
@@ -47,7 +58,7 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     s3.Object(bucket, sha256_key).put(
         Body=archive_sha256, ACL=acl, ContentType="text/plain"
     )
-    print("pushed build %s to %s" % (bucket, build_archive_name))
+    logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
 
 def _webgl_local_build_path(prefix, source_dir="builds"):
@@ -706,13 +717,28 @@ def clean():
 
 def link_build_cache(branch):
     library_path = os.path.join("unity", "Library")
+    logger.info("linking build cache for %s" % branch)
 
-    if os.path.exists(library_path):
+    if os.path.lexists(library_path):
         os.unlink(library_path)
 
-    branch_cache_dir = os.path.join(os.environ["HOME"], "cache", branch, "Library")
-    os.makedirs(branch_cache_dir, exist_ok=True)
-    os.symlink(branch_cache_dir, library_path)
+    # this takes takes care of branches with '/' in it
+    # to avoid implicitly creating directories under the cache dir
+    encoded_branch = re.sub(r'[^a-zA-Z0-9_\-.]', '_', re.sub('_', '__', branch))
+
+    cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+    master_cache_dir = os.path.join(cache_base_dir, 'master')
+    branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
+    # use the master cache as a starting point to avoid
+    # having to re-import all assets, which can take up to 1 hour
+    if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
+        logger.info("copying master cache for %s" % encoded_branch)
+        subprocess.check_call("cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True)
+        logger.info("copying master cache complete for %s" % encoded_branch)
+
+    branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
+    os.makedirs(branch_library_cache_dir, exist_ok=True)
+    os.symlink(branch_library_cache_dir, library_path)
 
 def travis_build(build_id):
     import requests
@@ -734,14 +760,13 @@ def pending_travis_build():
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
+        "https://api.travis-ci.com/repo/3459357/builds?include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Travis-API-Version": "3",
         },
     )
-
     for b in res.json()["builds"]:
         tag = None
         if b['tag']:
@@ -798,6 +823,7 @@ def ci_build(context):
         build = pending_travis_build()
         blacklist_branches = ["vids", "video"]
         if build and build["branch"] not in blacklist_branches:
+            logger.info("pending build for %s %s" % (build["branch"], build["commit_id"]))
             clean()
             link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
@@ -808,7 +834,9 @@ def ci_build(context):
 
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
+                logger.info("starting build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
                 p = ci_build_arch(arch, False)
+                logger.info("finished build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
                 procs.append(p)
 
 
@@ -817,28 +845,34 @@ def ci_build(context):
             # for the branch commit
             if build['tag'] is None:
 
+                logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
                 ci_pytest(context)
+                logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
 
             # give the travis poller time to see the result
             for i in range(6):
                 b = travis_build(build['id'])
-                print("build state for %s: %s" % (build['id'], b['state']))
+                logger.info("build state for %s: %s" % (build['id'], b['state']))
 
                 if b['state'] != 'started': 
                     break
                 time.sleep(10)
 
             if build["branch"] == "master":
+                logger.info("starting webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
+                logger.info("finished webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
 
             for p in procs:
                 if p:
+                    logger.info("joining proc %s for %s %s" % (p.pid, build["branch"], build["commit_id"]))
                     p.join()
             
 
             
+            logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
