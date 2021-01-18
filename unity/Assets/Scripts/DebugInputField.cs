@@ -746,9 +746,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "atpc":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "AddThirdPartyCamera";
-                        AManager.AddThirdPartyCamera(action);
+                        AManager.AddThirdPartyCamera(
+                            position: Vector3.zero,
+                            rotation: Vector3.zero
+                        );
                         break;
                     }
 
