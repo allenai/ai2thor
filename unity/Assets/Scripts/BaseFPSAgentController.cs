@@ -713,7 +713,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        // alias to RandomizeColors, supported for backwards compatibility
+        [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)] 
         public void ChangeColorOfMaterials() {
             RandomizeColors();
         }
