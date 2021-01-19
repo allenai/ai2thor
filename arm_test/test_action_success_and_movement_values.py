@@ -8,8 +8,11 @@ import copy
 import time
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state
 
+# RESOLUTION = 900
+RESOLUTION = 224
 MAX_TESTS = 300
-MAX_EP_LEN = 1000
+MAX_EP_LEN = 2000
+MAX_CONSECUTIVE_FAILURE = 10
 # scene_indices = [i + 1 for i in range(30)] #Only kitchens
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
@@ -17,7 +20,7 @@ set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 controller = ai2thor.controller.Controller(
     scene=scene_names[0], gridSize=0.25,
-    width=900, height=900, agentMode='arm', fieldOfView=100,
+    width=RESOLUTION, height=RESOLUTION, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
     useMassThreshold = True, massThreshold = 10, #TODO we need to add this everywhere
@@ -61,6 +64,7 @@ for i in range(MAX_TESTS):
         last_event_success = controller.last_event.metadata['lastActionSuccess']
         after_action_arm_value = get_current_arm_state(controller)
         after_full = copy.deepcopy(controller.last_event.metadata['arm'])
+
 
         if last_event_success and command in ['w','z', 'a', 's', '3', '4', 'u', 'j']:
             expected_arm_position = before_action_arm_value.copy()
@@ -115,6 +119,27 @@ for i in range(MAX_TESTS):
                 print('initial pose', initial_pose)
                 print('list of actions', all_commands)
                 break
+
+        if last_event_success:
+            failed_action_pool  = []
+        if not last_event_success:
+            failed_action_pool.append(1)
+            if len(failed_action_pool) > MAX_CONSECUTIVE_FAILURE:
+                # If last action failed Make sure it is not stuck
+                all_actions = copy.copy(set_of_actions)
+                random.shuffle(all_actions)
+                for a in all_actions:
+                    execute_command(controller, a, ADITIONAL_ARM_ARGS)
+                    all_commands.append(a)
+
+                    if controller.last_event.metadata['lastActionSuccess']:
+                        break
+                if not controller.last_event.metadata['lastActionSuccess']:
+                    print('This means we are stuck')
+                    print('scene name', controller.last_event.metadata['sceneName'])
+                    print('initial pose', initial_pose)
+                    print('list of actions', all_commands)
+                    break
 
 
 

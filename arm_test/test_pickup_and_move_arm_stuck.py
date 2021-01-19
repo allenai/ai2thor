@@ -9,6 +9,7 @@ from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM
 MAX_TESTS = 300
 MAX_EP_LEN = 1000
 MAX_CONSECUTIVE_FAILURE = 10
+RESOLUTION=224
 # scene_indices = [i + 1 for i in range(30)] #Only kitchens
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
@@ -16,7 +17,7 @@ set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 controller = ai2thor.controller.Controller(
     scene=scene_names[0], gridSize=0.25,
-    width=900, height=900, agentMode='arm', fieldOfView=100,
+    width=RESOLUTION, height=RESOLUTION, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
     useMassThreshold = True, massThreshold = 10,
@@ -55,7 +56,7 @@ for i in range(MAX_TESTS):
             execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
             all_commands.append(cmd)
             if controller.last_event.metadata['lastActionSuccess'] is False:
-                print('Failed to pick up ')
+                print('Failed to pick up ', pickupable)
                 print('scene name', controller.last_event.metadata['sceneName'])
                 print('initial pose', initial_pose)
                 print('list of actions', all_commands)
