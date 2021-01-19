@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
+using MIConvexHull;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -2584,6 +2585,51 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void GetSemanticHulls(List<string> objectTypes = null) {
+            HashSet<string> allowedObjectTypesSet = null;
+            if (objectTypes != null) {
+                allowedObjectTypesSet = new HashSet<string>(objectTypes);
+            }
+
+            var objectIdToConvexHull = new Dictionary<string, List<(float x, float y)>>();
+            foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (
+                    allowedObjectTypesSet != null 
+                    && !allowedObjectTypesSet.Contains(sop.Type.ToString())
+                ) {
+                    continue;
+                }
+                var vertices = new List<MIConvexHull.DefaultVertex2D>();
+                float maxY = -5f;
+
+                foreach (var meshFilter in sop.GetComponentsInChildren<MeshFilter>()) {
+                    foreach (var localVertex in meshFilter.mesh.vertices) {
+                        var globalVertex = meshFilter.transform.TransformPoint(localVertex);
+                        // var globalVertex = localVertex;
+                        vertices.Add(new MIConvexHull.DefaultVertex2D(globalVertex.x, globalVertex.z));
+                        maxY = Math.Max(maxY, globalVertex.y);
+                    }
+                }
+                var miconvexHull = MIConvexHull.ConvexHull.Create2D(vertices, 1e-10);
+                objectIdToConvexHull[sop.ObjectID] = miconvexHull.Result.Select(p => ((float) p.X, (float) p.Y)).ToList();
+
+                #if UNITY_EDITOR
+                Debug.Log(sop.ObjectID);
+                var pointsOnHullArray = miconvexHull.Result.ToArray();
+                for (int i = 0; i < pointsOnHullArray.Length; i++) {
+                    var p0 = pointsOnHullArray[i];
+                    var p1 = pointsOnHullArray[(i + 1) % pointsOnHullArray.Length];
+                    Debug.DrawLine(
+                        new Vector3((float) p0.X, maxY, (float) p0.Y),
+                        new Vector3((float) p1.X, maxY, (float) p1.Y),
+                        Color.red, 100.0f
+                    );
+                }
+                #endif
+            }
+            actionFinished(true, objectIdToConvexHull);
+
+        }
 
         public void UpdateDisplayGameObject(GameObject go, bool display) {
             if (go != null) {

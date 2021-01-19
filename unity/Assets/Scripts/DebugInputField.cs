@@ -2684,17 +2684,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				default:
                     {   
-                        ServerAction action = new ServerAction();
-                        action.action = splitcommand[0];
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        
+                        action["action"] = splitcommand[0];
                         if (splitcommand.Length == 2) {
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         } else if (splitcommand.Length == 3) {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.z = float.Parse(splitcommand[2]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["z"] = float.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.y = float.Parse(splitcommand[2]);
-                            action.z = float.Parse(splitcommand[3]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[2]);
+                            action["z"] = float.Parse(splitcommand[3]);
                         }
                         PhysicsController.ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
