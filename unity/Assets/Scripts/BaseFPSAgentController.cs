@@ -2631,6 +2631,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
+        public void GetCameraToWorldMatrix() {
+            Matrix4x4 m = m_Camera.cameraToWorldMatrix;
+            // Vector3 p = m.MultiplyPoint(new Vector3(x, y, -z));
+            // Debug.DrawLine(
+            //             p,
+            //             p + new Vector3(0f, 1f, 0f),
+            //             Color.red, 
+            //             100.0f
+            //         );
+            actionFinished(true, m);
+        }
+        
+        public void GetScreenToWorldPoint(float row, float col, float depth) {
+            actionFinished(
+                true, 
+                m_Camera.ScreenToWorldPoint(new Vector3(col, m_Camera.pixelHeight - row, m_Camera.nearClipPlane))
+            );
+        }
+
+        public void CameraRayCast(float x, float y) {            
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+            RaycastHit hit;
+            Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
+            Debug.DrawLine(
+                hit.point,
+                hit.point + new Vector3(0f, 1f, 0f),
+                Color.red, 
+                100.0f
+            );
+            actionFinished(true, hit.point);
+        }
+
         public void UpdateDisplayGameObject(GameObject go, bool display) {
             if (go != null) {
                 foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {

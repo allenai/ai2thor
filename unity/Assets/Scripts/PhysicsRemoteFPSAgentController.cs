@@ -267,6 +267,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject FindObjectInVisibleSimObjPhysics(string objectID) {
             GameObject target = null;
 
+            if (VisibleSimObjPhysics is null) {
+                this.LateUpdate();
+            }
             foreach (SimObjPhysics o in VisibleSimObjPhysics) {
                 if (o.objectID == objectID) {
                     target = o.gameObject;
