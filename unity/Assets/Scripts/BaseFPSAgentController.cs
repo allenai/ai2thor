@@ -289,12 +289,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.resumePhysics();
 		}
 
-        // immediately stops the execution of an action.
-        public void haltAction(bool success, object actionReturn = null, string errorMessage = null) {
-            actionFinished(success: success, actionReturn: actionReturn, errorMessage: errorMessage);
-            throw new StopActionNow();
-        }
-
         protected virtual void resumePhysics() {}
 
 
@@ -1523,41 +1517,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
                 errorCode = ServerActionErrorCode.MissingArguments;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
             }
             catch (AmbiguousActionException e)
             {
                 errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
                 errorCode = ServerActionErrorCode.AmbiguousAction;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
             }
             catch (InvalidActionException)
             {
-                errorMessage = "Invalid action: " + controlCommand.action;
                 errorCode = ServerActionErrorCode.InvalidAction;
-                Debug.LogError(errorMessage);
-                actionFinished(false);
+                actionFinished(success: false, errorMessage: "Invalid action: " + controlCommand.action);
             }
-            catch (TargetInvocationException e) when (e.InnerException is StopActionNow)
+            catch (TargetInvocationException e)
             {
-                // short circuiting, which terminates an action immediately
-                // note that this should only be thrown inside of actionFinished
-                Debug.Log("StopActionNow thrown!");
+                // TargetInvocationException is called whenever an action
+                // throws an exception. It is used to short circuit errors,
+                // which terminates the action immediately.
+                actionFinished(
+                    success: false,
+                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
+                );
             }
             catch (Exception e)
             {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
-                Debug.LogError(e);
                 errorMessage += e.ToString();
                 actionFinished(false);
             }
 
             #if UNITY_EDITOR
                 if (errorMessage != "") {
-                    Debug.Log(errorMessage);
+                    Debug.LogError(errorMessage);
                 }
             #endif
         }

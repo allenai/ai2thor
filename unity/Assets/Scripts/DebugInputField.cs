@@ -2031,8 +2031,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    // StopActionNow test!
-                case "san":
+                    // Short circuiting exception test
+                case "sc":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "OpenObject";

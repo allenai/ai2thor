@@ -4647,7 +4647,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     // this should basically only happen if the handDistance value is too big
                     if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                        haltAction(success: false, errorMessage: "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport");
+                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
                     }
 
                     // it is within viewport, so we are good, assign as target
@@ -4665,15 +4665,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                         // this should basically only happen if the handDistance value is too big
                         if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                            haltAction(success: false, errorMessage: "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport");
+                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
                         }
-                        //it is within viewport, so we are good, assign as target
+                        // it is within viewport, so we are good, assign as target
                         target = hit.transform.GetComponentInParent<SimObjPhysics>();
                     }
                 }
             }
 
-            //force update objects to be visible/interactable correctly
+            // force update objects to be visible/interactable correctly
             VisibleSimObjs(false);
             return true;
         }
@@ -5113,10 +5113,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        private SimObjPhysics getTargetObject( string objectId, bool forceAction = false) {
+        private SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                haltAction(success: false, errorMessage: "Object ID appears to be invalid.");
+                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
             }
 
             // if object is in the scene and visible, assign it to 'target'
@@ -5127,7 +5127,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // target not found!
             if (target == null) {
-                haltAction(success: false, errorMessage: "Target object not found within visibility.");
+                throw new NullReferenceException("Target object not found within the specified visibility.");
             }
 
             return target;
@@ -5135,13 +5135,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        private SimObjPhysics getTargetObject(
-            float x,
-            float y,
-            bool forceAction
-        ) {
+        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
-                haltAction(success: false, errorMessage: "x/y must be in [0:1].");
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
             SimObjPhysics target = null;
             ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
@@ -5149,10 +5145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // syntactic sugar for open object with openness = 0.
-        public void CloseObject(
-            string objectId,
-            bool forceAction = false
-        ) {
+        public void CloseObject(string objectId, bool forceAction = false) {
             OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
         }
 
