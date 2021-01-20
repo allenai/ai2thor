@@ -10,6 +10,7 @@ using MessagePack.Resolvers;
 using MessagePack.Formatters;
 using MessagePack;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
@@ -193,7 +194,7 @@ public class AgentManager : MonoBehaviour
 
         }
 
-		primaryAgent.ProcessControlCommand (action);
+		primaryAgent.ProcessControlCommand (action.dynamicServerAction);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
@@ -542,7 +543,7 @@ public class AgentManager : MonoBehaviour
 		// clone.m_Camera.targetDisplay = this.agents.Count;
 		clone.transform.position = clonePosition;
 		UpdateAgentColor(clone, agentColors[this.agents.Count]);
-		clone.ProcessControlCommand (action);
+		clone.ProcessControlCommand (action.dynamicServerAction);
 		this.agents.Add (clone);
 	}
 
@@ -1054,19 +1055,15 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
-        #if UNITY_WEBGL
-		ServerAction controlCommand = new ServerAction();
-		JsonUtility.FromJsonOverwrite(msg, controlCommand);
-        #else
-        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
-        #endif
+        
+        DynamicServerAction controlCommand = new DynamicServerAction(msg); //jObject);
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
-        this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
-        this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
+        this.renderImage = controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId;
 
-		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
+		if (agentManagerActions.Contains(controlCommand.action)) {
             this.agentManagerState = AgentState.Processing;
             try {
                 ActionDispatcher.Dispatch(this, controlCommand);
@@ -1411,6 +1408,88 @@ public struct MetadataWrapper
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 }
 
+/*
+Wraps the JObject created by JSON.net and used by the ActionDispatcher
+to dispatch to the appropriate action based on the passed in params.
+The properties(agentId, sequenceId, action) exist to encapsulate the key names.
+*/
+public class DynamicServerAction
+{
+    private JObject jObject;
+
+    public int agentId {
+        get {
+            return this.GetValue("agentId", 0);
+        }
+    }
+
+    public int sequenceId {
+        get {
+            return (int)this.jObject["sequenceId"];
+        }
+    }
+
+    public string action {
+        get {
+            return this.jObject["action"].ToString();
+        }
+    }
+
+    public int GetValue(string name, int defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (int)this.GetValue(name);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public bool GetValue(string name, bool defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (bool)this.GetValue(name);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public JToken GetValue(string name) {
+        return this.jObject.GetValue(name);
+    }
+
+    public bool ContainsKey(string name) {
+        return this.jObject.ContainsKey(name);
+    }
+
+    public bool renderObjectImage {
+        get {
+            return this.GetValue("renderObjectImage", false);
+        }
+    }
+
+    public bool renderImage {
+        get {
+            return this.GetValue("renderImage", true);
+        }
+    }
+
+    public DynamicServerAction(Dictionary<string, object> action) {
+        this.jObject = JObject.FromObject(action);
+    }
+
+
+    public DynamicServerAction(string jsonMessage) {
+        this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
+    }
+
+    public System.Object ToObject(Type objectType) {
+        return this.jObject.ToObject(objectType);
+    }
+
+    public T ToObject<T>() {
+        return this.jObject.ToObject<T>();
+    }
+
+}
+
 [Serializable]
 public class ServerAction
 {
@@ -1528,6 +1607,9 @@ public class ServerAction
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
     public bool fastActionEmit;
+    // this allows us to chain the dispatch between two separate
+    // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
+    public DynamicServerAction dynamicServerAction;
 
     public SimObjType ReceptableSimObjType()
 	{

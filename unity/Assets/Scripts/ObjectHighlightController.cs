@@ -134,11 +134,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (actionName != "")
                         {
-                            ServerAction action = new ServerAction
-                            {
-                                action = actionName,
-                                objectId = closestObj.objectID
-                            };
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["action"] = actionName;
+                            action["objectId"] = closestObj.objectID;
                             this.PhysicsController.ProcessControlCommand(action);
                         }
                     }
@@ -161,11 +159,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (actionName != "")
                         {
-                            ServerAction action = new ServerAction
-                            {
-                                action = actionName,
-                                objectId = closestObj.objectID
-                            };
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["action"] = actionName;
+                            action["objectId"] = closestObj.objectID;
+
                             this.PhysicsController.ProcessControlCommand(action);
                         }
                     }
@@ -179,31 +176,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.Mouse1)&& !Input.GetKey(KeyCode.LeftShift))
             {
-                ServerAction dothis = new ServerAction();
+                Dictionary<string, object> dothis = new Dictionary<string, object>();
 
-                dothis.action = "TouchThenApplyForce";
-                dothis.x = 0.5f;
-                dothis.y = 0.5f;
-                dothis.handDistance = 5.0f;
-                dothis.direction = new Vector3(0, 0.1f, 1);
-                dothis.moveMagnitude = 2000f;
+                dothis["action"] = "TouchThenApplyForce";
+                dothis["x"] = 0.5f;
+                dothis["y"] = 0.5f;
+                dothis["handDistance"] = 5.0f;
+                dothis["direction"] = new Vector3(0, 0.1f, 1);
+                dothis["moveMagnitude"] = 2000f;
 
                 // dothis.action = "SliceObject";
                 // dothis.objectId = PhysicsController.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
-
                 PhysicsController.ProcessControlCommand(dothis);
             }
 
             if (Input.GetKeyDown(KeyCode.Mouse1) && Input.GetKey(KeyCode.LeftShift))
             {
-                ServerAction dothis = new ServerAction();
-                dothis.action = "TouchThenApplyForce";
-                dothis.x = 0.5f;
-                dothis.y = 0.5f;
-                dothis.handDistance = 5.0f;
-                dothis.direction = new Vector3(0, 0.1f, 1);
-                dothis.moveMagnitude = 15000f;
-                
+                Dictionary<string, object> dothis = new Dictionary<string, object>();
+
+                dothis["action"] = "TouchThenApplyForce";
+                dothis["x"] = 0.5f;
+                dothis["y"] = 0.5f;
+                dothis["handDistance"] = 5.0f;
+                dothis["direction"] = new Vector3(0, 0.1f, 1);
+                dothis["moveMagnitude"] = 15000f;
                 // dothis.action = "PutObject";
                 // dothis.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
 
@@ -241,21 +237,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (this.PhysicsController.ReadyForCommand && (!this.highlightWhileHolding || (highlightedObject != null && this.PhysicsController.WhatAmIHolding() == highlightedObject.gameObject)))
                         {
-                            ServerAction action;
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["forceAction"] = true;
+
                             if (ThrowEnabled) {
-                                action = new ServerAction
-                                {
-                                    action = "ThrowObject",
-                                    moveMagnitude = force,
-                                    forceAction = true
-                                };
+                                action["action"] = "ThrowObject";
+                                action["moveMagnitude"] = force;
                             }
                             else {
-                                action = new ServerAction
-                                {
-                                    action = "DropHandObject",
-                                    forceAction = true
-                                };
+                                action["action"] = "DropHandObject";
                             }
                             this.PhysicsController.ProcessControlCommand(action);
                             this.mouseDownThrow = false;
