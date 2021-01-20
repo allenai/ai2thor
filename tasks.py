@@ -825,7 +825,6 @@ def ci_build(context):
         if build and build["branch"] not in blacklist_branches:
             logger.info("pending build for %s %s" % (build["branch"], build["commit_id"]))
             clean()
-            link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s" % build["branch"], shell=True)
             subprocess.check_call(
@@ -835,6 +834,12 @@ def ci_build(context):
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
                 logger.info("starting build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
+                if ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=False).exists():
+                    logger.info("found build for commit %s %s" % (build["commit_id"], arch))
+                    continue
+                # this is done here so that when a tag build request arrives and the commit_id has already
+                # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                link_build_cache(build["branch"])
                 p = ci_build_arch(arch, False)
                 logger.info("finished build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
                 procs.append(p)
@@ -885,11 +890,6 @@ def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
 
     commit_id = git_commit_id()
-    commit_build = ai2thor.build.Build(arch, commit_id, include_private_scenes)
-    if commit_build.exists():
-        print("found build for commit %s %s" % (commit_id, arch))
-        return
-
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
