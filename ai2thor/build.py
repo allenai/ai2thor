@@ -47,7 +47,7 @@ private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 class EditorBuild(object):
     def __init__(self):
         # assuming that an external build supports both server types
-        self.server_types = dict(server_types=['FIFO', 'WSGI'])
+        self.server_types = ['FIFO', 'WSGI']
         self.url = None
         self.unity_proc = None
 
@@ -65,7 +65,7 @@ class ExternalBuild(object):
         self.executable_path = executable_path
 
         # assuming that an external build supports both server types
-        self.server_types = dict(server_types=['FIFO', 'WSGI'])
+        self.server_types = ['FIFO', 'WSGI']
 
     def download(self):
         pass
