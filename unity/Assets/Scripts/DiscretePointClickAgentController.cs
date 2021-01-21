@@ -44,6 +44,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
              // TODO: move debug input field script from, Input Field and enable here
         }
+
+        private void executeAction(string actionName,  float moveMagnitude) {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+            action["action"] = actionName;
+            action["moveMagnitude"] = moveMagnitude;
+            PhysicsController.ProcessControlCommand(action);
+        }
+
+        private void executeAction(string actionName) {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+            action["action"] = actionName;
+            PhysicsController.ProcessControlCommand(action);
+        }
+
         void Update()
         {
                 highlightController.UpdateHighlightedObject(Input.mousePosition);
@@ -54,66 +68,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (!handMode) {
                             if(Input.GetKeyDown(KeyCode.W))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveAhead";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
+                                executeAction("MoveAhead", WalkMagnitude);
                             }
 
                             if(Input.GetKeyDown(KeyCode.S))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveBack";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
+                                executeAction("MoveBack", WalkMagnitude);
                             }
 
                             if(Input.GetKeyDown(KeyCode.A))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveLeft";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
+                                executeAction("MoveLeft", WalkMagnitude);
                             }
 
                             if(Input.GetKeyDown(KeyCode.D))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveRight";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
+                                executeAction("MoveRight", WalkMagnitude);
                             }
 
                             if(Input.GetKeyDown(KeyCode.UpArrow))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "LookUp";
-                                PhysicsController.ProcessControlCommand(action); 
+                                executeAction("LookUp");
                             }
 
                             if(Input.GetKeyDown(KeyCode.DownArrow))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "LookDown";
-                                PhysicsController.ProcessControlCommand(action); 
+                                executeAction("LookDown");
                             }
 
                             if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "RotateLeft";
-                                PhysicsController.ProcessControlCommand(action); 
+                                executeAction("RotateLeft");
                             }
 
                             if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
                             {
-                                ServerAction action = new ServerAction();
-                                action.action = "RotateRight";
-                                PhysicsController.ProcessControlCommand(action); 
+                                executeAction("RotateRight");
                             }
                         }
 
@@ -148,13 +138,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 localPos.x += HandMoveMagnitude;
                             }
                             if (actionName != "") {
-                                ServerAction action = new ServerAction
-                                {
-                                    action = "MoveHandForce",
-                                    x = localPos.x,
-                                    y = localPos.y,
-                                    z = localPos.z
-                                };
+                                Dictionary<string, object> action = new Dictionary<string, object>();
+                                action["action"] = actionName;
+                                action["x"] = localPos.x;
+                                action["y"] = localPos.y;
+                                action["z"] = localPos.z;
+                                    
                                 this.PhysicsController.ProcessControlCommand(action);
                             }
                         }

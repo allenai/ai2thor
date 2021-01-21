@@ -55,10 +55,8 @@ public class JavaScriptInterface : MonoBehaviour {
         }
     }
 
-    public void Step(string serverAction)
+    public void Step(string jsonAction)
     {
-        ServerAction controlCommand = new ServerAction();
-        JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
-        PhysicsController.ProcessControlCommand(controlCommand);
+        PhysicsController.ProcessControlCommand(new DynamicServerAction(jsonAction));
     }
 }

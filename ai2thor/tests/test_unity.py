@@ -348,14 +348,14 @@ def test_open(controller):
 def test_action_dispatch_find_ambiguous(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
@@ -390,6 +390,7 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -400,6 +401,7 @@ def test_action_dispatch_find_conflicts_physics(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts

@@ -1449,10 +1449,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = status;
 		}
 
-
-#if UNITY_WEBGL
+        // This should only be used by DebugInputField and HideNSeekController
+        // Once all those invocations have been converted to Dictionary<string, object>
+        // this can be removed
         public void ProcessControlCommand(ServerAction controlCommand)
         {
+
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1485,25 +1487,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
         }
-#endif
 
         // the parameter name is different to avoid failing a test
         // that looks for methods with identical param names, since
         // we dispatch using method + param names
         public void ProcessControlCommand(Dictionary<string, object> actionDict){
-            var jsonResolver = new ShouldSerializeContractResolver();
-            dynamic action = JObject.FromObject(actionDict,
-                        new Newtonsoft.Json.JsonSerializer()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            });
-
-
-            ProcessControlCommand(action);
+            ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(dynamic controlCommand)
+        public void ProcessControlCommand(DynamicServerAction controlCommand)
         {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
