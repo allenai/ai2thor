@@ -991,6 +991,7 @@ public class AgentManager : MonoBehaviour
             } else if (serverType == serverTypes.FIFO){
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 foreach(var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
@@ -1122,6 +1123,7 @@ public class AgentManager : MonoBehaviour
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class MultiAgentMetadata {
 
 	public MetadataWrapper[] agents;
@@ -1131,6 +1133,7 @@ public class MultiAgentMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ThirdPartyCameraMetadata
 {
 	public int thirdPartyCameraId;
@@ -1140,6 +1143,7 @@ public class ThirdPartyCameraMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class MetadataPatch
 {
 	public string lastAction;
@@ -1153,6 +1157,7 @@ public class MetadataPatch
 //adding AgentMetdata class so there is less confusing
 //overlap between ObjectMetadata and AgentMetadata
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class AgentMetadata
 {
     public string name;
@@ -1165,6 +1170,7 @@ public class AgentMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class DroneAgentMetadata : AgentMetadata
 {
     public float droneCurrentTime;
@@ -1173,6 +1179,7 @@ public class DroneAgentMetadata : AgentMetadata
 
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class DroneObjectMetadata : ObjectMetadata
 {
     // Drone Related Metadata
@@ -1186,6 +1193,7 @@ public class DroneObjectMetadata : ObjectMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectMetadata
 {
 	public string name;
@@ -1260,6 +1268,7 @@ public class ObjectMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class SceneBounds
 {
     //8 corners of the world axis aligned box that bounds a sim object
@@ -1277,6 +1286,7 @@ public class SceneBounds
 //for returning a world axis aligned bounding box
 //if an object is rotated, the dimensions of this box are subject to change
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class AxisAlignedBoundingBox
 {
     //8 corners of the world axis aligned box that bounds a sim object
@@ -1294,6 +1304,7 @@ public class AxisAlignedBoundingBox
 //for returning an object oriented bounds not locked to world axes
 //if an object is rotated, this object oriented box will not change dimensions
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectOrientedBoundingBox
 {
     //probably return these from the BoundingBox component of the object for now?
@@ -1302,6 +1313,7 @@ public class ObjectOrientedBoundingBox
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class InventoryObject
 {
 	public string objectId;
@@ -1309,18 +1321,21 @@ public class InventoryObject
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ColorId {
 	public ushort[] color;
 	public string name;
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ColorBounds {
 	public ushort[] color;
 	public int[] bounds;
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class HandMetadata {
 	public Vector3 position;
 	public Vector3 rotation;
@@ -1329,6 +1344,7 @@ public class HandMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectTypeCount
 {
     public string objectType; //specify object by type in scene
@@ -1336,6 +1352,7 @@ public class ObjectTypeCount
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose
 {
     public string objectName;
@@ -1348,6 +1365,7 @@ public class ObjectPose
 //"slice all objects that have the sliceable property"
 //also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class SetObjectStates
 {
     public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
@@ -1363,6 +1381,7 @@ public class SetObjectStates
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
@@ -1655,6 +1674,7 @@ public class ServerAction
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class InitializeReturn
 {
 	public float cameraNearPlane;

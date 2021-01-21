@@ -57,10 +57,9 @@ namespace MessagePack.Unity
     {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options)
         {
-            writer.WriteArrayHeader(4);
+            writer.WriteArrayHeader(3);
             writer.Write(value.x);
             writer.Write(value.y);
-            writer.Write(value.z);
             writer.Write(value.z);
         }
 
