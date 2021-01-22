@@ -485,15 +485,32 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //meta.handTarget = armTarget.position;
         var joint = FirstJoint;
         var joints = new List<JointMetadata>();
-        for (var i = 2; i <= 5; i++) {
-            var jointMeta = new JointMetadata();
+
+        //Declare variables used for processing metadata
+        var jointMeta = new JointMetadata();
+        float angleRot;
+        Vector3 vectorRot;
+
+        //Assign metadata to FirstJoint joint separately from others, since its angler joint uniquely refers to the tip's orientation rather than the base's, which is not what we want in this case
+        jointMeta.position = joint.position;
+        jointMeta.name = joint.name;
+        jointMeta.rootRelativePosition = Vector3.zero;
+
+        jointMeta.localRotation = new Vector4 (1, 0, 0, 0);
+
+        joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
+        jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+
+        jointMeta.rootRelativeRotation = new Vector4 (1, 0, 0, 0);
+        
+        //Assign joint metadata to remaining joints, which all have identical hierarchies
+        for (var i = 2; i <= 4; i++) {
+            joint = joint.Find("robot_arm_" + i + "_jnt");
+
             jointMeta.name = joint.name;
             jointMeta.position = joint.position;
             //local position of joint is meaningless because it never changes relative to its parent joint, we use rootRelative instead
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
-
-            float angleRot;
-            Vector3 vectorRot;
 
             //local rotation currently relative to immediate parent joint
             joint.GetChild(0).localRotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
@@ -509,7 +526,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             joints.Add(jointMeta);
-            joint = joint.Find("robot_arm_" + i + "_jnt");
         }
 
         meta.joints = joints.ToArray();
