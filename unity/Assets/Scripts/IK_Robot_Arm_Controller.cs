@@ -487,25 +487,29 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         var joints = new List<JointMetadata>();
 
         //Declare variables used for processing metadata
-        var jointMeta = new JointMetadata();
         float angleRot;
         Vector3 vectorRot;
+        var jointMetaRoot = new JointMetadata();
 
         //Assign metadata to FirstJoint joint separately from others, since its angler joint uniquely refers to the tip's orientation rather than the base's, which is not what we want in this case
-        jointMeta.position = joint.position;
-        jointMeta.name = joint.name;
-        jointMeta.rootRelativePosition = Vector3.zero;
+        jointMetaRoot.position = joint.position;
+        jointMetaRoot.name = joint.name;
+        jointMetaRoot.rootRelativePosition = Vector3.zero;
 
-        jointMeta.localRotation = new Vector4 (1, 0, 0, 0);
+        jointMetaRoot.localRotation = new Vector4 (1, 0, 0, 0);
 
         joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
-        jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+        jointMetaRoot.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
-        jointMeta.rootRelativeRotation = new Vector4 (1, 0, 0, 0);
-        
+        jointMetaRoot.rootRelativeRotation = new Vector4 (1, 0, 0, 0);
+
+        joints.Add(jointMetaRoot);
+
         //Assign joint metadata to remaining joints, which all have identical hierarchies
         for (var i = 2; i <= 4; i++) {
             joint = joint.Find("robot_arm_" + i + "_jnt");
+
+            var jointMeta = new JointMetadata();
 
             jointMeta.name = joint.name;
             jointMeta.position = joint.position;
