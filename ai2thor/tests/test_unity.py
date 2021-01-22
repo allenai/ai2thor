@@ -46,6 +46,7 @@ def test_stochastic_controller():
     controller = build_controller(agentControllerType='stochastic')
     controller.reset('FloorPlan28')
     assert controller.last_event.metadata['lastActionSuccess']
+    controller.stop()
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
 # up with the same frame
@@ -54,6 +55,7 @@ def test_multi_agent_with_third_party_camera():
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
     event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
+    controller.stop()
 
 # Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
 def test_third_party_camera_with_image_synthesis():
@@ -63,6 +65,7 @@ def test_third_party_camera_with_image_synthesis():
     assert len(event.third_party_class_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1
     assert len(event.third_party_instance_segmentation_frames) == 1
+    controller.stop()
 
 
 def test_rectangle_aspect():
@@ -70,12 +73,14 @@ def test_rectangle_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
+    controller.stop()
 
 def test_small_aspect():
     controller = build_controller(width=128, height=64)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
+    controller.stop()
 
 def test_reset():
     controller = build_controller()
@@ -91,6 +96,7 @@ def test_reset():
     event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=False)
     assert event.depth_frame is None, "depth frame shouldn't have rendered!"
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
+    controller.stop()
 
 def test_fast_emit():
     fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
@@ -104,6 +110,7 @@ def test_fast_emit():
     assert id(event.metadata['objects']) ==  id(event_fast_emit.metadata['objects'])
     assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
+    fast_controller.stop()
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_fast_emit_disabled(controller):
@@ -242,6 +249,7 @@ def test_update_third_party_camera():
         assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail outside of (0, 180)'
         assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should not have updated')
         assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should not have updated')
+    controller.stop()
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
