@@ -259,6 +259,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                
+                    // Reads and executes each action from a JSON file located in ./DebugScripts/
+                    // Example: 'run simple', where simple.json exists in ./DebugScripts/.
+                    // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
+                case "run":
+                    // parse the file path
+                    const string BASE_PATH = "./Assets/Scripts/DebugScripts/";
+                    string file = "";
+                    if (splitcommand.Length != 2 ) {
+                        Debug.LogError("Pass in a file name, like 'run simple'.");
+                        break;
+                    } else {
+                        file = splitcommand[1].Trim();
+                        if (!file.EndsWith(".json")) {
+                            file += ".json";
+                        }
+                    }
+                    string path = BASE_PATH + file;
+
+                    // parse the json file
+                    string jsonString = System.IO.File.ReadAllText(path);
+                    JArray actions = JArray.Parse(jsonString);
+                    Debug.Log($"Running: {file}.json. It has  {actions.Count} total actions.");
+
+                    // execute each action
+                    int i = 0;
+                    foreach (JObject action in actions) {
+                        PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
+                        Debug.Log($"{++i} Executing: {action}");
+                    }
+                    break;
 
                  case "exp":
                     {

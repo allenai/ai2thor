@@ -35,11 +35,11 @@ using Newtonsoft.Json.Linq;
     Unity serialized using json.  This restricts the types that can be passed to
     C# as well even if we serialized using a different format, Python does not 
     have all the same primitives, such as 'short'.  Second, we allow actions
-    to be invoked from the Python side using keyword args which doesn't preserve order.
+    to be invoked from the Python side using keyword args which don't preserve order.
 
     These restrictions shouldn't present themselves as creating duplicate public
     actions with different orders, but identically named parameters would lead to
-    confusion should be avoided.
+    confusion and should be avoided.
 
 
     Ambiguous Actions
@@ -62,7 +62,7 @@ using Newtonsoft.Json.Linq;
             public void LookUp(float degrees, bool forceThing=false)
         reason:
             This is valid C# and if you have code LookUp(0.0f) it will bind to the first
-            method, though there is still ambiguity since user could have wanted to dispatch
+            method, though there is still ambiguity since a user could have wanted to dispatch
             to the second method which has an optional forceThing parameter. i.e. if this
             case is not prevented, the optional value in the second method becomes required.
 
