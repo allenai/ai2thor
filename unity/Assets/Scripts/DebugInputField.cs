@@ -260,9 +260,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                
-                    // Reads and executes each action from a JSON file located in ./DebugScripts/
-                    // Example: 'run simple', where simple.json exists in ./DebugScripts/.
+
+                    // Reads and executes each action from a JSON file.
+                    // Example: 'run', where a local file explorer will open, and you'll select a json file.
+                    // Example: 'run simple', where simple.json exists in unity/debug/.
                     // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
                 case "run":
                     // parse the file path
@@ -272,7 +273,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // opens up a file explorer in the background
                     string path;
                     if (splitcommand.Length == 1) {
-                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: BASE_PATH, extension: ".json");
+                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "debug", extension: "json");
                     } else if (splitcommand.Length == 2 ) {
                         file = splitcommand[1].Trim();
                         if (!file.EndsWith(".json")) {
