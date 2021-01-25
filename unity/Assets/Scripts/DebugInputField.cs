@@ -269,12 +269,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // parse the file path
                     const string BASE_PATH = "./debug/";
                     string file = "";
-
-                    // opens up a file explorer in the background
                     string path;
                     if (splitcommand.Length == 1) {
+                        // opens up a file explorer in the background
                         path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "debug", extension: "json");
                     } else if (splitcommand.Length == 2 ) {
+                        // uses ./debug/{splitcommand[1]}[.json]
                         file = splitcommand[1].Trim();
                         if (!file.EndsWith(".json")) {
                             file += ".json";
@@ -288,7 +288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // parse the json file
                     string jsonString = System.IO.File.ReadAllText(path);
                     JArray actions = JArray.Parse(jsonString);
-                    Debug.Log($"Running: {file}.json. It has  {actions.Count} total actions.");
+                    Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
 
                     // execute each action
                     IEnumerator ExecuteBatch(JArray jActions) {
