@@ -291,11 +291,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log($"Running: {file}.json. It has  {actions.Count} total actions.");
 
                     // execute each action
-                    int i = 0;
-                    foreach (JObject action in actions) {
-                        PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
-                        Debug.Log($"{++i} Executing: {action}");
+                    IEnumerator ExecuteBatch(JArray jActions) {
+                        int i = 0;
+                        foreach (JObject action in jActions) {
+                            while (PhysicsController.IsProcessing) {
+                                yield return new WaitForEndOfFrame();
+                            }
+                            Debug.Log($"{++i} Executing: {action}");
+                            PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
+                        }
                     }
+                    StartCoroutine(ExecuteBatch(jActions: actions));
                     break;
 
                  case "exp":
