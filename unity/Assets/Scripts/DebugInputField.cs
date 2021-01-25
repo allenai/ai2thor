@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using UnityEditor;
 using Newtonsoft.Json.Linq;
 
 
@@ -259,6 +260,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                    // Reads and executes each action from a JSON file.
+                    // Example: 'run', where a local file explorer will open, and you'll select a json file.
+                    // Example: 'run simple', where simple.json exists in unity/debug/.
+                    // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
+                case "run":
+                    // parse the file path
+                    const string BASE_PATH = "./debug/";
+                    string file = "";
+                    string path;
+                    if (splitcommand.Length == 1) {
+                        // opens up a file explorer in the background
+                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "debug", extension: "json");
+                    } else if (splitcommand.Length == 2 ) {
+                        // uses ./debug/{splitcommand[1]}[.json]
+                        file = splitcommand[1].Trim();
+                        if (!file.EndsWith(".json")) {
+                            file += ".json";
+                        }
+                        path = BASE_PATH + file;
+                    } else {
+                        Debug.LogError("Pass in a file name, like 'run simple' or open a file with 'run'.");
+                        break;
+                    }
+
+                    // parse the json file
+                    string jsonString = System.IO.File.ReadAllText(path);
+                    JArray actions = JArray.Parse(jsonString);
+                    Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
+
+                    // execute each action
+                    IEnumerator ExecuteBatch(JArray jActions) {
+                        int i = 0;
+                        foreach (JObject action in jActions) {
+                            while (PhysicsController.IsProcessing) {
+                                yield return new WaitForEndOfFrame();
+                            }
+                            Debug.Log($"{++i} Executing: {action}");
+                            PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
+                        }
+                    }
+                    StartCoroutine(ExecuteBatch(jActions: actions));
+                    break;
 
                  case "exp":
                     {

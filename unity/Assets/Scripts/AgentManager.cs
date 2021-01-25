@@ -1494,6 +1494,9 @@ public class DynamicServerAction
         this.jObject = JObject.FromObject(action);
     }
 
+    public DynamicServerAction(JObject action) {
+        this.jObject = action;
+    }
 
     public DynamicServerAction(string jsonMessage) {
         this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
