@@ -265,7 +265,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
                 case "run":
                     // parse the file path
-                    const string BASE_PATH = "./Assets/Scripts/DebugScripts/";
+                    const string BASE_PATH = "./debug/";
                     string file = "";
                     if (splitcommand.Length != 2 ) {
                         Debug.LogError("Pass in a file name, like 'run simple'.");
