@@ -267,16 +267,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // parse the file path
                     const string BASE_PATH = "./debug/";
                     string file = "";
-                    if (splitcommand.Length != 2 ) {
-                        Debug.LogError("Pass in a file name, like 'run simple'.");
-                        break;
-                    } else {
+
+                    // opens up a file explorer in the background
+                    string path;
+                    if (splitcommand.Length == 1) {
+                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: BASE_PATH, extension: ".json");
+                    } else if (splitcommand.Length == 2 ) {
                         file = splitcommand[1].Trim();
                         if (!file.EndsWith(".json")) {
                             file += ".json";
                         }
+                        path = BASE_PATH + file;
+                    } else {
+                        Debug.LogError("Pass in a file name, like 'run simple' or open a file with 'run'.");
+                        break;
                     }
-                    string path = BASE_PATH + file;
 
                     // parse the json file
                     string jsonString = System.IO.File.ReadAllText(path);
