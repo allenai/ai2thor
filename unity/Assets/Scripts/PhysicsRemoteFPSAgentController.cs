@@ -5178,96 +5178,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             OpenOrCloseObjectAtLocation(false, action);
         }
 
-        // Helper used with OpenObject commands, which controls the physics
-        // of actually opening an object. Instead of calling this directly,
-        // one is recommended to call openObject, which runs more checks.
-        // Previously named InteractAndWait.
-        private protected IEnumerator openAnimation(
-            CanOpen_Object openableObject,
-            bool markActionFinished,
-            bool freezeContained = false,
-            float openness = 1.0f,
-            bool ignoreAgentInTransition = true
-        ) {
-            if (openableObject == null) {
-                if (markActionFinished) {
-                    errorMessage = "Must pass in openable object!";
-                    actionFinished(false);
-                }
-                yield break;
-            }
-
-            // disables all colliders in the scene
-            List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
-            }
-
-            // stores the object id of each object within this openableObject
-            Dictionary<string, Transform> objectIdToOldParent = null;
-            if (freezeContained) {
-                SimObjPhysics target = ancestorSimObjPhysics(openableObject.gameObject);
-                objectIdToOldParent = new Dictionary<string, Transform>();
-
-                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    objectIdToOldParent[objectId] = toReParent.transform.parent;
-                    toReParent.transform.parent = openableObject.transform;
-                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
-                }
-            }
-
-            // just incase there's a failure, we can undo it
-            float startOpenness = openableObject.currentOpenness;
-
-            // open the object to openness
-            openableObject.Interact(openness);
-            yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
-            yield return null;
-            bool succeeded = true;
-
-            if (ignoreAgentInTransition) {
-                GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
-
-                // check for collision failure
-                if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
-                    errorMessage = "Object failed to open/close successfully.";
-                    succeeded = false;
-
-                    // failure: reset the openness!
-                    openableObject.Interact(openness: startOpenness);
-                    yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
-                    yield return null;
-                }
-
-                // re-enables all previously disabled colliders
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
-                }
-            }
-
-            // stops any object located within this openableObject from moving
-            if (freezeContained) {
-                foreach (string objectId in objectIdToOldParent.Keys) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                    rb.isKinematic = false;
-                }
-            }
-
-            if (markActionFinished) {
-                actionFinished(succeeded);
-            }
-        }
-
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
             bool anyStillRunning = false;
             if (!anyStillRunning) {
@@ -5471,62 +5381,107 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
             // backwards compatibility support
+            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
             if (moveMagnitude != null) {
-                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
                 openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
             }
 
             if (openness > 1 || openness < 0) {
-                errorMessage = "openness must be in [0:1]";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            if (target == null) {
-                errorMessage = "Object not found!";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
+                throw new InvalidOperationException("Openness must be in [0:1]");
             }
 
             if (!forceAction && !target.isInteractable) {
-                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
             }
 
             if(!target.GetComponent<CanOpen_Object>()) {
-                errorMessage = $"{target.ObjectID} is not an Openable object";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
+                throw new InvalidOperationException($"{target.ObjectID} is not an Openable object");
             }
 
-            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+            CanOpen_Object openComponent = target.GetComponent<CanOpen_Object>();
 
             // This is a style choice that applies to Microwaves and Laptops,
             // where it doesn't make a ton of sense to open them, while they are in use.
-            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
-                errorMessage = "Target must be OFF to open!";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
+            if (openComponent.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
+                throw new InvalidOperationException("Target must be OFF to open!");
             }
 
-            StartCoroutine(openAnimation(
-                openableObject: codd,
-                freezeContained: simplifyPhysics,
-                openness: openness,
-                markActionFinished: markActionFinished
-            ));
+            IEnumerator openAnimation() {
+                // disables all colliders in the scene
+                List<Collider> collidersDisabled = new List<Collider>();
+                foreach (Collider c in GetComponentsInChildren<Collider>()) {
+                    if (c.enabled) {
+                        collidersDisabled.Add(c);
+                        c.enabled = false;
+                    }
+                }
+
+                // stores the object id of each object within this openComponent
+                Dictionary<string, Transform> objectIdToOldParent = null;
+
+                // freeze contained objects
+                if (simplifyPhysics) {
+                    SimObjPhysics target = ancestorSimObjPhysics(openComponent.gameObject);
+                    objectIdToOldParent = new Dictionary<string, Transform>();
+
+                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        objectIdToOldParent[objectId] = toReParent.transform.parent;
+                        toReParent.transform.parent = openComponent.transform;
+                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+                }
+
+                // just incase there's a failure, we can undo it
+                float startOpenness = openComponent.currentOpenness;
+
+                // open the object to openness
+                openComponent.Interact(openness);
+                yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
+                yield return null;
+
+                GameObject openableGameObj = openComponent.GetComponentInParent<SimObjPhysics>().gameObject;
+
+                // check for collision failure
+                bool failed = isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj);
+                if (failed) {
+                    // failure: reset the openness!
+                    openComponent.Interact(openness: startOpenness);
+                    yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
+                    yield return null;
+                }
+
+                // re-enables all previously disabled colliders
+                foreach (Collider c in collidersDisabled) {
+                    c.enabled = true;
+                }
+
+                // stops any object located within this openComponent from moving
+                // unfreeze contained objects
+                if (simplifyPhysics) {
+                    foreach (string objectId in objectIdToOldParent.Keys) {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                        Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                        rb.velocity = new Vector3(0f, 0f, 0f);
+                        rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                        rb.isKinematic = false;
+                    }
+                }
+
+                if (failed) {
+                    throw new InvalidOperationException("Object failed to open/close successfully.");
+                }
+                if (markActionFinished) {
+                    actionFinished(true);
+                }
+            }
+            StartCoroutine(openAnimation());
         }
 
         public void OpenObject(
