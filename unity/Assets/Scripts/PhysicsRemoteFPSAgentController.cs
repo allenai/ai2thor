@@ -864,9 +864,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // params are named x,y,z due to the action orignally using ServerAction.x,y,z
+        // params are named x,y,z due to the action originally using ServerAction.x,y,z
+        [ObsoleteAttribute(message: "This action is deprecated. Call ChangeAgentColor(string color) instead.", error: false)] 
         public void ChangeAgentColor(float x, float y, float z) {
-            agentManager.UpdateAgentColor(this, new Color(x, y, z, 1.0f));
+            ChangeAgentColor(color: $"rgb({x}, {y}, {z})");
+        }
+
+        // accepts any HTML string color as input
+        public void ChangeAgentColor(string htmlColor) {
+            Color targetColor;
+            bool successfullyParsed = ColorUtility.TryParseHtmlString(htmlString: htmlColor, color: out targetColor);
+            if (!successfullyParsed) {
+                throw new ArgumentException("Invalid color! It cannot be parsed as an HTML color.");
+            }
+            agentManager.UpdateAgentColor(this, targetColor);
             actionFinished(true);
         }
 
