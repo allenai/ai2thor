@@ -143,6 +143,14 @@ def test_no_leak_params(controller):
     assert 'sequenceId' not in action
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_target_invocation_exception(controller):
+    # TargetInvocationException is raised when short circuiting failures occur
+    # on the Unity side. It often occurs when invalid arguments are used.
+    event = controller.step('OpenObject', x=1.5, y=0.5)
+    assert not event.metadata['lastActionSuccess'], 'OpenObject(x > 1) should fail.'
+    assert event.metadata['errorMessage'], 'errorMessage should not be empty when OpenObject(x > 1).'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_lookup(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
