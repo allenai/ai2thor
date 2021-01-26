@@ -4721,12 +4721,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void PickupObject(float x, float y, bool forceAction, bool manualInteract) {
+        public void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
-        public void PickupObject(string objectId, bool forceAction) {
+        public void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
@@ -4969,7 +4969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        private SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
+        private SimObjPhysics getTargetObject(string objectId, bool forceAction) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
@@ -5371,234 +5371,96 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //face change the agent's face screen to demonstrate different "emotion" states
         //for use with multi agent implicit communication
-        public void ChangeAgentFaceToNeutral()
-        {
+        public void ChangeAgentFaceToNeutral() {
             Material[] currentmats = MyFaceMesh.materials;
-
             currentmats[2] = ScreenFaces[0];
-
             MyFaceMesh.materials = currentmats;
-            
             actionFinished(true);
         }
 
-        public void ChangeAgentFaceToHappy()
-        {
+        public void ChangeAgentFaceToHappy() {
             Material[] currentmats = MyFaceMesh.materials;
-
             currentmats[2] = ScreenFaces[1];
-
             MyFaceMesh.materials = currentmats;
-
-            actionFinished(true);
+            actionFinished(success: true);
         }
 
-        public void ChangeAgentFaceToMad()
-        {
+        public void ChangeAgentFaceToMad() {
             Material[] currentmats = MyFaceMesh.materials;
-
             currentmats[2] = ScreenFaces[2];
-
             MyFaceMesh.materials = currentmats;
-            
             actionFinished(true);
         }
 
-        public void ChangeAgentFaceToSuperMad()
-        {
+        public void ChangeAgentFaceToSuperMad() {
             Material[] currentmats = MyFaceMesh.materials;
-
             currentmats[2] = ScreenFaces[3];
-
             MyFaceMesh.materials = currentmats;
-            
-            actionFinished(true);
+            actionFinished(success: true);
         }
 
-        public void ToggleObjectOn(string objectId, bool forceAction=false)
-        {
-            toggleObject(objectId, true, forceAction);
+        public void ToggleObjectOn(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
         }
 
-        public void ToggleObjectOff(string objectId, bool forceAction=false)
-        {
-            toggleObject(objectId, false, forceAction);
+        public void ToggleObjectOff(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
         }
 
-        public void ToggleObjectOn(float x, float y, bool forceAction=false)
-        {
-            toggleObject(x, y, true, forceAction);
+        public void ToggleObjectOn(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
         }
 
-        public void ToggleObjectOff(float x, float y, bool forceAction=false)
-        {
-            toggleObject(x, y, false, forceAction);
+        public void ToggleObjectOff(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
         }
 
-        private void toggleObject(float x, float y, bool toggleOn, bool forceAction)
-        {
-            SimObjPhysics target = null;
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(!ScreenToWorldTarget(x, y, ref target, !forceAction))
-            {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
-                return;
-            }
-            
-            toggleObject(target, toggleOn, forceAction);
-        }
-
-        private void toggleObject(string objectId, bool toggleOn, bool forceAction)
-        {
-            SimObjPhysics target = null;
-            bool forceVisible = forceAction;
-
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-            
-            //if object is in the scene and visible, assign it to 'target'
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceVisible)) 
-            {
-                target = sop;
+        private void toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            if (!target)
-            {
-
-                //target not found in currently visible objects, report not found
-                errorMessage = "object not found: " + objectId;
-                actionFinished(false);
-                return;
+            if (!forceAction && !target.isInteractable) {
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
             }
-            
-            toggleObject(target, toggleOn, forceAction);
+
+            if (!target.GetComponent<CanToggleOnOff>()) {
+                throw new InvalidOperationException($"{target.objectId} is not toggleable!");
+            }
+
+            CanToggleOnOff toggleComponent = target.GetComponent<CanToggleOnOff>();
+
+            if (!toggleComponent.ReturnSelfControlled()) {
+                throw new InvalidOperationException("target object is controlled by another sim object. target object cannot be turned on/off directly");
+            }
+
+            // check to make sure object is in other state
+            if (toggleComponent.isOn == toggleOn) {
+                throw new InvalidOperationException("Object is already toggled " + toggleComponent.isOn ? "on" : "off");
+            }
+
+            //check if this object needs to be closed in order to turn on
+            if (toggleOn && toggleComponent.ReturnMustBeClosedToTurnOn().Contains(target.Type) && target.GetComponent<CanOpen_Object>().isOpen) {
+                throw new InvalidOperationException("Target must be closed to Toggle On!");
+            }
+
+            // check if this object is broken, it should not be able to be turned on
+            if (toggleOn && target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak) && target.IsBroken) {
+                throw new InvalidOperationException("Target is broken and cannot be Toggled On!");
+            }
+
+            IEnumerator ToggleAndWait() {
+                toggleComponent.Toggle();
+                yield return new WaitUntil(() => toggleComponent.GetiTweenCount() == 0);
+                actionFinished(success: true);
+            }
+            StartCoroutine(ToggleAndWait());
         }
 
-        //specific ToggleObject that is used for SetObjectStatesForLotsOfObjects
-        private IEnumerator toggleObject(SimObjPhysics target, bool toggleOn)
-        {
-            if(target.GetComponent<CanToggleOnOff>())
-            {
-                //get CanToggleOnOff component from target
-                CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                if(!ctof.ReturnSelfControlled())
-                {
-                    yield break;
-                }
-
-                //if the object is already in the state specified by the toggleOn bool, do nothing
-                if(ctof.isOn == toggleOn)
-                {
-                    yield break;
-                }
-
-                //if object needs to be closed to turn on...
-                if(toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type))
-                {
-                    //if the object is open and we are trying to turn it on, do nothing because it can't
-                    if(target.GetComponent<CanOpen_Object>().isOpen)
-                    yield break;
-                }
-
-                ctof.Toggle();
-            }
-        }
-
-        private bool toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
-        {
-            if (!forceAction && target.isInteractable == false)
-            {
-                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
-                actionFinished(false);
-                return false;
-            }
-
-            if (target.GetComponent<CanToggleOnOff>())
-            {
-                CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                if (!ctof.ReturnSelfControlled())
-                {
-                    errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
-                    actionFinished(false);
-                    return false;
-                }
-
-                //check to make sure object is in other state
-                if (ctof.isOn == toggleOn)
-                {
-                    if (ctof.isOn) {
-                        errorMessage = "can't toggle object on if it's already on!";
-                    }
-                    else
-                    {
-                        errorMessage = "can't toggle object off if it's already off!";
-                    }
-
-                    actionFinished(false);
-                    return false;
-                }
-                //check if this object needs to be closed in order to turn on
-                if (toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type))
-                {
-                    if (target.GetComponent<CanOpen_Object>().isOpen)
-                    {
-                        errorMessage = "Target must be closed to Toggle On!";
-                        actionFinished(false);
-                        return false;
-                    }
-                }
-
-                //check if this object is broken, it should not be able to be turned on
-                if(toggleOn && target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
-                {
-                    //if this breakable object is broken, we can't turn it on
-                    if(target.IsBroken)
-                    {
-                        errorMessage = "Target is broken and cannot be Toggled On!";
-                        actionFinished(false);
-                        return false;
-                    }
-
-                }
-
-                //interact then wait
-                StartCoroutine(ToggleAndWait(ctof));
-                return true;
-                
-            }
-            else
-            {
-                errorMessage = "object is not toggleable.";
-                actionFinished(false);
-                return false;
-            }
-        }
-
-        protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
-        {
-            if(ctof != null)
-            ctof.Toggle();
-
-            bool success = false;
-            
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0));
-            success = true;
-
-            if (!success)
-            {
-                errorMessage = "object could not be toggled on/off succesfully";
-            }
-
-            //only return ActionFinished once the object is completely done animating.
-            //print(ctof.isOn);
-            actionFinished(success);
-        }
 
         // private helper used with OpenObject commands
         private void openObject(
