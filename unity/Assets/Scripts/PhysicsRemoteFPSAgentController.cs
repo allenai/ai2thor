@@ -4630,7 +4630,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
         }
 
-
         private void pickupObject(
             SimObjPhysics target,
             bool forceAction,
@@ -5179,36 +5178,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // swap an object's materials out to the cooked version of the object :)
-        private void cookObject(SimObjPhysics target, bool forceAction) {
-            if (target == null) {
-                throw new ArgumentNullException();
-            }
-
-            if (!action.forceAction && !target.isInteractable) {
-                throw new InvalidOperationException("object is visible but occluded by something: " + target.objectId);
-            }
-
-            if (!target.GetComponent<CookObject>()) {
-                throw new InvalidOperationException("Target object is not cookable!");
-            }
-
-            CookObject cookComponent = target.GetComponent<CookObject>();
-            if (!cookComponent.IsCooked()) {
-                cookComponent.Cook();
-            }
-            actionFinished(true);
-        }
-
-        public void CookObject(string objectId, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            cookObject(target: target, forceAction: forceAction);
-        }
-
-        public void CookObject(float x, float y, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            cookObject(target: target, toggleOn: true, forceAction: forceAction);
-        }
+        ///////////////////////////////////////////
+        //////// CHANGE FACIAL EXPRESSION /////////
+        ///////////////////////////////////////////
 
         //face change the agent's face screen to demonstrate different "emotion" states
         //for use with multi agent implicit communication
@@ -5238,223 +5210,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             currentmats[2] = ScreenFaces[3];
             MyFaceMesh.materials = currentmats;
             actionFinished(success: true);
-        }
-
-        public void ToggleObjectOn(string objectId, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
-        }
-
-        public void ToggleObjectOff(string objectId, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
-        }
-
-        public void ToggleObjectOn(float x, float y, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
-        }
-
-        public void ToggleObjectOff(float x, float y, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
-        }
-
-        private void toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
-            if (target == null) {
-                throw new ArgumentNullException();
-            }
-
-            if (!forceAction && !target.isInteractable) {
-                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
-            }
-
-            if (!target.GetComponent<CanToggleOnOff>()) {
-                throw new InvalidOperationException($"{target.objectId} is not toggleable!");
-            }
-
-            CanToggleOnOff toggleComponent = target.GetComponent<CanToggleOnOff>();
-
-            if (!toggleComponent.ReturnSelfControlled()) {
-                throw new InvalidOperationException("target object is controlled by another sim object. target object cannot be turned on/off directly");
-            }
-
-            // check to make sure object is in other state
-            if (toggleComponent.isOn == toggleOn) {
-                throw new InvalidOperationException("Object is already toggled " + toggleComponent.isOn ? "on" : "off");
-            }
-
-            //check if this object needs to be closed in order to turn on
-            if (toggleOn && toggleComponent.ReturnMustBeClosedToTurnOn().Contains(target.Type) && target.GetComponent<CanOpen_Object>().isOpen) {
-                throw new InvalidOperationException("Target must be closed to Toggle On!");
-            }
-
-            // check if this object is broken, it should not be able to be turned on
-            if (toggleOn && target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak) && target.IsBroken) {
-                throw new InvalidOperationException("Target is broken and cannot be Toggled On!");
-            }
-
-            IEnumerator ToggleAndWait() {
-                toggleComponent.Toggle();
-                yield return new WaitUntil(() => toggleComponent.GetiTweenCount() == 0);
-                actionFinished(success: true);
-            }
-            StartCoroutine(ToggleAndWait());
-        }
-
-        // private helper used with OpenObject commands
-        private void openObject(
-            SimObjPhysics target,
-            float openness,
-            bool forceAction,
-            bool markActionFinished,
-            bool simplifyPhysics = false,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
-            if (target == null) {
-                throw new ArgumentNullException();
-            }
-
-            // backwards compatibility support
-            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
-            if (moveMagnitude != null) {
-                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
-            }
-
-            if (openness > 1 || openness < 0) {
-                throw new InvalidOperationException("Openness must be in [0:1]");
-            }
-
-            if (!forceAction && !target.isInteractable) {
-                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
-            }
-
-            if(!target.GetComponent<CanOpen_Object>()) {
-                throw new InvalidOperationException($"{target.ObjectID} is not an Openable object");
-            }
-
-            CanOpen_Object openComponent = target.GetComponent<CanOpen_Object>();
-
-            // This is a style choice that applies to Microwaves and Laptops,
-            // where it doesn't make a ton of sense to open them, while they are in use.
-            if (openComponent.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
-                throw new InvalidOperationException("Target must be OFF to open!");
-            }
-
-            IEnumerator openAnimation() {
-                // disables all colliders in the scene
-                List<Collider> collidersDisabled = new List<Collider>();
-                foreach (Collider c in GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
-
-                // stores the object id of each object within this openComponent
-                Dictionary<string, Transform> objectIdToOldParent = null;
-
-                // freeze contained objects
-                if (simplifyPhysics) {
-                    SimObjPhysics target = ancestorSimObjPhysics(openComponent.gameObject);
-                    objectIdToOldParent = new Dictionary<string, Transform>();
-
-                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                        objectIdToOldParent[objectId] = toReParent.transform.parent;
-                        toReParent.transform.parent = openComponent.transform;
-                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
-                    }
-                }
-
-                // just incase there's a failure, we can undo it
-                float startOpenness = openComponent.currentOpenness;
-
-                // open the object to openness
-                openComponent.Interact(openness);
-                yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
-                yield return null;
-
-                GameObject openableGameObj = openComponent.GetComponentInParent<SimObjPhysics>().gameObject;
-
-                // check for collision failure
-                bool failed = isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj);
-                if (failed) {
-                    // failure: reset the openness!
-                    openComponent.Interact(openness: startOpenness);
-                    yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
-                    yield return null;
-                }
-
-                // re-enables all previously disabled colliders
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
-                }
-
-                // stops any object located within this openComponent from moving
-                // unfreeze contained objects
-                if (simplifyPhysics) {
-                    foreach (string objectId in objectIdToOldParent.Keys) {
-                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                        toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                        Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                        rb.velocity = new Vector3(0f, 0f, 0f);
-                        rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                        rb.isKinematic = false;
-                    }
-                }
-
-                if (failed) {
-                    throw new InvalidOperationException("Object failed to open/close successfully.");
-                }
-                if (markActionFinished) {
-                    actionFinished(true);
-                }
-            }
-            StartCoroutine(openAnimation());
-        }
-
-        public void OpenObject(
-            string objectId,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            openObject(
-                target: target,
-                openness: openness,
-                forceAction: forceAction,
-                moveMagnitude: moveMagnitude,
-                markActionFinished: true
-            );
-        }
-
-        public void OpenObject(
-            float x,
-            float y,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            openObject(
-                target: target,
-                openness: openness,
-                forceAction: forceAction,
-                moveMagnitude: moveMagnitude,
-                markActionFinished: true
-            );
-        }
-
-        // syntactic sugar for open object with openness = 0.
-        public void CloseObject(string objectId, bool forceAction = false) {
-            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
-        }
-
-        // syntactic sugar for open object with openness = 0.
-        public void CloseObject(float x, float y, bool forceAction = false) {
-            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
         // XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
@@ -8267,567 +8022,534 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(SpamObjectsInRoomHelper(100, newObjects));
         }
 
-        public void ChangeLightSet(ServerAction action)
-        {
-            if(action.objectVariation > 10 || action.objectVariation < 1)
-            {
-                errorMessage = "Please use value between 1 and 10";
-                actionFinished(false);
-                return;
+        public void ChangeLightSet(int objectVariation) {
+            if (objectVariation > 10 || objectVariation < 1) {
+                throw new ArgumentOutOfRangeException("objectVariation must be an integer in [1:10]");
             }
 
             GameObject lightTransform = GameObject.Find("Lighting");
-            lightTransform.GetComponent<ChangeLighting>().SetLights(action.objectVariation);
+            lightTransform.GetComponent<ChangeLighting>().SetLights(objectVariation);
             actionFinished(true);
         }
 
-        public void SliceObject(ServerAction action) {
+        ///////////////////////////////////////////
+        ////////////// COOK OBJECT ////////////////
+        ///////////////////////////////////////////
 
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) {
-                action.forceVisible = true;
+        // swap an object's materials out to the cooked version of the object :)
+        private void cookObject(SimObjPhysics target, bool forceAction) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+            if (!action.forceAction && !target.isInteractable) {
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.objectId);
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+            if (!target.GetComponent<CookObject>()) {
+                throw new InvalidOperationException("Target object is not cookable!");
             }
 
-            //we found it!
-            if (target) {
+            CookObject cookComponent = target.GetComponent<CookObject>();
+            if (!cookComponent.IsCooked()) {
+                cookComponent.Cook();
+            }
+            actionFinished(true);
+        }
 
-                if(ItemInHand != null) {
-                    if(target.transform == ItemInHand.transform) {
-                        errorMessage = "target object cannot be sliced if it is in the agent's hand";
-                        actionFinished(false);
-                        return;
+        public void CookObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            cookObject(target: target, forceAction: forceAction);
+        }
+
+        public void CookObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            cookObject(target: target, toggleOn: true, forceAction: forceAction);
+        }
+
+        ///////////////////////////////////////////
+        ///////////// SLICE OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        private void sliceObject(SimObjPhysics target, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (ItemInHand != null && target.transform == ItemInHand.transform) {
+                throw new InvalidOperationException("target object cannot be sliced if it is in the agent's hand");
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced)) {
+                throw new InvalidOperationException($"{target.transform.name} Does not have the CanBeSliced property!");
+            }
+
+            target.GetComponent<SliceObject>().Slice();
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void SliceObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            sliceObject(target: target, forceAction: forceAction, markActionFinished: true);
+        }
+
+        public void SliceObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            sliceObject(target: target, forceAction: forceAction, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ///////////// BREAK OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        private void breakObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                throw new InvalidOperationException($"{target.transform.name} does not have the CanBreak property!");
+            }
+
+            // if the object is in the agent's hand, we need to reset the agent hand booleans and other cleanup as well
+            if (target.isInAgentHand) {                      
+                // if the target is also a Receptacle, drop contained objects first
+                if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                    // drop contained objects as well
+                    DropContainedObjects(target: targetsop, reparentContainedObjects: true, forceKinematic: false);
+                }
+
+                targetsop.isInAgentHand = false;
+                ItemInHand = null;
+                DefaultAgentHand();
+            }
+
+            // ok now we are ready to break go go go
+            target.GetComponentInChildren<Break>().BreakObject(null);
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void BreakObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            breakObject(target: target, forceAction: forceAction, markActionFinished: true);
+        }
+
+        public void BreakObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            breakObject(target: target, forceAction: forceAction, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ////////////// DIRTY OBJECT ///////////////
+        ///////////////////////////////////////////
+
+        private void dirtyObject(SimObjPhysics target, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty)) {
+                throw new InvalidOperationException($"{target.transform.name} does not have CanBeDirty property!");
+            }
+
+            Dirty dirtyComponent = target.GetComponent<Dirty>();
+            if(dirtyComponent.IsDirty($"{target.transform.name} is already dirty!")) {
+                throw new InvalidOperationException();
+            }
+
+            dirt.ToggleCleanOrDirty();
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void DirtyObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            dirtyObject(target: target, markActionFinished: true);
+        }
+
+        public void DirtyObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            dirtyObject(target: target, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ///////////// CLEAN OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        private void cleanObject(SimObjPhysics target, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty)) {
+                throw InvalidOperationException($"{target.transform.name} does not have dirtyable property!");
+            }
+
+            Dirty dirtyComponent = target.GetComponent<Dirty>();
+            if (!dirtyComponent.IsDirty()) {
+                throw new InvalidOperationException($"{target.transform.name} is already Clean!"); 
+            }
+            dirt.ToggleCleanOrDirty();
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void CleanObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            cleanObject(target: target, markActionFinished: true);
+        }
+
+        public void CleanObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            cleanObject(target: target, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ///////// FILL OBJECT WITH LIQUID /////////
+        ///////////////////////////////////////////
+
+        // fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc.
+        private void fillObjectWithLiquid(SimObjPhysics target, string fillLiquid, bool markActionFinished) {
+            if (target == null || fillLiquid == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
+                throw new InvalidOperationException($"{target.transform.name} does not have CanBeFilled property!");
+            }
+
+            Fill fillComponent = target.GetComponent<Fill>();
+            fillComponent.FillObject(fillLiquid: fillLiquid);
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void FillObjectWithLiquid(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            fillObjectWithLiquid(target: target, markActionFinished: true);
+        }
+
+        public void FillObjectWithLiquid(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            fillObjectWithLiquid(target: target, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        //////// EMPTY LIQUID FROM OBJECT /////////
+        ///////////////////////////////////////////
+
+        private void emptyLiquidFromObject(SimObjPhysics target, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
+                throw new InvalidOperationException($"{target.transform.name} does not have CanBeFilled property!");
+            }
+
+            Fill fillComponent = target.GetComponent<Fill>();
+            fillComponent.EmptyObject();
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void EmptyLiquidFromObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            emptyLiquidFromObject(target: target, markActionFinished: true);
+        }
+
+        public void EmptyLiquidFromObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            emptyLiquidFromObject(target: target, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ///////////// USE UP OBJECT ///////////////
+        ///////////////////////////////////////////
+
+        // use up the contents of this object (toilet paper, paper towel, tissue box, etc).
+        private void useObjectUp(SimObjPhysics target, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp)) {
+                throw new InvalidOperationException($"{target.transform.name} does not have CanBeUsedUp property!");
+            }
+
+            UsedUp useUpComponent = target.GetComponent<UsedUp>();
+            if (!useUpComponent.isUsedUp) {
+                useUpComponent.UseUp();
+                return;
+            }
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void UseObjectUp(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            useObjectUp(target: target, markActionFinished: true);
+        }
+
+        public void UseObjectUp(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            useObjectUp(target: target, markActionFinished: true);
+        }
+
+        ///////////////////////////////////////////
+        ///////////// TOGGLE OBJECT ///////////////
+        ///////////////////////////////////////////
+
+        private void toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (!forceAction && !target.isInteractable) {
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
+            }
+
+            if (!target.GetComponent<CanToggleOnOff>()) {
+                throw new InvalidOperationException($"{target.objectId} is not toggleable!");
+            }
+
+            CanToggleOnOff toggleComponent = target.GetComponent<CanToggleOnOff>();
+
+            if (!toggleComponent.ReturnSelfControlled()) {
+                throw new InvalidOperationException("target object is controlled by another sim object. target object cannot be turned on/off directly");
+            }
+
+            // check to make sure object is in other state
+            if (toggleComponent.isOn == toggleOn) {
+                throw new InvalidOperationException("Object is already toggled " + toggleComponent.isOn ? "on" : "off");
+            }
+
+            //check if this object needs to be closed in order to turn on
+            if (toggleOn && toggleComponent.ReturnMustBeClosedToTurnOn().Contains(target.Type) && target.GetComponent<CanOpen_Object>().isOpen) {
+                throw new InvalidOperationException("Target must be closed to Toggle On!");
+            }
+
+            // check if this object is broken, it should not be able to be turned on
+            if (toggleOn && target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak) && target.IsBroken) {
+                throw new InvalidOperationException("Target is broken and cannot be Toggled On!");
+            }
+
+            IEnumerator ToggleAndWait() {
+                toggleComponent.Toggle();
+                yield return new WaitUntil(() => toggleComponent.GetiTweenCount() == 0);
+                actionFinished(success: true);
+            }
+            StartCoroutine(ToggleAndWait());
+        }
+
+        public void ToggleObjectOn(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
+        }
+
+        public void ToggleObjectOff(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
+        }
+
+        public void ToggleObjectOn(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: true, forceAction: forceAction);
+        }
+
+        public void ToggleObjectOff(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            toggleObject(target: target, toggleOn: false, forceAction: forceAction);
+        }
+
+        ///////////////////////////////////////////
+        ////////////// OPEN OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        // private helper used with OpenObject commands
+        private void openObject(
+            SimObjPhysics target,
+            float openness,
+            bool forceAction,
+            bool markActionFinished,
+            bool simplifyPhysics = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            // backwards compatibility support
+            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+            if (moveMagnitude != null) {
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
+            }
+
+            if (openness > 1 || openness < 0) {
+                throw new InvalidOperationException("Openness must be in [0:1]");
+            }
+
+            if (!forceAction && !target.isInteractable) {
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
+            }
+
+            if(!target.GetComponent<CanOpen_Object>()) {
+                throw new InvalidOperationException($"{target.ObjectID} is not an Openable object");
+            }
+
+            CanOpen_Object openComponent = target.GetComponent<CanOpen_Object>();
+
+            // This is a style choice that applies to Microwaves and Laptops,
+            // where it doesn't make a ton of sense to open them, while they are in use.
+            if (openComponent.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
+                throw new InvalidOperationException("Target must be OFF to open!");
+            }
+
+            IEnumerator openAnimation() {
+                // disables all colliders in the scene
+                List<Collider> collidersDisabled = new List<Collider>();
+                foreach (Collider c in GetComponentsInChildren<Collider>()) {
+                    if (c.enabled) {
+                        collidersDisabled.Add(c);
+                        c.enabled = false;
                     }
                 }
 
-                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced)) {
-                    target.GetComponent<SliceObject>().Slice();
+                // stores the object id of each object within this openComponent
+                Dictionary<string, Transform> objectIdToOldParent = null;
+
+                // freeze contained objects
+                if (simplifyPhysics) {
+                    SimObjPhysics target = ancestorSimObjPhysics(openComponent.gameObject);
+                    objectIdToOldParent = new Dictionary<string, Transform>();
+
+                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        objectIdToOldParent[objectId] = toReParent.transform.parent;
+                        toReParent.transform.parent = openComponent.transform;
+                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+                }
+
+                // just incase there's a failure, we can undo it
+                float startOpenness = openComponent.currentOpenness;
+
+                // open the object to openness
+                openComponent.Interact(openness);
+                yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
+                yield return null;
+
+                GameObject openableGameObj = openComponent.GetComponentInParent<SimObjPhysics>().gameObject;
+
+                // check for collision failure
+                bool failed = isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj);
+                if (failed) {
+                    // failure: reset the openness!
+                    openComponent.Interact(openness: startOpenness);
+                    yield return new WaitUntil(() => (openComponent.GetiTweenCount() == 0));
+                    yield return null;
+                }
+
+                // re-enables all previously disabled colliders
+                foreach (Collider c in collidersDisabled) {
+                    c.enabled = true;
+                }
+
+                // stops any object located within this openComponent from moving
+                // unfreeze contained objects
+                if (simplifyPhysics) {
+                    foreach (string objectId in objectIdToOldParent.Keys) {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                        Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                        rb.velocity = new Vector3(0f, 0f, 0f);
+                        rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                        rb.isKinematic = false;
+                    }
+                }
+
+                if (failed) {
+                    throw new InvalidOperationException("Object failed to open/close successfully.");
+                }
+                if (markActionFinished) {
                     actionFinished(true);
-                    return;
-                } else {
-                    errorMessage = target.transform.name + " Does not have the CanBeSliced property!";
-                    actionFinished(false);
-                    return;
                 }
             }
-
-            //target not found in currently visible objects, report not found
-            else {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
-        }
-    
-        public void BreakObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            //we found it!
-            if (target) 
-            {
-                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) 
-                {
-                    SimObjPhysics targetsop = target.GetComponent<SimObjPhysics>();
-                    //if the object is in the agent's hand, we need to reset the agent hand booleans and other cleanup as well
-                    if(targetsop.isInAgentHand)
-                    {                      
-                        //if the target is also a Receptacle, drop contained objects first
-                        if(targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-                        {
-                            //drop contained objects as well
-                            DropContainedObjects(
-                                target: targetsop,
-                                reparentContainedObjects: true,
-                                forceKinematic: false
-                            );
-                        }
-
-                        targetsop.isInAgentHand = false;
-                        ItemInHand = null;
-                        DefaultAgentHand();
-                        //ok now we are ready to break go go go
-                    }
-
-                    target.GetComponentInChildren<Break>().BreakObject(null);
-                    actionFinished(true);
-                    return;
-                }
-
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have the CanBreak property!!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //target not found in currently visible objects, report not found
-            else {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+            StartCoroutine(openAnimation());
         }
 
-        public void DirtyObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            if(target)
-            {
-                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
-                {
-                    Dirty dirt = target.GetComponent<Dirty>();
-                    if(dirt.IsDirty() == false)
-                    {
-                        dirt.ToggleCleanOrDirty();
-                        actionFinished(true);
-                        return;
-                    }
-
-                    else
-                    {
-                        errorMessage = target.transform.name + " is already dirty!";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-            
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have CanBeDirty property!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            else
-            {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+        public void OpenObject(
+            string objectId,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
         }
 
-        public void CleanObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            if(target)
-            {
-                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
-                {
-                    Dirty dirt = target.GetComponent<Dirty>();
-                    if(dirt.IsDirty())
-                    {
-                        dirt.ToggleCleanOrDirty();
-                        actionFinished(true);
-                        return;
-                    }
-
-                    else
-                    {
-                        errorMessage = target.transform.name + " is already Clean!";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have dirtyable property!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            else
-            {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+        public void OpenObject(
+            float x,
+            float y,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
         }
 
-        //fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc
-        public void FillObjectWithLiquid(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
+        ///////////////////////////////////////////
+        ///////////// CLOSE OBJECT ////////////////
+        ///////////////////////////////////////////
 
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            if(action.fillLiquid == null)
-            {
-                errorMessage = "Missing Liquid string for FillObject action";
-                actionFinished(false);
-            }
-
-            if(target)
-            {
-                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
-                {
-                    Fill fil = target.GetComponent<Fill>();
-
-                    //if the passed in liquid string is not valid
-                    if(!fil.Liquids.ContainsKey(action.fillLiquid))
-                    {
-                        errorMessage = action.fillLiquid + " is not a valid Liquid Type";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    //make sure object is empty
-                    if(!fil.IsFilled())
-                    {
-                        if(fil.FillObject(action.fillLiquid))
-                        {
-                            actionFinished(true);
-                            return;
-                        }
-
-                        else
-                        {
-                            actionFinished(false);
-                            errorMessage = target.transform.name + " cannot be filled with " + action.fillLiquid;
-                            return;
-                        }
-
-                    }
-
-                    else
-                    {
-                        errorMessage = target.transform.name + " is already Filled!";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            else
-            {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(string objectId, bool forceAction = false) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
         }
 
-        public void EmptyLiquidFromObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            if(target)
-            {
-                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
-                {
-                    Fill fil = target.GetComponent<Fill>();
-
-                    if(fil.IsFilled())
-                    {
-                        fil.EmptyObject();
-                        actionFinished(true);
-                        return;
-                    }
-
-                    else
-                    {
-                        errorMessage = "object already empty";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            else
-            {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
-        }
-
-        //use up the contents of this object (toilet paper, paper towel, tissue box, etc).
-        public void UseUpObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            if (action.forceAction) 
-            {
-                action.forceVisible = true;
-            }
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            if(target)
-            {
-                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
-                {
-                    UsedUp u = target.GetComponent<UsedUp>();
-
-                    //make sure object is not already used up
-                    if(!u.isUsedUp)
-                    {
-                        u.UseUp();
-                        actionFinished(true);
-                        return;
-                    }
-
-                    else
-                    {
-                        errorMessage = "object already used up!";
-                        //Debug.Log(errorMessage);
-                        actionFinished(false);
-                        return;
-                    }
-                }
-
-                else 
-                {
-                    errorMessage = target.transform.name + " does not have CanBeUsedUp property!";
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            else
-            {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(float x, float y, bool forceAction = false) {
+            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
         public void GetScenesInBuild() {
             int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
             string[] scenes = new string[sceneCount];
-            for( int i = 0; i < sceneCount; i++ )
-            {
-             scenes[i] = System.IO.Path.GetFileNameWithoutExtension( UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex( i ) );
+            for (int i = 0; i < sceneCount; i++) {
+                scenes[i] = System.IO.Path.GetFileNameWithoutExtension(
+                    UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i)
+                );
             }
-             actionFinished(true, scenes);
+            actionFinished(success: true, actionReturn: scenes);
         }
 
         protected bool objectIsOfIntoType(SimObjPhysics so) {
@@ -8902,30 +8624,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
-
-        #if UNITY_EDITOR
-        void OnDrawGizmos()
-        {
-            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
-            //  Gizmos.color = Color.magenta;
-            //     if(validpointlist.Count > 0)
-            //     {
-            //         foreach(Vector3 yes in validpointlist)
-            //         {
-            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-            //         }
-            //     }
-
-            //draw axis aligned bounds of objects after actionFinished() calls
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
-        }
-        #endif
     }
 }
