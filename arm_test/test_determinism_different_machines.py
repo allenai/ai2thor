@@ -18,7 +18,7 @@ set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 controller = ai2thor.controller.Controller(
     scene=scene_names[0], gridSize=0.25,
-    width=900, height=900, agentMode='arm', fieldOfView=100,
+    width=224, height=224, agentMode='arm', fieldOfView=100,
     agentControllerType='mid-level',
     server_class=ai2thor.fifo_server.FifoServer,
     useMassThreshold = True, massThreshold = 10,
@@ -115,13 +115,20 @@ def determinism_test(all_tests):
         else:
             print('test {} passed'.format(k))
 
-if __name__ == '__main__':
-    # all_dict = random_tests()
-    # with open('determinism_json.json' ,'w') as f:
-    #     json.dump(all_dict, f)
+def test_generator():
+    all_dict = random_tests()
+    with open('determinism_json.json' ,'w') as f:
+        json.dump(all_dict, f)
 
+def test_from_file():
     with open('determinism_json.json' ,'r') as f:
         all_dict = json.load(f)
     determinism_test(all_dict)
+
+if __name__ == '__main__':
+    # test_generator()
+    test_from_file()
+
+
 
 

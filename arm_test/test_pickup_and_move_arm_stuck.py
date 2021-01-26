@@ -35,6 +35,7 @@ for i in range(MAX_TESTS):
     reachable_positions = reset_the_scene_and_get_reachables()
 
     failed_action_pool = []
+    all_action_details = []
 
     initial_location = random.choice(reachable_positions)
     initial_rotation = random.choice([i for i in range(0, 360, 45)])
@@ -45,7 +46,8 @@ for i in range(MAX_TESTS):
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
         command = random.choice(set_of_actions)
-        execute_command(controller, command, ADITIONAL_ARM_ARGS)
+        command_detail = execute_command(controller, command, ADITIONAL_ARM_ARGS)
+        all_action_details.append(command_detail)
         all_commands.append(command)
         last_event_success = controller.last_event.metadata['lastActionSuccess']
 
@@ -53,7 +55,8 @@ for i in range(MAX_TESTS):
         picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
         if len(pickupable) > 0 and len(picked_up_before) == 0:
             cmd = 'p'
-            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            command_detail = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            all_action_details.append(command_detail)
             all_commands.append(cmd)
             if controller.last_event.metadata['lastActionSuccess'] is False:
                 print('Failed to pick up ', pickupable)
@@ -63,7 +66,7 @@ for i in range(MAX_TESTS):
                 break
 
         if last_event_success:
-            failed_action_pool  = []
+            failed_action_pool = []
         if not last_event_success:
             failed_action_pool.append(1)
             if len(failed_action_pool) > MAX_CONSECUTIVE_FAILURE:
@@ -71,16 +74,19 @@ for i in range(MAX_TESTS):
                 all_actions = copy.copy(set_of_actions)
                 random.shuffle(all_actions)
                 for a in all_actions:
-                    execute_command(controller, a, ADITIONAL_ARM_ARGS)
+                    command_detail = execute_command(controller, a, ADITIONAL_ARM_ARGS)
+                    all_action_details.append(command_detail)
                     all_commands.append(a)
-
                     if controller.last_event.metadata['lastActionSuccess']:
+                        failed_action_pool = []
                         break
+
                 if not controller.last_event.metadata['lastActionSuccess']:
                     print('This means we are stuck')
                     print('scene name', controller.last_event.metadata['sceneName'])
                     print('initial pose', initial_pose)
                     print('list of actions', all_commands)
+                    print('action details', all_action_details)
                     break
 
 
