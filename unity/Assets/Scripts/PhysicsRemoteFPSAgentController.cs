@@ -5515,47 +5515,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
-        //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
-        //object ID of an object in this receptacle
-        public void Contains(ServerAction action) {
-            if (action.objectId == null) {
-                errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
-                actionFinished(false);
-                return;
+        // XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
+        // object ID of an object in this receptacle
+        public void Contains(string objectId) {
+            if (objectId == null) {
+                throw new ArgumentNullException();
             }
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
 
-            SimObjPhysics target = null;
-
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //check for object in current visible objects, and also check that it's interactable
-                if (action.objectId == sop.ObjectID) {
-                    target = sop;
-                }
-
-            }
-
-            if (target) {
-                List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
-
+            List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
             #if UNITY_EDITOR
-                foreach (string s in ids) 
-                {
+                foreach (string s in ids) {
                     Debug.Log(s);
                 }
             #endif
 
-                actionFinished(true, ids.ToArray());
-            } else {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
-            }
+            actionFinished(true, ids.ToArray());
         }
-
-        //override for SimpleSimObj?
-        // public override SimpleSimObj[] VisibleSimObjs() 
-        // {
-        //     return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
-        // }
 
         ////////////////////////////////////////
         ////// HIDING AND MASKING OBJECTS //////
