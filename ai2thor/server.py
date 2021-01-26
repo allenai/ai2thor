@@ -119,7 +119,7 @@ class Event(object):
         return (
             '<ai2thor.server.Event at ' + hex(id(self)) + '\n' +
             '\t.metadata["lastActionSuccess"] = ' + self.metadata['lastActionSuccess'] + '\n' +
-            '\t.metadata["errorMessage"] = ' + self.metadata['errorMessage'] + '\n' +
+            '\t.metadata["errorMessage"] = "' + self.metadata['errorMessage'] + '"\n' +
             '\t.metadata["actionReturn"] = ' + self.metadata['actionReturn'] + '\n' +
             '>'
         )
