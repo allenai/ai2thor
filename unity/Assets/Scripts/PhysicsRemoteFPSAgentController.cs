@@ -738,12 +738,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool allowTeleportOutOfHand = false,
             bool makeUnbreakable = false
         ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = $"Cannot find object with id {objectId}";
-                actionFinished(false);
-                return;
-            } 
-            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: forceAction);
 
             bool teleportSuccess = false;
             foreach (Vector3 position in positions) {
@@ -868,43 +863,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 makeUnbreakable: makeUnbreakable
             );
         }
-
-        /* For some reason this does not work with the new action dispatcher and the above needed to be added.
-        public void TeleportObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            } else {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
-                    errorMessage = "Cannot teleport object in hand.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-                Vector3 oldPosition = sop.transform.position;
-                Quaternion oldRotation = sop.transform.rotation;
-
-                sop.transform.position = new Vector3(action.x, action.y, action.z);
-                sop.transform.rotation = Quaternion.Euler(action.rotation);
-                if (action.forceKinematic) {
-                    sop.GetComponent<Rigidbody>().isKinematic = true;
-                }
-                if (!action.forceAction) {
-                    if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
-                        sop.transform.position = oldPosition;
-                        sop.transform.rotation = oldRotation;
-                        errorMessage = sop.ObjectID + " is colliding after teleport.";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-                actionFinished(true);
-            }
-        }
-        */
 
         // params are named x,y,z due to the action orignally using ServerAction.x,y,z
         public void ChangeAgentColor(float x, float y, float z) {
@@ -3474,10 +3432,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             StartCoroutine(scaleObject());
-
-            if (markActionFinished) {
-                actionFinished(success: true);
-            }
         }
 
         public void ScaleObject(float x, float y, float scale, bool forceAction = false) {
@@ -3489,7 +3443,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
             scaleObject(target: target, scale: scale, markActionFinished: true);
         }
-
 
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
