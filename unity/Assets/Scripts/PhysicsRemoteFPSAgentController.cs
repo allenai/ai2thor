@@ -5043,17 +5043,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return target;
         }
 
-
-        // syntactic sugar for open object with openness = 0.
-        public void CloseObject(string objectId, bool forceAction = false) {
-            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
-        }
-
-        // syntactic sugar for open object with openness = 0.
-        public void CloseObject(float x, float y, bool forceAction = false) {
-            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
-        }
-
         protected SimObjPhysics getOpenableOrCloseableObjectNearLocation(
             bool open, float x, float y, float radius, bool forceAction
         ) {
@@ -5371,7 +5360,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(ToggleAndWait());
         }
 
-
         // private helper used with OpenObject commands
         private void openObject(
             SimObjPhysics target,
@@ -5515,6 +5503,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 moveMagnitude: moveMagnitude,
                 markActionFinished: true
             );
+        }
+
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(string objectId, bool forceAction = false) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
+        }
+
+        // syntactic sugar for open object with openness = 0.
+        public void CloseObject(float x, float y, bool forceAction = false) {
+            OpenObject(x: x, y: y, forceAction: forceAction, openness: 0);
         }
 
         //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
