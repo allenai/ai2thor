@@ -3426,92 +3426,71 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
         }
 
-        //change scale of sim object, this only works with sim objects not structures
-        public void ScaleObject(ServerAction action)
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set inside ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+        ///////////////////////////////////////////
+        ////////////// SCALE OBJECT ///////////////
+        ///////////////////////////////////////////
+
+        // Change the scale of a sim object. This only works with sim objects not structures
+        // scale should be something like 0.3 to shrink or 1.5 to grow
+        private void scaleObject(SimObjPhysics target, float scale, bool markActionFinished) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
+            IEnumerator scaleObject() {
+                Vector3 targetScale = gameObject.transform.localScale * scale;
+                yield return new WaitForFixedUpdate();
+
+                Vector3 originalScale = target.transform.localScale;
+                float currentTime = 0.0f;
+
+                do {
+                    target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
+                    currentTime += Time.deltaTime;
+                    yield return null;
+                } while (currentTime <= 1.0f);
+
+                // store reference to all children
+                Transform[] children = new Transform[target.transform.childCount];
+
+                for (int i = 0; i < target.transform.childCount; i++) {
+                    children[i] = target.transform.GetChild(i);
                 }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
+
+                // detach all children
+                target.transform.DetachChildren();
+
+                // zero out object transform to be 1, 1, 1
+                target.transform.transform.localScale = Vector3.one;
+
+                // re-parent all children
+                foreach (Transform t in children) {
+                    t.SetParent(target.transform);
+                }
+
+                target.ContextSetUpBoundingBox();
+                if (markActionFinished) {
+                    actionFinished(true);
                 }
             }
+            StartCoroutine(scaleObject());
 
-            //neither objectId nor coordinates found an object
-            if(target == null)
-            {
-                errorMessage = "No target found";
-                actionFinished(false);
-                return;
-            }
-
-            else
-            {
-                float scaleMultiplier = action.scale; //this can be something like 0.3 to shrink or 1.5 to grow
-                StartCoroutine(scaleObject(gameObject.transform.localScale * action.scale, target));
+            if (markActionFinished) {
+                actionFinished(success: true);
             }
         }
 
-        private IEnumerator scaleObject(Vector3 targetScale, SimObjPhysics target)
-        {
-            yield return new WaitForFixedUpdate();
-
-            Vector3 originalScale = target.transform.localScale;
-            float currentTime = 0.0f;
-
-            do
-            {
-                target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
-                currentTime += Time.deltaTime;
-                yield return null;
-            } while (currentTime <= 1.0f);
-
-            //store reference to all children
-            Transform[] children = new Transform[target.transform.childCount];
-
-            for(int i = 0; i < target.transform.childCount; i++)
-            {
-                children[i] = target.transform.GetChild(i);
-            }
-
-            //detach all children
-            target.transform.DetachChildren();
-            //zero out object transform to be 1, 1, 1
-            target.transform.transform.localScale = Vector3.one;
-            //reparent all children
-            foreach (Transform t in children)
-            {
-                t.SetParent(target.transform);
-            }
-
-            target.ContextSetUpBoundingBox();
-            actionFinished(true);
+        public void ScaleObject(float x, float y, float scale, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            scaleObject(target: target, scale: scale, markActionFinished: true);
         }
-        
+
+        public void ScaleObject(string objectId, float scale, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            scaleObject(target: target, scale: scale, markActionFinished: true);
+        }
+
+
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
