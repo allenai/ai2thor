@@ -4825,87 +4825,70 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(ServerAction action) {
-            // make sure something is actually in our hands
+        public void DropHandObject(bool forceAction = false) {
+            if (ItemInHand == null) {
+                throw new InvalidOperationException("Nothing in hand to drop!");
+            }
 
-            if (ItemInHand != null) {
-                //we do need this to check if the item is currently colliding with the agent, otherwise
-                //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
+            // we do need this to check if the item is currently colliding with the agent, otherwise
+            // dropping an object while it is inside the agent will cause it to shoot out weirdly
+            if (!forceAction && isHandObjectColliding(false)) {
+                throw new InvalidOperationException($"{ItemInHand.transform.name} can't be dropped. It must be clear of all other collision first, including the Agent");
+            }
+
+            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.useGravity = true;
+
+            // change collision detection mode while falling so that objects don't phase through colliders.
+            // this is reset to discrete on SimObjPhysics.cs's update 
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject topObject = GameObject.Find("Objects");
+            ItemInHand.transform.parent = topObject == null ? null : topObject.transform;
+
+            // Add some random rotational momentum to the dropped object to make things
+            // less deterministic.
+            // TODO: Need a parameter to control how much randomness we introduce.
+            rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+            DropContainedObjects(
+                target: ItemInHand.GetComponent<SimObjPhysics>(),
+                reparentContainedObjects: true,
+                forceKinematic: false
+            );
+
+            //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
+            if (!physicsSceneManager.physicsSimulationPaused) {
+                //this is true by default
+                if (action.autoSimulation) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                 } else {
-                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.constraints = RigidbodyConstraints.None;
-                    rb.useGravity = true;
-
-                    //change collision detection mode while falling so that obejcts don't phase through colliders.
-                    //this is reset to discrete on SimObjPhysics.cs's update 
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-
-                    GameObject topObject = GameObject.Find("Objects");
-                    if (topObject != null) {
-                        ItemInHand.transform.parent = topObject.transform;
-                    } else {
-                        ItemInHand.transform.parent = null;
-                    }
-
-                    // Add some random rotational momentum to the dropped object to make things
-                    // less deterministic.
-                    // TODO: Need a parameter to control how much randomness we introduce.
-                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
-                    DropContainedObjects(
-                        target: ItemInHand.GetComponent<SimObjPhysics>(),
-                        reparentContainedObjects: true,
-                        forceKinematic: false
-                    );
-
-                    //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
-                    if(!physicsSceneManager.physicsSimulationPaused) {
-                        //this is true by default
-                        if (action.autoSimulation) {
-                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } else {
-                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
-                        }
-                    }
-
-                    else
-                    actionFinished(true);
-
-                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-                    ItemInHand = null;
-                    return;
+                    StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                 }
             } else {
-                errorMessage = "nothing in hand to drop!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                actionFinished(true);
             }
+
+            ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+            ItemInHand = null;
         }
 
-        //by default will throw in the forward direction relative to the Agent's Camera
-        //moveMagnitude, strength of throw, good values for an average throw are around 150-250
-        public void ThrowObject(ServerAction action) {
+        // by default will throw in the forward direction relative to the Agent's Camera
+        // moveMagnitude, strength of throw, good values for an average throw are around 150-250
+        public void ThrowObject(float moveMagnitude, bool forceAction = false) {
             if (ItemInHand == null) {
-                errorMessage = "Nothing in Hand to Throw!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Nothing in Hand to Throw!");
             }
 
             GameObject go = ItemInHand;
-            DropHandObject(action);
-            if (this.lastActionSuccess) {
+            DropHandObject(forceAction: forceAction);
+            // XXX: won't this execute after actionFinished has been called?
+            if (lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
-                go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
+                go.GetComponent<SimObjPhysics>().ApplyForce(dir, moveMagnitude);
             }
-
         }
 
         //Hide and Seek helper function, makes overlap box at x,z coordinates
