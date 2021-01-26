@@ -1967,7 +1967,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
+            if (!action.forceAction && !target.isInteractable) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
@@ -2063,7 +2063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
+            if (!action.forceAction && !target.isInteractable) {
                 print(target.isInteractable);
                 errorMessage = "Target:" + target.objectID +  "is not interactable and is probably occluded by something!";
                 actionFinished(false);
@@ -4658,7 +4658,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 throw new InvalidOperationException(target.objectID + " is not visible and can't be picked up.");
             }
-            if (!forceAction && target.isInteractable == false) {
+            if (!forceAction && !target.isInteractable) {
                 throw new InvalidOperationException(target.objectID + " is not interactable and (perhaps it is occluded by something).");
             }
 
@@ -5196,76 +5196,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // swap an object's materials out to the cooked version of the object
-        public void CookObject(ServerAction action) {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+        // swap an object's materials out to the cooked version of the object :)
+        private void cookObject(SimObjPhysics target, bool forceAction) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+            if (!action.forceAction && !target.isInteractable) {
+                throw new InvalidOperationException("object is visible but occluded by something: " + target.objectId);
             }
 
-
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
-                }
-
-                if (target.GetComponent<CookObject>()) {
-                    CookObject to = target.GetComponent<CookObject>();
-
-                    //is this toasted already? if not, good to go
-                    if (to.IsCooked()) {
-                        actionFinished(false);
-                        errorMessage = action.objectId + " is already Toasted!";
-                        return;
-                    }
-
-                    to.Cook();
-
-                    actionFinished(true);
-                }
-
-                else
-                {
-                    errorMessage = "target object is not cookable";
-                    actionFinished(false);
-                    return;
-                }
+            if (!target.GetComponent<CookObject>()) {
+                throw new InvalidOperationException("Target object is not cookable!");
             }
 
-            //target not found in currently visible objects, report not found
-            else {
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
+            CookObject cookComponent = target.GetComponent<CookObject>();
+            if (!cookComponent.IsCooked()) {
+                cookComponent.Cook();
             }
+            actionFinished(true);
+        }
+
+        public void CookObject(string objectId, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            cookObject(target: target, forceAction: forceAction);
+        }
+
+        public void CookObject(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            cookObject(target: target, toggleOn: true, forceAction: forceAction);
         }
 
         //face change the agent's face screen to demonstrate different "emotion" states
