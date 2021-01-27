@@ -2943,7 +2943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SimObjPhysics soInHand = ItemInHand.GetComponent<SimObjPhysics>();
 
             Vector3 handObjPosRelAgent =
-                Quaternion.Euler(0, rotation - transform.rotation.y, 0) *
+                Quaternion.Euler(0, rotation - transform.eulerAngles.y, 0) *
                 (transform.position - ItemInHand.transform.position);
 
             Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;

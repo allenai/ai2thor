@@ -936,6 +936,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "gip":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetInteractablePoses";
+                        action["objectId"] = "Fridge|-02.10|+00.00|+01.09";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //tests the Reset function on AgentManager.cs, adding a path to it from the PhysicsController
                 case "reset":
                     {
