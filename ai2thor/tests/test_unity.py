@@ -638,4 +638,4 @@ def test_get_interactable_poses(controller):
             raise Exception("Not expecting rotation: " + pose['rotation'])
     
     event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
-    assert len(event.metadata['actionReturn']) == 1241, 'GetInteractablePoses with large maxDistance is off!'
+    assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'
