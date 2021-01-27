@@ -637,6 +637,86 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        ///////////////////////////////////////////
+        //////////// getTargetObject //////////////
+        ///////////////////////////////////////////
+
+        // Helper method that parses objectId parameter to return the sim object that it target.
+        // The action is halted if the objectId does not appear in the scene.
+        private SimObjPhysics getTargetObject(string objectId, bool forceAction) {
+            // an objectId was given, so find that target in the scene if it exists
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
+            }
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
+                target = sop;
+            }
+
+            // target not found!
+            if (target == null) {
+                throw new NullReferenceException("Target object not found within the specified visibility.");
+            }
+
+            return target;
+        }
+
+        // Helper method that parses (x and y) parameters to return the
+        // sim object that they target.
+        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
+            }
+
+            // let's try picking up the object!
+            SimObjPhysics target = null;
+
+            // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+            y = 1.0f - y;
+
+            // cast ray from screen coordinate into world space. If it hits an object
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+            RaycastHit hit;
+
+            // if something was touched, actionFinished(true) always
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                if (hit.transform.GetComponent<SimObjPhysics>()) {
+                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                    // this should basically only happen if the handDistance value is too big
+                    if (forceAction || CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
+                    }
+
+                    // it is within viewport, so we are good, assign as target
+                    target = hit.transform.GetComponent<SimObjPhysics>();
+                }
+            }
+
+            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
+            // if no target was found in the layers above, try the SimObjInvisible layer. 
+            // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
+            // PlaceableSurfaces on it, also make sure to check again
+            if (target == null || hasPlaceableSurface.Contains(target.Type)) {
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
+                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
+                        // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        // this should basically only happen if the handDistance value is too big
+                        if (forceAction || CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
+                        }
+                        // it is within viewport, so we are good, assign as target
+                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
+                    }
+                }
+            }
+
+            // force update objects to be visible/interactable correctly
+            VisibleSimObjs(forceVisible: false);
+            return target;
+        }
+
         public IEnumerator checkInitializeAgentLocationAction()
         {
             yield return null;
@@ -710,6 +790,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
         }
+
+        ///////////////////////////////////////////
+        ////////// COLOR RANDOMIZATION ////////////
+        ///////////////////////////////////////////
 
         [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)] 
         public void ChangeColorOfMaterials() {
@@ -813,22 +897,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case 0: //forward
                     dir = gameObject.transform.forward;
                     break;
-
                 case 180: //backward
                     dir = -gameObject.transform.forward;
                     break;
-
                 case 270: //left
                     dir = -gameObject.transform.right;
                     break;
-
                 case 90: //right
                     dir = gameObject.transform.right;
                     break;
-
                 default:
-                    Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
-                    break;
+                    throw new ArgumentException("Incorrect orientation! Allowed orientations (0: forward, 90: right, 180: backward, 270: left).");
             }
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
@@ -2411,14 +2490,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             bool allowFloor = false
         ) {
             if (numPlacementAttempts <= 0) {
-                errorMessage = "numPlacementAttempts must be a positive integer.";
-                actionFinished(false);
-                return;
+                throw ArgumentOutOfRangeException("numPlacementAttempts must be a positive integer.");
             }
 
             //something is in our hand AND we are trying to spawn it. Quick drop the object
-            if (ItemInHand != null) 
-            {
+            if (ItemInHand != null) {
                 Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.None;
@@ -2448,17 +2524,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // check if strings used for excludedReceptacles are valid object types
             foreach (string receptacleType in excludedReceptacles) {
-                try
-                {
-                    SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
+                try {
+                    SimObjType objType = (SimObjType)Enum.Parse(typeof(SimObjType), receptacleType);
                     listOfExcludedReceptacleTypes.Add(objType);
-                }
-
-                catch (Exception)
-                {
-                    errorMessage = "invalid Object Type used in excludedReceptacles array: " + receptacleType;
-                    actionFinished(false);
-                    return;
+                } catch (ArgumentException) {
+                    throw new ArgumentException("invalid Object Type used in excludedReceptacles array: " + receptacleType);
                 }
             }
             if (!allowFloor) {
@@ -2471,11 +2541,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> excludedSimObjects = new HashSet<SimObjPhysics>();
             foreach (String objectId in excludedObjectIds) {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                    errorMessage = "Cannot find sim object with id '" + objectId + "'";
-                    actionFinished(false);
-                    return;
-                }
+                getTargetObject
                 excludedSimObjects.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
             }
 
