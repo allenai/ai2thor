@@ -608,17 +608,19 @@ def test_get_interactable_poses(controller):
     rotations = [0, 45]
     event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
     for pose in event.metadata['actionReturn']:
+        horizon_works = False
         for horizon in horizons:
             if abs(pose['horizon'] - horizon) < 1e-3:
+                horizon_works = True
                 break
-        else:
-            raise Exception("Not expecting horizon: " + pose['horizon'])
+        assert horizon_works, "Not expecting horizon: " + pose['horizon']
 
+        rotation_works = False
         for rotation in rotations:
             if abs(pose['rotation'] - rotation) < 1e-3:
+                rotation_works = True
                 break
-        else:
-            raise Exception("Not expecting rotation: " + pose['rotation'])
+        assert rotation_works, "Not expecting rotation: " + pose['rotation']
 
     # assert only checking certain horizons and rotations is working correctly
     event = controller.step('GetInteractablePoses', objectId=fridgeId, rotations=[270])
