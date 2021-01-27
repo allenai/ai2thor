@@ -840,7 +840,6 @@ class Controller(object):
         self._build_server(host, port, width, height)
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
-            import warnings
             warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
                 the parameter visibilityDistance parameter with the Initialize action instead")
 
@@ -858,7 +857,6 @@ class Controller(object):
             raise Exception("Screen resolution must be > 0x0")
 
         if self.server.started:
-            import warnings
             warnings.warn('start method depreciated. The server started when the Controller was initialized.')
 
             # Stops the current server and creates a new one. This is done so
