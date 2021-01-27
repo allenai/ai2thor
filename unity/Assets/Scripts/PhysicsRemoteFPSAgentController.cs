@@ -1801,18 +1801,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         #if UNITY_EDITOR
-        //for use in Editor to test the Reset function.
-        public void Reset(ServerAction action)
-        {
-           physicsSceneManager.GetComponent<AgentManager>().Reset(action);
-        }
+            // for use in Editor to test the Reset function.
+            public void Reset(ServerAction action) {
+                physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+            }
         #endif
-
-        //a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
-        public void NoOp()
-        {
-            actionFinished(true);
-        }
 
         public void PushObject(ServerAction action) {
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {

@@ -1550,14 +1550,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
         }
 
-        //no op action
-        public void Pass() {
+        ///////////////////////////////////////////
+        ////////////// DO NOTHING /////////////////
+        ///////////////////////////////////////////
+
+        // a no op action used to return metadata via actionFinished call,
+        // but not actually doing anything to interact with the scene or manipulate the Agent
+        public void NoOp() {
             actionFinished(true);
         }
 
-        //no op action
+        public void Pass() {
+            NoOp();
+        }
+
         public void Done() {
-            actionFinished(true);
+            NoOp();
         }
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
