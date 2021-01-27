@@ -103,22 +103,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //change the mass/drag/angular drag values of a simobjphys that is pickupable or moveable
-        public void SetMassProperties(string objectId, float mass, float drag, float angularDrag)
-        {
-            if(objectId == null)
-            {
+        public void SetMassProperties(string objectId, float mass, float drag, float angularDrag) {
+            if (objectId == null) {
                 errorMessage = "please give valid ObjectID for SetMassProperties() action";
                 actionFinished(false);
                 return;
             }
 
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            foreach(SimObjPhysics sop in simObjects)
-            {
-                if(sop.objectID == objectId)
-                {
-                    if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-                    {
+            foreach(SimObjPhysics sop in simObjects) {
+                if (sop.objectID == objectId) {
+                    if (sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                         Rigidbody rb = sop.GetComponent<Rigidbody>();
                         rb.mass = mass;
                         rb.drag = drag;
@@ -140,14 +135,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //sets whether this scene should allow objects to decay temperature to room temp over time or not
-        public void SetDecayTemperatureBool(bool allowDecayTemperature)
-        {
+        public void SetDecayTemperatureBool(bool allowDecayTemperature) {
             physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
             actionFinished(true);
-        }
-
-        // Update is called once per frame
-        void Update() {
         }
 
         private void LateUpdate() {
@@ -156,112 +146,104 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.agentState == AgentState.ActionComplete) {
-                ServerAction action = new ServerAction();
-                VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
-            }
-
+                if (this.agentState == AgentState.ActionComplete) {
+                    ServerAction action = new ServerAction();
+                    VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+                }
             #endif
         }
 
-        public override ObjectMetadata[] generateObjectMetadata() 
-        {
-            return base.generateObjectMetadata();
-        }
-
-        public override MetadataWrapper generateMetadataWrapper() 
-        {
-            return base.generateMetadataWrapper();
-        }
-
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible)
-        {
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
         }
 
-        //change the radius of the agent's capsule on the char controller component, and the capsule collider component
-        public void SetAgentRadius(float agentRadius = 2.0f)
-        {
+        // change the radius of the agent's capsule on the char controller component, and the capsule collider component
+        public void SetAgentRadius(float agentRadius = 2.0f) {
             m_CharacterController.radius = agentRadius;
             CapsuleCollider cap = GetComponent<CapsuleCollider>();
             cap.radius = agentRadius;
             actionFinished(true);
         }
 
-        //EDITOR DEBUG SCRIPTS:
-        //////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////
+        /////////// UNITY DEBUG SCRIPTS ///////////
+        ///////////////////////////////////////////
+
         #if UNITY_EDITOR
-
-        //return ID of closest CanPickup object by distance
-        public string ObjectIdOfClosestVisibleObject() {
-            string objectID = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
-                    objectID = o.ObjectID;
-                    //  print(objectID);
-                    break;
-                }
+            // for use in Editor to test the Reset function.
+            public void Reset(ServerAction action) {
+                physicsSceneManager.GetComponent<AgentManager>().Reset(action);
             }
 
-            return objectID;
-        }
-
-        public string ObjectIdOfClosestPickupableOrMoveableObject() {
-            string objectID = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.PrimaryProperty == SimObjPrimaryProperty.CanPickup || o.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
-                    objectID = o.ObjectID;
-                    //  print(objectID);
-                    break;
+            // return ID of closest CanPickup object by distance
+            public string ObjectIdOfClosestVisibleObject() {
+                string objectID = null;
+                foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                    if (o.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                        objectID = o.ObjectID;
+                        // TODO: why is it breaking? what if it's not the closest!
+                        break;
+                    }
                 }
+                return objectID;
             }
 
-            return objectID;
-        }
-
-        //return ID of closest CanOpen or CanOpen_Fridge object by distance
-        public string ObjectIdOfClosestVisibleOpenableObject() {
-            string objectID = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.GetComponent<CanOpen_Object>()) {
-                    objectID = o.ObjectID;
-                    break;
+            public string ObjectIdOfClosestPickupableOrMoveableObject() {
+                string objectID = null;
+                foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                    if (o.PrimaryProperty == SimObjPrimaryProperty.CanPickup || o.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
+                        objectID = o.ObjectID;
+                        // TODO: why is it breaking? what if it's not the closest!
+                        break;
+                    }
                 }
+                return objectID;
             }
 
-            return objectID;
-        }
+            // return ID of closest CanOpen or CanOpen_Fridge object by distance
+            public string ObjectIdOfClosestVisibleOpenableObject() {
+                string objectID = null;
 
-        //return ID of closes toggleable object by distance
-        public string ObjectIdOfClosestToggleObject() {
-            string objectID = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.GetComponent<CanToggleOnOff>()) {
-                    objectID = o.ObjectID;
-                    break;
+                foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                    if (o.GetComponent<CanOpen_Object>()) {
+                        // TODO: why is it breaking? what if it's not the closest!
+                        objectID = o.ObjectID;
+                        break;
+                    }
                 }
+
+                return objectID;
             }
 
-            return objectID;
-        }
+            //return ID of closes toggleable object by distance
+            public string ObjectIdOfClosestToggleObject() {
+                string objectID = null;
 
-        public string ObjectIdOfClosestReceptacleObject() {
-            string objectID = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                    objectID = o.ObjectID;
-                    break;
+                foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                    if (o.GetComponent<CanToggleOnOff>()) {
+                        // TODO: why is it breaking? what if it's not the closest!
+                        objectID = o.ObjectID;
+                        break;
+                    }
                 }
+
+                return objectID;
             }
-            return objectID;
-        }
+
+            public string ObjectIdOfClosestReceptacleObject() {
+                string objectID = null;
+
+                foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                    if (o.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                        // TODO: why is it breaking? what if it's not the closest!
+                        objectID = o.ObjectID;
+                        break;
+                    }
+                }
+                return objectID;
+            }
         #endif
-        /////////////////////////////////////////////////////////
+
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
         //matches the passed in objectID
         public GameObject FindObjectInVisibleSimObjPhysics(string objectID) {
@@ -325,6 +307,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return (decimal)f % 0.1M == 0;
         }
 
+        ///////////////////////////////////////////
+        /////////////// LOOK DOWN /////////////////
+        ///////////////////////////////////////////
+
         public override void LookDown(ServerAction action)
         {
             if(action.degrees < 0)
@@ -378,35 +364,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
         }
 
-        public override void LookUp(ServerAction action) 
-        {
+        ///////////////////////////////////////////
+        //////////////// LOOK UP //////////////////
+        ///////////////////////////////////////////
 
-            if(action.degrees < 0)
-            {
+        public override void LookUp(ServerAction action) {
+            if (action.degrees < 0) {
                 errorMessage = "LookUp action requires positive degree value. Invalid value used: " + action.degrees;
                 actionFinished(false);
                 return;
             }
 
-            if(!CheckIfFloatIsMultipleOfOneTenth(action.degrees))
-            {
+            if (!CheckIfFloatIsMultipleOfOneTenth(action.degrees)) {
                 errorMessage = "LookUp action requires degree value to be a multiple of 0.1f";
                 actionFinished(false);
                 return;
             }
 
             //default degree increment to 30
-            if(action.degrees == 0)
-            {
+            if (action.degrees == 0) {
                 action.degrees = 30f;
             }
 
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            // force the degree increment to the nearest tenths place
+            // this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if(!checkForUpDownAngleLimit("up", action.degrees))
-            {
+            if (!checkForUpDownAngleLimit("up", action.degrees)) {
                 errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
@@ -429,11 +413,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } 
         }
 
-        public override void RotateRight(ServerAction action) 
-        {
+        ///////////////////////////////////////////
+        ////////////// ROTATE RIGHT ///////////////
+        ///////////////////////////////////////////
+
+        public override void RotateRight(ServerAction action) {
             //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if(action.degrees == 0f)
-            action.degrees = rotateStepDegrees;
+            if(action.degrees == 0f) {
+                action.degrees = rotateStepDegrees;
+            }
 
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
@@ -452,6 +440,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+
+        ///////////////////////////////////////////
+        ////////////// ROTATE LEFT ////////////////
+        ///////////////////////////////////////////
 
         public override void RotateLeft(ServerAction action) 
         {
@@ -475,18 +467,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir)
-        {
+        ///////////////////////////////////////////
+        ////////////// ARC METHODS ////////////////
+        ///////////////////////////////////////////
+
+        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir) {
             bool result = true;
             
             //generate arc points in the positive y axis rotation
-            foreach(Vector3 v in corners)
-            {
+            foreach(Vector3 v in corners) {
                 Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
 
                 //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                for(int i = 0; i < pointsOnArc.Length; i++)
-                {
+                for(int i = 0; i < pointsOnArc.Length; i++) {
                     //debug draw spheres to show path of arc
                     // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     // Sphere.transform.position = pointsOnArc[i];
@@ -496,21 +489,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     RaycastHit hit;
 
                     //do linecasts from the first point, sequentially, to the last
-                    if(i < pointsOnArc.Length - 1)
-                    {
+                    if(i < pointsOnArc.Length - 1) {
                         //Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
 
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-                        {
-                            if(hit.transform.GetComponent<SimObjPhysics>())
-                            {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                            if (hit.transform.GetComponent<SimObjPhysics>()) {
                                 //if we hit the item in our hand, skip
-                                if(hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
-                                continue;
+                                if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform) {
+                                    continue;
+                                }
                             }
 
-                            if(hit.transform == this.transform)
-                            {
+                            if (hit.transform == this.transform) {
                                 //don't worry about clipping the object into this agent
                                 continue;
                             }
@@ -521,81 +511,81 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
-
             return result;
         }
 
-        //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
-        //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
-        //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
-        {
+        // for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
+        // given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
+        // if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir) {
             float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
             Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
             float currentIncrementAngle;
 
-            if (dir == "left") //Yawing left (Rotating across XZ plane around Y-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    currentIncrementAngle = i * -incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+            // Yawing left (Rotating across XZ plane around Y-pivot)
+            switch (dir) {
+                case "left":
+                    for (int i = 0; i < arcPoints.Length; i++) {
+                        currentIncrementAngle = i * -incrementAngle;
 
-            if (dir == "right") //Yawing right (Rotating across XZ plane around Y-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    currentIncrementAngle = i * incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+                        // move the rotPoint to the current corner's position
+                        rotPoint.transform.position = startingPoint;
 
-            else if(dir =="up") //Pitching up(Rotating across YZ plane around X-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    //reverse the increment angle because of the right handedness orientation of the local x-axis
-                    currentIncrementAngle = i * -incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+                        // rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                        rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
 
-            else if(dir == "down") //Pitching down (Rotating across YZ plane around X-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    //reverse the increment angle because of the right handedness orientation of the local x-axis
-                    currentIncrementAngle = i * incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+                        // set the current arcPoint's vector3 to the rotated point
+                        arcPoints[i] = rotPoint.transform.position;
+                    }
+                    break;
+                case "right":
+                    // Yawing right (Rotating across XZ plane around Y-pivot)
+                    for (int i = 0; i < arcPoints.Length; i++) {
+                        currentIncrementAngle = i * incrementAngle;
 
+                        //move the rotPoint to the current corner's position
+                        rotPoint.transform.position = startingPoint;
+
+                        //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                        rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+
+                        //set the current arcPoint's vector3 to the rotated point
+                        arcPoints[i] = rotPoint.transform.position;
+                    }
+                    break;
+                case "up":
+                    // Pitching up(Rotating across YZ plane around X-pivot)
+                    for (int i = 0; i < arcPoints.Length; i++) {
+                        // reverse the increment angle because of the right handedness orientation of the local x-axis
+                        currentIncrementAngle = i * -incrementAngle;
+
+                        // move the rotPoint to the current corner's position
+                        rotPoint.transform.position = startingPoint;
+
+                        // rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                        rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+
+                        // set the current arcPoint's vector3 to the rotated point
+                        arcPoints[i] = rotPoint.transform.position;
+                    }
+                    break;
+                case "down":
+                    // Pitching down (Rotating across YZ plane around X-pivot)
+                    for (int i = 0; i < arcPoints.Length; i++) {
+                        //reverse the increment angle because of the right handedness orientation of the local x-axis
+                        currentIncrementAngle = i * incrementAngle;
+
+                        //move the rotPoint to the current corner's position
+                        rotPoint.transform.position = startingPoint;
+
+                        //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                        rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+
+                        //set the current arcPoint's vector3 to the rotated point
+                        arcPoints[i] = rotPoint.transform.position;
+                    }
+                    break;
+            }
             return arcPoints;
         }
 
@@ -619,9 +609,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     }
         // }
 
-        //checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
+        // checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
         public bool CheckIfAgentCanRotate(string direction, float degrees) {
-
             if (ItemInHand == null) {
                 //Debug.Log("Rotation check passed: nothing in Agent Hand");
                 return true;
@@ -635,21 +624,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
 
             //ok now we have each corner, let's rotate them the specified direction
-            if(direction == "right" || direction == "left")
-            {
+            if(direction == "right" || direction == "left") {
                 result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
-            }
-
-            else if(direction == "up" || direction == "down")
-            {
+            } else if(direction == "up" || direction == "down") {
                 result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
             }
             //no checks flagged anything, good to go, return true i guess
             return result;
         }
 
-        private bool checkForUpDownAngleLimit(string direction, float degrees)
-        {   
+        private bool checkForUpDownAngleLimit(string direction, float degrees) {   
             bool result = true;
             //check the angle between the agent's forward vector and the proposed rotation vector
             //if it exceeds the min/max based on if we are rotating up or down, return false
@@ -659,30 +643,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //zero out the rotation first
             rotPoint.transform.rotation = m_Camera.transform.rotation;
 
-
             //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
-            if(direction == "down")
-            {
+            if (direction == "down") {
                 rotPoint.Rotate(new Vector3(degrees, 0, 0));
                 //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
                 //degrees being positive, it still needs to check against this negatively signed direction.
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
-                {
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f < -maxDownwardLookAngle) {
                     result = false;
                 }
-            }
-
-            if(direction == "up")
-            {
+            } else if (direction == "up") {
                 rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
-                {
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle) {
                     result = false;
                 }
             }
             return result;
         }
 
+        ///////////////////////////////////////////
+        //////////// TELEPORT OBJECT //////////////
+        ///////////////////////////////////////////
+
+        // TODO: why aren't these in the base?
         public void TeleportObject(
             string objectId,
             Vector3 position,
@@ -859,6 +841,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void TeleportObjectToFloor(ServerAction action) {
+            SimObjPhysics sop = getTargetObject(objectId: action.objectId);
+            if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
+                errorMessage = "Cannot teleport object in hand.";
+                actionFinished(false);
+                return;
+            }
+            Bounds objBounds = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
+            foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    objBounds.Encapsulate(r.bounds);
+                }
+            }
+            if (objBounds.min.x == float.PositiveInfinity) {
+                errorMessage = "Could not get bounds of " + action.objectId + ".";
+                actionFinished(false);
+                return;
+            }
+            float y = getFloorY(action.x, action.z);
+            if (errorMessage != "") {
+                actionFinished(false);
+                return;
+            }
+            sop.transform.position = new Vector3(
+                action.x,
+                objBounds.extents.y + y + 0.1f,
+                action.z
+            );
+            sop.transform.rotation = Quaternion.Euler(action.rotation);
+            actionFinished(true);
+        }
+
         // params are named x,y,z due to the action originally using ServerAction.x,y,z
         [ObsoleteAttribute(message: "This action is deprecated. Call ChangeAgentColor(string color) instead.", error: false)] 
         public void ChangeAgentColor(float x, float y, float z) {
@@ -962,8 +979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (
-                physicsSceneManager.ManipulatorReceptacles == null || 
+            if (physicsSceneManager.ManipulatorReceptacles == null || 
                 physicsSceneManager.ManipulatorReceptacles.Length == 0
             ) {
                 errorMessage = "Scene does not have manipulator receptacles set.";
@@ -1411,6 +1427,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return true;
         }
 
+        ///////////////////////////////////////////
+        //////// MOVE LIFTED OBJECT AHEAD /////////
+        ///////////////////////////////////////////
+
         public void MoveLiftedObjectAhead(ServerAction action) {
             float mag = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(
@@ -1454,6 +1474,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 )
             );
         }
+
+        ///////////////////////////////////////////
+        /////// ROTATE LIFTED OBJECT AHEAD ////////
+        ///////////////////////////////////////////
 
         public void RotateLiftedObjectRight(ServerAction action) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
@@ -1503,6 +1527,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             }
         }
+
+        ///////////////////////////////////////////
+        ///////// MOVE AGENTS WITH OBJECT /////////
+        ///////////////////////////////////////////
 
         public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d, bool snapToGrid=true) {
             List<Vector3> startAgentPositions = new List<Vector3>();
@@ -1564,89 +1592,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void MoveAgentsAheadWithObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(moveAgentsWithObject(objectToMove, transform.forward * action.moveMagnitude));
         }
 
         public void MoveAgentsLeftWithObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(moveAgentsWithObject(objectToMove, -transform.right * action.moveMagnitude));
         }
 
         public void MoveAgentsRightWithObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(moveAgentsWithObject(objectToMove, transform.right * action.moveMagnitude));
         }
 
         public void MoveAgentsBackWithObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(moveAgentsWithObject(objectToMove, -transform.forward * action.moveMagnitude));
         }
 
-        public void TeleportObjectToFloor(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                actionFinished(false);
-                return;
-            } else {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
-                    errorMessage = "Cannot teleport object in hand.";
-                    actionFinished(false);
-                    return;
-                }
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
-                foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
-                    if (r.enabled) {
-                        objBounds.Encapsulate(r.bounds);
-                    }
-                }
-                if (objBounds.min.x == float.PositiveInfinity) {
-                    errorMessage = "Could not get bounds of " + action.objectId + ".";
-                    actionFinished(false);
-                    return;
-                }
-                float y = getFloorY(action.x, action.z);
-                if (errorMessage != "") {
-                    actionFinished(false);
-                    return;
-                }
-                sop.transform.position = new Vector3(
-                    action.x,
-                    objBounds.extents.y + y + 0.1f,
-                    action.z
-                );
-                sop.transform.rotation = Quaternion.Euler(action.rotation);
-                actionFinished(true);
-            }
-        }
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
 
         public override void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
@@ -1736,6 +1707,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             TeleportFull(action);
         }
 
+        ///////////////////////////////////////////
+        /////////////// MOVE AGENT ////////////////
+        ///////////////////////////////////////////
+
         protected HashSet<Collider> allAgentColliders() {
             HashSet<Collider> colliders = null;
             colliders = new HashSet<Collider>();
@@ -1794,13 +1769,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
-
-        #if UNITY_EDITOR
-            // for use in Editor to test the Reset function.
-            public void Reset(ServerAction action) {
-                physicsSceneManager.GetComponent<AgentManager>().Reset(action);
-            }
-        #endif
 
         ///////////////////////////////////////////
         ////////////// PUSH OBJECT ////////////////
@@ -2760,15 +2728,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
-        }
-
-        public bool IsInArray(Collider collider, GameObject[] arrayOfCol) {
-            for (int i = 0; i < arrayOfCol.Length; i++) {
-                if (collider == arrayOfCol[i].GetComponent<Collider>()) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         ///////////////////////////////////////////
