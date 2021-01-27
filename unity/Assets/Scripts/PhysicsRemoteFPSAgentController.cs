@@ -1749,9 +1749,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new InvalidOperationException("Target is not interactable and is probably occluded by something!");
             }
 
-            // the direction vector to push the target object defined by pushAngle 
-            // degrees clockwise from the agent's forward.
-            pushAngle = Mathf.Abs(pushAngle % 360);
+            // The direction vector to push the target object defined by pushAngle 
+            // degrees clockwise from the agent's forward. Note: pushAngle % 360 < 0 iff pushAngle < 0.
+            pushAngle = pushAngle < 0 ? 360 + pushAngle % 360 : pushAngle % 360;
 
             //find the Direction to push the object based on PushAngle
             Vector3 agentForward = transform.forward;
