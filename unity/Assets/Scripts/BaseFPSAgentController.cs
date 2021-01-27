@@ -955,6 +955,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
+        ///////////////////////////////////////////
+        //////////// HIDING OBJECTS ///////////////
+        ///////////////////////////////////////////
+
         public void DisableObject(string objectId) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
             target.gameObject.SetActive(false);
@@ -989,6 +993,57 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 target.transform.gameObject.SetActive(false);
             }
             physicsSceneManager.SetupScene();
+            actionFinished(true);
+        }
+
+        public void HideObject(string objectId) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+                foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
+                    UpdateDisplayGameObject(containedSop.gameObject, false);
+                }
+            }
+            UpdateDisplayGameObject(sop.gameObject, false);
+            sop.GetAllSimObjectsInReceptacleTriggersByObjectID();
+
+            actionFinished(true);
+        }
+
+        public void UnhideObject(string objectId) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+                foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
+                    UpdateDisplayGameObject(containedSop.gameObject, true);
+                }
+            }
+            UpdateDisplayGameObject(sop.gameObject, true);
+            actionFinished(true);
+        }
+
+        protected void HideAll() {
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                UpdateDisplayGameObject(go, false);
+            }
+        }
+
+        public void HideAllObjects() {
+            HideAll();
+            actionFinished(true);
+        }
+
+        protected void UnhideAll() {
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                UpdateDisplayGameObject(go, true);
+            }
+            // Making sure the agents visibility capsules are not incorrectly unhidden
+            foreach (BaseFPSAgentController agent in this.agentManager.agents) {
+                agent.IsVisible = agent.IsVisible;
+            }
+        }
+
+        public void UnhideAllObjects() {
+            transparentStructureObjectsHidden = false;
+            UnhideAll();
             actionFinished(true);
         }
 

@@ -21,15 +21,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         bool transparentStructureObjectsHidden = false;
-        //face swap stuff here
+
+        // face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public int AdvancePhysicsStepCount;
         public GameObject[] TargetCircles = null;
-        //these object types can have a placeable surface mesh associated ith it
-        //this is to be used with ScreenToWorldTarget to filter out raycasts correctly
-        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>()
-        {
+
+        // these object types can have a placeable surface mesh associated ith it
+        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
             SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
             SimObjType.CounterTop, SimObjType.Shelf
         };
@@ -44,13 +44,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //forceVisible is true to activate, false to deactivate
         public void ToggleHideAndSeekObjects(bool forceVisible = false) {
-            if (physicsSceneManager.ToggleHideAndSeek(forceVisible)) {
-                physicsSceneManager.ResetObjectIdToSimObjPhysics();
-                actionFinished(true);
-            } else {
-                errorMessage = "No HideAndSeek object found";
-                actionFinished(false);
+            if (!physicsSceneManager.ToggleHideAndSeek(forceVisible)) {
+                throw new InvalidOperationException("No HideAndSeek object found");
             }
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+            actionFinished(true);
         }
 
         public Vector3 AgentHandLocation() {
@@ -105,33 +103,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //change the mass/drag/angular drag values of a simobjphys that is pickupable or moveable
         public void SetMassProperties(string objectId, float mass, float drag, float angularDrag) {
             if (objectId == null) {
-                errorMessage = "please give valid ObjectID for SetMassProperties() action";
-                actionFinished(false);
-                return;
+                throw new ArgumentNullException();
             }
 
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            foreach(SimObjPhysics sop in simObjects) {
-                if (sop.objectID == objectId) {
-                    if (sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
-                        Rigidbody rb = sop.GetComponent<Rigidbody>();
-                        rb.mass = mass;
-                        rb.drag = drag;
-                        rb.angularDrag = angularDrag;
-                        
-                        actionFinished(true);
-                        return;
-                    }
+            SimObjPhysics sop = getTargetObject(objectId: objectId, foraceAction: true);
 
-                    errorMessage = "object with ObjectID: " + objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed";
-                    actionFinished(false);
-                    return;
-                }
+            if (sop.PrimaryProperty != SimObjPrimaryProperty.Moveable && sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
+                throw new InvalidOperationException("object with ObjectID: " + objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed");
             }
 
-            errorMessage = "object with ObjectID: " + objectId + ", could not be found in this scene";
-            actionFinished(false);
-            return;
+            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            rb.mass = mass;
+            rb.drag = drag;
+            rb.angularDrag = angularDrag;
+            
+            actionFinished(true);
         }
 
         //sets whether this scene should allow objects to decay temperature to room temp over time or not
@@ -475,11 +462,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool result = true;
             
             //generate arc points in the positive y axis rotation
-            foreach(Vector3 v in corners) {
+            foreach (Vector3 v in corners) {
                 Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
 
                 //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                for(int i = 0; i < pointsOnArc.Length; i++) {
+                for (int i = 0; i < pointsOnArc.Length; i++) {
                     //debug draw spheres to show path of arc
                     // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     // Sphere.transform.position = pointsOnArc[i];
@@ -489,10 +476,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     RaycastHit hit;
 
                     //do linecasts from the first point, sequentially, to the last
-                    if(i < pointsOnArc.Length - 1) {
-                        //Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
-
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                    if (i < pointsOnArc.Length - 1) {
+                        if (Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
                             if (hit.transform.GetComponent<SimObjPhysics>()) {
                                 //if we hit the item in our hand, skip
                                 if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform) {
@@ -589,7 +574,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arcPoints;
         }
 
-
         //TODO: I dunno who was using this or for what, but it doesn't play nice with the new rotate functions so please add back functionality later
         //  public void RotateRightSmooth(ServerAction controlCommand) {
         //     if (CheckIfAgentCanTurn(90)) {
@@ -674,13 +658,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool allowTeleportOutOfHand = false,
             bool makeUnbreakable = false
         ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = $"Cannot find object with id {objectId}";
-                actionFinished(false);
-                return;
-            } 
-
-            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
             bool teleportSuccess = TeleportObject(
                 sop: sop,
                 position: position,
@@ -1012,8 +990,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void PlaceBookWallAtLocation(int objectVariation, float x, float y, float z, Vector3 rotation) {
-            if (
-                physicsSceneManager.ManipulatorBooks == null || 
+            if (physicsSceneManager.ManipulatorBooks == null || 
                 physicsSceneManager.ManipulatorBooks.Length == 0
             ) {
                 errorMessage = "Scene does not have manipulator books set.";
@@ -1177,9 +1154,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sb.Append("\n");
             }
             string mat = sb.ToString();
-#if UNITY_EDITOR
-            Debug.Log(mat);
-#endif
+            #if UNITY_EDITOR
+                Debug.Log(mat);
+            #endif
 
             targetObject.transform.position = savedObjectPosition;
             targetObject.transform.rotation = savedObjectRotation;
@@ -1191,14 +1168,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void RandomlyCreateLiftedFurniture(ServerAction action) {
             if (action.z < 0.25f) {
-                errorMessage = "z must be at least 0.25";
-                actionFinished(false);
-                return;
+                throw new ArgumentOutOfRangeException("z must be at least 0.25");
             }
             if (action.y == 0.0f) {
-                errorMessage = "y must be non-zero";
-                actionFinished(false);
-                return;
+                throw new ArgumentOutOfRangeException("y must be non-zero");
             }
             Vector3[] reachablePositions = getReachablePositions();
 
@@ -1221,11 +1194,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     agent.transform.position = oldAgentPositions[i];
                     agent.transform.rotation = oldAgentRotations[i];
                 }
-                errorMessage = "Failed to create object of type " + action.objectType + " . " + errorMessage;
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Failed to create object of type " + action.objectType + " . " + errorMessage);
             }
             objectCreated.GetComponent<Rigidbody>().isKinematic = true;
+
+            // TODO: fix moveObject to try() catch()
             bool objectFloating = moveObject(
                 objectCreated,
                 objectCreated.transform.position + new Vector3(0f, action.y, 0f)
@@ -1240,10 +1213,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     List<Vector3> candidatePositionsList = new List<Vector3>();
                     foreach (Vector3 p in reachablePositions) {
                         transform.position = p;
-                        if (isAgentCapsuleColliding(collidersToIgnoreDuringMovement)) {
-                            continue;
-                        }
-                        if (distanceToObject(objectCreated) <= action.z) {
+                        if (!isAgentCapsuleColliding(collidersToIgnoreDuringMovement) && distanceToObject(objectCreated) <= action.z) {
                             candidatePositionsList.Add(p);
                         }
                     }
@@ -1314,21 +1284,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     agent.transform.rotation = oldAgentRotations[i];
                 }
                 objectCreated.gameObject.SetActive(false);
-                errorMessage = "Could not find a place to put the object after 10 iterations. " + errorMessage;
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Could not find a place to put the object after 10 iterations. " + errorMessage);
             }
             actionFinished(true, objectCreated.ObjectID);
         }
 
-        protected bool moveObject(
+        public void CollidersObjectCollidingWith(string objectId) {
+            GameObject go = getTargetObject(objectId: objectId, forceAction: true).gameObject;
+            List<string> collidingWithNames = new List<string>();
+            foreach (Collider c in UtilityFunctions.collidersObjectCollidingWith(go)) {
+                collidingWithNames.Add(c.name);
+                #if UNITY_EDITOR
+                    Debug.Log(c.name);
+                #endif
+            }
+            actionFinished(true, collidingWithNames);
+        }
+
+        ///////////////////////////////////////////
+        //////// MOVE LIFTED OBJECT AHEAD /////////
+        ///////////////////////////////////////////
+
+        protected void moveObject(
             SimObjPhysics sop,
             Vector3 targetPosition,
             bool snapToGrid=false,
             HashSet<Transform> ignoreCollisionWithTransforms=null
         ) {
             Vector3 lastPosition = sop.transform.position;
-            //Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>(); no longer needs rb reference
 
             if (snapToGrid) {
                 float mult = 1.0f / gridSize;
@@ -1346,122 +1329,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit hit in sweepResults) {
                     if (ignoreCollisionWithTransforms == null || !ignoreCollisionWithTransforms.Contains(hit.transform)) {
-                        errorMessage = hit.transform.name + " is in the way of moving " + sop.ObjectID;
-                        return false;
+                        throw new InvalidOperationException(hit.transform.name + " is in the way of moving " + sop.ObjectID);
                     }
                 }
             }
             sop.transform.position = targetPosition;
-            return true;
         }
 
-        protected bool moveLiftedObjectHelper(string objectId, Vector3 relativeDir, float maxAgentsDistance = -1.0f) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                return false;
-            }
-            SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+        protected bool moveLiftedObjectHelper(string objectId, Vector3 relativeDir, float maxAgentsDistance, bool markActionFinished) {
+            SimObjPhysics objectToMove = getTargetObject(objectId: objectId, forceAction: true);
             Vector3 oldPosition = objectToMove.transform.position;
-            if (moveObject(objectToMove, objectToMove.transform.position + relativeDir, true)) {
-                if (maxAgentsDistance > 0.0f) {
-                    for (int i = 0; i < agentManager.agents.Count; i++) {
-                        if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(objectToMove) > maxAgentsDistance) {
-                            objectToMove.transform.position = oldPosition;
-                            errorMessage = "Would move object beyond max distance from agent " + i.ToString();
-                            return false;
-                        }
+            moveObject(objectToMove, objectToMove.transform.position + relativeDir, true);
+            if (maxAgentsDistance > 0.0f) {
+                for (int i = 0; i < agentManager.agents.Count; i++) {
+                    if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(objectToMove) > maxAgentsDistance) {
+                        objectToMove.transform.position = oldPosition;
+                        throw new InvalidOperationException("Would move object beyond max distance from agent " + i.ToString());
                     }
                 }
-                return true;
-            } else {
-                return false;
+            }
+
+            if (markActionFinished) {
+                actionFinished(true);
             }
         }
-
-        public void CollidersObjectCollidingWith(string objectId) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
-                return;
-            }
-            List<string> collidingWithNames = new List<string>();
-            GameObject go = physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject;
-            foreach (Collider c in UtilityFunctions.collidersObjectCollidingWith(go)) {
-                collidingWithNames.Add(c.name);
-#if UNITY_EDITOR
-                Debug.Log(c.name);
-#endif
-            }
-            actionFinished(true, collidingWithNames);
-        }
-        protected bool moveObjectWithTeleport(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid = false) {
-            Vector3 lastPosition = sop.transform.position;
-
-            if (snapToGrid) {
-                float mult = 1.0f / gridSize;
-                float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
-                float gridZ = Convert.ToSingle(Math.Round(targetPosition.z * mult) / mult);
-                targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
-            }
-
-            Vector3 oldPosition = sop.transform.position;
-            sop.transform.position = targetPosition;
-
-            if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
-                sop.transform.position = oldPosition;
-                errorMessage = sop.ObjectID + " is colliding after teleport.";
-                return false;
-            }
-
-            foreach (BaseFPSAgentController agent in agentManager.agents) {
-                // This check is stupid but seems necessary to appease the unity gods
-                // as unity doesn't realize the object collides with the agents in
-                // the above checks in some cases.
-                if (((PhysicsRemoteFPSAgentController)agent).isAgentCapsuleCollidingWith(sop.gameObject)) {
-                    sop.transform.position = oldPosition;
-                    errorMessage = sop.ObjectID + " is colliding with an agent after movement.";
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        ///////////////////////////////////////////
-        //////// MOVE LIFTED OBJECT AHEAD /////////
-        ///////////////////////////////////////////
 
         public void MoveLiftedObjectAhead(ServerAction action) {
-            float mag = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(
-                moveLiftedObjectHelper(
-                    action.objectId,
-                    mag * transform.forward,
-                    action.maxAgentsDistance
-                )
+            float mag = moveMagnitude == null || (float) moveMagnitude == 0 ? gridSize : (float) moveMagnitude;
+            moveLiftedObjectHelper(
+                objectId: objectId,
+                relativeDir: mag * transform.forward,
+                maxAgentsDistance: maxAgentsDistance,
+                markActionFinished: true
             );
         }
 
-        public void MoveLiftedObjectRight(ServerAction action) {
-            float mag = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(
-                moveLiftedObjectHelper(
-                    action.objectId,
-                    mag * transform.right,
-                    action.maxAgentsDistance
-                )
-            );
+        public void MoveLiftedObjectRight(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
+            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
+            moveLiftedObjectHelper(objectId: objectId, relativeDir: mag * transform.right, maxAgentsDistance: maxAgentsDistance);
         }
 
         public void MoveLiftedObjectLeft(ServerAction action) {
-            float mag = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(
-                moveLiftedObjectHelper(
-                    action.objectId,
-                    - mag * transform.right,
-                    action.maxAgentsDistance
-                )
-            );
+            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
+            moveLiftedObjectHelper(objectId: objectId, relativeDir: -mag * transform.right, maxAgentsDistance: maxAgentsDistance);
+            actionFinished(true);
         }
 
         public void MoveLiftedObjectBack(ServerAction action) {
@@ -1532,7 +1443,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////// MOVE AGENTS WITH OBJECT /////////
         ///////////////////////////////////////////
 
-        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d, bool snapToGrid=true) {
+        public void moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d, bool snapToGrid = true) {
             List<Vector3> startAgentPositions = new List<Vector3>();
             var agentMovePQ = new SimplePriorityQueue<BaseFPSAgentController>();
             foreach (BaseFPSAgentController agent in agentManager.agents) {
@@ -1554,41 +1465,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agentsAndObjColliders.Add(c);
             }
 
-            bool success = true;
-            Physics.autoSimulation = false;
-            while (agentMovePQ.Count > 0 || !objectMoved) {
-                if (agentMovePQ.Count == 0) {
-                    success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
-                    Physics.Simulate(0.04f);
-                    break;
-                } else {
-                    PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController) agentMovePQ.First;
-                    float agentPriority = -agentMovePQ.GetPriority(nextAgent);
+            void moveObjectWithTeleport(Vector3 targetPosition) {
+                Vector3 lastPosition = objectToMove.transform.position;
 
-                    if (!objectMoved && agentPriority < objectPriority) {
-                        // Debug.Log("Object");
-                        success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
-                        Physics.Simulate(0.04f);
-                        objectMoved = true;
-                    } else {
-                        // Debug.Log(nextAgent);
-                        agentMovePQ.Dequeue();
-                        success = nextAgent.moveInDirection(d, "", -1, false, false, agentsAndObjColliders);
-                        Physics.Simulate(0.04f);
+                if (snapToGrid) {
+                    float mult = 1.0f / gridSize;
+                    float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
+                    float gridZ = Convert.ToSingle(Math.Round(targetPosition.z * mult) / mult);
+                    targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
+                }
+
+                Vector3 oldPosition = objectToMove.transform.position;
+                objectToMove.transform.position = targetPosition;
+
+                if (UtilityFunctions.isObjectColliding(objectToMove.gameObject)) {
+                    objectToMove.transform.position = oldPosition;
+                    throw new InvalidOperationException(objectToMove.ObjectID + " is colliding after teleport.");
+                }
+
+                foreach (BaseFPSAgentController agent in agentManager.agents) {
+                    // This check is stupid but seems necessary to appease the unity gods
+                    // as unity doesn't realize the object collides with the agents in
+                    // the above checks in some cases.
+                    if (((PhysicsRemoteFPSAgentController)agent).isAgentCapsuleCollidingWith(objectToMove.gameObject)) {
+                        objectToMove.transform.position = oldPosition;
+                        throw new InvalidOperationException(objectToMove.ObjectID + " is colliding with an agent after movement.");
                     }
                 }
-                if (!success) {
-                    break;
-                }
             }
-            Physics.autoSimulation = true;
-            if (!success) {
+
+            try {
+                Physics.autoSimulation = false;
+                while (agentMovePQ.Count > 0 || !objectMoved) {
+                    if (agentMovePQ.Count == 0) {
+                        moveObjectWithTeleport(targetPosition: objectToMove.transform.position + d);
+                        Physics.Simulate(0.04f);
+                        break;
+                    } else {
+                        PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController) agentMovePQ.First;
+                        float agentPriority = -agentMovePQ.GetPriority(nextAgent);
+
+                        if (!objectMoved && agentPriority < objectPriority) {
+                            moveObjectWithTeleport(targetPosition: objectToMove.transform.position + d);
+                            Physics.Simulate(0.04f);
+                            objectMoved = true;
+                        } else {
+                            agentMovePQ.Dequeue();
+                            nextAgent.moveInDirection(d, "", -1, false, false, agentsAndObjColliders);
+                            Physics.Simulate(0.04f);
+                        }
+                    }
+                }
+            } catch (InvalidOperationException e) {
+                Physics.autoSimulation = true;
                 for (int i = 0; i < agentManager.agents.Count; i++) {
                     agentManager.agents[i].transform.position = startAgentPositions[i];
                 }
                 objectToMove.transform.position = startObjectPosition;
+                throw new InvalidOperationException(e.Message);
             }
-            return success;
         }
 
         public void MoveAgentsAheadWithObject(ServerAction action) {
@@ -1869,7 +1804,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
         }
 
-        public void directionalPush(float x, float y, float moveMagnitude, float pushAngle, bool forceAction = false) {
+        public void DirectionalPush(float x, float y, float moveMagnitude, float pushAngle, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
             directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
         }
@@ -2324,7 +2259,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
             Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
-            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f) {
+            if (vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f) {
                 errorMessage = "The target position is outside the viewport.";
                 return false;
             }
@@ -3801,51 +3736,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true){
+        ///////////////////////////////////////////
+        /////////////// PUT OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        // if you are holding an object, place it on a valid Receptacle 
+        // used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
+        // only checks if the object can be placed on top of the target receptacle
+        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true) {
             PlaceHeldObject(x, y, forceAction, placeStationary);
         }
 
-        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true){
+        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true) {
             PlaceHeldObject(objectId, forceAction, placeStationary);
         }
 
-        //if you are holding an object, place it on a valid Receptacle 
-        //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
-        //only checks if the object can be placed on top of the target receptacle
-        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
-            SimObjPhysics targetReceptacle = null;
-
-            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
-            {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
-                return;
-            }
-
-            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        [ObsoleteAttribute(message: "This action is deprecated. Call PutObject instead.", error: false)] 
+        public void PlaceHeldObject(float x, float y, bool forceAction = false, bool placeStationary = true, int randomSeed = 0, float z = 0.0f) {
+            // TODO: what is z?
+            SimObjPhysics targetReceptacle = getTargetObject(x: x, y: y, forceAction: forceAction);
+            putObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
         }
 
-        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f) 
-        {
-            //get the target receptacle based on the action object ID
-            SimObjPhysics targetReceptacle = null;
-
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-            
-            //if object is in the scene and visible, assign it to 'target'
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceAction)) 
-            {
-                targetReceptacle = sop;
-            }
-
-            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+        [ObsoleteAttribute(message: "This action is deprecated. Call PutObject instead.", error: false)] 
+        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f) {
+            // TODO: what is z?
+            SimObjPhysics targetReceptacle = getTargetObject(objectId: objectId, forceAction: forceAction);
+            putObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
         }
 
-        private void placeHeldObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
+        private void putObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
             if (targetReceptacle == null) {
                 throw new ArgumentNullException();
             }
@@ -4549,22 +4469,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private void HideAll() {
-            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
-                UpdateDisplayGameObject(go, false);
-            }
-        }
-
-        private void UnhideAll() {
-            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
-                UpdateDisplayGameObject(go, true);
-            }
-            // Making sure the agents visibility capsules are not incorrectly unhidden
-            foreach (BaseFPSAgentController agent in this.agentManager.agents) {
-                agent.IsVisible = agent.IsVisible;
-            }
-        }
-
         public void HideAllObjectsExcept(ServerAction action) {
             foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
                 UpdateDisplayGameObject(go, false);
@@ -4655,96 +4559,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void GetAwayFromObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                int k = 0;
-                while (isAgentCapsuleCollidingWith(sop.gameObject) && k < 20) {
-                    k++;
-                    Vector3[] dirs = {
-                        transform.forward, -transform.forward, transform.right, -transform.right
-                    };
-                    dirs.Shuffle_(action.randomSeed);
+        public void GetAwayFromObject(string objectId, int randomSeed = 0) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            int k = 0;
+            while (isAgentCapsuleCollidingWith(sop.gameObject) && k < 20) {
+                k++;
+                Vector3[] dirs = {
+                    transform.forward, -transform.forward, transform.right, -transform.right
+                };
+                dirs.Shuffle_(randomSeed);
 
-                    sop.gameObject.SetActive(false);
-                    moveInDirection(dirs[0] * gridSize);
-                    sop.gameObject.SetActive(true);
-                }
-                if (isAgentCapsuleCollidingWith(sop.gameObject)) {
-                    errorMessage = "Could not get away from " + sop.ObjectID;
-                    actionFinished(false);
-                    return;
-                }
-                actionFinished(true);
+                sop.gameObject.SetActive(false);
+                moveInDirection(dirs[0] * gridSize);
+                sop.gameObject.SetActive(true);
             }
-            else {
-                errorMessage = "No object with given id could be found to disable collisions with.";
-                actionFinished(false);
+            if (isAgentCapsuleCollidingWith(sop.gameObject)) {
+                throw new InvalidOperationException("Could not get away from " + sop.ObjectID);
             }
-        }
-
-
-        public void DisableObjectCollisionWithAgent(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
-                    foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
-                        Physics.IgnoreCollision(c0, c1);
-                    }
-                }
-                foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
-                    collidersToIgnoreDuringMovement.Add(c1);
-                }
-                actionFinished(true);
-            }
-            else {
-                errorMessage = "No object with given id could be found to disable collisions with.";
-                actionFinished(false);
-            }
-        }
-
-        public void HideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
-                    foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
-                        UpdateDisplayGameObject(containedSop.gameObject, false);
-                    }
-                }
-                UpdateDisplayGameObject(sop.gameObject, false);
-                sop.GetAllSimObjectsInReceptacleTriggersByObjectID();
-
-                actionFinished(true);
-            } else {
-                errorMessage = "No object with given id could be found to hide.";
-                actionFinished(false);
-            }
-        }
-
-        public void UnhideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
-                    foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
-                        UpdateDisplayGameObject(containedSop.gameObject, true);
-                    }
-                }
-                UpdateDisplayGameObject(sop.gameObject, true);
-                actionFinished(true);
-            } else {
-                errorMessage = "No object with given id could be found to unhide.";
-                actionFinished(false);
-            }
-        }
-
-        public void HideAllObjects(ServerAction action) {
-            HideAll();
             actionFinished(true);
         }
 
-        public void UnhideAllObjects(ServerAction action) {
-            transparentStructureObjectsHidden = false;
-            UnhideAll();
+        public void DisableObjectCollisionWithAgent(string objectId) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
+                foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
+            }
+            foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
+                collidersToIgnoreDuringMovement.Add(c1);
+            }
             actionFinished(true);
         }
 

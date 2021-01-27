@@ -656,9 +656,9 @@ public static class ReceptacleRestrictions
 		{SimObjType.TableTopDecor, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
 
-        //TARGET CIRCLE - for Moveable test and use with SpawnTargetCircles
-        {SimObjType.TargetCircle, new List<SimObjType>()
-        {SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Floor}},
+		//TARGET CIRCLE - for Moveable test and use with SpawnTargetCircles
+		{SimObjType.TargetCircle, new List<SimObjType>()
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Floor}},
 
 	};
 

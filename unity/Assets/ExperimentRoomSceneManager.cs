@@ -39,16 +39,9 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     Vector3 initialSpawnPosition = new Vector3(0, 100, 0);
 
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         agentManager = gameObject.GetComponent<AgentManager>();
         sceneManager = gameObject.GetComponent<PhysicsSceneManager>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     #if UNITY_EDITOR
