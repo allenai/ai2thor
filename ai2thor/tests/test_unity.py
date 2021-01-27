@@ -591,3 +591,51 @@ def test_get_interactable_poses(controller):
     assert abs(pose['rotation'] - event.metadata['agent']['rotation']['y']) < 1e-3, "Agent rotation off!"
     assert abs(pose['horizon'] - event.metadata['agent']['cameraHorizon']) < 1e-3, "Agent horizon off!"
     assert pose['standing'] == event.metadata['agent']['isStanding'], "Agent's isStanding is off!"
+
+    # potato should be inside of the fridge (and, thus, non interactable)
+    potatoId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Potato')
+    event = controller.step('GetInteractablePoses', objectId=potatoId)
+    assert len(event.metadata['actionReturn']) == 0, "Potato is inside of fridge, and thus, shouldn't be interactable"
+    assert event.metadata['lastActionFinished'], "GetInteractablePoses with Potato shouldn't have failed!"
+
+    # assertion for maxPoses
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxPoses=50)
+    assert len(event.metadata['actionReturn']) == 50, "maxPoses should be capped at 50!"
+
+    # assert only checking certain horizons and rotations is working correctly
+    horizons = [0, 30]
+    rotations = [0, 45]
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
+    for pose in event.metadata['actionReturn']:
+        for horizon in horizons:
+            if abs(pose['horizon'] - horizon) < 1e-3:
+                break
+        else:
+            raise Exception("Not expecting horizon: " + pose['horizon'])
+
+        for rotation in rotations:
+            if abs(pose['rotation'] - rotation) < 1e-3:
+                break
+        else:
+            raise Exception("Not expecting rotation: " + pose['rotation'])
+
+    # assert only checking certain horizons and rotations is working correctly
+    horizons = [0, 30]
+    rotations = [0, 45]
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
+    for pose in event.metadata['actionReturn']:
+        for horizon in horizons:
+            if abs(pose['horizon'] - horizon) < 1e-3:
+                break
+        else:
+            raise Exception("Not expecting horizon: " + pose['horizon'])
+
+        for rotation in rotations:
+            if abs(pose['rotation'] - rotation) < 1e-3:
+                break
+        else:
+            raise Exception("Not expecting rotation: " + pose['rotation'])
+    
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
+    assert len(event.metadata['actionReturn']) == 1241, 'GetInteractablePoses with large maxDistance is off!'
