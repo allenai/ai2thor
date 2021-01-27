@@ -1757,8 +1757,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 agentForward = transform.forward;
             float pushAngleInRadians = pushAngle * Mathf.PI / -180; //using -180 so positive PushAngle values go clockwise
 
-            Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
-            agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
+            Vector3 direction = new Vector3(
+                x: agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians),
+                y: 0,
+                z: agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians)
+            );
 
             ServerAction pushAction = new ServerAction();
             pushAction.x = direction.x;
@@ -1774,6 +1777,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // actionFinished(true);
         }
 
+        // TODO: use markActionFInished
         public void DirectionalPush(string objectId, float moveMagnitude, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
             directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
@@ -1784,105 +1788,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
         }
 
-        public void ApplyForceObject(ServerAction action) {
-            SimObjPhysics target = null;
+        ///////////////////////////////////////////
+        ////// (DEPRECATED) ApplyForceObject //////
+        ///////////////////////////////////////////
 
-            if (action.forceAction) {
-                action.forceVisible = true;
+        [ObsoleteAttribute(message: "This action is deprecated. Call DirectionalPush, PushObject, or PullObject instead.", error: false)]
+        public void ApplyForceObject(string objectId, float moveMagnitude, int z, bool forceAction = false) {
+            switch (z) {
+                case 1:
+                    PushObject(objectId: objectId, moveMagnitude: moveMagnitude, forceAction: forceAction);
+                    break;
+                case -1:
+                    PushObject(objectId: objectId, moveMagnitude: moveMagnitude, forceAction: forceAction);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("z must be in {1, -1}. Also, this is obsolete! Use PushObject, PullObject, or DirectionalPush");
+                    break;
             }
+        }
 
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
+        [ObsoleteAttribute(message: "This action is deprecated. Call DirectionalPush, PushObject, or PullObject instead.", error: false)]
+        public void ApplyForceObject(float x, float y, float moveMagnitude, int z, bool forceAction = false) {
+            switch (z) {
+                case 1:
+                    PushObject(x: x, y: y, moveMagnitude: moveMagnitude, forceAction: forceAction);
+                    break;
+                case -1:
+                    PushObject(x: x, y: y, moveMagnitude: moveMagnitude, forceAction: forceAction);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("z must be in {1, -1}. Also, this is obsolete! Use PushObject, PullObject, or DirectionalPush");
+                    break;
             }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         target = sop;
-            //     }
-            // }
-            //print(target.objectID);
-            //print(target.isInteractable);
-
-            if (target == null) {
-                errorMessage = "No valid target!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            if (!target.GetComponent<SimObjPhysics>()) {
-                errorMessage = "Target must be SimObjPhysics!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            bool canbepushed = false;
-
-            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-                canbepushed = true;
-
-            if (!canbepushed) {
-                errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
-                actionFinished(false);
-                return;
-            }
-
-            if (!action.forceAction && !target.isInteractable) {
-                print(target.isInteractable);
-                errorMessage = "Target:" + target.objectID +  "is not interactable and is probably occluded by something!";
-                actionFinished(false);
-                return;
-            }
-
-            target.GetComponent<Rigidbody>().isKinematic = false;
-
-            ServerAction apply = new ServerAction();
-            apply.moveMagnitude = action.moveMagnitude;
-
-            Vector3 dir = Vector3.zero;
-
-            if (action.z == 1) {
-                dir = gameObject.transform.forward;
-            }
-
-            if (action.z == -1) {
-                dir = -gameObject.transform.forward;
-            }
-            //Vector3 dir = gameObject.transform.forward;
-            //print(dir);
-            apply.x = dir.x;
-            apply.y = dir.y;
-            apply.z = dir.z;
-
-            sopApplyForce(apply, target);
-            //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
-            //actionFinished(true);
         }
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
