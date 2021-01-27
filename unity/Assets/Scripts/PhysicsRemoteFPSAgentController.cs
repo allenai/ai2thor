@@ -6975,13 +6975,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float[] rotations = null,
             float[] horizons = null,
             bool[] standings = null,
-            float? maxDistance = null
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
         ) {
             getInteractablePoses(
                 objectId: objectId,
                 markActionFinished: true,
                 positions: positions, rotations: rotations, horizons: horizons, standings: standings,
-                maxDistance: maxDistance
+                maxDistance: maxDistance,
+                maxPoses: maxPoses
             );
         }
 
