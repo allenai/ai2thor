@@ -819,38 +819,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void TeleportObjectToFloor(ServerAction action) {
-            SimObjPhysics sop = getTargetObject(objectId: action.objectId);
+        public void TeleportObjectToFloor(string objectId, float x, float y, float z, Vector3 rotation) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId);
             if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
-                errorMessage = "Cannot teleport object in hand.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Cannot teleport object in hand.");
             }
+
             Bounds objBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     objBounds.Encapsulate(r.bounds);
                 }
             }
+
             if (objBounds.min.x == float.PositiveInfinity) {
-                errorMessage = "Could not get bounds of " + action.objectId + ".";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException($"Could not get bounds of {objectId}.");
             }
-            float y = getFloorY(action.x, action.z);
-            if (errorMessage != "") {
-                actionFinished(false);
-                return;
-            }
-            sop.transform.position = new Vector3(
-                action.x,
-                objBounds.extents.y + y + 0.1f,
-                action.z
-            );
-            sop.transform.rotation = Quaternion.Euler(action.rotation);
+
+            float y = getFloorY(x, z);
+            sop.transform.position = new Vector3(x, objBounds.extents.y + y + 0.1f, z);
+            sop.transform.rotation = Quaternion.Euler(rotation);
             actionFinished(true);
         }
 
@@ -1005,17 +996,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float yoffset = 0.19f;
 
-            //uint which = (uint) Convert.ToUInt32(action.objectVariation);
-            // List<bool> whichIncluded = new List<bool>();
             for (int i = 0; i < 5; i++) {
                 if (((objectVariation >> i) % 2) == 1) {
                     physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(true);
                 } else {
                     physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(false);
                 }
-                // whichIncluded.Add(
-                //     ((action.objectVariation >> i) % 2) == 1
-                // );
             }
 
             GameObject allBooksObject = physicsSceneManager.ManipulatorBooks[0].transform.parent.gameObject;
@@ -1309,7 +1295,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<Transform> ignoreCollisionWithTransforms=null
         ) {
             Vector3 lastPosition = sop.transform.position;
-
             if (snapToGrid) {
                 float mult = 1.0f / gridSize;
                 float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
@@ -1756,28 +1741,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new InvalidOperationException("Please use Throw for an item in the Agent's Hand");
             }
 
-            // the direction vector to push the target object defined by pushAngle 
-            // degrees clockwise from the agent's forward.
-            if (action.pushAngle <= 0 || action.pushAngle >= 360) {
-                errorMessage = "please give a PushAngle between 0 and 360.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
             if (!canBePushed(target)) {
                 throw new InvalidOperationException("Target Primary Property type incompatible with push/pull");
             }
 
             if (!forceAction && !target.isInteractable) {
-                errorMessage = "Target is not interactable and is probably occluded by something!";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Target is not interactable and is probably occluded by something!");
             }
+
+            // the direction vector to push the target object defined by pushAngle 
+            // degrees clockwise from the agent's forward.
+            pushAngle = Mathf.Abs(pushAngle % 360);
 
             //find the Direction to push the object based on PushAngle
             Vector3 agentForward = transform.forward;
-            float pushAngleInRadians = pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+            float pushAngleInRadians = pushAngle * Mathf.PI / -180; //using -180 so positive PushAngle values go clockwise
 
             Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
             agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
@@ -5232,8 +5210,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
             Bounds objectBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
@@ -5508,8 +5486,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             foreach (Vector3 p in positions) {
                 b.Encapsulate(p);
@@ -5757,8 +5735,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             sop.transform.rotation = Quaternion.identity;
             Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
@@ -5823,22 +5801,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RandomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation = 0) {
             SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(objectType, objectVariation);
             if (!objectCreated) {
-                errorMessage = "Failed to randomly create object. " + errorMessage;
-                actionFinished(false);
-            } else {
-                errorMessage = "";
-                actionFinished(true, objectCreated.ObjectID);
+                throw new InvalidOperationException("Failed to randomly create object. " + errorMessage);
             }
+            actionFinished(true, objectCreated.ObjectID);
         }
 
         public void GetPositionsObjectVisibleFrom(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object " + action.objectId + " does not seem to exist.";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            SimObjPhysics sop = getTargetObject(objectId: action.objectId, forceAction: true);
 
             Vector3 savedPosition = transform.position;
             Quaternion savedRotation = transform.rotation;
@@ -5862,10 +5831,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         transform.position = position;
                         transform.rotation = Quaternion.Euler(new Vector3(0f, r, 0f));
                         if (objectIsCurrentlyVisible(sop, maxVisibleDistance)) {
-#if UNITY_EDITOR
-                            Debug.Log(position);
-                            Debug.Log(r);
-#endif
+                            #if UNITY_EDITOR
+                                Debug.Log(position);
+                                Debug.Log(r);
+                            #endif
                             goodPositions.Add(position);
                             goodRotations.Add(r);
                         }
@@ -5885,9 +5854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void WorldToViewportPoint(Vector3 position) {
             Vector3 point = m_Camera.WorldToViewportPoint(position);
             if (point.x < 0f || point.x > 1.0f || point.y < 0f || point.y > 1.0f) {
-                errorMessage = "Point not in viewport.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Point not in viewport.");
             }
             
             // Translate to coordinates from top left of screen
@@ -5921,7 +5888,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             #if UNITY_EDITOR
-            Debug.Log(percent);
+                Debug.Log(percent);
             #endif
             return percent;
         }
@@ -6161,10 +6128,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // @pOpen is the probability of opening an openable object.
         // @randOpenness specifies if the openness for each opened object should be random, between 0% : 100%, or always 100%.
         public void RandomlyOpenCloseObjects(
-                int? randomSeed = null,
-                bool simplifyPhysics = false,
-                float pOpen = 0.5f,
-                bool randOpenness = true
+            int? randomSeed = null,
+            bool simplifyPhysics = false,
+            float pOpen = 0.5f,
+            bool randOpenness = true
         ) {
             System.Random rnd;
             System.Random rndOpenness;
@@ -6195,37 +6162,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetApproximateVolume(string objectId) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                Quaternion oldRotation = so.transform.rotation;
-                so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
-                bool hasActiveRenderer = false;
-                foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
-                    if (r.enabled) {
-                        hasActiveRenderer = true;
-                        objBounds.Encapsulate(r.bounds);
-                    }
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            Quaternion oldRotation = sop.transform.rotation;
+            sop.transform.rotation = Quaternion.identity;
+            Bounds objBounds = new Bounds(
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
+            bool hasActiveRenderer = false;
+            foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    hasActiveRenderer = true;
+                    objBounds.Encapsulate(r.bounds);
                 }
-                if (!hasActiveRenderer) {
-                    errorMessage = "Cannot get bounds for " + objectId + " as it has no attached (and active) renderers.";
-                    actionFinished(false);
-                    return;
-                }
-                so.transform.rotation = oldRotation;
-                Vector3 diffs = objBounds.max - objBounds.min;
-                actionFloatReturn = diffs.x * diffs.y * diffs.z;
-#if UNITY_EDITOR
-                Debug.Log("Volume is " + actionFloatReturn);
-#endif
-                actionFinished(true);
-            } else {
-                errorMessage = "Invalid objectId " + objectId;
-                actionFinished(false);
             }
+            if (!hasActiveRenderer) {
+                throw 
+                errorMessage = "Cannot get bounds for " + objectId + " as it has no attached (and active) renderers.";
+                actionFinished(false);
+                return;
+            }
+            sop.transform.rotation = oldRotation;
+            Vector3 diffs = objBounds.max - objBounds.min;
+            actionFloatReturn = diffs.x * diffs.y * diffs.z;
+            #if UNITY_EDITOR
+                Debug.Log("Volume is " + actionFloatReturn);
+            #endif
+            actionFinished(true);
         }
 
         public void GetVolumeOfAllObjects() {
@@ -6235,8 +6198,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
                 Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                    center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                    size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
                 );
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
@@ -6257,61 +6220,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionStringsReturn = objectIds.ToArray();
             actionFloatsReturn = volumes.ToArray();
             actionFinished(true);
-        }
-
-        protected void changeObjectBlendMode(SimObjPhysics so, StandardShaderUtils.BlendMode bm, float alpha) {
-            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
-            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
-                if (!childSo.ObjectID.StartsWith("Drawer") &&
-                    !childSo.ObjectID.Split('|') [0].EndsWith("Door") &&
-                    so.ObjectID != childSo.ObjectID) {
-                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
-                        renderersToSkip.Add(mr);
-                    }
-                }
-            }
-
-            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                if (!renderersToSkip.Contains(r)) {
-                    Material[] newMaterials = new Material[r.materials.Length];
-                    for (int i = 0; i < newMaterials.Length; i++) {
-                        newMaterials[i] = new Material(r.materials[i]);
-                        StandardShaderUtils.ChangeRenderMode(newMaterials[i], bm);
-                        Color color = newMaterials[i].color;
-                        color.a = alpha;
-                        newMaterials[i].color = color;
-                    }
-                    r.materials = newMaterials;
-                }
-            }
-        }
-
-        public void MakeObjectTransparent(string objectId) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                changeObjectBlendMode(
-                    physicsSceneManager.ObjectIdToSimObjPhysics[objectId],
-                    StandardShaderUtils.BlendMode.Fade,
-                    0.4f
-                );
-                actionFinished(true);
-            } else {
-                errorMessage = "Invalid objectId " + objectId;
-                actionFinished(false);
-            }
-        }
-
-        public void MakeObjectOpaque(string objectId) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                changeObjectBlendMode(
-                    physicsSceneManager.ObjectIdToSimObjPhysics[objectId],
-                    StandardShaderUtils.BlendMode.Opaque,
-                    1.0f
-                );
-                actionFinished(true);
-            } else {
-                errorMessage = "Invalid objectId " + objectId;
-                actionFinished(false);
-            }
         }
 
         public void UnmaskWalkable() {
@@ -6659,8 +6567,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
             Bounds objBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                 objBounds.Encapsulate(r.bounds);
@@ -6877,8 +6785,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     offset += 1.0f;
 
                     Bounds objBounds = new Bounds(
-                        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                        center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                        size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
                     );
                     foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                         objBounds.Encapsulate(r.bounds);

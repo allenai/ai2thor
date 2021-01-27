@@ -1052,6 +1052,56 @@ namespace UnityStandardAssets.Characters.FirstPerson
             RemoveFromScene(objectIds: objectIds);
         }
 
+        ///////////////////////////////////////////
+        ////////// OBJECT TRANSPARENCY ////////////
+        ///////////////////////////////////////////
+        
+        protected void changeObjectBlendMode(SimObjPhysics so, StandardShaderUtils.BlendMode bm, float alpha) {
+            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
+            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
+                if (!childSo.ObjectID.StartsWith("Drawer") &&
+                    !childSo.ObjectID.Split('|') [0].EndsWith("Door") &&
+                    so.ObjectID != childSo.ObjectID
+                ) {
+                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
+                        renderersToSkip.Add(mr);
+                    }
+                }
+            }
+
+            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                if (!renderersToSkip.Contains(r)) {
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = new Material(r.materials[i]);
+                        StandardShaderUtils.ChangeRenderMode(newMaterials[i], bm);
+                        Color color = newMaterials[i].color;
+                        color.a = alpha;
+                        newMaterials[i].color = color;
+                    }
+                    r.materials = newMaterials;
+                }
+            }
+        }
+
+        public void MakeObjectTransparent(string objectId, float alpha = 0.4f) {
+            changeObjectBlendMode(
+                so: getTargetObject(objectId: objectId, forceAction: true),
+                bm: StandardShaderUtils.BlendMode.Fade,
+                alpha: alpha
+            );
+            actionFinished(true);
+        }
+
+        public void MakeObjectOpaque(string objectId) {
+            changeObjectBlendMode(
+                so: getTargetObject(objectId: objectId, forceAction: true),
+                bm: StandardShaderUtils.BlendMode.Opaque,
+                alpha: 1
+            );
+            actionFinished(true);
+        }
+
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
