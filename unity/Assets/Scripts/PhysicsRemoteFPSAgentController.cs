@@ -6999,11 +6999,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 horizons: horizons.ToArray()
             );
 
-            if (interactablePoses == null) {
-                actionFinished(false);
-                return;
-            }
-
             // for backwards compatibility, PositionsFromWhichItemIsInteractable returns
             // Dictionary<string, float> instead of List<Dictionary<string, object>>,
             // where the latter is cleaner in python.
@@ -7031,7 +7026,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
                 objectId: objectId,
                 positions: positions,
-                maxDistance: 1e5f,                                                // super large number for maximum distance!
+                maxDistance: 1e5f,  // super large number for maximum distance!
                 horizons: new float[] { m_Camera.transform.localEulerAngles.x },  // don't care about every horizon here, just horizon={current horizon}
                 markActionFinished: false,
                 maxPoses: maxPoses
