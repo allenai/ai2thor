@@ -6795,7 +6795,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int maxPoses = int.MaxValue  // works like infinity
         ) {
             if (360 % rotateStepDegrees != 0 && rotations != null) {
-                throw new InvalidOperationException("360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.");
+                throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
             }
 
             if (maxPoses <= 0) {
