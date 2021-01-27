@@ -321,16 +321,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //checks if a float is a multiple of 0.1f
-        private bool CheckIfFloatIsMultipleOfOneTenth(float f)
-        {
-            if(((decimal)f % 0.1M == 0) == false)
-            return false;
-
-            else 
-            return true;
+        private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
+            return (decimal)f % 0.1M == 0;
         }
 
-        public override void LookDown(ServerAction action) 
+        public override void LookDown(ServerAction action)
         {
             if(action.degrees < 0)
             {
@@ -1807,137 +1802,82 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         #endif
 
-        public void PushObject(ServerAction action) {
-            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
-                errorMessage = "Please use Throw for an item in the Agent's Hand";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
+        ///////////////////////////////////////////
+        ////////////// PUSH OBJECT ////////////////
+        ///////////////////////////////////////////
 
-            action.z = 1;
-
-            // if (action.moveMagnitude == 0f) {
-            //     action.moveMagnitude = 200f;
-            // }
-
-            ApplyForceObject(action);
+        // syntactic sugar for DirectionalPush(pushAngle: 0)
+        public void PushObject(string objectId, float moveMagnitude, bool forceAction = false) {
+            DirectionalPush(objectId: objectId, moveMagnitude: moveMagnitude, pushAngle: 0, forceAction: forceAction);
         }
 
-        public void PullObject(ServerAction action) {
-            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
-                errorMessage = "Please use Throw for an item in the Agent's Hand";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            action.z = -1;
-
-            // if (action.moveMagnitude == 0f) {
-            //     action.moveMagnitude = 200f;
-            // }
-
-            ApplyForceObject(action);
+        // syntactic sugar for DirectionalPush(pushAngle: 0)
+        public void PushObject(float x, float y, float moveMagnitude, bool forceAction = false) {
+            DirectionalPush(x: x, y: y, moveMagnitude: moveMagnitude, pushAngle: 0, forceAction: forceAction);
         }
 
-        //pass in a magnitude and an angle offset to push an object relative to agent forward
-        public void DirectionalPush(ServerAction action)
-        {
-            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
-                errorMessage = "Please use Throw for an item in the Agent's Hand";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+        ///////////////////////////////////////////
+        ////////////// PULL OBJECT ////////////////
+        ///////////////////////////////////////////
+
+        // syntactic sugar for DirectionalPush(pushAngle: 180)
+        public void PullObject(string objectId, float moveMagnitude, bool forceAction = false) {
+            DirectionalPush(objectId: objectId, moveMagnitude: moveMagnitude, pushAngle: 180, forceAction: forceAction);
+        }
+
+        // syntactic sugar for DirectionalPush(pushAngle: 180)
+        public void PullObject(float x, float y, float moveMagnitude, bool forceAction = false) {
+            DirectionalPush(x: x, y: y, moveMagnitude: moveMagnitude, pushAngle: 180, forceAction: forceAction);
+        }
+
+        ///////////////////////////////////////////
+        /////////// DIRECTIONAL PUSH //////////////
+        ///////////////////////////////////////////
+
+        private bool canBePushed(SimObjPhysics target) {
+            return (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                    target.PrimaryProperty == SimObjPrimaryProperty.Moveable
+            );
+        }
+
+        // pass in a magnitude and an angle offset to push an object relative to agent forward
+        private void directionalPush(
+            SimObjPhysics target,
+            float moveMagnitude,
+            float pushAngle,
+            bool markActionFinished,
+            bool forceAction
+        ) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //the direction vecctor to push the target object defined by action.PushAngle 
-            //degrees clockwise from the agent's forward, the PushAngle must be less than 360
-            if(action.pushAngle <= 0 || action.pushAngle >= 360)
-            {
+            if (ItemInHand != null && target.ObjectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+                throw new InvalidOperationException("Please use Throw for an item in the Agent's Hand");
+            }
+
+            // the direction vector to push the target object defined by pushAngle 
+            // degrees clockwise from the agent's forward.
+            if (action.pushAngle <= 0 || action.pushAngle >= 360) {
                 errorMessage = "please give a PushAngle between 0 and 360.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
-            SimObjPhysics target = null;
-
-            if (action.forceAction) {
-                action.forceVisible = true;
+            if (!canBePushed(target)) {
+                throw new InvalidOperationException("Target Primary Property type incompatible with push/pull");
             }
 
-            if(action.objectId == null)
-            {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
-                {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         target = sop;
-            //     }
-            // }
-
-            if (target == null) {
-                errorMessage = "No valid target!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            //print(target.name);
-
-            if (!target.GetComponent<SimObjPhysics>()) {
-                errorMessage = "Target must be SimObjPhysics!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            bool canbepushed = false;
-
-            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-                canbepushed = true;
-
-            if (!canbepushed) {
-                errorMessage = "Target Primary Property type incompatible with push/pull";
-                actionFinished(false);
-                return;
-            }
-
-            if (!action.forceAction && !target.isInteractable) {
+            if (!forceAction && !target.isInteractable) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
             }
 
-            //find the Direction to push the object basec on action.PushAngle
+            //find the Direction to push the object based on PushAngle
             Vector3 agentForward = transform.forward;
-            float pushAngleInRadians = action.pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+            float pushAngleInRadians = pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
 
             Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
             agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
@@ -1954,6 +1894,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
             // actionFinished(true);
+        }
+
+        public void DirectionalPush(string objectId, float moveMagnitude, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
+        }
+
+        public void directionalPush(float x, float y, float moveMagnitude, float pushAngle, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
         }
 
         public void ApplyForceObject(ServerAction action) {
@@ -3974,66 +3924,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void SetObjectPoses(ServerAction action)
-        {
+        public void SetObjectPoses(ServerAction action) {
             //make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if(action.objectPoses == null || action.objectPoses[0] == null)
-            {
+            if (action.objectPoses == null || action.objectPoses[0] == null) {
                 errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
                 actionFinished(false);
                 return;
             }
+
+            // SetObjectPoses is performed in a coroutine otherwise if
+            // a frame does not pass prior to this AND the imageSynthesis
+            // is enabled for say depth or normals, Unity will crash on 
+            // a subsequent scene reset()
+            IEnumerator setObjectPoses(ObjectPose[] objectPoses){
+                yield return new WaitForEndOfFrame();
+                bool success = physicsSceneManager.SetObjectPoses(objectPoses);
+                actionFinished(success);
+            }
+
             StartCoroutine(setObjectPoses(action.objectPoses));
         }
 
-        // SetObjectPoses is performed in a coroutine otherwise if
-        // a frame does not pass prior to this AND the imageSynthesis
-        // is enabled for say depth or normals, Unity will crash on 
-        // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses){
-            yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses);
-            actionFinished(success);
-        }
 
-        //set all objects objects of a given type to a specific state, if that object has that state
-        //ie: All objects of type Bowl that have the state property breakable, set isBroken = true
-        public void SetObjectStates(ServerAction action)
-        {
-            if(action.SetObjectStates == null)
-            {
-                errorMessage = "action.SetObjectStates is null or not initialized!";
-                actionFinished(false);
-                return;
+        // set all objects objects of a given type to a specific state, if that object has that state
+        // i.e.,: All objects of type Bowl that have the state property breakable, set isBroken = true
+        public void SetObjectStates(var SetObjectStates) {
+            if (SetObjectStates == null || SetObjectStates.objectType == null || SetObjectStates.stateChange == null || SetObjectStates.stateChange == null) {
+                throw new ArgumentNullException();
             }
 
-            //if both the objectType and stateChange members are null, params not set correctly
-            if(action.SetObjectStates.objectType == null && action.SetObjectStates.stateChange == null)
-            {
-                errorMessage = "action.SetObjectStates has objectType and stateChange strings null. Please pass in valid strings.";
-                actionFinished(false);
-                return;
-            }
-
-            //if you pass in an ObjectType, you must also pass in which stateChange of that object you are trying to Set
-            if(action.SetObjectStates.objectType != null && action.SetObjectStates.stateChange == null)
-            {
-                errorMessage = "action.SetObjectStates is missing stateChange string. If setting objects by objectType, Please specify both an objectType and a stateChange compatible with that objectType to set.";
-                actionFinished(false);
-                return;
-            }
-            
             //call a coroutine to return actionFinished for all objects that have animation time
-            if(action.SetObjectStates.stateChange == "toggleable" || action.SetObjectStates.stateChange == "openable")
-            {
-                StartCoroutine(SetStateOfAnimatedObjects(action.SetObjectStates));
-            }
-
-            //these object change states instantly, so no need for coroutine
-            //the function called will handle the actionFinished() return;
-            else
-            {
-                SetStateOfObjectsThatDontHaveAnimationTime(action.SetObjectStates);
+            if (action.SetObjectStates.stateChange == "toggleable" || action.SetObjectStates.stateChange == "openable") {
+                StartCoroutine(SetStateOfAnimatedObjects(SetObjectStates));
+            } else {
+                // these object change states instantly, so no need for coroutine
+                // the function called will handle the actionFinished() return;
+                SetStateOfObjectsThatDontHaveAnimationTime(SetObjectStates);
             }
         }
 
@@ -4124,253 +4050,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
     
-        //for setting object states that don't have an animation time, which means they don't require coroutines yeah!
-        protected void SetStateOfObjectsThatDontHaveAnimationTime(SetObjectStates SetObjectStates)
-        {   
+        // for setting object states that don't have an animation time, which means they don't require coroutines yeah!
+        protected void SetStateOfObjectsThatDontHaveAnimationTime(
+            string stateChange,
+            string objectType,
+            string fillLiquid = "water"
+        ) {   
+            if (stateChange == null || objectType == null) {
+                throw new ArgumentNullException();
+            }
 
-            //ok what state are we lookin at here
-            switch(SetObjectStates.stateChange)
-            {
-                case "breakable":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
-                        {
-                            //only break objects that are not already broken
-                            Break b = sop.GetComponent<Break>();
-
-                            //only actually do stuff is the object is not broken and we are trying to break it
-                            if(!b.isBroken() && SetObjectStates.isBroken)
-                            {
-
-                                //oh we have a specific object type?
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    {
-                                        b.BreakObject(null);
-                                    }
-
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                b.BreakObject(null);
-                            }
+            foreach(SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), objectType)) {
+                    try {
+                        switch (stateChange) {
+                            case "canBeUsedUp":
+                                useObjectUp(target: sop, markActionFinished: false);
+                                break;
+                            case "breakable":
+                                breakObject(target: sop, forceAction: false, markActionFinished: false);
+                                break;
+                            case "cookable":
+                                cookObject(target: sop, forceAction: false, markActionFinished: false);
+                                break;
+                            case "sliceable":
+                                sliceObject(target: sop, markActionFinished: false);
+                                break;
+                            case "canFillWithLiquid":
+                                // TODO: toggle it.
+                                fillObjectWithLiquid(target: sop, fillLiquid: fillLiquid, markActionFinished: false);
+                                break;
+                            case "dirtyable":
+                                // TODO: toggle it.
+                                dirtyObject(target: sop, markActionFinished: false);
+                                break;
+                            case "default":
+                                throw new ArgumentException("Invald stateChange!");
                         }
-                    }
-
-                    break;
-                }
-
-                case "canFillWithLiquid":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        //only proceed if the sop is fillable
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
-                        {
-                            Fill fil = sop.GetComponent<Fill>();
-
-                            //object is empty and trying to fill it
-                            if(!fil.IsFilled() && SetObjectStates.isFilledWithLiquid)
-                            {
-                                //oh, we have a specific object type?
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    //we found an object of the type we want to set
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    fil.FillObject("water");
-
-                                    //doesn't match objectType, continue to next object
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                {
-                                    fil.FillObject("water");
-                                }
-                            }
-
-                            //object is full of some liquid, and trying to empty it
-                            else if(fil.IsFilled() && !SetObjectStates.isFilledWithLiquid)
-                            {
-                                //oh, we have a specific object type?
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    //we found an object of the type we want to set
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    fil.EmptyObject();
-
-                                    //doesn't match objectType, continue to next object
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                {
-                                    fil.EmptyObject();
-                                }
-                            }
-                        }
-                    }
-
-                    break;
-                }
-
-                case "dirtyable":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        //only proceed if the sop is dirtyable
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
-                        {
-                            Dirty deedsDoneDirtCheap = sop.GetComponent<Dirty>();
-
-                            //object is clean and we are trying to dirty it
-                            if(!deedsDoneDirtCheap.IsDirty() && SetObjectStates.isDirty)
-                            {
-                                //oh, we have a specific object type?
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    //we found an object of the type we want to set
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
-
-                                    //doesn't match objectType, continue to next object
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                {
-                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
-                                }
-                            }
-
-                            //object is dirty and we are trying to clean it
-                            else if(deedsDoneDirtCheap.IsDirty() && !SetObjectStates.isDirty)
-                            {
-                                //oh, we have a specific object type?
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    //we found an object of the type we want to set
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
-
-                                    //doesn't match objectType, continue to next object
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                {
-                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
-                                }
-                            }
-                        }
-                    }
-
-                    break;
-                }
-
-                //one way
-                case "cookable":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
-                        {
-                            CookObject c = sop.GetComponent<CookObject>();
-
-                            //only do stuff if object is not cooked and we are trying to cook it
-                            if(!c.IsCooked() && SetObjectStates.isCooked)
-                            {
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    {
-                                        c.Cook();
-                                    }
-
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                c.Cook();
-                            }
-                        }
-                    }
-
-                    break;
-                }
-
-                //one way
-                case "sliceable":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
-                        {
-                            SliceObject s = sop.GetComponent<SliceObject>();
-
-                            //only do stuff if object is unsliced and we are trying to slice it
-                            if(!s.IsSliced() && SetObjectStates.isSliced)
-                            {
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    {
-                                        s.Slice();
-                                    }
-
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                s.Slice();
-                            }
-                        }
-                    }
-                    
-                    break;
-                }
-
-                //one way
-                case "canBeUsedUp":
-                {
-                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
-                    {
-                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
-                        {
-                            UsedUp u = sop.GetComponent<UsedUp>();
-
-                            //only do stuff if object is not used up and we are trying to use it up
-                            if(!u.isUsedUp && SetObjectStates.isUsedUp)
-                            {
-                                if(SetObjectStates.objectType != null)
-                                {
-                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
-                                    {
-                                        u.UseUp();
-                                    }
-
-                                    else
-                                    continue;
-                                }
-
-                                else
-                                u.UseUp();
-                            }
-                        }
-                    }
-                    
-                    break;
+                    } catch (InvalidOperationException) {}
                 }
             }
 
@@ -4422,82 +4139,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private void placeHeldObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
-            // #if UNITY_EDITOR
-            // var watch = System.Diagnostics.Stopwatch.StartNew();
-            // #endif
-
-            //check if we are even holding anything
-            if (ItemInHand == null) {
-                errorMessage = "Can't place an object if Agent isn't holding anything";
-                actionFinished(false);
-                return;
+            if (targetReceptacle == null) {
+                throw new ArgumentNullException();
             }
 
-
-            if (targetReceptacle == null) {
-                errorMessage = "No valid Receptacle found";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+            // check if we are even holding anything
+            if (ItemInHand == null) {
+                throw new InvalidOperationException("Can't place an object if Agent isn't holding anything");
             }
 
             if (!targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                errorMessage = "This target object is NOT a receptacle!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                throw new ArgumentException("This target object is NOT a receptacle!");
             }
 
-            //if receptacle can open, check that it's open before placing. Can't place objects in something that is closed!
-            if (targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-                if (ReceptacleRestrictions.MustBeOpenToPlaceObjectsIn.Contains(targetReceptacle.ObjType)) {
-                    if (!targetReceptacle.GetComponent<CanOpen_Object>().isOpen) {
-                        errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
-                        Debug.Log(errorMessage);
-                        actionFinished(false);
-                        return;
-                    }
-                }
+            // if receptacle can open, check that it's open before placing. Can't place objects in something that is closed!
+            if (targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) &&
+                ReceptacleRestrictions.MustBeOpenToPlaceObjectsIn.Contains(targetReceptacle.ObjType) &&
+                !targetReceptacle.GetComponent<CanOpen_Object>().isOpen
+            ) {
+                throw new InvalidOperationException("Target openable Receptacle is CLOSED, can't place if target is not open!");
             }
 
             //if this receptacle only receives specific objects, check that the ItemInHand is compatible and
             //check if the receptacle is currently full with another valid object or not
             if (targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
-                if (osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && !osr.isFull()) {
-                    //check spawn area specifically if it's a stove top we are trying to place something in because
-                    //they are close together and can overlap and are weird
-                    if (osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
-                        //PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                        if (physicsSceneManager.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
-                                osr.attachPoint.transform.rotation, false) == false) {
-                            errorMessage = "another object's collision is blocking held object from being placed";
-                            actionFinished(false);
-                            return;
-                        }
-
-                    }
-
-                    ItemInHand.transform.position = osr.attachPoint.position;
-                    ItemInHand.transform.SetParent(osr.attachPoint.transform);
-                    ItemInHand.transform.localRotation = Quaternion.identity;
-                    ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
-                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
-                    ItemInHand = null;
-                    DefaultAgentHand();
-                    actionFinished(true);
-                    return;
-                } else {
-
-                    if (osr.attachPoint.transform.childCount > 0 || osr.isFull()) {
-                        errorMessage = targetReceptacle.name + " is full right now";
-                    } else {
-                        errorMessage = ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name;
-                    }
-
-                    actionFinished(false);
-                    return;
+                if (osr.attachPoint.transform.childCount > 0 || osr.isFull()) {
+                    throw new InvalidOperationException(targetReceptacle.name + " is currently full!");
                 }
+
+                if (!osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType)) {
+                    throw new InvalidOperationException(ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name);
+                }
+
+                //check spawn area specifically if it's a stove top we are trying to place something in because
+                //they are close together and can overlap and are weird
+                if (osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner && !physicsSceneManager.StoveTopCheckSpawnArea(
+                        simObj: ItemInHand.GetComponent<SimObjPhysics>(),
+                        position: osr.attachPoint.transform.position,
+                        rotation: osr.attachPoint.transform.rotation,
+                        spawningInHand: false
+                    )
+                ) {
+                    throw new InvalidOperationException("another object's collision is blocking held object from being placed");
+                }
+
+                ItemInHand.transform.position = osr.attachPoint.position;
+                ItemInHand.transform.SetParent(osr.attachPoint.transform);
+                ItemInHand.transform.localRotation = Quaternion.identity;
+                ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
+                ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; //remove in agent hand flag
+                ItemInHand = null;
+                DefaultAgentHand();
+                actionFinished(true);
             }
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
@@ -4506,13 +4200,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //check if the item we are holding can even be placed in the action.ObjectID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
                     //find the Object Type in the PlacementRestrictions dictionary
-                    if (res.Key == handSOP.ObjType) {
-                        if (!res.Value.Contains(targetReceptacle.ObjType)) {
-                            errorMessage = ItemInHand.name + " cannot be placed in " + targetReceptacle.transform.name;
-                            Debug.Log(errorMessage);
-                            actionFinished(false);
-                            return;
-                        }
+                    if (res.Key == handSOP.ObjType && !res.Value.Contains(targetReceptacle.ObjType)) {
+                        throw new InvalidOperationException(ItemInHand.name + " cannot be placed in " + targetReceptacle.transform.name);
                     }
                 }
             }
@@ -4550,20 +4239,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
-                ItemInHand = null;
-                DefaultAgentHand();
-                actionFinished(true);
-            } else {
-                errorMessage = "No valid positions to place object found";
-                actionFinished(false);
+            if (!script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
+                throw new InvalidOperationException("No valid positions to place object found");
             }
-
-            // #if UNITY_EDITOR
-            // watch.Stop();
-            // var elapsed = watch.ElapsedMilliseconds;
-            // print("place object took: " + elapsed + "ms");
-            // #endif
+            ItemInHand = null;
+            DefaultAgentHand();
+            actionFinished(true);
         }
 
         private void pickupObject(
@@ -4585,7 +4266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 throw new InvalidOperationException("Agent hand has something in it already! Can't pick up anything else");
             } 
-            if (IsHandDefault == false) {
+            if (!IsHandDefault) {
                 throw new InvalidOperationException("Must reset Hand to default position before attempting to Pick Up objects");
             }
 
@@ -7965,7 +7646,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject lightTransform = GameObject.Find("Lighting");
             lightTransform.GetComponent<ChangeLighting>().SetLights(objectVariation);
-            actionFinished(true);
+            actionFinished(success: true);
         }
 
         ///////////////////////////////////////////
@@ -7973,7 +7654,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         // swap an object's materials out to the cooked version of the object :)
-        private void cookObject(SimObjPhysics target, bool forceAction) {
+        private void cookObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -7990,17 +7671,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!cookComponent.IsCooked()) {
                 cookComponent.Cook();
             }
-            actionFinished(true);
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
         }
 
         public void CookObject(string objectId, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            cookObject(target: target, forceAction: forceAction);
+            cookObject(target: target, forceAction: forceAction, markActionFinished: true);
         }
 
         public void CookObject(float x, float y, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            cookObject(target: target, toggleOn: true, forceAction: forceAction);
+            cookObject(target: target, toggleOn: true, forceAction: forceAction, markActionFinished: true);
         }
 
         ///////////////////////////////////////////
