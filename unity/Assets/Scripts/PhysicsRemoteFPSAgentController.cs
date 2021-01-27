@@ -72,7 +72,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             foreach (SimObjPhysics sop in simObjects)
             {
-                if(sop.Type.ToString() == objectType)
+                if (sop.Type.ToString() == objectType)
                 {
                     simObjectsOfType.Add(sop);
                 }
@@ -298,25 +298,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////////////// LOOK DOWN /////////////////
         ///////////////////////////////////////////
 
-        public override void LookDown(ServerAction action)
-        {
-            if(action.degrees < 0)
-            {
+        public override void LookDown(ServerAction action) {
+            if (action.degrees < 0) {
                 errorMessage = "LookDown action requires positive degree value. Invalid value used: " + action.degrees;
                 actionFinished(false);
                 return;
             }
 
-            if(!CheckIfFloatIsMultipleOfOneTenth(action.degrees))
-            {
+            if (!CheckIfFloatIsMultipleOfOneTenth(action.degrees)) {
                 errorMessage = "LookDown action requires degree value to be a multiple of 0.1f";
                 actionFinished(false);
                 return;
             }
 
             //default degree increment to 30
-            if(action.degrees == 0)
-            {
+            if (action.degrees == 0) {
                 action.degrees = 30f;
             }
 
@@ -324,27 +320,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //this is to prevent too small of a degree increment change that could cause float imprecision
             action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
 
-            if(!checkForUpDownAngleLimit("down", action.degrees))
-            {
+            if (!checkForUpDownAngleLimit("down", action.degrees)) {
                 errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
             }
 
-            if (CheckIfAgentCanRotate("down", action.degrees)) 
-            {
+            if (CheckIfAgentCanRotate("down", action.degrees)) {
 
                 //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
+                if (!action.manualInteract)
                 DefaultAgentHand();
 
                 base.LookDown(action);
                 return;
-            } 
-
-            else
-            {
+            } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates down " + action.degrees+ " degrees";
                 actionFinished(false);
             } 
@@ -384,17 +375,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (CheckIfAgentCanRotate("up", action.degrees)) 
-            {
-                //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                DefaultAgentHand();
+            if (CheckIfAgentCanRotate("up", action.degrees)) {
+                // only default hand if not manually Interacting with things
+                if (!action.manualInteract) {
+                    DefaultAgentHand();
+                }
 
                 base.LookUp(action);
-            }
-
-            else
-            {
+            } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates up " + action.degrees+ " degrees";
                 actionFinished(false);
             } 
@@ -405,24 +393,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         public override void RotateRight(ServerAction action) {
-            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if(action.degrees == 0f) {
+            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
+            if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
             }
 
-            if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
-            {
+            if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
                 //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                {
+                if (!action.manualInteract) {
                     DefaultAgentHand();
                 }
 
                 base.RotateRight(action);
-            } 
-
-            else 
-            {
+            } else {
                 errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Right " + action.degrees+ " degrees";
                 actionFinished(false);
             }
@@ -432,23 +415,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// ROTATE LEFT ////////////////
         ///////////////////////////////////////////
 
-        public override void RotateLeft(ServerAction action) 
-        {
+        public override void RotateLeft(ServerAction action) {
             //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if(action.degrees == 0f)
-            action.degrees = rotateStepDegrees;
+            if (action.degrees == 0f) {
+                action.degrees = rotateStepDegrees;
+            }
 
-            if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
-            {
+            if (CheckIfAgentCanRotate("left", action.degrees) || action.forceAction) {
                 //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                DefaultAgentHand();
-                
-                base.RotateLeft(action);
-            } 
+                if (!action.manualInteract) {
+                    DefaultAgentHand();
+                }
 
-            else 
-            {
+                base.RotateLeft(action);
+            } else {
                 errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees+ " degrees";
                 actionFinished(false);
             }
@@ -608,9 +588,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
 
             //ok now we have each corner, let's rotate them the specified direction
-            if(direction == "right" || direction == "left") {
+            if (direction == "right" || direction == "left") {
                 result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
-            } else if(direction == "up" || direction == "down") {
+            } else if (direction == "up" || direction == "down") {
                 result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
             }
             //no checks flagged anything, good to go, return true i guess
@@ -632,12 +612,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotPoint.Rotate(new Vector3(degrees, 0, 0));
                 //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
                 //degrees being positive, it still needs to check against this negatively signed direction.
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f < -maxDownwardLookAngle) {
+                if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f < -maxDownwardLookAngle) {
                     result = false;
                 }
             } else if (direction == "up") {
                 rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle) {
+                if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle) {
                     result = false;
                 }
             }
@@ -1128,7 +1108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.position = targetObject.transform.position + new Vector3(xOffset, 0f, zOffset);
                     if (isAgentCapsuleCollidingWith(targetObject.gameObject)) {
                         sb.Append("1");
-                    } else if(distanceToObject(targetObject) <= z) {
+                    } else if (distanceToObject(targetObject) <= z) {
                         sb.Append("2");
                     } else {
                         sb.Append("0");
@@ -1848,7 +1828,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if(timeStep <= 0.0f || timeStep > 0.05f)
+            if (timeStep <= 0.0f || timeStep > 0.05f)
             {
                 errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
                 actionFinished(false);
@@ -2065,11 +2045,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RaycastHit hit;
 
             //if something was touched, actionFinished(true) always
-            if(Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1<<10, QueryTriggerInteraction.Ignore)) {
-                if(hit.transform.GetComponent<SimObjPhysics>()) {
+            if (Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1<<10, QueryTriggerInteraction.Ignore)) {
+                if (hit.transform.GetComponent<SimObjPhysics>()) {
                     //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     //this should basically only happen if the handDistance value is too big
-                    if(!CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                    if (!CheckIfTargetPositionIsInViewportRange(hit.point)) {
                         errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
                         WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
                         actionFinished(false, errorFeedback);
@@ -2991,7 +2971,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool includeErrorMessage = false
         ) {
             //make sure point we are moving the object to is valid
-            if(!agentManager.sceneBounds.Contains(position)) {
+            if (!agentManager.sceneBounds.Contains(position)) {
                 if (includeErrorMessage) {
                     errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
                 }
@@ -3006,9 +2986,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
             bool wasInHand = false;
-            if(ItemInHand)
+            if (ItemInHand)
             {
-                if(ItemInHand.transform.gameObject == target.transform.gameObject)
+                if (ItemInHand.transform.gameObject == target.transform.gameObject)
                 {
                     wasInHand = true;
                 }
@@ -3072,7 +3052,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.rotation = originalRotation;
 
             //if the original position was in agent hand, reparent object to agent hand
-            if(wasInHand)
+            if (wasInHand)
             {
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
@@ -3135,19 +3115,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //find the object in the scene, disregard visibility
             foreach(SimObjPhysics sop in VisibleSimObjs(true))
             {
-                if(sop.objectID == t.objectID)
+                if (sop.objectID == t.objectID)
                 {
                     target = sop;
                 }
             }
 
-            if(target == null)
+            if (target == null)
             {
                 return false;
             }
 
             //make sure point we are moving the object to is valid
-            if(!agentManager.sceneBounds.Contains(position))
+            if (!agentManager.sceneBounds.Contains(position))
             {
                 return false;
             }
@@ -3170,7 +3150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //check spawn area, if its clear, then place object at finalPos
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
             {
                 target.transform.position = finalPos;
                 return true;
@@ -3199,15 +3179,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //if action.anywhere true, return for any object no matter where it is
             foreach (SimObjPhysics sop in VisibleSimObjs(action.anywhere))
             {
-                if(action.objectId == sop.ObjectID)
+                if (action.objectId == sop.ObjectID)
                 {
                     target = sop;
                 }
             }
 
-            if(target == null)
+            if (target == null)
             {
-                if(action.anywhere)
+                if (action.anywhere)
                 errorMessage = "No valid Receptacle found in scene";
 
                 else
@@ -3223,12 +3203,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //by default, action.anywhere = false, so remove all targetPoints that are outside of agent's view
             //if anywhere true, don't do this and just return all points we got from above
-            if(!action.anywhere)
+            if (!action.anywhere)
             {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
                 foreach(Vector3 v in targetPoints)
                 {
-                    if(CheckIfTargetPositionIsInViewportRange(v))
+                    if (CheckIfTargetPositionIsInViewportRange(v))
                     {
                         filteredTargetPoints.Add(v);
                     }
@@ -3295,7 +3275,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 // spawn target circle in any valid "outside" receptacle in the scene even if not in veiw
                 foreach(SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene()) {
-                    if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+                    if (ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                         targetReceptacles.Add(sop);
                     }
                 }               
@@ -3338,7 +3318,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (minDistance == 0 && maxDistance > 0) {
                             //check distance from agent's transform to spawnpoint
-                            if((Vector3.Distance(normalizedPoint, normalizedPosition) <= maxDistance)) {
+                            if ((Vector3.Distance(normalizedPoint, normalizedPosition) <= maxDistance)) {
                                 editedRsps.Add(p);
                             }
                         }
@@ -3370,7 +3350,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // only place in viewport
                 if (!anywhere) {
-                    if(ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
+                    if (ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
                         //make sure target circle is within viewport
                         successfulSpawn = true;
                         break;
@@ -4733,7 +4713,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ChangeFOV(ServerAction action) 
         {
 
-            if(action.fieldOfView > 0 && action.fieldOfView < 180)
+            if (action.fieldOfView > 0 && action.fieldOfView < 180)
             {
                 m_Camera.fieldOfView = action.fieldOfView;
                 actionFinished(true);
@@ -4827,11 +4807,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //raycast from agentcamera to point, ignore triggers, use layers 8 and 10
                         RaycastHit hit;
 
-                        if(Physics.Raycast(m_Camera.transform.position, 
+                        if (Physics.Raycast(m_Camera.transform.position, 
                         (point.position - m_Camera.transform.position), 
                         out hit, Mathf.Infinity, (1 << 8) | (1 << 10)))
                         {
-                            if(hit.transform != sop.transform)
+                            if (hit.transform != sop.transform)
                             result = false;
 
                             else
@@ -5100,20 +5080,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void PositionsFromWhichItemIsInteractable(ServerAction action) {
 
             //default to increments of 30 for horizon
-            if(action.horizon == 0)
+            if (action.horizon == 0)
             {
                 action.horizon = 30;
             }
 
             //check if horizon is a multiple of 5
-            if(action.horizon % 5 != 0)
+            if (action.horizon % 5 != 0)
             {
                 errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
                 actionFinished(false);
                 return;
             }
 
-            if(action.horizon < 0 || action.horizon > 30)
+            if (action.horizon < 0 || action.horizon > 30)
             {
                 errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
                 actionFinished(false);
@@ -6970,7 +6950,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Dirty dirtyComponent = target.GetComponent<Dirty>();
-            if(dirtyComponent.IsDirty($"{target.transform.name} is already dirty!")) {
+            if (dirtyComponent.IsDirty($"{target.transform.name} is already dirty!")) {
                 throw new InvalidOperationException();
             }
 
@@ -7220,7 +7200,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new InvalidOperationException("object is visible but occluded by something: " + target.ObjectID);
             }
 
-            if(!target.GetComponent<CanOpen_Object>()) {
+            if (!target.GetComponent<CanOpen_Object>()) {
                 throw new InvalidOperationException($"{target.ObjectID} is not an Openable object");
             }
 

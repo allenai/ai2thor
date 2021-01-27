@@ -1829,31 +1829,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
         }
 
+        ///////////////////////////////////////////
+        ///////////////// ROTATE //////////////////
+        ///////////////////////////////////////////
+
 		//free rotate, change forward facing of Agent
         //this is currently overrided by Rotate in Stochastic Controller
-		public virtual void Rotate(ServerAction response)
-		{
+		public virtual void Rotate(ServerAction response) {
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);
 		}
 
 		//rotates controlCommand.degrees degrees left w/ respect to current forward
-		public virtual void RotateLeft(ServerAction controlCommand)
-		{
+		public virtual void RotateLeft(ServerAction controlCommand) {
             transform.Rotate(0, -controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 
 		//rotates controlCommand.degrees degrees right w/ respect to current forward
-		public virtual void RotateRight(ServerAction controlCommand)
-		{
+		public virtual void RotateRight(ServerAction controlCommand) {
             transform.Rotate(0, controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 
+        ///////////////////////////////////////////
+        ////////////// LOOK UP/DOWN ///////////////
+        ///////////////////////////////////////////
+
 		//iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
-		public virtual void LookDown(ServerAction controlCommand)
-		{
+		public virtual void LookDown(ServerAction controlCommand) {
 			m_Camera.transform.Rotate(controlCommand.degrees, 0, 0);
 			actionFinished(true);
 		}
@@ -1864,6 +1868,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_Camera.transform.Rotate(-controlCommand.degrees, 0, 0);
 			actionFinished(true);
 		}
+
+        ///////////////////////////////////////////
+        //////////// TELEPORT UP/DOWN /////////////
+        ///////////////////////////////////////////
 
         //teleport full, base version does not consider being able to hold objects
         public virtual void TeleportFull(ServerAction action) {
