@@ -956,75 +956,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void DisableObject(string objectId) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
-                actionFinished(true);
-            } else {
-                actionFinished(false);
-            }
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            target.gameObject.SetActive(false);
+            actionFinished(true);
         }
 
         public void EnableObject(string objectId) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
-                actionFinished(true);
-            } else {
-                actionFinished(false);
-            }
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            target.gameObject.SetActive(true);
+            actionFinished(true);
         }
         
-        //remove a given sim object from the scene. Pass in the object's objectID string to remove it.
+        // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
-            //pass name of object in from action.objectId
-            if (objectId == null) {
-                errorMessage = "objectId required for OpenObject";
-                actionFinished(false);
-                return;
-            }
-
-            //see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
-                physicsSceneManager.SetupScene();
-                actionFinished(true);
-                return;
-            }
-
-            errorMessage = objectId + " could not be found in this scene, so it can't be removed";
-            actionFinished(false);
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            target.transform.gameObject.SetActive(false);
+            physicsSceneManager.SetupScene();
+            actionFinished(true);
         }
 
-        //remove a list of given sim object from the scene.
-        public void RemoveObjsFromScene(string[] objectIds) {
-            if (objectIds == null || objectIds[0] == null)
-            {
-                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
-                actionFinished(false);
-                return;
+        // remove an array of sim objects from the scene.
+        public void RemoveFromScene(string[] objectIds) {
+            List<SimObjPhysics> objects = new List<SimObjPhysics>();
+
+            // Make sure all the objectIds are valid!
+            foreach (string objectId in objectIds) {
+                SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+                objects.Add(target);
             }
-            bool fail = false;
-            foreach (string objIds in objectIds)
-            {
-                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
-                {
-                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
-                }
-                else
-                {
-                    fail = true;
-                }
+
+            foreach (SimObjPhysics target in objects) {
+                target.transform.gameObject.SetActive(false);
             }
             physicsSceneManager.SetupScene();
-            if (fail)
-            {
-                errorMessage = "some objectsin objectIds were not removed correctly.";
-                actionFinished(false);
-            }
-            else
-            {
-                actionFinished(true);
-            }
-            return;
+            actionFinished(true);
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene(string[] objectIds) instead.", error: false)] 
+        public void RemoveObjsFromScene(string[] objectIds) {
+            RemoveFromScene(objectIds: objectIds);
         }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
