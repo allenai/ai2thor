@@ -597,7 +597,7 @@ def test_get_interactable_poses(controller):
                     if obj['objectType'] == 'Potato')
     event = controller.step('GetInteractablePoses', objectId=potatoId)
     assert len(event.metadata['actionReturn']) == 0, "Potato is inside of fridge, and thus, shouldn't be interactable"
-    assert event.metadata['lastActionFinished'], "GetInteractablePoses with Potato shouldn't have failed!"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Potato shouldn't have failed!"
 
     # assertion for maxPoses
     event = controller.step('GetInteractablePoses', objectId=fridgeId, maxPoses=50)
