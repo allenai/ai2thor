@@ -566,3 +566,67 @@ def test_change_resolution(controller):
     assert event.screen_height == 400
     event = controller.step(dict(action='ChangeResolution', x=300, y=300), raise_for_failure=True)
 
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_interactable_poses(controller):
+    controller.reset('FloorPlan28')
+    fridgeId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Fridge')
+    event = controller.step('GetInteractablePoses', objectId=fridgeId)
+    poses = event.metadata['actionReturn']
+    assert len(poses) > 490, "Should have around 494 interactable poses next to the fridge!"
+
+    # teleport to a random pose
+    pose = poses[len(poses) // 2]
+    event = controller.step('TeleportFull', **pose)
+
+    # assumes 1 fridge in the scene
+    fridge = next(obj for obj in controller.last_event.metadata['objects']
+                  if obj['objectType'] == 'Fridge')
+    assert fridge['visible'], "Object is not interactable!"
+
+    # tests that teleport correctly works with **syntax
+    assert abs(pose['x'] - event.metadata['agent']['position']['x']) < 1e-3, "Agent x position off!"
+    assert abs(pose['z'] - event.metadata['agent']['position']['z']) < 1e-3, "Agent z position off!"
+    assert abs(pose['rotation'] - event.metadata['agent']['rotation']['y']) < 1e-3, "Agent rotation off!"
+    assert abs(pose['horizon'] - event.metadata['agent']['cameraHorizon']) < 1e-3, "Agent horizon off!"
+    assert pose['standing'] == event.metadata['agent']['isStanding'], "Agent's isStanding is off!"
+
+    # potato should be inside of the fridge (and, thus, non interactable)
+    potatoId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Potato')
+    event = controller.step('GetInteractablePoses', objectId=potatoId)
+    assert len(event.metadata['actionReturn']) == 0, "Potato is inside of fridge, and thus, shouldn't be interactable"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Potato shouldn't have failed!"
+
+    # assertion for maxPoses
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxPoses=50)
+    assert len(event.metadata['actionReturn']) == 50, "maxPoses should be capped at 50!"
+
+    # assert only checking certain horizons and rotations is working correctly
+    horizons = [0, 30]
+    rotations = [0, 45]
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
+    for pose in event.metadata['actionReturn']:
+        horizon_works = False
+        for horizon in horizons:
+            if abs(pose['horizon'] - horizon) < 1e-3:
+                horizon_works = True
+                break
+        assert horizon_works, "Not expecting horizon: " + pose['horizon']
+
+        rotation_works = False
+        for rotation in rotations:
+            if abs(pose['rotation'] - rotation) < 1e-3:
+                rotation_works = True
+                break
+        assert rotation_works, "Not expecting rotation: " + pose['rotation']
+
+    # assert only checking certain horizons and rotations is working correctly
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, rotations=[270])
+    assert len(event.metadata['actionReturn']) == 0, "Fridge shouldn't be viewable from this rotation!"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Fridge shouldn't have failed!"
+
+    # test maxDistance
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
+    assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'
