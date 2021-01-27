@@ -117,10 +117,10 @@ class Event(object):
     def __repr__(self):
         """Summarizes the results from an Event.""" 
         return (
-            '<ai2thor.server.Event at ' + hex(id(self)) + '\n' +
-            '\t.metadata["lastActionSuccess"] = ' + self.metadata['lastActionSuccess'] + '\n' +
-            '\t.metadata["errorMessage"] = "' + self.metadata['errorMessage'] + '"\n' +
-            '\t.metadata["actionReturn"] = ' + self.metadata['actionReturn'] + '\n' +
+            '<ai2thor.server.Event at ' + str(hex(id(self))) + '\n' +
+            '\t.metadata["lastActionSuccess"] = ' + str(self.metadata['lastActionSuccess']) + '\n' +
+            '\t.metadata["errorMessage"] = "' + str(self.metadata['errorMessage']) + '"\n' +
+            '\t.metadata["actionReturn"] = ' + str(self.metadata['actionReturn']) + '\n' +
             '>'
         )
 
