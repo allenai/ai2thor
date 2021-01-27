@@ -621,21 +621,10 @@ def test_get_interactable_poses(controller):
             raise Exception("Not expecting rotation: " + pose['rotation'])
 
     # assert only checking certain horizons and rotations is working correctly
-    horizons = [0, 30]
-    rotations = [0, 45]
-    event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
-    for pose in event.metadata['actionReturn']:
-        for horizon in horizons:
-            if abs(pose['horizon'] - horizon) < 1e-3:
-                break
-        else:
-            raise Exception("Not expecting horizon: " + pose['horizon'])
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, rotations=[270])
+    assert len(event.metadata['actionReturn']) == 0, "Fridge shouldn't be viewable from this rotation!"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Fridge shouldn't have failed!"
 
-        for rotation in rotations:
-            if abs(pose['rotation'] - rotation) < 1e-3:
-                break
-        else:
-            raise Exception("Not expecting rotation: " + pose['rotation'])
-    
+    # test maxDistance
     event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
     assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'
