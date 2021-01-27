@@ -2622,124 +2622,84 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
-        public bool CheckIfAgentCanMoveHand(Vector3 targetPosition, bool mustBeVisible = false) {
-            bool result = false;
-
-            //first check if we have anything in our hand, if not then no reason to move hand
+        public void CheckIfAgentCanMoveHand(Vector3 targetPosition, bool mustBeVisible = false) {
+            // first check if we have anything in our hand, if not then no reason to move hand
             if (ItemInHand == null) {
-                errorMessage = "Agent can only move hand if currently holding an item";
-                result = false;
-                return result;
+                throw new InvalidOperationException("Agent can only move hand if currently holding an item");
             }
 
-            //now check if the target position is within bounds of the Agent's forward (z) view
+            // now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
             tmp.y = targetPosition.y;
 
-            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)
-            {
-                errorMessage = "The target position is out of range- object cannot move outside of max visibility distance.";
-                result = false;
-                return result;
+            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) {
+                throw new InvalidOperationException("The target position is out of range: object cannot move outside of max visibility distance.");
             }
 
-            //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
-            //now make sure the targetPosition is actually within the Camera Bounds 
-
+            // Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
+            // now make sure the targetPosition is actually within the Camera Bounds 
             Vector3 lastPosition = AgentHand.transform.position;
             AgentHand.transform.position = targetPosition;
-            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-            if(!objectIsWithinViewport(ItemInHand.GetComponent<SimObjPhysics>()))
-            {
+
+            // now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
+            if (!objectIsWithinViewport(ItemInHand.GetComponent<SimObjPhysics>())) {
                 AgentHand.transform.position = lastPosition;
-                errorMessage = "Target position is outside of the agent's viewport. The target position must be within the frustrum of the viewport.";
-                result = false;
-                return result;
+                throw new InvalidOperationException("Target position is outside of the agent's viewport.");
             }
 
-            //reset for mustBeVisible test so the direction from agent hand to target is correct
+            // reset for mustBeVisible test so the direction from agent hand to target is correct
             AgentHand.transform.position = lastPosition;
 
-            //by default this is ignored, but pass this as true to force hand manipulation
-            //such that objects will always remain visible to the agent and not occluded
-            if(mustBeVisible)
-            {
-                //quickly move object to proposed target position and see if target is still visible
+            // by default this is ignored, but pass this as true to force hand manipulation
+            // such that objects will always remain visible to the agent and not occluded
+            if (mustBeVisible) {
+                // quickly move object to proposed target position and see if target is still visible
                 lastPosition = AgentHand.transform.position;
                 AgentHand.transform.position = targetPosition;
                 if (!objectIsCurrentlyVisible(ItemInHand.GetComponent<SimObjPhysics>(), 1000f)) {
-                    errorMessage = "The target position is not in the Area of the Agent's Viewport!";
-                    result = false;
                     AgentHand.transform.position = lastPosition;
-                    return result;
+                    throw new InvalidOperationException("The target position is not in the area of the Agent's Viewport!");
                 }
                 AgentHand.transform.position = lastPosition;
             }
 
-
-            //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
-            //being obstructed by anything
+            // ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
+            // being obstructed by anything
             Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-
-            RaycastHit[] sweepResults = ItemRB.SweepTestAll(targetPosition - AgentHand.transform.position,
+            RaycastHit[] sweepResults = ItemRB.SweepTestAll(
+                targetPosition - AgentHand.transform.position,
                 Vector3.Distance(targetPosition, AgentHand.transform.position),
-                QueryTriggerInteraction.Ignore);
+                QueryTriggerInteraction.Ignore
+            );
 
-            //did we hit anything?
+            // did we hit anything?
             if (sweepResults.Length > 0) {
-
                 foreach (RaycastHit hit in sweepResults) {
-                    //hit the player? it's cool, no problem
-                    if (hit.transform.tag == "Player") {
-                        result = true;
-                        break;
-                    }
-
-                    //oh we hit something else? oh boy, that's blocking!
-                    else {
-                        errorMessage = hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name;
-                        result = false;
-                        return result;
+                    // hit the player? it's cool, no problem
+                    if (hit.transform.tag != "Player") {
+                        // oh we hit something else? oh boy, that's blocking!
+                        throw new InvalidOperationException(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
                     }
                 }
-
             }
-
-            //didnt hit anything in sweep, we are good to go
-            else 
-            {
-                result = true;
-            }
-
-            return result;
         }
 
-        //moves hand to the x, y, z coordinate, not constrained by any axis, if within range
-        protected bool moveHandToXYZ(float x, float y, float z, bool mustBeVisible = false) 
-        {
+        // moves hand to the x, y, z coordinate, not constrained by any axis, if within range
+        protected void moveHandToXYZ(float x, float y, float z, bool mustBeVisible = false) {
             Vector3 targetPosition = new Vector3(x, y, z);
-            if (CheckIfAgentCanMoveHand(targetPosition, mustBeVisible)) 
-            {
-                //Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
-                Vector3 oldPosition = AgentHand.transform.position;
-                AgentHand.transform.position = targetPosition;
-                IsHandDefault = false;
-                return true;
-            } 
-            
-            else 
-            {
-                //error messages are set up in CheckIfAgentCanMoveHand
-                return false;
-            }
+            CheckIfAgentCanMoveHand(targetPosition, mustBeVisible);
+
+            Vector3 oldPosition = AgentHand.transform.position;
+            AgentHand.transform.position = targetPosition;
+            IsHandDefault = false;
         }
 
         //coroutine to yield n frames before returning
-        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
+        protected IEnumerator waitForNFramesAndReturn(int n) {
             for (int i = 0; i < n; i++) {
                 yield return null;
             }
-            actionFinished(actionSuccess);
+            actionFinished(true);
         }
 
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
@@ -2751,82 +2711,84 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.forward * z +
                 transform.right * x +
                 transform.up * y;
-            StartCoroutine(waitForNFramesAndReturn(1, moveHandToXYZ(newPos.x, newPos.y, newPos.z)));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z);
+            StartCoroutine(waitForNFramesAndReturn(n: 1));
         }
 
-        //moves hand constrained to x, y, z axes a given magnitude- x y z describe the magnitude in this case
-        //pass in x,y,z of 0 if no movement is desired on that axis
-        //pass in x,y,z of + for positive movement along that axis
-        //pass in x,y,z of - for negative movement along that axis
+        // moves hand constrained to x, y, z axes a given magnitude- x y z describe the magnitude in this case
+        // pass in x,y,z of 0 if no movement is desired on that axis
+        // pass in x,y,z of + for positive movement along that axis
+        // pass in x,y,z of - for negative movement along that axis
         public void MoveHandDelta(float x, float y, float z, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.forward * z) + (m_Camera.transform.up * y) + (m_Camera.transform.right * x);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandAhead(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandLeft(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandDown(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandUp(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.up * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandRight(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.right * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         public void MoveHandBack(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
+            moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible);
+            actionFinished(success: true);
         }
 
         //uh this kinda does what MoveHandDelta does but in more steps, splitting direction and magnitude into
         //two separate params in case someone wants it that way
-        public void MoveHandMagnitude(float moveMagnitude, float x=0.0f, float y=0.0f, float z=0.0f) {
+        public void MoveHandMagnitude(float moveMagnitude, float x = 0, float y = 0, float z = 0) {
             Vector3 newPos = AgentHand.transform.position;
 
-            //get new direction relative to Agent's (camera's) forward facing 
+            // get new direction relative to Agent's (camera's) forward facing 
             if (x > 0) {
                 newPos = newPos + (m_Camera.transform.right * moveMagnitude);
-            }
-
-            if (x < 0) {
+            } else if (x < 0) {
                 newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
             }
 
             if (y > 0) {
                 newPos = newPos + (m_Camera.transform.up * moveMagnitude);
-            }
-
-            if (y < 0) {
+            } else if (y < 0) {
                 newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
             }
 
             if (z > 0) {
                 newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
-            }
-
-            if (z < 0) {
+            } else if (z < 0) {
                 newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
             }
 
@@ -2835,8 +2797,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool IsInArray(Collider collider, GameObject[] arrayOfCol) {
             for (int i = 0; i < arrayOfCol.Length; i++) {
-                if (collider == arrayOfCol[i].GetComponent<Collider>())
+                if (collider == arrayOfCol[i].GetComponent<Collider>()) {
                     return true;
+                }
             }
             return false;
         }
@@ -2888,41 +2851,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        //rotat ethe hand if there is an object in it
-        public void RotateHand(ServerAction action) {
-
+        // rotate the hand if there is an object in it
+        public void RotateHand(float x, float y, float z) {
             if (ItemInHand == null) {
-                errorMessage = "Can't rotate hand unless holding object";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Can't rotate hand unless holding object");
             }
 
-            if (CheckIfAgentCanRotateHand()) {
-                Vector3 vec = new Vector3(action.x, action.y, action.z);
-                AgentHand.transform.localRotation = Quaternion.Euler(vec);
-                //SetUpRotationBoxChecks();
-
-                //if this is rotated too much, drop any contained object if held item is a receptacle
-                if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
-                    DropContainedObjects(
-                        target: ItemInHand.GetComponent<SimObjPhysics>(),
-                        reparentContainedObjects: true,
-                        forceKinematic: false
-                    );
-                }
-
-                actionFinished(true);
-            } else {
-                actionFinished(false);
+            if (!CheckIfAgentCanRotateHand()) {
+                throw new InvalidOperationException("Agent hand cannot rotate!");
             }
+
+            Vector3 vec = new Vector3(x, y, z);
+            AgentHand.transform.localRotation = Quaternion.Euler(vec);
+
+            // if this is rotated too much, drop any contained object if held item is a receptacle
+            if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
+                DropContainedObjects(
+                    target: ItemInHand.GetComponent<SimObjPhysics>(),
+                    reparentContainedObjects: true,
+                    forceKinematic: false
+                );
+            }
+
+            actionFinished(true);
         }
 
-        //rotate the hand if there is an object in it
-        public void RotateHandRelative(ServerAction action) {
-
+        // rotate the hand if there is an object in it
+        public void RotateHandRelative(float x, float y, float z) {
             if (ItemInHand == null) {
-                errorMessage = "Can't rotate hand unless holding object";
-                return;
+                throw new InvalidOperationException("Can't rotate hand unless holding object");
             }
 
             Quaternion agentRot = transform.rotation;
@@ -2930,163 +2887,74 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             transform.rotation = Quaternion.identity;
 
-            AgentHand.transform.Rotate(
-                new Vector3(action.x, action.y, action.z), Space.World
-            );
+            AgentHand.transform.Rotate(new Vector3(x, y, z), Space.World);
             transform.rotation = agentRot;
 
             if (isHandObjectColliding(true)) {
-                errorMessage = "Hand object is coliding after rotation.";
                 AgentHand.transform.rotation = agentHandStartRot;
-                actionFinished(false);
-            } else {
-                actionFinished(true);
+                throw new InvalidOperationException("Hand object is coliding after rotation.");
             }
+
+            actionFinished(success: true);
         }
 
-        //action to return points from a grid that have an experiment receptacle below it
-        //creates a grid startinng from the agent's current hand position and projects that grid
-        //forward relative to the agent
-        //grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
-        public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount)
-        {
-            var agent = this.agentManager.agents[0];
+        // action to return points from a grid that have an experiment receptacle below it
+        // creates a grid starting from the agent's current hand position and projects that grid
+        // forward relative to the agent
+        // grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
+        public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount) {
+            var agent = agentManager.agents[0];
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+
             //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
             var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
+
             //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
             actionFinished(true, ret);
         }
 
-        //spawn receptacle object at array index <objectVariation> rotated to <y>
-        //on <receptacleObjectId> using position <position>
-        public void SpawnExperimentObjAtPoint(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
-                actionFinished(false);
-                return;
-            }
-
-            if(action.objectType == null)
-            {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
-                actionFinished(false);
-                return;
+        // spawn receptacle object at array index <objectVariation> rotated to <y>
+        // on <receptacleObjectId> using position <position>
+        public void SpawnExperimentObjAtPoint(string receptacleObjectId, string objectType, int objectVariation, float y, Vector3 position) {
+            if (receptacleObjectId == null || objectType == null) {
+                throw new ArgumentNullException();
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
+            SimObjPhysics target = getTargetObject(objectId: receptacleObjectId, forceAction: false);
+            if (!ersm.SpawnExperimentObjAtPoint(objectType, objectVariation, target, position, y)) {
+                throw new InvalidOperationException("Experiment object could not be placed on " + receptacleObjectId);
             }
+            actionFinished(true);
         }
 
-        //spawn receptacle object at array index <objectVariation> rotated to <y>
-        //on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentObjAtRandom(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
-                actionFinished(false);
-                return;
-            }
-
-            if(action.objectType == null)
-            {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
-                actionFinished(false);
-                return;
+        // spawn receptacle object at array index <objectVariation> rotated to <y>
+        // on <receptacleObjectId> using random seed <randomSeed>
+        public void SpawnExperimentObjAtRandom(string receptacleObjectId, string objectType, float y, int objectVariation, int randomSeed = 0) {
+            if (receptacleObjectId == null || objectType == null) {
+                throw new ArgumentNullException();
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
+            SimObjPhysics target = getTargetObject(objectId: receptacleObjectId);
+            if (!ersm.SpawnExperimentObjAtRandom(objectType, objectVariation, randomSeed, target, y)) {
+                throw new InvalidOperationException("Experiment object could not be placed on " + receptacleObjectId);
             }
+            actionFinished(true);
         }
 
         //specify a screen by objectId in exp room and change material to objectVariation
-        public void ChangeScreenMaterialExpRoom(string objectId, int objectVariation)
-        {
-            //only 5 material options at the moment
-            if(objectVariation < 0 || objectVariation > 4)
-            {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
+        public void ChangeScreenMaterialExpRoom(string objectId, int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                throw new ArgumentOutOfRangeException("please use objectVariation [0, 4] inclusive");
             }
 
-            if(objectId == null)
-            {
-                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
-                actionFinished(false);
-                return;
+            if (objectId == null) {
+                throw new ArgumentNullException();
             }
 
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == objectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no object with id: "+ 
-                objectId + " could be found during ChangeScreenMaterialExpRoom";
-                actionFinished(false);
-                return;
-            }
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: false);
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeScreenMaterial(target, objectVariation);
@@ -3094,50 +2962,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //specify a screen in exp room by objectId and change material color to rgb
-        public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b)
-        {
-            if(
-            r < 0 || r > 255 ||
-            g < 0 || g > 255 ||
-            b < 0 || b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == objectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no object with id: "+ 
-                objectId + " could not be found during ChangeScreenColorExpRoom";
-                actionFinished(false);
-                return;
+        public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: false);
             ersm.ChangeScreenColor(target, r, g, b);
             actionFinished(true);
         }
 
         //change wall to material [variation]       
-        public void ChangeWallMaterialExpRoom(int objectVariation)
-        {
-            //only 5 material options at the moment
-            if(objectVariation < 0 || objectVariation > 4)
-            {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
+        public void ChangeWallMaterialExpRoom(int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                throw new ArgumentOutOfRangeException("please use objectVariation [0, 4] inclusive");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
@@ -3145,86 +2985,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //change wall color to rgb (0-255, 0-255, 0-255)
-        public void ChangeWallColorExpRoom(ServerAction action)
-        {
-            if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
+        // change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeWallColorExpRoom(int r, int g, int b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeWallColor(action.r, action.g, action.b);
+            ersm.ChangeWallColor(r, g, b);
             actionFinished(true);
         }
 
         //change floor to material [variation]
-        public void ChangeFloorMaterialExpRoom(ServerAction action)
-        {
+        public void ChangeFloorMaterialExpRoom(int objectVariation) {
             //only 5 material options at the moment
-            if(action.objectVariation < 0 || action.objectVariation > 4)
-            {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
+            if (objectVariation < 0 || objectVariation > 4) {
+                throw new ArgumentOutOfRangeException("please use objectVariation [0, 4] inclusive");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeFloorMaterial(action.objectVariation);
+            ersm.ChangeFloorMaterial(objectVariation);
             actionFinished(true);
         }
 
-        //change wall color to rgb (0-255, 0-255, 0-255)
-        public void ChangeFloorColorExpRoom(ServerAction action)
-        {
-            if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
+        // change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeFloorColorExpRoom(int r, int g, int b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeFloorColor(action.r, action.g, action.b);
+            ersm.ChangeFloorColor(r, g, b);
             actionFinished(true);
         }
 
-        //change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
-        public void ChangeLightColorExpRoom(ServerAction action)
-        {
-            if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
+        // change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
+        public void ChangeLightColorExpRoom(int r, int g, int b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightColor(action.r, action.g, action.b);
+            ersm.ChangeLightColor(r, g, b);
             actionFinished(true);
         }
 
         //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
         //just a relative intensity value
-        public void ChangeLightIntensityExpRoom(float intensity)
-        {
-            //restrict this to [0-5]
-            if(intensity < 0 || intensity > 5)
-            {
-                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
-                actionFinished(false);
-                return;
+        public void ChangeLightIntensityExpRoom(float intensity) {
+            if (intensity < 0 || intensity > 5) {
+                throw new ArgumentOutOfRangeException("light intensity must be [0.0 , 5.0] inclusive");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
@@ -3232,14 +3042,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeTableTopMaterialExpRoom(ServerAction action)
-        {
-            //only 5 material options at the moment
-            if(action.objectVariation < 0 || action.objectVariation > 4)
-            {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
+        public void ChangeTableTopMaterialExpRoom(ServerAction action) {
+            // only 5 material options at the moment
+            if (action.objectVariation < 0 || action.objectVariation > 4) {
+                throw new ArgumentOutOfRangeException("Please use objectVariation [0, 4] inclusive");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
@@ -3247,95 +3053,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeTableTopColorExpRoom(ServerAction action)
-        {
-            if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
+        public void ChangeTableTopColorExpRoom(int r, int g, int b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableTopColor(action.r, action.g, action.b);
+            ersm.ChangeTableTopColor(r, g, b);
             actionFinished(true);
         }
 
-        public void ChangeTableLegMaterialExpRoom(ServerAction action)
-        {
+        public void ChangeTableLegMaterialExpRoom(int objectVariation) {
             //only 5 material options at the moment
-            if(action.objectVariation < 0 || action.objectVariation > 4)
-            {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
+            if (objectVariation < 0 || objectVariation > 4) {
+                throw new ArgumentOutOfRangeException("please use objectVariation [0, 4] inclusive");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableLegMaterial(action.objectVariation);
+            ersm.ChangeTableLegMaterial(objectVariation);
             actionFinished(true);
         }
 
-        public void ChangeTableLegColorExpRoom(ServerAction action)
-        {
-            if(
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255)
-            {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
+        public void ChangeTableLegColorExpRoom(int r, int g, int b) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableLegColor(action.r, action.g, action.b);
-            actionFinished(true);
+            ersm.ChangeTableLegColor(r, g, b);
+            actionFinished(success: true);
         }
 
-        //returns valid spawn points for spawning an object on a receptacle in the experiment room
-        //checks if <action.objectId> at <action.y> rotation can spawn without falling off 
-        //table <receptacleObjectId>
-        public void ReturnValidSpawnsExpRoom(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
-                actionFinished(false);
-                return;
+        // returns valid spawn points for spawning an object on a receptacle in the experiment room
+        // checks if <objectId> at <y> rotation can spawn without falling off 
+        // table <receptacleObjectId>
+        public void ReturnValidSpawnsExpRoom(string receptacleObjectId, string objectType, float y) {
+            if (receptacleObjectId == null || objectType == null) {
+                throw new ArgumentNullException();
             }
 
-            if(action.objectType == null)
-            {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
-                actionFinished(false);
-                return;
-            }
-
-            //return all valid spawn coordinates
+            // return all valid spawn coordinates
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
+            SimObjPhysics target = getTargetObject(objectId: receptacleObjectId, forceAction: false);
+            actionFinished(
+                success: true,
+                actionReturn: ersm.ReturnValidSpawns(
+                    objType: objectType,
+                    variation: objectVariation,
+                    targetReceptacle: target,
+                    yRot: y
+                )
+            );
         }
 
         ///////////////////////////////////////////
