@@ -1079,27 +1079,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
-        //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
-        //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
-        //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
-        //this means that the isSceneAtRest bool will always be false
-        public void MakeAllObjectsMoveable()
-        {
-            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
-            {
+        // if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
+        // otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
+        // use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
+        // note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
+        // this means that the isSceneAtRest bool will always be false
+        public void MakeAllObjectsMoveable() {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 //check if the sopType is something that can be hung
-                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
-                {
+                if (sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper) {
                     //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
-                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
-                    {
+                    if (sop.GetComponentInParent<ObjectSpecificReceptacle>()) {
                         continue;
                     }
                 }
 
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
-                {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -1110,26 +1105,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //this does not appear to be used except for by the python unit test?
         //May deprecate this at some point?
-		public void RotateLook(ServerAction response)
-		{
+		public void RotateLook(ServerAction response) {
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
 			actionFinished(true);
-
 		}
 
 		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
-		protected virtual void RotateView()
-		{
+		protected virtual void RotateView() {
 			// turn up & down
-			if (Mathf.Abs(m_XRotation) > Mathf.Epsilon)
-			{
+			if (Mathf.Abs(m_XRotation) > Mathf.Epsilon) {
 				transform.Rotate(Vector3.right * m_XRotation, Space.Self);
 			}
 
 			// turn left & right
-			if (Mathf.Abs(m_ZRotation) > Mathf.Epsilon)
-			{
+			if (Mathf.Abs(m_ZRotation) > Mathf.Epsilon) {
 				transform.Rotate(Vector3.up * m_ZRotation, Space.Self);
 			}
 
@@ -1143,29 +1133,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move this out of Unity
 			// constrain vertical turns in safe range
 			float X_SAFE_RANGE = 30.0f;
-			if (eulerX < 180.0f)
-			{
+			if (eulerX < 180.0f) {
 				eulerX = Mathf.Min(X_SAFE_RANGE, eulerX);
-			}
-			else
-			{
+			} else {
 				eulerX = 360.0f - Mathf.Min(X_SAFE_RANGE, 360.0f - eulerX);
 			}
 
 			// freeze y-axis
 			transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
-
 		}
 
 		// Check if agent is collided with other objects
-		protected bool IsCollided()
-		{
+		protected bool IsCollided() {
 			return collisionsInAction.Count > 0;
 		}
 
         public virtual SimpleSimObj[] allSceneObjects() {
 			return GameObject.FindObjectsOfType<SimObj>();
         }
+
+        ///////////////////////////////////////////
+        //////////////// METADATA /////////////////
+        ///////////////////////////////////////////
 
         public void ResetObjectFilter() {
             this.simObjFilter = null;
@@ -1184,8 +1173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(true);
         }
 
-        public virtual ObjectMetadata[] generateObjectMetadata()
-		{
+        public virtual ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] simObjects = null;
             if (this.simObjFilter != null) {
                 simObjects = this.simObjFilter;
@@ -1202,8 +1190,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>>();
 
             #if UNITY_EDITOR
-            //debug draw bounds reset list
-            gizmobounds.Clear();
+                //debug draw bounds reset list
+                gizmobounds.Clear();
             #endif
 
             for (int k = 0; k < numObj; k++) {
@@ -1237,7 +1225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return metadata.ToArray();
 		}
 
-        //generates object metatada based on sim object's properties
+        // generates object metadata based on sim object's properties
         public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
@@ -1279,14 +1267,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             //if the sim object is moveable or pickupable
-            if(simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0)
-            {
-                //this object should report back mass and salient materials
-
+            if (simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0) {
+                // this object should report back mass and salient materials
                 string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
 
-                for(int i = 0; i < simObj.salientMaterials.Length; i++)
-                {
+                for (int i = 0; i < simObj.salientMaterials.Length; i++) {
                     salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
                 }
 
@@ -1294,16 +1279,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //this object should also report back mass since it is moveable/pickupable
                 objMeta.mass = simObj.Mass;
-                
             }
 
-            //can this object change others to hot?
+            // can this object change others to hot?
             objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
 
-            //can this object change others to cold?
+            // can this object change others to cold?
             objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
 
-            //placeholder for heatable objects -kettle, pot, pan
+            // placeholder for heatable objects -kettle, pot, pan
             // objMeta.abletocook = simObj.abletocook;
             // if(objMeta.abletocook) {
             //     objMeta.isReadyToCook = simObj.IsHeated;
@@ -1345,8 +1329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objMeta;
         }
 
-        public SceneBounds GenerateSceneBounds(Bounds bounding)
-        {
+        public SceneBounds GenerateSceneBounds(Bounds bounding) {
             SceneBounds b = new SceneBounds();
             List<float[]> cornerPoints = new List<float[]>();
             float[] xs = new float[]{
@@ -1376,8 +1359,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
-		public virtual  MetadataPatch generateMetadataPatch()
-		{
+		public virtual  MetadataPatch generateMetadataPatch() {
             MetadataPatch patch = new MetadataPatch();
             patch.lastAction = this.lastAction;
             patch.lastActionSuccess = this.lastActionSuccess;
@@ -1389,8 +1371,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return patch;
         }
 
-		public virtual MetadataWrapper generateMetadataWrapper()
-		{
+		public virtual MetadataWrapper generateMetadataWrapper() {
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -1485,10 +1466,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return metaMessage;
 		}
 
-		// public virtual SimpleSimObj[] VisibleSimObjs() {
-		// 	return new SimObj[]{} as SimpleSimObj[];
-		// }
-
 		public void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
                 imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
@@ -1496,12 +1473,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = status;
 		}
 
+        ///////////////////////////////////////////
+        //////// PROCESS CONTROL COMMAND //////////
+        ///////////////////////////////////////////
+
         // This should only be used by DebugInputField and HideNSeekController
         // Once all those invocations have been converted to Dictionary<string, object>
         // this can be removed
-        public void ProcessControlCommand(ServerAction controlCommand)
-        {
-
+        public void ProcessControlCommand(ServerAction controlCommand) {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1538,12 +1517,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // the parameter name is different to avoid failing a test
         // that looks for methods with identical param names, since
         // we dispatch using method + param names
-        public void ProcessControlCommand(Dictionary<string, object> actionDict){
+        public void ProcessControlCommand(Dictionary<string, object> actionDict) {
             ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand)
-        {
+        public void ProcessControlCommand(DynamicServerAction controlCommand) {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -2511,8 +2489,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> excludedSimObjects = new HashSet<SimObjPhysics>();
             foreach (String objectId in excludedObjectIds) {
-                getTargetObject
-                excludedSimObjects.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                excludedSimObjects.Add(getTargetObject(objectId: objectId, forceAction: true));
             }
 
             bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
@@ -2525,8 +2502,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 excludedReceptacleTypes: listOfExcludedReceptacleTypes
             );
 
-            if (success && !placeStationary) {
-                // Let things come to rest for 2 seconds.
+            // Let things come to rest for 2 seconds.
+            if (success && placeStationary) {
                 bool autoSim = Physics.autoSimulation;
                 Physics.autoSimulation = false;
                 for (int i = 0; i < 100; i++) {
@@ -2536,7 +2513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
-            actionFinished(success);
+            actionFinished(success: success);
         }
 
         // On demand public function for getting what sim objects are visible at that moment 
@@ -2748,20 +2725,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
-                actionFinished(false);
-                return;
+                throw new NullReferenceException();
             }
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                //VisualizePath(startPosition, path);
-                actionFinishedEmit(true, path);
-                return;
+            if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+                throw InvalidOperationException("Path to target could not be found");
             }
-            else {
-                errorMessage = "Path to target could not be found";
-                actionFinishedEmit(false);
-                return;
-            }
+            // VisualizePath(startPosition, path);
+            actionFinishedEmit(true, path);
         }
 
         public void GetShortestPath(
@@ -2937,11 +2908,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         errorMessage = $"Collided with: {collidedWithName}.";
                     }
-#if UNITY_EDITOR
-                    Debug.Log("Collided with: ");
-                    Debug.Log(c);
-                    Debug.Log(c.enabled);
-#endif
+                    #if UNITY_EDITOR
+                        Debug.Log("Collided with: ");
+                        Debug.Log(c);
+                        Debug.Log(c.enabled);
+                    #endif
                     return true;
                 }
             }
@@ -2954,8 +2925,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
-
-
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -3264,8 +3233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, results.ToArray());
         }
 
-        public void CameraCrack(int randomSeed = 0)
-        {
+        public void CameraCrack(int randomSeed = 0) {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
 
@@ -3273,43 +3241,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
-        public void OnTriggerStay(Collider other)
-        {
-            if(other.CompareTag("HighFriction"))
-            {
-                inHighFrictionArea = true;
-            }
-
-            else
-            {
-                inHighFrictionArea = false;
-            }
+        public void OnTriggerStay(Collider other) {
+            inHighFrictionArea = other.CompareTag("HighFriction");
         }
 
-        #if UNITY_EDITOR
-        void OnDrawGizmos()
-        {
-            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
-            // Gizmos.color = Color.magenta;
-            // if(validpointlist.Count > 0)
-            // {
-            //     foreach(Vector3 yes in validpointlist)
-            //     {
-            //         Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-            //     }
-            // }
-
-            //draw axis aligned bounds of objects after actionFinished() calls
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
-        }
-        #endif
+        ///////////////////////////////////////////
+        ///////// ACTION DISPATCH TESTING /////////
+        ///////////////////////////////////////////
 
         public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
             actionFinished(true);
@@ -3358,6 +3296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void TestActionDispatchConflict(string param22) {
             actionFinished(true);
         }
+
         public void TestActionDispatchConflict(bool param22) {
             actionFinished(true);
         }
