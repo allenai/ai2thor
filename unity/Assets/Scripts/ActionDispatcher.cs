@@ -35,11 +35,11 @@ using Newtonsoft.Json.Linq;
     Unity serialized using json.  This restricts the types that can be passed to
     C# as well even if we serialized using a different format, Python does not 
     have all the same primitives, such as 'short'.  Second, we allow actions
-    to be invoked from the Python side using keyword args which doesn't preserve order.
+    to be invoked from the Python side using keyword args which don't preserve order.
 
     These restrictions shouldn't present themselves as creating duplicate public
     actions with different orders, but identically named parameters would lead to
-    confusion should be avoided.
+    confusion and should be avoided.
 
 
     Ambiguous Actions
@@ -62,7 +62,7 @@ using Newtonsoft.Json.Linq;
             public void LookUp(float degrees, bool forceThing=false)
         reason:
             This is valid C# and if you have code LookUp(0.0f) it will bind to the first
-            method, though there is still ambiguity since user could have wanted to dispatch
+            method, though there is still ambiguity since a user could have wanted to dispatch
             to the second method which has an optional forceThing parameter. i.e. if this
             case is not prevented, the optional value in the second method becomes required.
 
@@ -100,8 +100,8 @@ public static class ActionDispatcher {
             try {
                 Dictionary<string, object> act = new Dictionary<string, object>();
                 act["action"] = methodName;
-                dynamic action = JObject.FromObject(act);
-                MethodInfo m = getDispatchMethod(targetType, action);
+                DynamicServerAction dynamicServerAction = new DynamicServerAction(act);
+                MethodInfo m = getDispatchMethod(targetType, dynamicServerAction);
             } catch(AmbiguousActionException) {
                 actions.Add(methodName);
             }
@@ -254,9 +254,9 @@ public static class ActionDispatcher {
         return methodDispatchTable[action];
     }
 
-    public static MethodInfo getDispatchMethod(Type targetType, dynamic serverCommand) {
+    public static MethodInfo getDispatchMethod(Type targetType, DynamicServerAction dynamicServerAction) {
 
-        List<MethodInfo> actionMethods = getCandidateMethods(targetType, serverCommand.action.ToString());
+        List<MethodInfo> actionMethods = getCandidateMethods(targetType,  dynamicServerAction.action);
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
@@ -283,13 +283,8 @@ public static class ActionDispatcher {
             if (matchedMethod == null && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
                 matchedMethod = method;
             } else {
-                HashSet<string> actionParams = new HashSet<string>();
-                foreach(var p in serverCommand.Properties()) {
-                    actionParams.Add(p.Name);
-                }
-
                 foreach(var p in method.GetParameters()) {
-                    if (actionParams.Contains(p.Name)) {
+                    if (dynamicServerAction.ContainsKey(p.Name)) {
                         matchCount++;
                     }
                 }
@@ -306,9 +301,9 @@ public static class ActionDispatcher {
         return matchedMethod;
     }
 
-    public static void Dispatch(System.Object target, dynamic serverCommand) {
+    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
 
-        MethodInfo method = getDispatchMethod(target.GetType(), serverCommand);
+        MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
             throw new InvalidActionException();
@@ -318,15 +313,14 @@ public static class ActionDispatcher {
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         object[] arguments = new object[methodParams.Length];
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
-            arguments[0] = serverCommand.ToObject(methodParams[0].ParameterType);
+            ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
+            serverAction.dynamicServerAction = dynamicServerAction;
+            arguments[0] = serverAction;
         }  else {
             for(int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
-                // allows for passing in a ServerAction as a dynamic to ProcessControlCommand
-                if (serverCommand.GetType() == pi.ParameterType){
-                    arguments[i] = serverCommand;
-                } else if (serverCommand.ContainsKey(pi.Name)) {
-                    arguments[i] = serverCommand[pi.Name].ToObject(pi.ParameterType);
+                if (dynamicServerAction.ContainsKey(pi.Name)) {
+                    arguments[i] = dynamicServerAction.GetValue(pi.Name).ToObject(pi.ParameterType);
                 } else {
                     if (!pi.HasDefaultValue)  {
                         if (missingArguments == null) {

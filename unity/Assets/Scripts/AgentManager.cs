@@ -10,6 +10,7 @@ using MessagePack.Resolvers;
 using MessagePack.Formatters;
 using MessagePack;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
@@ -48,6 +49,9 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
+    public const float DEFAULT_FOV = 90;
+    public const float MAX_FOV = 180;
+    public const float MIN_FOV = 0;
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -190,7 +194,7 @@ public class AgentManager : MonoBehaviour
 
         }
 
-		primaryAgent.ProcessControlCommand (action);
+		primaryAgent.ProcessControlCommand (action.dynamicServerAction);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
@@ -321,11 +325,6 @@ public class AgentManager : MonoBehaviour
 		ResetSceneBounds();
 	}
 
-	// If fov is <= min or > max, return defaultVal, else return fov
-	private float ClampFieldOfView(float fov, float defaultVal = 90f, float min = 0f, float max = 180f) {
-		return (fov <= min || fov > max) ? defaultVal : fov;
-	}
-
     private void updateImageSynthesis(bool status) {
         foreach(var agent in this.agents) {
             agent.updateImageSynthesis(status);
@@ -348,68 +347,194 @@ public class AgentManager : MonoBehaviour
         }
     }
 
-	public void AddThirdPartyCamera(ServerAction action) {
-		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
-		gameObject.AddComponent(typeof(Camera));
-		Camera camera = gameObject.GetComponentInChildren<Camera>();
+    private void updateCameraProperties(
+        Camera camera,
+        Vector3 position,
+        Vector3 rotation,
+        float fieldOfView,
+        string skyboxColor,
+        bool? orthographic,
+        float? orthographicSize,
+        string actionName
+    ) {
+        // update the position and rotation
+        camera.gameObject.transform.position = position;
+        camera.gameObject.transform.eulerAngles = rotation;
 
-		camera.cullingMask = ~(1 << 11);
-
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage)
-		{
-			gameObject.AddComponent(typeof(ImageSynthesis));
-		}
-
-		this.thirdPartyCameras.Add(camera);
-		gameObject.transform.eulerAngles = action.rotation;
-		gameObject.transform.position = action.position;
-
-		// default to 90 fov on third party camera if value is too small or large
-		camera.fieldOfView = ClampFieldOfView(action.fieldOfView);
-
-        if (action.orthographic) {
-			// NOTE: orthographicSize uses the original fieldOfView value passed in
-			// TODO: this is an odd overload of the argument, consider adding another parameter
-            camera.orthographicSize = action.fieldOfView;
+        // updates the camera's perspective
+        camera.fieldOfView = fieldOfView;
+        if (orthographic != null) {
+            camera.orthographic = (bool) orthographic;
+            if (orthographic == true && orthographicSize != null) {
+                camera.orthographicSize = (float) orthographicSize;
+            }
         }
-        camera.orthographic = action.orthographic;
 
-		this.agentManagerState = AgentState.ActionComplete;
-	}
+        // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
+        bool actionFailed = false;
+        if (skyboxColor == "default") {
+            camera.clearFlags = CameraClearFlags.Skybox;
+        } else if (skyboxColor != null) {
+            Color color;
+            bool successfullyParsed = ColorUtility.TryParseHtmlString(skyboxColor, out color);
+            if (successfullyParsed) {
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = color;
+            } else {
+                actionError(errorMessage: "Invalid skyboxColor! Cannot be parsed as an HTML color.", actionName: actionName);
+                actionFailed = true;
+            }
+        }
 
-	public void UpdateThirdPartyCamera(ServerAction action) {
-		if (action.thirdPartyCameraId <= thirdPartyCameras.Count) {
-			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
-			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
-			thirdPartyCamera.gameObject.transform.position = action.position;
+        if (!actionFailed) {
+            actionSuccess(actionName: actionName);
+        }
+    }
 
-			// keep existing fieldOfView if we have one and are not passed a new one
-			// 0 gets passed for null
-			if(thirdPartyCamera.fieldOfView == 0 || action.fieldOfView != 0) {
-				// default to 90 fov on third party camera if value passed in is too small or large
-				thirdPartyCamera.fieldOfView = ClampFieldOfView(action.fieldOfView);
-			}
+    private void actionError(string errorMessage, string actionName, ServerActionErrorCode errorCode) {
+        // update metadata
+        primaryAgent.errorMessage = errorMessage;
+        primaryAgent.lastAction = actionName;
+        primaryAgent.lastActionSuccess = false;
+        primaryAgent.errorCode = errorCode;
 
-			// set the skybox to default, white, or black (other colors can be added as needed)
-			if (action.skyboxColor == null) {
-				// default blue-ish skybox that shows the ground
-				thirdPartyCamera.clearFlags = CameraClearFlags.Skybox;
-			} else {
-				thirdPartyCamera.clearFlags = CameraClearFlags.SolidColor;
-				if (action.skyboxColor == "white") {
-					thirdPartyCamera.backgroundColor = Color.white;
-				} else {
-					thirdPartyCamera.backgroundColor = Color.black;
-				}
-			}
-		}
-		this.agentManagerState = AgentState.ActionComplete;
-	}
+        // end action
+        agentManagerState = AgentState.ActionComplete;
+    }
+
+    // Helper used to provide an error message and fail the action in the metadata from the agent manager
+    private void actionError(string errorMessage, string actionName) {
+        actionError(errorMessage, actionName, ServerActionErrorCode.Undefined);
+    }
+
+    // Helper used to update success of agent metadata from the agent manager
+    private void actionSuccess(string actionName) {
+        // update metadata
+        primaryAgent.errorMessage = "";
+        primaryAgent.lastAction = actionName;
+        primaryAgent.lastActionSuccess = true;
+        primaryAgent.errorCode = ServerActionErrorCode.Undefined;
+
+        // end action
+        agentManagerState = AgentState.ActionComplete;
+    }
+
+    // Returns true if the FOV is in the correct range, otherwise false.
+    // It updates the error message as well.
+    private bool fovInBounds(float fov, string actionName) {
+        if (fov <= MIN_FOV) {
+            actionError(errorMessage: $"fieldOfView must be > {MIN_FOV}.", actionName: actionName);
+            return false;
+        } else if (fov >= MAX_FOV) {
+            actionError(errorMessage: $"fieldOfView must be < {MAX_FOV}.", actionName: actionName);
+            return false;
+        }
+        return true;
+    }
+
+    public void AddThirdPartyCamera(
+        Vector3 position,
+        Vector3 rotation,
+        float fieldOfView = DEFAULT_FOV,
+        string skyboxColor = null,
+        bool orthographic = false,
+        float? orthographicSize = null
+    ) {
+        // adds error if fieldOfView is out of bounds
+        if (!fovInBounds(fov: fieldOfView, actionName: "AddThirdPartyCamera")) {
+            return;
+        }
+
+        GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
+        gameObject.AddComponent(typeof(Camera));
+        Camera camera = gameObject.GetComponentInChildren<Camera>();
+
+        // set up returned image
+        camera.cullingMask = ~(1 << 11);
+        if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
+            gameObject.AddComponent(typeof(ImageSynthesis));
+        }
+
+        thirdPartyCameras.Add(camera);
+        updateCameraProperties(
+            camera: camera,
+            position: position,
+            rotation: rotation,
+            fieldOfView: fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize,
+            actionName: "AddThirdPartyCamera"
+        );
+    }
+
+    // helper that can be used when converting Dictionary<string, float> to a Vector3.
+    private Vector3 parseDictAsVector3(
+        Dictionary<string, float> dict,
+        Vector3 defaultsOnNull
+    ) {
+        if (dict == null) {
+            return defaultsOnNull;
+        }
+
+        return new Vector3(
+            x: dict.ContainsKey("x") ? dict["x"] : defaultsOnNull.x,
+            y: dict.ContainsKey("y") ? dict["y"] : defaultsOnNull.y,
+            z: dict.ContainsKey("z") ? dict["z"] : defaultsOnNull.z
+        );
+    }
+
+    // note that using a using a Dictionary<string, float> allows for only x, y, or z
+    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
+    public void UpdateThirdPartyCamera(
+        int thirdPartyCameraId = 0,
+        Dictionary<string, float> position = null,
+        Dictionary<string, float> rotation = null,
+        float? fieldOfView = null,
+        string skyboxColor = null,
+        bool? orthographic = null,
+        float? orthographicSize = null
+    ) {
+        // adds error if fieldOfView is out of bounds
+        if (fieldOfView !=null && !fovInBounds(fov: (float) fieldOfView, actionName: "UpdateThirdPartyCamera")) {
+            return;
+        }
+
+        // count is out of bounds
+        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
+            actionError(
+                errorMessage: $"thirdPartyCameraId (int: default=0) must be >= 0 and < len(thirdPartyCameras)={thirdPartyCameras.Count}.",
+                actionName: "UpdateThirdPartyCamera"
+            );
+            return;
+        }
+
+        Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
+
+        // keeps positions at default values, if unspecified.
+        Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
+        Vector3 targetPosition = parseDictAsVector3(dict: position, defaultsOnNull: oldPosition);
+
+        // keeps rotations at default values, if unspecified.
+        Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
+        Vector3 targetRotation = parseDictAsVector3(dict: rotation, defaultsOnNull: oldRotation);
+
+        updateCameraProperties(
+            camera: thirdPartyCamera,
+            position: targetPosition,
+            rotation: targetRotation,
+            fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float) fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize,
+            actionName: "UpdateThirdPartyCamera"
+        );
+    }
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
-		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
+		//disable ambient occlusion on primary agent because it causes issues with multiple main cameras
 		//primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
@@ -418,7 +543,7 @@ public class AgentManager : MonoBehaviour
 		// clone.m_Camera.targetDisplay = this.agents.Count;
 		clone.transform.position = clonePosition;
 		UpdateAgentColor(clone, agentColors[this.agents.Count]);
-		clone.ProcessControlCommand (action);
+		clone.ProcessControlCommand (action.dynamicServerAction);
 		this.agents.Add (clone);
 	}
 
@@ -866,6 +991,7 @@ public class AgentManager : MonoBehaviour
             } else if (serverType == serverTypes.FIFO){
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 foreach(var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
@@ -930,21 +1056,23 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
-        #if UNITY_WEBGL
-		ServerAction controlCommand = new ServerAction();
-		JsonUtility.FromJsonOverwrite(msg, controlCommand);
-        #else
-        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
-        #endif
+        
+        DynamicServerAction controlCommand = new DynamicServerAction(msg); //jObject);
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
-        this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
-        this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
+        this.renderImage = controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId;
 
-		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
+		if (agentManagerActions.Contains(controlCommand.action)) {
             this.agentManagerState = AgentState.Processing;
-            ActionDispatcher.Dispatch(this, controlCommand);
+            try {
+                ActionDispatcher.Dispatch(this, controlCommand);
+            } catch (MissingArgumentsActionException e) {
+                string errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
+                Debug.LogError(errorMessage);
+                actionError(errorMessage, controlCommand.action.ToString(), ServerActionErrorCode.MissingArguments);
+            }
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
@@ -995,6 +1123,7 @@ public class AgentManager : MonoBehaviour
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class MultiAgentMetadata {
 
 	public MetadataWrapper[] agents;
@@ -1004,6 +1133,7 @@ public class MultiAgentMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ThirdPartyCameraMetadata
 {
 	public int thirdPartyCameraId;
@@ -1013,6 +1143,7 @@ public class ThirdPartyCameraMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class MetadataPatch
 {
 	public string lastAction;
@@ -1026,6 +1157,7 @@ public class MetadataPatch
 //adding AgentMetdata class so there is less confusing
 //overlap between ObjectMetadata and AgentMetadata
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class AgentMetadata
 {
     public string name;
@@ -1038,6 +1170,7 @@ public class AgentMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class DroneAgentMetadata : AgentMetadata
 {
     public float droneCurrentTime;
@@ -1046,6 +1179,7 @@ public class DroneAgentMetadata : AgentMetadata
 
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class DroneObjectMetadata : ObjectMetadata
 {
     // Drone Related Metadata
@@ -1059,6 +1193,7 @@ public class DroneObjectMetadata : ObjectMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectMetadata
 {
 	public string name;
@@ -1105,7 +1240,7 @@ public class ObjectMetadata
 	///
 	public bool openable;
 	public bool isOpen;
-	public float openPercent;//if the object is openable, what is the current open percent? value from 0 to 1.0
+	public float openness; // if the object is openable, what is the current openness? It's a normalized percentage from [0:1]
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
@@ -1133,6 +1268,7 @@ public class ObjectMetadata
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class SceneBounds
 {
     //8 corners of the world axis aligned box that bounds a sim object
@@ -1150,6 +1286,7 @@ public class SceneBounds
 //for returning a world axis aligned bounding box
 //if an object is rotated, the dimensions of this box are subject to change
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class AxisAlignedBoundingBox
 {
     //8 corners of the world axis aligned box that bounds a sim object
@@ -1167,6 +1304,7 @@ public class AxisAlignedBoundingBox
 //for returning an object oriented bounds not locked to world axes
 //if an object is rotated, this object oriented box will not change dimensions
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectOrientedBoundingBox
 {
     //probably return these from the BoundingBox component of the object for now?
@@ -1175,6 +1313,7 @@ public class ObjectOrientedBoundingBox
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class InventoryObject
 {
 	public string objectId;
@@ -1182,18 +1321,21 @@ public class InventoryObject
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ColorId {
 	public ushort[] color;
 	public string name;
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ColorBounds {
 	public ushort[] color;
 	public int[] bounds;
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class HandMetadata {
 	public Vector3 position;
 	public Vector3 rotation;
@@ -1202,6 +1344,7 @@ public class HandMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectTypeCount
 {
     public string objectType; //specify object by type in scene
@@ -1209,6 +1352,7 @@ public class ObjectTypeCount
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose
 {
     public string objectName;
@@ -1221,6 +1365,7 @@ public class ObjectPose
 //"slice all objects that have the sliceable property"
 //also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class SetObjectStates
 {
     public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
@@ -1236,6 +1381,7 @@ public class SetObjectStates
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
@@ -1279,6 +1425,91 @@ public struct MetadataWrapper
     public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
+}
+
+/*
+Wraps the JObject created by JSON.net and used by the ActionDispatcher
+to dispatch to the appropriate action based on the passed in params.
+The properties(agentId, sequenceId, action) exist to encapsulate the key names.
+*/
+public class DynamicServerAction
+{
+    private JObject jObject;
+
+    public int agentId {
+        get {
+            return this.GetValue("agentId", 0);
+        }
+    }
+
+    public int sequenceId {
+        get {
+            return (int)this.jObject["sequenceId"];
+        }
+    }
+
+    public string action {
+        get {
+            return this.jObject["action"].ToString();
+        }
+    }
+
+    public int GetValue(string name, int defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (int)this.GetValue(name);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public bool GetValue(string name, bool defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (bool)this.GetValue(name);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public JToken GetValue(string name) {
+        return this.jObject.GetValue(name);
+    }
+
+    public bool ContainsKey(string name) {
+        return this.jObject.ContainsKey(name);
+    }
+
+    public bool renderObjectImage {
+        get {
+            return this.GetValue("renderObjectImage", false);
+        }
+    }
+
+    public bool renderImage {
+        get {
+            return this.GetValue("renderImage", true);
+        }
+    }
+
+    public DynamicServerAction(Dictionary<string, object> action) {
+        this.jObject = JObject.FromObject(action);
+    }
+
+    public DynamicServerAction(JObject action) {
+        this.jObject = action;
+    }
+
+    public DynamicServerAction(string jsonMessage) {
+        this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
+    }
+
+    public System.Object ToObject(Type objectType) {
+        return this.jObject.ToObject(objectType);
+    }
+
+    public T ToObject<T>() {
+        return this.jObject.ToObject<T>();
+    }
+
 }
 
 [Serializable]
@@ -1398,6 +1629,9 @@ public class ServerAction
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
     public bool fastActionEmit;
+    // this allows us to chain the dispatch between two separate
+    // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
+    public DynamicServerAction dynamicServerAction;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -1443,6 +1677,7 @@ public class ServerAction
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class InitializeReturn
 {
 	public float cameraNearPlane;

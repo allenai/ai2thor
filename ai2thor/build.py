@@ -2,11 +2,15 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
 import platform
+import json
 from ai2thor.util import makedirs
+import time
+import random
 import ai2thor.downloader
-import fcntl
 import zipfile
 import logging
+from ai2thor.util.lock import LockSh, LockEx
+from ai2thor.util import atomic_write
 import io
 
 logger = logging.getLogger(__name__)
@@ -39,9 +43,13 @@ base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PUBLIC_S3_BUCKET
 private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 
 
-class ExternalBuild(object):
-    def __init__(self, executable_path):
-        self.executable_path = executable_path
+# dummy build when connecting to the editor
+class EditorBuild(object):
+    def __init__(self):
+        # assuming that an external build supports both server types
+        self.server_types = ['FIFO', 'WSGI']
+        self.url = None
+        self.unity_proc = None
 
     def download(self):
         pass
@@ -51,7 +59,23 @@ class ExternalBuild(object):
 
     def lock_sh(self):
         pass
-    
+
+class ExternalBuild(object):
+    def __init__(self, executable_path):
+        self.executable_path = executable_path
+
+        # assuming that an external build supports both server types
+        self.server_types = ['FIFO', 'WSGI']
+
+    def download(self):
+        pass
+
+    def unlock(self):
+        pass
+
+    def lock_sh(self):
+        pass
+
 
 class Build(object):
 
@@ -62,7 +86,8 @@ class Build(object):
         self.include_private_scenes = include_private_scenes
         self.releases_dir = releases_dir
         self.tmp_dir = None
-        if releases_dir:
+
+        if self.releases_dir:
             self.tmp_dir = os.path.normpath(self.releases_dir + "/../tmp")
 
     def download(self):
@@ -72,30 +97,57 @@ class Build(object):
 
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
-        download_lf = os.open(os.path.join(self.tmp_dir, self.name + ".lock"), os.O_RDWR | os.O_CREAT)
-        try:
-            fcntl.lockf(download_lf, fcntl.LOCK_EX)
 
+        with LockEx(os.path.join(self.tmp_dir, self.name)):
             if not os.path.isfile(self.executable_path):
-                zip_data = ai2thor.downloader.download(
-                    self.url,
-                    self.sha256(),
-                    self.include_private_scenes)
-
-                z = zipfile.ZipFile(io.BytesIO(zip_data))
+                z = self.zipfile()
                 # use tmpdir instead or a random number
                 extract_dir = os.path.join(self.tmp_dir, self.name)
                 logger.debug("Extracting zipfile %s" % os.path.basename(self.url))
                 z.extractall(extract_dir)
+
                 os.rename(extract_dir, os.path.join(self.releases_dir, self.name))
+                # This can be removed after migrating OSXIntel64 builds to have the AI2Thor executable
+                if os.path.exists(self.old_executable_path) and not os.path.exists(self.executable_path):
+                    os.link(self.old_executable_path, self.executable_path)
+                
                 # we can lose the executable permission when unzipping a build
                 os.chmod(self.executable_path, 0o755)
-            else:
-                logger.debug("%s exists - skipping download" % self.executable_path)
 
-        finally:
-            fcntl.lockf(download_lf, fcntl.LOCK_UN)
-            os.close(download_lf)
+            else:
+                logger.debug("%s exists - skipping download" % (self.executable_path,))
+
+    def zipfile(self):
+        zip_data = ai2thor.downloader.download(
+            self.url,
+            self.sha256(),
+            self.include_private_scenes)
+
+        return zipfile.ZipFile(io.BytesIO(zip_data))
+
+    def download_metadata(self):
+        # this can happen if someone has an existing release without the metadata 
+        # built prior to the backfill
+        # can add check to see if metadata has expired/we update metadata
+        # if we want to add more info to metadata
+        if not self.metadata:
+            z = self.zipfile()
+            atomic_write(self.metadata_path, z.read('metadata.json'))
+
+    @property
+    def old_executable_path(self):
+        target_arch = platform.system()
+        if target_arch == 'Linux':
+            return self.executable_path
+        elif target_arch == 'Darwin':
+            return os.path.join(
+                self.releases_dir,
+                self.name,
+                self.name + ".app",
+                "Contents/MacOS",
+                self.name)
+        else:
+            raise Exception('unable to handle target arch %s' % target_arch)
 
     @property
     def executable_path(self):
@@ -112,6 +164,23 @@ class Build(object):
                 "AI2-Thor")
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
+    
+    @property
+    def metadata_path(self):
+        return os.path.join(self.releases_dir, self.name, "metadata.json")
+
+    @property
+    def metadata(self):
+        if os.path.isfile(self.metadata_path):
+            with open(self.metadata_path, "r") as f:
+                return json.loads(f.read())
+        else:
+            return None
+
+    @property
+    def server_types(self):
+        self.download_metadata()
+        return self.metadata.get('server_types', [])
 
     def auth(self):
         if self.include_private_scenes:
@@ -134,31 +203,29 @@ class Build(object):
         return build_name(self.arch, self.commit_id, self.include_private_scenes)
 
     def unlock(self):
-        if self._lock_file:
-            fcntl.lockf(self._lock_file, fcntl.LOCK_UN)
-            os.close(self._lock_file)
-
-    def _lock(self, mode):
-        build_dir = os.path.join(self.releases_dir, self.name)
-        self._lock_file = os.open(build_dir + ".lock", os.O_RDWR | os.O_CREAT)
-        fcntl.lockf(self._lock_file, mode)
+        if self._lock:
+            self._lock.unlock()
+            self._lock = None
 
     def lock_sh(self):
-        self._lock(fcntl.LOCK_SH)
-        build_dir = os.path.join(self.releases_dir, self.name)
-        self._lock_file = os.open(build_dir + ".lock", os.O_RDWR | os.O_CREAT)
-        fcntl.lockf(self._lock_file, fcntl.LOCK_SH)
+        self._lock = LockSh(os.path.join(self.releases_dir, self.name))
+        self._lock.lock()
 
     @property
     def log_url(self):
         return os.path.splitext(self.url)[0] + '.log'
 
     @property
+    def metadata_url(self):
+        return os.path.splitext(self.url)[0] + '.json'
+
+    @property
     def sha256_url(self):
         return os.path.splitext(self.url)[0] + '.sha256'
 
     def exists(self):
-        return requests.head(self.url, auth=self.auth()).status_code == 200
+        x = requests.head(self.url, auth=self.auth())
+        return x.status_code == 200
 
     def log_exists(self):
         return requests.head(self.log_url, auth=self.auth()).status_code == 200

@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 import json
+import re
 import time
 import zipfile
 import threading
@@ -14,6 +15,16 @@ import boto3
 import platform
 import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s [%(process)d] %(funcName)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def add_files(zipf, start_dir):
@@ -47,7 +58,7 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     s3.Object(bucket, sha256_key).put(
         Body=archive_sha256, ACL=acl, ContentType="text/plain"
     )
-    print("pushed build %s to %s" % (bucket, build_archive_name))
+    logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
 
 def _webgl_local_build_path(prefix, source_dir="builds"):
@@ -361,6 +372,16 @@ def local_build(context, prefix="local", arch="OSXIntel64"):
     generate_quality_settings(context)
 
 
+def fix_webgl_unity_loader_regex(unity_loader_path):
+    # Bug in the UnityLoader.js causes Chrome on Big Sur to fail to load
+    # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
+    with open(unity_loader_path) as f:
+        loader = f.read()
+    
+    loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
+    with open(unity_loader_path, "w") as f:
+        f.write(loader)
+
 @task
 def webgl_build(
         context,
@@ -435,8 +456,10 @@ def webgl_build(
         print("Build Successful")
     else:
         print("Build Failure")
-    generate_quality_settings(context)
+
     build_path = _webgl_local_build_path(prefix, directory)
+    fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
+    generate_quality_settings(context)
 
     rooms = {
         "kitchens": {
@@ -540,19 +563,6 @@ def build_sha256(path):
 
     return m.hexdigest()
 
-
-def build_docker(version):
-
-    subprocess.check_call(
-        "docker build --quiet --rm --no-cache -t  ai2thor/ai2thor-base:{version} .".format(
-            version=version
-        ),
-        shell=True,
-    )
-
-    subprocess.check_call(
-        "docker push ai2thor/ai2thor-base:{version}".format(version=version), shell=True
-    )
 
 def git_commit_id():
     commit_id = (
@@ -719,13 +729,28 @@ def clean():
 
 def link_build_cache(branch):
     library_path = os.path.join("unity", "Library")
+    logger.info("linking build cache for %s" % branch)
 
-    if os.path.exists(library_path):
+    if os.path.lexists(library_path):
         os.unlink(library_path)
 
-    branch_cache_dir = os.path.join(os.environ["HOME"], "cache", branch, "Library")
-    os.makedirs(branch_cache_dir, exist_ok=True)
-    os.symlink(branch_cache_dir, library_path)
+    # this takes takes care of branches with '/' in it
+    # to avoid implicitly creating directories under the cache dir
+    encoded_branch = re.sub(r'[^a-zA-Z0-9_\-.]', '_', re.sub('_', '__', branch))
+
+    cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+    master_cache_dir = os.path.join(cache_base_dir, 'master')
+    branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
+    # use the master cache as a starting point to avoid
+    # having to re-import all assets, which can take up to 1 hour
+    if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
+        logger.info("copying master cache for %s" % encoded_branch)
+        subprocess.check_call("cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True)
+        logger.info("copying master cache complete for %s" % encoded_branch)
+
+    branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
+    os.makedirs(branch_library_cache_dir, exist_ok=True)
+    os.symlink(branch_library_cache_dir, library_path)
 
 def travis_build(build_id):
     import requests
@@ -747,14 +772,13 @@ def pending_travis_build():
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.com/repo/3459357/builds?repository_id=3459357&include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
+        "https://api.travis-ci.com/repo/3459357/builds?include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Travis-API-Version": "3",
         },
     )
-
     for b in res.json()["builds"]:
         tag = None
         if b['tag']:
@@ -811,8 +835,8 @@ def ci_build(context):
         build = pending_travis_build()
         blacklist_branches = ["vids", "video"]
         if build and build["branch"] not in blacklist_branches:
+            logger.info("pending build for %s %s" % (build["branch"], build["commit_id"]))
             clean()
-            link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s" % build["branch"], shell=True)
             subprocess.check_call(
@@ -821,7 +845,15 @@ def ci_build(context):
 
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
+                logger.info("starting build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
+                if ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=False).exists():
+                    logger.info("found build for commit %s %s" % (build["commit_id"], arch))
+                    continue
+                # this is done here so that when a tag build request arrives and the commit_id has already
+                # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                link_build_cache(build["branch"])
                 p = ci_build_arch(arch, False)
+                logger.info("finished build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
                 procs.append(p)
 
 
@@ -830,28 +862,34 @@ def ci_build(context):
             # for the branch commit
             if build['tag'] is None:
 
+                logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
                 ci_pytest(context)
+                logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
 
             # give the travis poller time to see the result
             for i in range(6):
                 b = travis_build(build['id'])
-                print("build state for %s: %s" % (build['id'], b['state']))
+                logger.info("build state for %s: %s" % (build['id'], b['state']))
 
                 if b['state'] != 'started': 
                     break
                 time.sleep(10)
 
             if build["branch"] == "master":
+                logger.info("starting webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
+                logger.info("finished webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
 
             for p in procs:
                 if p:
+                    logger.info("joining proc %s for %s %s" % (p.pid, build["branch"], build["commit_id"]))
                     p.join()
             
 
             
+            logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
@@ -864,11 +902,6 @@ def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
 
     commit_id = git_commit_id()
-    commit_build = ai2thor.build.Build(arch, commit_id, include_private_scenes)
-    if commit_build.exists():
-        print("found build for commit %s %s" % (commit_id, arch))
-        return
-
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
@@ -964,8 +997,6 @@ def build(context, local=False):
 
     builds = {"Docker": {"tag": version}}
     threads = []
-    # dp = Process(target=build_docker, args=(version,))
-    # dp.start()
 
     for include_private_scenes in (True, False):
         for arch in platform_map.keys():
@@ -2870,3 +2901,4 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
+

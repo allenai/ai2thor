@@ -128,10 +128,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public CharacterController m_CharacterController;
 		protected CollisionFlags m_CollisionFlags;
 		protected Vector3 lastPosition;
-		protected string lastAction;
-		protected bool lastActionSuccess;
-		protected string errorMessage;
-		protected ServerActionErrorCode errorCode;
+
+        // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
+        public string lastAction;
+        public bool lastActionSuccess;
+        public string errorMessage;
+        public ServerActionErrorCode errorCode;
+
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
@@ -265,15 +268,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.Emit, actionReturn);
+		public void actionFinishedEmit(bool success, object actionReturn = null) {
+            actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
 		}
 
-		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
-		{
-			if (!this.IsProcessing)
-			{
+		protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
+			if (!this.IsProcessing) {
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
 
@@ -282,12 +282,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
-
         }
 
-		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.ActionComplete, actionReturn);
+		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
+            actionFinished(success: success, newState: AgentState.ActionComplete, actionReturn: actionReturn);
             this.resumePhysics();
 		}
 
@@ -708,6 +709,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("Initialize: no valid starting positions found");
                 actionFinished(false);
             }
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)] 
+        public void ChangeColorOfMaterials() {
+            RandomizeColors();
+        }
+
+        public void RandomizeColors() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.RandomizeColor();
+            actionFinished(true);
+        }
+
+        public void ResetColors() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.ResetColors();
+            actionFinished(true);
         }
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
@@ -1183,7 +1201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isOpen = simObj.IsOpen;
-                objMeta.openPercent = simObj.OpenPercentage;
+                objMeta.openness = simObj.openness;
             }
 
             objMeta.toggleable = simObj.IsToggleable;
@@ -1429,10 +1447,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = status;
 		}
 
-
-#if UNITY_WEBGL
+        // This should only be used by DebugInputField and HideNSeekController
+        // Once all those invocations have been converted to Dictionary<string, object>
+        // this can be removed
         public void ProcessControlCommand(ServerAction controlCommand)
         {
+
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1465,25 +1485,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
         }
-#endif
 
         // the parameter name is different to avoid failing a test
         // that looks for methods with identical param names, since
         // we dispatch using method + param names
         public void ProcessControlCommand(Dictionary<string, object> actionDict){
-            var jsonResolver = new ShouldSerializeContractResolver();
-            dynamic action = JObject.FromObject(actionDict,
-                        new Newtonsoft.Json.JsonSerializer()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            });
-
-
-            ProcessControlCommand(action);
+            ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(dynamic controlCommand)
+        public void ProcessControlCommand(DynamicServerAction controlCommand)
         {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -1502,38 +1512,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
                 errorCode = ServerActionErrorCode.MissingArguments;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
             }
             catch (AmbiguousActionException e)
             {
                 errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
                 errorCode = ServerActionErrorCode.AmbiguousAction;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
-            
             }
             catch (InvalidActionException)
             {
-                errorMessage = "Invalid action: " + controlCommand.action;
                 errorCode = ServerActionErrorCode.InvalidAction;
-                Debug.LogError(errorMessage);
-                actionFinished(false);
-            
+                actionFinished(success: false, errorMessage: "Invalid action: " + controlCommand.action);
+            }
+            catch (TargetInvocationException e)
+            {
+                // TargetInvocationException is called whenever an action
+                // throws an exception. It is used to short circuit errors,
+                // which terminates the action immediately.
+                actionFinished(
+                    success: false,
+                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
+                );
             }
             catch (Exception e)
             {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
-                Debug.LogError(e);
                 errorMessage += e.ToString();
                 actionFinished(false);
             }
 
             #if UNITY_EDITOR
-            if (errorMessage != "") {
-                Debug.Log(errorMessage);
-            }
+                if (errorMessage != "") {
+                    Debug.LogError(errorMessage);
+                }
             #endif
         }
 
@@ -1973,8 +1986,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return visible;
         }
 
-        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false)
-        {
+        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false) {
             ServerAction action = new ServerAction();
             action.objectId = objectId;
             action.forceVisible = forceVisible;
@@ -1982,8 +1994,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
-        public SimObjPhysics[] VisibleSimObjs(ServerAction action)
-        {
+        public SimObjPhysics[] VisibleSimObjs(ServerAction action) {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
 
             //go through array of sim objects visible to the camera
@@ -3093,12 +3104,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                startPosition, out startHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+                startPosition, out startHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
 
             NavMeshHit targetHit;
             bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                targetPosition, out targetHit, 0.2f, UnityEngine.AI.NavMesh.AllAreas
+                targetPosition, out targetHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
 
             if (!startWasHit || !targetWasHit) {
@@ -3144,8 +3155,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return true;
             }
             else {
-                errorMessage = $"Could not find path between {startHit.position}" +
-                    " and {targetHit.position} using the NavMesh.";
+                errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
+                    $" and {targetHit.position.ToString("F3")} using the NavMesh.";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }

@@ -46,6 +46,7 @@ def test_stochastic_controller():
     controller = build_controller(agentControllerType='stochastic')
     controller.reset('FloorPlan28')
     assert controller.last_event.metadata['lastActionSuccess']
+    controller.stop()
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
 # up with the same frame
@@ -54,6 +55,7 @@ def test_multi_agent_with_third_party_camera():
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
     event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
+    controller.stop()
 
 # Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
 def test_third_party_camera_with_image_synthesis():
@@ -63,6 +65,7 @@ def test_third_party_camera_with_image_synthesis():
     assert len(event.third_party_class_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1
     assert len(event.third_party_instance_segmentation_frames) == 1
+    controller.stop()
 
 
 def test_rectangle_aspect():
@@ -70,12 +73,14 @@ def test_rectangle_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
+    controller.stop()
 
 def test_small_aspect():
     controller = build_controller(width=128, height=64)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
+    controller.stop()
 
 def test_reset():
     controller = build_controller()
@@ -91,6 +96,7 @@ def test_reset():
     event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=False)
     assert event.depth_frame is None, "depth frame shouldn't have rendered!"
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
+    controller.stop()
 
 def test_fast_emit():
     fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
@@ -104,6 +110,7 @@ def test_fast_emit():
     assert id(event.metadata['objects']) ==  id(event_fast_emit.metadata['objects'])
     assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
+    fast_controller.stop()
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_fast_emit_disabled(controller):
@@ -134,6 +141,14 @@ def test_no_leak_params(controller):
     action = dict(action='RotateLook', rotation=0, horizon=0)
     e = controller.step(action)
     assert 'sequenceId' not in action
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_target_invocation_exception(controller):
+    # TargetInvocationException is raised when short circuiting failures occur
+    # on the Unity side. It often occurs when invalid arguments are used.
+    event = controller.step('OpenObject', x=1.5, y=0.5)
+    assert not event.metadata['lastActionSuccess'], 'OpenObject(x > 1) should fail.'
+    assert event.metadata['errorMessage'], 'errorMessage should not be empty when OpenObject(x > 1).'
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_lookup(controller):
@@ -185,8 +200,6 @@ def test_simobj_filter(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_add_third_party_camera(controller):
-
-
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
@@ -200,38 +213,51 @@ def test_add_third_party_camera(controller):
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_update_third_party_camera(controller):
+def test_update_third_party_camera():
+    controller = build_controller(server_class=FifoServer)
 
+    # add a new camera
+    expectedPosition = dict(x=1.2, y=2.3, z=3.4)
+    expectedRotation = dict(x=30, y=40, z=50)
+    expectedFieldOfView = 45.0
+    e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+
+    # update camera pose fully
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
     expectedInitialFieldOfView = 45.0
-    expectedFieldOfView2 = 55.0
-    expectedFieldOfViewDefault = 90.0
-    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
-
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, position=expectedPosition, rotation=expectedRotation))
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
     assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should have been updated')
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
 
-    # 0 is a special case, since nullable float does not get encoded properly, we need to pass 0 as null
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
+    # partially update the camera pose
+    changeFOV = 55.0
+    expectedPosition2 = dict(x=3.2, z=5)
+    expectedRotation2 = dict(y=90)
+    e = controller.step(
+        action=Actions.UpdateThirdPartyCamera,
+        thirdPartyCameraId=0,
+        fieldOfView=changeFOV,
+        position=expectedPosition2,
+        rotation=expectedRotation2
+    )
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should have been updated'
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == changeFOV, 'fieldOfView should have been updated'
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=expectedFieldOfView2))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView2, 'fieldOfView should have been updated'
+    expectedPosition.update(expectedPosition2)
+    expectedRotation.update(expectedRotation2)
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should been slightly updated')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should been slightly updated')
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
-
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+    for fov in [-1, 181, 0]:
+        e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=fov))
+        assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail outside of (0, 180)'
+        assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should not have updated')
+        assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should not have updated')
+    controller.stop()
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
@@ -276,18 +302,76 @@ def test_teleport(controller):
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_open(controller):
+    objects = controller.last_event.metadata['objects']
+    obj_to_open = next(obj for obj in objects if obj['objectType'] == 'Fridge')
+
+    # helper that returns obj_to_open from a new event
+    def get_object(event, object_id):
+        return next(obj for obj in event.metadata['objects']
+                    if obj['objectId'] == object_id)
+
+    for openness in [0.5, 0.7, 0]:
+        event = controller.step(
+            action='OpenObject',
+            objectId=obj_to_open['objectId'],
+            openness=openness,
+            forceAction=True,
+            raise_for_failure=True)
+        opened_obj = get_object(event, obj_to_open['objectId'])
+        assert abs(opened_obj['openness'] - openness) < 1e-3, 'Incorrect openness!'
+        assert opened_obj['isOpen'] == (openness != 0), 'isOpen incorrectly reported!'
+
+    # test bad openness values
+    for bad_openness in [-0.5, 1.5]:
+        event = controller.step(
+            action='OpenObject',
+            objectId=obj_to_open['objectId'],
+            openness=bad_openness,
+            forceAction=True)
+        assert not event.metadata['lastActionSuccess'], '0.0 > Openness > 1.0 should fail!'
+
+    # test backwards compatibility on moveMagnitude, where moveMagnitude
+    # is now `openness`, but when moveMagnitude = 0 that corresponds to openness = 1.
+    event = controller.step(
+        action='OpenObject',
+        objectId=obj_to_open['objectId'],
+        forceAction=True,
+        moveMagnitude=0)
+    opened_obj = get_object(event, obj_to_open['objectId'])
+    assert abs(opened_obj['openness'] - 1) < 1e-3, 'moveMagnitude=0 must have openness=1'
+    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
+
+    # another moveMagnitude check
+    test_openness = 0.65
+    event = controller.step(
+        action='OpenObject',
+        objectId=obj_to_open['objectId'],
+        forceAction=True,
+        moveMagnitude=test_openness)
+    opened_obj = get_object(event, obj_to_open['objectId'])
+    assert abs(opened_obj['openness'] - test_openness) < 1e-3, 'moveMagnitude is not working!'
+    assert opened_obj['isOpen'], 'moveMagnitude isOpen incorrectly reported!'
+
+    # a CloseObject specific check
+    event = controller.step(action='CloseObject', objectId=obj_to_open['objectId'], forceAction=True)
+    obj = get_object(event, obj_to_open['objectId'])
+    assert abs(obj['openness'] - 0) < 1e-3, 'CloseObject openness should be 0'
+    assert not obj['isOpen'], 'CloseObject should report isOpen==false!'
+
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
@@ -322,6 +406,7 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -332,6 +417,7 @@ def test_action_dispatch_find_conflicts_physics(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
