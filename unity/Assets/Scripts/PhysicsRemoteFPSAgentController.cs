@@ -2075,81 +2075,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
-        public void UnpausePhysicsAutoSim()
-        {
+        // Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        public void UnpausePhysicsAutoSim() {
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
             actionFinished(true);
         }
 
-        protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length)
-        {
-            //print("running sopApplyForce");
-            //apply force, return action finished immediately
-            if(physicsSceneManager.physicsSimulationPaused)
-            {
+        protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length = 0) {
+            // apply force, return action finished immediately
+            if (physicsSceneManager.physicsSimulationPaused) {
                 //print("autosimulation off");
                 sop.ApplyForce(action);
-                if(length >= 0.00001f)
-                {
+                if (length >= 0.00001f) {
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
                     #if UNITY_EDITOR
-                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
-                    print("armslength: " + feedback.armsLength);
+                        print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                        print("object id: " + feedback.objectId);
+                        print("armslength: " + feedback.armsLength);
                     #endif
                     actionFinished(true, feedback);
                 }
 
                 //why is this here?
-                else
-                {
+                else {
                     actionFinished(true);
                 }
             }
 
             //if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
-            else
-            {
+            else {
                 //print("autosimulation true");
                 sop.ApplyForce(action);
                 StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
             }
         }
 
-        //wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
-        protected void sopApplyForce(ServerAction action, SimObjPhysics sop)
-        {
-            sopApplyForce(action, sop, 0.0f);
-        }
-
-        //used to check if an specified sim object has come to rest
-        //set useTimeout bool to use a faster time out
+        // used to check if an specified sim object has come to rest
+        // set useTimeout bool to use a faster time out
         private IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             float length,
-            bool useTimeout = false)
-        {
+            bool useTimeout = false
+        ) {
             //yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
 
             float startTime = Time.time;
             float waitTime = TimeToWaitForObjectsToComeToRest;
 
-            if(useTimeout)
-            {
+            if (useTimeout) {
                 waitTime = 1.0f;
             }
 
-            if(sop != null)
-            {
+            if (sop != null) {
                 Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
                 bool stoppedMoving = false;
 
-                while(Time.time - startTime < waitTime)
-                {
-                    if(sop == null) {
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
                         break;
                     }
 
@@ -2157,8 +2141,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                     //ok the accel is basically zero, so it has stopped moving
-                    if(Mathf.Abs(accel) <= 0.001f)
-                    {
+                    if (Mathf.Abs(accel) <= 0.001f) {
                         //force the rb to stop moving just to be safe
                         rb.velocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
@@ -2171,10 +2154,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //so we never stopped moving and we are using the timeout
-                if(!stoppedMoving && useTimeout)
-                {
+                if (!stoppedMoving && useTimeout) {
                     errorMessage = "object couldn't come to rest";
-                    //print(errorMessage);
                     actionFinished(false);
                     yield break;
                 }
@@ -2185,8 +2166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //rb.Sleep();
 
                 //return to metadatawrapper.actionReturn if an object was touched during this interaction
-                if(length != 0.0f)
-                {
+                if (length != 0.0f) {
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
 
                     #if UNITY_EDITOR
@@ -2196,42 +2176,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     print("armslength: " + feedback.armsLength);
                     #endif
 
-                    //force objec to stop moving 
+                    //force object to stop moving 
                     rb.velocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
                     rb.Sleep();
 
                     actionFinished(true, feedback);
-                }
-
-                //if passed in length is 0, don't return feedback cause not all actions need that
-                else
-                {
+                } else {
+                    // if passed in length is 0, don't return feedback cause not all actions need that
                     DefaultAgentHand();
                     actionFinished(true, "object settled after: " + (Time.time - startTime));
                 }
-            }
-
-            else
-            {
+            } else {
                 errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
                 actionFinished(false);
             }
 
         }
 
-        //Sweeptest to see if the object Agent is holding will prohibit movement
+        // Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentStandOrCrouch() {
             bool result = false;
 
-            //if there is nothing in our hand, we are good, return!
+            // if there is nothing in our hand, we are good, return!
             if (ItemInHand == null) {
                 result = true;
                 return result;
-            }
-
-            //otherwise we are holding an object and need to do a sweep using that object's rb
-            else {
+            } else {
+                // otherwise we are holding an object and need to do a sweep using that object's rb
                 Vector3 dir = new Vector3();
 
                 if (isStanding()) {
@@ -2260,9 +2232,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                     }
-                }
-                //if the array is empty, nothing was hit by the sweeptest so we are clear to move
-                else {
+                } else {
+                    // if the array is empty, nothing was hit by the sweeptest so we are clear to move
                     result = true;
                 }
 
@@ -2279,14 +2250,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RaycastHit hit;
 
             //if something was touched, actionFinished(true) always
-            if(Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1<<10, QueryTriggerInteraction.Ignore))
-            {
-                if(hit.transform.GetComponent<SimObjPhysics>())
-                {
+            if(Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1<<10, QueryTriggerInteraction.Ignore)) {
+                if(hit.transform.GetComponent<SimObjPhysics>()) {
                     //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     //this should basically only happen if the handDistance value is too big
-                    if(!CheckIfTargetPositionIsInViewportRange(hit.point))
-                    {
+                    if(!CheckIfTargetPositionIsInViewportRange(hit.point)) {
                         errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
                         WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
                         actionFinished(false, errorFeedback);
