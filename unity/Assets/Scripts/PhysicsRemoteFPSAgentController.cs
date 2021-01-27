@@ -6928,7 +6928,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
-        // returns null on failure.
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
         private List<Dictionary<string, object>> getInteractablePoses(
@@ -6941,20 +6940,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? maxDistance = null,
             int maxPoses = int.MaxValue  // works like infinity
         ) {
-            if (360 % rotateStepDegrees != 0) {
-                errorMessage = "360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.";
-                if (markActionFinished) {
-                    actionFinished(success: false);
-                }
-                return null;
+            if (360 % rotateStepDegrees != 0 && rotations != null) {
+                throw new InvalidOperationException("360 % rotateStepDegrees must be 0, unless 'rotations: float[]' is overwritten.");
             }
 
             if (maxPoses <= 0) {
-                errorMessage = "maxPoses must be > 0.";
-                if (markActionFinished) {
-                    actionFinished(success: false);
-                }
-                return null;
+                throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
             }
 
             // default "visibility" distance
@@ -6962,11 +6953,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (maxDistance == null) {
                 maxDistanceFloat = maxVisibleDistance;
             } else if ((float) maxDistance <= 0) {
-                errorMessage = "maxDistance must be >= 0 meters from the object.";
-                if (markActionFinished) {
-                    actionFinished(success: false);
-                }
-                return null;
+                throw new ArgumentOutOfRangeException("maxDistance must be >= 0 meters from the object.");
             } else {
                 maxDistanceFloat = (float) maxDistance;
             }
