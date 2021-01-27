@@ -6812,21 +6812,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxDistanceFloat = (float) maxDistance;
             }
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "objectId appears to be invalid.";
-                actionFinished(false);
-                return null;
-            }
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-
-            // save current agent pose
-            bool wasStanding = isStanding();
-            Vector3 oldPosition = transform.position;
-            Quaternion oldRotation = transform.rotation;
-            Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(false);
-            }
+            SimObjPhysics theObject = getTargetObject(objectId: objectId, forceAction: true);
 
             // Populate default standings. Note that these are boolean because that's
             // the most natural integration with Teleport
@@ -6837,6 +6823,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // populate default horizons
             if (horizons == null) {
                 horizons = new float[] {-30, 0, 30, 60};
+            } else {
+                foreach (float horizon in horizons) {
+                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                        throw new ArgumentException($"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]");
+                    }
+                }
             }
 
             // populate the positions by those that are reachable
@@ -6859,6 +6852,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
                     rotations[i++] = rotation;
                 }
+            }
+
+            if (horizons.Length == 0 || rotations.Length == 0 || positions.Length == 0 || standings.Length == 0) {
+                throw new InvalidOperationException("Every degree of freedom must have at least 1 valid value.");
+            }
+
+            // save current agent pose
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
             }
 
             // Don't want to consider all positions in the scene, just those from which the object
@@ -6884,14 +6890,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // iterate over each reasonable agent pose
             bool stopEarly = false;
             foreach (float horizon in horizons) {
-                // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-                if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                    errorMessage = $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]";
-                    if (markActionFinished) {
-                        actionFinished(success: false);
-                    }
-                    return null;
-                }
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
 
                 foreach (bool standing in standings) {
