@@ -5577,21 +5577,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //from given position in worldspace, raycast straight down and return a point of any surface hit
         //useful for getting a worldspace coordinate on the floor given any point in space.
-        public Vector3 GetSurfacePointBelowPosition(Vector3 position)
-        {
+        public Vector3 GetSurfacePointBelowPosition(Vector3 position) {
             Vector3 point = Vector3.zero;
 
             //raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
             RaycastHit hit;
-            if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
-            {
+            if (Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<8 | 1<<10), QueryTriggerInteraction.Ignore)) {
                 point = hit.point;
                 return point;
-            }
-
-            //nothing hit, return the original position?
-            else
-            {
+            } else {
+                // nothing hit, return the original position?
                 return position;
             }
         }
@@ -5644,108 +5639,104 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //spawns object in agent's hand with the same orientation as the agent's hand
-        public void CreateObject(ServerAction action) {
-            if (ItemInHand != null) {
-                errorMessage = "Already have an object in hand, can't create a new one to put there.";
-                actionFinished(false);
-                return;
+        ///////////////////////////////////////////
+        ///////////// CREATE OBJECT ///////////////
+        ///////////////////////////////////////////
+
+        private SimObjPhysics createObject(
+            string objectType,
+            Vector3 position,
+            Vector3 rotation,
+            bool randomizeObjectAppearance = false,
+            int objectVariation = 0,
+            bool forceAction = false
+        ) {
+            if (objectType == null) {
+                throw new ArgumentNullException("Please give valid Object Type from SimObjType enum list");
             }
 
-            if (action.objectType == null) {
-                errorMessage = "Please give valid Object Type from SimObjType enum list";
-                actionFinished(false);
-                return;
-            }
-
-            //spawn the object at the agent's hand position
+            // spawn the object at the agent's hand position
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(
-                action.objectType,
-                action.randomizeObjectAppearance,
-                action.objectVariation,
-                AgentHand.transform.position,
-                AgentHand.transform.rotation.eulerAngles,
-                true,
-                action.forceAction
+            SimObjPhysics sop = script.SpawnObject(
+                objectType: objectType,
+                randomize: randomizeObjectAppearance,
+                variation: objectVariation,
+                position: AgentHand.transform.position,
+                rotation: AgentHand.transform.rotation.eulerAngles,
+                spawningInHand: true,
+                ignoreChecks: forceAction
             );
 
-            if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                actionFinished(false);
-                return;
-            } else {
-                //put new object created in dictionary and assign its objectID to the action
-                action.objectId = so.objectID;
-
-                //also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
+            if (sop == null) {
+                throw new NullReferenceException("Failed to create object, are you sure it can be spawned?");
             }
 
-            action.forceAction = true;
-            PickupObject(action);
+            // also update the Physics Scene Manager with this new object
+            physicsSceneManager.AddToObjectsInScene(sop);
+            return sop;
         }
 
-        public void CreateObjectAtLocation(ServerAction action) {
-            Vector3 targetPosition = action.position;
-            Vector3 targetRotation = action.rotation;
-
-            if (!action.forceAction && !agentManager.SceneBounds.Contains(targetPosition)) {
-                errorMessage = "Target position is out of bounds!";
-                actionFinished(false);
-                return;
+        // spawns object in agent's hand with the same orientation as the agent's hand
+        public void CreateObject(
+            string objectType,
+            bool randomizeObjectAppearance = false,
+            int objectVariation = 0,
+            bool forceAction = false
+        ) {
+            if (ItemInHand != null) {
+                throw new InvalidOperationException("Already have an object in hand, can't create a new one to put there.");
             }
-
-            if (action.objectType == null) {
-                errorMessage = "Please give valid Object Type from SimObjType enum list";
-                actionFinished(false);
-                return;
-            }
-
-            //spawn the object at the agent's hand position
-            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation,
-                targetPosition, targetRotation, false, action.forceAction);
-
-            if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                actionFinished(false);
-                return;
-            } else {
-                //also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
-            }
-
-            actionFinished(true, so.ObjectID);
+            SimObjPhysics sop = createObject(
+                objectType: objectType,
+                position: AgentHand.transform.position,
+                rotation: AgentHand.transform.rotation.eulerAngles,
+                randomizeObjectAppearance: randomizeObjectAppearance,
+                objectVariation: objectVariation,
+                forceAction: forceAction
+            );
+            PickupObject(objectId: sop.objectId, forceAction: true);
         }
 
-        protected SimObjPhysics createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) {
-            if (!agentManager.SceneBounds.Contains(targetPosition)) {
-                errorMessage = "Target position is out of bounds!";
-                return null;
-            }
+        [ObsoleteAttribute(message: "This action is deprecated. Call CreateObject instead.", error: false)] 
+        public void CreateObjectAtLocation(
+            string objectType,
+            Vector3 position,
+            Vector3 rotation,
+            bool randomizeObjectAppearance = false,
+            int objectVariation = 0,
+            bool forceAction = false
+        ) {
+            SimObjPhysics sop = CreateObject(
+                objectType: objectType,
+                position: position,
+                rotation: rotation,
+                randomizeObjectAppearance: randomizeObjectAppearance,
+                objectVariation: objectVariation,
+                forceAction: forceAction
+            );
+        }
 
+        public void CreateObject(
+            string objectType,
+            Vector3 position,
+            Vector3 rotation,
+            bool randomizeObjectAppearance = false,
+            int objectVariation = 0,
+            bool forceAction = false
+        ) {
             if (objectType == null) {
-                errorMessage = "Please give valid Object Type from SimObjType enum list";
-                return null;
+                throw new ArgumentNullException();
             }
-
-            //spawn the object at the agent's hand position
-            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(objectType, false, objectVariation,
-                targetPosition, targetRotation, false);
-
-            if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                return null;
-            } else {
-                //also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
-            }
-
-            return so;
+            SimObjPhysics sop = createObject(
+                objectType: objectType,
+                position: position,
+                rotation: rotation,
+                randomizeObjectAppearance: randomizeObjectAppearance,
+                objectVariation: objectVariation,
+                forceAction: forceAction
+            );
+            actionFinished(true, sop.ObjectID);
         }
-
 
         public void CreateObjectOnFloor(ServerAction action) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
@@ -5804,32 +5795,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             Bounds b = script.BoundsOfObject(objectType, 1);
             if (b.min.x != float.PositiveInfinity) {
-                errorMessage = "Could not get bounds of object with type " + objectType;
+                throw InvalidOperationException("Could not get bounds of object with type " + objectType);
             }
 
             System.Random rnd = new System.Random();
             Vector3[] shuffledCurrentlyReachable = candidatePositions.OrderBy(x => rnd.Next()).ToArray();
             float[] rotations = { 0f, 90f, 180f, 270f };
             float[] shuffledRotations = rotations.OrderBy(x => rnd.Next()).ToArray();
-            SimObjPhysics objectCreated = null;
             foreach (Vector3 position in shuffledCurrentlyReachable) {
                 float y = b.extents.y + getFloorY(position.x, position.y, position.z) + 0.01f;
                 foreach (float r in shuffledRotations) {
-                    objectCreated = createObjectAtLocation(
-                        objectType,
-                        new Vector3(position.x, y, position.z),
-                        new Vector3(0.0f, r, 0.0f),
-                        objectVariation);
-                    if (objectCreated) {
-                        break;
-                    }
-                }
-                if (objectCreated) {
-                    errorMessage = "";
-                    break;
+                    return createObject(
+                        objectType: objectType,
+                        position: new Vector3(position.x, y, position.z),
+                        rotation: new Vector3(0.0f, r, 0.0f),
+                        objectVariation: objectVariation
+                    );
                 }
             }
-            return objectCreated;
+            return null;
         }
 
         protected SimObjPhysics randomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation) {
