@@ -1506,8 +1506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			
             this.agentState = AgentState.Processing;
-			try
-			{
+			try {
 				if (method == null) {
 					errorMessage = "Invalid action: " + controlCommand.action;
 					errorCode = ServerActionErrorCode.InvalidAction;
@@ -1516,9 +1515,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 				} else {
 					method.Invoke(this, new object[] { controlCommand });
 				}
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
 				Debug.LogError(e);
@@ -1526,7 +1523,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
-
         }
 
         // the parameter name is different to avoid failing a test
@@ -1649,7 +1645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         // XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(
+        protected void moveInDirection(
             Vector3 direction,
             string objectId = "",
             float maxDistanceToObject = -1.0f,
@@ -1666,35 +1662,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
-            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
+            // forceAction = true allows ignoring movement restrictions caused by held objects
+            if (!checkIfSceneBoundsContainTargetPosition(targetPosition) ||
+                !CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) ||
+                !CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)
+            ) {
+                throw new InvalidOperationException("Unable to move agent in direction.");
+            }
 
-                //only default hand if not manually interacting with things    
-                if (!manualInteract) {
-                    DefaultAgentHand();
+            //only default hand if not manually interacting with things    
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+
+            // TODO: these things should go on their own method...
+            Vector3 oldPosition = transform.position;
+            transform.position = targetPosition;
+            this.snapAgentToGrid();
+
+            if (objectId != "" && maxDistanceToObject > 0.0f) {
+                SimObjPhysics sop;
+                try {
+                    sop = getTargetObject(objectId: objectId, forceAction: true);
+                } catch (Exception e) {
+                    transform.position = oldPosition; 
+                    throw new ArgumentException(e.Message);
                 }
 
-                Vector3 oldPosition = transform.position;
-                transform.position = targetPosition;
-                this.snapAgentToGrid();
-
-                if (objectId != "" && maxDistanceToObject > 0.0f) {
-                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                        errorMessage = "No object with ID " + objectId;
-                        transform.position = oldPosition; 
-                        return false;
-                    }
-                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    if (distanceToObject(sop) > maxDistanceToObject) {
-                        errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
-                        transform.position = oldPosition;
-                        return false;
-                    }
+                if (distanceToObject(sop) > maxDistanceToObject) {
+                    transform.position = oldPosition;
+                    throw new InvalidOperationException("Agent movement would bring it beyond the max distance of " + objectId);
                 }
-                return true;
-            } else {
-                return false;
             }
         }
 
@@ -1708,8 +1706,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 		}
 
-        public virtual void MoveRelative(ServerAction action) {
-            var moveLocal = new Vector3(action.x, 0, action.z);
+        // Allows you to move in both the x/z directions at once, instead of calling
+        // MoveAhead and MoveRight.
+        public virtual void MoveRelative(float x, float z) {
+            var moveLocal = new Vector3(x, 0, z);
             Vector3 moveWorldSpace = transform.rotation * moveLocal;
             moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
 			m_CharacterController.Move(moveWorldSpace);
@@ -1722,20 +1722,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 		// free rotate, change forward facing of Agent
         // this is currently overwritten by Rotate in Stochastic Controller
-		public virtual void Rotate(ServerAction response) {
+		public virtual void Rotate(Vector3 rotation) {
+            // TODO: why is x=0 and z=0 set in the base?
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);
 		}
 
 		// rotates controlCommand.degrees degrees left w/ respect to current forward
 		public virtual void RotateLeft(float degrees) {
-            transform.Rotate(0, -degrees, 0);
+            transform.Rotate(0, degrees == null ? -rotateStepDegrees : -1 * (float) degrees, 0);
 			actionFinished(true);
 		}
 
 		// rotates controlCommand.degrees degrees right w/ respect to current forward
-		public virtual void RotateRight(float degrees) {
-            transform.Rotate(0, degrees, 0);
+		public virtual void RotateRight(float? degrees = null) {
+            transform.Rotate(0, degrees == null ? rotateStepDegrees : (float) degrees, 0);
 			actionFinished(true);
 		}
 
@@ -1769,6 +1770,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (action.forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
+                // TODO: why are X/Z set to 0 in the base?
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
@@ -1937,7 +1939,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (outsidePlane) {
                         continue;
                     }
-
 
                     float xdelta = Math.Abs(this.transform.position.x - point.position.x);
                     if (xdelta > maxDistance) {
