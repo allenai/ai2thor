@@ -3091,6 +3091,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: true);
         }
 
+        ////////////////
+        ///// MISC /////
+        ////////////////
+
+        public void RotateUniverseAroundAgent(Vector3 rotation) {
+            RotateUniverseAroundAgent(rotation: rotation.y);
+        }
+
+        public void RotateUniverseAroundAgent(float rotation) {
+            agentManager.RotateAgentsByRotatingUniverse(rotation: rotation);
+            actionFinished(true);
+        }
+
+        public void ChangeFOV(float fieldOfView) {
+            if (fieldOfView <= 0 || fieldOfView >= 180) {
+                throw new ArgumentOutOfRangeException("fov must be in (0, 180) noninclusive.");
+            }
+            m_Camera.fieldOfView = action.fieldOfView;
+            actionFinished(true);
+        }
+
+        public void ChangeResolution(int x, int y) {
+            Screen.SetResolution(width: x, height: y, fullscreen: false);
+
+            IEnumerator WaitOnResolutionChange() {
+                while (Screen.width != x || Screen.height != y) {
+                    yield return null;
+                }
+                actionFinished(true);
+            }
+            StartCoroutine(WaitOnResolutionChange());
+        }
+
+        public void ChangeQuality(string quality) {
+            bool validQuality = false;
+            for (int i = 0; i < QualitySettings.names.Length; i++) {
+                if (QualitySettings.names[i] == quality) {
+                    QualitySettings.SetQualityLevel(i, true);
+                    validQuality = true;
+                    break;
+                }
+            }
+
+            if (!validQuality) {
+                throw new ArgumentException($"Invalid screen quality: {quality}");
+            }
+
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            if (quality == "Low" || quality == "Very Low") {
+                script.enabled = false;
+            } else {
+                script.enabled = true;
+            }
+            actionFinished(true);
+        }
+
+        public void DisableScreenSpaceAmbientOcclusion() {
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            script.enabled = false;
+            actionFinished(true);
+        }
+
+        public void ChangeTimeScale(float timeScale) {
+            if (timeScale <= 0) {
+                throw new ArgumentOutOfRangeException("timeScale must be > 0");
+            }
+            Time.timeScale = action.timeScale;
+            actionFinished(true);
+        }
+
         ///////////////////////////////////////////
         ///////// ACTION DISPATCH TESTING /////////
         ///////////////////////////////////////////

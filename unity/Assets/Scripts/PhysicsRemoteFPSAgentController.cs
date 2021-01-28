@@ -3068,62 +3068,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             return false;
         }
-        //uncomment this to debug draw valid points
-        //private List<Vector3> validpointlist = new List<Vector3>();
 
-        //return a bunch of vector3 points above a target receptacle
-        //if forceVisible = true, return points regardless of where receptacle is
-        //if forceVisible = false, only return points that are also within view of the Agent camera
-        public void GetSpawnCoordinatesAboveReceptacle(ServerAction action)
-        {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) 
-            {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find our target receptacle
-            //if action.anywhere False (default) this should only return objects that are visible
-            //if action.anywhere true, return for any object no matter where it is
-            foreach (SimObjPhysics sop in VisibleSimObjs(action.anywhere))
-            {
-                if (action.objectId == sop.ObjectID)
-                {
-                    target = sop;
-                }
-            }
-
-            if (target == null)
-            {
-                if (action.anywhere)
-                errorMessage = "No valid Receptacle found in scene";
-
-                else
-                errorMessage = "No valid Receptacle found in view";
-
-                actionFinished(false);
-                return;
-            }
+        // return a bunch of vector3 points above a target receptacle
+        // if forceVisible = true, return points regardless of where receptacle is
+        // if forceVisible = false, only return points that are also within view of the Agent camera
+        public void GetSpawnCoordinatesAboveReceptacle(string objectId, bool anywhere = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: anywhere);
 
             //ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
             targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
 
-            //by default, action.anywhere = false, so remove all targetPoints that are outside of agent's view
-            //if anywhere true, don't do this and just return all points we got from above
-            if (!action.anywhere)
-            {
+            // by default, anywhere = false, so remove all targetPoints that are outside of agent's view
+            // if anywhere true, don't do this and just return all points we got from above
+            if (!anywhere) {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
-                foreach (Vector3 v in targetPoints)
-                {
-                    if (CheckIfTargetPositionIsInViewportRange(v))
-                    {
+                foreach (Vector3 v in targetPoints) {
+                    if (CheckIfTargetPositionIsInViewportRange(v)) {
                         filteredTargetPoints.Add(v);
                     }
                 }
-
                 targetPoints = filteredTargetPoints;
             }
 
@@ -3135,11 +3099,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, targetPoints);
         }
 
-        //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
-        //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t) {
-            SimObjPhysics target = t;
-            //ok now get spawn points from target
+        // same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
+        // returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics target) {
+            // ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
             targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
             return targetPoints;
@@ -4594,97 +4557,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        ////////////////
-        ///// MISC /////
-        ////////////////
-
-        public void RotateUniverseAroundAgent(ServerAction action) {
-            agentManager.RotateAgentsByRotatingUniverse(action.rotation.y);
-            actionFinished(true);
-        }
-
-        public void ChangeFOV(ServerAction action) 
-        {
-
-            if (action.fieldOfView > 0 && action.fieldOfView < 180)
-            {
-                m_Camera.fieldOfView = action.fieldOfView;
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "fov must be in (0, 180) noninclusive.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-            }
-
-        }
-
-        public IEnumerator WaitOnResolutionChange(int width, int height) {
-            while (Screen.width != width || Screen.height != height) {
-                yield return null;
-            }
-            actionFinished(true);
-        }
-
-        public void ChangeResolution(ServerAction action) {
-            int height = Convert.ToInt32(action.y);
-            int width = Convert.ToInt32(action.x);
-            Screen.SetResolution(width, height, false);
-            StartCoroutine(WaitOnResolutionChange(width, height));
-        }
-
-        public void ChangeQuality(ServerAction action) {
-            string[] names = QualitySettings.names;
-            for (int i = 0; i < names.Length; i++) {
-                if (names[i] == action.quality) {
-                    QualitySettings.SetQualityLevel(i, true);
-                    break;
-                }
-            }
-
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            if (action.quality == "Low" || action.quality == "Very Low") {
-                script.enabled = false;
-            } else {
-                script.enabled = true;
-            }
-            actionFinished(true);
-        }
-
-        public void DisableScreenSpaceAmbientOcclusion() {
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            script.enabled = false;
-            actionFinished(true);
-        }
-
-        //in case you want to change the timescale
-        public void ChangeTimeScale(ServerAction action) {
-            if (action.timeScale > 0) {
-                Time.timeScale = action.timeScale;
-                actionFinished(true);
-            } else {
-                errorMessage = "Time scale must be >0";
-                actionFinished(false);
-            }
-        }
-
         ///////////////////////////////////
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
 
-        //this is a combination of objectIsWithinViewport and objectIsCurrentlyVisible, specifically to check
-        //if a single sim object is on screen regardless of agent visibility maxDistance
-        //DO NOT USE THIS FOR ALL OBJECTS cause it's going to be soooo expensive
-        public bool objectIsOnScreen(SimObjPhysics sop)
-        {
+        // this is a combination of objectIsWithinViewport and objectIsCurrentlyVisible, specifically to check
+        // if a single sim object is on screen regardless of agent visibility maxDistance
+        // DO NOT USE THIS FOR ALL OBJECTS cause it's going to be soooo expensive
+        public bool objectIsOnScreen(SimObjPhysics sop) {
             bool result = false;
-            if (sop.VisibilityPoints.Length > 0) 
-            {
+            if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) 
-                {
+                foreach (Transform point in visPoints) {
                     Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
                     float ViewPointRangeHigh = 1.0f;
                     float ViewPointRangeLow = 0.0f;
@@ -4693,22 +4577,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (viewPoint.z > 0 &&
                         viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
                         viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-                    ) 
-                    {
+                    ) {
                         //ok so it is within the viewport, not lets do a raycast to see if we can see the vis point
                         updateAllAgentCollidersForVisibilityCheck(false);
                         //raycast from agentcamera to point, ignore triggers, use layers 8 and 10
                         RaycastHit hit;
 
-                        if (Physics.Raycast(m_Camera.transform.position, 
-                        (point.position - m_Camera.transform.position), 
-                        out hit, Mathf.Infinity, (1 << 8) | (1 << 10)))
-                        {
-                            if (hit.transform != sop.transform)
-                            result = false;
-
-                            else
-                            {
+                        if (Physics.Raycast(
+                            m_Camera.transform.position,
+                            point.position - m_Camera.transform.position, 
+                            out hit, Mathf.Infinity, (1 << 8) | (1 << 10))
+                        ) {
+                            if (hit.transform != sop.transform) {
+                                result = false;
+                            } else {
                                 result = true;
                                 break;
                             }
@@ -4722,6 +4604,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             else 
             {
+                // TODO: throw exception.
                 #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
                 #endif
