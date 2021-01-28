@@ -67,10 +67,8 @@ namespace UnityStandardAssets.ImageEffects
         }
 
         [ImageEffectOpaque]
-        void OnRenderImage (RenderTexture source, RenderTexture destination)
-		{
-            if (CheckResources () == false)
-			{
+        void OnRenderImage (RenderTexture source, RenderTexture destination) {
+            if (!CheckResources()) {
                 Graphics.Blit (source, destination);
                 return;
             }

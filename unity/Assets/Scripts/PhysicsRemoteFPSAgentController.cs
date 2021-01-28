@@ -1690,9 +1690,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             target.GetComponent<Rigidbody>().isKinematic = false;
             sopApplyForce(pushAction, target);
-
-            // target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
-            // actionFinished(true);
         }
 
         // TODO: use markActionFInished

@@ -2825,7 +2825,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //     //suffix += " VISIBLE";
                         //     //if(!IgnoreInteractableFlag)
                         //     //{
-                        //     // if (o.isInteractable == true)
+                        //     // if (o.isInteractable)
                         //     // {
                         //     //     suffix += " INTERACTABLE";
                         //     // }

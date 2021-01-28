@@ -41,8 +41,7 @@ namespace UnityStandardAssets.ImageEffects
         [ImageEffectOpaque]
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            if (CheckResources() == false || (!distanceFog && !heightFog))
-            {
+            if (!CheckResources() || (!distanceFog && !heightFog)) {
                 Graphics.Blit(source, destination);
                 return;
             }

@@ -486,8 +486,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 //if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-                if(PlaceStationary == true)
-                {
+                if (PlaceStationary) {
                     //make object being placed kinematic true
                     sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
@@ -497,50 +496,38 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
 
                     //if this object is a receptacle and it has other objects inside it, drop them all together
-                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-                    {
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                         PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
                         agent.DropContainedObjectsStationary(sop); //use stationary version so that colliders are turned back on, but kinematics remain true
                     }
 
                     //if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
-                    if(rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-                    {
+                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                         rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
                     }
 
-                }
-
-                //place stationary false, let physics drop everything too
-                else
-                {
-                    //if not placing stationary, put all objects under Objects game object
+                } else {
+                    // if not placing stationary, put all objects under Objects game object
                     GameObject topObject = GameObject.Find("Objects");
-                    //parent to the Objects transform
+                    // parent to the Objects transform
                     sop.transform.SetParent(topObject.transform);
 
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                    //if this object is a receptacle and it has other objects inside it, drop them all together
-                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-                    {
+                    // if this object is a receptacle and it has other objects inside it, drop them all together
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                         PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
                         agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
-                sop.isInAgentHand = false;//set agent hand flag
-
-                // #if UNITY_EDITOR
-                // Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                // #endif
-
+                sop.isInAgentHand = false;
                 return true;
             }
         }
-       
-        //reset rotation if no valid spawns found
-        //oh now we couldn't spawn it, all the spawn areas were not clear
+
+        // reset rotation if no valid spawns found
+        // oh now we couldn't spawn it, all the spawn areas were not clear
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;
         return false;

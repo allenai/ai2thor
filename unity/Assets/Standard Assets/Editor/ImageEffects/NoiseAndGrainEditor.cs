@@ -68,7 +68,7 @@ namespace UnityStandardAssets.ImageEffects
             EditorGUILayout.Slider(blackIntensity, 0.0f, 1.0f, new GUIContent(" Black Boost"));
             EditorGUILayout.Slider(whiteIntensity, 0.0f, 1.0f, new GUIContent(" White Boost"));
             midGrey.floatValue = EditorGUILayout.Slider( new GUIContent(" Mid Grey (for Boost)"), midGrey.floatValue, 0.0f, 1.0f);
-            if (monochrome.boolValue == false) {
+            if (!monochrome.boolValue) {
                 Color c = new Color(intensities.vector3Value.x,intensities.vector3Value.y,intensities.vector3Value.z,1.0f);
                 c = EditorGUILayout.ColorField(new GUIContent(" Color Weights"), c);
                 intensities.vector3Value = new Vector3(c.r, c.g, c.b);
@@ -92,15 +92,13 @@ namespace UnityStandardAssets.ImageEffects
                 EditorGUILayout.Separator();
                 EditorGUILayout.LabelField("Advanced");
 
-                if (monochrome.boolValue == false)
-                {
+                if (!monochrome.boolValue) {
                     Vector3 temp = tiling.vector3Value;
                     temp.x = EditorGUILayout.FloatField(new GUIContent(" Tiling (Red)"), tiling.vector3Value.x);
                     temp.y = EditorGUILayout.FloatField(new GUIContent(" Tiling (Green)"), tiling.vector3Value.y);
                     temp.z = EditorGUILayout.FloatField(new GUIContent(" Tiling (Blue)"), tiling.vector3Value.z);
                     tiling.vector3Value = temp;
-                }
-                else {
+                } else {
                     EditorGUILayout.PropertyField(monochromeTiling, new GUIContent(" Tiling"));
                 }
             }

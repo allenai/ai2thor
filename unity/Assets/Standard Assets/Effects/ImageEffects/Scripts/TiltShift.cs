@@ -46,8 +46,8 @@ namespace UnityStandardAssets.ImageEffects
         }
 
         void OnRenderImage (RenderTexture source, RenderTexture destination) {
-            if (CheckResources() == false) {
-                Graphics.Blit (source, destination);
+            if (!CheckResources()) {
+                Graphics.Blit(source, destination);
                 return;
             }
 

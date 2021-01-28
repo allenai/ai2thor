@@ -104,11 +104,8 @@ namespace UnityStandardAssets.ImageEffects
             return isSupported;
         }
 
-
-        public void OnRenderImage(RenderTexture source, RenderTexture destination)
-        {
-            if (CheckResources() == false)
-            {
+        public void OnRenderImage(RenderTexture source, RenderTexture destination) {
+            if (!CheckResources()) {
                 Graphics.Blit(source, destination);
                 return;
             }
@@ -116,36 +113,25 @@ namespace UnityStandardAssets.ImageEffects
 			// ----------------------------------------------------------------
             // FXAA antialiasing modes
 
-            if (mode == AAMode.FXAA3Console && (materialFXAAIII != null))
-            {
+            if (mode == AAMode.FXAA3Console && (materialFXAAIII != null)) {
                 materialFXAAIII.SetFloat("_EdgeThresholdMin", edgeThresholdMin);
                 materialFXAAIII.SetFloat("_EdgeThreshold", edgeThreshold);
                 materialFXAAIII.SetFloat("_EdgeSharpness", edgeSharpness);
 
                 Graphics.Blit(source, destination, materialFXAAIII);
-            }
-            else if (mode == AAMode.FXAA1PresetB && (materialFXAAPreset3 != null))
-            {
+            } else if (mode == AAMode.FXAA1PresetB && (materialFXAAPreset3 != null)) {
                 Graphics.Blit(source, destination, materialFXAAPreset3);
-            }
-            else if (mode == AAMode.FXAA1PresetA && materialFXAAPreset2 != null)
-            {
+            } else if (mode == AAMode.FXAA1PresetA && materialFXAAPreset2 != null) {
                 source.anisoLevel = 4;
                 Graphics.Blit(source, destination, materialFXAAPreset2);
                 source.anisoLevel = 0;
-            }
-            else if (mode == AAMode.FXAA2 && materialFXAAII != null)
-            {
+            } else if (mode == AAMode.FXAA2 && materialFXAAII != null) {
                 Graphics.Blit(source, destination, materialFXAAII);
-            }
-            else if (mode == AAMode.SSAA && ssaa != null)
-            {
+            } else if (mode == AAMode.SSAA && ssaa != null) {
 				// ----------------------------------------------------------------
                 // SSAA antialiasing
                 Graphics.Blit(source, destination, ssaa);
-            }
-            else if (mode == AAMode.DLAA && dlaa != null)
-            {
+            } else if (mode == AAMode.DLAA && dlaa != null) {
 				// ----------------------------------------------------------------
 				// DLAA antialiasing
 
@@ -154,9 +140,7 @@ namespace UnityStandardAssets.ImageEffects
                 Graphics.Blit(source, interim, dlaa, 0);
                 Graphics.Blit(interim, destination, dlaa, dlaaSharp ? 2 : 1);
                 RenderTexture.ReleaseTemporary(interim);
-            }
-            else if (mode == AAMode.NFAA && nfaa != null)
-            {
+            } else if (mode == AAMode.NFAA && nfaa != null) {
                 // ----------------------------------------------------------------
                 // nfaa antialiasing
 
@@ -166,9 +150,7 @@ namespace UnityStandardAssets.ImageEffects
                 nfaa.SetFloat("_BlurRadius", blurRadius);
 
                 Graphics.Blit(source, destination, nfaa, showGeneratedNormals ? 1 : 0);
-            }
-            else
-            {
+            } else {
                 // none of the AA is supported, fallback to a simple blit
                 Graphics.Blit(source, destination);
             }

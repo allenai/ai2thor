@@ -125,7 +125,7 @@ public class CanOpen_Object : MonoBehaviour {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-        if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false) {
+        if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && !sop.isInAgentHand) {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
@@ -267,7 +267,7 @@ public class CanOpen_Object : MonoBehaviour {
 		}
 
 		//if hitting another object that has double doors, do some checks 
-		if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
+		if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting) {
 			if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
 				//don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
 				return;

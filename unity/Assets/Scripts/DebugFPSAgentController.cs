@@ -233,8 +233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
-		private void Update()	
-        {
+		private void Update()	{
             highlightController.UpdateHighlightedObject(new Vector3(Screen.width / 2, Screen.height / 2));
             highlightController.MouseControls();
 
@@ -242,29 +241,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
          
             ///////////////////////////////////////////////////////////////////////////
 			//we are not in focus mode, so use WASD and mouse to move around
-			if(FPSEnabled)
-			{
+			if(FPSEnabled) {
 				FPSInput();
-				if(Cursor.visible == false)
-				{
+				if (!Cursor.visible) {
                     //accept input to update view based on mouse input
                     MouseRotateView();
                 }
             }
         }
 
-        public void OnGUI()
-        {
-            if (Event.current.type == EventType.ScrollWheel && scroll2DEnabled)
-            {
-                if (this.PhysicsController.WhatAmIHolding() != null)
-                {
+        public void OnGUI() {
+            if (Event.current.type == EventType.ScrollWheel && scroll2DEnabled) {
+                if (this.PhysicsController.WhatAmIHolding() != null) {
                     var scrollAmount = Event.current.delta;
                     var eps = 1e-6;
-                    if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps)
-                    {
-                        ServerAction action = new ServerAction
-                        {
+                    if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps) {
+                        ServerAction action = new ServerAction {
                             action = "MoveHandDelta",
                             x = scrollAmount.x * 0.05f,
                             z = scrollAmount.y * -0.05f,
@@ -277,8 +269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void GetInput(out float speed)
-		{
+        private void GetInput(out float speed) {
 			// Read input
 			float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
 			float vertical = CrossPlatformInputManager.GetAxis("Vertical");
@@ -311,8 +302,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
    			m_MouseLook.LookRotation (transform, m_Camera.transform);         
 		}
 
-        private void FPSInput()
-		{                  
+        private void FPSInput() {                  
             //take WASD input and do magic, turning it into movement!
             float speed;
             GetInput(out speed);
@@ -332,11 +322,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
 
             //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
-            if(m_CharacterController.enabled == true)       
-            m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
+            if (m_CharacterController.enabled) {
+                m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
+            }
 		}
-
-  
 	}
 }
 

@@ -63,8 +63,7 @@ public class SliceObject : MonoBehaviour
     public void Slice()
     {
         //if this is already sliced, we can't slice again so yeah stop that
-        if(isSliced == true)
-        {
+        if (isSliced) {
             return;
         }
 

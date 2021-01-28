@@ -516,12 +516,12 @@ public class PhysicsSceneManager : MonoBehaviour {
 
                         // perform additional checks if this is a Stove Burner! 
                         if (receptacleSop.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
-                            if (
-                                StoveTopCheckSpawnArea(
+                            if (StoveTopCheckSpawnArea(
                                     sopToPlaceInReceptacle,
                                     osr.attachPoint.transform.position,
                                     osr.attachPoint.transform.rotation,
-                                    false) == true
+                                    false
+                                )
                             ) {
                                 // print("moving object now");
                                 gameObjToPlaceInReceptacle.transform.position = osr.attachPoint.position;

@@ -109,7 +109,7 @@ namespace UnityStandardAssets.ImageEffects
         }
 
         void OnRenderImage (RenderTexture source, RenderTexture destination) {
-            if (CheckResources () == false || !SystemInfo.supports3DTextures) {
+            if (!CheckResources() || !SystemInfo.supports3DTextures) {
                 Graphics.Blit (source, destination);
                 return;
             }

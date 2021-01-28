@@ -365,7 +365,7 @@ public class AgentManager : MonoBehaviour
         camera.fieldOfView = fieldOfView;
         if (orthographic != null) {
             camera.orthographic = (bool) orthographic;
-            if (orthographic == true && orthographicSize != null) {
+            if (orthographic && orthographicSize != null) {
                 camera.orthographicSize = (float) orthographicSize;
             }
         }
@@ -1078,7 +1078,7 @@ public class AgentManager : MonoBehaviour
             //on a per step() basis, since by default the param is null
             //so we don't know if a request is meant to turn the param off
             //or if it is just the value by default
-            if (controlCommand.renderObjectImage == true) {
+            if (controlCommand.renderObjectImage) {
                 this.renderObjectImage = true;
             }
 

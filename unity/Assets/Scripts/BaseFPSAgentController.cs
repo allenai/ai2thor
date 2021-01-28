@@ -1807,8 +1807,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //*** Maybe make this better */
         // This function should be called before and after doing a visibility check (before with
-        // enableColliders == false and after with it equaling true). It, in particular, will
-        // turn off/on all the colliders on agents which should not block visibility for the current agent
+        // !enableColliders and after with it equaling true). It, in particular, will turn off/on
+        // all the colliders on agents which should not block visibility for the current agent
         // (invisible agents for example).
         protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
             foreach (BaseFPSAgentController agent in this.agentManager.agents) {

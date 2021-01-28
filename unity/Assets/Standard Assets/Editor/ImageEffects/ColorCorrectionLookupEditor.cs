@@ -2,11 +2,9 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityStandardAssets.ImageEffects
-{
+namespace UnityStandardAssets.ImageEffects {
     [CustomEditor (typeof(ColorCorrectionLookup))]
-    class ColorCorrectionLookupEditor : Editor
-    {
+    class ColorCorrectionLookupEditor : Editor {
         SerializedObject serObj;
 
         void OnEnable () {
@@ -36,8 +34,7 @@ namespace UnityStandardAssets.ImageEffects
 
             Texture2D tex = tempClutTex2D;
 
-            if (tex && (target as ColorCorrectionLookup).basedOnTempTex != AssetDatabase.GetAssetPath(tex))
-            {
+            if (tex && (target as ColorCorrectionLookup).basedOnTempTex != AssetDatabase.GetAssetPath(tex)) {
                 EditorGUILayout.Separator();
                 if (!(target as ColorCorrectionLookup).ValidDimensions(tex))
                 {
@@ -47,16 +44,15 @@ namespace UnityStandardAssets.ImageEffects
                 {
                     string path = AssetDatabase.GetAssetPath (tex);
                     TextureImporter textureImporter = AssetImporter.GetAtPath(path) as TextureImporter;
-                    bool doImport = textureImporter.isReadable == false;
-                    if (textureImporter.mipmapEnabled == true) {
+                    bool doImport = !textureImporter.isReadable;
+                    if (textureImporter.mipmapEnabled) {
                         doImport = true;
                     }
                     if (textureImporter.textureCompression != TextureImporterCompression.Uncompressed) {
                         doImport = true;
                     }
 
-                    if (doImport)
-                    {
+                    if (doImport) {
                         textureImporter.isReadable = true;
                         textureImporter.mipmapEnabled = false;
 						textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
@@ -68,8 +64,7 @@ namespace UnityStandardAssets.ImageEffects
                 }
             }
 
-            if ((target as ColorCorrectionLookup).basedOnTempTex != "")
-            {
+            if ((target as ColorCorrectionLookup).basedOnTempTex != "") {
                 EditorGUILayout.HelpBox("Using " + (target as ColorCorrectionLookup).basedOnTempTex, MessageType.Info);
                 t = AssetDatabase.LoadMainAssetAtPath(((ColorCorrectionLookup)target).basedOnTempTex) as Texture2D;
                 if (t) {
