@@ -154,8 +154,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         #if UNITY_EDITOR
             // for use in Editor to test the Reset function.
-            public void Reset(ServerAction action) {
-                physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+            public void Reset(string sceneName) {
+                physicsSceneManager.GetComponent<AgentManager>().Reset(sceneName: sceneName);
             }
 
             // return ID of closest CanPickup object by distance
@@ -2053,6 +2053,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// OPEN WITH HAND //////////////
         ///////////////////////////////////////////
 
+        // H&S action
         [ObsoleteAttribute(message: "This action is deprecated. Call OpenObject(x, y, forceAction=true) instead.", error: false)]
         public void OpenWithHand(float x, float y, float z) {
             // z direction specifies the forward distance that you want to aim at.
@@ -2339,10 +2340,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
         public void MoveHand(float x, float y, float z) {
             // get new direction relative to Agent forward facing direction (not the camera)
-            Vector3 newPos = AgentHand.transform.position +
+            Vector3 newPos = (
+                AgentHand.transform.position +
                 transform.forward * z +
                 transform.right * x +
-                transform.up * y;
+                transform.up * y
+            );
             moveHandToXYZ(newPos.x, newPos.y, newPos.z);
 
             IEnumerator waitForNFramesAndReturn(int n) {
@@ -3203,6 +3206,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // set all objects objects of a given type to a specific state, if that object has that state
         // i.e.,: All objects of type Bowl that have the state property breakable, set isBroken = true
+        // TODO: come back here :/
         public void SetObjectStates(var SetObjectStates) {
             if (SetObjectStates == null || SetObjectStates.objectType == null || SetObjectStates.stateChange == null || SetObjectStates.stateChange == null) {
                 throw new ArgumentNullException();
@@ -3681,7 +3685,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(bool forceAction = false) {
+        public void DropHandObject(bool forceAction = false, bool autoSimulation = true) {
             if (ItemInHand == null) {
                 throw new InvalidOperationException("Nothing in hand to drop!");
             }
@@ -3717,8 +3721,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
             if (!physicsSceneManager.physicsSimulationPaused) {
-                // this is true by default
-                if (action.autoSimulation) {
+                if (autoSimulation) {
                     StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                 } else {
                     StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
@@ -4521,18 +4524,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Math.Abs(Convert.ToInt32((p0.z - p1.z) / gridSize)));
         }
 
-        public void ExhaustiveSearchForItem(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+        public void ExhaustiveSearchForItem(string objectId, Vector3[] positions = null, float randomSeed = 0) {
+            SimObjPhysics theObject = getTargetObject(objectId: objectId, forceAction: true);
 
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
+            if (positions == null) {
                 positions = getReachablePositions();
             }
 
@@ -4543,7 +4538,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.gameObject.SetActive(false);
             }
 
-            Shuffle(new System.Random(action.randomSeed), positions);
+            Shuffle(new System.Random(randomSeed), positions);
 
             SimplePriorityQueue<Vector3> pq = new SimplePriorityQueue<Vector3>();
             Vector3 agentPos = transform.position;
@@ -4604,17 +4599,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-#if UNITY_EDITOR
-            if (objectSeen) {
-                Debug.Log("Object found.");
-                Debug.Log("Manhattan distance:");
-                Debug.Log(xzManhattanDistance(visiblePosition, oldPosition, gridSize));
-            } else {
-                Debug.Log("Object not found.");
-            }
-            Debug.Log("BFS steps taken:");
-            Debug.Log(positionsTried);
-#endif
+            #if UNITY_EDITOR
+                if (objectSeen) {
+                    Debug.Log("Object found.");
+                    Debug.Log("Manhattan distance:");
+                    Debug.Log(xzManhattanDistance(visiblePosition, oldPosition, gridSize));
+                } else {
+                    Debug.Log("Object not found.");
+                }
+                Debug.Log("BFS steps taken:");
+                Debug.Log(positionsTried);
+            #endif
 
             actionIntReturn = positionsTried;
 
@@ -5531,11 +5526,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectIdToVisibilityPoints);
         }
 
-        public void ObjectsVisibleFromPositions(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
+        public void ObjectsVisibleFromPositions(Vector3[] positions = null) {
+            if (positions == null) {
                 positions = getReachablePositions();
             }
 
