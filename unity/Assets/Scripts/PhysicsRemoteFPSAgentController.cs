@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject[] TargetCircles = null;
 
         // these object types can have a placeable surface mesh associated ith it
-        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
+        protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
             SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet,
             SimObjType.CounterTop, SimObjType.Shelf
         };
@@ -123,7 +123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private void LateUpdate() {
+        protected void LateUpdate() {
             // make sure this happens in late update so all physics related checks are done ahead of time
             // this is also mostly for in editor, the array of visible sim objects is found via server actions
             // using VisibleSimObjs(action), so be aware of that
@@ -386,7 +386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // helper used with rotate right/left.
         // note: this sets actionFinished(true) if successful.
-        private void rotate(float? degrees, string direction, bool manualInteract) {
+        protected void rotate(float? degrees, string direction, bool manualInteract) {
             assertAgentCanRotate(direction: direction, degrees: degreesFloat);
             if (!manualInteract) {
                 DefaultAgentHand();
@@ -411,7 +411,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // helper used with look up/down.
         // note: this sets actionFinished(true) if successful.
-        private void look(float degrees, string direction, bool manualInteract) {
+        protected void look(float degrees, string direction, bool manualInteract) {
             // force the degree increment to the nearest tenths place
             // this is to prevent too small of a degree increment change that could cause float imprecision
             degrees = Mathf.Round(degrees * 10.0f) / 10.0f;
@@ -1555,13 +1555,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool manualInteract = false,
             bool allowAgentsToIntersect
         ) {
-            actionFinished(moveInDirection(
+            moveInDirection(
                 direction: transform.right,
                 moveMagnitude: moveMagnitude,
                 forceAction: forceAction,
                 manualInteract: manualInteract,
                 ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
-            ));
+            );
+            actionFinished(true);
         }
 
         public override void MoveLeft(
@@ -1570,13 +1571,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool manualInteract = false,
             bool allowAgentsToIntersect = false
         ) {
-            actionFinished(moveInDirection(
+            moveInDirection(
                 direction: -transform.right,
                 moveMagnitude: moveMagnitude,
                 forceAction: forceAction,
                 manualInteract: manualInteract,
                 ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
-            ));
+            );
+            actionFinished(true);
         }
 
         public override void MoveBack(
@@ -1585,13 +1587,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool manualInteract = false,
             bool allowAgentsToIntersect = false
         ) {
-            actionFinished(moveInDirection(
+            moveInDirection(
                 direction: -transform.forward,
                 moveMagnitude: moveMagnitude,
                 forceAction: forceAction,
                 manualInteract: manualInteract,
                 ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
-            ));
+            );
+            actionFinished(true);
         }
 
         public override void MoveAhead(
@@ -1600,13 +1603,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool manualInteract = false,
             bool allowAgentsToIntersect = false
         ) {
-            actionFinished(moveInDirection(
+            moveInDirection(
                 direction: transform.forward,
                 moveMagnitude: moveMagnitude,
                 forceAction: forceAction,
                 manualInteract: manualInteract,
                 ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
-            ));
+            );
+            actionFinished(true);
         }
 
         ///////////////////////////////////////////
@@ -1641,14 +1645,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////////// DIRECTIONAL PUSH //////////////
         ///////////////////////////////////////////
 
-        private bool canBePushed(SimObjPhysics target) {
+        protected bool canBePushed(SimObjPhysics target) {
             return (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
                     target.PrimaryProperty == SimObjPrimaryProperty.Moveable
             );
         }
 
         // pass in a magnitude and an angle offset to push an object relative to agent forward
-        private void directionalPush(
+        protected void directionalPush(
             SimObjPhysics target,
             float moveMagnitude,
             float pushAngle,
@@ -1828,7 +1832,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // used to check if an specified sim object has come to rest
         // set useTimeout bool to use a faster time out
-        private IEnumerator checkIfObjectHasStoppedMoving(
+        protected IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             float length,
             bool useTimeout = false
@@ -2567,7 +2571,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////// ExpRoom CHANGE COLOR ///////////
         ///////////////////////////////////////////
 
-        private void changeColor(int r, int g, int b, string materialType, SimObjPhysics target = null) {
+        protected void changeColor(int r, int g, int b, string materialType, SimObjPhysics target = null) {
             if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 throw new ArgumentOutOfRangeException("rgb values must be [0-255]");
             }
@@ -2651,7 +2655,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////// ExpRoom CHANGE MATERIALS /////////
         ///////////////////////////////////////////
 
-        private void changeMaterial(int objectVariation, string materialType, SimObjPhysics target = null) {
+        protected void changeMaterial(int objectVariation, string materialType, SimObjPhysics target = null) {
             if (materialType == null) {
                 throw new ArgumentNullException();
             }
@@ -2786,7 +2790,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Change the scale of a sim object. This only works with sim objects not structures
         // scale should be something like 0.3 to shrink or 1.5 to grow
-        private void scaleObject(SimObjPhysics target, float scale, bool markActionFinished) {
+        protected void scaleObject(SimObjPhysics target, float scale, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -2875,7 +2879,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private bool placeObjectAtPoint(
+        protected bool placeObjectAtPoint(
             SimObjPhysics target,
             Vector3 position,
             Vector3? rotation,
@@ -3411,7 +3415,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             putObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
         }
 
-        private void putObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
+        protected void putObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
             if (targetReceptacle == null) {
                 throw new ArgumentNullException();
             }
@@ -3520,7 +3524,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private void pickupObject(
+        protected void pickupObject(
             SimObjPhysics target,
             bool forceAction,
             bool manualInteract,
@@ -3692,7 +3696,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             DropContainedObjects(target: target, reparentContainedObjects: false, forceKinematic: true);
         }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
+        protected IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
             if (currentHandSimObj != null) {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
                 Physics.autoSimulation = false;
@@ -3900,7 +3904,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // H&S action
-        private void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
+        protected void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
             float x = action.x;
             float y = 1.0f - action.y;
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
@@ -4032,8 +4036,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////// HIDING AND MASKING OBJECTS //////
         ////////////////////////////////////////
 
-        private Dictionary<int, Material[]> maskedGameObjectDict = new Dictionary<int, Material[]>();
-        private void maskGameObject(GameObject go, Material mat) {
+        protected Dictionary<int, Material[]> maskedGameObjectDict = new Dictionary<int, Material[]>();
+        protected void maskGameObject(GameObject go, Material mat) {
             if (go.name == "Objects" || go.name == "Structure") {
                 return;
             }
@@ -4051,7 +4055,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private void unmaskGameObject(GameObject go) {
+        protected void unmaskGameObject(GameObject go) {
             foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
                 int id = r.GetInstanceID();
                 if (maskedGameObjectDict.ContainsKey(id)) {
@@ -4307,17 +4311,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///// GETTING DISTANCES, NORMALS, ETC /////
         ///////////////////////////////////////////
 
-        private bool NormalIsApproximatelyUp(Vector3 normal, float tol = 10f) {
+        protected bool NormalIsApproximatelyUp(Vector3 normal, float tol = 10f) {
             return Vector3.Angle(transform.up, normal) < tol;
         }
 
-        private bool AnythingAbovePosition(Vector3 position, float distance) {
+        protected bool AnythingAbovePosition(Vector3 position, float distance) {
             Vector3 up = new Vector3(0.0f, 1.0f, 0.0f);
             RaycastHit hit;
             return Physics.Raycast(position, up, out hit, distance);
         }
 
-        private bool AnythingAbovePositionIgnoreObject(
+        protected bool AnythingAbovePositionIgnoreObject(
             Vector3 position,
             float distance,
             int layerMask,
@@ -4332,7 +4336,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        private float[, , ] initializeFlatSurfacesOnGrid(int yGridSize, int xGridSize) {
+        protected float[, , ] initializeFlatSurfacesOnGrid(int yGridSize, int xGridSize) {
             float[, , ] flatSurfacesOnGrid = new float[2, yGridSize, xGridSize];
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < yGridSize; j++) {
@@ -4344,7 +4348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return flatSurfacesOnGrid;
         }
 
-        private void toggleColliders(IEnumerable<Collider> colliders) {
+        protected void toggleColliders(IEnumerable<Collider> colliders) {
             foreach (Collider c in colliders) {
                 c.enabled = !c.enabled;
             }
@@ -4787,7 +4791,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private List<Dictionary<string, object>> getInteractablePoses(
+        protected List<Dictionary<string, object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
@@ -5026,8 +5030,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, d);
         }
 
-        // private helper for NumberOfPositionsFromWhichItemIsVisible
-        private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null, int maxPoses = int.MaxValue) {
+        // protected helper for NumberOfPositionsFromWhichItemIsVisible
+        protected int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null, int maxPoses = int.MaxValue) {
             List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
                 objectId: objectId,
                 positions: positions,
@@ -5259,7 +5263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private bool stringInSomeAncestorName(GameObject go, string[] strs) {
+        protected bool stringInSomeAncestorName(GameObject go, string[] strs) {
             foreach (string str in strs) {
                 if (go.name.Contains(str)) {
                     return true;
@@ -5312,7 +5316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// CREATE OBJECT ///////////////
         ///////////////////////////////////////////
 
-        private SimObjPhysics createObject(
+        protected SimObjPhysics createObject(
             string objectType,
             Vector3 position,
             Vector3 rotation,
@@ -5939,7 +5943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private IEnumerator CoverSurfacesWithHelper(
+        protected IEnumerator CoverSurfacesWithHelper(
             int n,
             List<SimObjPhysics> newObjects,
             Vector3[] reachablePositions
@@ -6009,7 +6013,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private void createCubeSurrounding(Bounds bounds) {
+        protected void createCubeSurrounding(Bounds bounds) {
             Vector3 center = bounds.center;
             Vector3 max = bounds.max;
             Vector3 min = bounds.min;
@@ -6070,7 +6074,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
         }
 
-        private List<RaycastHit> RaycastWithRepeatHits(
+        protected List<RaycastHit> RaycastWithRepeatHits(
             Vector3 origin, Vector3 direction, float maxDistance, int layerMask
         ) {
             List<RaycastHit> hits = new List<RaycastHit>();
@@ -6317,7 +6321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectIdToPositionsVisibleFrom);
         }
 
-        private IEnumerator SpamObjectsInRoomHelper(int n, List<SimObjPhysics> newObjects) {
+        protected IEnumerator SpamObjectsInRoomHelper(int n, List<SimObjPhysics> newObjects) {
             for (int i = 0; i < n; i++) {
                 yield return null;
             }
@@ -6506,7 +6510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         // swap an object's materials out to the cooked version of the object :)
-        private void cookObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
+        protected void cookObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6543,7 +6547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// SLICE OBJECT ////////////////
         ///////////////////////////////////////////
 
-        private void sliceObject(SimObjPhysics target, bool markActionFinished) {
+        protected void sliceObject(SimObjPhysics target, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6577,7 +6581,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// BREAK OBJECT ////////////////
         ///////////////////////////////////////////
 
-        private void breakObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
+        protected void breakObject(SimObjPhysics target, bool forceAction, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6621,7 +6625,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// DIRTY OBJECT ///////////////
         ///////////////////////////////////////////
 
-        private void dirtyObject(SimObjPhysics target, bool markActionFinished) {
+        protected void dirtyObject(SimObjPhysics target, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6656,7 +6660,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// CLEAN OBJECT ////////////////
         ///////////////////////////////////////////
 
-        private void cleanObject(SimObjPhysics target, bool markActionFinished) {
+        protected void cleanObject(SimObjPhysics target, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6691,7 +6695,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         // fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc.
-        private void fillObjectWithLiquid(SimObjPhysics target, string fillLiquid, bool markActionFinished) {
+        protected void fillObjectWithLiquid(SimObjPhysics target, string fillLiquid, bool markActionFinished) {
             if (target == null || fillLiquid == null) {
                 throw new ArgumentNullException();
             }
@@ -6722,7 +6726,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////// EMPTY LIQUID FROM OBJECT /////////
         ///////////////////////////////////////////
 
-        private void emptyLiquidFromObject(SimObjPhysics target, bool markActionFinished) {
+        protected void emptyLiquidFromObject(SimObjPhysics target, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6754,7 +6758,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         // use up the contents of this object (toilet paper, paper towel, tissue box, etc).
-        private void useObjectUp(SimObjPhysics target, bool markActionFinished) {
+        protected void useObjectUp(SimObjPhysics target, bool markActionFinished) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6788,7 +6792,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// TOGGLE OBJECT ///////////////
         ///////////////////////////////////////////
 
-        private void toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
+        protected void toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
             if (target == null) {
                 throw new ArgumentNullException();
             }
@@ -6854,8 +6858,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// OPEN OBJECT ////////////////
         ///////////////////////////////////////////
 
-        // private helper used with OpenObject commands
-        private void openObject(
+        // protected helper used with OpenObject commands
+        protected void openObject(
             SimObjPhysics target,
             float openness,
             bool forceAction,

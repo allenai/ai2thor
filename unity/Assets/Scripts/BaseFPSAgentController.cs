@@ -32,7 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
         [SerializeField] protected GameObject DebugPointPrefab;
-        [SerializeField] private GameObject GridRenderer = null;
+        [SerializeField] protected GameObject GridRenderer = null;
         [SerializeField] protected GameObject DebugTargetPointPrefab;
         [SerializeField] protected bool inTopLevelView = false;
         [SerializeField] protected Vector3 lastLocalCameraPosition;
@@ -74,12 +74,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
         public GameObject DroneBasket;// reference to the drone's basket object
-        private bool isVisible = true;
+        protected bool isVisible = true;
         public bool inHighFrictionArea = false;
 
         // outbound object filter
-        private SimObjPhysics[] simObjFilter = null;
-        private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        protected SimObjPhysics[] simObjFilter = null;
+        protected VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         public AgentState agentState = AgentState.Emit;
 
         public const float DefaultAllowedErrorInShortestPath = 0.0001f;
@@ -159,21 +159,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public int actionDuration = 3;
 
         // internal state variables
-        private float lastEmitTime;
+        protected float lastEmitTime;
         protected List<string> collisionsInAction;// tracking collided objects
         protected string[] collidedObjects;// container for collided objects
         protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
         protected Quaternion targetRotation;
 
         // Javascript communication
-        private JavaScriptInterface jsInterface = null;
+        protected JavaScriptInterface jsInterface = null;
         public Quaternion TargetRotation
         {
             get { return targetRotation; }
         }
 
         // use as reference to the PhysicsSceneManager object
-        private PhysicsSceneManager _physicsSceneManager = null;
+        protected PhysicsSceneManager _physicsSceneManager = null;
         protected PhysicsSceneManager physicsSceneManager {
             get {
                 if (_physicsSceneManager == null) {
@@ -608,7 +608,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        private SimObjPhysics getTargetObject(string objectId, bool forceAction) {
+        protected SimObjPhysics getTargetObject(string objectId, bool forceAction) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
@@ -630,7 +630,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
@@ -1006,7 +1006,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////////// OBJECT MATERIALS /////////////
         ///////////////////////////////////////////
 
-        private void setAllObjectsToMaterial(Material material, bool markActionFinished) {
+        protected void setAllObjectsToMaterial(Material material, bool markActionFinished) {
             GameObject go = GameObject.Find("Lighting");
             if (go != null) {
                 go.SetActive(false);
@@ -1866,7 +1866,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, visibleRange());
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+        protected bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
@@ -1975,7 +1975,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // is within range of the maxVisibleDistance, but obscurred only within this
         // range and is visibile outside of the range, it will get reported as invisible
         // by the new scheme, but visible in the current scheme.
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance) {
+        protected SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance) {
             List<SimObjPhysics> visible = new List<SimObjPhysics>();
             IEnumerable<SimObjPhysics> simObjs = null;
             if (this.simObjFilter != null) {
@@ -1994,7 +1994,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visible.ToArray();
         }
 
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) {
+        protected SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             #if UNITY_EDITOR
@@ -2510,7 +2510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         #if UNITY_EDITOR
             // this one is used for in-editor debug draw, currently calls to this are commented out
-            private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
+            protected void VisualizePath(Vector3 startPosition, NavMeshPath path) {
                 var pathDistance = 0.0;
 
                 for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -2542,7 +2542,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// SHORTEST PATH ///////////////
         ///////////////////////////////////////////
 
-        private void getShortestPath(
+        protected void getShortestPath(
             string objectType,
             string objectId,
             Vector3 startPosition,
@@ -2584,7 +2584,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
         }
 
-        private bool GetPathFromReachablePositions(
+        protected bool GetPathFromReachablePositions(
             IEnumerable<Vector3> sortedPositions,
             Vector3 targetPosition,
             Transform agentTransform,
@@ -2610,7 +2610,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return pathSuccess;
         }
 
-        private string[] objectTypeToObjectIds(string objectTypeString) {
+        protected string[] objectTypeToObjectIds(string objectTypeString) {
             List<string> objectIds = new List<string>();
             // TODO: why are we using try/catch here?
             try {
@@ -2637,7 +2637,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // TODO: remove
-        private SimObjPhysics getSimObjectFromTypeOrId(string objectType, string objectId) {
+        protected SimObjPhysics getSimObjectFromTypeOrId(string objectType, string objectId) {
             if (!String.IsNullOrEmpty(objectType) && String.IsNullOrEmpty(objectId)) {
                 var ids = objectTypeToObjectIds(objectType);
                 if (ids.Length == 0) {
@@ -2899,7 +2899,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(
+        protected UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(
             SimObjPhysics targetSOP,
             Vector3 initialPosition,
             Quaternion initialRotation,
