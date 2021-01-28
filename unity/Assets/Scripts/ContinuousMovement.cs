@@ -211,6 +211,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 actionSuccess = false;
         }
+
+        controller.errorMessage = debugMessage;
         controller.actionFinished(actionSuccess, debugMessage);
     }
 

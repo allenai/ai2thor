@@ -134,7 +134,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 lastPosition;
 		protected string lastAction;
 		protected bool lastActionSuccess;
-		protected string errorMessage;
+		public string errorMessage;
 		protected ServerActionErrorCode errorCode;
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;

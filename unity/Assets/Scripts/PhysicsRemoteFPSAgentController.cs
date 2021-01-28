@@ -9227,44 +9227,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //NO RENDER option is now a parameter "disableRendering" on MoveMidLevelArm and MoveMidLevelArmHeight
-        // public void MoveMidLevelArmNoRender(ServerAction action) {
-        //     var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-        //     if (arm != null) {
-        //         arm.moveArmTargetNoRender(this, action.position, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart, action.coordinateSpace);
-                
-                
-        //     }
-        //     else {
-        //         actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
-        //     }
-
-        // }
-
-        // //constrain arm's y position based on the agent's current capsule collider center and extents
-        // //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
-        // //arm constrained by the agent's capsule
-        // public void MoveMidLevelArmHeightNoRender(ServerAction action)
-        // {
-        //     if(action.y < 0 || action.y > 1.0)
-        //     {
-        //         actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
-        //         return;
-        //     }
-
-        //     var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-        //     if(arm != null)
-        //     {
-        //         arm.moveArmHeightNoRender(this, action.y, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart);
-        //     }
-
-        //     else
-        //     {
-        //         actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
-        //     }
-        // }
-
+        #if UNITY_EDITOR
+        //debug for static arm collisions from collision listener
         public void GetMidLevelArmCollisions() {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
@@ -9294,7 +9258,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
         }
-
+        
+        //debug for static arm collisions from collision listener
         public void DebugMidLevelArmCollisions() {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
@@ -9308,19 +9273,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             actionFinished(true);
         }
+        #endif
 
         public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
-
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
                 
                 arm.moveArmTarget(
                     this,
@@ -9334,7 +9291,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
             else {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
             }
 
         }
@@ -9346,23 +9304,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if(action.y < 0 || action.y > 1.0)
             {
-                actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
+                errorMessage = "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive";
+                actionFinished(false, errorMessage);
                 return;
             }
 
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
-
-                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 arm.moveArmHeight(
                     this, 
                     action.y, 
@@ -9372,29 +9321,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action.disableRendering
                 );
             }
+
             else {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
             }
         }
 
+        //currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
+        //between a given arm joint an other arm joints.
         public void RotateMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
-
-
-                // TODO re-enable once collision listener listens for self-intersections with agent or arm
-                // Enabling this leads to inconcistencies because when holding an object and rotating to
-                // end up in a position where the object intersect the arm, self collisions are not checked so it 
-                // doesn't stop and ends self intersecting, and when trying to call this, it get's stuck forever 
-                // as arm.IsArmColliding() returns true
-                
-                // if(arm.IsArmColliding())
-                // {
-                //     errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                //     actionFinished(false, errorMessage);
-                //     return;
-                // }
 
                 var target = new Quaternion();
                 //rotate around axis aliged x, y, z with magnitude based on vector3
@@ -9403,41 +9342,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //use euler angles
                     target = Quaternion.Euler(action.rotation);
                 }
+
                 //rotate action.degrees about axis
                 else {
                     target = Quaternion.AngleAxis(action.degrees, action.rotation);
                 }
 
-                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
                     
             }
             else {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
             }
         }
 
+        //perhaps this should fail if no object is picked up?
+        //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
         public void PickUpMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
-
                 actionFinished(arm.PickupObject());
                 return;
             }
 
             else 
             {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
             }
         }
 
@@ -9446,25 +9380,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
-
                 arm.DropObject();
+
                 //todo- only return after object(s) droped have finished moving
                 //currently this will return the frame the object is released
+
                 actionFinished(true);
                 return;
             }
 
             else 
             {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
             }
         }
 
@@ -9475,21 +9403,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (arm != null) 
             {
-
                 StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
-                // List<String> listOfSOP = new List<String>();
-                // foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphere())
-                // {
-                //     listOfSOP.Add(sop.objectID);
-                // }
-
-                // actionFinished(true, listOfSOP);
-                // return;
             }
 
             else 
             {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+
             }
         }
 
@@ -9517,8 +9436,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             else 
             {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
-            }
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);            }
         }
 
         public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
@@ -9540,18 +9459,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     speed,
                     returnToStart
             );
-
-            if(arm != null)
-            {
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment.Rotation of agent cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
-            }
 
             if (disableRendering) {
                 this.unrollSimulatePhysics(
@@ -9594,18 +9501,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     returnToStart,
                     false
             );
-
-            if(arm != null)
-            {
-                /*
-                if(arm.IsArmColliding())
-                {
-                    errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. Movement of agent cannot be done while stuck.";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-                */
-            }
 
             if (disableRendering) {
                 this.unrollSimulatePhysics(
