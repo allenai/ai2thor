@@ -1611,7 +1611,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected HashSet<Collider> allAgentColliders() {
             HashSet<Collider> colliders = null;
             colliders = new HashSet<Collider>();
-            foreach(BaseFPSAgentController agent in agentManager.agents) {
+            foreach (BaseFPSAgentController agent in agentManager.agents) {
                 foreach (Collider c in agent.GetComponentsInChildren<Collider>()) {
                     colliders.Add(c);
                 }
@@ -2972,10 +2972,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             //make sure point we are moving the object to is valid
             if (!agentManager.sceneBounds.Contains(position)) {
-                if (includeErrorMessage) {
-                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
-                }
-                return false;
+                throw new ArgumentOutOfRangeException($"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})");
             }
 
             Quaternion originalRotation = target.transform.rotation;
@@ -2986,10 +2983,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
             bool wasInHand = false;
-            if (ItemInHand)
-            {
-                if (ItemInHand.transform.gameObject == target.transform.gameObject)
-                {
+            if (ItemInHand) {
+                if (ItemInHand.transform.gameObject == target.transform.gameObject) {
                     wasInHand = true;
                 }
             }
@@ -3113,7 +3108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = null;
             //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            foreach (SimObjPhysics sop in VisibleSimObjs(true))
             {
                 if (sop.objectID == t.objectID)
                 {
@@ -3206,7 +3201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!action.anywhere)
             {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
-                foreach(Vector3 v in targetPoints)
+                foreach (Vector3 v in targetPoints)
                 {
                     if (CheckIfTargetPositionIsInViewportRange(v))
                     {
@@ -3274,7 +3269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             } else {
                 // spawn target circle in any valid "outside" receptacle in the scene even if not in veiw
-                foreach(SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene()) {
+                foreach (SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene()) {
                     if (ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                         targetReceptacles.Add(sop);
                     }
@@ -3285,7 +3280,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // if we passed in a objectId, see if it is in the list of targetReceptacles found so far
             if (objectId != null) {
                 List<SimObjPhysics> filteredTargetReceptacleList = new List<SimObjPhysics>();
-                foreach(SimObjPhysics sop in targetReceptacles) {
+                foreach (SimObjPhysics sop in targetReceptacles) {
                     if (sop.objectID == objectId) {
                         filteredTargetReceptacleList.Add(sop);
                     }
@@ -3311,7 +3306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //only do further constraint checks if defaults are overwritten
                 if (minDistance != 0 || maxDistance != 0) {
-                    foreach(ReceptacleSpawnPoint p in rsps) {
+                    foreach (ReceptacleSpawnPoint p in rsps) {
                         //get rid of differences in y values for points
                         Vector3 normalizedPosition = new Vector3(transform.position.x, 0, transform.position.z);
                         Vector3 normalizedPoint = new Vector3(p.Point.x, 0, p.Point.z);
@@ -3529,7 +3524,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new ArgumentNullException();
             }
 
-            foreach(SimObjPhysics sop in VisibleSimObjs(true)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                 if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), objectType)) {
                     try {
                         switch (stateChange) {
@@ -5293,7 +5288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (string key in keys) {
                 d[key] = new List<float>();
             }
-            foreach(Dictionary<string, object> pose in interactablePoses) {
+            foreach (Dictionary<string, object> pose in interactablePoses) {
                 foreach (string key in keys) {
                     if (key == "standing") {
                         // standing is converted from true => 1 to false => 0, for backwards compatibility
@@ -5346,10 +5341,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             reachablePositions = new Vector3[2];
             reachablePositions[0] = agentManager.SceneBounds.min;
             reachablePositions[1] = agentManager.SceneBounds.max;
-#if UNITY_EDITOR
-            Debug.Log(reachablePositions[0]);
-            Debug.Log(reachablePositions[1]);
-#endif
+            #if UNITY_EDITOR
+                Debug.Log(reachablePositions[0]);
+                Debug.Log(reachablePositions[1]);
+            #endif
             actionFinished(true);
         }
 
@@ -5418,16 +5413,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void RandomlyMoveAgent(int randomSeed = 0) {
-#if UNITY_EDITOR
-            randomSeed = UnityEngine.Random.Range(0, 1000000);
-#endif
+            #if UNITY_EDITOR
+                randomSeed = UnityEngine.Random.Range(0, 1000000);
+            #endif
             reachablePositions = getReachablePositions();
-            var orientations = new float[]{
-                0,
-                90,
-                180,
-                270
-            };
+            var orientations = new float[] {0, 90, 180, 270};
             orientations.Shuffle_(randomSeed);
             reachablePositions.Shuffle_(randomSeed);
 
@@ -5443,16 +5433,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (errorMessage != "") {
-                actionFinished(false);
+            if (!success) {
+                throw new InvalidOperationException("Could not find a position in which the agent and object fit.");
             }
-            else if (!success) {
-                errorMessage = "Could not find a position in which the agent and object fit.";
-                actionFinished(false);
-            }
-            else {
-                actionFinished(true, reachablePositions);
-            }
+            actionFinished(true, reachablePositions);
         }
 
         public void GetReachablePositionsForObject(
@@ -5484,7 +5468,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (BaseFPSAgentController agent in agentManager.agents) {
                 agentGameObjects.Add(agent.gameObject);
             }
-            //List<Vector3> reachable = new List<Vector3>();
 
             List<Collider> enabledColliders = new List<Collider>();
             foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
@@ -6151,6 +6134,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
                 size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
+
             bool hasActiveRenderer = false;
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
@@ -6158,18 +6142,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     objBounds.Encapsulate(r.bounds);
                 }
             }
+
             if (!hasActiveRenderer) {
-                throw 
-                errorMessage = "Cannot get bounds for " + objectId + " as it has no attached (and active) renderers.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Cannot get bounds for " + objectId + " as it has no attached (and active) renderers.");
             }
+
             sop.transform.rotation = oldRotation;
             Vector3 diffs = objBounds.max - objBounds.min;
             actionFloatReturn = diffs.x * diffs.y * diffs.z;
+
             #if UNITY_EDITOR
                 Debug.Log("Volume is " + actionFloatReturn);
             #endif
+
             actionFinished(true);
         }
 

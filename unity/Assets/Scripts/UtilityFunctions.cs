@@ -1,3 +1,6 @@
+// UtilityFunctions.cs defines GENERAL PURPOSE utility functions that are not specific
+// to any particular action.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,6 +12,41 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using System.Reflection;
 public static class UtilityFunctions {
+    ///////////////////////////////////////////
+    ///////////// ARRAY HELPERS ///////////////
+    ///////////////////////////////////////////
+
+    public T[] flatten2DimArray<T>(T[, ] array) {
+        int nrow = array.GetLength(0);
+        int ncol = array.GetLength(1);
+        T[] flat = new T[nrow * ncol];
+        for (int i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
+                flat[i * ncol + j] = array[i, j];
+            }
+        }
+        return flat;
+    }
+
+    public T[] flatten3DimArray<T>(T[, , ] array) {
+        int n0 = array.GetLength(0);
+        int n1 = array.GetLength(1);
+        int n2 = array.GetLength(2);
+        T[] flat = new T[n0 * n1 * n2];
+        for (int i = 0; i < n0; i++) {
+            for (int j = 0; j < n1; j++) {
+                for (int k = 0; k < n2; k++) {
+                    flat[i * n1 * n2 + j * n2 + k] = array[i, j, k];
+                }
+            }
+        }
+        return flat;
+    }
+
+    ///////////////////////////////////////////
+    ///////////// COMBINATORICS ///////////////
+    ///////////////////////////////////////////
+
     private static IEnumerable<int[]> Combinations(int m, int n) {
         // Enumerate all possible m-size combinations of [0, 1, ..., n-1] array
         // in lexicographic order (first [0, 1, 2, ..., m-1]).
@@ -22,9 +60,10 @@ public static class UtilityFunctions {
             while (value < n) {
                 result[index++] = value++;
                 stack.Push(value);
-                if (index != m) continue;
-                yield return (int[])result.Clone(); // thanks to @xanatos
-                //yield return result;
+                if (index != m) {
+                    continue;
+                }
+                yield return (int[])result.Clone();
                 break;
             }
         }
@@ -46,6 +85,10 @@ public static class UtilityFunctions {
             yield return result;
         }
     }
+
+    ///////////////////////////////////////////
+    /////////////// COLLISION /////////////////
+    ///////////////////////////////////////////
 
     public static bool isObjectColliding(
         GameObject go,
@@ -132,6 +175,7 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
             if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)) {
                 continue;
@@ -142,6 +186,7 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
@@ -149,6 +194,7 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         return collidersSet.ToArray();
     }
 
@@ -157,6 +203,7 @@ public static class UtilityFunctions {
         foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
             transformsToIgnore.Add(t);
         }
+
         List<RaycastHit> hits = new List<RaycastHit>();
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.CapsuleCastAll(cc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
@@ -165,6 +212,7 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.BoxCastAll(bc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
                 if (!transformsToIgnore.Contains(h.transform)) {
@@ -172,6 +220,7 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.SphereCastAll(sc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
                 if (!transformsToIgnore.Contains(h.transform)) {
@@ -179,55 +228,11 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         return hits.ToArray();
     }
 
-    //get a copy of a specific component and apply it to another object at runtime
-    //usage: var copy = myComp.GetCopyOf(someOtherComponent);
-    public static T GetCopyOf<T>(this Component comp, T other) where T : Component
-    {
-        Type type = comp.GetType();
-        if (type != other.GetType()) return null; // type mis-match
-        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
-        PropertyInfo[] pinfos = type.GetProperties(flags);
-        foreach (var pinfo in pinfos) {
-            if (pinfo.CanWrite) {
-                try {
-                    pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
-                }
-                catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
-            }
-        }
-        FieldInfo[] finfos = type.GetFields(flags);
-        foreach (var finfo in finfos) {
-            finfo.SetValue(comp, finfo.GetValue(other));
-        }
-        return comp as T;
-    }
-
-    //usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
-    public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component
-    {
-        return go.AddComponent<T>().GetCopyOf(toAdd) as T;
-    }
-
-
-    // Taken from https://answers.unity.com/questions/589983/using-mathfround-for-a-vector3.html
-    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2)
-    {
-         float multiplier = 1;
-         for (int i = 0; i < decimalPlaces; i++)
-         {
-             multiplier *= 10f;
-         }
-         return new Vector3(
-             Mathf.Round(vector3.x * multiplier) / multiplier,
-             Mathf.Round(vector3.y * multiplier) / multiplier,
-             Mathf.Round(vector3.z * multiplier) / multiplier);
-    }
-
-    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
-    {
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b) {
         Vector3[] corners = new Vector3[8];
 
         corners[0] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
@@ -241,5 +246,62 @@ public static class UtilityFunctions {
         corners[7] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
 
         return corners;
+    }
+
+    ///////////////////////////////////////////
+    ///////////// COPY COMPONENT //////////////
+    ///////////////////////////////////////////
+
+    // get a copy of a specific component and apply it to another object at runtime
+    // usage: var copy = myComp.GetCopyOf(someOtherComponent);
+    public static T GetCopyOf<T>(this Component comp, T other) where T : Component {
+        Type type = comp.GetType();
+        if (type != other.GetType()) {
+            throw new ArgumentException("Type mismatch in GetCopyOf<T>");
+        }
+
+        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
+        PropertyInfo[] pinfos = type.GetProperties(flags);
+        foreach (var pinfo in pinfos) {
+            if (pinfo.CanWrite) {
+                try {
+                    pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
+                }
+                catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
+            }
+        }
+
+        FieldInfo[] finfos = type.GetFields(flags);
+        foreach (var finfo in finfos) {
+            finfo.SetValue(comp, finfo.GetValue(other));
+        }
+
+        return comp as T;
+    }
+
+    ///////////////////////////////////////////
+    ///////////// ADD COMPONENT ///////////////
+    ///////////////////////////////////////////
+
+    // usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
+    public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component {
+        return go.AddComponent<T>().GetCopyOf(toAdd) as T;
+    }
+
+    ///////////////////////////////////////////
+    /////////////// ROUNDING //////////////////
+    ///////////////////////////////////////////
+
+    // Taken from https://answers.unity.com/questions/589983/using-mathfround-for-a-vector3.html
+    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2) {
+         float multiplier = 1;
+         for (int i = 0; i < decimalPlaces; i++) {
+             multiplier *= 10f;
+         }
+         return new Vector3(
+            Mathf.Round(vector3.x * multiplier) / multiplier,
+            Mathf.Round(vector3.y * multiplier) / multiplier,
+            Mathf.Round(vector3.z * multiplier) / multiplier
+        );
     }
 }
