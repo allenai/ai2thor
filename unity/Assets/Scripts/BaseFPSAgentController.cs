@@ -704,8 +704,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return target;
         }
 
-        public IEnumerator checkInitializeAgentLocationAction()
-        {
+        public IEnumerator checkInitializeAgentLocationAction() {
             yield return null;
 
             Vector3 startingPosition = this.transform.position;
@@ -720,18 +719,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
             List<Vector3> validMovements = new List<Vector3>();
 
-            foreach (float x in xs)
-            {
-                foreach (float z in zs)
-                {
+            foreach (float x in xs) {
+                foreach (float z in zs) {
                     this.transform.position = startingPosition;
                     yield return null;
 
                     Vector3 target = new Vector3(x, this.transform.position.y, z);
                     Vector3 dir = target - this.transform.position;
                     Vector3 movement = dir.normalized * 100.0f;
-                    if (movement.magnitude > dir.magnitude)
-                    {
+                    if (movement.magnitude > dir.magnitude) {
                         movement = dir;
                     }
 
@@ -757,8 +753,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             this.transform.position = startingPosition;
             yield return null;
-            if (validMovements.Count > 0)
-            {
+            if (validMovements.Count > 0) {
                 Debug.Log("Initialize: got total valid initial targets: " + validMovements.Count);
                 Vector3 firstMove = validMovements[0];
                 firstMove.y = Physics.gravity.y * this.m_GravityMultiplier;
@@ -769,10 +764,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     cameraNearPlane = m_Camera.nearClipPlane,
                     cameraFarPlane = m_Camera.farClipPlane
                 });
-            }
-
-            else
-            {
+            } else {
                 Debug.Log("Initialize: no valid starting positions found");
                 actionFinished(false);
             }
@@ -797,61 +789,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetColors();
             actionFinished(true);
-        }
-
-        //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
-        //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
-        //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
-        //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
-
-        //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(
-            Vector3 direction,
-            string objectId="",
-            float maxDistanceToObject=-1.0f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            HashSet<Collider> ignoreColliders=null
-        ) {
-            Vector3 targetPosition = transform.position + direction;
-            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
-
-            float right = Vector3.Dot(transform.right, direction);
-            if (right < 0) {
-                angle = 360f - angle;
-            }
-            int angleInt = Mathf.RoundToInt(angle) % 360;
-
-            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
-
-                //only default hand if not manually interacting with things    
-                if (!manualInteract) {
-                    DefaultAgentHand();
-                }
-
-                Vector3 oldPosition = transform.position;
-                transform.position = targetPosition;
-                this.snapAgentToGrid();
-
-                if (objectId != "" && maxDistanceToObject > 0.0f) {
-                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                        errorMessage = "No object with ID " + objectId;
-                        transform.position = oldPosition; 
-                        return false;
-                    }
-                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    if (distanceToObject(sop) > maxDistanceToObject) {
-                        errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
-                        transform.position = oldPosition;
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
         }
 
         protected float distanceToObject(SimObjPhysics sop) {
@@ -1087,6 +1024,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 alpha: 1
             );
             actionFinished(true);
+        }
+
+        ///////////////////////////////////////////
+        //////////// OBJECT MATERIALS /////////////
+        ///////////////////////////////////////////
+
+        private void setAllObjectsToMaterial(Material material, bool markActionFinished) {
+            GameObject go = GameObject.Find("Lighting");
+            if (go != null) {
+                go.SetActive(false);
+            }
+            foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
+                bool disableRenderer = false;
+                foreach (Material m in r.materials) {
+                    if (m.name.Contains("LightRay")) {
+                        disableRenderer = true;
+                        break;
+                    }
+                }
+                if (disableRenderer) {
+                    r.enabled = false;
+                } else {
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = material;
+                    }
+                    r.materials = newMaterials;
+                }
+            }
+            foreach (Light l in GameObject.FindObjectsOfType<Light>()) {
+                l.enabled = false;
+            }
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = Color.white;
+
+            if (markActionFinished) {
+                actionFinished(success: true);
+            }
+        }
+
+        public void SetAllObjectsToBlueUnlit() {
+            setAllObjectsToMaterial(material: (Material) Resources.Load("BLUE", typeof(Material)), markActionFinished: true);
+        }
+
+        public void SetAllObjectsToBlueStandard() {
+            setAllObjectsToMaterial(material: (Material) Resources.Load("BLUE_standard", typeof(Material)), markActionFinished: true);
         }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
@@ -1623,29 +1606,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             this.agentState = AgentState.Processing;
 
-            try
-            {
+            try {
                 ActionDispatcher.Dispatch(this, controlCommand);
-            }
-            catch (MissingArgumentsActionException e)
-            {
+            } catch (MissingArgumentsActionException e) {
                 errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
                 errorCode = ServerActionErrorCode.MissingArguments;
                 actionFinished(false);
-            }
-            catch (AmbiguousActionException e)
-            {
+            } catch (AmbiguousActionException e) {
                 errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
                 errorCode = ServerActionErrorCode.AmbiguousAction;
                 actionFinished(false);
-            }
-            catch (InvalidActionException)
-            {
+            } catch (InvalidActionException) {
                 errorCode = ServerActionErrorCode.InvalidAction;
                 actionFinished(success: false, errorMessage: "Invalid action: " + controlCommand.action);
-            }
-            catch (TargetInvocationException e)
-            {
+            } catch (TargetInvocationException e) {
                 // TargetInvocationException is called whenever an action
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
@@ -1653,9 +1627,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
                 );
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
                 errorMessage += e.ToString();
@@ -1727,6 +1699,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 			//body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
 
+        ///////////////////////////////////////////
+        ////////////////// MOVE ///////////////////
+        ///////////////////////////////////////////
+        
+        // for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
+        // NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
+        // checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
+        // Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
+
+        // XXX revisit what movement means when we more clearly define what "continuous" movement is
+        protected bool moveInDirection(
+            Vector3 direction,
+            string objectId = "",
+            float maxDistanceToObject = -1.0f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            HashSet<Collider> ignoreColliders = null
+        ) {
+            Vector3 targetPosition = transform.position + direction;
+            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
+
+            float right = Vector3.Dot(transform.right, direction);
+            if (right < 0) {
+                angle = 360f - angle;
+            }
+            int angleInt = Mathf.RoundToInt(angle) % 360;
+
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
+
+                //only default hand if not manually interacting with things    
+                if (!manualInteract) {
+                    DefaultAgentHand();
+                }
+
+                Vector3 oldPosition = transform.position;
+                transform.position = targetPosition;
+                this.snapAgentToGrid();
+
+                if (objectId != "" && maxDistanceToObject > 0.0f) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        errorMessage = "No object with ID " + objectId;
+                        transform.position = oldPosition; 
+                        return false;
+                    }
+                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    if (distanceToObject(sop) > maxDistanceToObject) {
+                        errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
 		protected void snapAgentToGrid() {
             if (this.snapToGrid) {
                 float mult = 1 / gridSize;
@@ -1737,71 +1768,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 		}
 
-		//move in cardinal directions
-		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
-		{
-            // TODO: Simplify this???
-			//resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
-			moveMagnitude = gridSize;
-			if (action.moveMagnitude > 0)
-			{
-				moveMagnitude = action.moveMagnitude;
-			}
-			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
-			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3>();
-			actionOrientation.Add(0, new Vector3(0f, 0f, 1.0f));
-			actionOrientation.Add(90, new Vector3(1.0f, 0.0f, 0.0f));
-			actionOrientation.Add(180, new Vector3(0f, 0f, -1.0f));
-			actionOrientation.Add(270, new Vector3(-1.0f, 0.0f, 0.0f));
-			int delta = (currentRotation + targetOrientation) % 360;
-
-			Vector3 m;
-			if (actionOrientation.ContainsKey(delta))
-			{
-				m = actionOrientation[delta];
-
-			}
-
-			else
-			{
-				actionOrientation = new Dictionary<int, Vector3>();
-				actionOrientation.Add(0, transform.forward);
-				actionOrientation.Add(90, transform.right);
-				actionOrientation.Add(180, transform.forward * -1);
-				actionOrientation.Add(270, transform.right * -1);
-				m = actionOrientation[targetOrientation];
-			}
-
-			m *= moveMagnitude;
-
-			m.y = Physics.gravity.y * this.m_GravityMultiplier;
-			m_CharacterController.Move(m);
-			actionFinished(true);
-			// StartCoroutine(checkMoveAction(action));
-		}
-
-        //do not use this base version, use the override from PhysicsRemote or Stochastic
-		public virtual void MoveLeft(ServerAction action)
-		{
-			moveCharacter(action, 270);
-		}
-
-		public virtual void MoveRight(ServerAction action)
-		{
-			moveCharacter(action, 90);
-		}
-
-		public virtual void MoveAhead(ServerAction action)
-		{
-			moveCharacter(action, 0);
-		}
-
-		public virtual void MoveBack(ServerAction action)
-		{
-			moveCharacter(action, 180);
-		}
-
-        //overriden by stochastic
         public virtual void MoveRelative(ServerAction action) {
             var moveLocal = new Vector3(action.x, 0, action.z);
             Vector3 moveWorldSpace = transform.rotation * moveLocal;

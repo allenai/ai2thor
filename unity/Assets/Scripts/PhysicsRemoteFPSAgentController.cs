@@ -6347,49 +6347,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Top
             GameObject cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, max.y + offset + size / 2, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, max.y + offset + size / 2, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
             // Bottom
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, min.y - offset - size / 2, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, min.y - offset - size / 2, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
             // z min
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, center.y, min.z - offset - size / 2),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, center.y, min.z - offset - size / 2),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
             // z max
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, center.y, max.z + offset + size / 2),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, center.y, max.z + offset + size / 2),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
             // x min
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(min.x - offset - size / 2, center.y, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(min.x - offset - size / 2, center.y, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
 
             // x max
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(max.x + offset + size / 2, center.y, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(max.x + offset + size / 2, center.y, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
         }
@@ -6407,45 +6407,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 didHit = Physics.Raycast(origin, direction, out hit, maxDistance, layerMask);
             }
             return hits;
-        }
-
-        public void setAllObjectsToMaterial(Material material) {
-            GameObject go = GameObject.Find("Lighting");
-            if (go != null) {
-                go.SetActive(false);
-            }
-            foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
-                bool disableRenderer = false;
-                foreach (Material m in r.materials) {
-                    if (m.name.Contains("LightRay")) {
-                        disableRenderer = true;
-                        break;
-                    }
-                }
-                if (disableRenderer) {
-                    r.enabled = false;
-                } else {
-                    Material[] newMaterials = new Material[r.materials.Length];
-                    for (int i = 0; i < newMaterials.Length; i++) {
-                        newMaterials[i] = material;
-                    }
-                    r.materials = newMaterials;
-                }
-            }
-            foreach (Light l in GameObject.FindObjectsOfType<Light>()) {
-                l.enabled = false;
-            }
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = Color.white;
-        }
-
-        public void SetAllObjectsToBlueUnlit() {
-            setAllObjectsToMaterial((Material) Resources.Load("BLUE", typeof(Material)));
-            actionFinished(true);
-        }
-        public void SetAllObjectsToBlueStandard() {
-            setAllObjectsToMaterial((Material) Resources.Load("BLUE_standard", typeof(Material)));
-            actionFinished(true);
         }
 
         public void EnableFog(float z) {
