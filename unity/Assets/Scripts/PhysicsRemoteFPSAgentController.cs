@@ -700,7 +700,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // params are named x,y,z due to the action originally using ServerAction.x,y,z
         [ObsoleteAttribute(message: "This action is deprecated. Call ChangeAgentColor(string color) instead.", error: false)] 
         public void ChangeAgentColor(float x, float y, float z) {
             ChangeAgentColor(color: $"rgb({x}, {y}, {z})");
@@ -4224,7 +4223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void HideBlueObjects(ServerAction action) {
+        public void HideBlueObjects() {
             foreach (Renderer r in UnityEngine.Object.FindObjectsOfType<Renderer>()) {
                 foreach (Material m in r.materials) {
                     if (m.name.Contains("BLUE")) {
@@ -4275,7 +4274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected void MaskSimObj(SimObjPhysics so, Material mat) {
+        protected void maskSimObj(SimObjPhysics so, Material mat) {
             if (!transparentStructureObjectsHidden) {
                 HideTransparentStructureObjects();
             }
@@ -4303,7 +4302,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected void MaskSimObj(SimObjPhysics so, Color color) {
+        protected void maskSimObj(SimObjPhysics so, Color color) {
             if (!transparentStructureObjectsHidden) {
                 HideTransparentStructureObjects();
             }        
@@ -4312,7 +4311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MaskSimObj(so, material);
         }
 
-        protected void UnmaskSimObj(SimObjPhysics so) {
+        protected void unmaskSimObj(SimObjPhysics so) {
             if (transparentStructureObjectsHidden) {
                 UnhideStructureObjects();
             }
@@ -4333,27 +4332,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
             HideAll();
             updateDisplayGameObject(target: sop.gameObject, enabled: true);
-            MaskSimObj(target, Color.magenta);
+            maskSimObj(target, Color.magenta);
             actionFinished(true);
         }
 
         public void UnemphasizeAll() {
-            UnhideAll();
+            unhideAll();
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                UnmaskSimObj(so);
+                unmaskSimObj(so);
             }
             actionFinished(true);
         }
 
         public void MaskObject(string objectId) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
-            MaskSimObj(so: target, mat: Color.magenta);
+            maskSimObj(so: target, mat: Color.magenta);
             actionFinished(true);
         }
 
-        public void UnmaskObject(ServerAction action) {
+        public void UnmaskObject(string objectId) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
-            UnmaskSimObj(target);
+            unmaskSimObj(target);
             actionFinished(true);
         }
 
@@ -5111,10 +5110,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeOpenSpeed(ServerAction action) {
+        // Why are we using x?
+        public void ChangeOpenSpeed(float x) {
             foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
-                coo.animationTime = action.x;
-        }
+                coo.animationTime = x;
+            }
             actionFinished(true);
         }
 

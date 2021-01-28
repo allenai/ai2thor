@@ -933,7 +933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected void UnhideAll() {
+        protected void unhideAll() {
             foreach (GameObject target in GameObject.FindObjectsOfType<GameObject>()) {
                 updateDisplayGameObject(target: target, enabled: true);
             }
@@ -945,7 +945,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void UnhideAllObjects() {
             transparentStructureObjectsHidden = false;
-            UnhideAll();
+            unhideAll();
             actionFinished(true);
         }
 
