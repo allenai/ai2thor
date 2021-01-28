@@ -289,269 +289,187 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        //checks if a float is a multiple of 0.1f
-        private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
-            return (decimal)f % 0.1M == 0;
-        }
-
         ///////////////////////////////////////////
-        /////////////// LOOK DOWN /////////////////
+        ///////////////// ROTATE //////////////////
         ///////////////////////////////////////////
 
-        public override void LookDown(ServerAction action) {
-            if (action.degrees < 0) {
-                errorMessage = "LookDown action requires positive degree value. Invalid value used: " + action.degrees;
-                actionFinished(false);
-                return;
-            }
-
-            if (!CheckIfFloatIsMultipleOfOneTenth(action.degrees)) {
-                errorMessage = "LookDown action requires degree value to be a multiple of 0.1f";
-                actionFinished(false);
-                return;
-            }
-
-            //default degree increment to 30
-            if (action.degrees == 0) {
-                action.degrees = 30f;
-            }
-
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
-
-            if (!checkForUpDownAngleLimit("down", action.degrees)) {
-                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
-                return;
-            }
-
-            if (CheckIfAgentCanRotate("down", action.degrees)) {
-
-                //only default hand if not manually Interacting with things
-                if (!action.manualInteract)
-                DefaultAgentHand();
-
-                base.LookDown(action);
-                return;
-            } else {
-                errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates down " + action.degrees+ " degrees";
-                actionFinished(false);
-            } 
-        
-        }
-
-        ///////////////////////////////////////////
-        //////////////// LOOK UP //////////////////
-        ///////////////////////////////////////////
-
-        public override void LookUp(ServerAction action) {
-            if (action.degrees < 0) {
-                errorMessage = "LookUp action requires positive degree value. Invalid value used: " + action.degrees;
-                actionFinished(false);
-                return;
-            }
-
-            if (!CheckIfFloatIsMultipleOfOneTenth(action.degrees)) {
-                errorMessage = "LookUp action requires degree value to be a multiple of 0.1f";
-                actionFinished(false);
-                return;
-            }
-
-            //default degree increment to 30
-            if (action.degrees == 0) {
-                action.degrees = 30f;
-            }
-
-            // force the degree increment to the nearest tenths place
-            // this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
-
-            if (!checkForUpDownAngleLimit("up", action.degrees)) {
-                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
-                return;
-            }
-
-            if (CheckIfAgentCanRotate("up", action.degrees)) {
-                // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
-                    DefaultAgentHand();
+        public void assertAgentCanRotate(string direction, float degrees) {
+            // checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
+            if (ItemInHand != null) {
+                if (direction != "left" && direction != "right" && direction != "up" && direction != "down") {
+                    throw new ArgumentException("direction must be in {up, right, down, left}");
                 }
 
-                base.LookUp(action);
-            } else {
-                errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates up " + action.degrees+ " degrees";
-                actionFinished(false);
-            } 
-        }
+                BoxCollider bb = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
 
-        ///////////////////////////////////////////
-        ////////////// ROTATE RIGHT ///////////////
-        ///////////////////////////////////////////
+                // get world coordinates of object in hand's bounding box corners
+                Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
 
-        public override void RotateRight(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
-            }
+                // ok now we have each corner, let's rotate them the specified direction
+                Vector3 origin = (direction == "right" || direction == "left" ? m_CharacterController : m_Camera).transform.position;
 
-            if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
-                //only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
-                    DefaultAgentHand();
+                // for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
+                // given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
+                // if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+                Vector3[] GenerateArcPoints(Vector3 startingPoint) {
+                    float incrementAngle = degrees / 10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
+                    Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
+                    float currentIncrementAngle;
+
+                    // Yawing left (Rotating across XZ plane around Y-pivot)
+                    for (int i = 0; i < arcPoints.Length; i++) {
+                        // move the rotPoint to the current corner's position
+                        rotPoint.transform.position = startingPoint;
+
+                        switch (dir) {
+                            case "up":
+                                currentIncrementAngle = i * -incrementAngle;
+                                goto case "look";
+                            case "down":
+                                currentIncrementAngle = i * incrementAngle;
+                                goto case "look";
+                            case "left":
+                                currentIncrementAngle = i * -incrementAngle;
+                                goto case "rotate";
+                            case "right":
+                                currentIncrementAngle = i * incrementAngle;
+                                goto case "rotate";
+
+                            // rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                            case "look":
+                                rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+                                break;
+                            case "rotate":
+                                rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+                                break;
+                        }
+
+                        // set the current arcPoint's vector3 to the rotated point
+                        arcPoints[i] = rotPoint.transform.position;
+                    }
+                    return arcPoints;
                 }
 
-                base.RotateRight(action);
-            } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Right " + action.degrees+ " degrees";
-                actionFinished(false);
-            }
-        }
+                // generate arc points in the positive y axis rotation
+                foreach (Vector3 v in corners) {
+                    Vector3[] pointsOnArc = GenerateArcPoints(v, degrees, dir);
 
-        ///////////////////////////////////////////
-        ////////////// ROTATE LEFT ////////////////
-        ///////////////////////////////////////////
+                    // raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                    for (int i = 0; i < pointsOnArc.Length; i++) {
+                        //debug draw spheres to show path of arc
+                        // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        // Sphere.transform.position = pointsOnArc[i];
+                        // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+                        // Sphere.GetComponent<SphereCollider>().enabled = false;
 
-        public override void RotateLeft(ServerAction action) {
-            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
-            }
+                        RaycastHit hit;
 
-            if (CheckIfAgentCanRotate("left", action.degrees) || action.forceAction) {
-                //only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
-                    DefaultAgentHand();
-                }
+                        //do linecasts from the first point, sequentially, to the last
+                        if (i < pointsOnArc.Length - 1) {
+                            if (Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                                if (hit.transform.GetComponent<SimObjPhysics>()) {
+                                    //if we hit the item in our hand, skip
+                                    if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform) {
+                                        continue;
+                                    }
+                                }
 
-                base.RotateLeft(action);
-            } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees+ " degrees";
-                actionFinished(false);
-            }
-        }
-
-        ///////////////////////////////////////////
-        ////////////// ARC METHODS ////////////////
-        ///////////////////////////////////////////
-
-        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir) {
-            bool result = true;
-            
-            //generate arc points in the positive y axis rotation
-            foreach (Vector3 v in corners) {
-                Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
-
-                //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                for (int i = 0; i < pointsOnArc.Length; i++) {
-                    //debug draw spheres to show path of arc
-                    // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    // Sphere.transform.position = pointsOnArc[i];
-                    // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                    // Sphere.GetComponent<SphereCollider>().enabled = false;
-                    
-                    RaycastHit hit;
-
-                    //do linecasts from the first point, sequentially, to the last
-                    if (i < pointsOnArc.Length - 1) {
-                        if (Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
-                            if (hit.transform.GetComponent<SimObjPhysics>()) {
-                                //if we hit the item in our hand, skip
-                                if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform) {
+                                if (hit.transform == this.transform) {
+                                    // don't worry about clipping the object into this agent
                                     continue;
                                 }
+                                throw new InvalidOperationException(
+                                    $"a held item: {ItemInHand.transform.GetComponent<SimObjPhysics>().objectID} will collide with something if agent rotates down {degrees}degrees"
+                                );
                             }
-
-                            if (hit.transform == this.transform) {
-                                //don't worry about clipping the object into this agent
-                                continue;
-                            }
-
-                            result = false;
-                            break;
                         }
                     }
                 }
             }
-            return result;
+
+            // check if the angle between the agent's forward vector and the proposed rotation vector
+            // if it exceeds the min/max based on if we are rotating up or down
+            if (direction == "down" || direction == "up") {
+                // first move the rotPoint to the camera
+                rotPoint.transform.position = m_Camera.transform.position;
+
+                // zero out the rotation first
+                rotPoint.transform.rotation = m_Camera.transform.rotation;
+
+                if (direction == "down") {
+                    rotPoint.Rotate(new Vector3(degrees, 0, 0));
+                    //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
+                    //degrees being positive, it still needs to check against this negatively signed direction.
+                    if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f < -maxDownwardLookAngle) {
+                        throw new InvalidOperationException("can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon");
+                    }
+                } else if (direction == "up") {
+                    rotPoint.Rotate(new Vector3(-degrees, 0, 0));
+                    if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle) {
+                        throw new InvalidOperationException("can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon");
+                    }
+                }
+            }
         }
 
-        // for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
-        // given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
-        // if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir) {
-            float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
-            Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
-            float currentIncrementAngle;
-
-            // Yawing left (Rotating across XZ plane around Y-pivot)
-            switch (dir) {
-                case "left":
-                    for (int i = 0; i < arcPoints.Length; i++) {
-                        currentIncrementAngle = i * -incrementAngle;
-
-                        // move the rotPoint to the current corner's position
-                        rotPoint.transform.position = startingPoint;
-
-                        // rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                        rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-
-                        // set the current arcPoint's vector3 to the rotated point
-                        arcPoints[i] = rotPoint.transform.position;
-                    }
-                    break;
+        // helper used with rotate right/left.
+        // note: this sets actionFinished(true) if successful.
+        private void rotate(float? degrees, string direction, bool manualInteract) {
+            assertAgentCanRotate(direction: direction, degrees: degreesFloat);
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+            switch (direction) {
                 case "right":
-                    // Yawing right (Rotating across XZ plane around Y-pivot)
-                    for (int i = 0; i < arcPoints.Length; i++) {
-                        currentIncrementAngle = i * incrementAngle;
-
-                        //move the rotPoint to the current corner's position
-                        rotPoint.transform.position = startingPoint;
-
-                        //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                        rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-
-                        //set the current arcPoint's vector3 to the rotated point
-                        arcPoints[i] = rotPoint.transform.position;
-                    }
+                    base.RotateRight(degrees: degrees);
                     break;
-                case "up":
-                    // Pitching up(Rotating across YZ plane around X-pivot)
-                    for (int i = 0; i < arcPoints.Length; i++) {
-                        // reverse the increment angle because of the right handedness orientation of the local x-axis
-                        currentIncrementAngle = i * -incrementAngle;
-
-                        // move the rotPoint to the current corner's position
-                        rotPoint.transform.position = startingPoint;
-
-                        // rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                        rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-
-                        // set the current arcPoint's vector3 to the rotated point
-                        arcPoints[i] = rotPoint.transform.position;
-                    }
-                    break;
-                case "down":
-                    // Pitching down (Rotating across YZ plane around X-pivot)
-                    for (int i = 0; i < arcPoints.Length; i++) {
-                        //reverse the increment angle because of the right handedness orientation of the local x-axis
-                        currentIncrementAngle = i * incrementAngle;
-
-                        //move the rotPoint to the current corner's position
-                        rotPoint.transform.position = startingPoint;
-
-                        //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                        rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-
-                        //set the current arcPoint's vector3 to the rotated point
-                        arcPoints[i] = rotPoint.transform.position;
-                    }
+                case "left":
+                    base.RotateLeft(degrees: degrees);
                     break;
             }
-            return arcPoints;
+        }
+
+        public override void RotateRight(float? degrees = null, bool manualInteract = false) {
+            rotate(degrees: degrees, direction: "right", manualInteract: manualInteract);
+        }
+
+        public override void RotateLeft(float? degrees = null, bool manualInteract = false) {
+            rotate(degrees: degrees, direction: "left", manualInteract: manualInteract);
+        }
+
+        // helper used with look up/down.
+        // note: this sets actionFinished(true) if successful.
+        private void look(float degrees, string direction, bool manualInteract) {
+            // force the degree increment to the nearest tenths place
+            // this is to prevent too small of a degree increment change that could cause float imprecision
+            degrees = Mathf.Round(degrees * 10.0f) / 10.0f;
+
+            assertAgentCanRotate(direction: direction, degrees: degrees);
+
+            // only default hand if not manually Interacting with things
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+
+            // execute the standard LookUp/LookDown
+            switch (direction) {
+                case "up":
+                    base.LookUp(degrees: degrees);
+                    break;
+                case "down":
+                    base.LookDown(degrees: degrees);
+                    break;
+                default:
+                    throw new InvalidOperationException("direction must be either up or down.");
+            }
+        }
+
+        public override void LookDown(float degrees = 30, bool manualInteract = false) {
+            look(degrees: degrees, direction: "down");
+        }
+
+        public override void LookUp(float degrees, bool manualInteract = false) {
+            look(degrees: degrees, direction: "up", manualInteract: manualInteract);
         }
 
         //TODO: I dunno who was using this or for what, but it doesn't play nice with the new rotate functions so please add back functionality later
@@ -573,56 +491,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     }
         // }
 
-        // checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
-        public bool CheckIfAgentCanRotate(string direction, float degrees) {
-            if (ItemInHand == null) {
-                //Debug.Log("Rotation check passed: nothing in Agent Hand");
-                return true;
-            }
-
-            bool result = true;
-
-            BoxCollider bb = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
-
-            //get world coordinates of object in hand's bounding box corners
-            Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
-
-            //ok now we have each corner, let's rotate them the specified direction
-            if (direction == "right" || direction == "left") {
-                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
-            } else if (direction == "up" || direction == "down") {
-                result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
-            }
-            //no checks flagged anything, good to go, return true i guess
-            return result;
-        }
-
-        private bool checkForUpDownAngleLimit(string direction, float degrees) {   
-            bool result = true;
-            //check the angle between the agent's forward vector and the proposed rotation vector
-            //if it exceeds the min/max based on if we are rotating up or down, return false
-
-            //first move the rotPoint to the camera
-            rotPoint.transform.position = m_Camera.transform.position;
-            //zero out the rotation first
-            rotPoint.transform.rotation = m_Camera.transform.rotation;
-
-            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
-            if (direction == "down") {
-                rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
-                //degrees being positive, it still needs to check against this negatively signed direction.
-                if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f < -maxDownwardLookAngle) {
-                    result = false;
-                }
-            } else if (direction == "up") {
-                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if (Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle) {
-                    result = false;
-                }
-            }
-            return result;
-        }
+        //  protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
+        //     var time = Time.time;
+        //     var newTime = time;
+        //     while (newTime - time < seconds) {
+        //         yield return null;
+        //         newTime = Time.time;
+        //         var diffSeconds = newTime - time;
+        //         var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
+        //         this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
+                
+        //     }
+        //     Debug.Log("Rotate action finished! " + (newTime - time) );
+        //     //  this.transform.rotation = targetRotation;
+        //     actionFinished(true);
+        // }
 
         ///////////////////////////////////////////
         //////////// TELEPORT OBJECT //////////////
@@ -4152,22 +4035,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return anyStillRunning;
         }
 
-         protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
-            var time = Time.time;
-            var newTime = time;
-            while (newTime - time < seconds) {
-                yield return null;
-                newTime = Time.time;
-                var diffSeconds = newTime - time;
-                var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
-                this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
-                
-            }
-            Debug.Log("Rotate action finished! " + (newTime - time) );
-            //  this.transform.rotation = targetRotation;
-            actionFinished(true);
-        }
-
         ///////////////////////////////////////////
         //////// CHANGE FACIAL EXPRESSION /////////
         ///////////////////////////////////////////
@@ -6026,9 +5893,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             System.Random rnd = new System.Random(randomSeed);
 
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
-                errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Hide and Seek object reference not set, nothing to randomize.");
             }
 
             foreach (Transform child in physicsSceneManager.HideAndSeek.transform) {
