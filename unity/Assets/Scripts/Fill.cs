@@ -13,7 +13,7 @@ public class Fill : MonoBehaviour {
     protected GameObject WineObject = null;
 
     [SerializeField]
-    protected bool isFilled = false; //false - empty, true - currently filled with
+    protected bool isFilled = false; // false - empty, true - currently filled with
 
     protected string currentlyFilledWith = null;
 
@@ -81,7 +81,7 @@ public class Fill : MonoBehaviour {
 
         Liquids[liquidType].transform.gameObject.SetActive(true);
 
-        //coffee is hot so change the object's temperature if whichLiquid was coffee
+        // coffee is hot so change the object's temperature if whichLiquid was coffee
         if (liquidType == "coffee") {
             // coffee is hot!
             SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();

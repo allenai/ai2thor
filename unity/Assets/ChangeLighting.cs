@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ChangeLighting : MonoBehaviour {
-    //9 elements right now
+    // 9 elements right now
     public GameObject [] Lights;
 
     public void SetLights(int lightset) {
