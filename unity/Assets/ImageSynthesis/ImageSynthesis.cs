@@ -70,9 +70,9 @@ public class ImageSynthesis : MonoBehaviour {
     public Texture2D tex;
 
     void Start() {
-        //XXXXXXXXXXX************
-        //Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
-        //otherwise the standlone will build without the shaders and you will be sad
+        // XXXXXXXXXXX************
+        // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
+        // otherwise the standlone will build without the shaders and you will be sad
 
 
         // default fallbacks, if shaders are unspecified
@@ -94,7 +94,7 @@ public class ImageSynthesis : MonoBehaviour {
             }
         #endif
 
-        //if (!positionShader)
+        // if (!positionShader)
         //    positionShader = Shader.Find("Hidden/World");
 
         opticalFlowSensitivity = 50.0f;
@@ -118,7 +118,7 @@ public class ImageSynthesis : MonoBehaviour {
         #endif
 
         // @TODO: detect if camera properties actually changed
-        //OnCameraChange();
+        // OnCameraChange();
     }
     
     private Camera CreateHiddenCamera(string name) {
@@ -138,7 +138,7 @@ public class ImageSynthesis : MonoBehaviour {
         }
 
         var newCamera = go.GetComponent<Camera>();
-        newCamera.cullingMask = 1;//render everything, including PlaceableSurfaces
+        newCamera.cullingMask = 1;// render everything, including PlaceableSurfaces
         return newCamera;
     }
 
@@ -182,8 +182,8 @@ public class ImageSynthesis : MonoBehaviour {
         Flow = 5
     };
 
-    //Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
-    //do, so maybe it's fine for now I dunno
+    // Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
+    // do, so maybe it's fine for now I dunno
     public void OnCameraChange() {
         var mainCamera = GetComponent<Camera>();
         mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
@@ -199,16 +199,16 @@ public class ImageSynthesis : MonoBehaviour {
             // copy all "main" camera parameters into capturing camera
             pass.camera.CopyFrom(mainCamera);
 
-            //make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+            // make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
             pass.camera.renderingPath = RenderingPath.Forward;
 
-            //make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
+            // make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
             pass.camera.cullingMask = -1;
 
             pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
         }
     
-        //set the display corresponding to which capturePass this is
+        // set the display corresponding to which capturePass this is
         for (int i = 0; i < capturePasses.Length; i++) {
             capturePasses[i].camera.targetDisplay = i;
         }
@@ -222,8 +222,8 @@ public class ImageSynthesis : MonoBehaviour {
         if (!depthMaterial || depthMaterial.shader != depthShader) {
             depthMaterial = new Material (depthShader);    
         }
-        //capturePasses [1].camera.farClipPlane = 100;
-        //SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
+        // capturePasses [1].camera.farClipPlane = 100;
+        // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
         SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
 
 
@@ -294,7 +294,7 @@ public class ImageSynthesis : MonoBehaviour {
 
             if (so != null) {
                 classTag = "" + so.WhatIsMyStructureObjectTag;
-                //objTag = so.gameObject.name;
+                // objTag = so.gameObject.name;
             } 
             if (sop != null) {
                 classTag = "" + sop.Type;
@@ -453,7 +453,7 @@ public class ImageSynthesis : MonoBehaviour {
         cam.targetTexture = prevCameraRT;
         RenderTexture.active = prevActiveRT;
 
-        //UnityEngine.Object.Destroy(tex);
+        // UnityEngine.Object.Destroy(tex);
         RenderTexture.ReleaseTemporary(finalRT);
         return bytes;
     }

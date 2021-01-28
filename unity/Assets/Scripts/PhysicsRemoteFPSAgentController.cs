@@ -2840,6 +2840,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             scaleObject(target: target, scale: scale, markActionFinished: true);
         }
 
+        ///////////////////////////////////////////
+        ////////// PLACE OBJECT AT POINT //////////
+        ///////////////////////////////////////////
+
         // pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         // unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         // limited by collision
@@ -2928,7 +2932,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.constraints = RigidbodyConstraints.None;
                     rb.useGravity = true;
 
-                    // change collision detection mode while falling so that obejcts don't phase through colliders.
+                    // change collision detection mode while falling so that objects don't phase through colliders.
                     // this is reset to discrete on SimObjPhysics.cs's update
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
@@ -2954,7 +2958,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.position = originalPos;
             target.transform.rotation = originalRotation;
 
-            // if the original position was in agent hand, reparent object to agent hand
+            // if the original position was in agent hand, re-parent object to agent hand
             if (wasInHand) {
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
@@ -3009,51 +3013,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-        }
-
-        // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
-        public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position) {
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == t.objectID) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                return false;
-            }
-
-            // make sure point we are moving the object to is valid
-            if (!agentManager.sceneBounds.Contains(position)) {
-                return false;
-            }
-
-            // ok let's get the distance from the simObj to the bottom most part of its colliders
-            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
-            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
-
-            b.enabled = true;
-            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
-            b.enabled = false;
-
-            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
-
-            float offset = distFromSopToBottomPoint;
-
-            // final position to place on surface
-            Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
-
-
-            // check spawn area, if its clear, then place object at finalPos
-            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
-                target.transform.position = finalPos;
-                return true;
-            }
-
-            return false;
         }
 
         // return a bunch of vector3 points above a target receptacle
@@ -4587,10 +4546,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(true);
                 return result;
-            }
-
-            else
-            {
+            } else {
                 // TODO: throw exception.
                 #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
@@ -5437,7 +5393,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = 0,
             bool forceAction = false
         ) {
-            if (objectType == null) {
+            if (objectType == null || position == null || rotation == null) {
                 throw new ArgumentNullException();
             }
             SimObjPhysics sop = createObject(
@@ -5451,17 +5407,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, sop.ObjectID);
         }
 
-        public void CreateObjectOnFloor(ServerAction action) {
+        public void CreateObjectOnFloor(string objectType, float x, float z, Vector3 rotation = null) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             Bounds b = script.BoundsOfObject(action.objectType, 1);
             if (b.min.x == float.PositiveInfinity) {
-                errorMessage = "Could not get bounds for the object to be created on the floor";
-                actionFinished(false);
-            } else {
-                action.y = b.extents.y + getFloorY(action.x, action.z) + 0.1f;
-                action.position = new Vector3(action.x, action.y, action.z);
-                CreateObjectAtLocation(action);
+                throw new InvalidOperationException("Could not get bounds for the object to be created on the floor");
             }
+            float y = b.extents.y + getFloorY(x, z) + 0.1f;
+            Vector3 position = new Vector3(x, y, z);
+            CreateObjectAtLocation(
+                objectType: objectType,
+                position: position,
+                rotation: rotation == null ? new Vector3(x: 0, y: 0, z: 0) : rotation
+            );
         }
 
         protected bool randomlyPlaceObjectOnFloor(SimObjPhysics sop, Vector3[] candidatePositions) {
@@ -5541,22 +5499,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectCreated.ObjectID);
         }
 
-        public void GetPositionsObjectVisibleFrom(ServerAction action) {
-            SimObjPhysics sop = getTargetObject(objectId: action.objectId, forceAction: true);
+        public void GetPositionsObjectVisibleFrom(string objectId, Vector3[] positions) {
+            // TODO: rewrite with GetInteractablePoses
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
 
             Vector3 savedPosition = transform.position;
             Quaternion savedRotation = transform.rotation;
+
             float[] rotations = { 0f, 90f, 180f, 270f };
+            if (positions == null) {
+                positions = getReachablePositions();
+            }
 
             List<Vector3> goodPositions = new List<Vector3>();
             List<float> goodRotations = new List<float>();
-
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
-                positions = getReachablePositions();
-            }
 
             foreach (Vector3 position in positions) {
                 Vector3 tmp = position;
@@ -6188,9 +6144,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void CoverSurfacesWith(ServerAction action) {
-            string prefab = action.objectType;
-            int objectVariation = action.objectVariation;
+        public void CoverSurfacesWith(string objectType, int objectVariation, float x = 0, float z = 0) {
             Vector3[] reachablePositions = getReachablePositions();
 
             Bounds b = new Bounds();
@@ -6212,7 +6166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float xRoomSize = b.max.x - b.min.x;
             float zRoomSize = b.max.z - b.min.z;
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
+            SimObjPhysics objForBounds = script.SpawnObject(objectType, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
             Bounds objBounds = new Bounds(
                 center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -6232,8 +6186,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float xExtent = objBounds.max.x - objBounds.min.x;
             float yExtent = objBounds.max.y - objBounds.min.y;
             float zExtent = objBounds.max.z - objBounds.min.z;
-            float xStepSize = Math.Max(Math.Max(xExtent, 0.1f), action.x);
-            float zStepSize = Math.Max(Math.Max(zExtent, 0.1f), action.z);
+            float xStepSize = Math.Max(Math.Max(xExtent, 0.1f), x);
+            float zStepSize = Math.Max(Math.Max(zExtent, 0.1f), z);
             int numXSteps = (int) (xRoomSize / xStepSize);
             int numZSteps = (int) (zRoomSize / zStepSize);
             // float xTmp = -0.153f;
@@ -6285,13 +6239,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             hit.collider.transform.gameObject)
                     ) {
                         SimObjPhysics hitSimObj = hit.transform.gameObject.GetComponent<SimObjPhysics>();
-                        if (hitSimObj == null || hitSimObj.ObjectID.Split('|') [0] != prefab) {
+                        if (hitSimObj == null || hitSimObj.ObjectID.Split('|') [0] != objectType) {
                             Vector3 halfExtents = new Vector3(xExtent / 2.1f, yExtent / 2.1f, zExtent / 2.1f);
                             Vector3 center = hit.point + objCenterRelPos + yOffset;
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                SimObjPhysics newObj = script.SpawnObject(prefab, false, objectVariation, center - objCenterRelPos, transform.eulerAngles, false, true);
+                                SimObjPhysics newObj = script.SpawnObject(objectType, false, objectVariation, center - objCenterRelPos, transform.eulerAngles, false, true);
                                 if (prefab == "Cup") {
                                     foreach (Collider c in newObj.GetComponentsInChildren<Collider>()) {
                                         c.enabled = false;
@@ -6312,7 +6266,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             StartCoroutine(CoverSurfacesWithHelper(100, newObjects, reachablePositions));
         }
-
 
         public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(
             string objectType,

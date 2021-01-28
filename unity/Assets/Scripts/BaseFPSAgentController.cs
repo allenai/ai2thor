@@ -2643,8 +2643,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (ids.Length == 0) {
                     errorMessage = "Object type '" + objectType + "' was not found in the scene.";
                     return null;
-                }
-                else if (ids.Length > 1) {
+                } else if (ids.Length > 1) {
                     errorMessage = "Multiple objects of type '" + objectType + "' were found in the scene, cannot disambiguate.";
                     return null;
                 }
@@ -3034,8 +3033,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 #endif
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return true;
-            }
-            else {
+            } else {
                 errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
                     $" and {targetHit.position.ToString("F3")} using the NavMesh.";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;

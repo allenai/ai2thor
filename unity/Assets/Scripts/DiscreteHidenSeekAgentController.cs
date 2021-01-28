@@ -225,8 +225,7 @@ public int objectVariation;
                         };
                         this.PhysicsController.ProcessControlCommand(action);
                     }
-                }
-                else if (handMode) {
+                } else if (handMode) {
                     if (Input.GetKeyDown(KeyCode.Space)) {
                         var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
                         if (withinReach) {

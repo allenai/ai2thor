@@ -116,7 +116,7 @@ public static class ActionDispatcher {
         return methodCache[targetType];
     }
 
-    // Find public/void methods that have matching Method names and idenitical parameter names,
+    // Find public/void methods that have matching Method names and identical parameter names,
     // but either different parameter order or parameter types which make dispatching
     // ambiguous.  This method is used during testing to find conflicts.
     public static Dictionary<string, List<string>> FindMethodVariableNameConflicts(Type targetType) {

@@ -192,10 +192,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
                 Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
                 #endif
                 return b;
-            }
-
-            else
-            {
+            } else {
                 #if UNITY_EDITOR
                 Debug.Log("Something went wrong, no Colliders were found on" + this.name);
                 #endif
@@ -1675,9 +1672,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
                     foreach(Transform yes in inst.transform) {
                         yes.GetComponent<Collider>().isTrigger = true;
                     }
-                }
-                else
-                {
+                } else {
                     DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
                     GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
                     inst.name = "TriggerColliders";

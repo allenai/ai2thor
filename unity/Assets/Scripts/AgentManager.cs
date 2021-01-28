@@ -531,8 +531,8 @@ public class AgentManager : MonoBehaviour
         );
     }
 
-	private void addAgent(ServerAction action) {
-		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
+	private void addAgent(float x, float y, float z) {
+		Vector3 clonePosition = new Vector3(x, y, z);
 
 		//disable ambient occlusion on primary agent because it causes issues with multiple main cameras
 		//primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
@@ -544,7 +544,7 @@ public class AgentManager : MonoBehaviour
 		clone.transform.position = clonePosition;
 		UpdateAgentColor(clone, agentColors[this.agents.Count]);
 		clone.ProcessControlCommand (action.dynamicServerAction);
-		this.agents.Add (clone);
+		this.agents.Add(clone);
 	}
 
 	private Vector3 agentStartPosition(BaseFPSAgentController agent) {
