@@ -384,7 +384,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // move drone and launcher to some start position
         // using the 'position' variable name is an artifact from using position for the thrust_dt
-        public void FlyAssignStart(Vector3 position, float x, float y, float z) {   
+        public void FlyAssignStart(Vector3 position, float x, float y, float z) {
             //drone uses action.position
             Vector3 thrust_dt = position;
             transform.position = thrust_dt;
@@ -398,7 +398,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // Flying Drone Agent Controls
-        public void FlyTo(float x, float y, float z, Vector3 rotation, float horizon) {   
+        public void FlyTo(float x, float y, float z, Vector3 rotation, float horizon) {
             transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
             m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
             thrust += new Vector3(x, y, z);
@@ -511,6 +511,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SpawnLauncher(Vector3 position) {
             Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
-
     }
 }

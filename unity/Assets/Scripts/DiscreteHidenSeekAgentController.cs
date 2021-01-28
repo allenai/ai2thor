@@ -118,23 +118,14 @@ public int objectVariation;
         }
 
         public void SetObjectVisible(bool visible) {
-            
-                                 visibleObject = visible;
-                                 // Debug.Log("Calling disply with "+ visibleObject);
-                                 var go = PhysicsController.WhatAmIHolding();
-                                PhysicsController.UpdateDisplayGameObject( go, visibleObject);
-                                var layer = go.layer;
-                                if (!visibleObject) {
-                                    // go.layer = LayerMask.NameToLayer("SimObjInvisible");
-                                    SetLayerRecursively(go, LayerMask.NameToLayer("SimObjInvisible"));
-                                }
-                                else {
-                                    SetLayerRecursively(go, LayerMask.NameToLayer("SimObjVisible"));
-                                }
+            visibleObject = visible;
+            var go = PhysicsController.WhatAmIHolding();
+            PhysicsController.updateDisplayGameObject(target: go, enabled: visibleObject);
+            var layer = go.layer;
+            SetLayerRecursively(go, visibleObject ? LayerMask.NameToLayer("SimObjVisible") : LayerMask.NameToLayer("SimObjInvisible"));
         }
 
-        public void Step(string serverAction)
-		{
+        public void Step(string serverAction) {
 			ServerAction controlCommand = new ServerAction();
 			JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
 			PhysicsController.ProcessControlCommand(controlCommand);
@@ -146,147 +137,136 @@ public int objectVariation;
         //     PhysicsController.ProcessControlCommand(command);
         // }
 
-        void Update()
-        {
-                highlightController.UpdateHighlightedObject(Input.mousePosition);
-                highlightController.MouseControls();
+        void Update() {
+            highlightController.UpdateHighlightedObject(Input.mousePosition);
+            highlightController.MouseControls();
 
-                if (PhysicsController.ReadyForCommand) {
-                        handMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-                        float WalkMagnitude = 0.25f;
-                        if (!handMode && !hidingPhase) {
-                            if(Input.GetKeyDown(KeyCode.W))
-                            {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveAhead";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
-                            }
+            if (PhysicsController.ReadyForCommand) {
+                handMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                float WalkMagnitude = 0.25f;
+                if (!handMode && !hidingPhase) {
+                    if(Input.GetKeyDown(KeyCode.W))
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveAhead";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    
+                    }
 
-                            if(Input.GetKeyDown(KeyCode.S))
-                            {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveBack";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
-                            }
+                    if(Input.GetKeyDown(KeyCode.S))
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveBack";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    
+                    }
 
-                            if(Input.GetKeyDown(KeyCode.A))
-                            {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveLeft";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
-                            }
+                    if(Input.GetKeyDown(KeyCode.A))
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveLeft";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    
+                    }
 
-                            if(Input.GetKeyDown(KeyCode.D))
-                            {
-                                ServerAction action = new ServerAction();
-                                action.action = "MoveRight";
-                                action.moveMagnitude = WalkMagnitude;		
-                                PhysicsController.ProcessControlCommand(action);
-                            
-                            }
+                    if(Input.GetKeyDown(KeyCode.D))
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveRight";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    
+                    }
 
-                            if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
-                            {
-                                ServerAction action = new ServerAction();
-                                // action.action = "RotateLeft";
-                                action.action = "RotateLeftSmooth";
-                                action.timeStep = 0.4f;
-                                PhysicsController.ProcessControlCommand(action); 
-                            }
+                    if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
+                    {
+                        ServerAction action = new ServerAction();
+                        // action.action = "RotateLeft";
+                        action.action = "RotateLeftSmooth";
+                        action.timeStep = 0.4f;
+                        PhysicsController.ProcessControlCommand(action); 
+                    }
 
-                            if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
-                            {
-                                ServerAction action = new ServerAction();
-                                // action.action = "RotateRight";
-                                action.action = "RotateRightSmooth";
-                                action.timeStep = 0.4f;
-                                PhysicsController.ProcessControlCommand(action); 
-                            }
-                        }
+                    if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
+                    {
+                        ServerAction action = new ServerAction();
+                        // action.action = "RotateRight";
+                        action.action = "RotateRightSmooth";
+                        action.timeStep = 0.4f;
+                        PhysicsController.ProcessControlCommand(action); 
+                    }
+                }
 
-                        
+                if (this.PhysicsController.WhatAmIHolding() != null && handMode) {
+                    var actionName = "MoveHandForce";
+                    var localPos = new Vector3(0, 0, 0);
+                    if (Input.GetKeyDown(KeyCode.W)) {
+                        localPos.y += HandMoveMagnitude;
+                    } else if (Input.GetKeyDown(KeyCode.S)) {
+                        localPos.y -= HandMoveMagnitude;
+                    } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                        localPos.z += HandMoveMagnitude;
+                    } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                        localPos.z -= HandMoveMagnitude;
+                    } else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) {
+                        localPos.x -= HandMoveMagnitude;
+                    } else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) {
+                        localPos.x += HandMoveMagnitude;
+                    } if (actionName != "" && localPos.sqrMagnitude > 0) {
+                        // TODO: make these not use ServerAction..
+                        ServerAction action = new ServerAction {
+                            action = "MoveHandForce",
+                            x = localPos.x,
+                            y = localPos.y,
+                            z = localPos.z
+                        };
+                        this.PhysicsController.ProcessControlCommand(action);
+                    }
 
-                        if (this.PhysicsController.WhatAmIHolding() != null  && handMode)
-                        {
-                            var actionName = "MoveHandForce";
-                            var localPos = new Vector3(0, 0, 0);
-                            // Debug.Log(" Key down shift ? " + Input.GetKey(KeyCode.LeftAlt) + " up " + Input.GetKeyDown(KeyCode.UpArrow));
-                            if (Input.GetKeyDown(KeyCode.W)) {
-                                localPos.y += HandMoveMagnitude;
-                            }
-                            else if (Input.GetKeyDown(KeyCode.S)) {
-                                localPos.y -= HandMoveMagnitude;
-                            }
-                            else if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                                localPos.z += HandMoveMagnitude;
-                            }
-                            else if (Input.GetKeyDown(KeyCode.DownArrow)) {
-                                localPos.z -= HandMoveMagnitude;
-                            }
-                            else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) {
-                                localPos.x -= HandMoveMagnitude;
-                            }
-                            else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) {
-                                localPos.x += HandMoveMagnitude;
-                            }
-                            if (actionName != "" && localPos.sqrMagnitude > 0) {
-                                ServerAction action = new ServerAction
-                                {
-                                    action = "MoveHandForce",
-                                    x = localPos.x,
-                                    y = localPos.y,
-                                    z = localPos.z
-                                };
-                                this.PhysicsController.ProcessControlCommand(action);
-                            }
-
-                            if (Input.GetKeyDown(KeyCode.Space)) {
-                                SetObjectVisible(true);
-                                  var action = new ServerAction
-                                    {
-                                        action = "DropHandObject",
-                                        forceAction = true
-                                    };
-                                this.PhysicsController.ProcessControlCommand(action);
-                            }
-                        }
-                        else if (handMode) {
-                            if (Input.GetKeyDown(KeyCode.Space)) {
-                                var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
-                                if (withinReach) {
-                                    ServerAction action = new ServerAction();
-                                    action.objectId = onlyPickableObjectId;
-                                    action.action = "PickupObject";
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-                            }
-                        }
-                        if ((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.RightControl) ) && PhysicsController.ReadyForCommand) {
+                    if (Input.GetKeyDown(KeyCode.Space)) {
+                        SetObjectVisible(true);
+                        // TODO: make these not use ServerAction..
+                        var action = new ServerAction {
+                            action = "DropHandObject",
+                            forceAction = true
+                        };
+                        this.PhysicsController.ProcessControlCommand(action);
+                    }
+                }
+                else if (handMode) {
+                    if (Input.GetKeyDown(KeyCode.Space)) {
+                        var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
+                        if (withinReach) {
                             ServerAction action = new ServerAction();
-                            if (this.PhysicsController.isStanding()) {
-                                action.action = "Crouch";
-                                PhysicsController.ProcessControlCommand(action);
-                            }
-                            else {
-                                 action.action = "Stand";
-                                 PhysicsController.ProcessControlCommand(action);
-                            }
-                            
-
+                            action.objectId = onlyPickableObjectId;
+                            action.action = "PickupObject";
+                            PhysicsController.ProcessControlCommand(action);
                         }
+                    }
+                }
+                if ((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.RightControl) ) && PhysicsController.ReadyForCommand) {
+                    ServerAction action = new ServerAction();
+                    if (this.PhysicsController.isStanding()) {
+                        action.action = "Crouch";
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+                    else {
+                            action.action = "Stand";
+                            PhysicsController.ProcessControlCommand(action);
+                    }
+                    
 
-                        if (PhysicsController.WhatAmIHolding() != null) {
-                             if (Input.GetKeyDown(KeyCode.Space) && !hidingPhase && !handMode) {
-                                
-                                SetObjectVisible(!visibleObject);
-                             }
+                }
+
+                if (PhysicsController.WhatAmIHolding() != null) {
+                        if (Input.GetKeyDown(KeyCode.Space) && !hidingPhase && !handMode) {
+                        
+                        SetObjectVisible(!visibleObject);
                         }
+                }
             }
         }
 

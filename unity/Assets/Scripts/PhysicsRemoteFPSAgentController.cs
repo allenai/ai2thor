@@ -4291,20 +4291,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void HideAllObjectsExcept(ServerAction action) {
+        public void HideAllObjectsExcept(string objectId) {
+            GameObject target = getTargetObject(objectId: objectId, forceAction: true).gameObject;
             foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
-                UpdateDisplayGameObject(go, false);
+                updateDisplayGameObject(target: go, enabled: false);
             }
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                UpdateDisplayGameObject(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].gameObject, true);
-            }
+            updateDisplayGameObject(target: target, enabled: true);
             actionFinished(true);
         }
 
         public void HideTranslucentObjects() {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                    UpdateDisplayGameObject(sop.gameObject, false);
+                    updateDisplayGameObject(target: sop.gameObject, enabled: false);
                 }
             }
             actionFinished(true);
@@ -4339,7 +4338,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (transparent) {
-                    UpdateDisplayGameObject(r.gameObject, false);
+                    updateDisplayGameObject(target: r.gameObject, enabled: false);
                 }
             }
         }
@@ -4359,7 +4358,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Transform transform in transforms) {
-                UpdateDisplayGameObject(transform.gameObject, true);
+                updateDisplayGameObject(target: transform.gameObject, enabled: true);
             }
         }
 
@@ -4375,7 +4374,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>()) {
                 if (go.name.Contains("BlueCube")) {
-                    UpdateDisplayGameObject(go, true);
+                    updateDisplayGameObject(target: go, enabled: true);
                 }
             }
             actionFinished(true);
@@ -4471,7 +4470,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void EmphasizeObject(string objectId) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
             HideAll();
-            UpdateDisplayGameObject(sop.gameObject, true);
+            updateDisplayGameObject(target: sop.gameObject, enabled: true);
             MaskSimObj(target, Color.magenta);
             actionFinished(true);
         }
@@ -5566,7 +5565,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     RaycastHit hit;
                     while (true) {
                         if (Physics.Raycast(ray, out hit, 10f, layerMask)) {
-                            UpdateDisplayGameObject(hit.transform.gameObject, false);
+                            updateDisplayGameObject(target: hit.transform.gameObject, enabled: false);
                             SimObjPhysics hitObj = hit.transform.gameObject.GetComponentInChildren<SimObjPhysics>();
                             if (hitObj != null && objType != "" && hitObj.ObjectID.Contains(objType)) {
                                 ray.origin = hit.point + ray.direction / 100f;

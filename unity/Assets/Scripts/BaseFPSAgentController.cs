@@ -895,10 +895,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
             if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                 foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
-                    UpdateDisplayGameObject(containedSop.gameObject, false);
+                    updateDisplayGameObject(target: containedSop.gameObject, enabled: false);
                 }
             }
-            UpdateDisplayGameObject(sop.gameObject, false);
+            updateDisplayGameObject(target: sop.gameObject, enabled: false);
             sop.GetAllSimObjectsInReceptacleTriggersByObjectID();
 
             actionFinished(true);
@@ -908,16 +908,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
             if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                 foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
-                    UpdateDisplayGameObject(containedSop.gameObject, true);
+                    updateDisplayGameObject(target: containedSop.gameObject, enabled: true);
                 }
             }
-            UpdateDisplayGameObject(sop.gameObject, true);
+            updateDisplayGameObject(target: sop.gameObject, enabled: true);
             actionFinished(true);
         }
 
         protected void HideAll() {
-            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
-                UpdateDisplayGameObject(go, false);
+            foreach (GameObject target in GameObject.FindObjectsOfType<GameObject>()) {
+                updateDisplayGameObject(target: target, enabled: false);
             }
         }
 
@@ -927,8 +927,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected void UnhideAll() {
-            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
-                UpdateDisplayGameObject(go, true);
+            foreach (GameObject target in GameObject.FindObjectsOfType<GameObject>()) {
+                updateDisplayGameObject(target: target, enabled: true);
             }
             // Making sure the agents visibility capsules are not incorrectly unhidden
             foreach (BaseFPSAgentController agent in this.agentManager.agents) {
@@ -2391,7 +2391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // Let things come to rest for 2 seconds.
-            if (success && placeStationary) {
+            if (success && !placeStationary) {
                 bool autoSim = Physics.autoSimulation;
                 Physics.autoSimulation = false;
                 for (int i = 0; i < 100; i++) {
@@ -2447,9 +2447,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sync.StopSyncingForASecond = false;
                 }
 
-                foreach (StructureObject so in structureObjsList)
-                {
-                    UpdateDisplayGameObject(so.gameObject, true);
+                foreach (StructureObject so in structureObjsList) {
+                    updateDisplayGameObject(target: so.gameObject, enabled: true);
                 }
             }
 
@@ -2479,19 +2478,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
 
                 cameraOrthSize = m_Camera.orthographicSize;
-                foreach (StructureObject so in structureObjsList)
-                {
-                    UpdateDisplayGameObject(so.gameObject, false);
+                foreach (StructureObject so in structureObjsList) {
+                    updateDisplayGameObject(target: so.gameObject, enabled: false);
                 }            }
             actionFinished(true);
         }
 
-        public void UpdateDisplayGameObject(GameObject go, bool display) {
-            if (go != null) {
-                foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                    if (!initiallyDisabledRenderers.Contains(mr.GetInstanceID())) {
-                        mr.enabled = display;
-                    }
+        public void updateDisplayGameObject(GameObject target, bool enabled) {
+            if (target == null) {
+                throw new ArgumentNullException("target must be specified");
+            }
+            foreach (MeshRenderer mr in target.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                if (!initiallyDisabledRenderers.Contains(mr.GetInstanceID())) {
+                    mr.enabled = enabled;
                 }
             }
         }
