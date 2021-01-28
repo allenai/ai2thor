@@ -1108,6 +1108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         agent.transform.position = new Vector3(50f, 50f, 50f);
                     }
                     randomlyPlaceObjectOnFloor(objectCreated, reachablePositions);
+                    // TODO: fix with try catch.
                     objectFloating = moveObject(
                         objectCreated,
                         objectCreated.transform.position + new Vector3(0f, action.y, 0f)
@@ -1191,7 +1192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MoveLiftedObjectAhead(ServerAction action) {
+        public void MoveLiftedObjectAhead(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
             float mag = moveMagnitude == null || (float) moveMagnitude == 0 ? gridSize : (float) moveMagnitude;
             moveLiftedObjectHelper(
                 objectId: objectId,
@@ -1203,17 +1204,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void MoveLiftedObjectRight(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
             float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
-            moveLiftedObjectHelper(objectId: objectId, relativeDir: mag * transform.right, maxAgentsDistance: maxAgentsDistance);
+            moveLiftedObjectHelper(
+                objectId: objectId, 
+                relativeDir: mag * transform.right,
+                maxAgentsDistance: maxAgentsDistance
+            );
         }
 
-        public void MoveLiftedObjectLeft(ServerAction action) {
+        public void MoveLiftedObjectLeft(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
             float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
-            moveLiftedObjectHelper(objectId: objectId, relativeDir: -mag * transform.right, maxAgentsDistance: maxAgentsDistance);
+            moveLiftedObjectHelper(
+                objectId: objectId,
+                relativeDir: -mag * transform.right,
+                maxAgentsDistance: maxAgentsDistance
+            );
             actionFinished(true);
         }
 
-        public void MoveLiftedObjectBack(ServerAction action) {
-            float mag = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public void MoveLiftedObjectBack(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
+            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
             actionFinished(
                 moveLiftedObjectHelper(
                     action.objectId,
