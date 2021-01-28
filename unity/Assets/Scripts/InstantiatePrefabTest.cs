@@ -485,7 +485,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         if (spawningInHand) {
             layermask = 1 << 8;
         } else {
-            // oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
+            // oh we are spawning it somewhere in the environment, we do need to make sure not to spawn inside the agent or the environment
             layermask = (1 << 8) | (1 << 10);
         }
 

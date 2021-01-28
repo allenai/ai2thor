@@ -65,7 +65,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected bool snapToGrid;
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call snapToGrid instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call snapToGrid instead.", error: false)]
         protected bool continuousMode;
 
         public ImageSynthesis imageSynthesis;
@@ -90,7 +90,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
 
-                // The VisibilityCapsule will be set to either Tall or Bot 
+                // The VisibilityCapsule will be set to either Tall or Bot
                 // from the SetAgentMode call in BaseFPSAgentController's Initialize()
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
@@ -223,7 +223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            // Recording initially disabled renderers and scene bounds 
+            // Recording initially disabled renderers and scene bounds
             // then setting up sceneBounds based on encapsulating all renderers
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
@@ -372,7 +372,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 gridLineRenderer.positionCount = 2;
                                 // gridLineRenderer.startWidth = 0.01f;
                                 // gridLineRenderer.endWidth = 0.01f;
-                                gridLineRenderer.SetPositions(new Vector3[] { 
+                                gridLineRenderer.SetPositions(new Vector3[] {
                                     new Vector3(p.x, gridVisualizeY, p.z),
                                     new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
                                 });
@@ -513,7 +513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             // determine if we are in Tall or Bot mode (or other modes as we go on)
-            if (whichMode == "default") {   
+            if (whichMode == "default") {
                 // toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
 
@@ -660,7 +660,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            // if no target was found in the layers above, try the SimObjInvisible layer. 
+            // if no target was found in the layers above, try the SimObjInvisible layer.
             // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
             // PlaceableSurfaces on it, also make sure to check again
             if (target == null || hasPlaceableSurface.Contains(target.Type)) {
@@ -713,14 +713,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     m_CharacterController.Move(movement);
 
-                    for (int i = 0; i < actionDuration; i++)
-                    {
+                    for (int i = 0; i < actionDuration; i++) {
                         yield return null;
                         Vector3 diff = this.transform.position - target;
 
 
-                        if ((Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005))
-                        {
+                        if ((Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) {
                             validMovements.Add(movement);
                             break;
                         }
@@ -752,7 +750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////// COLOR RANDOMIZATION ////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)]
         public void ChangeColorOfMaterials() {
             RandomizeColors();
         }
@@ -872,7 +870,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.gameObject.SetActive(true);
             actionFinished(true);
         }
-        
+
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
@@ -949,7 +947,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene(string[] objectIds) instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene(string[] objectIds) instead.", error: false)]
         public void RemoveObjsFromScene(string[] objectIds) {
             RemoveFromScene(objectIds: objectIds);
         }
@@ -957,7 +955,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
         ////////// OBJECT TRANSPARENCY ////////////
         ///////////////////////////////////////////
-        
+
         protected void changeObjectBlendMode(SimObjPhysics so, StandardShaderUtils.BlendMode bm, float alpha) {
             HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
             foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
@@ -1156,7 +1154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // This does not appear to be used except for by the Python unit test
-        [ObsoleteAttribute(message: "This action is deprecated. Call RotateRight/Left and LookUp/Down instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call RotateRight/Left and LookUp/Down instead.", error: false)]
         public void RotateLook(Vector3 rotation, float horizon) {
             // TODO: why is the base setting x=0.0f and z=0.0f?
             transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
@@ -1219,10 +1217,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics simObj = simObjects[k];
                 ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
                 if (meta.receptacle) {
-                    
+
                     List<string> containedObjectsAsID = new List<String>();
-                    foreach (GameObject go in simObj.ContainedGameObjects())
-                    {
+                    foreach (GameObject go in simObj.ContainedGameObjects()) {
                         containedObjectsAsID.Add(go.GetComponent<SimObjPhysics>().ObjectID);
                     }
                     List<string> roid = containedObjectsAsID;// simObj.Contains();
@@ -1247,7 +1244,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metadata based on sim object's properties
-        public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
+        public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
@@ -1344,7 +1341,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
-            
+
             objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
 
             return objMeta;
@@ -1376,7 +1373,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             b.center = bounding.center;
             b.size = bounding.size;
-            
+
             return b;
         }
 
@@ -1399,7 +1396,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentMeta.position = transform.position;
             agentMeta.rotation = transform.eulerAngles;
             agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-            if (agentMeta.cameraHorizon > 180) 
+            if (agentMeta.cameraHorizon > 180)
             {
                 agentMeta.cameraHorizon -= 360;
             }
@@ -1510,7 +1507,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
-            
+
             this.agentState = AgentState.Processing;
             try {
                 if (method == null) {
@@ -1912,8 +1909,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // if this particular point is in view...
                     if (CheckIfVisibilityPointRaycast(sop, point, agentCamera, false) ||
-                        CheckIfVisibilityPointRaycast(sop, point, agentCamera, true))
-                    {
+                        CheckIfVisibilityPointRaycast(sop, point, agentCamera, true)
+                    ) {
                         visPointCount++;
                         #if !UNITY_EDITOR
                             // If we're in the unity editor then don't break on finding a visible
@@ -2147,8 +2144,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
-            if (sop.Type == SimObjType.Floor)
-            mask = (1 << 8) | (1 << 10);
+            if (sop.Type == SimObjType.Floor) {
+                mask = (1 << 8) | (1 << 10);
+            }
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -2353,7 +2351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: success);
         }
 
-        // On demand public function for getting what sim objects are visible at that moment 
+        // On demand public function for getting what sim objects are visible at that moment
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
             var camera = this.GetComponentInChildren<Camera>();
             return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
@@ -2372,8 +2370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
 
-            foreach (StructureObject so in structureObjs)
-            {
+            foreach (StructureObject so in structureObjs) {
                 if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
                     (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
                     (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
@@ -2391,23 +2388,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // restore agent body culling
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = false;
                 }
 
                 foreach (StructureObject so in structureObjsList) {
                     updateDisplayGameObject(target: so.gameObject, enabled: true);
                 }
-            }
-
-            else {
+            } else {
 
                 // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = true;
                 }
 
@@ -2505,8 +2498,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lineRenderer.endWidth = 0.015f;
 
                 results.Add(path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete);
-               
-                if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) { 
+
+                if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                     lineRenderer.positionCount = path.corners.Length;
                     lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
                 }
@@ -2597,7 +2590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Transform agentTransform,
             string targetSimObjectId,
             UnityEngine.AI.NavMeshPath path) {
-                
+
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             // bool success = false;
             var PhysicsController = this;
@@ -2655,7 +2648,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Multiple objects of type '" + objectType + "' were found in the scene, cannot disambiguate.";
                     return null;
                 }
-                
+
                 objectId = ids[0];
             }
 
@@ -2843,7 +2836,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         return true;
                     }
 
-                    
+
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
@@ -2937,7 +2930,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
             bool pathSuccess = SafelyComputeNavMeshPath(initialPosition, fixedPosition, path, allowedError);
-            
+
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 #if UNITY_EDITOR
@@ -2962,7 +2955,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return hit.point.y;
         }
-        
+
         protected float getFloorY(float x, float z) {
             int layerMask = ~LayerMask.GetMask("Agent");
 
@@ -3012,15 +3005,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             float startOffset = Vector3.Distance(
-                startHit.position, 
+                startHit.position,
                 new Vector3(startPosition.x, startHit.position.y, startPosition.z)
             );
             float targetOffset = Vector3.Distance(
-                targetHit.position, 
+                targetHit.position,
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                errorMessage = $"Closest point on NavMesh was too far from the agent: " + 
+                errorMessage = $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +

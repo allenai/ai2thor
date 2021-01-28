@@ -107,7 +107,7 @@ public int objectVariation;
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 return;
             }
-            
+
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             disableCollistionWithPickupObject = true;
             foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
@@ -145,44 +145,35 @@ public int objectVariation;
                 handMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
                 float WalkMagnitude = 0.25f;
                 if (!handMode && !hidingPhase) {
-                    if(Input.GetKeyDown(KeyCode.W))
-                    {
+                    if (Input.GetKeyDown(KeyCode.W)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
                         action.moveMagnitude = WalkMagnitude;		
                         PhysicsController.ProcessControlCommand(action);
-                    
                     }
 
-                    if(Input.GetKeyDown(KeyCode.S))
-                    {
+                    if (Input.GetKeyDown(KeyCode.S)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveBack";
                         action.moveMagnitude = WalkMagnitude;		
                         PhysicsController.ProcessControlCommand(action);
-                    
                     }
 
-                    if(Input.GetKeyDown(KeyCode.A))
-                    {
+                    if (Input.GetKeyDown(KeyCode.A)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
                         action.moveMagnitude = WalkMagnitude;		
                         PhysicsController.ProcessControlCommand(action);
-                    
                     }
 
-                    if(Input.GetKeyDown(KeyCode.D))
-                    {
+                    if (Input.GetKeyDown(KeyCode.D)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
                         action.moveMagnitude = WalkMagnitude;		
                         PhysicsController.ProcessControlCommand(action);
-                    
                     }
 
-                    if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
-                    {
+                    if (Input.GetKeyDown(KeyCode.LeftArrow)) {
                         ServerAction action = new ServerAction();
                         // action.action = "RotateLeft";
                         action.action = "RotateLeftSmooth";
@@ -190,8 +181,7 @@ public int objectVariation;
                         PhysicsController.ProcessControlCommand(action); 
                     }
 
-                    if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
-                    {
+                    if (Input.GetKeyDown(KeyCode.RightArrow)) {
                         ServerAction action = new ServerAction();
                         // action.action = "RotateRight";
                         action.action = "RotateRightSmooth";
@@ -252,42 +242,34 @@ public int objectVariation;
                     if (this.PhysicsController.isStanding()) {
                         action.action = "Crouch";
                         PhysicsController.ProcessControlCommand(action);
-                    }
-                    else {
+                    } else {
                             action.action = "Stand";
                             PhysicsController.ProcessControlCommand(action);
                     }
-                    
-
                 }
 
                 if (PhysicsController.WhatAmIHolding() != null) {
-                        if (Input.GetKeyDown(KeyCode.Space) && !hidingPhase && !handMode) {
-                        
+                    if (Input.GetKeyDown(KeyCode.Space) && !hidingPhase && !handMode) {
                         SetObjectVisible(!visibleObject);
-                        }
+                    }
                 }
             }
         }
 
-        private static void SetLayerRecursively(GameObject obj, int newLayer)
-    {
-        if (null == obj)
-        {
+        private static void SetLayerRecursively(GameObject obj, int newLayer) {
+        if (null == obj) {
             return;
         }
-       
+
         obj.layer = newLayer;
-       
-        foreach (Transform child in obj.transform)
-        {
-            if (null == child)
-            {
+
+        foreach (Transform child in obj.transform) {
+            if (null == child) {
                 continue;
             }
             SetLayerRecursively(child.gameObject, newLayer);
         }
     }
     }
-    
+
 }
