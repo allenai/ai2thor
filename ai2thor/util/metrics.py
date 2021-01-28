@@ -46,7 +46,7 @@ def compute_single_spl(path, shortest_path, successful_path):
     :param successful_path: boolean indicating if the path was successful, 0 for a failed path or 1 for a successful one
     :return:
     """
-    Si = 1 if successful_path == True or successful_path == 1 else 0
+    Si = 1 if successful_path or successful_path == 1 else 0
     li = path_distance(shortest_path)
     pi = path_distance(path)
     spl = Si * (li / (max(pi, li)))

@@ -1681,15 +1681,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 z: agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians)
             );
 
-            ServerAction pushAction = new ServerAction();
-            pushAction.x = direction.x;
-            pushAction.y = direction.y;
-            pushAction.z = direction.z;
-
-            pushAction.moveMagnitude = action.moveMagnitude;
-
             target.GetComponent<Rigidbody>().isKinematic = false;
-            sopApplyForce(pushAction, target);
+            sopApplyForce(dir: direction, magnitude: moveMagnitude, sop: target);
         }
 
         // TODO: use markActionFInished
@@ -1812,31 +1805,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length = 0) {
+        protected void sopApplyForce(Vector3 dir, float magnitude, SimObjPhysics sop, float length = 0) {
             // apply force, return action finished immediately
-            if (physicsSceneManager.physicsSimulationPaused) {
-                //print("autosimulation off");
-                sop.ApplyForce(action);
-                if (length >= 0.00001f) {
-                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
-                    #if UNITY_EDITOR
-                        print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                        print("object id: " + feedback.objectId);
-                        print("armslength: " + feedback.armsLength);
-                    #endif
-                    actionFinished(true, feedback);
-                }
-
-                //why is this here?
-                else {
-                    actionFinished(true);
-                }
-            }
-
-            //if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
-            else {
-                //print("autosimulation true");
-                sop.ApplyForce(action);
+            sop.ApplyForce(dir: dir, magnitude: magnitude);
+            if (physicsSceneManager.physicsSimulationPaused && length > 0) {
+                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
+                #if UNITY_EDITOR
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
+                #endif
+                actionFinished(true, feedback);
+            } else if (physicsSceneManager.physicsSimulationPaused) {
+                actionFinished(true);
+            } else {
+                // if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
                 StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
             }
         }
@@ -1985,7 +1968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     //this should basically only happen if the handDistance value is too big
                     if (!CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                        errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
+                        errorMessage = "Object successfully hit, but it is outside of the Agent's interaction range";
                         WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
                         actionFinished(false, errorFeedback);
                         return;
@@ -1993,37 +1976,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //if the object is a sim object, apply force now!
                     SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
-                    bool canbepushed = false;
-
-                    if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                        target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-                        canbepushed = true;
-
-                    if (!canbepushed) 
-                    {
+                    if (!canBePushed(target)) {
                         //the sim object hit was not moveable or pickupable
                         WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = target.objectID, armsLength = hit.distance};
                         #if UNITY_EDITOR
-                        print("object touched was not moveable or pickupable");
-                        print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                        print("object id: " + feedback.objectId);
-                        print("armslength: " + feedback.armsLength);
+                            print("object touched was not moveable or pickupable");
+                            print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                            print("object id: " + feedback.objectId);
+                            print("armslength: " + feedback.armsLength);
                         #endif
                         actionFinished(true, feedback);
                         return;
                     }
 
-                    ServerAction apply = new ServerAction();
-                    apply.moveMagnitude = action.moveMagnitude;
-
-                    //translate action.direction from Agent's local space to world space - note: do not use camera local space, keep it on agent
-                    Vector3 forceDir = this.transform.TransformDirection(action.direction);
-
-                    apply.x = forceDir.x;
-                    apply.y = forceDir.y;
-                    apply.z = forceDir.z;
-
-                    sopApplyForce(apply, target, hit.distance);
+                    sopApplyForce(
+                        dir: transform.TransformDirection(action.direction),
+                        magnitude: action.moveMagnitude,
+                        sop: target,
+                        length: hit.distance
+                    )
                 }
 
                 //raycast hit something but it wasn't a sim object
