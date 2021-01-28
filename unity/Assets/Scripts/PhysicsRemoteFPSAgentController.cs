@@ -1693,7 +1693,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             sopApplyForce(dir: direction, magnitude: moveMagnitude, sop: target);
         }
 
-        // TODO: use markActionFInished
+        // TODO: use markActionFinished
         public void DirectionalPush(string objectId, float moveMagnitude, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
             directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
@@ -1738,6 +1738,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        ///////////////////////////////////////////
+        /////////////  PHYSICS TIMING /////////////
+        ///////////////////////////////////////////
+
         // pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         // additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
         public void PausePhysicsAutoSim() {
@@ -1753,29 +1757,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool allowAutoSimulation = false
         ) {
             if ((!allowAutoSimulation) && Physics.autoSimulation) {
-                errorMessage = (
+                throw new InvalidOperationException(
                     "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
                     "paused or if you have passed allowAutoSimulation=true! Either use the" +
                     " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
                     " AutoSimulation has been turned back on already."
                 );
-                actionFinished(false);
-                return;
             }
 
             if (timeStep <= 0.0f || timeStep > 0.05f) {
-                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
-                actionFinished(false);
-                return;
+                throw new ArgumentOutOfRangeException(
+                    "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results."
+                );
             }
 
             if (!simSeconds.HasValue) {
                 simSeconds = timeStep;
             }
+
             if (simSeconds.Value < 0.0f) {
-                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
-                actionFinished(false);
-                return;
+                throw new ArgumentOutOfRangeException($"simSeconds must be non-negative (simSeconds=={simSeconds}).");
             }
 
             bool oldPhysicsAutoSim = Physics.autoSimulation;
@@ -1804,7 +1805,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        // Use this to immediately un-pause physics autosimulation and allow physics to resolve automatically like normal
         public void UnpausePhysicsAutoSim() {
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
@@ -1960,6 +1961,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        ///////////////////////////////////////////
+        /////////  TOUCH THEN APPLY FORCE /////////
+        ///////////////////////////////////////////
+
         public void TouchThenApplyForce(ServerAction action) {
             float x = action.x;
             float y = 1.0f - action.y; // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
@@ -1991,7 +1996,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             print("object id: " + feedback.objectId);
                             print("armslength: " + feedback.armsLength);
                         #endif
-                        actionFinished(true, feedback);
+                        actionFinished(false, feedback);
                         return;
                     }
 
@@ -2001,11 +2006,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         sop: target,
                         length: hit.distance
                     )
-                }
-
-                // raycast hit something but it wasn't a sim object
-                else
-                {
+                } else {
+                    // raycast hit something but it wasn't a sim object
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "not a sim object, a structure was touched", armsLength = hit.distance};
                     #if UNITY_EDITOR
                     print("object touched was not a sim object at all");
@@ -2016,11 +2018,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true, feedback);
                     return;
                 }
-            }
-
-            // raycast didn't hit anything
-            else
-            {
+            } else {
+                // raycast didn't hit anything
                 // get ray.origin, multiply handDistance with ray.direction, add to origin to get the final point
                 // if the final point was out of range, return actionFinished false, otherwise return actionFinished true with feedback
                 Vector3 testPosition = ((action.handDistance * ray.direction) + ray.origin);
@@ -2039,7 +2038,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     print("object id: " + feedback.objectId);
                     print("armslength: " + feedback.armsLength);
                 #endif
-                actionFinished(true,feedback);
+                actionFinished(true, feedback);
             }
         }
 
@@ -2075,10 +2074,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// OPEN WITH HAND //////////////
         ///////////////////////////////////////////
 
-        public void OpenWithHand(ServerAction action) {
-            Vector3 direction = transform.forward * action.z +
-                transform.right * action.x +
-                transform.up * action.y;
+        public void OpenWithHand(float x = 0, float y = 0, float z = 0) {
+            Vector3 direction = (
+                transform.forward * z +
+                transform.right * x +
+                transform.up * y
+            );
             direction.Normalize();
             if (ItemInHand != null) {
                 ItemInHand.SetActive(false);
@@ -2092,17 +2093,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!raycastDidHit) {
-                errorMessage = "No openable objects in direction.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("No openable objects in direction.");
             }
+
             SimObjPhysics so = ancestorSimObjPhysics(hit.transform.gameObject);
-            if (so != null) {
-                OpenObject(objectId: so.ObjectID, forceAction: true);
-            } else {
-                errorMessage = hit.transform.gameObject.name + " is not interactable.";
-                actionFinished(false);
+            if (so == null) {
+                throw new InvalidOperationException(hit.transform.gameObject.name + " is not interactable.");
             }
+
+            OpenObject(objectId: so.ObjectID, forceAction: true);
         }
 
         ///////////////////////////////////////////
@@ -2111,9 +2110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance) {
             if (ItemInHand == null) {
-                errorMessage = "Agent can only move hand if holding an item";
-                actionFinished(false);
-                yield break;
+                throw new InvalidOperationException("Agent can only move hand if holding an item");
             }
             SimObjPhysics simObjInHand = ItemInHand.GetComponent<SimObjPhysics>();
             simObjInHand.ResetContactPointsDictionary();
@@ -2263,7 +2260,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage += " object(s) after movement.";
                 actionFinished(false);
             } else if (Vector3.Distance(initialPosition, lastPosition) < 0.001f &&
-                Quaternion.Angle(initialRotation, lastRotation) < 0.001f) {
+                Quaternion.Angle(initialRotation, lastRotation) < 0.001f
+            ) {
                 if (beyondVisibleDistance) {
                     errorMessage = "Hand already at max distance.";
                 } else if (leavingViewport) {
@@ -2278,22 +2276,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void MoveHandForce(float x, float y, float z) {
-            Vector3 direction = transform.forward * z +
-                transform.right * x +
-                transform.up * y;
-            Vector3 target = AgentHand.transform.position +
-                direction;
             if (ItemInHand == null) {
-                Debug.Log("Agent can only move hand if holding an item");
-                actionFinished(false);
-            } else if (moveHandToXYZ(target.x, target.y, target.z)) {
-                actionFinished(true);
-            } else {
-                errorMessage = "";
-                StartCoroutine(
-                    moveHandToTowardsXYZWithForce(target.x, target.y, target.z, direction.magnitude)
-                );
+                throw new InvalidOperationException("Agent can only move hand if holding an item");
             }
+
+            Vector3 direction = (
+                transform.forward * z +
+                transform.right * x +
+                transform.up * y
+            );
+            Vector3 target = AgentHand.transform.position + direction;
+            if (moveHandToXYZ(target.x, target.y, target.z)) {
+                actionFinished(true);
+            }
+
+            StartCoroutine(moveHandToTowardsXYZWithForce(target.x, target.y, target.z, direction.magnitude));
         }
 
         // checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
@@ -3218,16 +3215,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void SetObjectPoses(ServerAction action) {
-            // make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if (action.objectPoses == null || action.objectPoses[0] == null) {
+        public void SetObjectPoses(ObjectPose[] objectPoses) {
+            if (objectPoses == null) {
                 throw new ArgumentNullException();
             }
 
-            // SetObjectPoses is performed in a coroutine otherwise if
-            // a frame does not pass prior to this AND the imageSynthesis
-            // is enabled for say depth or normals, Unity will crash on
-            // a subsequent scene reset()
+            // SetObjectPoses is performed in a coroutine otherwise if a frame does not pass
+            // prior to this AND the imageSynthesis is enabled for say depth or normals,
+            // Unity will crash on a subsequent scene reset()
             IEnumerator setObjectPoses() {
                 yield return new WaitForEndOfFrame();
                 bool success = physicsSceneManager.SetObjectPoses(objectPoses);
@@ -3843,70 +3838,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected SimObjPhysics getOpenableOrCloseableObjectNearLocation(
-            bool open, float x, float y, float radius, bool forceAction
-        ) {
-            y = 1.0f - y;
-
-            RaycastHit hit;
-            int layerMask = 3 << 8;
-            if (ItemInHand != null) {
-                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                    c.enabled = false;
-                }
-            }
-            for (int i = 0; i < 10; i++) {
-                float r = radius * (i / 9.0f);
-                int n = 2 * i + 1;
-                for (int j = 0; j < n; j++) {
-                    float thetak = 2 * j * ((float) Math.PI) / n;
-
-                    float newX = x + (float) (r * Math.Cos(thetak));
-                    float newY = y + (float) (r * Math.Sin(thetak));
-                    if (x < 0 || x > 1.0 || y < 0 || y > 1.0) {
-                        continue;
-                    }
-
-                    Ray ray = m_Camera.ViewportPointToRay(new Vector3(newX, newY, 0.0f));
-                    bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
-
-                    #if UNITY_EDITOR
-                    if (raycastDidHit) {
-                        Debug.DrawLine(ray.origin, hit.point, Color.red, 10f);
-                    }
-                    #endif
-
-                    if (raycastDidHit) {
-                        SimObjPhysics sop = ancestorSimObjPhysics(hit.transform.gameObject);
-                        if (sop != null && sop.GetComponent<CanOpen_Object>() && (
-                                forceAction || objectIsCurrentlyVisible(sop, maxVisibleDistance)
-                            )) {
-                            CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
-
-                            if (open != coo.isOpen) {
-                                if (ItemInHand != null) {
-                                    foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                                        c.enabled = true;
-                                    }
-                                }
-                                return sop;
-                            }
-                        }
-                    }
-                }
-            }
-            if (ItemInHand != null) {
-                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                    c.enabled = true;
-                }
-            }
-            return null;
-        }
-
-        // H&S action
-        protected void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
-            float x = action.x;
-            float y = 1.0f - action.y;
+        // H&S helper action
+        protected void getObjectAtLocation(bool open, float x, float y, bool forceAction) {
+            float x = x;
+            float y = 1.0f - y;
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
             int layerMask = 3 << 8;
@@ -3915,56 +3850,108 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     c.enabled = false;
                 }
             }
+
             bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
             if (ItemInHand != null) {
                 foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
                     c.enabled = true;
                 }
             }
+
             if (!raycastDidHit) {
-                Debug.Log("There don't seem to be any objects in that area.");
-                errorMessage = "No openable object at location.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("No openable object at location.");
             }
+
             SimObjPhysics so = ancestorSimObjPhysics(hit.transform.gameObject);
-            if (so != null && (
-                    action.forceAction || objectIsCurrentlyVisible(so, maxVisibleDistance)
-                )) {
-                if (open) {
-                    OpenObject(objectId: so.ObjectID, forceAction: true);
-                } else {
-                    CloseObject(objectId: so.ObjectID, forceAction: true);
-                }
-            } else if (so == null) {
-                errorMessage = "Object at location is not interactable.";
-                actionFinished(false);
-            } else {
-                errorMessage = so.ObjectID + " is too far away.";
-                actionFinished(false);
+
+            if (so == null) {
+                throw new InvalidOperationException("Object at location is not interactable.");
+            }
+
+            if (!forceAction && !objectIsCurrentlyVisible(so, maxVisibleDistance)) {
+                throw new InvalidOperationException(so.ObjectID + " is too far away.");
             }
         }
 
         // H&S action
-        public void OpenObjectAtLocation(ServerAction action) {
-            if (action.z > 0) {
-                SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
-                    true, action.x, action.y, action.z, false
-                );
-                if (sop != null) {
-                    OpenObject(objectId: sop.ObjectID, forceAction: true);
-                } else {
-                    errorMessage = "No openable object found within a radius about given point.";
-                    actionFinished(false);
+        public void OpenObjectAtLocation(float x, float y, float z = 0, bool forceAction = false) {
+            // NOTE: z specifies the radius... for some reason...
+            if (z > 0) {
+                SimObjPhysics getOpenableObjectNearLocation(
+                    float radius, bool isOpen = true
+                ) {
+                    y = 1.0f - y;
+
+                    RaycastHit hit;
+                    int layerMask = 3 << 8;
+                    if (ItemInHand != null) {
+                        foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                            c.enabled = false;
+                        }
+                    }
+                    for (int i = 0; i < 10; i++) {
+                        float r = radius * (i / 9.0f);
+                        int n = 2 * i + 1;
+                        for (int j = 0; j < n; j++) {
+                            float thetak = 2 * j * ((float) Math.PI) / n;
+
+                            float newX = x + (float) (r * Math.Cos(thetak));
+                            float newY = y + (float) (r * Math.Sin(thetak));
+                            if (x < 0 || x > 1.0 || y < 0 || y > 1.0) {
+                                continue;
+                            }
+
+                            Ray ray = m_Camera.ViewportPointToRay(new Vector3(newX, newY, 0.0f));
+                            bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
+
+                            #if UNITY_EDITOR
+                            if (raycastDidHit) {
+                                Debug.DrawLine(ray.origin, hit.point, Color.red, 10f);
+                            }
+                            #endif
+
+                            if (raycastDidHit) {
+                                SimObjPhysics sop = ancestorSimObjPhysics(hit.transform.gameObject);
+                                if (sop != null && sop.GetComponent<CanOpen_Object>() && (
+                                        forceAction || objectIsCurrentlyVisible(sop, maxVisibleDistance)
+                                    )) {
+                                    CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+
+                                    if (isOpen != coo.isOpen) {
+                                        if (ItemInHand != null) {
+                                            foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                                                c.enabled = true;
+                                            }
+                                        }
+                                        return sop;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (ItemInHand != null) {
+                        foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                            c.enabled = true;
+                        }
+                    }
+                    throw new InvalidOperationException("No openable object found within a radius about given point.");
                 }
+                SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(radius: z, isOpen: true);
+                OpenObject(objectId: sop.ObjectID, forceAction: true);
             } else {
-                OpenOrCloseObjectAtLocation(true, action);
+                openOrCloseObjectAtLocation(true, action);
             }
         }
 
         // H&S action
-        public void CloseObjectAtLocation(ServerAction action) {
-            OpenOrCloseObjectAtLocation(false, action);
+        public void CloseObjectAtLocation() {
+            openOrCloseObjectAtLocation(false, action);
+
+            if (open) {
+                OpenObject(objectId: so.ObjectID, forceAction: true);
+            } else {
+                CloseObject(objectId: so.ObjectID, forceAction: true);
+            }
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {

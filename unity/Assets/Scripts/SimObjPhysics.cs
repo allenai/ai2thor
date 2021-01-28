@@ -10,8 +10,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class SimObjPhysics : MonoBehaviour, SimpleSimObj
-{
+public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [Header("Unique String ID of this Object")]
     [SerializeField]
     public string objectID = string.Empty;
@@ -138,8 +137,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public List<GameObject> CurrentlyContains;
     #endif
 
-    public class PhysicsMaterialValues
-    {
+    public class PhysicsMaterialValues {
         public float DynamicFriction;
         public float StaticFriction;
         public float Bounciness;
@@ -159,7 +157,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         ContainedObjectReferences.Remove(t);
     }
 
-
     private void regenerateBoundingBoxes() {
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
@@ -172,7 +169,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
         this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
-
 
         boundingBoxCacheRotation = rotation;
         boundingBoxCachePosition = position;
@@ -211,16 +207,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         // ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
         List<float[]> cornerPoints = new List<float[]>();
         float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
+            bounding.center.x + bounding.size.x / 2f,
+            bounding.center.x - bounding.size.x / 2f
         };
         float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
+            bounding.center.y + bounding.size.y / 2f,
+            bounding.center.y - bounding.size.y / 2f
         };
         float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
+            bounding.center.z + bounding.size.z / 2f,
+            bounding.center.z - bounding.size.z / 2f
         };
         foreach(float x in xs) {
             foreach (float y in ys) {

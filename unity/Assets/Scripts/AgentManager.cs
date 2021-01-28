@@ -531,7 +531,7 @@ public class AgentManager : MonoBehaviour
         );
     }
 
-	private void addAgent(float x, float y, float z) {
+	private void addAgent(float x, float y, float z, bool makeAgents) {
 		Vector3 clonePosition = new Vector3(x, y, z);
 
 		//disable ambient occlusion on primary agent because it causes issues with multiple main cameras
@@ -1353,8 +1353,7 @@ public class ObjectTypeCount
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ObjectPose
-{
+public class ObjectPose {
     public string objectName;
     public Vector3 position;
     public Vector3 rotation;
