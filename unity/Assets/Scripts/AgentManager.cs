@@ -1596,7 +1596,6 @@ public class ServerAction
     public float minDistance;//used in target circle spawning function
     public float maxDistance;//used in target circle spawning function
     public float noise;
-    public ControllerInitialization controllerInitialization = null;
     public string agentControllerType = "physics";//default to physics controller
     public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 
@@ -1625,7 +1624,7 @@ public class ServerAction
 	public float b;
 
 	//default time for objects to wait before returning actionFinished() if an action put them in motion
-	public float TimeToWaitForObjectsToComeToRest = 10.0f;
+	public float timeToWaitForObjectsToComeToRest = 10.0f;
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
     public bool fastActionEmit;
@@ -1641,19 +1640,6 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
 	}
-
-    public VisibilityScheme GetVisibilityScheme() {
-        VisibilityScheme result = VisibilityScheme.Collider;
-        try 
-        {
-            result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
-        } 
-        catch (ArgumentException) { 
-            Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
-        }
-
-		return result;
-    }
 
 	public SimObjType GetSimObjType()
 	{
@@ -1706,22 +1692,6 @@ public enum VisibilityScheme {
     Collider,
     Distance
 }
-
-
-
-[Serializable]
-public class ControllerInitialization {
-    public Dictionary<string, TypedVariable> variableInitializations;
-}
-
-
-[Serializable]
-public class TypedVariable {
-    public string type;
-    public object value;
-}
-
-
 
 public class ShouldSerializeContractResolver : DefaultContractResolver
 {

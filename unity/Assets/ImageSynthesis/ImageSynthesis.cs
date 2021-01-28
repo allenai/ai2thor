@@ -185,12 +185,12 @@ public class ImageSynthesis : MonoBehaviour {
 	}
 
 	enum ReplacelementModes {
-		ObjectId 			= 0,
-		CatergoryId			= 1,
-		DepthCompressed		= 2,
-		DepthMultichannel	= 3,
-		Normals				= 4,
-        Flow                = 5,
+		ObjectId = 0,
+		CatergoryId = 1,
+		DepthCompressed = 2,
+		DepthMultichannel = 3,
+		Normals = 4,
+    Flow = 5
 	};
 
 	//Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras

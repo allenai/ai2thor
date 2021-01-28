@@ -1917,7 +1917,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return new WaitForFixedUpdate();
 
             float startTime = Time.time;
-            float waitTime = TimeToWaitForObjectsToComeToRest;
+            float waitTime = timeToWaitForObjectsToComeToRest;
 
             if (useTimeout) {
                 waitTime = 1.0f;
