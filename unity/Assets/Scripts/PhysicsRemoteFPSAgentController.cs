@@ -5944,18 +5944,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectIdToVisiblePositions);
         }
 
-        public void DisableAllObjectsOfType(ServerAction action) {
-            string type = action.objectType;
-            if (type == "") {
-                type = action.objectId;
-            }
-
-            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (Enum.GetName(typeof(SimObjType), so.Type) == type) {
-                    so.gameObject.SetActive(false);
-                }
-            }
-            actionFinished(true);
+        // Remains for cordial-sync backwards compatibility.
+        [ObsoleteAttribute(message: "This action is deprecated. Please use DisableObjectsOfType.", error: false)] 
+        public void DisableAllObjectsOfType(string objectType = null, string objectId = "") {
+            base.DisableObjectsOfType(objectType: objectType == null ? objectId : objectType);
         }
 
         public void StackBooks() {

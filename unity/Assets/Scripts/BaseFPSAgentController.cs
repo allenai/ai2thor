@@ -3133,6 +3133,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             inHighFrictionArea = other.CompareTag("HighFriction");
         }
 
+        public void DisableObjectsOfType(string objectType) {
+            foreach (SimObjPhysics target in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (Enum.GetName(typeof(SimObjType), target.Type) == type) {
+                    target.gameObject.SetActive(false);
+                }
+            }
+            actionFinished(success: true);
+        }
+
         ///////////////////////////////////////////
         ///////// ACTION DISPATCH TESTING /////////
         ///////////////////////////////////////////
