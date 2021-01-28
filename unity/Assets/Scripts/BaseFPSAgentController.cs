@@ -15,15 +15,14 @@ using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-	[RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(CharacterController))]
 
-	abstract public class BaseFPSAgentController : MonoBehaviour {
-		//debug draw bounds of objects in editor
+    abstract public class BaseFPSAgentController : MonoBehaviour {
+        //debug draw bounds of objects in editor
         #if UNITY_EDITOR
             protected List<Bounds> gizmobounds = new List<Bounds>();
         #endif
-        [SerializeField] public SimObjPhysics[] VisibleSimObjPhysics 
-        {
+        [SerializeField] public SimObjPhysics[] VisibleSimObjPhysics {
             get;
             protected set;
         }
@@ -43,25 +42,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
-		// first person controller parameters
-		[SerializeField]
-		protected bool m_IsWalking;
-		[SerializeField]
-		protected float m_WalkSpeed;
-		[SerializeField]
-		protected float m_RunSpeed;
-		[SerializeField]
-		protected float m_GravityMultiplier;
-		protected static float gridSize = 0.25f;
-        //time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
+
+        [SerializeField]
+        protected bool m_IsWalking;
+        [SerializeField]
+        protected float m_WalkSpeed;
+        [SerializeField]
+        protected float m_RunSpeed;
+        [SerializeField]
+        protected float m_GravityMultiplier;
+
+        protected static float gridSize = 0.25f;
+
+        // time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float timeToWaitForObjectsToComeToRest = 0.0f;
+
         //determins default move distance for move actions
-		protected float moveMagnitude;
+        protected float moveMagnitude;
+
         //determines rotation increment of rotate functions
         protected float rotateStepDegrees = 90.0f;
+
         protected bool snapToGrid;
-		protected bool continuousMode;//deprecated, use snapToGrid instead
-		public ImageSynthesis imageSynthesis;
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call snapToGrid instead.", error: false)] 
+        protected bool continuousMode;
+
+        public ImageSynthesis imageSynthesis;
         public GameObject VisibilityCapsule = null;//used to keep track of currently active VisCap: see different vis caps for modes below
         public GameObject TallVisCap;//meshes used for Tall mode
         public GameObject BotVisCap;//meshes used for Bot mode
@@ -69,6 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
+
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
@@ -77,8 +85,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public const float DefaultAllowedErrorInShortestPath = 0.0001f;
 
         public bool IsVisible {
-			get { return isVisible; }
-			set {
+            get { return isVisible; }
+            set {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
 
@@ -87,8 +95,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
                 }
-				isVisible = value;
-			}
+                isVisible = value;
+            }
         }
 
         public bool IsProcessing {
@@ -101,25 +109,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get {
                 return this.agentState == AgentState.Emit;
             }
-
         }
 
-		protected float maxDownwardLookAngle = 60f;
-		protected float maxUpwardLookAngle = 30f;
-		//allow agent to push sim objects that can move, for physics
-		protected bool PushMode = false;
-		protected int actionCounter;
-		protected Vector3 targetTeleport;
+        protected float maxDownwardLookAngle = 60f;
+        protected float maxUpwardLookAngle = 30f;
+
+        // Allow agent to push sim objects that can move, for physics
+        protected bool PushMode = false;
+
+        protected int actionCounter;
+        protected Vector3 targetTeleport;
         public AgentManager agentManager;
-		public Camera m_Camera;
+        public Camera m_Camera;
         [SerializeField] protected float cameraOrthSize;
-		protected float m_XRotation;
-		protected float m_ZRotation;
-		protected Vector2 m_Input;
-		protected Vector3 m_MoveDir = Vector3.zero;
-		public CharacterController m_CharacterController;
-		protected CollisionFlags m_CollisionFlags;
-		protected Vector3 lastPosition;
+        protected float m_XRotation;
+        protected float m_ZRotation;
+        protected Vector2 m_Input;
+        protected Vector3 m_MoveDir = Vector3.zero;
+        public CharacterController m_CharacterController;
+        protected CollisionFlags m_CollisionFlags;
+        protected Vector3 lastPosition;
 
         // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
         public string lastAction;
@@ -127,14 +136,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public string errorMessage;
         public ServerActionErrorCode errorCode;
 
-		public System.Object actionReturn;
+        public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
         protected float[, , ] flatSurfacesOnGrid = new float[0, 0, 0];
         protected float[, ] distances = new float[0, 0];
         protected float[, , ] normals = new float[0, 0, 0];
-		protected bool[, ] isOpenableGrid = new bool[0, 0];
+        protected bool[, ] isOpenableGrid = new bool[0, 0];
         protected string[] segmentedObjectIds = new string[0];
         [SerializeField] public string[] objectIdsInBox = new string[0];
         protected int actionIntReturn;
@@ -143,28 +152,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Vector3[] actionVector3sReturn;
         protected string[] actionStringsReturn;
         public bool alwaysReturnVisibleRange = false;
-		// initial states
-		protected Vector3 init_position;
-		protected Quaternion init_rotation;
-		public int actionDuration = 3;
 
-		// internal state variables
-		private float lastEmitTime;
-		protected List<string> collisionsInAction;// tracking collided objects
-		protected string[] collidedObjects;// container for collided objects
+        // initial states
+        protected Vector3 init_position;
+        protected Quaternion init_rotation;
+        public int actionDuration = 3;
+
+        // internal state variables
+        private float lastEmitTime;
+        protected List<string> collisionsInAction;// tracking collided objects
+        protected string[] collidedObjects;// container for collided objects
         protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
-		protected Quaternion targetRotation;
+        protected Quaternion targetRotation;
+
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-		public Quaternion TargetRotation
-		{
-			get { return targetRotation; }
-		}
-
-        private PhysicsSceneManager _physicsSceneManager = null;
-        //use as reference to the PhysicsSceneManager object
-        protected PhysicsSceneManager physicsSceneManager
+        public Quaternion TargetRotation
         {
+            get { return targetRotation; }
+        }
+
+        // use as reference to the PhysicsSceneManager object
+        private PhysicsSceneManager _physicsSceneManager = null;
+        protected PhysicsSceneManager physicsSceneManager {
             get {
                 if (_physicsSceneManager == null) {
                     _physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
@@ -173,11 +183,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        //reference to prefab for activiting the cracked camera effect via CameraCrack()
+        // reference to prefab for activating the cracked camera effect via CameraCrack()
         [SerializeField] GameObject CrackedCameraCanvas = null;
 
-		// Initialize parameters from environment variables
-		protected virtual void Awake() {
+        // Initialize parameters from environment variables
+        protected virtual void Awake() {
             #if UNITY_WEBGL
                 this.jsInterface = this.GetComponent<JavaScriptInterface>();
                 this.jsInterface.enabled = true;
@@ -185,30 +195,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // character controller parameters
             m_CharacterController = GetComponent<CharacterController>();
-			this.m_WalkSpeed = 2;
-			this.m_RunSpeed = 10;
-			this.m_GravityMultiplier = 2;
-		}
+            this.m_WalkSpeed = 2;
+            this.m_RunSpeed = 10;
+            this.m_GravityMultiplier = 2;
+        }
 
-		// Use this for initialization
-		public virtual void Start() {
-			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
+        // Use this for initialization
+        public virtual void Start() {
+            m_Camera = this.gameObject.GetComponentInChildren<Camera>();
 
-			// set agent initial states
-			targetRotation = transform.rotation;
-			collidedObjects = new string[0];
-			collisionsInAction = new List<string>();
+            // set agent initial states
+            targetRotation = transform.rotation;
+            collidedObjects = new string[0];
+            collisionsInAction = new List<string>();
 
             // setting default renderer settings
             // this hides renderers not used in tall mode, and also sets renderer
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
 
-			// record initial positions and rotations
-			init_position = transform.position;
-			init_rotation = transform.rotation;
+            // record initial positions and rotations
+            init_position = transform.position;
+            init_rotation = transform.rotation;
 
-			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
@@ -227,9 +237,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 movement = Vector3.zero;
             movement.y = Physics.gravity.y * m_GravityMultiplier;
             m_CharacterController.Move(movement);
-		}
+        }
 
-        //defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
+        // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
             foreach (Renderer r in TallVisCap.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
@@ -243,41 +253,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>())
-            {
-                if (r.enabled)
-                {
+            foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
                     r.enabled = false;
                 }
             }
         }
 
-		public void actionFinishedEmit(bool success, object actionReturn = null) {
+        public void actionFinishedEmit(bool success, object actionReturn = null) {
             actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
-		}
-
-		protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
-			if (!this.IsProcessing) {
-				Debug.LogError ("ActionFinished called with agentState not in processing ");
-			}
-
-            lastActionSuccess = success;
-			this.agentState = newState;
-			this.actionReturn = actionReturn;
-			actionCounter = 0;
-			targetTeleport = Vector3.zero;
         }
 
-		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
+        protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
+            if (!this.IsProcessing) {
+                Debug.LogError ("ActionFinished called with agentState not in processing ");
+            }
+
+            lastActionSuccess = success;
+            this.agentState = newState;
+            this.actionReturn = actionReturn;
+            actionCounter = 0;
+            targetTeleport = Vector3.zero;
+        }
+
+        public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
             if (errorMessage != null) {
                 this.errorMessage = errorMessage;
             }
             actionFinished(success: success, newState: AgentState.ActionComplete, actionReturn: actionReturn);
             this.resumePhysics();
-		}
+        }
 
         protected virtual void resumePhysics() {}
-
 
         // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
         public Vector3[] getReachablePositions(
@@ -411,7 +418,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// Initialize /////////////////
         ///////////////////////////////////////////
 
-		public void Initialize(
+        public void Initialize(
             string agentMode = "default",
             float? fieldOfView = null,
             float gridSize = 0.25f,
@@ -464,8 +471,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // set up image synthesis
             if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage) {
-    			updateImageSynthesis(true);
-    		}
+                updateImageSynthesis(true);
+            }
 
             if (visibilityDistance <= 0) {
                 throw new ArgumentOutOfRangeException("Visibility Distance must be > 0.");
@@ -560,8 +567,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);//smaller y offset if Bot
 
                 // limit camera from looking too far down
-				this.maxDownwardLookAngle = 30f;
-				this.maxUpwardLookAngle = 30f;
+                this.maxDownwardLookAngle = 30f;
+                this.maxUpwardLookAngle = 30f;
                 //this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
             } else if (whichMode == "drone") {
                 //toggle first person character cull
@@ -1048,8 +1055,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool result = false;
 
             //if forceAction true, ignore collision restrictions caused by held objects
-            if (forceAction)
-            {
+            if (forceAction) {
                 return true;
             }
             //if there is nothing in our hand, we are good, return!
@@ -1238,7 +1244,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             return metadata.ToArray();
-		}
+        }
 
         // generates object metadata based on sim object's properties
         public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
@@ -1374,7 +1380,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return b;
         }
 
-		public virtual  MetadataPatch generateMetadataPatch() {
+        public virtual  MetadataPatch generateMetadataPatch() {
             MetadataPatch patch = new MetadataPatch();
             patch.lastAction = this.lastAction;
             patch.lastActionSuccess = this.lastActionSuccess;
@@ -1386,7 +1392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return patch;
         }
 
-		public virtual MetadataWrapper generateMetadataWrapper() {
+        public virtual MetadataWrapper generateMetadataWrapper() {
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -1397,7 +1403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 agentMeta.cameraHorizon -= 360;
             }
-	        agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
+            agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
             // OTHER METADATA
@@ -1479,14 +1485,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionVector3sReturn = new Vector3[0];
 
             return metaMessage;
-		}
+        }
 
-		public void updateImageSynthesis(bool status) {
+        public void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
                 imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
             }
-			imageSynthesis.enabled = status;
-		}
+            imageSynthesis.enabled = status;
+        }
 
         ///////////////////////////////////////////
         //////// PROCESS CONTROL COMMAND //////////
@@ -1503,26 +1509,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
-			
+            System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+            
             this.agentState = AgentState.Processing;
-			try {
-				if (method == null) {
-					errorMessage = "Invalid action: " + controlCommand.action;
-					errorCode = ServerActionErrorCode.InvalidAction;
-					Debug.LogError(errorMessage);
-					actionFinished(false);
-				} else {
-					method.Invoke(this, new object[] { controlCommand });
-				}
-			} catch (Exception e) {
-				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+            try {
+                if (method == null) {
+                    errorMessage = "Invalid action: " + controlCommand.action;
+                    errorCode = ServerActionErrorCode.InvalidAction;
+                    Debug.LogError(errorMessage);
+                    actionFinished(false);
+                } else {
+                    method.Invoke(this, new object[] { controlCommand });
+                }
+            } catch (Exception e) {
+                Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
-				Debug.LogError(e);
+                Debug.LogError(e);
 
-				errorMessage += e.ToString();
-				actionFinished(false);
-			}
+                errorMessage += e.ToString();
+                actionFinished(false);
+            }
         }
 
         // the parameter name is different to avoid failing a test
@@ -1595,108 +1601,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             NoOp();
         }
 
-		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
+        // Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
-		protected void OnControllerColliderHit(ControllerColliderHit hit) {
-			if (!enabled) {
-				return;
-			}
+        protected void OnControllerColliderHit(ControllerColliderHit hit) {
+            if (!enabled) {
+                return;
+            }
 
-			if (hit.gameObject.GetComponent<StructureObject>() &&
+            if (hit.gameObject.GetComponent<StructureObject>() &&
                 hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor
             ) {
-				return;
-			}
+                return;
+            }
 
 
-			if (!collisionsInAction.Contains(hit.gameObject.name)) {
-				collisionsInAction.Add(hit.gameObject.name);
-			}
+            if (!collisionsInAction.Contains(hit.gameObject.name)) {
+                collisionsInAction.Add(hit.gameObject.name);
+            }
 
-			Rigidbody body = hit.collider.attachedRigidbody;
-			// don't move the rigidbody if the character is on top of it
-			if (m_CollisionFlags == CollisionFlags.Below) {
-				return;
-			}
+            Rigidbody body = hit.collider.attachedRigidbody;
+            // don't move the rigidbody if the character is on top of it
+            if (m_CollisionFlags == CollisionFlags.Below) {
+                return;
+            }
 
-			if (body == null || body.isKinematic) {
-				return;
-			}
+            if (body == null || body.isKinematic) {
+                return;
+            }
 
-			// push objects out of the way if moving through them and they are Moveable or CanPickup (Physics)
-			if (PushMode) {
-				float pushPower = 2.0f;
-				Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
-				body.velocity = pushDir * pushPower;
-			}
+            // push objects out of the way if moving through them and they are Moveable or CanPickup (Physics)
+            if (PushMode) {
+                float pushPower = 2.0f;
+                Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+                body.velocity = pushDir * pushPower;
+            }
 
-			//if we touched something with a rigidbody that needs to simulate physics, generate a force at the impact point
-			//body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
-			//body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
-		}
+            //if we touched something with a rigidbody that needs to simulate physics, generate a force at the impact point
+            //body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
+            //body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
+        }
 
         ///////////////////////////////////////////
         ////////////////// MOVE ///////////////////
         ///////////////////////////////////////////
-        
-        // for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
-        // NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
-        // checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
-        // Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
-        // XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected void moveInDirection(
-            Vector3 direction,
-            string objectId = "",
-            float maxDistanceToObject = -1.0f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            HashSet<Collider> ignoreColliders = null
-        ) {
-            Vector3 targetPosition = transform.position + direction;
-            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
-
-            float right = Vector3.Dot(transform.right, direction);
-            if (right < 0) {
-                angle = 360f - angle;
-            }
-            int angleInt = Mathf.RoundToInt(angle) % 360;
-
-            // forceAction = true allows ignoring movement restrictions caused by held objects
-            if (!checkIfSceneBoundsContainTargetPosition(targetPosition) ||
-                !CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) ||
-                !CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)
-            ) {
-                throw new InvalidOperationException("Unable to move agent in direction.");
-            }
-
-            //only default hand if not manually interacting with things    
-            if (!manualInteract) {
-                DefaultAgentHand();
-            }
-
-            // TODO: these things should go on their own method...
-            Vector3 oldPosition = transform.position;
-            transform.position = targetPosition;
-            this.snapAgentToGrid();
-
-            if (objectId != "" && maxDistanceToObject > 0.0f) {
-                SimObjPhysics sop;
-                try {
-                    sop = getTargetObject(objectId: objectId, forceAction: true);
-                } catch (Exception e) {
-                    transform.position = oldPosition; 
-                    throw new ArgumentException(e.Message);
-                }
-
-                if (distanceToObject(sop) > maxDistanceToObject) {
-                    transform.position = oldPosition;
-                    throw new InvalidOperationException("Agent movement would bring it beyond the max distance of " + objectId);
-                }
-            }
-        }
-
-		protected void snapAgentToGrid() {
+        protected void snapAgentToGrid() {
             if (this.snapToGrid) {
                 float mult = 1 / gridSize;
                 float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
@@ -1704,7 +1653,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
             }
-		}
+        }
 
         // Allows you to move in both the x/z directions at once, instead of calling
         // MoveAhead and MoveRight.
@@ -1712,49 +1661,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var moveLocal = new Vector3(x, 0, z);
             Vector3 moveWorldSpace = transform.rotation * moveLocal;
             moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
-			m_CharacterController.Move(moveWorldSpace);
-			actionFinished(true);
+            m_CharacterController.Move(moveWorldSpace);
+            actionFinished(true);
         }
 
         ///////////////////////////////////////////
         ///////////////// ROTATE //////////////////
         ///////////////////////////////////////////
 
-		// free rotate, change forward facing of Agent
+        // free rotate, change forward facing of Agent
         // this is currently overwritten by Rotate in Stochastic Controller
-		public virtual void Rotate(Vector3 rotation) {
+        public virtual void Rotate(Vector3 rotation) {
             // TODO: why is x=0 and z=0 set in the base?
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
-			actionFinished(true);
-		}
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+            actionFinished(true);
+        }
 
-		// rotates controlCommand.degrees degrees left w/ respect to current forward
-		public virtual void RotateLeft(float degrees) {
+        // rotates controlCommand.degrees degrees left w/ respect to current forward
+        public virtual void RotateLeft(float degrees) {
             transform.Rotate(0, degrees == null ? -rotateStepDegrees : -1 * (float) degrees, 0);
-			actionFinished(true);
-		}
+            actionFinished(true);
+        }
 
-		// rotates controlCommand.degrees degrees right w/ respect to current forward
-		public virtual void RotateRight(float? degrees = null) {
+        // rotates controlCommand.degrees degrees right w/ respect to current forward
+        public virtual void RotateRight(float? degrees = null) {
             transform.Rotate(0, degrees == null ? rotateStepDegrees : (float) degrees, 0);
-			actionFinished(true);
-		}
+            actionFinished(true);
+        }
 
         ///////////////////////////////////////////
         ////////////// LOOK UP/DOWN ///////////////
         ///////////////////////////////////////////
 
-		// iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
-		public virtual void LookDown(float degrees) {
-			m_Camera.transform.Rotate(degrees, 0, 0);
-			actionFinished(true);
-		}
+        // iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
+        public virtual void LookDown(float degrees) {
+            m_Camera.transform.Rotate(degrees, 0, 0);
+            actionFinished(true);
+        }
 
-		// iterates to next allowed upward horizon angle for agent camera (max 30 degrees up)
-		public virtual void LookUp(float degrees) {
-			m_Camera.transform.Rotate(degrees, 0, 0);
-			actionFinished(true);
-		}
+        // iterates to next allowed upward horizon angle for agent camera (max 30 degrees up)
+        public virtual void LookUp(float degrees) {
+            m_Camera.transform.Rotate(degrees, 0, 0);
+            actionFinished(true);
+        }
 
         ///////////////////////////////////////////
         //////////////// TELEPORT /////////////////
@@ -3215,5 +3164,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
             actionFinished(true, conflicts);
         }
-	}
+    }
 }

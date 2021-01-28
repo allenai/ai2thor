@@ -531,14 +531,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (teleportSuccess) {
                 if (!forceKinematic) {
                     StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
-                    return;
                 } else {
                     actionFinished(true);
-                    return;
                 }
             } else {
                 actionFinished(false);
-                return;
             }
         }
 
@@ -1366,28 +1363,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void MoveAgentsAheadWithObject(ServerAction action) {
-            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(moveAgentsWithObject(objectToMove, transform.forward * action.moveMagnitude));
+        public void MoveAgentsAheadWithObject(string objectId, float moveMagnitude = 0) {
+            SimObjPhysics objectToMove = getTargetObject(objectId: objectId, forceAction: true);
+            moveMagnitude = moveMagnitude > 0 ? moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, transform.forward * moveMagnitude));
         }
 
-        public void MoveAgentsLeftWithObject(ServerAction action) {
-            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(moveAgentsWithObject(objectToMove, -transform.right * action.moveMagnitude));
+        public void MoveAgentsLeftWithObject(string objectId, float moveMagnitude = 0) {
+            SimObjPhysics objectToMove = getTargetObject(objectId: objectId, forceAction: true);
+            moveMagnitude = moveMagnitude > 0 ? moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, -transform.right * moveMagnitude));
         }
 
-        public void MoveAgentsRightWithObject(ServerAction action) {
-            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(moveAgentsWithObject(objectToMove, transform.right * action.moveMagnitude));
+        public void MoveAgentsRightWithObject(string objectId, float moveMagnitude = 0) {
+            SimObjPhysics objectToMove = getTargetObject(objectId: objectId, forceAction: true);
+            moveMagnitude = moveMagnitude > 0 ? moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, transform.right * moveMagnitude));
         }
 
-        public void MoveAgentsBackWithObject(ServerAction action) {
-            SimObjPhysics objectToMove = getTargetObject(objectId: action.objectId, forceAction: true);
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            actionFinished(moveAgentsWithObject(objectToMove, -transform.forward * action.moveMagnitude));
+        public void MoveAgentsBackWithObject(string objectId, float moveMagnitude = 0) {
+            SimObjPhysics objectToMove = getTargetObject(objectId: objectId, forceAction: true);
+            moveMagnitude = moveMagnitude > 0 ? moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, -transform.forward * moveMagnitude));
         }
 
         ///////////////////////////////////////////
@@ -1497,51 +1494,114 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return colliders;
         }
 
-        public override void MoveLeft(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+                
+        // for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
+        // NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
+        // checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
+        // Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
+
+        // XXX revisit what movement means when we more clearly define what "continuous" movement is
+        protected void moveInDirection(
+            Vector3 direction,
+            float? moveMagnitude,
+            bool forceAction,
+            bool manualInteract,
+            HashSet<Collider> ignoreColliders
+        ) {
+            float mag = moveMagnitude == null ? gridSize : (float) moveMagnitude;
+            if (mag <= 0) {
+                throw new ArgumentOutOfRangeException("moveMagnitude must be >= 0");
+            }
+
+            if (snapToGrid && Mathf.Abs(mag % gridSize) >= 1e-3f) {
+                throw new ArgumentOutOfRangeException($"moveMagnitude % gridSize != 0 (moveMagnitude: {moveMagnitude}, gridSize: {gridSize}). Use controller.reset(..., snapToGrid=False to set this off.).");
+            }
+
+            Vector3 targetPosition = transform.position + direction * mag;
+            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
+
+            float right = Vector3.Dot(transform.right, direction);
+            if (right < 0) {
+                angle = 360f - angle;
+            }
+            int angleInt = Mathf.RoundToInt(angle) % 360;
+
+            // forceAction = true allows ignoring movement restrictions caused by held objects
+            if (!checkIfSceneBoundsContainTargetPosition(targetPosition) ||
+                !CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) ||
+                !CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)
+            ) {
+                throw new InvalidOperationException("Unable to move agent in direction.");
+            }
+
+            // only default hand if not manually interacting with things    
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+
+            transform.position = targetPosition;
+            snapAgentToGrid();
+        }
+
+        // TODO: set allowAgentsToIntersect should be set upon Initialization.. (ask Luca)
+        // seem to only be used in cordial-sync.
+        public override void MoveRight(
+            float? moveMagnitude = null,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect
+        ) {
             actionFinished(moveInDirection(
-                -1 * transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance, 
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.right,
+                moveMagnitude: moveMagnitude,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveRight(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public override void MoveLeft(
+            float? moveMagnitude = null,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
             actionFinished(moveInDirection(
-                transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.right,
+                moveMagnitude: moveMagnitude,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveAhead(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public override void MoveBack(
+            float? moveMagnitude = null,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
             actionFinished(moveInDirection(
-                transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.forward,
+                moveMagnitude: moveMagnitude,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveBack(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public override void MoveAhead(
+            float? moveMagnitude = null,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
             actionFinished(moveInDirection(
-                -1 * transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.forward,
+                moveMagnitude: moveMagnitude,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
