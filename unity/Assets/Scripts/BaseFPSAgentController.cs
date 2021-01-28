@@ -1149,53 +1149,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //this does not appear to be used except for by the python unit test?
-        //May deprecate this at some point?
-		public void RotateLook(ServerAction response) {
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
-			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-			actionFinished(true);
-		}
+        // This does not appear to be used except for by the Python unit test
+        [ObsoleteAttribute(message: "This action is deprecated. Call RotateRight/Left and LookUp/Down instead.", error: false)] 
+        public void RotateLook(Vector3 rotation, float horizon) {
+            // TODO: why is the base setting x=0.0f and z=0.0f?
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+            actionFinished(true);
+        }
 
-		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
-		protected virtual void RotateView() {
-			// turn up & down
-			if (Mathf.Abs(m_XRotation) > Mathf.Epsilon) {
-				transform.Rotate(Vector3.right * m_XRotation, Space.Self);
-			}
-
-			// turn left & right
-			if (Mathf.Abs(m_ZRotation) > Mathf.Epsilon) {
-				transform.Rotate(Vector3.up * m_ZRotation, Space.Self);
-			}
-
-			// heading
-			float eulerX = Mathf.Round(transform.eulerAngles.x);
-
-			// rotating
-			float eulerY = Mathf.Round(transform.eulerAngles.y);
-
-			// TODO: make this as a precondition
-			// move this out of Unity
-			// constrain vertical turns in safe range
-			float X_SAFE_RANGE = 30.0f;
-			if (eulerX < 180.0f) {
-				eulerX = Mathf.Min(X_SAFE_RANGE, eulerX);
-			} else {
-				eulerX = 360.0f - Mathf.Min(X_SAFE_RANGE, 360.0f - eulerX);
-			}
-
-			// freeze y-axis
-			transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
-		}
-
-		// Check if agent is collided with other objects
-		protected bool IsCollided() {
-			return collisionsInAction.Count > 0;
-		}
+        // Check if agent is collided with other objects
+        protected bool IsCollided() {
+            return collisionsInAction.Count > 0;
+        }
 
         public virtual SimpleSimObj[] allSceneObjects() {
-			return GameObject.FindObjectsOfType<SimObj>();
+            return GameObject.FindObjectsOfType<SimObj>();
         }
 
         ///////////////////////////////////////////
@@ -2022,21 +1991,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             action.objectId = objectId;
             action.forceVisible = forceVisible;
             return VisibleSimObjs(action);
-        }
 
-        public SimObjPhysics[] VisibleSimObjs(ServerAction action) {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
 
-            //go through array of sim objects visible to the camera
-            foreach (SimObjPhysics so in VisibleSimObjs(action.forceVisible)) {
-                if (!string.IsNullOrEmpty(action.objectId) && action.objectId != so.ObjectID) {
+            // go through array of sim objects visible to the camera
+            foreach (SimObjPhysics so in VisibleSimObjs(forceVisible)) {
+                if (!string.IsNullOrEmpty(objectId) && objectId != so.ObjectID) {
                     continue;
                 }
-
-                if (!string.IsNullOrEmpty(action.objectType) && action.GetSimObjType() != so.Type) {
-                    continue;
-                }
-
                 simObjs.Add(so);
             }
 
@@ -2077,26 +2039,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(agentCamera);
-            foreach (var sop in simObjs)
-            {
-                if (isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes))
-                {
+            foreach (var sop in simObjs) {
+                if (isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes)) {
                     visible.Add(sop);
                 }
             }
             return visible.ToArray();
         }
 
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance)
-        {
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             #if UNITY_EDITOR
-            foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics)
-            {
-                // Set all objects to not be visible
-                pair.Value.isVisible = false;
-            }
+                foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics) {
+                    // Set all objects to not be visible
+                    pair.Value.isVisible = false;
+                }
             #endif
 
             HashSet<SimObjPhysics> filter = null;
@@ -2115,13 +2073,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 point0, point1;
             float radius;
             agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
-            if (point0.y <= point1.y)
-            {
+            if (point0.y <= point1.y) {
                 point1.y += maxDistance;
-            }
-
-            else
-            {
+            } else {
                 point0.y += maxDistance;
             }
 

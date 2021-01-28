@@ -76,18 +76,22 @@ public class ImageSynthesis : MonoBehaviour {
 
 
         // default fallbacks, if shaders are unspecified
-        if (!uberReplacementShader)
+        if (!uberReplacementShader) {
             uberReplacementShader = Shader.Find("Hidden/UberReplacement");
+        }
 
-        if (!opticalFlowShader)
+        if (!opticalFlowShader) {
             opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
+        }
 
         #if UNITY_EDITOR
-            if (!depthShader)
+            if (!depthShader) {
                 depthShader = Shader.Find("Hidden/DepthBW");
+            }
         #else
-            if (!depthShader)
+            if (!depthShader) {
                 depthShader = Shader.Find("Hidden/Depth");
+            }
         #endif
 
         //if (!positionShader)
@@ -185,8 +189,9 @@ public class ImageSynthesis : MonoBehaviour {
         mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
-            if (pass.camera == mainCamera)
+            if (pass.camera == mainCamera) {
                 continue;
+            }
 
             // cleanup capturing camera
              pass.camera.RemoveAllCommandBuffers();
@@ -204,7 +209,7 @@ public class ImageSynthesis : MonoBehaviour {
         }
     
         //set the display corresponding to which capturePass this is
-        for(int i = 0; i < capturePasses.Length; i++) {
+        for (int i = 0; i < capturePasses.Length; i++) {
             capturePasses[i].camera.targetDisplay = i;
         }
 
@@ -228,8 +233,7 @@ public class ImageSynthesis : MonoBehaviour {
         SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
         #if UNITY_EDITOR
-            for(int i = 0; i < capturePasses.Length; i++)
-            {
+            for (int i = 0; i < capturePasses.Length; i++) {
                 capturePasses[i].camera.targetDisplay = i;
             }
         #endif
@@ -267,7 +271,6 @@ public class ImageSynthesis : MonoBehaviour {
             return objectId;
         }
     }
-
 
     public void OnSceneChange() {
         sentColorCorrespondence = false;
