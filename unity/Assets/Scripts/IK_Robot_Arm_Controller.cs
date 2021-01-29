@@ -532,7 +532,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             //world relative rotation
             //GetChild grabs angler since that is what actually changes the geometry angle
-            joint.GetChild(0).rotation.ToAngleAxis(angle: out angleRot, angle: out vectorRot);
+            joint.GetChild(0).rotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //rotation relative to root joint/agent
