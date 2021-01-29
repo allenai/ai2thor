@@ -130,8 +130,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             #if UNITY_EDITOR || UNITY_WEBGL
                 if (this.agentState == AgentState.ActionComplete) {
-                    ServerAction action = new ServerAction();
-                    VisibleSimObjPhysics = VisibleSimObjs(action); // GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+                    VisibleSimObjPhysics = VisibleSimObjs(forceVisible: false);
                 }
             #endif
         }

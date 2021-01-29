@@ -4,16 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
-[Serializable]
-public class ObjectSpanwMetadata
-{
-public string objectType;
-public int objectVariation;
-}
-    public class DiscreteHidenSeekgentController : MonoBehaviour
-    {
+namespace UnityStandardAssets.Characters.FirstPerson {
+    [Serializable]
+    public class ObjectSpanwMetadata {
+        public string objectType;
+        public int objectVariation;
+    }
+
+    public class DiscreteHidenSeekgentController : MonoBehaviour {
         [SerializeField] private float HandMoveMagnitude = 0.1f;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private GameObject InputMode_Text = null;
@@ -122,7 +120,7 @@ public int objectVariation;
             var go = PhysicsController.WhatAmIHolding();
             PhysicsController.updateDisplayGameObject(target: go, enabled: visibleObject);
             var layer = go.layer;
-            SetLayerRecursively(go, visibleObject ? LayerMask.NameToLayer("SimObjVisible") : LayerMask.NameToLayer("SimObjInvisible"));
+            SetLayerRecursively(go, LayerMask.NameToLayer(visibleObject ? "SimObjVisible" : "SimObjInvisible"));
         }
 
         public void Step(string serverAction) {
@@ -256,19 +254,19 @@ public int objectVariation;
         }
 
         private static void SetLayerRecursively(GameObject obj, int newLayer) {
-        if (null == obj) {
-            return;
-        }
-
-        obj.layer = newLayer;
-
-        foreach (Transform child in obj.transform) {
-            if (null == child) {
-                continue;
+            if (null == obj) {
+                return;
             }
-            SetLayerRecursively(child.gameObject, newLayer);
+
+            obj.layer = newLayer;
+
+            foreach (Transform child in obj.transform) {
+                if (null == child) {
+                    continue;
+                }
+                SetLayerRecursively(child.gameObject, newLayer);
+            }
         }
-    }
     }
 
 }
