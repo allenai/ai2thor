@@ -1,4 +1,5 @@
 import copy
+import math
 
 ADITIONAL_ARM_ARGS = {
     'disableRendering': True,
@@ -155,7 +156,7 @@ def dict_recursive_nan_check(arm_dict):
         if type(v) == dict:
             this_item_nan = dict_recursive_nan_check(v)
         elif type(v) == float:
-            this_item_nan = (v != v)
+            this_item_nan = (v != v) or (math.isinf(v))
         elif type(v) == str:
             this_item_nan = False
         else:
