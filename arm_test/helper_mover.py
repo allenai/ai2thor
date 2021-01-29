@@ -149,3 +149,18 @@ def two_dict_equal(dict1, dict2, threshold=0.001):
             print('not equal', val1, val2)
             return equal
     return equal
+
+def dict_recursive_nan_check(arm_dict):
+    for (k, v) in arm_dict.items():
+        if type(v) == dict:
+            this_item_nan = dict_recursive_nan_check(v)
+        elif type(v) == float:
+            this_item_nan = (v != v)
+        elif type(v) == str:
+            this_item_nan = False
+        else:
+            print(v)
+            raise Exception('Not implemented')
+        if this_item_nan:
+            return True
+    return False

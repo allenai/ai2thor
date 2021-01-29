@@ -1,10 +1,12 @@
 import datetime
+import pdb
+
 import ai2thor.controller
 import ai2thor
 import random
 import copy
 import time
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, dict_recursive_nan_check
 
 MAX_TESTS = 300
 MAX_EP_LEN = 1000
@@ -45,6 +47,17 @@ for i in range(MAX_TESTS):
     all_commands = []
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
+
+        #check if arm values are nan:
+        arm_values = controller.last_event.metadata['arm']['joints']
+        arm_values_dict = {i:val for (i,val) in enumerate(arm_values)}
+        if dict_recursive_nan_check(arm_values_dict):
+            print('Arm is nan', arm_values)
+            print('scene name', controller.last_event.metadata['sceneName'])
+            print('initial pose', initial_pose)
+            print('list of actions', all_commands)
+            break
+
         command = random.choice(set_of_actions)
         command_detail = execute_command(controller, command, ADITIONAL_ARM_ARGS)
         all_action_details.append(command_detail)
@@ -53,6 +66,7 @@ for i in range(MAX_TESTS):
 
         pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
         picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
+
         if len(pickupable) > 0 and len(picked_up_before) == 0:
             cmd = 'p'
             command_detail = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
