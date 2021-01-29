@@ -498,7 +498,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         jointMetaRoot.localRotation = new Vector4 (1, 0, 0, 0);
 
-        joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
+        joint.rotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
         jointMetaRoot.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
         jointMetaRoot.rootRelativeRotation = new Vector4 (1, 0, 0, 0);
@@ -519,7 +519,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //local rotation currently relative to immediate parent joint
             if (joint.rotation != joint.GetChild(0).rotation)
             {
-                joint.GetChild(0).localRotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
+                //GetChild grabs angler since that is what actually changes the geometry angle
+                joint.GetChild(0).localRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             }
 
@@ -528,16 +529,18 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 jointMeta.localRotation = new Vector4(1, 0, 0, 0);
             }
-            
+
             //world relative rotation
-            joint.GetChild(0).rotation.ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
+            //GetChild grabs angler since that is what actually changes the geometry angle
+            joint.GetChild(0).rotation.ToAngleAxis(angle: out angleRot, angle: out vectorRot);
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             //rotation relative to root joint/agent
             //root forward and agent forward are always the same
             if (FirstJoint.rotation != joint.GetChild(0).rotation)
             {
-                Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);//getchild to grab the angler since that is what actually changes the geometry angle
+                //GetChild grabs angler since that is what actually changes the geometry angle
+                Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             }
 
