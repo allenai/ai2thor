@@ -16,7 +16,7 @@ public static class UtilityFunctions {
     ///////////// ARRAY HELPERS ///////////////
     ///////////////////////////////////////////
 
-    public T[] flatten2DimArray<T>(T[, ] array) {
+    public static T[] flatten2DimArray<T>(T[, ] array) {
         int nrow = array.GetLength(0);
         int ncol = array.GetLength(1);
         T[] flat = new T[nrow * ncol];
@@ -28,7 +28,7 @@ public static class UtilityFunctions {
         return flat;
     }
 
-    public T[] flatten3DimArray<T>(T[, , ] array) {
+    public static T[] flatten3DimArray<T>(T[, , ] array) {
         int n0 = array.GetLength(0);
         int n1 = array.GetLength(1);
         int n2 = array.GetLength(2);

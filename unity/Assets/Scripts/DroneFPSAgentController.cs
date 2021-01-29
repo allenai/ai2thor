@@ -57,11 +57,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
         }
 
-        public override void RotateRight(float? degrees = null) {
+        public void RotateRight(float? degrees = null) {
             base.RotateRight(degrees: degrees);
         }
 
-        public override void RotateLeft(float? degrees = null) {
+        public void RotateLeft(float? degrees = null) {
             base.RotateRight(degrees: degrees);
         }
 

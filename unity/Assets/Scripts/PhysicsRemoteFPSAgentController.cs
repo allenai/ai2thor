@@ -63,8 +63,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        // get all sim objets of action.type, then sets their temperature decay timers to value
-        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp=0.0f) {
+        // get all sim objects of type, then sets their temperature decay timers to value
+        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp = 0.0f) {
             // get all objects of type passed by action
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 
@@ -400,11 +400,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void RotateRight(float? degrees = null, bool manualInteract = false) {
+        public void RotateRight(float? degrees = null, bool manualInteract = false) {
             rotate(degrees: degrees, direction: "right", manualInteract: manualInteract);
         }
 
-        public override void RotateLeft(float? degrees = null, bool manualInteract = false) {
+        public void RotateLeft(float? degrees = null, bool manualInteract = false) {
             rotate(degrees: degrees, direction: "left", manualInteract: manualInteract);
         }
 
@@ -454,11 +454,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void LookDown(float degrees = 30, bool manualInteract = false) {
+        public void LookDown(float degrees = 30, bool manualInteract = false) {
             look(degrees: degrees, direction: "down");
         }
 
-        public override void LookUp(float degrees, bool manualInteract = false) {
+        public void LookUp(float degrees = 30, bool manualInteract = false) {
             look(degrees: degrees, direction: "up", manualInteract: manualInteract);
         }
 
@@ -998,11 +998,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, mat);
         }
 
-        public void RandomlyCreateLiftedFurniture(ServerAction action) {
-            if (action.z < 0.25f) {
+        public void RandomlyCreateLiftedFurniture(float z, float y, string objectType, int objectVariation = 0) {
+            if (z < 0.25f) {
                 throw new ArgumentOutOfRangeException("z must be at least 0.25");
             }
-            if (action.y == 0.0f) {
+            if (y == 0.0f) {
                 throw new ArgumentOutOfRangeException("y must be non-zero");
             }
             Vector3[] reachablePositions = getReachablePositions();
@@ -1017,23 +1017,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics objectCreated = null;
             try {
                 objectCreated = randomlyCreateAndPlaceObjectOnFloor(
-                    action.objectType, action.objectVariation, reachablePositions
+                    objectType, objectVariation, reachablePositions
                 );
-            } catch (Exception) {}
-            if (objectCreated == null) {
+            } catch (Exception e) {
                 for (int i = 0; i < this.agentManager.agents.Count; i++) {
                     var agent = this.agentManager.agents[i];
                     agent.transform.position = oldAgentPositions[i];
                     agent.transform.rotation = oldAgentRotations[i];
                 }
-                throw new InvalidOperationException("Failed to create object of type " + action.objectType + " . " + errorMessage);
+                throw new InvalidOperationException($"Failed to create object of type {objectType}.");
             }
             objectCreated.GetComponent<Rigidbody>().isKinematic = true;
 
             // TODO: fix moveObject to try() catch()
             bool objectFloating = moveObject(
                 objectCreated,
-                objectCreated.transform.position + new Vector3(0f, action.y, 0f)
+                objectCreated.transform.position + new Vector3(0f, y, 0f)
             );
 
             float[] rotationsArr = { 0f, 90f, 180f, 270f };
@@ -1045,7 +1044,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     List<Vector3> candidatePositionsList = new List<Vector3>();
                     foreach (Vector3 p in reachablePositions) {
                         transform.position = p;
-                        if (!isAgentCapsuleColliding(collidersToIgnoreDuringMovement) && distanceToObject(objectCreated) <= action.z) {
+                        if (!isAgentCapsuleColliding(collidersToIgnoreDuringMovement) && distanceToObject(objectCreated) <= z) {
                             candidatePositionsList.Add(p);
                         }
                     }
@@ -1105,7 +1104,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // TODO: fix with try catch.
                     objectFloating = moveObject(
                         objectCreated,
-                        objectCreated.transform.position + new Vector3(0f, action.y, 0f)
+                        objectCreated.transform.position + new Vector3(0f, y, 0f)
                     );
                 }
             }
@@ -1197,32 +1196,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void MoveLiftedObjectRight(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
-            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
+            float mag = moveMagnitude == null ? gridSize : moveMagnitude;
             moveLiftedObjectHelper(
                 objectId: objectId,
                 relativeDir: mag * transform.right,
-                maxAgentsDistance: maxAgentsDistance
+                maxAgentsDistance: maxAgentsDistance,
+                markActionFinished: true
             );
         }
 
         public void MoveLiftedObjectLeft(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
-            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
+            float mag = moveMagnitude == null ? gridSize : moveMagnitude;
             moveLiftedObjectHelper(
                 objectId: objectId,
                 relativeDir: -mag * transform.right,
-                maxAgentsDistance: maxAgentsDistance
+                maxAgentsDistance: maxAgentsDistance,
+                markActionFinished: true
             );
             actionFinished(true);
         }
 
         public void MoveLiftedObjectBack(string objectId, float maxAgentsDistance = -1, float? moveMagnitude = null) {
-            float mag = moveMagnitude == null ? gridSize : action.moveMagnitude;
-            actionFinished(
-                moveLiftedObjectHelper(
-                    action.objectId,
-                    - mag * transform.forward,
-                    action.maxAgentsDistance
-                )
+            float mag = moveMagnitude == null ? gridSize : moveMagnitude;
+            moveLiftedObjectHelper(
+                objectId: objectId,
+                relativeDir: - mag * transform.forward,
+                maxAgentsDistance: maxAgentsDistance,
+                markActionFinished: true
             );
         }
 
@@ -1230,53 +1230,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////// ROTATE LIFTED OBJECT AHEAD ////////
         ///////////////////////////////////////////
 
-        public void RotateLiftedObjectRight(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            } else {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
-                    errorMessage = "Cannot rotate lifted object in hand.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-                Quaternion oldRotation = sop.transform.rotation;
-                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round((sop.transform.eulerAngles.y + 90f) % 360), 0.0f));;
-                if (!action.forceAction) {
-                    if (action.maxAgentsDistance > 0.0f) {
-                        for (int i = 0; i < agentManager.agents.Count; i++) {
-                            if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(sop) > action.maxAgentsDistance) {
-                                sop.transform.rotation = oldRotation;
-                                errorMessage = "Would move object beyond max distance from agent " + i.ToString();
-                                actionFinished(false);
-                                return;
-                            }
-                        }
-                    }
-                    if (UtilityFunctions.isObjectColliding(sop.gameObject, null, 0.0f)) {
-                        sop.transform.rotation = oldRotation;
-                        errorMessage = sop.ObjectID + " is colliding after teleport.";
-                        actionFinished(false);
-                        return;
-                    }
-                    foreach (BaseFPSAgentController agent in agentManager.agents) {
-                        // This check is silly but seems necessary to appease unity
-                        // as unity doesn't realize the object collides with the agents in
-                        // the above checks in some cases.
-                        if (((PhysicsRemoteFPSAgentController) agent).isAgentCapsuleCollidingWith(sop.gameObject)) {
-                            sop.transform.rotation = oldRotation;
-                            errorMessage = sop.ObjectID + " is colliding with an agent after rotation.";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-                }
-                actionFinished(true);
+        public void RotateLiftedObjectRight(string objectId, bool forceAction = false, float maxAgentsDistance = 0) {
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: forceAction);
+            if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
+                throw new InvalidOperationException("Cannot rotate lifted object in hand.");
             }
+
+            Quaternion oldRotation = sop.transform.rotation;
+            sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round((sop.transform.eulerAngles.y + 90f) % 360), 0.0f));;
+            if (!forceAction) {
+                if (maxAgentsDistance > 0.0f) {
+                    for (int i = 0; i < agentManager.agents.Count; i++) {
+                        if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(sop) > maxAgentsDistance) {
+                            sop.transform.rotation = oldRotation;
+                            throw new InvalidOperationException("Would move object beyond max distance from agent " + i.ToString());
+                        }
+                    }
+                }
+                if (UtilityFunctions.isObjectColliding(sop.gameObject, null, 0.0f)) {
+                    sop.transform.rotation = oldRotation;
+                    throw new InvalidOperationException(sop.ObjectID + " is colliding after teleport.");
+                }
+                foreach (BaseFPSAgentController agent in agentManager.agents) {
+                    // This check is silly but seems necessary to appease unity
+                    // as unity doesn't realize the object collides with the agents in
+                    // the above checks in some cases.
+                    if (((PhysicsRemoteFPSAgentController) agent).isAgentCapsuleCollidingWith(sop.gameObject)) {
+                        sop.transform.rotation = oldRotation;
+                        throw new InvalidOperationException(sop.ObjectID + " is colliding with an agent after rotation.");
+                    }
+                }
+            }
+            actionFinished(true);
         }
 
         ///////////////////////////////////////////
@@ -1548,11 +1533,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // TODO: set allowAgentsToIntersect should be set upon Initialization.. (ask Luca)
         // seem to only be used in cordial-sync.
-        public override void MoveRight(
+        public void MoveRight(
             float? moveMagnitude = null,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect
+            bool allowAgentsToIntersect = false
         ) {
             moveInDirection(
                 direction: transform.right,
@@ -1564,7 +1549,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public override void MoveLeft(
+        public void MoveLeft(
             float? moveMagnitude = null,
             bool forceAction = false,
             bool manualInteract = false,
@@ -1580,7 +1565,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public override void MoveBack(
+        public void MoveBack(
             float? moveMagnitude = null,
             bool forceAction = false,
             bool manualInteract = false,
@@ -1596,7 +1581,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public override void MoveAhead(
+        public void MoveAhead(
             float? moveMagnitude = null,
             bool forceAction = false,
             bool manualInteract = false,
@@ -1744,7 +1729,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         // additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
         public void PausePhysicsAutoSim() {
-            // print("ZA WARUDO!");
             Physics.autoSimulation = false;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
@@ -1910,7 +1894,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
                 actionFinished(false);
             }
-
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
@@ -2004,7 +1987,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         magnitude: action.moveMagnitude,
                         sop: target,
                         length: hit.distance
-                    )
+                    );
                 } else {
                     // raycast hit something but it wasn't a sim object
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "not a sim object, a structure was touched", armsLength = hit.distance};
@@ -2717,7 +2700,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
             var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
 
-            // var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            // var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
             actionFinished(true, ret);
         }
 
@@ -3440,7 +3423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
             if (!forceAction) {
-                // check if the item we are holding can even be placed in the action.ObjectID target at all
+                // check if the item we are holding can even be placed in the ObjectID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
                     // find the Object Type in the PlacementRestrictions dictionary
                     if (res.Key == handSOP.ObjType && !res.Value.Contains(targetReceptacle.ObjType)) {
@@ -5296,9 +5279,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, sop.ObjectID);
         }
 
-        public void CreateObjectOnFloor(string objectType, float x, float z, Vector3 rotation = null) {
+        public void CreateObjectOnFloor(string objectType, float x, float z, Vector3? rotation = null) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            Bounds b = script.BoundsOfObject(action.objectType, 1);
+            Bounds b = script.BoundsOfObject(objectType, 1);
             if (b.min.x == float.PositiveInfinity) {
                 throw new InvalidOperationException("Could not get bounds for the object to be created on the floor");
             }
@@ -6397,7 +6380,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new ArgumentNullException();
             }
 
-            if (!action.forceAction && !target.isInteractable) {
+            if (!forceAction && !target.isInteractable) {
                 throw new InvalidOperationException("object is visible but occluded by something: " + target.objectId);
             }
 
@@ -6576,7 +6559,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////// FILL OBJECT WITH LIQUID /////////
         ///////////////////////////////////////////
 
-        // fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc.
+        // fill an object with a liquid specified by fillLiquid - coffee, water, soap, wine, etc.
         protected void fillObjectWithLiquid(SimObjPhysics target, string fillLiquid, bool markActionFinished) {
             if (target == null || fillLiquid == null) {
                 throw new ArgumentNullException();
@@ -6747,16 +6730,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction,
             bool markActionFinished,
             bool simplifyPhysics = false,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             if (target == null) {
                 throw new ArgumentNullException();
-            }
-
-            // backwards compatibility support
-            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
-            if (moveMagnitude != null) {
-                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
             }
 
             if (openness > 1 || openness < 0) {
@@ -6852,37 +6828,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(openAnimation());
         }
 
-        public void OpenObject(
-            string objectId,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
+        public void OpenObject(string objectId, bool forceAction = false, float openness = 1) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
             openObject(
                 target: target,
                 openness: openness,
                 forceAction: forceAction,
-                moveMagnitude: moveMagnitude,
                 markActionFinished: true
             );
         }
 
-        public void OpenObject(
-            float x,
-            float y,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
+        [ObsoleteAttribute(message: "This action is deprecated. Call OpenObject(openness) instead.", error: false)]
+        public void OpenObject(string objectId, bool forceAction = false, float? moveMagnitude = null) {
+            // backwards compatibility support
+            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+            float openness = 1;
+            if (moveMagnitude != null) {
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
+            }
+
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction, markActionFinished: true);
+        }
+
+        public void OpenObject(float x, float y, bool forceAction = false, float openness = 1) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            openObject(
-                target: target,
-                openness: openness,
-                forceAction: forceAction,
-                moveMagnitude: moveMagnitude,
-                markActionFinished: true
-            );
+            openObject(target: target, openness: openness, forceAction: forceAction, markActionFinished: true);
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call OpenObject(openness) instead.", error: false)]
+        public void OpenObject(float x, float y, bool forceAction = false, float? moveMagnitude = null) {
+            // backwards compatibility support
+            // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+            float openness = 1;
+            if (moveMagnitude != null) {
+                openness = ((float) moveMagnitude) == 0 ? 1 : (float) moveMagnitude;
+            }
+
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            openObject(target: target, openness: openness, forceAction: forceAction, markActionFinished: true);
         }
 
         ///////////////////////////////////////////

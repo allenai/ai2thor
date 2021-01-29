@@ -98,7 +98,7 @@ public class Fill : MonoBehaviour {
 
     public void EmptyObject() {
         if (!isFilled) {
-            throw new InvalidOperationException("Object is already empty!")
+            throw new InvalidOperationException("Object is already empty!");
         }
 
         // for each thing in Liquids, if it exists set it to false and then set bools appropriately

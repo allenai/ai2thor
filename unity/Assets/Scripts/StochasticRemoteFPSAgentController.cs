@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
 
-        public new void Initialize(ServerAction action) {
+        public void Initialize(ServerAction action) {
             this.applyActionNoise = action.applyActionNoise;
 
             if (action.movementGaussianMu > 0.0f) {
@@ -59,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
         }
 
-        public override void MoveRelative(ServerAction action) {
+        public void MoveRelative(ServerAction action) {
             if (!allowHorizontalMovement && Math.Abs(action.x) > 0) {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
@@ -97,17 +97,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-
-        // NOOP action to allow evaluation to know that the episode has finished
+        [ObsoleteAttribute("This property is obsolete. Use Done() or Pass() instead.", false)]
         public void Stop() {
-            // i don't know why, but we have two no-op actions so here we go
             base.Pass();
         }
 
-        public override void Rotate(ServerAction action) {
-            // only default hand if not manually Interacting with things
-            if (!action.manualInteract)
-            DefaultAgentHand();
+        public void Rotate(bool manualInteract = false) {
+            // only default hand if not manually interacting with things
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
 
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
@@ -116,7 +115,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public override void RotateRight(ServerAction action) {
+        public void RotateRight(ServerAction action) {
             float rotationAmount = this.rotateStepDegrees;
 
             if (action.degrees != 0.0f) {
@@ -126,7 +125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Rotate(new ServerAction() { rotation = new Vector3(0, rotationAmount, 0) });
         }
 
-        public override void RotateLeft(ServerAction action) {
+        public void RotateLeft(ServerAction action) {
             float rotationAmount = this.rotateStepDegrees;
 
             if (action.degrees != 0.0f) {
@@ -136,21 +135,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
         }
 
-        public override void MoveAhead(ServerAction action) {
+        public void MoveAhead(ServerAction action) {
             action.x = 0.0f;
             action.y = 0;
             action.z = 1.0f;
             MoveRelative(action);
         }
 
-        public override void MoveBack(ServerAction action) {
+        public void MoveBack(ServerAction action) {
             action.x = 0.0f;
             action.y = 0;
             action.z = -1.0f;
             MoveRelative(action);
         }
 
-        public override void MoveRight(ServerAction action) {
+        public void MoveRight(ServerAction action) {
             if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
@@ -160,7 +159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MoveRelative(action);
         }
 
-        public override void MoveLeft(ServerAction action) {
+        public void MoveLeft(ServerAction action) {
             if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
