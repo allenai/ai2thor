@@ -496,12 +496,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         jointMetaRoot.name = joint.name;
         jointMetaRoot.rootRelativePosition = Vector3.zero;
 
-        jointMetaRoot.localRotation = new Vector4 (1, 0, 0, 0);
+        jointMetaRoot.localRotation = new Vector4(0, 0, 1, 0);
 
         joint.rotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
         jointMetaRoot.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
-        jointMetaRoot.rootRelativeRotation = new Vector4 (1, 0, 0, 0);
+        jointMetaRoot.rootRelativeRotation = new Vector4 (0, 0, 1, 0);
 
         joints.Add(jointMetaRoot);
 
@@ -527,7 +527,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //edge case for where angler and parent rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
             else
             {
-                jointMeta.localRotation = new Vector4(1, 0, 0, 0);
+                jointMeta.localRotation = new Vector4(0, 0, 1, 0);
             }
 
             //world relative rotation
@@ -547,7 +547,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //edge case for when angler and root rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
             else
             {
-                jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
+                jointMeta.rootRelativeRotation = new Vector4(0, 0, 1, 0);
             }
 
             joints.Add(jointMeta);
