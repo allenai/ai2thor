@@ -487,15 +487,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         var joints = new List<JointMetadata>();
 
         //Declare variables used for processing metadata
+        Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
         var jointMetaRoot = new JointMetadata();
 
         //Assign metadata to FirstJoint joint separately from others, since its angler joint uniquely refers to the tip's orientation rather than the base's, which is not what we want in this case
-        jointMetaRoot.position = joint.position;
         jointMetaRoot.name = joint.name;
+        jointMetaRoot.position = joint.position;
         jointMetaRoot.rootRelativePosition = Vector3.zero;
-
         jointMetaRoot.localRotation = new Vector4(0, 0, 1, 0);
 
         joint.rotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
@@ -508,47 +508,63 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //Assign joint metadata to remaining joints, which all have identical hierarchies
         for (var i = 2; i <= 4; i++) {
             joint = joint.Find("robot_arm_" + i + "_jnt");
+            parentJoint = joint.parent;
 
             var jointMeta = new JointMetadata();
 
             jointMeta.name = joint.name;
+
+            //WORLD RELATIVE POSITION
             jointMeta.position = joint.position;
+
+            //ROOT-JOINT RELATIVE POSITION
             //local position of joint is meaningless because it never changes relative to its parent joint, we use rootRelative instead
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
-            //local rotation currently relative to immediate parent joint
-            if (joint.rotation != joint.GetChild(0).rotation)
-            {
-                //GetChild grabs angler since that is what actually changes the geometry angle
-                joint.GetChild(0).localRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            }
-
-            //edge case for where angler and parent rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
-            else
-            {
-                jointMeta.localRotation = new Vector4(0, 0, 1, 0);
-            }
-
-            //world relative rotation
+            //WORLD RELATIVE ROTATION
             //GetChild grabs angler since that is what actually changes the geometry angle
             joint.GetChild(0).rotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
-            //rotation relative to root joint/agent
-            //root forward and agent forward are always the same
-            if (FirstJoint.rotation != joint.GetChild(0).rotation)
-            {
+            //ROOT-JOINT RELATIVE ROTATION
+            //Root-forward and agent-forward are always the same
+            //if (FirstJoint.rotation != joint.GetChild(0).rotation)
+            //{
                 //GetChild grabs angler since that is what actually changes the geometry angle
                 Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            }
+            //}
 
-            //edge case for when angler and root rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
-            else
-            {
-                jointMeta.rootRelativeRotation = new Vector4(0, 0, 1, 0);
-            }
+            //Edge case for when angler and root rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
+            //else
+            //{
+            //    jointMeta.rootRelativeRotation = new Vector4(0, 0, 1, 0);
+            //}
+
+            //PARENT-BONE RELATIVE ROTATION
+            //if (parentJoint.GetChild(0).rotation != joint.GetChild(0).rotation)
+            //{
+                if (i != 2)
+                {
+                    //Grab rotation of current joint's angler relative to parent joint's angler, convert it to a quaternion, and then convert that to angle-axis notation
+                    Quaternion.Euler(parentJoint.GetChild(0).InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                    jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                }
+
+                //Special case for robot_arm_2_jnt because its parent-joint is the root-joint, so the root-relative rotation and parent-relative rotation are equal. Even if I wanted to leave this out to keep the code consolidated, though, the root-joint's hierarchy is different, so it requires a special case regardless
+                else
+                {
+                    jointMeta.localRotation = jointMeta.rootRelativeRotation;
+                }
+
+                
+            //}
+
+            //Edge case for where angler and parent rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
+            //else
+            //{
+            //    jointMeta.localRotation = new Vector4(0, 0, 1, 0);
+            //}
 
             joints.Add(jointMeta);
         }
