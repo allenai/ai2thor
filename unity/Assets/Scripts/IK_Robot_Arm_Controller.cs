@@ -528,22 +528,22 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             //ROOT-JOINT RELATIVE ROTATION
             //Root-forward and agent-forward are always the same
-            if (FirstJoint.rotation != joint.GetChild(0).rotation)
-            {
+            //if (FirstJoint.rotation != joint.GetChild(0).rotation)
+            //{
                 //GetChild grabs angler since that is what actually changes the geometry angle
                 Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            }
+            //}
 
             //Edge case for when angler and root rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
-            else
-            {
-                jointMeta.rootRelativeRotation = new Vector4(0, 0, 1, 0);
-            }
+            //else
+            //{
+            //    jointMeta.rootRelativeRotation = new Vector4(0, 0, 1, 0);
+            //}
 
             //PARENT-BONE RELATIVE ROTATION
-            if (parentJoint.GetChild(0).rotation != joint.GetChild(0).rotation)
-            {
+            //if (parentJoint.GetChild(0).rotation != joint.GetChild(0).rotation)
+            //{
                 if (i != 2)
                 {
                     //Grab rotation of current joint's angler relative to parent joint's angler, convert it to a quaternion, and then convert that to angle-axis notation
@@ -560,14 +560,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 }
 
                 
-            }
+            //}
 
             //Edge case for where angler and parent rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
-            else
-            {
-                //Debug.Log("JOINT_" + i + " reporting A LA BUGGGGGGGGGGGGG!");
-                jointMeta.localRotation = new Vector4(0, 0, 1, 0);
-            }
+            //else
+            //{
+            //    //Debug.Log("JOINT_" + i + " reporting A LA BUGGGGGGGGGGGGG!");
+            //    jointMeta.localRotation = new Vector4(0, 0, 1, 0);
+            //}
 
             joints.Add(jointMeta);
         }
