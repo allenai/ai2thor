@@ -1017,19 +1017,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SetObjectStates(
             string objectId,
-            Dictionary<string, bool> objectStates,
+            bool? isBroken = null,
+            bool? isOpen = null,
+            bool? isDirty = null,
+            bool? isSliced = null,
+            bool? isUsedUp = null,
+            bool? isToggled = null,
+            bool? isCooked = null,
+            bool? isFilledWithLiquid = null,
             string fillLiquid = null
         ) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
 
             // require a fill liquid when using isFilledWithLiquid
-            if (objectStates.ContainsKey("isFilledWithLiquid") && objectStates["isFilledWithLiquid"] && fillLiquid == null) {
+            if (isFilledWithLiquid == true && fillLiquid == null) {
                 throw new ArgumentNullException("fillLiquid (string) must be specified, if you are trying to fill an object.");
             }
 
             // We do checks at the state so if anything fails, nothing changes in the environment state.
             // Some special cases, since a broken object cannot be unbroken
-            if (objectState.ContainsKey("isBroken") && !objectStates["isBroken"]) {
+            if (isBroken == false) {
                 Break breakComponent = target.GetComponentInChildren<Break>();
                 if (breakComponent == null) {
                     throw new ArgumentException($"Object {objectId} is not breakable!");
@@ -1039,11 +1046,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // object is not broken and they set isBroken to false. Thus, the state is fine.
-                objectStates.Remove("isBroken");
+                isBroken = null;
             }
 
             // Cooked objects cannot be uncooked
-            if (objectState.ContainsKey("isCooked") && !objectStates["isCooked"]) {
+            if (isCooked == false) {
                 CookObject cookComponent = target.GetComponent<CookObject>();
                 if (cookComponent == null) {
                     throw new ArgumentException($"Object {objectId} is not cookable!");
@@ -1053,11 +1060,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // the state is currently fine.
-                objectStates.Remove("isCooked");
+                isCooked = null;
             }
 
             // Sliced objects cannot be unsliced.
-            if (objectState.ContainsKey("isSliced") && !objectStates["isSliced"]) {
+            if (isSliced == false) {
                 SliceObject sliceComponent = !target.GetComponent<SliceObject>();
                 if (sliceComponent == null) {
                     throw new ArgumentException($"Object {objectId} is not sliceable!");
@@ -1067,11 +1074,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // the state is currently fine.
-                objectStates.Remove("isSliced");
+                isSliced = null;
             }
 
             // Sliced objects cannot be unsliced.
-            if (objectState.ContainsKey("isUsedUp") && !objectStates["isUsedUp"]) {
+            if (isUsedUp == false) {
                 UsedUp useUpComponent = target.GetComponent<UsedUp>();
                 if (useUpComponent == null) {
                     throw new ArgumentException($"Object {objectId} is compatible with UseUp!");
@@ -1081,89 +1088,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // the state is currently fine.
-                objectStates.Remove("isUsedUp");
+                isUsedUp = null;
             }
 
-
-            // Again, make sure the environment state doesn't change on failure.
-            HashSet<string> validKeys = new HashSet<string>() {
-                "isOpen", "isToggled", "isBroken", "isFilledWithLiquid",
-                "isDirty", "isCooked", "isSliced", "isUsedUp"
-            };
-            foreach (KeyValuePair<string, bool> state in objectStates) {
-                if (!validKeys.Contains(state.Key)) {
-                    throw new ArgumentException($"Unknown object state: {state.Key}.");
-                }
+            if (isBroken != null) {
+                breakObject(target: target, markActionFinished: false);
             }
 
-            bool containsOpen = false;
-            bool containsToggle = false;
-            foreach (KeyValuePair<string, bool> state in objectStates) {
-                switch (state.Key) {
-                    case "isOpen":
-                        containsOpen = true;
-                        break;
-                    case "isToggled":
-                        containsToggle = true;
-                        break;
-                    case "isBroken":
-                        breakObject(target: target, markActionFinished: false);
-                        break;
-                    case "isFilledWithLiquid":
-                        // which fill liquid? Also use emptyLiquid
-                        if (state.Value) {
-                            fillObjectWithLiquid(
-                                target: target,
-                                fillLiquid: fillLiquid,
-                                markActionFinished: false
-                            );
-                        } else {
-                            emptyLiquidFromObject(target: target, markActionFinished: false);
-                        }
-                        break;
-                    case "isDirty":
-                        if (state.Value) {
-                            dirtyObject(target: target, markActionFinished: false);
-                        } else {
-                            cleanObject(target: target, markActionFinished: false);
-                        }
-                        break;
-                    case "isCooked":
-                        cookObject(target: target, markActionFinished: false);
-                        break;
-                    case "isSliced":
-                        sliceObject(target: target, markActionFinished: false);
-                        break;
-                    case "isUsedUp":
-                        useObjectUp(target: target, markActionFinished: false);
-                        break;
-                }
+            if (isFilledWithLiquid == true) {
+                fillObjectWithLiquid(
+                    target: target,
+                    fillLiquid: fillLiquid,
+                    markActionFinished: false
+                );
+            } else if (isFilledWithLiquid == false) {
+                emptyLiquidFromObject(target: target, markActionFinished: false);
+            }
+
+            if (isDirty == true) {
+                dirtyObject(target: target, markActionFinished: false);
+            } else if (isDirty == false) {
+                cleanObject(target: target, markActionFinished: false);
+            }
+
+            if (isCooked == true) {
+                cookObject(target: target, markActionFinished: false);
+            }
+
+            if (isSliced == true) {
+                sliceObject(target: target, markActionFinished: false);
+            }
+
+            if (isUsedUp == true) {
+                useObjectUp(target: target, markActionFinished: false);
             }
 
             // These actions are executed inside of a coroutine,
             // so they must call actionFinished() when they are done.
             // Notice the markActionFinished in each of these.
-            if (containsOpen && containsToggle) {
+            if (isOpen != null && isToggled != null) {
                 openObject(
                     target: target,
-                    openness: objectStates["isOpen"] ? 1 : 0,
+                    openness: isOpen == true ? 1 : 0,
                     markActionFinished: false
                 );
                 toggleObject(
                     target: target,
-                    toggleOn: objectStates["isToggled"],
+                    toggleOn: isToggled == true,
                     markActionFinished: true
                 );
-            } else if (containsToggle) {
+            } else if (isToggled != null) {
                 toggleObject(
                     target: target,
-                    toggleOn: objectStates["isToggled"],
+                    toggleOn: isToggled == true,
                     markActionFinished: true
                 );
-            } else if (containsOpen) {
+            } else if (isOpen != null) {
                 openObject(
                     target: target,
-                    openness: objectStates["isOpen"] ? 1 : 0,
+                    openness: isOpen == true ? 1 : 0,
                     markActionFinished: true
                 );
             } else {
