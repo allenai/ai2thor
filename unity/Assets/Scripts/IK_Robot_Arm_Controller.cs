@@ -547,7 +547,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 if (i != 2)
                 {
                     //Grab rotation of current joint's angler relative to parent joint's angler, convert it to a quaternion, and then convert that to angle-axis notation
-                    //Debug.Log("Joint_" + i + "'s angler is " + joint.GetChild(0).eulerAngles + ", and its parent's is " + parentJoint.GetChild(0).eulerAngles);
                     Quaternion.Euler(parentJoint.GetChild(0).InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
                 }
@@ -555,7 +554,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 //Special case for robot_arm_2_jnt because its parent-joint is the root-joint, so the root-relative rotation and parent-relative rotation are equal. Even if I wanted to leave this out to keep the code consolidated, though, the root-joint's hierarchy is different, so it requires a special case regardless
                 else
                 {
-                    //Debug.Log("Joint_" + i + " reporting as joint_2 <-------(This is debug-text)");
                     jointMeta.localRotation = jointMeta.rootRelativeRotation;
                 }
 
@@ -565,7 +563,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //Edge case for where angler and parent rotations are aligned, which Quaternions have trouble resolving, so we hard-code it here
             //else
             //{
-            //    //Debug.Log("JOINT_" + i + " reporting A LA BUGGGGGGGGGGGGG!");
             //    jointMeta.localRotation = new Vector4(0, 0, 1, 0);
             //}
 
