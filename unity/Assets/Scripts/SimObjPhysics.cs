@@ -735,9 +735,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         this.IsDirtyable = this.GetComponent<Dirty>();
         this.IsCookable = this.GetComponent<CookObject>();
         this.IsSliceable = this.GetComponent<SliceObject>();
-        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
-
+        this.canChangeTempToHot = hasSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
+        this.canChangeTempToCold = hasSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
     }
 
     // Use this for initialization
@@ -803,7 +802,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         initializeProperties();
     }
 
-    public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {
+    public bool hasSecondaryProperty(SimObjSecondaryProperty prop) {
         bool result = false;
         List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
 
@@ -856,7 +855,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers() {
         List<SimObjPhysics> objs = new List<SimObjPhysics>();
 
-        if (DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle) && ReceptacleTriggerBoxes != null) {
+        if (hasSecondaryProperty(SimObjSecondaryProperty.Receptacle) && ReceptacleTriggerBoxes != null) {
             foreach (GameObject go in ReceptacleTriggerBoxes) {
                 foreach(SimObjPhysics sop in go.GetComponent<Contains>().CurrentlyContainedObjects()) {
                     if (!objs.Contains(sop)) {
@@ -874,7 +873,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public List<string> GetAllSimObjectsInReceptacleTriggersByObjectID() {
         List<string> objs = new List<string>();
 
-        if (DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+        if (hasSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
             if (ReceptacleTriggerBoxes != null) {
                 foreach (GameObject go in ReceptacleTriggerBoxes) {
                     foreach(string s in go.GetComponent<Contains>().CurrentlyContainedObjectIDs()) {

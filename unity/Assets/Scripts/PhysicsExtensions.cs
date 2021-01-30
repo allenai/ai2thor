@@ -206,8 +206,8 @@ public static class PhysicsExtensions
         CapsuleCollider capsule, 
         int layerMask = Physics.DefaultRaycastLayers, 
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
-        float expandBy = 0.0f)
-    {
+        float expandBy = 0.0f
+    ) {
         Vector3 point0, point1;
         float radius;
         capsule.ToWorldSpaceCapsule(out point0, out point1, out radius);

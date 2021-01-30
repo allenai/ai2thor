@@ -15,18 +15,16 @@ public class Dirty : MonoBehaviour
     [SerializeField]
     protected bool isDirty = false;
 
-    public bool IsDirty()
-    {
+    public bool IsDirty() {
         return isDirty;
     }
+
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         #if UNITY_EDITOR
-        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
-        {
-            Debug.LogError(gameObject.name + " is missing the CanBeDirty secondary property!");
-        }
+            if (!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeDirty)) {
+                Debug.LogError(gameObject.name + " is missing the CanBeDirty secondary property!");
+            }
         #endif
     }
 
@@ -39,34 +37,26 @@ public class Dirty : MonoBehaviour
         // }
     }
 
-    public void ToggleCleanOrDirty()
-    {
+    public void ToggleCleanOrDirty() {
         //if clean make dirty
-        if(!isDirty)
-        {
+        if (!isDirty) {
             //swap all material swap objects to OnMaterials
-            if(MaterialSwapObjects.Length > 0)
-            {
-                for(int i = 0; i < MaterialSwapObjects.Length; i++)
-                {
+            if (MaterialSwapObjects.Length > 0) {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
             //disable disable all clean objects
-            if(ObjectsToEnableIfClean.Length > 0)
-            {
-                for(int i = 0; i < ObjectsToEnableIfClean.Length; i++)
-                {
+            if (ObjectsToEnableIfClean.Length > 0) {
+                for (int i = 0; i < ObjectsToEnableIfClean.Length; i++) {
                     ObjectsToEnableIfClean[i].SetActive(false);
                 }
             }
 
             //enable all dirty objects
-            if(ObjectsToEnableIfDirty.Length > 0)
-            {
-                for(int i = 0; i < ObjectsToEnableIfDirty.Length; i++)
-                {
+            if (ObjectsToEnableIfDirty.Length > 0) {
+                for (int i = 0; i < ObjectsToEnableIfDirty.Length; i++) {
                     ObjectsToEnableIfDirty[i].SetActive(true);
                 }
             }
@@ -77,29 +67,23 @@ public class Dirty : MonoBehaviour
         //if dirt, make clean
         else
         {
-            //swap all material swap object to OffMaterials
-            if(MaterialSwapObjects.Length > 0)
-            {
-                for(int i = 0; i < MaterialSwapObjects.Length; i++)
-                {
+            // swap all material swap object to OffMaterials
+            if (MaterialSwapObjects.Length > 0) {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OffMaterials;
                 }
             }
 
-            //enable all clean objects
-            if(ObjectsToEnableIfClean.Length > 0)
-            {
-                for(int i = 0; i < ObjectsToEnableIfClean.Length; i++)
-                {
+            // enable all clean objects
+            if (ObjectsToEnableIfClean.Length > 0) {
+                for (int i = 0; i < ObjectsToEnableIfClean.Length; i++) {
                     ObjectsToEnableIfClean[i].SetActive(true);
                 }
             }
 
-            //disable all dirty objects
-            if(ObjectsToEnableIfDirty.Length > 0)
-            {
-                for(int i = 0; i < ObjectsToEnableIfDirty.Length; i++)
-                {
+            // disable all dirty objects
+            if (ObjectsToEnableIfDirty.Length > 0) {
+                for (int i = 0; i < ObjectsToEnableIfDirty.Length; i++) {
                     ObjectsToEnableIfDirty[i].SetActive(false);
                 }
             }
@@ -108,16 +92,11 @@ public class Dirty : MonoBehaviour
         }
     }
 
-    //similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
-    public void OnTriggerStay(Collider other)
-    {
-        //only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
-        if(other.CompareTag("Liquid"))
-        {
-            if(isDirty)
-            {
-                ToggleCleanOrDirty();
-            }
+    // similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
+    public void OnTriggerStay(Collider other) {
+        // only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
+        if (other.CompareTag("Liquid") && isDirty)
+            ToggleCleanOrDirty();
         }
     }
 }

@@ -15,7 +15,7 @@ public class CookObject : MonoBehaviour
     void Start()
     {
         #if UNITY_EDITOR
-        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        if(!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
         {
             Debug.LogError(gameObject.name + " is missing the CanBeCooked secondary property!");
         }

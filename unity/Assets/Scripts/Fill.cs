@@ -25,7 +25,7 @@ public class Fill : MonoBehaviour {
 
     void Start() {
         #if UNITY_EDITOR
-            if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
+            if(!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
                 Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
             }
         #endif 

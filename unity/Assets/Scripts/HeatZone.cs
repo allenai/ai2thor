@@ -20,7 +20,7 @@ public class HeatZone : MonoBehaviour {
             sop.SetStartRoomTempTimer(false);
 
             // now if the object is able to be cooked, automatically cook it
-            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked)) {
+            if (sop.hasSecondaryProperty(SimObjSecondaryProperty.CanBeCooked)) {
                 CookObject sopcook = sop.GetComponent<CookObject>();
 
                 // if the object is bread... check if CanToastBread is true, and if so proceed to cook

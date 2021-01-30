@@ -167,7 +167,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
         // only add spawn points to try if the point's parent is not an object specific receptacle, that is handled in RandomSpawnRequiredSceneObjects
         foreach (ReceptacleSpawnPoint p in rsps) {
-            if (!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+            if (!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().hasSecondaryProperty
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 goodRsps.Add(p);
             }
@@ -204,7 +204,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
         foreach (ReceptacleSpawnPoint p in rsps) {
-            if (!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+            if (!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().hasSecondaryProperty
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 goodRsps.Add(p);
             }
@@ -429,13 +429,13 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     sop.GetComponent<Rigidbody>().isKinematic = true;
 
                     // check if the parent sim object is one that moves like a drawer - and would require this to be parented
-                    // if (rsp.ParentSimObjPhys.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
+                    // if (rsp.ParentSimObjPhys.hasSecondaryProperty(SimObjSecondaryProperty.CanOpen))
                     sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
 
                     // if this object is a receptacle and it has other objects inside it, drop them all together
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                    if (sop.hasSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                         PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                        agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
+                        agent.dropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
 
                     // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
@@ -452,9 +452,9 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     // if this object is a receptacle and it has other objects inside it, drop them all together
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                    if (sop.hasSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                         PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                        agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
+                        agent.dropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
                 sop.isInAgentHand = false;

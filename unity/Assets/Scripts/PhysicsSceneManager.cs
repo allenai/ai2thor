@@ -195,7 +195,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
         foreach (SimObjPhysics sop in ObjectIdToSimObjPhysics.Values) {
-            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            if (sop.hasSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                 ReceptaclesInScene.Add(sop);
 
                 #if UNITY_EDITOR
@@ -503,7 +503,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 // check if the target Receptacle is an ObjectSpecificReceptacle
                 // if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
                 // this is specifically for things like spawning a mug inside a coffee maker
-                if (receptacleSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+                if (receptacleSop.hasSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                     ObjectSpecificReceptacle osr = receptacleSop.GetComponent<ObjectSpecificReceptacle>();
 
                     if (osr.HasSpecificType(sopToPlaceInReceptacle.ObjType)) {

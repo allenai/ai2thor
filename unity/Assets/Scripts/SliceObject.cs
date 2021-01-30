@@ -17,8 +17,7 @@ public class SliceObject : MonoBehaviour
     [SerializeField]
     protected bool isSliced = false;
 
-    public bool IsSliced()
-    {
+    public bool IsSliced() {
         return isSliced;
     }
 
@@ -26,7 +25,7 @@ public class SliceObject : MonoBehaviour
     {
         #if UNITY_EDITOR
 		//debug check for missing property
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+        if (!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
         {
             Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanBeSliced!");
         }
@@ -37,7 +36,7 @@ public class SliceObject : MonoBehaviour
         }
 
         // //if the object can be cooked, check if CookedObjectToChangeTo is missing
-        // if(gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        // if(gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
         // {
         //     if(CookedObjectToChangeTo == null)
         //     {
@@ -80,7 +79,7 @@ public class SliceObject : MonoBehaviour
 
         GameObject resultObject;
 
-        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        if(!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
         {
             //instantiate the normal object if this object is not cooked, otherwise....
             resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);

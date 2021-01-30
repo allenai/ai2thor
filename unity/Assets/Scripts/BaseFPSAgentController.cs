@@ -309,7 +309,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<Vector3> seenPoints = new HashSet<Vector3>();
+
+            // let's only check layer 8: SimObjVisible
             int layerMask = 1 << 8;
+
             int stepsTaken = 0;
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
@@ -325,12 +328,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            direction: d,
+                            moveMagnitude: gridSize * gridMultiplier,
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -606,17 +609,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////////// getTargetObject //////////////
         ///////////////////////////////////////////
 
-        // Helper method that parses objectId parameter to return the sim object that it target.
-        // The action is halted if the objectId does not appear in the scene.
         protected SimObjPhysics getTargetObject(string objectId, bool forceAction) {
-            // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
             }
 
+            // works the fastest as a way to fetch the ObjectId.
+            if (forceAction) {
+                return physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            }
+
             // if object is in the scene and visible, assign it to 'target'
             SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: false)) {
                 target = sop;
             }
 
@@ -2211,7 +2216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // we didn't directly hit the sop we are checking for with this cast,
                 // check if it's because we hit something see-through
                 SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-                if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                if (hitSop != null && hitSop.hasSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                     // we hit something see through, so now find all objects in the path between
                     // the sop and the camera
                     RaycastHit[] hits;
@@ -2233,7 +2238,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // Didn't find it, continue on only if the hit object was translucent
                             SimObjPhysics sopHitOnPath = null;
                             sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                            if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                            if (sopHitOnPath == null || !sopHitOnPath.hasSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                                 return false;
                             }
                         }
@@ -2766,23 +2771,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // cast a capsule the same size as the agent
         // used to check for collisions
         public RaycastHit[] capsuleCastAllForAgent(
-            CapsuleCollider cc,
+            CapsuleCollider capsuleCollider,
             float skinWidth,
             Vector3 startPosition,
-            Vector3 dir,
+            Vector3 direction,
             float moveMagnitude,
             int layerMask
         ) {
-            Vector3 center = cc.transform.position + cc.center;// make sure to offset this by cc.center since we shrank the capsule size
-            float radius = cc.radius + skinWidth;
-            float innerHeight = cc.height / 2.0f - radius;
+            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;// make sure to offset this by cc.center since we shrank the capsule size
+            float radius = capsuleCollider.radius + skinWidth;
+            float innerHeight = capsuleCollider.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
             return Physics.CapsuleCastAll(
                 point1,
                 point2,
                 radius,
-                dir,
+                direction,
                 moveMagnitude,
                 layerMask,
                 QueryTriggerInteraction.Ignore
@@ -2820,11 +2825,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected Collider[] objectsCollidingWithAgent() {
+            // we only care about visible sim objects
             int layerMask = 1 << 8;
-            return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
+            return PhysicsExtensions.OverlapCapsule(
+                capsule: GetComponent<CapsuleCollider>(),
+                layerMask: layerMask,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
         }
 
-        public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        public bool  getReachablePositionToObjectVisible(
+            SimObjPhysics targetSOP,
+            out Vector3 pos,
+            float gridMultiplier = 1,
+            int maxStepCount = 10000  // seems dangerous to set here...
+        ) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -2849,6 +2864,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
+
                     // make sure to rotate just the Camera, not the whole agent
                     m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
@@ -2868,7 +2884,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         return true;
                     }
 
-
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
@@ -2878,12 +2893,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            direction: d,
+                            moveMagnitude: gridSize * gridMultiplier,
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -2918,7 +2933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
+                if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }

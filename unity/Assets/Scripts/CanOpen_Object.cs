@@ -72,7 +72,7 @@ public class CanOpen_Object : MonoBehaviour {
 		}
 
         #if UNITY_EDITOR
-            if(!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+            if(!this.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
                 Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
             }
         #endif
@@ -95,7 +95,7 @@ public class CanOpen_Object : MonoBehaviour {
     #if UNITY_EDITOR
         void OnEnable () {
             //debug check for missing CanOpen property
-            if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+            if (!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
                 Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanOpen!");
             }
         }

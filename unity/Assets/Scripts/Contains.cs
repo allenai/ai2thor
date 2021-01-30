@@ -60,7 +60,7 @@ public class Contains : MonoBehaviour
 		//check that all objects with receptacles components have the correct Receptacle secondary property
 		#if UNITY_EDITOR
 		SimObjPhysics go = gameObject.GetComponentInParent<SimObjPhysics>();
-		if(!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+		if(!go.hasSecondaryProperty(SimObjSecondaryProperty.Receptacle))
 		{
 			Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
 		}
