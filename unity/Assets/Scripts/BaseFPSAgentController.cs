@@ -1084,6 +1084,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectStates.Remove("isUsedUp");
             }
 
+
+            // Again, make sure the environment state doesn't change on failure.
+            HashSet<string> validKeys = new HashSet<string>() {
+                "isOpen", "isToggled", "isBroken", "isFilledWithLiquid",
+                "isDirty", "isCooked", "isSliced", "isUsedUp"
+            };
+            foreach (KeyValuePair<string, bool> state in objectStates) {
+                if (!validKeys.Contains(state.Key)) {
+                    throw new ArgumentException($"Unknown object state: {state.Key}.");
+                }
+            }
+
             bool containsOpen = false;
             bool containsToggle = false;
             foreach (KeyValuePair<string, bool> state in objectStates) {
@@ -1125,8 +1137,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     case "isUsedUp":
                         useObjectUp(target: target, markActionFinished: false);
                         break;
-                    default:
-                        throw new ArgumentException($"Unknown object state: {state.Key}.");
                 }
             }
 
