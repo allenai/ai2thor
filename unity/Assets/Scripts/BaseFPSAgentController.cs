@@ -991,6 +991,177 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         ///////////////////////////////////////////
+        ///////////// SetObjectPoses //////////////
+        ///////////////////////////////////////////
+
+        public void SetObjectPoses(ObjectPose[] objectPoses) {
+            if (objectPoses == null) {
+                throw new ArgumentNullException();
+            }
+
+            // SetObjectPoses is performed in a coroutine otherwise if a frame does not pass
+            // prior to this AND the imageSynthesis is enabled for say depth or normals,
+            // Unity will crash on a subsequent scene reset()
+            IEnumerator setObjectPoses() {
+                yield return new WaitForEndOfFrame();
+                bool success = physicsSceneManager.SetObjectPoses(objectPoses);
+                actionFinished(success);
+            }
+
+            StartCoroutine(setObjectPoses());
+        }
+
+        ///////////////////////////////////////////
+        //////////// SetObjectStates //////////////
+        ///////////////////////////////////////////
+
+        public void SetObjectStates(
+            string objectId,
+            Dictionary<string, bool> objectStates,
+            string fillLiquid = null
+        ) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+
+            // require a fill liquid when using isFilledWithLiquid
+            if (objectStates.ContainsKey("isFilledWithLiquid") && objectStates["isFilledWithLiquid"] && fillLiquid == null) {
+                throw new ArgumentNullException("fillLiquid (string) must be specified, if you are trying to fill an object.");
+            }
+
+            // We do checks at the state so if anything fails, nothing changes in the environment state.
+            // Some special cases, since a broken object cannot be unbroken
+            if (objectState.ContainsKey("isBroken") && !objectStates["isBroken"]) {
+                Break breakComponent = target.GetComponentInChildren<Break>();
+                if (breakComponent == null) {
+                    throw new ArgumentException($"Object {objectId} is not breakable!");
+                }
+                if (breakComponent.isBroken()) {
+                    throw new InvalidOperationException("A broken object cannot be unbroken!");
+                }
+
+                // object is not broken and they set isBroken to false. Thus, the state is fine.
+                objectStates.Remove("isBroken");
+            }
+
+            // Cooked objects cannot be uncooked
+            if (objectState.ContainsKey("isCooked") && !objectStates["isCooked"]) {
+                CookObject cookComponent = target.GetComponent<CookObject>();
+                if (cookComponent == null) {
+                    throw new ArgumentException($"Object {objectId} is not cookable!");
+                }
+                if (cookComponent.IsCooked()) {
+                    throw new InvalidOperationException("A cooked object cannot be uncooked!");
+                }
+
+                // the state is currently fine.
+                objectStates.Remove("isCooked");
+            }
+
+            // Sliced objects cannot be unsliced.
+            if (objectState.ContainsKey("isSliced") && !objectStates["isSliced"]) {
+                SliceObject sliceComponent = !target.GetComponent<SliceObject>();
+                if (sliceComponent == null) {
+                    throw new ArgumentException($"Object {objectId} is not sliceable!");
+                }
+                if (sliceComponent.IsSliced()) {
+                    throw new InvalidOperationException("A sliced object cannot be unsliced!");
+                }
+
+                // the state is currently fine.
+                objectStates.Remove("isSliced");
+            }
+
+            // Sliced objects cannot be unsliced.
+            if (objectState.ContainsKey("isUsedUp") && !objectStates["isUsedUp"]) {
+                UsedUp useUpComponent = target.GetComponent<UsedUp>();
+                if (useUpComponent == null) {
+                    throw new ArgumentException($"Object {objectId} is compatible with UseUp!");
+                }
+                if (useUpComponent.isUsedUp) {
+                    throw new InvalidOperationException("A used up object object cannot be un-used up!");
+                }
+
+                // the state is currently fine.
+                objectStates.Remove("isUsedUp");
+            }
+
+            bool containsOpen = false;
+            bool containsToggle = false;
+            foreach (KeyValuePair<string, bool> state in objectStates) {
+                switch (state.Key) {
+                    case "isOpen":
+                        containsOpen = true;
+                        break;
+                    case "isToggled":
+                        containsToggle = true;
+                        break;
+                    case "isBroken":
+                        breakObject(target: target, markActionFinished: false);
+                        break;
+                    case "isFilledWithLiquid":
+                        // which fill liquid? Also use emptyLiquid
+                        if (state.Value) {
+                            fillObjectWithLiquid(
+                                target: target,
+                                fillLiquid: fillLiquid,
+                                markActionFinished: false
+                            );
+                        } else {
+                            emptyLiquidFromObject(target: target, markActionFinished: false);
+                        }
+                        break;
+                    case "isDirty":
+                        if (state.Value) {
+                            dirtyObject(target: target, markActionFinished: false);
+                        } else {
+                            cleanObject(target: target, markActionFinished: false);
+                        }
+                        break;
+                    case "isCooked":
+                        cookObject(target: target, markActionFinished: false);
+                        break;
+                    case "isSliced":
+                        sliceObject(target: target, markActionFinished: false);
+                        break;
+                    case "isUsedUp":
+                        useObjectUp(target: target, markActionFinished: false);
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown object state: {state.Key}.");
+                }
+            }
+
+            // These actions are executed inside of a coroutine,
+            // so they must call actionFinished() when they are done.
+            // Notice the markActionFinished in each of these.
+            if (containsOpen && containsToggle) {
+                openObject(
+                    target: target,
+                    openness: objectStates["isOpen"] ? 1 : 0,
+                    markActionFinished: false
+                );
+                toggleObject(
+                    target: target,
+                    toggleOn: objectStates["isToggled"],
+                    markActionFinished: true
+                );
+            } else if (containsToggle) {
+                toggleObject(
+                    target: target,
+                    toggleOn: objectStates["isToggled"],
+                    markActionFinished: true
+                );
+            } else if (containsOpen) {
+                openObject(
+                    target: target,
+                    openness: objectStates["isOpen"] ? 1 : 0,
+                    markActionFinished: true
+                );
+            } else {
+                actionFinished(true);
+            }
+        }
+
+        ///////////////////////////////////////////
         ////////// OBJECT TRANSPARENCY ////////////
         ///////////////////////////////////////////
 
