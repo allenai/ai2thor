@@ -5690,8 +5690,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ctof.Toggle();
 
             bool success = false;
+
+            bool ctofInitialState = ctof.isOn;
             
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0));
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
             success = true;
 
             if (!success)
