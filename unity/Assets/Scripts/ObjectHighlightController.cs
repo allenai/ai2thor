@@ -281,17 +281,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
                 };
-                if (simObj != null && validObjectLazy())
-                {
-                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.objectID) != null;
+                if (simObj != null && validObjectLazy()) {
+                    var withinReach = PhysicsController.findObjectInVisibleSimObjPhysics(simObj.objectID) != null;
                     setTargetText(simObj.name, withinReach);
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     var useHighlightShader = !(disableHighlightShaderForObject && simObj.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
                     
-                    if (mRenderer != null && useHighlightShader)
-                    {
+                    if (mRenderer != null && useHighlightShader) {
                         if (this.highlightedObject != newHighlightedObject) {
                             newPreviousShader = mRenderer.material.shader;
                             this.previousRenderQueueValue = mRenderer.material.renderQueue;

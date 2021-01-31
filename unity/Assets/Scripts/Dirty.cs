@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Dirty : MonoBehaviour
-{
+public class Dirty : MonoBehaviour {
 
     [SerializeField]
     public SwapObjList[] MaterialSwapObjects; //put objects that need amterial swaps here, use OnMaterials for Dirty, OffMaterials for Clean
@@ -26,15 +25,6 @@ public class Dirty : MonoBehaviour
                 Debug.LogError(gameObject.name + " is missing the CanBeDirty secondary property!");
             }
         #endif
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        // if(Input.GetKeyDown(KeyCode.G))
-        // {
-        //     ToggleCleanOrDirty();
-        // }
     }
 
     public void ToggleCleanOrDirty() {
@@ -62,11 +52,8 @@ public class Dirty : MonoBehaviour
             }
 
             isDirty = true;
-        }
-
-        //if dirt, make clean
-        else
-        {
+        } else {
+            // make clean!
             // swap all material swap object to OffMaterials
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
@@ -95,7 +82,7 @@ public class Dirty : MonoBehaviour
     // similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
     public void OnTriggerStay(Collider other) {
         // only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
-        if (other.CompareTag("Liquid") && isDirty)
+        if (other.CompareTag("Liquid") && isDirty) {
             ToggleCleanOrDirty();
         }
     }

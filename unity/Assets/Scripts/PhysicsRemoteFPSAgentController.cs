@@ -103,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            SimObjPhysics sop = getTargetObject(objectId: objectId, foraceAction: true);
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
 
             if (sop.PrimaryProperty != SimObjPrimaryProperty.Moveable && sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
                 throw new InvalidOperationException("object with ObjectID: " + objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed");
@@ -126,11 +126,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected void LateUpdate() {
             // make sure this happens in late update so all physics related checks are done ahead of time
             // this is also mostly for in editor, the array of visible sim objects is found via server actions
-            // using VisibleSimObjs(action), so be aware of that
+            // using (), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
                 if (this.agentState == AgentState.ActionComplete) {
-                    VisibleSimObjPhysics = VisibleSimObjs(forceVisible: false);
+                    VisibleSimObjPhysics = getVisibleSimObjects();
                 }
             #endif
         }
@@ -228,16 +228,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
         // matches the passed in objectID
-        public GameObject FindObjectInVisibleSimObjPhysics(string objectID) {
-            GameObject target = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.objectID == objectID) {
-                    target = o.gameObject;
-                }
-            }
-
-            return target;
+        public GameObject findObjectInVisibleSimObjPhysics(string objectId) {
+            return getTargetObject(objectId: objectId, forceAction: false).gameObject;
         }
 
         protected Collider[] collidersWithinCapsuleCastOfAgent(float maxDistance) {
@@ -2978,6 +2970,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this is the default, only spawn circles in objects that are in view
             if (!anywhere) {
                 // check every sim object and see if it is within the viewport
+                // TODO: VisibleSimObjs no longer exists!
                 foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                     if (sop.hasSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                         /// one more check, make sure this receptacle
@@ -6515,7 +6508,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target,
             float openness,
             bool markActionFinished,
-            bool simplifyPhysics = false,
+            bool simplifyPhysics = false
         ) {
             if (target == null) {
                 throw new ArgumentNullException();

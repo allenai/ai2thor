@@ -421,6 +421,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// Initialize /////////////////
         ///////////////////////////////////////////
 
+        // NOTE: updates here must also be made to
+        // StochasticRemoteFPSAgentController
         public void Initialize(
             string agentMode = "default",
             float? fieldOfView = null,
@@ -429,7 +431,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float rotateStepDegrees = 90,
             bool snapToGrid = true,
             float visibilityDistance = 1.5f,
-            float TimeToWaitForObjectsToComeToRest = 10.0f,
+            float timeToWaitForObjectsToComeToRest = 10.0f,
             bool renderDepthImage = false,
             bool renderClassImage = false,
             bool renderObjectImage = false,
@@ -629,7 +631,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // target not found!
             if (target == null) {
                 throw new NullReferenceException("Target object not found within the specified visibility.");
             }
@@ -1885,7 +1886,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // rotates controlCommand.degrees degrees left w/ respect to current forward
-        public virtual void RotateLeft(float degrees) {
+        public virtual void RotateLeft(float? degrees = null) {
             transform.Rotate(0, degrees == null ? -rotateStepDegrees : -1 * (float) degrees, 0);
             actionFinished(true);
         }

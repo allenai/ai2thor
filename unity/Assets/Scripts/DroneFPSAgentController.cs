@@ -47,14 +47,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-            //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
+            // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN'T LIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
-        }
-
-        private void LateUpdate() {
-            #if UNITY_EDITOR || UNITY_WEBGL
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-            #endif
         }
 
         public void RotateRight(float? degrees = null) {

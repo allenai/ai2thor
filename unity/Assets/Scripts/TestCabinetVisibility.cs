@@ -137,7 +137,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 						//currentCabinet.Animator.SetBool ("AnimState1", false);
 						//yield return null;
 						//get visible again
-						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs (cam, MaxDistance)) {
+						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
 							if (visibleSimObj == currentCabinet) {
 								cabinetVisibleClosed = true;
 								//seenAtLeastOnce = true;
@@ -155,7 +155,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 						yield return null;
 						yield return new WaitForEndOfFrame ();
 						//get visible objects again
-						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs (cam, MaxDistance)) {
+						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
 							if (visibleSimObj == currentCabinet) {
 								cabinetVisibleOpen = true;
 								//seenAtLeastOnce = true;

@@ -225,7 +225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 } else if (handMode) {
                     if (Input.GetKeyDown(KeyCode.Space)) {
-                        var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
+                        var withinReach = PhysicsController.findObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
                         if (withinReach) {
                             ServerAction action = new ServerAction();
                             action.objectId = onlyPickableObjectId;
