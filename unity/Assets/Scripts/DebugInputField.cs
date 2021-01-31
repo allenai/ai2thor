@@ -130,7 +130,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Execute(string command) {
-
             if ((PhysicsController.enabled && PhysicsController.IsProcessing) ||
                 (StochasticController != null && StochasticController.enabled && StochasticController.IsProcessing)
             ) {
@@ -141,6 +140,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
 
             switch (splitcommand[0]) {
+                /*
                 case "init":
                     Dictionary<string, object> action = new Dictionary<string, object>();
                     // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
@@ -1921,9 +1921,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
 
-            // opens given object the given percent, default is 100% open
-            // open <object ID> percent
-            case "open":
+                // opens given object the given percent, default is 100% open
+                // open <object ID> percent
+                case "open":
                     Dictionary<string, object> action = new Dictionary<string, object>();
                     action["action"] = "OpenObject";
                     action["forceAction"] = true;
@@ -1947,323 +1947,328 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     PhysicsController.ProcessControlCommand(action);                  
                     break;
 
-            case "close":
-                Dictionary<string, object> action = new Dictionary<string, object>();
-                action["action"] = "CloseObject";
+                case "close":
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "CloseObject";
 
-                if (splitcommand.Length > 1) {
-                    action["objectId"] = splitcommand[1];
-                } else {
-                    // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-                    action["x"] = 0.5f;
-                    action["y"] = 0.5f;
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // pass in object id of a receptacle, and this will report any other sim objects inside of it
-            // this works for cabinets, drawers, countertops, tabletops, etc.
-            case "contains":
-                ServerAction action = new ServerAction();
-                action.action = "Contains";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-
-                break;
-
-            //*****************************************************************************
-            // MASS SCALE ACTIONS HERE
-            //*****************************************************************************
-
-            // get total mass in right scale of MassScale sim obj
-            case "rscalemass":
-                ServerAction action = new ServerAction();
-                action.action = "MassInRightScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // get total mass in left scale of MassScale sim obj
-            case "lscalemass":
-                ServerAction action = new ServerAction();
-                action.action = "MassInLeftScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // get total count of objects in right scale of MassScale sim obj
-            case "rscalecount":
-                ServerAction action = new ServerAction();
-                action.action = "CountInRightScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // get total count of objects in the left scale of MassScale sim obj
-            case "lscalecount":
-                ServerAction action = new ServerAction();
-                action.action = "CountInLeftScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // get list of all sim objects in the right scale of MassScale sim obj
-            case "rscaleobjs":
-                ServerAction action = new ServerAction();
-                action.action = "ObjectsInRightScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // get list of all sim objects in the Left scale of MassScale sim obj
-            case "lscaleobjs":
-                ServerAction action = new ServerAction();
-                action.action = "ObjectsInLeftScale";
-
-                if (splitcommand.Length > 1) {
-                    action.objectId = splitcommand[1];
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            // Will fail if navmeshes are not setup
-            case "shortest_path":
-                Dictionary<string, object> action = new Dictionary<string, object>();
-                action["action"] = "GetShortestPath";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    action["objectId"] = splitcommand[1];
-
-                    if (splitcommand.Length == 5) {
-                        action["position"] = new Vector3(
-                            float.Parse(splitcommand[2]),
-                            float.Parse(splitcommand[3]), 
-                            float.Parse(splitcommand[4])
-                        );
-                    }
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "shortest_path_type":
-                Dictionary<string, object> action = new Dictionary<string, object>();
-                action["action"] = "GetShortestPath";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    action["objectType"] = splitcommand[1];
-
-                    if (splitcommand.Length == 5) {
-                        action["position"] = new Vector3(
-                            float.Parse(splitcommand[2]),
-                            float.Parse(splitcommand[3]), 
-                            float.Parse(splitcommand[4])
-                        );
-                    }
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "shortest_path_point":
-                Dictionary<string, object> action = new Dictionary<string, object>();
-                action["action"] = "GetShortestPathToPoint";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    // action.objectId = splitcommand[1];
-
-                    if (splitcommand.Length == 4) {
-                        action["x"] = float.Parse(splitcommand[1]);
-                        action["y"] = float.Parse(splitcommand[2]);
-                        action["z"] = float.Parse(splitcommand[3]);
-                    }
-                    if (splitcommand.Length >= 7) {
-                        action["position"] = new Vector3(
-                            float.Parse(splitcommand[1]),
-                            float.Parse(splitcommand[2]), 
-                            float.Parse(splitcommand[3])
-                        );
-                        action["x"] = float.Parse(splitcommand[4]);
-                        action["y"] = float.Parse(splitcommand[5]);
-                        action["z"] = float.Parse(splitcommand[6]);
-                    }
-                    if (splitcommand.Length >= 8) {
-                        action["allowedError"] = float.Parse(splitcommand[7]);
-                    }
-
-
-                        if (splitcommand.Length < 4) {
-                        throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
-                    }
-                } else {
-                        throw new ArgumentException("need to provide at least 3 floats for target position");
-                }
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "visualize_path":
-                ServerAction action = new ServerAction();
-                action.action = "VisualizePath";
-                action.objectId = "0";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    action.objectId = splitcommand[1];
-
-                    if (splitcommand.Length == 5) {
-                        action.position = new Vector3(
-                            float.Parse(splitcommand[2]),
-                            float.Parse(splitcommand[3]), 
-                            float.Parse(splitcommand[4])
-                        );
+                    if (splitcommand.Length > 1) {
+                        action["objectId"] = splitcommand[1];
                     } else {
-                        action.positions = new List<Vector3>() {
-                            new Vector3( 4.258f, 1.0f, -1.69f),
-                            new Vector3(6.3f, 1.0f, -3.452f)
-                        };
+                        // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                        action["x"] = 0.5f;
+                        action["y"] = 0.5f;
                     }
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "vp":
-                ServerAction action = new ServerAction();
-                action.action = "VisualizeShortestPaths";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    action.objectType = splitcommand[1];
-
-                    if (splitcommand.Length == 5) {
-                        action.position = new Vector3(
-                            float.Parse(splitcommand[2]),
-                            float.Parse(splitcommand[3]), 
-                            float.Parse(splitcommand[4])
-                        );
-                    } else {
-                        var pos = PhysicsController.getReachablePositions().Shuffle();
-                        action.positions = pos.Take(20).ToList();
-                        action.grid = true;
-                        // action.pathGradient = new Gradient() {
-                        //     colorKeys = new GradientColorKey[]{
-                        //          new GradientColorKey(Color.white, 0.0f),
-                        //          new GradientColorKey(Color.blue, 1.0f)
-                        //         },
-                        //     alphaKeys =  new GradientAlphaKey[]{
-                        //         new GradientAlphaKey(1.0f, 0.0f),
-                        //         new GradientAlphaKey(1.0f, 1.0f)
-                        //     },
-                        //     mode = GradientMode.Blend
-                        // };
-                        // action.gridColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
-                        // action.positions = new List<Vector3>() {
-                        //     new Vector3( 4.258f, 1.0f, -2.69f),
-                        //     new Vector3(4.3f, 1.0f, -3.452f)
-                        // };
-                    }
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "visualize_shortest_path":
-                ServerAction action = new ServerAction();
-                action.action = "VisualizeShortestPaths";
-
-                // pass in a min range, max range, delay
-                if (splitcommand.Length > 1) {
-                    // ID of spawner
-                    action.objectType = splitcommand[1];
-
-                    if (splitcommand.Length == 5) {
-                        action.position = new Vector3(
-                            float.Parse(splitcommand[2]),
-                            float.Parse(splitcommand[3]), 
-                            float.Parse(splitcommand[4])
-                        );
-                    } else {
-                        // var pos = PhysicsController.getReachablePositions().Shuffle();
-                        action.positions = new List<Vector3>() { PhysicsController.transform.position };
-                        action.grid = true;
-                    }
-                }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            case "get_object_type_ids":
-                Dictionary<string, object> action = new Dictionary<string, object>();
-                action["action"] = "ObjectTypeToObjectIds";
-                if (splitcommand.Length > 1) {
-                    action["objectType"] = splitcommand[1];
-                }
 
                     PhysicsController.ProcessControlCommand(action);
-                break;
+                    break;
 
-            case "scale":
-                ServerAction action = new ServerAction();
-                action.action = "ScaleObject";
-                action.objectId = "Cup|-01.36|+00.78|+00.71";
-                action.scale = 2.0f;
+                // pass in object id of a receptacle, and this will report any other sim objects inside of it
+                // this works for cabinets, drawers, countertops, tabletops, etc.
+                case "contains":
+                    ServerAction action = new ServerAction();
+                    action.action = "Contains";
 
-                if (splitcommand.Length > 1) {
-                    action.scale = float.Parse(splitcommand[1]);
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+
+                    break;
+
+                //*****************************************************************************
+                // MASS SCALE ACTIONS HERE
+                //*****************************************************************************
+
+                // get total mass in right scale of MassScale sim obj
+                case "rscalemass":
+                    ServerAction action = new ServerAction();
+                    action.action = "MassInRightScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // get total mass in left scale of MassScale sim obj
+                case "lscalemass":
+                    ServerAction action = new ServerAction();
+                    action.action = "MassInLeftScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // get total count of objects in right scale of MassScale sim obj
+                case "rscalecount":
+                    ServerAction action = new ServerAction();
+                    action.action = "CountInRightScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // get total count of objects in the left scale of MassScale sim obj
+                case "lscalecount":
+                    ServerAction action = new ServerAction();
+                    action.action = "CountInLeftScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // get list of all sim objects in the right scale of MassScale sim obj
+                case "rscaleobjs":
+                    ServerAction action = new ServerAction();
+                    action.action = "ObjectsInRightScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // get list of all sim objects in the Left scale of MassScale sim obj
+                case "lscaleobjs":
+                    ServerAction action = new ServerAction();
+                    action.action = "ObjectsInLeftScale";
+
+                    if (splitcommand.Length > 1) {
+                        action.objectId = splitcommand[1];
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                // Will fail if navmeshes are not setup
+                case "shortest_path":
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "GetShortestPath";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        action["objectId"] = splitcommand[1];
+
+                        if (splitcommand.Length == 5) {
+                            action["position"] = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]), 
+                                float.Parse(splitcommand[4])
+                            );
+                        }
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "shortest_path_type":
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "GetShortestPath";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        action["objectType"] = splitcommand[1];
+
+                        if (splitcommand.Length == 5) {
+                            action["position"] = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]), 
+                                float.Parse(splitcommand[4])
+                            );
+                        }
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "shortest_path_point":
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "GetShortestPathToPoint";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        // action.objectId = splitcommand[1];
+
+                        if (splitcommand.Length == 4) {
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[2]);
+                            action["z"] = float.Parse(splitcommand[3]);
+                        }
+                        if (splitcommand.Length >= 7) {
+                            action["position"] = new Vector3(
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]), 
+                                float.Parse(splitcommand[3])
+                            );
+                            action["x"] = float.Parse(splitcommand[4]);
+                            action["y"] = float.Parse(splitcommand[5]);
+                            action["z"] = float.Parse(splitcommand[6]);
+                        }
+                        if (splitcommand.Length >= 8) {
+                            action["allowedError"] = float.Parse(splitcommand[7]);
+                        }
+
+
+                            if (splitcommand.Length < 4) {
+                            throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
+                        }
+                    } else {
+                            throw new ArgumentException("need to provide at least 3 floats for target position");
+                    }
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "visualize_path":
+                    ServerAction action = new ServerAction();
+                    action.action = "VisualizePath";
+                    action.objectId = "0";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        action.objectId = splitcommand[1];
+
+                        if (splitcommand.Length == 5) {
+                            action.position = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]), 
+                                float.Parse(splitcommand[4])
+                            );
+                        } else {
+                            action.positions = new List<Vector3>() {
+                                new Vector3( 4.258f, 1.0f, -1.69f),
+                                new Vector3(6.3f, 1.0f, -3.452f)
+                            };
+                        }
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "vp":
+                    ServerAction action = new ServerAction();
+                    action.action = "VisualizeShortestPaths";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        action.objectType = splitcommand[1];
+
+                        if (splitcommand.Length == 5) {
+                            action.position = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]), 
+                                float.Parse(splitcommand[4])
+                            );
+                        } else {
+                            var pos = PhysicsController.getReachablePositions().Shuffle();
+                            action.positions = pos.Take(20).ToList();
+                            action.grid = true;
+                            // action.pathGradient = new Gradient() {
+                            //     colorKeys = new GradientColorKey[]{
+                            //          new GradientColorKey(Color.white, 0.0f),
+                            //          new GradientColorKey(Color.blue, 1.0f)
+                            //         },
+                            //     alphaKeys =  new GradientAlphaKey[]{
+                            //         new GradientAlphaKey(1.0f, 0.0f),
+                            //         new GradientAlphaKey(1.0f, 1.0f)
+                            //     },
+                            //     mode = GradientMode.Blend
+                            // };
+                            // action.gridColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+                            // action.positions = new List<Vector3>() {
+                            //     new Vector3( 4.258f, 1.0f, -2.69f),
+                            //     new Vector3(4.3f, 1.0f, -3.452f)
+                            // };
+                        }
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "visualize_shortest_path":
+                    ServerAction action = new ServerAction();
+                    action.action = "VisualizeShortestPaths";
+
+                    // pass in a min range, max range, delay
+                    if (splitcommand.Length > 1) {
+                        // ID of spawner
+                        action.objectType = splitcommand[1];
+
+                        if (splitcommand.Length == 5) {
+                            action.position = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]), 
+                                float.Parse(splitcommand[4])
+                            );
+                        } else {
+                            // var pos = PhysicsController.getReachablePositions().Shuffle();
+                            action.positions = new List<Vector3>() { PhysicsController.transform.position };
+                            action.grid = true;
+                        }
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "get_object_type_ids":
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "ObjectTypeToObjectIds";
+                    if (splitcommand.Length > 1) {
+                        action["objectType"] = splitcommand[1];
+                    }
+
+                        PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                case "scale":
+                    ServerAction action = new ServerAction();
+                    action.action = "ScaleObject";
+                    action.objectId = "Cup|-01.36|+00.78|+00.71";
+                    action.scale = 2.0f;
+
+                    if (splitcommand.Length > 1) {
+                        action.scale = float.Parse(splitcommand[1]);
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+
+                default:
+                    ServerAction action = new ServerAction();
+                    action.action = splitcommand[0];
+                    if (splitcommand.Length == 2) {
+                        action.objectId = splitcommand[1];
+                    } else if (splitcommand.Length == 3) {
+                        action.x = float.Parse(splitcommand[1]);
+                        action.z = float.Parse(splitcommand[2]);
+                    } else if (splitcommand.Length == 4) {
+                        action.x = float.Parse(splitcommand[1]);
+                        action.y = float.Parse(splitcommand[2]);
+                        action.z = float.Parse(splitcommand[3]);
+                    }
+                    PhysicsController.ProcessControlCommand(action);      
+                    break;
                 }
-
-                PhysicsController.ProcessControlCommand(action);
-                break;
-
-            default:
-                ServerAction action = new ServerAction();
-                action.action = splitcommand[0];
-                if (splitcommand.Length == 2) {
-                    action.objectId = splitcommand[1];
-                } else if (splitcommand.Length == 3) {
-                    action.x = float.Parse(splitcommand[1]);
-                    action.z = float.Parse(splitcommand[2]);
-                } else if (splitcommand.Length == 4) {
-                    action.x = float.Parse(splitcommand[1]);
-                    action.y = float.Parse(splitcommand[2]);
-                    action.z = float.Parse(splitcommand[3]);
-                }
-                PhysicsController.ProcessControlCommand(action);      
-                break;
+                */
+                default:
+                    Debug.LogError("Make sure it wasn't commented out! It may need to be modified as a non-server action.");
+                    break;
             }
         }
 
