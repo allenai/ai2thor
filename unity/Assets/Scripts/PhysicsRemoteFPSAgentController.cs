@@ -3542,7 +3542,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // try and open all visible objects
         public void OpenVisibleObjects(bool simplifyPhysics = false, float openness = 1) {
-            foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
+            foreach (SimObjPhysics so in getVisibleSimObjects()) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                 if (coo && !coo.isOpen) {
                     // if object is open, add it to be closed.
@@ -4090,7 +4090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             int k = 0;
             List<string> objectIds = new List<string>();
-            foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, 100f)) {
+            foreach (SimObjPhysics so in getVisibleSimObjects(maxDistance: Mathf.Infinity)) {
                 int i = (10 * k) / 256;
                 int j = (10 * k) % 256;
                 MaskSimObj(so, new Color32(Convert.ToByte(i), Convert.ToByte(j), 255, 255));
@@ -4425,7 +4425,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             crouch();
                         }
-                        foreach (SimObjPhysics sop in GetAllVisibleSimObjPhysics(m_Camera, 1.0f + maxVisibleDistance)) {
+
+                        // TODO: why are we adding 1?
+                        foreach (SimObjPhysics sop in getVisibleSimObjects(1.0f + maxVisibleDistance)) {
                             allVisible.Add(sop);
                         }
                     }
@@ -5316,7 +5318,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.position = position;
                 foreach (float rotation in rotations) {
                     transform.rotation = Quaternion.Euler(0f, rotation, 0f);
-                    foreach (SimObjPhysics sop in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
+                    foreach (SimObjPhysics sop in getVisibleSimObjects()) {
                         if (!objectIdToVisiblePositions.ContainsKey(sop.ObjectID)) {
                             objectIdToVisiblePositions[sop.ObjectID] = new List<float[]>();
                         }

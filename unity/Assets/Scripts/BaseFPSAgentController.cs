@@ -623,8 +623,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // if object is in the scene and visible, assign it to 'target'
             SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: false)) {
-                target = sop;
+            foreach (SimObjPhysics sop in getVisibleSimObjects()) {
+                if (sop.ObjectID == objectId) {
+                    target = sop;
+                }
             }
 
             // target not found!
@@ -1408,9 +1410,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>(GetAllVisibleSimObjPhysics(
-                this.m_Camera,
-                this.maxVisibleDistance));
+            HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>(getVisibleSimObjects());
 
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
@@ -2142,50 +2142,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return visible;
         }
-
-        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false) {
-            ServerAction action = new ServerAction();
-            action.objectId = objectId;
-            action.forceVisible = forceVisible;
-            return VisibleSimObjs(action);
-
-            List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
-
-            // go through array of sim objects visible to the camera
-            foreach (SimObjPhysics so in VisibleSimObjs(forceVisible)) {
-                if (!string.IsNullOrEmpty(objectId) && objectId != so.ObjectID) {
-                    continue;
-                }
-                simObjs.Add(so);
-            }
-
-            return simObjs.ToArray();
-        }
-
-        // pass in forceVisible bool to force grab all objects of type sim obj
-        // if not, gather all visible sim objects maxVisibleDistance away from camera view
-        public SimObjPhysics[] VisibleSimObjs(bool forceVisible) {
-            if (forceVisible) {
-                return GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            } else {
-                return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
-            }
-        }
-
-        protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) {
+        
+        // On demand function for getting what sim objects are visible at that moment
+        protected List<SimObjPhysics> getVisibleSimObjects(float maxDistance) {
             if (this.visibilityScheme == VisibilityScheme.Collider) {
-                return GetAllVisibleSimObjPhysicsCollider(agentCamera, maxDistance);
+                return getAllVisibleSimObjPhysicsCollider(agentCamera: m_Camera, maxDistance: maxDistance);
             } else {
-                return GetAllVisibleSimObjPhysicsDistance(agentCamera, maxDistance);
+                return getAllVisibleSimObjPhysicsDistance(agentCamera: m_Camera, maxDistance: maxDistance);
             }
+        }
+
+        protected List<SimObjPhysics> getVisibleSimObjects() {
+            return getVisibleSimObjects(maxDistance: maxVisibleDistance);
         }
 
         // this is a faster version of the visibility check, but is not entirely
-        // consistent with the collider based method.  In particular, if an object
+        // consistent with the collider based method. In particular, if an object
         // is within range of the maxVisibleDistance, but obscurred only within this
         // range and is visible outside of the range, it will get reported as invisible
         // by the new scheme, but visible in the current scheme.
-        protected SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance) {
+        protected SimObjPhysics[] getAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance) {
             List<SimObjPhysics> visible = new List<SimObjPhysics>();
             IEnumerable<SimObjPhysics> simObjs = null;
             if (this.simObjFilter != null) {
@@ -2197,14 +2173,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(agentCamera);
             foreach (var sop in simObjs) {
-                if (isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes)) {
+                if (isSimObjVisible(agentCamera: agentCamera, sop: sop, maxDistance: maxDistance, planes: planes)) {
                     visible.Add(sop);
                 }
             }
             return visible.ToArray();
         }
 
-        protected SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) {
+        protected SimObjPhysics[] getAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             #if UNITY_EDITOR
@@ -2561,12 +2537,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: success);
         }
 
-        // On demand public function for getting what sim objects are visible at that moment
-        public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
-            var camera = this.GetComponentInChildren<Camera>();
-            return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
-        }
-
         // not sure what this does, maybe delete?
         public void SetTopLevelView(bool topView = false) {
             inTopLevelView = topView;
@@ -2799,25 +2769,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 targetPosition,
             Transform agentTransform,
             string targetSimObjectId,
-            UnityEngine.AI.NavMeshPath path) {
-
+            UnityEngine.AI.NavMeshPath path
+        ) {
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-            // bool success = false;
             var PhysicsController = this;
             foreach (var pos in sortedPositions) {
                 agentTransform.position = pos;
                 agentTransform.LookAt(targetPosition);
 
-                var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
-                if (visibleSimObjects.Any(sop => sop.objectID == targetSimObjectId)) {
+                if (getVisibleSimObjects().Any(sop => sop.objectID == targetSimObjectId)) {
                     fixedPosition = pos;
-                    // success = true;
                     break;
                 }
             }
 
-            var pathSuccess =  UnityEngine.AI.NavMesh.CalculatePath(agentTransform.position, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
-            return pathSuccess;
+            return UnityEngine.AI.NavMesh.CalculatePath(
+                sourcePosition: agentTransform.position,
+                targetPosition: fixedPosition,
+                areaMask: UnityEngine.AI.NavMesh.AllAreas,
+                path: path
+            );
         }
 
         protected string[] objectTypeToObjectIds(string objectTypeString) {
@@ -3045,8 +3016,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(this.m_Camera);
                         isVisible = isSimObjVisible(this.m_Camera, targetSOP, this.maxVisibleDistance, planes);
                     } else {
-                        var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
-                        isVisible = visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID);
+                        isVisible = getVisibleSimObjects().Any(sop => sop.objectID == targetSOP.objectID);
                     }
 
                     transform.rotation = rot;
