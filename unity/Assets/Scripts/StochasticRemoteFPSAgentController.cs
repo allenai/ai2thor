@@ -15,31 +15,63 @@ using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
+    
+    // TODO: Why is this separate controller necessary, and why is it inheriting from base?
     public class StochasticRemoteFPSAgentController : BaseFPSAgentController {
-        protected bool applyActionNoise = true;
+
+        // these mu's seem like really weird defaults?
+        // do we want it to basically never move?
         protected float movementGaussianMu = 0.001f;
-        protected float movementGaussianSigma = 0.005f;
         protected float rotateGaussianMu = 0.0f;
+
+        protected float movementGaussianSigma = 0.005f;
         protected float rotateGaussianSigma = 0.5f;
-        protected bool allowHorizontalMovement = false;
 
-        public void Initialize(ServerAction action) {
-            this.applyActionNoise = action.applyActionNoise;
+        protected bool applyActionNoise = true;
+        protected bool allowHorizontalMovement;
 
-            if (action.movementGaussianMu > 0.0f) {
-                this.movementGaussianMu = action.movementGaussianMu;
+        public void Initialize(
+            // stochastic specific
+            bool applyActionNoise = true,
+            bool allowHorizontalMovement = false,
+            float? movementGaussianMu = null,
+            float? movementGaussianSigma = null,
+            float? rotateGaussianMu = null,
+            float? rotateGaussianSigma = null,
+
+            // base specific
+            string agentMode = "default",
+            float? fieldOfView = null,
+            float gridSize = 0.25f,
+            float timeScale = 1,
+            float rotateStepDegrees = 90,
+            bool snapToGrid = true,
+            float visibilityDistance = 1.5f,
+            float timeToWaitForObjectsToComeToRest = 10.0f,
+            bool renderDepthImage = false,
+            bool renderClassImage = false,
+            bool renderObjectImage = false,
+            bool renderNormalsImage = false,
+            string visibilityScheme = "Collider"
+        ) {
+            if (movementGaussianMu != null) {
+                this.movementGaussianMu = (float) movementGaussianMu;
+            }
+            if (rotateGaussianMu != null) {
+                this.rotateGaussianMu = rotateGaussianMu;
             }
 
-            if (action.movementGaussianSigma > 0.0f) {
-                this.movementGaussianSigma = action.movementGaussianSigma;
+            if (movementGaussianSigma != null) {
+                if ((float) movementGaussianSigma < 0) {
+                    throw new ArgumentOutOfRangeException("movementGaussianSigma must be >= 0");
+                }
+                this.movementGaussianSigma = (float) movementGaussianSigma;
             }
-
-            if (action.rotateGaussianMu > 0.0f) {
-                this.rotateGaussianMu = action.rotateGaussianMu;
-            }
-
-            if (action.rotateGaussianSigma > 0.0f) {
-                this.rotateGaussianSigma = action.rotateGaussianSigma;
+            if (rotateGaussianSigma) {
+                if ((float) rotateGaussianSigma < 0) {
+                    throw new ArgumentOutOfRangeException("rotateGaussianSigma must be >= 0");
+                }
+                this.rotateGaussianSigma = rotateGaussianSigma;
             }
 
             #if UNITY_EDITOR
@@ -48,60 +80,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log("applynoise:" + applyActionNoise);
             #endif
 
-            base.Initialize(action);
+            this.applyActionNoise = applyActionNoise;
+            this.allowHorizontalMovement = allowHorizontalMovement;
+
+            base.Initialize(
+                agentMode: agentMode,
+                fieldOfView: fieldOfView,
+                gridSize: gridSize,
+                timeScale: timeScale,
+                rotateStepDegrees: rotateStepDegrees,
+                snapToGrid: snapToGrid,
+                visibilityDistance: visibilityDistance,
+                timeToWaitForObjectsToComeToRest: timeToWaitForObjectsToComeToRest,
+                renderDepthImage: renderDepthImage,
+                renderClassImage: renderClassImage,
+                renderObjectImage: renderObjectImage,
+                renderNormalsImage: renderNormalsImage,
+                visibilityScheme: visibilityScheme,
+            );
         }
 
-        // reset visible objects while in editor, for debug purposes only
-        private void LateUpdate() {
-            #if UNITY_EDITOR || UNITY_WEBGL
-            ServerAction action = new ServerAction();
-            VisibleSimObjPhysics = VisibleSimObjs(action);
-            #endif
-        }
-
-        public void MoveRelative(ServerAction action) {
-            if (!allowHorizontalMovement && Math.Abs(action.x) > 0) {
-                throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
+        public void MoveRelative(float x, float z) {
+            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
+                throw new InvalidOperationException("Controller does not support horizontal movement. Set allowHorizontalMovement to true on the Controller.");
             }
-            var moveLocal = new Vector3(action.x, 0, action.z);
-            var moveMagnitude = moveLocal.magnitude;
-            if (moveMagnitude > 0.00001) {
-                // random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
-                var random = new System.Random();
-                
 
-                // rotate a small amount with every movement since robot doesn't always move perfectly straight
-                if (this.applyActionNoise) {
-                    var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
-                    transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
-                }
-                var moveLocalNorm = moveLocal / moveMagnitude;
-                if (action.moveMagnitude > 0.0) {
-                    action.moveMagnitude = moveMagnitude * action.moveMagnitude;
-                }
-                else {
-                    action.moveMagnitude = moveMagnitude * gridSize;
-                }
+            Vector3 moveLocal = new Vector3(x, 0, z);
+            var random = new System.Random();
+            
 
-                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
-
-                actionFinished(moveInDirection(
-                    this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
-                    action.objectId,
-                    action.maxAgentsDistance,
-                    action.forceAction
-                ));
+            // rotate a small amount with every movement since robot doesn't always move perfectly straight
+            if (applyActionNoise) {
+                float rotateNoise = (float) random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
             }
-            else {
-                actionFinished(false);
+
+            // Todo: come back to here.... :0
+            var moveLocalNorm = moveLocal / moveMagnitude;
+            if (action.moveMagnitude > 0.0) {
+                action.moveMagnitude = moveMagnitude * action.moveMagnitude;
+            } else {
+                action.moveMagnitude = moveMagnitude * gridSize;
             }
+
+            var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
+
+            actionFinished(moveInDirection(
+                this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
+                action.objectId,
+                action.maxAgentsDistance,
+                action.forceAction
+            ));
         }
 
-        [ObsoleteAttribute("This property is obsolete. Use Done() or Pass() instead.", false)]
-        public void Stop() {
-            base.Pass();
-        }
-
+        // TODO: manualInteract isn't even setable reachable...?
         public void Rotate(bool manualInteract = false) {
             // only default hand if not manually interacting with things
             if (!manualInteract) {
@@ -115,23 +147,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RotateRight(ServerAction action) {
+        public override void RotateRight(float? rotation) {
             float rotationAmount = this.rotateStepDegrees;
-
-            if (action.degrees != 0.0f) {
-                rotationAmount = action.degrees;
+            if (rotation != null) {
+                rotationAmount = (float) degrees;
             }
-
-            Rotate(new ServerAction() { rotation = new Vector3(0, rotationAmount, 0) });
+            Rotate(new ServerAction() { rotation = new Vector3(0, 1.0f * rotationAmount, 0) });
         }
 
-        public void RotateLeft(ServerAction action) {
+        public override void RotateLeft(float? rotation) {
             float rotationAmount = this.rotateStepDegrees;
-
-            if (action.degrees != 0.0f) {
-                rotationAmount = action.degrees;
+            if (rotation != null) {
+                rotationAmount = (float) degrees;
             }
-
             Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
         }
 
@@ -150,6 +178,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void MoveRight(ServerAction action) {
+            // TODO: why would we not just allow horizontal movement by default?
             if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
@@ -160,6 +189,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void MoveLeft(ServerAction action) {
+            // TODO: why would we not just allow horizontal movement by default?
             if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
@@ -170,15 +200,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private float GetMoveMagnitudeWithNoise(ServerAction action) {
+            // TODO: why are these being declared here?
             var random = new System.Random();
             var noise = applyActionNoise ? random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
             return action.moveMagnitude + action.noise + (float)noise;
         }
 
-        private float GetRotateMagnitudeWithNoise(ServerAction action) {
+        private float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
+            // TODO: why are these being declared here?
             var random = new System.Random();
             var noise = applyActionNoise ? random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
-            return action.rotation.y + action.noise + (float)noise;
+            return action.rotation.y + action.noise + (float) noise;
         }
     }
 }
