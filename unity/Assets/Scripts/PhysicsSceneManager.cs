@@ -496,7 +496,6 @@ public class PhysicsSceneManager : MonoBehaviour {
                 continue;
             }
 
-            bool spawned = false;
             foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                 List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
         
@@ -532,8 +531,6 @@ public class PhysicsSceneManager : MonoBehaviour {
                                 gameObjToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
 
                                 howManyCouldntSpawn--;
-                                spawned = true;
-
                                 break;
                             }
                         } else {
@@ -547,7 +544,6 @@ public class PhysicsSceneManager : MonoBehaviour {
                             rb.isKinematic = true;
                 
                             howManyCouldntSpawn--;
-                            spawned = true;
                             break;
                         }
                     }
@@ -566,7 +562,6 @@ public class PhysicsSceneManager : MonoBehaviour {
                         AlwaysPlaceUpright: true // TODO: lowercase on A
                 )) {
                     howManyCouldntSpawn--;
-                    spawned = true;
                     break;
                 } 
             }
@@ -584,7 +579,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         // TODO: we should try again for them. It rarely happens, but when it does,
         // it's hard to catch.
         if (howManyCouldntSpawn > 0) {
-            throw new InvalidOperationException(gameObjToPlaceInReceptacle.name + " could not be spawned. Consider trying again!");
+            throw new InvalidOperationException("Couldn't spawn all objects! Consider resetting!");
         }
         return true;
     }

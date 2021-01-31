@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Fill : MonoBehaviour {
     [SerializeField]
@@ -46,7 +47,7 @@ public class Fill : MonoBehaviour {
 
     // fill the object with a random liquid
     public void FillObjectRandomLiquid() {
-        int randN = Random.Range(1, 3);
+        int randN = UnityEngine.Random.Range(1, 3);
         switch (randN) {
             case 1:
                 FillObject("water");
@@ -61,12 +62,12 @@ public class Fill : MonoBehaviour {
     }
 
     public void FillObject(string liquidType) {
-        if (whichLiquid == null) {
+        if (liquidType == null) {
             throw new ArgumentNullException();
         }
 
         if (!Liquids.ContainsKey(liquidType)) {
-            throw new ArgumentException($"liquidType: {whichLiquid} not a valid Liquid!");
+            throw new ArgumentException($"liquidType: {liquidType} not a valid Liquid!");
         }
 
         // check if this object has whichLiquid setup as fillable:

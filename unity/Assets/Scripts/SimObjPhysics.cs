@@ -911,18 +911,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     public void OnTriggerEnter(Collider other) {
         // is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
-        if ((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)) {
-            if (other.CompareTag("HighFriction")) { //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)) Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        if ((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable) &&
+            other.CompareTag("HighFriction")
+            // && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
+        ) {
+            Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-                // add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-                rb.drag = HFrbdrag;
-                rb.angularDrag = HFrbangulardrag;
+            // add something so that drag/angular drag isn't reset if we haven't set it on the object yet
+            rb.drag = HFrbdrag;
+            rb.angularDrag = HFrbangulardrag;
 
-                foreach (Collider col in MyColliders) {
-                    col.material.dynamicFriction = HFdynamicfriction;
-                    col.material.staticFriction = HFstaticfriction;
-                    col.material.bounciness = HFbounciness;
-                }
+            foreach (Collider col in MyColliders) {
+                col.material.dynamicFriction = HFdynamicfriction;
+                col.material.staticFriction = HFstaticfriction;
+                col.material.bounciness = HFbounciness;
             }
         }
     }

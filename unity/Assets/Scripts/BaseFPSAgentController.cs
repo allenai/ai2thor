@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
+using UnityEngine.Rendering;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -56,6 +57,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float timeToWaitForObjectsToComeToRest = 0.0f;
+
+        protected bool transparentStructureObjectsHidden = false;
 
         // determins default move distance for move actions
         protected float moveMagnitude;
@@ -439,25 +442,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string visibilityScheme = "Collider"
         ) {
             // set agent mode to default, bot or drone
-            const HashSet<string> VALID_AGENT_MODES = new HashSet<string> {"default", "bot", "drone"};
+            HashSet<string> VALID_AGENT_MODES = new HashSet<string> {"default", "bot", "drone"};
             if (!VALID_AGENT_MODES.Contains(agentMode)) {
                 throw new ArgumentException("agentMode be be in {'default', 'bot', 'drone'}.");
             }
             SetAgentMode(agentMode);
 
             // set up the gridSize
-            if (this.gridSize <= 0 || this.gridSize > 5) {
+            if (BaseFPSAgentController.gridSize <= 0 || BaseFPSAgentController.gridSize > 5) {
                 throw new ArgumentOutOfRangeException("grid size must be in the range (0, 5]");
             }
-            this.gridSize = gridSize;
+            BaseFPSAgentController.gridSize = gridSize;
             StartCoroutine(checkInitializeAgentLocationAction());
 
             // fieldOfView is set to its defaults in SetAgentMode. But, here, we can overwrite it.
             if (fieldOfView != null) {
-                if ((float)fieldOfView <= 0 || (float)fieldOfView >= 180) {
+                if ((float) fieldOfView <= 0 || (float) fieldOfView >= 180) {
                     throw new ArgumentOutOfRangeException("fov must be set to (0, 180) noninclusive.");
                 }
-                m_Camera.fieldOfView = action.fieldOfView;
+                m_Camera.fieldOfView = (float) fieldOfView;
             }
 
             // set the time scale
@@ -483,7 +486,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new ArgumentOutOfRangeException("Visibility Distance must be > 0.");
             }
 
-            this.maxVisibleDistance = action.visibilityDistance;
+            this.maxVisibleDistance = visibilityDistance;
 
             NavMeshAgent navmeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
             CapsuleCollider collider = GetComponent<CapsuleCollider>();
@@ -646,14 +649,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool isPositionInteractable(Vector3 position) {
             // now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
-            tmp.y = targetPosition.y;
+            tmp.y = position.y;
 
-            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) {
+            if (Vector3.Distance(tmp, position) > maxVisibleDistance) {
                 return false;
             }
 
             // now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+            Vector3 vp = m_Camera.WorldToViewportPoint(position);
             if (vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f) {
                 return false;
             }
@@ -682,6 +685,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool hitObject = Physics.Raycast(
                 ray: ray,
                 hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
                 layerMask: layerMask,
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
@@ -705,10 +709,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this means we only care about hits on layers
             // 0: Default, 8: SimObjVisible, 10: Agent, 11: PlaceableSurface
             int layerMask = 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11;
+            RaycastHit hit;
 
             bool hitObject = Physics.Raycast(
                 origin: origin,
                 direction: direction,
+                hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
                 layerMask: layerMask,
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
@@ -1018,149 +1025,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             StartCoroutine(setObjectPoses());
-        }
-
-        ///////////////////////////////////////////
-        //////////// SetObjectStates //////////////
-        ///////////////////////////////////////////
-
-        public void SetObjectStates(
-            string objectId,
-            bool? isBroken = null,
-            bool? isOpen = null,
-            bool? isDirty = null,
-            bool? isSliced = null,
-            bool? isUsedUp = null,
-            bool? isToggled = null,
-            bool? isCooked = null,
-            bool? isFilledWithLiquid = null,
-            string fillLiquid = null
-        ) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
-
-            // require a fill liquid when using isFilledWithLiquid
-            if (isFilledWithLiquid == true && fillLiquid == null) {
-                throw new ArgumentNullException("fillLiquid (string) must be specified, if you are trying to fill an object.");
-            }
-
-            // We do checks at the state so if anything fails, nothing changes in the environment state.
-            // Some special cases, since a broken object cannot be unbroken
-            if (isBroken == false) {
-                Break breakComponent = target.GetComponentInChildren<Break>();
-                if (breakComponent == null) {
-                    throw new ArgumentException($"Object {objectId} is not breakable!");
-                }
-                if (breakComponent.isBroken()) {
-                    throw new InvalidOperationException("A broken object cannot be unbroken!");
-                }
-
-                // object is not broken and they set isBroken to false. Thus, the state is fine.
-                isBroken = null;
-            }
-
-            // Cooked objects cannot be uncooked
-            if (isCooked == false) {
-                CookObject cookComponent = target.GetComponent<CookObject>();
-                if (cookComponent == null) {
-                    throw new ArgumentException($"Object {objectId} is not cookable!");
-                }
-                if (cookComponent.IsCooked()) {
-                    throw new InvalidOperationException("A cooked object cannot be uncooked!");
-                }
-
-                // the state is currently fine.
-                isCooked = null;
-            }
-
-            // Sliced objects cannot be unsliced.
-            if (isSliced == false) {
-                SliceObject sliceComponent = !target.GetComponent<SliceObject>();
-                if (sliceComponent == null) {
-                    throw new ArgumentException($"Object {objectId} is not sliceable!");
-                }
-                if (sliceComponent.IsSliced()) {
-                    throw new InvalidOperationException("A sliced object cannot be unsliced!");
-                }
-
-                // the state is currently fine.
-                isSliced = null;
-            }
-
-            // Sliced objects cannot be unsliced.
-            if (isUsedUp == false) {
-                UsedUp useUpComponent = target.GetComponent<UsedUp>();
-                if (useUpComponent == null) {
-                    throw new ArgumentException($"Object {objectId} is compatible with UseUp!");
-                }
-                if (useUpComponent.isUsedUp) {
-                    throw new InvalidOperationException("A used up object object cannot be un-used up!");
-                }
-
-                // the state is currently fine.
-                isUsedUp = null;
-            }
-
-            if (isBroken != null) {
-                breakObject(target: target, markActionFinished: false);
-            }
-
-            if (isFilledWithLiquid == true) {
-                fillObjectWithLiquid(
-                    target: target,
-                    fillLiquid: fillLiquid,
-                    markActionFinished: false
-                );
-            } else if (isFilledWithLiquid == false) {
-                emptyLiquidFromObject(target: target, markActionFinished: false);
-            }
-
-            if (isDirty == true) {
-                dirtyObject(target: target, markActionFinished: false);
-            } else if (isDirty == false) {
-                cleanObject(target: target, markActionFinished: false);
-            }
-
-            if (isCooked == true) {
-                cookObject(target: target, markActionFinished: false);
-            }
-
-            if (isSliced == true) {
-                sliceObject(target: target, markActionFinished: false);
-            }
-
-            if (isUsedUp == true) {
-                useObjectUp(target: target, markActionFinished: false);
-            }
-
-            // These actions are executed inside of a coroutine,
-            // so they must call actionFinished() when they are done.
-            // Notice the markActionFinished in each of these.
-            if (isOpen != null && isToggled != null) {
-                openObject(
-                    target: target,
-                    openness: isOpen == true ? 1 : 0,
-                    markActionFinished: false
-                );
-                toggleObject(
-                    target: target,
-                    toggleOn: isToggled == true,
-                    markActionFinished: true
-                );
-            } else if (isToggled != null) {
-                toggleObject(
-                    target: target,
-                    toggleOn: isToggled == true,
-                    markActionFinished: true
-                );
-            } else if (isOpen != null) {
-                openObject(
-                    target: target,
-                    openness: isOpen == true ? 1 : 0,
-                    markActionFinished: true
-                );
-            } else {
-                actionFinished(true);
-            }
         }
 
         ///////////////////////////////////////////
@@ -1881,7 +1745,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // this is currently overwritten by Rotate in Stochastic Controller
         public virtual void Rotate(Vector3 rotation) {
             // TODO: why is x=0 and z=0 set in the base?
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
             actionFinished(true);
         }
 
@@ -2119,8 +1983,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     // if this particular point is in view...
-                    if (CheckIfVisibilityPointRaycast(sop, point, agentCamera, false) ||
-                        CheckIfVisibilityPointRaycast(sop, point, agentCamera, true)
+                    if (checkIfVisibilityPointRaycast(sop, point, agentCamera, false) ||
+                        checkIfVisibilityPointRaycast(sop, point, agentCamera, true)
                     ) {
                         visPointCount++;
                         #if !UNITY_EDITOR
@@ -2145,7 +2009,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         
         // On demand function for getting what sim objects are visible at that moment
-        protected List<SimObjPhysics> getVisibleSimObjects(float maxDistance) {
+        protected SimObjPhysics[] getVisibleSimObjects(float maxDistance) {
             if (this.visibilityScheme == VisibilityScheme.Collider) {
                 return getAllVisibleSimObjPhysicsCollider(agentCamera: m_Camera, maxDistance: maxDistance);
             } else {
@@ -2153,7 +2017,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected List<SimObjPhysics> getVisibleSimObjects() {
+        protected SimObjPhysics[] getVisibleSimObjects() {
             return getVisibleSimObjects(maxDistance: maxVisibleDistance);
         }
 
@@ -2313,13 +2177,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // check if the visibility point on a sim object, sop, is within the viewport
         // has a include Invisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected bool CheckIfVisibilityPointRaycast(
+        protected bool checkIfVisibilityPointRaycast(
             SimObjPhysics sop,
             Transform point,
             Camera agentCamera,
             bool includeInvisible
         ) {
-            bool result = false;
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
@@ -2414,7 +2277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && // within x bounds of viewport
                 viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow  // within y bounds of viewport
             ) {
-                result = CheckIfVisibilityPointRaycast(sop, point, agentCamera, includeInvisible);
+                result = checkIfVisibilityPointRaycast(sop, point, agentCamera, includeInvisible);
             }
 
             #if UNITY_EDITOR
@@ -2460,7 +2323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool allowFloor = false
         ) {
             if (numPlacementAttempts <= 0) {
-                throw ArgumentOutOfRangeException("numPlacementAttempts must be a positive integer.");
+                throw new ArgumentOutOfRangeException("numPlacementAttempts must be a positive integer.");
             }
 
             // something is in our hand AND we are trying to spawn it. Quick drop the object
@@ -2628,7 +2491,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new ArgumentNullException("text and positions must be non-null.");
             }
 
-            if (positions.Count == 0) {
+            if (positions.Length == 0) {
                 throw new ArgumentOutOfRangeException("Positions must have at least 1 position!");
             }
 
@@ -2637,7 +2500,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // set start and target positions
-            Instantiate(DebugTargetPointPrefab, positions[positions.Count - 1], Quaternion.identity);
+            Instantiate(DebugTargetPointPrefab, positions[positions.Length - 1], Quaternion.identity);
             GameObject start = Instantiate(DebugPointPrefab, positions[0], Quaternion.identity) as GameObject;
 
             // set the text
@@ -2648,7 +2511,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             LineRenderer lineRenderer = start.GetComponentInChildren<LineRenderer>();
             lineRenderer.startWidth = 0.015f;
             lineRenderer.endWidth = 0.015f;
-            lineRenderer.positionCount = positions.Count;
+            lineRenderer.positionCount = positions.Length;
             lineRenderer.SetPositions(positions);
 
             actionFinished(success: true);
@@ -2733,7 +2596,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                throw InvalidOperationException("Path to target could not be found");
+                throw new InvalidOperationException("Path to target could not be found");
             }
             actionFinishedEmit(true, path);
         }
@@ -2812,10 +2675,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ObjectTypeToObjectIds(string objectType) {
             try {
                 string[] objectIds = objectTypeToObjectIds(objectType);
+                actionFinished(true, objectIds.ToArray());
             } catch (ArgumentException exception) {
-                throw new ArgumentException($"Invalid object type '{objectTypeString}'.");
+                throw new ArgumentException($"Invalid object type '{objectType}'.");
             }
-            actionFinished(true, objectIds.ToArray());
         }
 
         // TODO: remove
@@ -3266,7 +3129,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void DisableObjectsOfType(string objectType) {
             foreach (SimObjPhysics target in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (Enum.GetName(typeof(SimObjType), target.Type) == type) {
+                if (Enum.GetName(typeof(SimObjType), target.Type) == objectType) {
                     target.gameObject.SetActive(false);
                 }
             }
@@ -3290,7 +3153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (fieldOfView <= 0 || fieldOfView >= 180) {
                 throw new ArgumentOutOfRangeException("fov must be in (0, 180) noninclusive.");
             }
-            m_Camera.fieldOfView = action.fieldOfView;
+            m_Camera.fieldOfView = fieldOfView;
             actionFinished(true);
         }
 
@@ -3339,7 +3202,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (timeScale <= 0) {
                 throw new ArgumentOutOfRangeException("timeScale must be > 0");
             }
-            Time.timeScale = action.timeScale;
+            Time.timeScale = timeScale;
             actionFinished(true);
         }
 

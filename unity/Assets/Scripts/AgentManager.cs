@@ -181,8 +181,7 @@ public class AgentManager : MonoBehaviour {
             ((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
         }
         print("start addAgents");
-        StartCoroutine (addAgents (action));
-
+        StartCoroutine(addAgents(action));
     }
 
     private void SetUpStochasticController(ServerAction action) {
@@ -226,14 +225,18 @@ public class AgentManager : MonoBehaviour {
         return primaryAgent;
     }
 
-    private IEnumerator addAgents(ServerAction action) {
+    private IEnumerator addAgents(
+        int agentCount,
+        float? startAgentsRotatedBy = null
+    ) {
         yield return null;
         Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
-        for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
-            action.x = reachablePositions[i + 4].x;
-            action.y = reachablePositions[i + 4].y;
-            action.z = reachablePositions[i + 4].z;
-            addAgent (action);
+        for (int i = 1; i < agentCount && this.agents.Count < Math.Min(agentColors.Length, agentCount); i++) {
+            addAgent(
+                x: reachablePositions[i + 4].x,
+                y: reachablePositions[i + 4].y,
+                z: reachablePositions[i + 4].z
+            );
             yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -241,8 +244,8 @@ public class AgentManager : MonoBehaviour {
         }
         this.agents[0].m_Camera.depth = 9999;
 
-        if (action.startAgentsRotatedBy != 0f) {
-            RotateAgentsByRotatingUniverse(action.startAgentsRotatedBy);
+        if (startAgentsRotatedBy != null) {
+            RotateAgentsByRotatingUniverse((float) startAgentsRotatedBy);
         } else {
             ResetSceneBounds();
         }
@@ -251,10 +254,10 @@ public class AgentManager : MonoBehaviour {
     }
 
     public void ResetSceneBounds() {
-        // Recordining initially disabled renderers and scene bounds
+        // Recording initially disabled renderers and scene bounds
         sceneBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
         foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
             if (r.enabled) {
@@ -499,19 +502,20 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
-    private void addAgent(float x, float y, float z, bool makeAgents) {
+    // todo: make sure makeAgentsVisible is working
+    private void addAgent(float x, float y, float z, bool makeAgentsVisible = false) {
         Vector3 clonePosition = new Vector3(x, y, z);
 
         //disable ambient occlusion on primary agent because it causes issues with multiple main cameras
         //primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
         BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
-        clone.IsVisible = action.makeAgentsVisible;
+        clone.IsVisible = makeAgentsVisible;
         clone.actionDuration = this.actionDuration;
         // clone.m_Camera.targetDisplay = this.agents.Count;
         clone.transform.position = clonePosition;
         UpdateAgentColor(clone, agentColors[this.agents.Count]);
-        clone.ProcessControlCommand (action.dynamicServerAction);
+        clone.ProcessControlCommand(action.dynamicServerAction);
         this.agents.Add(clone);
     }
 

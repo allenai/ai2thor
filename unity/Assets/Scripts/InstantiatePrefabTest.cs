@@ -147,7 +147,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
     public bool PlaceObjectReceptacle(
         List<ReceptacleSpawnPoint> rsps,
         SimObjPhysics sop, 
-        bool PlaceStationary,
+        bool placeStationary,
         int maxPlacementAttempts,
         int degreeIncrement,
         bool AlwaysPlaceUpright
@@ -176,7 +176,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         // try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps) {
-            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
+            if (PlaceObject(sop, p, placeStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 return true;
             }
             tries += 1;
@@ -191,7 +191,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     // same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
 
-    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
+    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool placeStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
         if (rsps == null) {
             #if UNITY_EDITOR
             Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
@@ -215,7 +215,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             // if this is an Object Specific Receptacle, stop this check right now! I mean it!
             // Placing objects in/on an Object Specific Receptacle uses different logic to place the
             // object at the attachment point rather than in the spawn area, so stop this right now!
-            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
+            if (PlaceObject(sop, p, placeStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
                 BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
                 if (primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop)) {
@@ -248,7 +248,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
     public bool PlaceObject(
         SimObjPhysics sop,
         ReceptacleSpawnPoint rsp,
-        bool PlaceStationary,
+        bool placeStationary,
         int degreeIncrement,
         bool AlwaysPlaceUpright
     ) {
@@ -423,7 +423,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                 // set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-                if (PlaceStationary) {
+                if (placeStationary) {
                     // make object being placed kinematic true
                     sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
