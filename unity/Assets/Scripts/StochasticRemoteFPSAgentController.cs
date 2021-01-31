@@ -96,7 +96,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 renderClassImage: renderClassImage,
                 renderObjectImage: renderObjectImage,
                 renderNormalsImage: renderNormalsImage,
-                visibilityScheme: visibilityScheme,
+                visibilityScheme: visibilityScheme
             );
         }
 

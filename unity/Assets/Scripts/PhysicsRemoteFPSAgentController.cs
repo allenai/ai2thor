@@ -5252,7 +5252,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ApproxPercentScreenObjectFromPositions(string objectId, Vector3[] positions = null) {
             SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
             Vector3[] positions = null;
-            if (positions != null && positions.Count != 0) {
+            if (positions != null && positions.Length != 0) {
                 positions = positions.ToArray();
             } else {
                 positions = getReachablePositions();
