@@ -1677,6 +1677,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             isOpenableGrid = new bool[0, 0];
             segmentedObjectIds = new string[0];
             objectIdsInBox = new string[0];
+            actionReturn = null;
             actionIntReturn = 0;
             actionFloatReturn = 0.0f;
             actionFloatsReturn = new float[0];
@@ -1766,6 +1767,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // which terminates the action immediately.
                 actionFinished(
                     success: false,
+                    actionReturn: actionReturn,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
                 );
             } catch (Exception e) {
