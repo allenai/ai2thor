@@ -504,6 +504,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        // TODO: make each mode its own method or component so that default parameters
+        // can be easily accessed.
         public void SetAgentMode(string mode) {
             string whichMode;
             whichMode = mode.ToLower();
@@ -628,6 +630,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // target not found!
             if (target == null) {
                 throw new NullReferenceException("Target object not found within the specified visibility.");
+            }
+
+            if (!forceAction && !target.isInteractable) {
+                throw new InvalidOperationException(objectId + " is not interactable and (perhaps it is occluded by something).");
             }
 
             return target;

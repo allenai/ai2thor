@@ -187,7 +187,7 @@ public class AgentManager : MonoBehaviour {
 
     private void SetUpStochasticController(ServerAction action) {
         this.agents.Clear();
-        //force snapToGrid to be false since we are stochastic
+        // force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         primaryAgent.enabled = false;

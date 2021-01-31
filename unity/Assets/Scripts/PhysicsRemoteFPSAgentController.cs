@@ -1626,8 +1626,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target,
             float moveMagnitude,
             float pushAngle,
-            bool markActionFinished,
-            bool forceAction
+            bool markActionFinished
         ) {
             if (target == null) {
                 throw new ArgumentNullException();
@@ -1639,10 +1638,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!canBePushed(target)) {
                 throw new InvalidOperationException("Target Primary Property type incompatible with push/pull");
-            }
-
-            if (!forceAction && !target.isInteractable) {
-                throw new InvalidOperationException("Target is not interactable and is probably occluded by something!");
             }
 
             // The direction vector to push the target object defined by pushAngle
@@ -1660,18 +1655,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             target.GetComponent<Rigidbody>().isKinematic = false;
-            sopApplyForce(dir: direction, magnitude: moveMagnitude, sop: target);
+            sopApplyForce(dir: direction, magnitude: moveMagnitude, sop: target, markActionFinished: true);
         }
 
-        // TODO: use markActionFinished
         public void DirectionalPush(string objectId, float moveMagnitude, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
-            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
+            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, markActionFinished: true);
         }
 
         public void DirectionalPush(float x, float y, float moveMagnitude, float pushAngle, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
-            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, forceAction: forceAction);
+            directionalPush(target: target, moveMagnitude: moveMagnitude, pushAngle: pushAngle, markActionFinished: true);
         }
 
         ///////////////////////////////////////////
@@ -1781,22 +1775,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected void sopApplyForce(Vector3 dir, float magnitude, SimObjPhysics sop, float length = 0) {
+        protected void sopApplyForce(Vector3 dir, float magnitude, SimObjPhysics sop, bool markActionFinished, float length = 0) {
             // apply force, return action finished immediately
             sop.ApplyForce(dir: dir, magnitude: magnitude);
             if (physicsSceneManager.physicsSimulationPaused && length > 0) {
-                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
-                #if UNITY_EDITOR
-                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
-                    print("armslength: " + feedback.armsLength);
-                #endif
-                actionFinished(true, feedback);
+                giveTouchFeedback(didHandTouchSomething: true, objectId: sop.ObjectID, armsLength: length);
+                if (markActionFinished) {
+                    actionFinished(true, feedback);
+                }
             } else if (physicsSceneManager.physicsSimulationPaused) {
-                actionFinished(true);
+                if (markActionFinished) {
+                    actionFinished(true);
+                }
             } else {
                 // if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
-                StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: sop, length: length));
             }
         }
 
@@ -1805,8 +1798,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             float length,
+            bool markActionFinished,
             bool useTimeout = false
         ) {
+            if (sop == null) {
+                throw new ArgumentNullException("SimObject must be non-null!");
+            }
+
             // yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
 
@@ -1817,115 +1815,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 waitTime = 1.0f;
             }
 
-            if (sop != null) {
-                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
-                bool stoppedMoving = false;
+            Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+            bool stoppedMoving = false;
 
-                while (Time.time - startTime < waitTime) {
-                    if (sop == null) {
-                        break;
-                    }
-
-                    float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
-
-                    // ok the accel is basically zero, so it has stopped moving
-                    if (Mathf.Abs(accel) <= 0.001f) {
-                        // force the rb to stop moving just to be safe
-                        rb.velocity = Vector3.zero;
-                        rb.angularVelocity = Vector3.zero;
-                        rb.Sleep();
-                        stoppedMoving = true;
-                        break;
-                    } else {
-                        yield return new WaitForFixedUpdate();
-                    }
+            while (Time.time - startTime < waitTime) {
+                if (sop == null) {
+                    break;
                 }
 
-                // so we never stopped moving and we are using the timeout
-                if (!stoppedMoving && useTimeout) {
-                    errorMessage = "object couldn't come to rest";
-                    actionFinished(false);
-                    yield break;
-                }
+                float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                // we are past the wait time threshold, so force object to stop moving before
-                // rb.velocity = Vector3.zero;
-                // rb.angularVelocity = Vector3.zero;
-                // rb.Sleep();
-
-                // return to metadatawrapper.actionReturn if an object was touched during this interaction
-                if (length != 0.0f) {
-                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
-
-                    #if UNITY_EDITOR
-                    print("yield timed out");
-                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
-                    print("armslength: " + feedback.armsLength);
-                    #endif
-
-                    // force object to stop moving
+                // ok the accel is basically zero, so it has stopped moving
+                if (Mathf.Abs(accel) <= 0.001f) {
+                    // force the rb to stop moving just to be safe
                     rb.velocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
                     rb.Sleep();
-
-                    actionFinished(true, feedback);
+                    stoppedMoving = true;
+                    break;
                 } else {
-                    // if passed in length is 0, don't return feedback cause not all actions need that
-                    DefaultAgentHand();
+                    yield return new WaitForFixedUpdate();
+                }
+            }
+
+            // so we never stopped moving and we are using the timeout
+            if (!stoppedMoving && useTimeout) {
+                throw new InvalidOperationException("object couldn't come to rest");
+            }
+
+            // we are past the wait time threshold, so force object to stop moving before
+            // rb.velocity = Vector3.zero;
+            // rb.angularVelocity = Vector3.zero;
+            // rb.Sleep();
+
+            // return to metadatawrapper.actionReturn if an object was touched during this interaction
+            if (length != 0.0f) {
+                // force object to stop moving
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.Sleep();
+
+                if (markActionFinished) {
+                    TouchFeedback feedback = giveTouchFeedback(didHandTouchSomething: true, objectId: sop.objectID, armsLength: length);
+                    actionFinished(true, feedback);
+                }
+            } else {
+                // if passed in length is 0, don't return feedback cause not all actions need that
+                DefaultAgentHand();
+                if (markActionFinished) {
                     actionFinished(true, "object settled after: " + (Time.time - startTime));
                 }
-            } else {
-                errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
-                actionFinished(false);
-            }
-        }
-
-        // Sweeptest to see if the object Agent is holding will prohibit movement
-        public bool CheckIfItemBlocksAgentStandOrCrouch() {
-            bool result = false;
-
-            // if there is nothing in our hand, we are good, return!
-            if (ItemInHand == null) {
-                result = true;
-                return result;
-            } else {
-                // otherwise we are holding an object and need to do a sweep using that object's rb
-                Vector3 dir = new Vector3();
-
-                if (isStanding()) {
-                    dir = new Vector3(0.0f, -1f, 0.0f);
-                } else {
-                    dir = new Vector3(0.0f, 1f, 0.0f);
-                }
-
-                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-
-                RaycastHit[] sweepResults = rb.SweepTestAll(dir, standingLocalCameraPosition.y, QueryTriggerInteraction.Ignore);
-                if (sweepResults.Length > 0) {
-                    foreach (RaycastHit res in sweepResults) {
-                        // did the item in the hand touch the agent? if so, ignore it's fine
-                        // also ignore Untagged because the Transparent_RB of transparent objects need to be ignored for movement
-                        // the actual rigidbody of the SimObjPhysics parent object of the transparent_rb should block correctly by having the
-                        // checkMoveAction() in the BaseFPSAgentController fail when the agent collides and gets shoved back
-                        if (res.transform.tag == "Player" || res.transform.tag == "Untagged") {
-                            result = true;
-                            break;
-                        } else {
-                            errorMessage = res.transform.name + " is blocking the Agent from moving " + dir + " with " + ItemInHand.name;
-                            result = false;
-                            Debug.Log(errorMessage);
-                            return result;
-                        }
-
-                    }
-                } else {
-                    // if the array is empty, nothing was hit by the sweeptest so we are clear to move
-                    result = true;
-                }
-
-                return result;
             }
         }
 
@@ -1933,88 +1873,110 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////////  TOUCH THEN APPLY FORCE /////////
         ///////////////////////////////////////////
 
-        public void TouchThenApplyForce(ServerAction action) {
-            float x = action.x;
-            float y = 1.0f - action.y; // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+        // TODO: can we simplify this actionReturn setup? Seems super complicated and uniquely different..
+        // Specifically, looking at using getTargetObject.
+        public void TouchThenApplyForce(
+            float x,
+            float y,
+            float moveMagnitude,
+            Vector3 direction,
+            float? handDistance = null
+        ) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
+            }
 
-            // cast ray from screen coordinate into world space. If it hits an object
+            float handDistanceFloat = maxVisibleDistance;
+            if (handDistance != null) {
+                handDistanceFloat = (float) handDistance;
+            }
+            if (handDistanceFloat <= 0) {
+                throw new ArgumentOutOfRangeException("handDistance must be > 0.");
+            }
+
+            // NOTE: this does nearly the same thing as getTargetObject, but we care a lot
+            // more about the returns from the intermediate steps here. See getTargetObject
+            // for more on what's going on.
+            float x = x;
+            float y = 1.0f - y; 
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
+            bool hitSomething = Physics.Raycast(
+                origin: ray,
+                hit: out hit,
+                maxDistance: handDistanceFloat,
+                layerMask: 1 << 0 | 1 << 8 | 1 << 10,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
 
-            // if something was touched, actionFinished(true) always
-            if (Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1<<10, QueryTriggerInteraction.Ignore)) {
-                if (hit.transform.GetComponent<SimObjPhysics>()) {
-                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                    // this should basically only happen if the handDistance value is too big
-                    if (!CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                        errorMessage = "Object successfully hit, but it is outside of the Agent's interaction range";
-                        WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
-                        actionFinished(false, errorFeedback);
-                        return;
-                    }
-
-                    // if the object is a sim object, apply force now!
-                    SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
-                    if (!canBePushed(target)) {
-                        // the sim object hit was not moveable or pickupable
-                        WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = target.objectID, armsLength = hit.distance};
-                        #if UNITY_EDITOR
-                            print("object touched was not moveable or pickupable");
-                            print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                            print("object id: " + feedback.objectId);
-                            print("armslength: " + feedback.armsLength);
-                        #endif
-                        actionFinished(false, feedback);
-                        return;
-                    }
-
-                    sopApplyForce(
-                        dir: transform.TransformDirection(action.direction),
-                        magnitude: action.moveMagnitude,
-                        sop: target,
-                        length: hit.distance
-                    );
-                } else {
-                    // raycast hit something but it wasn't a sim object
-                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "not a sim object, a structure was touched", armsLength = hit.distance};
-                    #if UNITY_EDITOR
-                    print("object touched was not a sim object at all");
-                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
-                    print("armslength: " + feedback.armsLength);
-                    #endif
-                    actionFinished(true, feedback);
-                    return;
-                }
-            } else {
-                // raycast didn't hit anything
+            if (!hitSomething) {
                 // get ray.origin, multiply handDistance with ray.direction, add to origin to get the final point
                 // if the final point was out of range, return actionFinished false, otherwise return actionFinished true with feedback
-                Vector3 testPosition = ((action.handDistance * ray.direction) + ray.origin);
-                if (!CheckIfTargetPositionIsInViewportRange(testPosition)) {
-                    errorMessage = "the position the hand would have moved to is outside the agent's max interaction range";
-                    WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
-                    actionFinished(false, errorFeedback);
-                    return;
+                Vector3 testPosition = ((handDistanceFloat * ray.direction) + ray.origin);
+                if (!isPositionInteractable(position: testPosition)) {
+                    giveTouchFeedback(didHandTouchSomething: false, armsLength: handDistanceFloat);
+                    throw new InvalidOperationException("The position the hand would have moved to is outside the agent's max interaction range.");
                 }
 
                 // the nothing hit was not out of range, but still nothing was hit
-                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
-                #if UNITY_EDITOR
-                    print("raycast did not hit anything, it only hit empty space");
-                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
-                    print("armslength: " + feedback.armsLength);
-                #endif
-                actionFinished(true, feedback);
+                TouchFeedback feedback = giveTouchFeedback(didHandTouchSomething: false, armsLength: handDistanceFloat);
+                actionFinished(success: true, actionReturn: feedback);
+                return;
             }
+
+            // if something was touched, actionFinished(true) always
+            if (!hit.transform.GetComponent<SimObjPhysics>()) {
+                // raycast hit something but it wasn't a sim object
+                TouchFeedback feedback = giveTouchFeedback(didHandTouchSomething: false, armsLength: handDistanceFloat);
+                actionFinished(success: true, actionReturn: feedback, errorMessage: "Structure touched, not SimObject");
+                return;
+            }
+
+            // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+            // this should basically only happen if the handDistance value is too big
+            if (!isPositionInteractable(position: hit.point)) {
+                giveTouchFeedback(didHandTouchSomething: false, armsLength: handDistanceFloat);
+                throw new InvalidOperationException("Object successfully hit, but it is outside of the Agent's interaction range");
+            }
+
+            // if the object is a sim object, apply force now!
+            SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
+            if (!canBePushed(target)) {
+                TouchFeedback feedback = giveTouchFeedback(didHandTouchSomething: false, armsLength: handDistanceFloat);
+                actionFinished(success: false, actionReturn: feedback);
+                return;
+            }
+
+            sopApplyForce(
+                dir: transform.TransformDirection(direction),
+                magnitude: moveMagnitude,
+                sop: target,
+                markActionFinished: true,
+                length: hit.distance
+            );
         }
 
         // for use with TouchThenApplyForce feedback return
-        public struct WhatDidITouch {
+        public struct TouchFeedback {
             public bool didHandTouchSomething; // did the hand touch something or did it hit nothing?
             public string objectId; // id of object touched, if it is a sim object
             public float armsLength; // the amount the hand moved from it's starting position to hit the object touched
+        }
+
+        protected void giveTouchFeedback(bool didHandTouchSomething, float armsLength, string objectId = null) {
+            TouchFeedback feedback = new TouchFeedback() {
+                didHandTouchSomething = didHandTouchSomething,
+                objectId = objectId,
+                armsLength = armsLength
+            };
+
+            #if UNITY_EDITOR
+                print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                print("object id: " + feedback.objectId);
+                print("armslength: " + feedback.armsLength);
+            #endif
+
+            actionReturn = feedback;
         }
 
         ///////////////////////////////////////////
@@ -2966,7 +2928,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!anywhere) {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
                 foreach (Vector3 v in targetPoints) {
-                    if (CheckIfTargetPositionIsInViewportRange(v)) {
+                    if (isPositionInteractable(position: v)) {
                         filteredTargetPoints.Add(v);
                     }
                 }
@@ -3309,14 +3271,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (!IsHandDefault) {
                 throw new InvalidOperationException("Must reset Hand to default position before attempting to Pick Up objects");
-            }
-
-            // cannot interact with object
-            if (!forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                throw new InvalidOperationException(target.objectID + " is not visible and can't be picked up.");
-            }
-            if (!forceAction && !target.isInteractable) {
-                throw new InvalidOperationException(target.objectID + " is not interactable and (perhaps it is occluded by something).");
             }
 
             // save all initial values in case we need to reset on action fail
@@ -4155,6 +4109,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///// Crouch and Stand /////
         ////////////////////////////
 
+
+        // Sweeptest to see if the object Agent is holding will prohibit movement
+        public void assertAgentCanStandOrCrouch() {
+            // if there is nothing in our hand, we are good, return!
+            if (ItemInHand == null) {
+                return;
+            }
+
+            // otherwise we are holding an object and need to do a sweep using that object's rb
+            Vector3 dir = new Vector3();
+
+            if (isStanding()) {
+                dir = new Vector3(0.0f, -1f, 0.0f);
+            } else {
+                dir = new Vector3(0.0f, 1f, 0.0f);
+            }
+
+            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+
+            RaycastHit[] sweepResults = rb.SweepTestAll(dir, standingLocalCameraPosition.y, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit res in sweepResults) {
+                // did the item in the hand touch the agent? if so, ignore it's fine
+                // also ignore Untagged because the Transparent_RB of transparent objects need to be ignored for movement
+                // the actual rigidbody of the SimObjPhysics parent object of the transparent_rb should block correctly by having the
+                // checkMoveAction() in the BaseFPSAgentController fail when the agent collides and gets shoved back
+                if (res.transform.tag == "Player" || res.transform.tag == "Untagged") {
+                    break;
+                } else {
+                    throw new InvalidOperationException($"{res.transform.name} is blocking the Agent from moving {dir} with {ItemInHand.name}");
+                }
+            }
+        }
+
         public bool isStanding() {
             return standingLocalCameraPosition == m_Camera.transform.localPosition;
         }
@@ -4173,30 +4160,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Crouch() {
             if (!isStanding()) {
-                errorMessage = "Already crouching.";
-                actionFinished(false);
-            } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
-                actionFinished(false);
-            } else {
-                m_Camera.transform.localPosition = new Vector3(
-                    standingLocalCameraPosition.x,
-                    crouchingLocalCameraPosition.y,
-                    standingLocalCameraPosition.z
-                );
                 actionFinished(true);
+                return;
             }
+
+            assertAgentCanStandOrCrouch();
+            crouch();
+            actionFinished(true);
         }
 
         public void Stand() {
             if (isStanding()) {
-                errorMessage = "Already standing.";
-                actionFinished(false);
-            } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
-                actionFinished(false);
-            } else {
-                m_Camera.transform.localPosition = standingLocalCameraPosition;
                 actionFinished(true);
+                return;
             }
+
+            assertAgentCanStandOrCrouch();
+            stand();
+            actionFinished(true);
         }
 
         ///////////////////////////////////
@@ -4243,9 +4224,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 updateAllAgentCollidersForVisibilityCheck(true);
                 return result;
             } else {
-                // TODO: throw exception.
                 #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                    Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
                 #endif
             }
 
@@ -4275,19 +4255,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance)
-        {
-            if (sop.VisibilityPoints.Length > 0)
-            {
+        public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+            if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 updateAllAgentCollidersForVisibilityCheck(false);
-                foreach (Transform point in visPoints)
-                {
+                foreach (Transform point in visPoints) {
                     Vector3 tmp = point.position;
                     tmp.y = transform.position.y;
                     // Debug.Log(Vector3.Distance(tmp, transform.position));
-                    if (Vector3.Distance(tmp, transform.position) < maxDistance)
-                    {
+                    if (Vector3.Distance(tmp, transform.position) < maxDistance) {
                         // if this particular point is in view...
                         if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false) ||
                             CheckIfVisibilityPointInViewport(sop, point, m_Camera, true)
@@ -4299,7 +4275,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             } else {
                 #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                    Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
                 #endif
             }
             updateAllAgentCollidersForVisibilityCheck(true);
@@ -4345,7 +4321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             #if UNITY_EDITOR
-            Vector3 visiblePosition = new Vector3(0.0f, 0.0f, 0.0f);
+                Vector3 visiblePosition = new Vector3(0.0f, 0.0f, 0.0f);
             #endif
             bool objectSeen = false;
             int positionsTried = 0;
@@ -4369,7 +4345,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                for (int j = 0; j < 2; j++) { // Standing / Crouching
+                // Standing / Crouching
+                for (int j = 0; j < 2; j++) { 
                     if (j == 0) {
                         stand();
                     } else {
@@ -5969,7 +5946,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             #endif
-
 
             List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
             foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
