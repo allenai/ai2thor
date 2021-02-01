@@ -324,22 +324,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "inita":
                     {
-						ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
 						if (splitcommand.Length == 2 )
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3)
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
-                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
                         }
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
@@ -356,16 +356,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.cameraY = 2.0f;
                         //action.snapToGrid = true;
                         // action.rotateStepDegrees = 45;
-                        action.action = "Initialize";
+                        action["action"] = "Initialize";
 
-                        action.agentMode = "arm";
-                        action.agentControllerType = "mid-level";
+                        action["agentMode"] = "arm";
+                        action["agentControllerType"] = "mid-level";
 
                         //action.useMassThreshold = true;
                         //action.massThreshold = 10f;
 
 
-                        AManager.Initialize(action);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -430,7 +430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
 
                     // execute each action
-                    IEnumerator ExecuteBatch(JArray jActions) {
+                    IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
                             while (PhysicsController.IsProcessing) {
@@ -440,7 +440,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
                         }
                     }
-                    StartCoroutine(ExecuteBatch(jActions: actions));
+                    StartCoroutine(executeBatch(jActions: actions));
                     break;
 
                  case "exp":
