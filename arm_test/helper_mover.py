@@ -157,8 +157,12 @@ def dict_recursive_nan_check(arm_dict):
             this_item_nan = dict_recursive_nan_check(v)
         elif type(v) == float:
             this_item_nan = (v != v) or (math.isinf(v))
-        elif type(v) == str:
+        elif type(v) == str or type(v) == bool:
             this_item_nan = False
+        elif type(v) == list:
+            this_item_nan = dict_recursive_nan_check({i:v for (i,v) in enumerate(v)})
+        elif v is None:
+            this_item_nan = False #TODO
         else:
             print(v)
             raise Exception('Not implemented')
