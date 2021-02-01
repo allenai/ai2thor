@@ -132,10 +132,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public CharacterController m_CharacterController;
 		protected CollisionFlags m_CollisionFlags;
 		protected Vector3 lastPosition;
-		protected string lastAction;
-		protected bool lastActionSuccess;
-		public string errorMessage;
-		protected ServerActionErrorCode errorCode;
+
+        // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
+        public string lastAction;
+        public bool lastActionSuccess;
+        public string errorMessage;
+        public ServerActionErrorCode errorCode;
+
+
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
@@ -275,29 +279,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.Emit, actionReturn);
+		public void actionFinishedEmit(bool success, object actionReturn = null) {
+            actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
 		}
 
-		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
-		{
-			if (!this.IsProcessing)
-			{
-				Debug.LogWarning ("ActionFinished called with agentState not in processing ");
-			}
+		protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
+			if (!this.IsProcessing) {
+				Debug.LogError ("ActionFinished called with agentState not in processing ");
+		}
 
             lastActionSuccess = success;
 			this.agentState = newState;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
-
         }
 
-		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
-		{
-            actionFinished(success, AgentState.ActionComplete, actionReturn);
+		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
+            actionFinished(success: success, newState: AgentState.ActionComplete, actionReturn: actionReturn);
             this.resumePhysics();
 		}
 
@@ -737,7 +739,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        // alias to RandomizeColors, supported for backwards compatibility
+        [ObsoleteAttribute(message: "This action is deprecated. Call RandomizeColors instead.", error: false)] 
         public void ChangeColorOfMaterials() {
             RandomizeColors();
         }
@@ -1478,10 +1480,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = status;
 		}
 
-
-#if UNITY_WEBGL
+        // This should only be used by DebugInputField and HideNSeekController
+        // Once all those invocations have been converted to Dictionary<string, object>
+        // this can be removed
         public void ProcessControlCommand(ServerAction controlCommand)
         {
+
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1514,25 +1518,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
         }
-#endif
 
         // the parameter name is different to avoid failing a test
         // that looks for methods with identical param names, since
         // we dispatch using method + param names
         public void ProcessControlCommand(Dictionary<string, object> actionDict){
-            var jsonResolver = new ShouldSerializeContractResolver();
-            dynamic action = JObject.FromObject(actionDict,
-                        new Newtonsoft.Json.JsonSerializer()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            });
-
-
-            ProcessControlCommand(action);
+            ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(dynamic controlCommand)
+        public void ProcessControlCommand(DynamicServerAction controlCommand)
         {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -1551,38 +1545,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
                 errorCode = ServerActionErrorCode.MissingArguments;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
             }
             catch (AmbiguousActionException e)
             {
                 errorMessage = "Ambiguous action: " + controlCommand.action + " " + e.Message;
                 errorCode = ServerActionErrorCode.AmbiguousAction;
-                Debug.LogError(errorMessage);
                 actionFinished(false);
-            
             }
             catch (InvalidActionException)
             {
-                errorMessage = "Invalid action: " + controlCommand.action;
                 errorCode = ServerActionErrorCode.InvalidAction;
-                Debug.LogError(errorMessage);
-                actionFinished(false);
-            
+                actionFinished(success: false, errorMessage: "Invalid action: " + controlCommand.action);
+            }
+            catch (TargetInvocationException e)
+            {
+                // TargetInvocationException is called whenever an action
+                // throws an exception. It is used to short circuit errors,
+                // which terminates the action immediately.
+                actionFinished(
+                    success: false,
+                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
+                );
             }
             catch (Exception e)
             {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
-                Debug.LogError(e);
                 errorMessage += e.ToString();
                 actionFinished(false);
             }
 
             #if UNITY_EDITOR
-            if (errorMessage != "") {
-                Debug.Log(errorMessage);
-            }
+                if (errorMessage != "") {
+                    Debug.LogError(errorMessage);
+                }
             #endif
         }
 
@@ -3123,7 +3120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SimObjPhysics soInHand = ItemInHand.GetComponent<SimObjPhysics>();
 
             Vector3 handObjPosRelAgent =
-                Quaternion.Euler(0, rotation - transform.rotation.y, 0) *
+                Quaternion.Euler(0, rotation - transform.eulerAngles.y, 0) *
                 (transform.position - ItemInHand.transform.position);
 
             Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;

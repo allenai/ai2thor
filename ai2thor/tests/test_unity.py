@@ -47,6 +47,7 @@ def test_stochastic_controller():
     controller = build_controller(agentControllerType='stochastic')
     controller.reset('FloorPlan28')
     assert controller.last_event.metadata['lastActionSuccess']
+    controller.stop()
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
 # up with the same frame
@@ -55,6 +56,7 @@ def test_multi_agent_with_third_party_camera():
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
     event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=90), position=dict(x=-1.0, z=-2.0, y=1.0)))
     assert not np.all(controller.last_event.events[1].frame == controller.last_event.events[0].frame)
+    controller.stop()
 
 # Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
 def test_third_party_camera_with_image_synthesis():
@@ -64,6 +66,7 @@ def test_third_party_camera_with_image_synthesis():
     assert len(event.third_party_class_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1
     assert len(event.third_party_instance_segmentation_frames) == 1
+    controller.stop()
 
 
 def test_rectangle_aspect():
@@ -71,12 +74,14 @@ def test_rectangle_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
+    controller.stop()
 
 def test_small_aspect():
     controller = build_controller(width=128, height=64)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
+    controller.stop()
 
 def test_reset():
     controller = build_controller()
@@ -92,6 +97,7 @@ def test_reset():
     event = controller.reset(scene='FloorPlan28', width=width, height=height, renderDepthImage=False)
     assert event.depth_frame is None, "depth frame shouldn't have rendered!"
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
+    controller.stop()
 
 def test_fast_emit():
     fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
@@ -105,6 +111,7 @@ def test_fast_emit():
     assert id(event.metadata['objects']) ==  id(event_fast_emit.metadata['objects'])
     assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
+    fast_controller.stop()
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_fast_emit_disabled(controller):
@@ -135,6 +142,15 @@ def test_no_leak_params(controller):
     action = dict(action='RotateLook', rotation=0, horizon=0)
     e = controller.step(action)
     assert 'sequenceId' not in action
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_target_invocation_exception(controller):
+    # TargetInvocationException is raised when short circuiting failures occur
+    # on the Unity side. It often occurs when invalid arguments are used.
+    event = controller.step('OpenObject', x=1.5, y=0.5)
+    assert not event.metadata['lastActionSuccess'], 'OpenObject(x > 1) should fail.'
+    assert event.metadata['errorMessage'], 'errorMessage should not be empty when OpenObject(x > 1).'
+
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_lookup(controller):
@@ -199,38 +215,51 @@ def test_add_third_party_camera(controller):
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_update_third_party_camera(controller):
+def test_update_third_party_camera():
+    controller = build_controller(server_class=FifoServer)
 
+    # add a new camera
+    expectedPosition = dict(x=1.2, y=2.3, z=3.4)
+    expectedRotation = dict(x=30, y=40, z=50)
+    expectedFieldOfView = 45.0
+    e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+
+    # update camera pose fully
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
     expectedInitialFieldOfView = 45.0
-    expectedFieldOfView2 = 55.0
-    expectedFieldOfViewDefault = 90.0
-    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
-
     e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, position=expectedPosition, rotation=expectedRotation))
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
     assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should have been updated')
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
 
-    # 0 is a special case, since nullable float does not get encoded properly, we need to pass 0 as null
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
+    # partially update the camera pose
+    changeFOV = 55.0
+    expectedPosition2 = dict(x=3.2, z=5)
+    expectedRotation2 = dict(y=90)
+    e = controller.step(
+        action=Actions.UpdateThirdPartyCamera,
+        thirdPartyCameraId=0,
+        fieldOfView=changeFOV,
+        position=expectedPosition2,
+        rotation=expectedRotation2
+    )
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should have been updated'
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == changeFOV, 'fieldOfView should have been updated'
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=expectedFieldOfView2))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView2, 'fieldOfView should have been updated'
+    expectedPosition.update(expectedPosition2)
+    expectedRotation.update(expectedRotation2)
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should been slightly updated')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should been slightly updated')
 
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
-
-    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
-    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
-    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+    for fov in [-1, 181, 0]:
+        e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=fov))
+        assert not e.metadata['lastActionSuccess'], 'fieldOfView should fail outside of (0, 180)'
+        assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should not have updated')
+        assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should not have updated')
+    controller.stop()
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
@@ -337,14 +366,14 @@ def test_open(controller):
 def test_action_dispatch_find_ambiguous(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_action_dispatch_find_ambiguous_stochastic(controller):
     event = controller.step(dict(action='TestActionDispatchFindAmbiguous'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
 
-    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2'])
+    known_ambig = sorted(['TestActionDispatchSAAmbig', 'TestActionDispatchSAAmbig2', 'ProcessControlCommand'])
     assert sorted(event.metadata['actionReturn']) == known_ambig
 
 @pytest.mark.parametrize("controller", [fifo_controller])
@@ -379,6 +408,7 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -389,6 +419,7 @@ def test_action_dispatch_find_conflicts_physics(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
+        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -537,3 +568,67 @@ def test_change_resolution(controller):
     assert event.screen_height == 400
     event = controller.step(dict(action='ChangeResolution', x=300, y=300), raise_for_failure=True)
 
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_interactable_poses(controller):
+    controller.reset('FloorPlan28')
+    fridgeId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Fridge')
+    event = controller.step('GetInteractablePoses', objectId=fridgeId)
+    poses = event.metadata['actionReturn']
+    assert len(poses) > 490, "Should have around 494 interactable poses next to the fridge!"
+
+    # teleport to a random pose
+    pose = poses[len(poses) // 2]
+    event = controller.step('TeleportFull', **pose)
+
+    # assumes 1 fridge in the scene
+    fridge = next(obj for obj in controller.last_event.metadata['objects']
+                  if obj['objectType'] == 'Fridge')
+    assert fridge['visible'], "Object is not interactable!"
+
+    # tests that teleport correctly works with **syntax
+    assert abs(pose['x'] - event.metadata['agent']['position']['x']) < 1e-3, "Agent x position off!"
+    assert abs(pose['z'] - event.metadata['agent']['position']['z']) < 1e-3, "Agent z position off!"
+    assert abs(pose['rotation'] - event.metadata['agent']['rotation']['y']) < 1e-3, "Agent rotation off!"
+    assert abs(pose['horizon'] - event.metadata['agent']['cameraHorizon']) < 1e-3, "Agent horizon off!"
+    assert pose['standing'] == event.metadata['agent']['isStanding'], "Agent's isStanding is off!"
+
+    # potato should be inside of the fridge (and, thus, non interactable)
+    potatoId = next(obj['objectId'] for obj in controller.last_event.metadata['objects']
+                    if obj['objectType'] == 'Potato')
+    event = controller.step('GetInteractablePoses', objectId=potatoId)
+    assert len(event.metadata['actionReturn']) == 0, "Potato is inside of fridge, and thus, shouldn't be interactable"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Potato shouldn't have failed!"
+
+    # assertion for maxPoses
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxPoses=50)
+    assert len(event.metadata['actionReturn']) == 50, "maxPoses should be capped at 50!"
+
+    # assert only checking certain horizons and rotations is working correctly
+    horizons = [0, 30]
+    rotations = [0, 45]
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, horizons=horizons, rotations=rotations)
+    for pose in event.metadata['actionReturn']:
+        horizon_works = False
+        for horizon in horizons:
+            if abs(pose['horizon'] - horizon) < 1e-3:
+                horizon_works = True
+                break
+        assert horizon_works, "Not expecting horizon: " + pose['horizon']
+
+        rotation_works = False
+        for rotation in rotations:
+            if abs(pose['rotation'] - rotation) < 1e-3:
+                rotation_works = True
+                break
+        assert rotation_works, "Not expecting rotation: " + pose['rotation']
+
+    # assert only checking certain horizons and rotations is working correctly
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, rotations=[270])
+    assert len(event.metadata['actionReturn']) == 0, "Fridge shouldn't be viewable from this rotation!"
+    assert event.metadata['lastActionSuccess'], "GetInteractablePoses with Fridge shouldn't have failed!"
+
+    # test maxDistance
+    event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
+    assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'

@@ -372,6 +372,16 @@ def local_build(context, prefix="local", arch="OSXIntel64"):
     generate_quality_settings(context)
 
 
+def fix_webgl_unity_loader_regex(unity_loader_path):
+    # Bug in the UnityLoader.js causes Chrome on Big Sur to fail to load
+    # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
+    with open(unity_loader_path) as f:
+        loader = f.read()
+    
+    loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
+    with open(unity_loader_path, "w") as f:
+        f.write(loader)
+
 @task
 def webgl_build(
         context,
@@ -446,8 +456,10 @@ def webgl_build(
         print("Build Successful")
     else:
         print("Build Failure")
-    generate_quality_settings(context)
+
     build_path = _webgl_local_build_path(prefix, directory)
+    fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
+    generate_quality_settings(context)
 
     rooms = {
         "kitchens": {
@@ -825,7 +837,6 @@ def ci_build(context):
         if build and build["branch"] not in blacklist_branches:
             logger.info("pending build for %s %s" % (build["branch"], build["commit_id"]))
             clean()
-            link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s" % build["branch"], shell=True)
             subprocess.check_call(
@@ -835,6 +846,12 @@ def ci_build(context):
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
                 logger.info("starting build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
+                if ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=False).exists():
+                    logger.info("found build for commit %s %s" % (build["commit_id"], arch))
+                    continue
+                # this is done here so that when a tag build request arrives and the commit_id has already
+                # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                link_build_cache(build["branch"])
                 p = ci_build_arch(arch, False)
                 logger.info("finished build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
                 procs.append(p)
@@ -885,11 +902,6 @@ def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
 
     commit_id = git_commit_id()
-    commit_build = ai2thor.build.Build(arch, commit_id, include_private_scenes)
-    if commit_build.exists():
-        print("found build for commit %s %s" % (commit_id, arch))
-        return
-
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)

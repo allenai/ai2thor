@@ -6,6 +6,10 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class JavaScriptInterface : MonoBehaviour {
 
+// IL2CPP throws exceptions about SendMetadata and Init not existing
+// so the body is only used for WebGL
+#if UNITY_WEBGL
+
     private PhysicsRemoteFPSAgentController PhysicsController;
     //private DebugInputField inputField; //inputField.setControlMode no longer used in SetController
 
@@ -55,10 +59,9 @@ public class JavaScriptInterface : MonoBehaviour {
         }
     }
 
-    public void Step(string serverAction)
+    public void Step(string jsonAction)
     {
-        ServerAction controlCommand = new ServerAction();
-        JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
-        PhysicsController.ProcessControlCommand(controlCommand);
+        PhysicsController.ProcessControlCommand(new DynamicServerAction(jsonAction));
     }
+#endif
 }

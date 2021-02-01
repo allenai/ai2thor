@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using UnityEditor;
 using Newtonsoft.Json.Linq;
 
 
@@ -238,22 +239,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{            
                     case "init":
                     {
-						ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
 						if (splitcommand.Length == 2 )
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3)
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
-                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
                         }
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
@@ -265,12 +266,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
                         //action.agentMode = "bot";
-                        action.fieldOfView = 90f;
+                        action["fieldOfView"] = 90f;
                         //action.cameraY = 2.0f;
-                        action.snapToGrid = true;
+                        action["snapToGrid"] = true;
                         // action.rotateStepDegrees = 45;
-                        action.action = "Initialize";
-                        AManager.Initialize(action);
+                        action["action"] = "Initialize";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -281,22 +282,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 case "initb":
                     {
-						ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
 						if (splitcommand.Length == 2 )
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3)
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
-                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
                         }
 
                         // action.renderNormalsImage = true;
@@ -305,20 +306,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.gridSize = 0.25f;
-                        action.visibilityDistance = 1.0f;
-                        action.fieldOfView = 60;
-                        action.rotateStepDegrees = 45;
-                        action.agentMode = "bot";
-                        action.agentControllerType = "stochastic";
+                        action["gridSize"] = 0.25f;
+                        action["visibilityDistance"] = 1.0f;
+                        action["fieldOfView"] = 60;
+                        action["rotateStepDegrees"] = 45;
+                        action["agentMode"] = "bot";
+                        action["agentControllerType"] = "stochastic";
 
-                        action.applyActionNoise = true;
+                        action["applyActionNoise"] = true;
                        
-                        action.snapToGrid = false;
-                        action.action = "Initialize";
-                        action.fieldOfView = 90;
-                        action.gridSize = 0.25f;
-                        AManager.Initialize(action);
+                        action["snapToGrid"] = false;
+                        action["action"] = "Initialize";
+                        action["fieldOfView"] = 90;
+                        action["gridSize"] = 0.25f;
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
                     case "inita":
@@ -398,6 +399,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                    // Reads and executes each action from a JSON file.
+                    // Example: 'run', where a local file explorer will open, and you'll select a json file.
+                    // Example: 'run simple', where simple.json exists in unity/debug/.
+                    // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
+                case "run":
+                    // parse the file path
+                    const string BASE_PATH = "./debug/";
+                    string file = "";
+                    string path;
+                    if (splitcommand.Length == 1) {
+                        // opens up a file explorer in the background
+                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "debug", extension: "json");
+                    } else if (splitcommand.Length == 2 ) {
+                        // uses ./debug/{splitcommand[1]}[.json]
+                        file = splitcommand[1].Trim();
+                        if (!file.EndsWith(".json")) {
+                            file += ".json";
+                        }
+                        path = BASE_PATH + file;
+                    } else {
+                        Debug.LogError("Pass in a file name, like 'run simple' or open a file with 'run'.");
+                        break;
+                    }
+
+                    // parse the json file
+                    string jsonString = System.IO.File.ReadAllText(path);
+                    JArray actions = JArray.Parse(jsonString);
+                    Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
+
+                    // execute each action
+                    IEnumerator ExecuteBatch(JArray jActions) {
+                        int i = 0;
+                        foreach (JObject action in jActions) {
+                            while (PhysicsController.IsProcessing) {
+                                yield return new WaitForEndOfFrame();
+                            }
+                            Debug.Log($"{++i} Executing: {action}");
+                            PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
+                        }
+                    }
+                    StartCoroutine(ExecuteBatch(jActions: actions));
+                    break;
 
                  case "exp":
                     {
@@ -592,18 +636,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //initialize drone mode
                  case "initd":
                     {
-						ServerAction action = new ServerAction();
-
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.action = "Initialize";
-                        action.agentMode = "drone";
-                        action.agentControllerType = "drone";
-                        AManager.Initialize(action);
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "drone";
+                        action["agentControllerType"] = "drone";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
 
                         break;
                     }
@@ -1077,26 +1120,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "initsynth":
                     {
-						ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                        action.renderNormalsImage = true;
-                        action.renderDepthImage = true;
-                        action.renderClassImage = true;
-                        action.renderObjectImage = true;
-                        action.renderFlowImage = true;
+                        action["renderNormalsImage"] = true;
+                        action["renderDepthImage"] = true;
+                        action["renderClassImage"] = true;
+                        action["renderObjectImage"] = true;
+                        action["renderFlowImage"] = true;
 
                         //action.ssao = "default";
 
-                        action.action = "Initialize";
-                        AManager.Initialize(action);
+                        action["action"] = "Initialize";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
 
                 case "atpc":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "AddThirdPartyCamera";
-                        AManager.AddThirdPartyCamera(action);
+                        AManager.AddThirdPartyCamera(
+                            position: Vector3.zero,
+                            rotation: Vector3.zero
+                        );
                         break;
                     }
 
@@ -1236,6 +1280,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MakeAllObjectsMoveable";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "gip":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetInteractablePoses";
+                        action["objectId"] = "Fridge|-02.10|+00.00|+01.09";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2367,6 +2420,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+
+                    // do nothing action
+                case "pass":
+                case "done":
+                case "noop":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "NoOp";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    // Short circuiting exception test
+                case "sc":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenObject";
+                        action["x"] = 1.5;
+                        action["y"] = 0.5;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
 					//move hand up, relative to agent's facing
 					//pass in move magnitude or default is 0.25 units
