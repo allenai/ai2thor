@@ -46,7 +46,7 @@ public class AgentManager : MonoBehaviour
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
-    private bool fastActionEmit;
+    private bool fastActionEmit = true;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
     public const float DEFAULT_FOV = 90;
