@@ -43,6 +43,83 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return success;
         }
 
+        public IEnumerator moveArmHeightDebug(float height) {
+            CapsuleCollider cc = PhysicsController.GetComponent<CapsuleCollider>();
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            Vector3 cc_center = cc.center;
+            Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
+            Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
+
+            //linear function that take height and adjusts targetY relative to min/max extents
+            float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
+            Vector3 target = new Vector3(0, targetY, 0);
+            float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            double epsilon = 1e-3;
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - arm.transform.localPosition).normalized;
+                arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
+            }
+
+        }
+        public void dumpPosition(Transform to) {
+            Debug.Log("GameObject: " + to.gameObject.name);
+            Debug.Log(
+                to.position.x.ToString("0.####") + " " + 
+                to.position.y.ToString("0.####") + " " + 
+                to.position.z.ToString("0.####") + " "
+            );
+
+        }
+
+        public IEnumerator moveArmDebug(Vector3 targetArmBase)
+        {
+
+            var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            //var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
+            //var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
+            //var animator = arm.gameObject.GetComponent<Animator>();
+            //animator.enabled = false;
+            Debug.Log("My name is " + arm.name);
+            var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+            var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+            Vector3 target = arm.transform.TransformPoint(targetArmBase);
+            float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            double epsilon = 1e-3;
+            Debug.Log("Starting arm movement");
+            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0)
+            {
+                Vector3 direction = (target - armTarget.transform.position).normalized;
+                armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
+
+                GameObject.Find("robot_arm_FK_IK_rig").GetComponent<FK_IK_Solver>().ManipulateArm();
+
+                dumpPosition(wristCol);
+
+                if (!Physics.autoSimulation)
+                {
+                    Physics.Simulate(Time.fixedDeltaTime);
+                }
+                //animator.Update(Time.fixedDeltaTime);
+
+                yield return new WaitForEndOfFrame();
+
+                currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
+            }
+            yield return new WaitForEndOfFrame();
+            Debug.Log("Ending arm movement");
+
+        }
+
         public void setControlMode(ControlMode mode) {
             setEnabledControlComponent(controlMode, false);
             controlMode = mode;
@@ -127,8 +204,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         #if UNITY_EDITOR
-        // shortcut to execute no-parameter actions
+        public IEnumerator ExecuteBatch(List<string> commands) {
 
+            foreach(var command in commands) {
+                while(PhysicsController.IsProcessing) {
+                    yield return new WaitForEndOfFrame();
+                }
+                Debug.Log("Executing Batch command: " + command);
+                Execute(command);
+            }
+        }                
+
+
+        // shortcut to execute no-parameter actions
         private void ExecuteAction(string actionName) {
             Dictionary<string, object> action = new Dictionary<string, object>();
             action["action"] = actionName;
@@ -234,7 +322,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
+                    case "inita":
+                    {
+						ServerAction action = new ServerAction();
+                        //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        //by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        //grid size!
+						if (splitcommand.Length == 2 )
+                        {
+							action.gridSize = float.Parse(splitcommand[1]);
+                        } else if (splitcommand.Length == 3)
+                        {
+							action.gridSize = float.Parse(splitcommand[1]);
+                            action.agentCount = int.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 4) {
+                            action.gridSize = float.Parse(splitcommand[1]);
+                            action.agentCount = int.Parse(splitcommand[2]);
+                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                        }
+                        // action.renderNormalsImage = true;
+                        // action.renderDepthImage = true;
+                        // action.renderClassImage = true;
+                        // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
+						//PhysicsController.actionComplete = false;
+                        // action.rotateStepDegrees = 30;
+                        //action.ssao = "default";
+                        //action.snapToGrid = true;
+                        //action.makeAgentsVisible = false;
+                        //action.agentMode = "bot";
+                        //action.fieldOfView = 90f;
+                        //action.cameraY = 2.0f;
+                        //action.snapToGrid = true;
+                        // action.rotateStepDegrees = 45;
+                        action.action = "Initialize";
 
+                        action.agentMode = "arm";
+                        action.agentControllerType = "mid-level";
+
+                        //action.useMassThreshold = true;
+                        //action.massThreshold = 10f;
+
+
+                        AManager.Initialize(action);
+                        // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
+                        // Debug.Log("Physics scene manager = ...");
+                        // Debug.Log(physicsSceneManager);
+                        // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
+                        // Debug.Log(am);
+      			        // am.Initialize(action);
+                        break;
+                    }
                  case "expspawn":
                     {
                         ServerAction action = new ServerAction();
@@ -633,11 +772,220 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "pp":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PausePhysicsAutoSim";
-                        PhysicsController.ProcessControlCommand(action);
+                        ExecuteAction("PausePhysicsAutoSim");
                         break;
                     }
+
+                case "msa":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.993f, 0.8023f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+                case "msr":
+                {
+                   GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.771f, 0.87f, 0.6436f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    break;
+                }
+
+                case "mach": {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+
+                case "mafh":
+                {
+                    var moveCall = moveArmHeightDebug(0.4f);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+                    break;
+                }
+                case "macr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    StartCoroutine(moveCall);
+                    break;
+                }
+                case "mafr":
+                {
+                    var target = new Vector3(0.1f, 0.0f, 0.4f);
+                    var moveCall = moveArmDebug(target);
+                    while (moveCall.MoveNext()) {
+                        // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+                        // as autoSimulation is off
+                    }
+
+                    break;
+                }
+                case "dumpwrist": {
+                    var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
+                    dumpPosition(wristCol);
+                    break;
+                }
+
+                case "debugarm":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    ArmMetadata armmeta = arm.GenerateMetadata();
+                    Debug.Log("last joint position");
+                    Vector3 rrpos = armmeta.joints[armmeta.joints.Length - 1].rootRelativePosition;
+                    Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
+                    break;
+                }
+
+                case "debugarmjoints":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    ArmMetadata armmeta = arm.GenerateMetadata();
+                    foreach (JointMetadata jm in armmeta.joints)
+                    {
+                        Debug.Log(jm.name);
+                        Debug.Log(jm.rotation);
+                    }
+
+                    break;
+                }
+
+                case "posarm1":
+                {
+                    var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+                    armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
+                    break;
+                }
+
+                case "slide3":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull 0.25 0.9014922380447388 1.5 360 10");
+                    //commands.Add("mc 0.0 0.0 0.2 1");
+                    commands.Add("mmlah 0.38 1 true true false");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    //run debugarmjoints to get rotation metadata
+                    break;
+                }                
+
+                case "ras1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msr");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "ras2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1 135");
+                    commands.Add("ld 20");
+                    commands.Add("posarm1");
+                    commands.Add("msa");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmrot1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1.5 90");
+                    commands.Add("mmla 0.0 0.0 0.2 1.0");
+                    commands.Add("debugarm");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "reproarmrot2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("telefull -1.0 0.9009995460510254 1.5 45");
+                    commands.Add("mmla 0.0 0.0 0.2 1.0");
+                    commands.Add("debugarm");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmsphere3":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    go.GetComponent<SphereCollider>().enabled = false;
+                    go.AddComponent(typeof(MeshCollider));
+                    MeshCollider mc  = go.GetComponent<MeshCollider>();
+                    mc.convex = true;
+                    mc.isTrigger = true;
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmsphere2":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    go.GetComponent<SphereCollider>().enabled = false;
+                    go.AddComponent(typeof(MeshCollider));
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmsphere1":
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.position = new Vector3(-0.6648f, 1.701f, 1.421f);
+                    go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    SphereCollider sc = go.GetComponent<SphereCollider>();
+                    sc.isTrigger = true;
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+                case "reproarmstuck":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("pp");
+                    commands.Add("rr");
+                    commands.Add("inita");
+                    commands.Add("mmlah 1 1 True True");
+                    commands.Add("telefull");
+                    commands.Add("mmlah 0.5203709825292535 2 True True");
+                    commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
                 case "ap":
                     {
@@ -2534,6 +2882,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    
+                    // Will fail if navmeshes are not setup
+                    case "expact":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectNavExpertAction";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectType = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     // Will fail if navmeshes are not setup
                     case "shortest_path":
@@ -2561,7 +2926,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                      case "shortest_path_type":
                     {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
 
@@ -2699,6 +3063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    
                     case "visualize_shortest_path":
                     {
                         ServerAction action = new ServerAction();
@@ -2727,6 +3092,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
                     case "get_object_type_ids":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2737,6 +3103,161 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                          PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "move_mid_arm":
+                    case "mmla":
+                    {
+                        // Limit around -0.084
+                        //"mmla 0 0 0.08 0.1 false wrist true"
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArm";
+                        action.speed = 1.0f;
+                        action.disableRendering = false;
+                        //action.returnToStart = true;
+                        if (splitcommand.Length > 4)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }     
+
+                             if(splitcommand.Length >= 6) {
+                                 action.coordinateSpace = splitcommand[5];
+                             }
+
+                             if (splitcommand.Length >= 7) {
+                                 action.returnToStart = bool.Parse(splitcommand[6]);
+                             }
+
+                             if(splitcommand.Length >= 8) {
+                                 action.restrictMovement = bool.Parse(splitcommand[7]);
+                             }
+
+                             if(splitcommand.Length >= 9) {
+                                 action.disableRendering = bool.Parse(splitcommand[8]);
+                             }
+
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        //action.stopArmMovementOnContact = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //move mid level arm stop motion
+                    case "mmlas":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArm";
+                        action.speed = 1.0f;
+                        //action.returnToStart = true;
+                        if (splitcommand.Length > 4)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+
+                            if (splitcommand.Length >= 6) {
+                                 action.returnToStart = bool.Parse(splitcommand[5]);
+                             }
+
+                             if(splitcommand.Length >= 7) {
+                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
+                             }
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        action.stopArmMovementOnContact = true;
+                        //action.stopArmMovementOnContact = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "pac":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "DebugMidLevelArmCollisions";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "mmlah":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArmHeight";
+                        action.disableRendering = false;
+
+                        if(splitcommand.Length > 1)
+                        {
+                            action.y = float.Parse(splitcommand[1]);
+
+                            if(splitcommand.Length > 2)
+                            {
+                                action.speed = float.Parse(splitcommand[2]);
+                            }
+                            if(splitcommand.Length > 3) 
+                                action.returnToStart = bool.Parse(splitcommand[3]);
+
+                            if(splitcommand.Length > 4) 
+                                action.disableRendering = bool.Parse(splitcommand[4]);
+
+                            if(splitcommand.Length > 5)
+                                action.restrictMovement = bool.Parse(splitcommand[5]);
+                            
+                        }
+
+                        else
+                        {
+                            action.y = 0.9f;
+                            action.speed = 1.0f;
+                        }
+                        action.disableRendering = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "telefull":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportFull";
+                        action.x = -1.0f;
+                        action.y = 0.9009995460510254f;
+                        action.z = 1;
+                        float rotation = 135.0f;
+                        int horizon = 0;
+						if (splitcommand.Length > 1  && splitcommand.Length < 5) {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            rotation = float.Parse(splitcommand[4]);
+                        }
+
+                        else if(splitcommand.Length > 5)
+                        {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            rotation = float.Parse(splitcommand[4]);
+                            horizon = int.Parse(splitcommand[5]);
+                        }
+
+                        action.rotation = new Vector3(0, rotation, 0);
+                        action.horizon = horizon;
+
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -2755,6 +3276,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "mc": 
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveContinuous";
+                        if (splitcommand.Length > 4)
+                        {
+                            action.direction = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+                        }
+
+                        action.disableRendering = true;
+                        action.restrictMovement = false;
+                        action.returnToStart = true;
+                        action.speed = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
+                    case "rc": 
+                    {
+                        dynamic action = new JObject();
+                        action.action = "RotateContinuous";
+                        if (splitcommand.Length > 2)
+                        {
+                            action.degrees = float.Parse(splitcommand[1]);
+                            
+                             if (splitcommand.Length >= 3) {
+                                 action.speed = float.Parse(splitcommand[2]);
+                             }
+
+                             if (splitcommand.Length >= 4) {
+                                 action.disableRendering = bool.Parse(splitcommand[3]);
+                             }
+
+                             if (splitcommand.Length >= 5) {
+                                 action.returnToStart = bool.Parse(splitcommand[4]);
+                             }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
 
 				default:
                     {   
@@ -2772,6 +3341,65 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         PhysicsController.ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
+                        break;
+                    }
+
+                    //rotate kinematic hand on arm
+                    case "rmlh":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "RotateMidLevelHand";
+
+                        if (splitcommand.Length > 4)
+                        {
+                            action.rotation = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);      
+
+                        break;
+                    }
+
+                    case "pumlh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PickUpMidLevelHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "dmlh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DropMidLevelHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "wopu":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "WhatObjectsCanHandPickUp";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "smlhr": {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetMidLevelHandRadius";
+
+                         if (splitcommand.Length == 2) {
+                            action.radius = float.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        
                         break;
                     }
 			}
