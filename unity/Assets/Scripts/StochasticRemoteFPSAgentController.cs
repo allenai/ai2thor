@@ -120,62 +120,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.Pass();
         }
 
-        public override void LookDown(ServerAction action) 
-        {
-            //default degree increment to 30
-            if(action.degrees == 0)
-            {
-                action.degrees = 30f;
-            } else {
-                errorMessage = "Must have degrees == 0 for now.";
-                actionFinished(false);
-                return;
-            }
-
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
-
-            if(!checkForUpDownAngleLimit("down", action.degrees))
-            {
-                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
-                return;
-            }
-
-            base.LookDown(action);
-            return;
-        }
-
-        public override void LookUp(ServerAction action) 
-        {
-
-            //default degree increment to 30
-            if(action.degrees == 0)
-            {
-                action.degrees = 30f;
-            } else {
-                errorMessage = "Must have degrees == 0 for now.";
-                actionFinished(false);
-                return;
-            }
-
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
-
-            if(!checkForUpDownAngleLimit("up", action.degrees))
-            {
-                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
-                return;
-            }
-
-            base.LookUp(action);
-        }
-
         public override void Rotate(ServerAction action)
         {
             //only default hand if not manually Interacting with things

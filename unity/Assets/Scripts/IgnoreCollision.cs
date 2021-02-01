@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityStandardAssets.Characters.FirstPerson;
 
 public class IgnoreCollision : MonoBehaviour
 {
@@ -31,18 +30,7 @@ public class IgnoreCollision : MonoBehaviour
 
         //if the object to ignore has been manually set already
         if(objectToIgnoreCollisionsWith != null)
-        {
-            //do this if we are ignoring a sim object like a dresser with drawers in it
-            if(objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>())
-            otherCollidersToIgnore = objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>().MyColliders;
-
-            //do this if we are ignoring the agent
-            if(objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>())
-            {
-                otherCollidersToIgnore = new Collider[] {objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>().GetComponent<CapsuleCollider>()};
-            }
-
-        }
+        otherCollidersToIgnore = objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>().MyColliders;
 
         #if UNITY_EDITOR
         else
