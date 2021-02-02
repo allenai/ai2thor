@@ -357,9 +357,18 @@ public class AgentManager : MonoBehaviour
         float? orthographicSize,
         string actionName
     ) {
+        if (orthographic != true && orthographicSize != null) {
+            throw new InvalidOperationException(
+                $"orthographicSize(: {orthographicSize}) can only be set when orthographic=True.\n" +
+                "Otherwise, we use assume perspective camera setting." +
+                "Hint: call .step(..., orthographic=True)."
+            );
+        }
+
         // update the position and rotation
         camera.gameObject.transform.position = position;
         camera.gameObject.transform.eulerAngles = rotation;
+
 
         // updates the camera's perspective
         camera.fieldOfView = fieldOfView;

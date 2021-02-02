@@ -791,7 +791,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         AManager.AddThirdPartyCamera(
                             position: Vector3.zero,
-                            rotation: Vector3.zero
+                            rotation: Vector3.zero,
+                            orthographic: true,
+                            orthographicSize: 5
                         );
                         break;
                     }
