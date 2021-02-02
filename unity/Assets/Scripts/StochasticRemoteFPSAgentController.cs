@@ -1,4 +1,6 @@
 
+// These are the actions available to the LoCoBot
+
 using System;
 using System.Collections;
 using System.Collections.Generic;

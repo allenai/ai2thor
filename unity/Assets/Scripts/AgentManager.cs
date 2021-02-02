@@ -128,30 +128,30 @@ public class AgentManager : MonoBehaviour {
     }
 
     public void Initialize(ServerAction action) {
-        //first parse agentMode and agentControllerType
-        //"default" agentMode can use either default or "stochastic" agentControllerType
-        //"bot" agentMode can use either default or "stochastic" agentControllerType
-        //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
+        // first parse agentMode and agentControllerType
+        // "default" agentMode can use either "physics" or "stochastic" agentControllerType
+        // "bot" agentMode can use either default or "stochastic" agentControllerType
+        // "drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if (action.agentMode.ToLower() == "default") {
             if (action.agentControllerType.ToLower() != "physics" || action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
                 SetUpPhysicsController();
             }
 
-            //if not stochastic, default to physics controller
+            // if not stochastic, default to physics controller
             if (action.agentControllerType.ToLower() == "physics") {
-                //set up physics controller
+                // set up physics controller
                 SetUpPhysicsController();
             } else if (action.agentControllerType.ToLower() == "stochastic") {
-                //set up stochastic controller
+                // set up stochastic controller
                 SetUpStochasticController(action);
             }
         } else if (action.agentMode.ToLower() == "bot") {
-            //if not stochastic, default to stochastic
+            // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-                //set up stochastic controller
+                // set up stochastic controller
                 SetUpStochasticController(action);
             } else {
                 SetUpStochasticController(action);
@@ -161,14 +161,14 @@ public class AgentManager : MonoBehaviour {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
 
-                //ok now set up drone controller
+                // ok now set up drone controller
                 SetUpDroneController(action);
             } else {
                 SetUpDroneController(action);
             }
         }
 
-        primaryAgent.ProcessControlCommand (action.dynamicServerAction);
+        primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         primaryAgent.IsVisible = action.makeAgentsVisible;
         this.renderClassImage = action.renderClassImage;
         this.renderDepthImage = action.renderDepthImage;
@@ -336,7 +336,7 @@ public class AgentManager : MonoBehaviour {
         camera.fieldOfView = fieldOfView;
         if (orthographic != null) {
             camera.orthographic = (bool) orthographic;
-            if (orthographic && orthographicSize != null) {
+            if (orthographic == true && orthographicSize != null) {
                 camera.orthographicSize = (float) orthographicSize;
             }
         }
@@ -1538,9 +1538,12 @@ public class ServerAction {
 
     public float agentRadius = 2.0f;
     public int maxStepCount;
-    public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
-    public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
+    // default rotation amount for RotateRight/RotateLeft actions
+    public float rotateStepDegrees = 90.0f; 
+
+    // for overriding the default degree amount in look up/lookdown/rotateRight/rotateLeft
+    public float degrees;
 
     public bool topView = false;
 
@@ -1552,10 +1555,10 @@ public class ServerAction {
 
     public Gradient pathGradient;
 
-    //should actions like pickup and moveHand have more manual, less abstracted behavior?
+    // should actions like pickup and moveHand have more manual, less abstracted behavior?
     public bool manualInteract = false;
 
-    //color 0-255
+    // color 0-255
     public float r;
     public float g;
     public float b;
@@ -1564,7 +1567,8 @@ public class ServerAction {
     public float timeToWaitForObjectsToComeToRest = 10.0f;
     public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
-    public bool fastActionEmit;
+    public bool fastActionEmit = true;
+
     // this allows us to chain the dispatch between two separate
     // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
     public DynamicServerAction dynamicServerAction;
@@ -1591,8 +1595,6 @@ public class ServerAction {
     public ServerAction ToObject(Type t) {
         return this;
     }
-
-
 }
 
 [Serializable]

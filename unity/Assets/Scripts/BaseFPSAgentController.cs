@@ -1,4 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
+
+// Note: This base agent is only designed to change its yaw,
+// with other body rotations being unavailable, unless overwritten in
+// sub-classes.
+
 using System;
 using System.IO;
 using System.Collections;
@@ -3210,7 +3215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////// ACTION DISPATCH TESTING /////////
         ///////////////////////////////////////////
 
-        public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
+        public void TestActionDispatchSAAmbig2(float foo, bool def = false) {
             actionFinished(true);
         }
 
@@ -3234,15 +3239,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, rvalue);
         }
 
-        public void TestActionDispatchNoopAllDefault2(float param12, float param10=0.0f, float param11=1.0f) {
+        public void TestActionDispatchNoopAllDefault2(float param12, float param10 = 0.0f, float param11 = 1.0f) {
             actionFinished(true, "somedefault");
         }
 
-        public void TestActionDispatchNoopAllDefault(float param10=0.0f, float param11=1.0f) {
+        public void TestActionDispatchNoopAllDefault(float param10 = 0.0f, float param11 = 1.0f) {
             actionFinished(true, "alldefault");
         }
 
-        public void TestActionDispatchNoop2(bool param3,  string param4="foo") {
+        public void TestActionDispatchNoop2(bool param3,  string param4 = "foo") {
             actionFinished(true, "param3 param4/default " + param4);
         }
 
