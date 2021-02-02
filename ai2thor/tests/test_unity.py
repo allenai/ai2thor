@@ -576,7 +576,7 @@ def test_get_interactable_poses(controller):
                     if obj['objectType'] == 'Fridge')
     event = controller.step('GetInteractablePoses', objectId=fridgeId)
     poses = event.metadata['actionReturn']
-    assert len(poses) > 490, "Should have around 494 interactable poses next to the fridge!"
+    assert 600 > len(poses) > 440, "Should have around 494 interactable poses next to the fridge!"
 
     # teleport to a random pose
     pose = poses[len(poses) // 2]
@@ -631,4 +631,4 @@ def test_get_interactable_poses(controller):
 
     # test maxDistance
     event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
-    assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'
+    assert 1400 > len(event.metadata['actionReturn']) > 1100, 'GetInteractablePoses with large maxDistance is off!'
