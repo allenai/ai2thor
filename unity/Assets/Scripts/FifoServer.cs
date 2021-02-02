@@ -53,7 +53,10 @@ namespace FifoServer {
             string action = null;
             while (true) {
                 byte[] header = new byte[headerLength];
-                clientPipe.Read(header, 0, header.Length);
+                int bytesRead = clientPipe.Read(header, 0, header.Length);
+                if (bytesRead == 0) {
+                    throw new EndOfStreamException("zero bytes read trying to read header; assuming disconnect");
+                }
                 FieldType fieldType = (FieldType)header[0];
                 if (fieldType == FieldType.EndOfMessage) {
                         //Console.WriteLine("Got eom");
@@ -61,7 +64,15 @@ namespace FifoServer {
                 }
                 int fieldLength = UnpackNetworkBytes(header, 1);
                 byte[] body = new byte[fieldLength];
-                clientPipe.Read(body, 0, body.Length);
+                int totalBytesRead = 0;
+                while(totalBytesRead < body.Length) {
+                    bytesRead = clientPipe.Read(body, totalBytesRead, body.Length - totalBytesRead);
+                    // didn't read anything new, assume that we have a disconnect
+                    if (bytesRead == 0) {
+                        throw new EndOfStreamException("number of bytes read did not change during body read; assuming disconnect");
+                    }
+                    totalBytesRead += bytesRead;
+                }
 
                 switch (fieldType) {
                     case FieldType.Action:

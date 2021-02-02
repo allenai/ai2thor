@@ -3303,6 +3303,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, "param3 param4/default " + param4);
         }
 
+        public void TestActionReflectParam(string rvalue) {
+            actionFinished(true, rvalue);
+        }
+
         public void TestActionDispatchNoop(string param6, string param7) {
             actionFinished(true, "param6 param7");
         }

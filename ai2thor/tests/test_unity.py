@@ -1,6 +1,8 @@
 
 #import pytest
 import os
+import string
+import random
 import json
 import pytest
 import jsonschema
@@ -111,6 +113,12 @@ def test_fast_emit():
     assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     fast_controller.stop()
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_fifo_large_input(controller):
+    random_string = ''.join(random.choice(string.ascii_letters) for i in range(1024 * 16))
+    event = controller.step(dict(action='TestActionReflectParam', rvalue=random_string))
+    assert event.metadata['actionReturn'] == random_string
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_fast_emit_disabled(controller):
