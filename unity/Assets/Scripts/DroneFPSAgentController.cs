@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -454,11 +454,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // in case you want to change the fixed delta time
-        public void ChangeFixedDeltaTime(float fixedDeltaTime) {
+        public void ChangeFixedDeltaTime(float? fixedDeltaTime = null) {
             if (fixedDeltaTime <= 0) {
                 throw new ArgumentOutOfRangeException("FixedDeltaTime must be > 0");
             }
-            Time.fixedDeltaTime = fixedDeltaTime;
+            Time.fixedDeltaTime = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);;
             actionFinished(true);
         }
 
