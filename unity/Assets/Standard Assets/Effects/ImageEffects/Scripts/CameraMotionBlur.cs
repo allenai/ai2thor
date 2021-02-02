@@ -368,7 +368,7 @@ namespace UnityStandardAssets.ImageEffects
             prevFrameUp = transform.up;
             prevFramePos = transform.position;
 			prevStereoViewProjMat[0] = currentStereoViewProjMat[0];
-			prevStereoViewProjMat[1] = currentStereoViewProjMat[1]; 
+			prevStereoViewProjMat[1] = currentStereoViewProjMat[1];
 		}
 
         Camera GetTmpCam () {

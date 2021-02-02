@@ -32,11 +32,12 @@ def test_train_numpy_action():
         action='Teleport', 
         rotation=dict(y=np.array([24])[0]),
         moveMagnitude=np.array([55.5])[0],
+        myCustomArray=np.array([1, 2]),
     ))
     c = FifoClient(s.server_pipe_path, s.client_pipe_path)
     msg = c.recv()
 
-    assert msg == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5}
+    assert msg == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5, 'myCustomArray': [1, 2]}
 
 def generate_metadata_payload(metadata, sequence_id):
     return msgpack.dumps(dict(agents=[metadata], sequenceId=sequence_id))

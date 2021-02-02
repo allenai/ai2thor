@@ -276,9 +276,9 @@ namespace Priority_Queue
         }
 
         /// <summary>
-        /// Removes an item from the queue.  The item does not need to be the head of the queue.  
+        /// Removes an item from the queue.  The item does not need to be the head of the queue.
         /// If the item is not in the queue, an exception is thrown.  If unsure, check Contains() first.
-        /// If multiple copies of the item are enqueued, only the first one is removed. 
+        /// If multiple copies of the item are enqueued, only the first one is removed.
         /// O(log n)
         /// </summary>
         public void Remove(TItem item)
@@ -399,10 +399,10 @@ namespace Priority_Queue
         }
 
         /// <summary>
-        /// Attempts to remove an item from the queue.  The item does not need to be the head of the queue.  
+        /// Attempts to remove an item from the queue.  The item does not need to be the head of the queue.
         /// Useful for multi-threading, where the queue may become empty between calls to Contains() and Remove()
         /// Returns true if the item was successfully removed, false if it wasn't in the queue.
-        /// If multiple copies of the item are enqueued, only the first one is removed. 
+        /// If multiple copies of the item are enqueued, only the first one is removed.
         /// O(log n)
         /// </summary>
         public bool TryRemove(TItem item)

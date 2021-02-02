@@ -50,7 +50,7 @@ namespace MessagePack.Resolvers
          }
 
     }
-    
+
     public class ThorContractlessStandardResolver : IFormatterResolver
     {
         public static readonly MessagePackSerializerOptions Options;

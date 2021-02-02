@@ -14,13 +14,13 @@ public class StructureObject : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }
 
@@ -45,8 +45,8 @@ public enum StructureObjectTag : int
     Rug = 15,
     FirePlace = 16,
     DecorativeSticks = 17,
-    
-    
+
+
 
 }
 

@@ -21,7 +21,7 @@ namespace Plugins.Isolationist
 				{
 					_instance = FindObjectOfType<IsolateInfo>();
 					_searched = true;
-				} 
+				}
 				return _instance;
 			}
 		}

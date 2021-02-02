@@ -17,7 +17,7 @@ public class Microwave : MonoBehaviour {
 
 	public bool EditorOpen = false;
 	public bool EditorOn = false;
-	
+
 	bool displayedError = false;
 
 	public void Update() {
@@ -34,7 +34,7 @@ public class Microwave : MonoBehaviour {
 				}
 				return;
 			}
-		
+
 			int animState = SimObjParent.Animator.GetInteger ("AnimState1");
 			//1 - Closed, Off
 			//2 - Open, Off

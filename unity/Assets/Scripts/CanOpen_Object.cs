@@ -8,7 +8,7 @@ public class CanOpen_Object : MonoBehaviour {
 	[Header("Moving Parts for this Object")]
 	[SerializeField]
 	public GameObject[] MovingParts;
-    
+
 	[Header("Animation Parameters")]
 	[SerializeField]
     public Vector3[] openPositions;
@@ -20,7 +20,7 @@ public class CanOpen_Object : MonoBehaviour {
     public float animationTime = 0.2f;
 
     [SerializeField]
-    public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
+    public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens.
     private float startOpenness; // used to reset on failure
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
@@ -118,7 +118,7 @@ public class CanOpen_Object : MonoBehaviour {
 
         public void SetMovementToScaleZ() {
             movementType = MovementType.ScaleZ;
-        }   
+        }
     #endif
 
     public void Interact(float openness = 1.0f) {
@@ -266,7 +266,7 @@ public class CanOpen_Object : MonoBehaviour {
 			return;
 		}
 
-		//if hitting another object that has double doors, do some checks 
+		//if hitting another object that has double doors, do some checks
 		if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting) {
 			if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
 				//don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
@@ -279,7 +279,7 @@ public class CanOpen_Object : MonoBehaviour {
 				// if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
 				// object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
 				// this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
-				if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0 
+				if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0
                     && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)//check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
 				{
                     #if UNITY_EDITOR

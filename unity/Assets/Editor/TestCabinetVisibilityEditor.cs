@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 
 [CustomEditor(typeof(TestCabinetVisibility))]
-public class TestCabinetVisibilityEditor : Editor 
+public class TestCabinetVisibilityEditor : Editor
 {
 	public override void OnInspectorGUI()
 	{

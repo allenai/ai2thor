@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System;
 
 [CustomEditor(typeof(Randomizer))]
-public class RandomizerEditor : Editor 
+public class RandomizerEditor : Editor
 {
 	static Color newColor = Color.white;
 	static bool showMatPreviews = false;

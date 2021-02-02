@@ -21,7 +21,7 @@ public class Screenshot360 : MonoBehaviour
         string path;
 
         byte[] bytes = I360Render.Capture(imageWidth, saveAsJPEG);
-            
+
             if (bytes != null)
             {
                 while (!newFileName)

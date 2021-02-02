@@ -9,7 +9,7 @@ using System.Linq;
 public class InstantiatePrefabTest : MonoBehaviour {
     public GameObject[] prefabs = null;
     private int spawnCount = 0;
-    
+
     #if UNITY_EDITOR
     private bool m_Started = false;
     #endif
@@ -116,7 +116,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             GameObject prefab = Instantiate(candidates[variation], position, quat) as GameObject;
             if (!ignoreChecks) {
                 if (UtilityFunctions.isObjectColliding(
-                    prefab, 
+                    prefab,
                     new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseFPSAgentController>() select agent.gameObject))
                 ) {
                     Debug.Log("On spawning object the area was not clear despite CheckSpawnArea saying it was.");
@@ -146,7 +146,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
     // be randomized so that the random spawn is... random
     public bool PlaceObjectReceptacle(
         List<ReceptacleSpawnPoint> rsps,
-        SimObjPhysics sop, 
+        SimObjPhysics sop,
         bool placeStationary,
         int maxPlacementAttempts,
         int degreeIncrement,
@@ -266,7 +266,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
         // get the bounding box of the sim object we are trying to place
         BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
-        
+
         // zero out rotation and velocity/angular velocity, then match the target receptacle's rotation
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         Rigidbody sopRB = sop.GetComponent<Rigidbody>();
@@ -289,7 +289,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             if (i > 0) {
                 sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
                 // ToCheck[i].rotation = sop.transform.rotation;
-                
+
                 Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
                 BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
                 DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
@@ -341,7 +341,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                     }
-                            
+
                     sop.transform.rotation = oldRotation;
                 }
                 oabb.enabled = false;
@@ -355,7 +355,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
-                
+
                 // now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 // bits of it hanging out
 
@@ -397,7 +397,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 // ok so this is just checking if there are enough corners in the Receptacle Zone to consider it placed correctly.
                 // originally this looped up to i < HowManyCornersToCheck, but if we just check all the corners, regardless of
                 // sort order, it seems to bypass the issue above of how to sort the corners to find the "bottom" 4 corners, so uh
-                // i guess this might just work without fancy sorting to determine the bottom 4 corners... especially since the "bottom corners" starts to lose meaning as objects are rotated 
+                // i guess this might just work without fancy sorting to determine the bottom 4 corners... especially since the "bottom corners" starts to lose meaning as objects are rotated
                 for (int i = 0; i < 8; i++) {
                     if (rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i])) {
                         CornerCount++;
@@ -562,7 +562,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         Collider[] hitColliders = Physics.OverlapBox(
             bbCenterTransformPoint,
             bbcol.size / 2.0f,
-            rotation, 
+            rotation,
             layermask,
             QueryTriggerInteraction.Collide
         );

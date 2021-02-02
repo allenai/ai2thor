@@ -19,7 +19,7 @@ public class THORDocumentationExporter : MonoBehaviour
         var file = "PlacementRestrictions.txt";
 
         var create = File.CreateText("Assets/DebugTextFiles/" + file);
-        
+
         foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions)
         {
             //create.WriteLine("/////////////////////////////");
@@ -66,7 +66,7 @@ public class THORDocumentationExporter : MonoBehaviour
         Dictionary<SimObjType, int> ObjectTypeInAllScenes_to_Count = new Dictionary<SimObjType, int>();
 
         //keep track of which object types exist in which scene
-        Dictionary<SimObjType, List<String>> ObjectType_To_Scenes = new Dictionary<SimObjType, List<String>>(); 
+        Dictionary<SimObjType, List<String>> ObjectType_To_Scenes = new Dictionary<SimObjType, List<String>>();
 
         //Keep track of the total instance count and oobject type: count in individual scenes
         Dictionary<String, TotalSimObjectsInScene> SceneName_to_Counts = new Dictionary<String, TotalSimObjectsInScene>();
@@ -136,7 +136,7 @@ public class THORDocumentationExporter : MonoBehaviour
                 }
 
                 //keep track of unique prefab instances across all scenes
-                
+
                 //check if this object is a prefab
                 //if so, store that prefab as one we have encountered already
                 //if this is not a prefab, assume that it is unique to this scene

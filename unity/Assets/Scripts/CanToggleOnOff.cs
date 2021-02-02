@@ -23,9 +23,9 @@ public class SwapObjList
 
 }
 
-public class CanToggleOnOff : MonoBehaviour 
+public class CanToggleOnOff : MonoBehaviour
 {
-	//the array of moving parts and lightsources will correspond with each other based on their 
+	//the array of moving parts and lightsources will correspond with each other based on their
 	//position in the array
 
 	//these are any switches, dials, levers, etc that should change position or orientation when toggle on or off
@@ -44,7 +44,7 @@ public class CanToggleOnOff : MonoBehaviour
 	public GameObject[] LightSources;
 
 	[Header("Animation Parameters")]
-	
+
 	//rotations or translations for the MovingParts when On
 	[SerializeField]
     public Vector3[] OnPositions;
@@ -116,11 +116,11 @@ public class CanToggleOnOff : MonoBehaviour
     {
         movementType = MovementType.Rotate;
     }
-    
+
 #endif
 
 	// Use this for initialization
-	void Start () 
+	void Start ()
 	{
 		if(MovingParts != null)
 		{
@@ -137,9 +137,9 @@ public class CanToggleOnOff : MonoBehaviour
 		}
 		#endif
 	}
-	
+
 	// Update is called once per frame
-	void Update () 
+	void Update ()
 	{
 		// //test if it can open without Agent Command - Debug Purposes
         // #if UNITY_EDITOR
@@ -161,7 +161,7 @@ public class CanToggleOnOff : MonoBehaviour
         }
 		return count;//iTween.Count(this.transform.gameObject);
     }
-    
+
 	public void Toggle()
 	{
 		//if this object is controlled by another object, do nothing and report failure?
@@ -192,7 +192,7 @@ public class CanToggleOnOff : MonoBehaviour
 						"rotation", OffPositions[i],
 						"islocal", true,
 						"time", animationTime,
-						"easetype", "linear")); 
+						"easetype", "linear"));
 					}
 
 					if(movementType == MovementType.Slide)
@@ -211,7 +211,7 @@ public class CanToggleOnOff : MonoBehaviour
 						"position", OffPositions[i],
 						"islocal", true,
 						"time", animationTime,
-						"easetype", "linear")); 
+						"easetype", "linear"));
 					}
 				}
 			}
@@ -245,7 +245,7 @@ public class CanToggleOnOff : MonoBehaviour
 						"rotation", OnPositions[i],
 						"islocal", true,
 						"time", animationTime,
-						"easetype", "linear")); 
+						"easetype", "linear"));
 					}
 
 					if(movementType == MovementType.Slide)
@@ -264,7 +264,7 @@ public class CanToggleOnOff : MonoBehaviour
 						"position", OnPositions[i],
 						"islocal", true,
 						"time", animationTime,
-						"easetype", "linear")); 
+						"easetype", "linear"));
 					}
 				}
 			}
@@ -350,7 +350,7 @@ public class CanToggleOnOff : MonoBehaviour
 	// {
 	// 	foreach (SwapObjList swap in MaterialSwapObjects)
 	// 	{
-	// 		List<Material> list = 
+	// 		List<Material> list =
 	// 		new List<Material>(swap.MyObject.GetComponent<MeshRenderer>().sharedMaterials);
 
 	// 		//print(swap.MyObject.name);

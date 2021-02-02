@@ -24,7 +24,7 @@ public class Mirror : MonoBehaviour {
 			}
 		}
 	}
-		
+
 	void Update () {
 		bool dirty = EditorDirty;
 		if (Application.isPlaying) {

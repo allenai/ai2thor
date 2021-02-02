@@ -1,23 +1,23 @@
 ﻿ using UnityEngine;
  using System.Collections;
- 
+
  public class ScreenShotFromCamera : MonoBehaviour {
-     public int resWidth = 3840; 
+     public int resWidth = 3840;
      public int resHeight = 2160;
- 
+
      private bool takeHiResShot = false;
- 
+
      public static string ScreenShotName(int width, int height) {
-         return string.Format("{0}/screenshots/screen_{1}x{2}_{3}.png", 
-                              Application.dataPath, 
-                              width, height, 
+         return string.Format("{0}/screenshots/screen_{1}x{2}_{3}.png",
+                              Application.dataPath,
+                              width, height,
                               System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
      }
- 
+
      public void TakeHiResShot() {
          takeHiResShot = true;
      }
- 
+
      void LateUpdate() {
          takeHiResShot |= Input.GetKeyDown("k");
          if (takeHiResShot) {

@@ -72,7 +72,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float rotateStepDegrees = 90.0f;
 
         protected bool snapToGrid;
-
         [ObsoleteAttribute(message: "This action is deprecated. Call snapToGrid instead.", error: false)]
         protected bool continuousMode;
 
@@ -82,8 +81,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
         public GameObject DroneBasket;// reference to the drone's basket object
+        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         protected bool isVisible = true;
         public bool inHighFrictionArea = false;
+
+        public int fixedUpdateCount { get; protected set; }
+        public int updateCount { get; protected set; }
 
         // outbound object filter
         protected SimObjPhysics[] simObjFilter = null;
@@ -171,14 +174,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected List<string> collisionsInAction;// tracking collided objects
         protected string[] collidedObjects;// container for collided objects
         protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
-        protected Quaternion targetRotation;
 
         // Javascript communication
-        protected JavaScriptInterface jsInterface = null;
-        public Quaternion TargetRotation
-        {
-            get { return targetRotation; }
-        }
+        #if UNITY_WEBGL
+            protected JavaScriptInterface jsInterface = null;
+            public Quaternion TargetRotation {
+                get { return targetRotation; }
+            }
+        #endif
+
+        // Arm
+        protected IK_Robot_Arm_Controller Arm;
 
         // use as reference to the PhysicsSceneManager object
         protected PhysicsSceneManager _physicsSceneManager = null;
@@ -447,9 +453,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string visibilityScheme = "Collider"
         ) {
             // set agent mode to default, bot or drone
-            HashSet<string> VALID_AGENT_MODES = new HashSet<string> {"default", "bot", "drone"};
+            HashSet<string> VALID_AGENT_MODES = new HashSet<string> {"default", "bot", "drone", "arm"};
             if (!VALID_AGENT_MODES.Contains(agentMode)) {
-                throw new ArgumentException("agentMode be be in {'default', 'bot', 'drone'}.");
+                throw new ArgumentException("agentMode be be in {'default', 'bot', 'drone', 'arm'}.");
             }
             SetAgentMode(agentMode);
 
@@ -528,7 +534,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             // determine if we are in Tall or Bot mode (or other modes as we go on)
-            if (whichMode == "default") {
+            if (whichMode == "default" || whichMode == "arm") {
                 // toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
 
@@ -554,8 +560,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
-            } else if (whichMode == "bot") {
-                // toggle FirstPersonCharacterCull
+
+                // enable arm component
+                if (whichMode == "arm") {
+                    Debug.Log("initializing arm");
+                    IKArm.SetActive(true);
+                    Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                    var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+                    Vector3 pos = armTarget.transform.localPosition;
+                    pos.z = 0.4f; // pulls the arm in from being fully extended
+                    armTarget.transform.localPosition = pos;
+                    var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
+                    Debug.Log("running manipulate arm");
+                    ikSolver.ManipulateArm();
+                }
+            } else if(whichMode == "bot") {
+                //toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = BotVisCap;
@@ -649,7 +669,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             return target;
         }
-        
+
         // checks if the target position in space is within the agent's current viewport
         protected bool isPositionInteractable(Vector3 position) {
             // now check if the target position is within bounds of the Agent's forward (z) view
@@ -1524,6 +1544,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
             metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
 
+             // ARM
+            if (Arm != null) {
+                metaMessage.arm = Arm.GenerateMetadata();
+            }
+
             // EXTRAS
             metaMessage.reachablePositions = reachablePositions;
             metaMessage.flatSurfacesOnGrid = UtilityFunctions.flatten3DimArray(flatSurfacesOnGrid);
@@ -1778,9 +1803,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // iterates to next allowed upward horizon angle for agent camera (max 30 degrees up)
         public virtual void LookUp(float degrees) {
-            m_Camera.transform.Rotate(degrees, 0, 0);
+            m_Camera.transform.Rotate(-degrees, 0, 0);
             actionFinished(true);
         }
+
+<<<<<<< HEAD
+=======
+// TODO: move to stochastic/bring up the exact same one in physics.
+        protected bool checkForUpDownAngleLimit(string direction, float degrees) {
+            bool result = true;
+            //check the angle between the agent's forward vector and the proposed rotation vector
+            //if it exceeds the min/max based on if we are rotating up or down, return false
+
+            //first move the rotPoint to the camera
+            rotPoint.transform.position = m_Camera.transform.position;
+            //zero out the rotation first
+            rotPoint.transform.rotation = m_Camera.transform.rotation;
+
+
+            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
+            if(direction == "down")
+            {
+                rotPoint.Rotate(new Vector3(degrees, 0, 0));
+                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
+                //degrees being positive, it still needs to check against this negatively signed direction.
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+
+            if(direction == "up")
+            {
+                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+            return result;
+        }
+>>>>>>> origin/ExpRoom
+
 
         ///////////////////////////////////////////
         //////////////// TELEPORT /////////////////
@@ -1790,6 +1854,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // XXX: does teleport full even make sense in the base? what about the drone
         // or some other robot that has 10 degrees of freedom. When will this ever
         // be used?
+
+        //teleport full, base version does not consider being able to hold objects
         public virtual void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
@@ -1890,10 +1956,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
             foreach (BaseFPSAgentController agent in this.agentManager.agents) {
                 bool overlapping = (transform.position - agent.transform.position).magnitude < 0.001f;
+<<<<<<< HEAD
                 if (overlapping || agent == this || !agent.IsVisible) {
                     foreach (Collider c in agent.GetComponentsInChildren<Collider>()) {
                         if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) {
                             c.enabled = enableColliders;
+=======
+                if (overlapping || agent == this || !agent.IsVisible)
+                {
+                    foreach (Collider c in agent.GetComponentsInChildren<Collider>())
+                    {
+                        if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand))
+                        {
+                            //if we are in arm mode, also do the ItemInHand collider re-enable check
+                            //for all objects that might be currently picked up by the arm
+                            if(Arm != null)
+                            {
+                                foreach(SimObjPhysics inArmHand in Arm.HeldObjects.Keys)
+                                {
+                                    //print("here");
+                                    if(!hasAncestor(c.transform.gameObject, inArmHand.transform.gameObject))
+                                    {
+                                        c.enabled = enableColliders;
+                                    }
+                                }
+                            }
+>>>>>>> origin/ExpRoom
                         }
                     }
                 }
@@ -1946,6 +2034,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, visibleRange());
         }
 
+        protected bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length <= 0) {
+                throw new ArgumentException("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+            }
+
+            Transform[] visPoints = sop.VisibilityPoints;
+            foreach (Transform point in visPoints) {
+                Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                float ViewPointRangeHigh = 1.0f;
+                float ViewPointRangeLow = 0.0f;
+
+                if (viewPoint.z > 0 &&
+                    viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                    viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                ) {
+                        return true;
+                }
+            }
+            return false;
+        }
+
         protected bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
@@ -1954,16 +2063,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 int visPointCount = 0;
 
                 foreach (Transform point in visPoints) {
-                    bool outsidePlane = false;
-                    for (int i = 0; i < planes.Length; i++) {
-                        if (!planes[i].GetSide(point.position)) {
-                            outsidePlane = true;
-                            break;
+                    if (planes != null) {
+                        bool outsidePlane = false;
+                        for (int i = 0; i < planes.Length; i++) {
+                            if (!planes[i].GetSide(point.position)) {
+                                outsidePlane = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (outsidePlane) {
-                        continue;
+                        if (outsidePlane) {
+                            continue;
+                        }
                     }
 
                     float xdelta = Math.Abs(this.transform.position.x - point.position.x);
@@ -2012,7 +2123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return visible;
         }
-        
+
         // On demand function for getting what sim objects are visible at that moment
         protected SimObjPhysics[] getVisibleSimObjects(float maxDistance) {
             if (this.visibilityScheme == VisibilityScheme.Collider) {
@@ -2582,6 +2693,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// VISUALIZE GRID //////////////
         ///////////////////////////////////////////
 
+        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
+            var objectId = action.objectId;
+            var objectType = action.objectType;
+            return getSimObjectFromTypeOrId(objectType, objectId);
+        }
+
         public void VisualizeGrid() {
             var reachablePositions = getReachablePositions(visualize: true);
             actionFinished(true, reachablePositions);
@@ -2591,6 +2708,124 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////// SHORTEST PATH ///////////////
         ///////////////////////////////////////////
 
+        public void ObjectNavExpertAction(ServerAction action) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            UnityEngine.AI.NavMeshPath path = GetSimObjectNavMeshTarget(sop, transform.position, transform.rotation, DefaultAllowedErrorInShortestPath);
+
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+                int parts = (int) Math.Round(360f / rotateStepDegrees);
+                if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
+                    throw new ArgumentException("Invalid rotate step degrees for agent, must divide 360 without a remainder.");
+                }
+
+                int numLeft = parts / 2;
+                int numRight = numLeft + (parts % 2 == 0 ? 1 : 0);
+                Vector3 startPosition = this.transform.position;
+                Quaternion startRotation = this.transform.rotation;
+                Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
+
+                if (path.corners.Length <= 1) {
+                    if (objectIsWithinViewport(sop)) {
+                        actionFinished(true);
+                        return;
+                    }
+
+                    int relRotate = 0;
+                    int relHorizon = 0;
+                    int bestNumActions = 1000000;
+                    for (int i = -numLeft; i <= numRight; i++) {
+                        transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+                        for (int horizon = -1; horizon <= 2; horizon++) {
+                            m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
+                            if (objectIsWithinViewport(sop)) {
+                                int numActions = Math.Abs(i) + Math.Abs(horizon - (int) (startCameraRot.x / 30f));
+                                if (numActions < bestNumActions) {
+                                    bestNumActions = numActions;
+                                    relRotate = i;
+                                    relHorizon = horizon - (int) (startCameraRot.x / 30f);
+                                }
+                            }
+                        }
+                        m_Camera.transform.localEulerAngles = startCameraRot;
+                        transform.rotation = startRotation;
+                    }
+
+                    #if UNITY_EDITOR
+                    Debug.Log("Expert rotate and horizon:");
+                    Debug.Log(relRotate);
+                    Debug.Log(relHorizon);
+                    // When in the editor, rotate the agent and camera into the expert direction
+                    m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
+                    transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
+                    #endif
+
+                    if (relRotate != 0) {
+                        if (relRotate < 0) {
+                            actionFinished(true, "RotateLeft");
+                        } else {
+                            actionFinished(true, "RotateRight");
+                        }
+                    } else if (relHorizon != 0) {
+                        if (relHorizon < 0) {
+                            actionFinished(true, "LookUp");
+                        } else {
+                            actionFinished(true, "LookDown");
+                        }
+                    } else {
+                        throw new InvalidOperationException("Object doesn't seem visible from any rotation/horizon.");
+                    }
+                    return;
+                }
+
+                Vector3 nextCorner = path.corners[1];
+
+                int whichBest = 0;
+                float bestDistance = 1000f;
+                for (int i = -numLeft; i <= numRight; i++) {
+                    transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+
+                    bool couldMove = moveInDirection(this.transform.forward * gridSize);
+                    if (couldMove) {
+                        float newDistance = Math.Abs(nextCorner.x - transform.position.x) + Math.Abs(nextCorner.z - transform.position.z);
+                        if (newDistance + 1e-6 < bestDistance) {
+                            bestDistance = newDistance;
+                            whichBest = i;
+                        }
+                    }
+                    transform.position = startPosition;
+                    transform.rotation = startRotation;
+                }
+
+                if (bestDistance >= 1000f) {
+                    throw new InvalidOperationException("Can't seem to move in any direction...");
+                }
+
+               #if UNITY_EDITOR
+               transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+               if (whichBest == 0) {
+                   moveInDirection(this.transform.forward * gridSize);
+               }
+               Debug.Log(whichBest);
+               #endif
+
+                if (whichBest < 0) {
+                    actionFinished(true, "RotateLeft");
+                } else if (whichBest > 0) {
+                    actionFinished(true, "RotateRight");
+                } else {
+                    actionFinished(true, "MoveAhead");
+                }
+                return;
+            }
+            else {
+                // TODO
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+                return;
+            }
+        }
+
+        // TODO: make objecType and objectId separate methods
         protected void getShortestPath(
             string objectType,
             string objectId,
@@ -2984,6 +3219,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.transform.rotation = originalCameraRotation;
 
             var path = new UnityEngine.AI.NavMeshPath();
+
             var sopPos = targetSOP.transform.position;
             // var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
@@ -2997,7 +3233,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
-
             return path;
         }
 
@@ -3183,7 +3418,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
             }
-
             if (!validQuality) {
                 throw new ArgumentException($"Invalid screen quality: {quality}");
             }
@@ -3195,6 +3429,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 script.enabled = true;
             }
             actionFinished(true);
+        }
+
+        void Update() {
+            this.updateCount++;
+        }
+
+        void FixedUpdate() {
+            this.fixedUpdateCount++;
+        }
+
+        public void ResetUpdateCounters() {
+            this.fixedUpdateCount = 0;
+            this.updateCount = 0;
+        }
+
+        public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+            this.fixedUpdateCount = ContinuousMovement.unrollSimulatePhysics(
+                enumerator,
+                fixedDeltaTime
+            );
         }
 
         public void DisableScreenSpaceAmbientOcclusion() {

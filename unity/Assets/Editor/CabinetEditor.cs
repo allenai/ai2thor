@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System;
 
 [CustomEditor(typeof(Cabinet))]
-public class CabinetEditor : Editor 
+public class CabinetEditor : Editor
 {
 	public override void OnInspectorGUI()
 	{
@@ -29,7 +29,7 @@ public class CabinetEditor : Editor
 		EditorGUILayout.LabelField ("Parent SimObj:", EditorStyles.miniLabel);
 		c.ParentObj = (SimObj)EditorGUILayout.ObjectField (c.ParentObj, typeof(SimObj), true);
 		EditorGUILayout.EndVertical ();
-	
+
 
 		GUI.color = Color.grey;
 		EditorGUILayout.BeginVertical (EditorStyles.helpBox);
@@ -84,13 +84,13 @@ public class CabinetEditor : Editor
 		GUI.color = Color.white;
 		EditorGUILayout.LabelField ("Utilities:", EditorStyles.miniLabel);
 
-		if (c.OpenStyle == CabinetOpenStyle.Drawer) 
+		if (c.OpenStyle == CabinetOpenStyle.Drawer)
         {
-			if (GUILayout.Button ("Set drawer open position")) 
+			if (GUILayout.Button ("Set drawer open position"))
             {
 				c.OpenLocalPosition = c.DrawerDoor.localPosition;
 			}
-			if (GUILayout.Button ("Set drawer closed position")) 
+			if (GUILayout.Button ("Set drawer closed position"))
             {
 				c.ClosedLocalPosition = c.DrawerDoor.localPosition;
 			}
@@ -119,12 +119,12 @@ public class CabinetEditor : Editor
             */
 		}
 
-		if (c.ParentObj != null && c.ParentObj.Animator == null) 
+		if (c.ParentObj != null && c.ParentObj.Animator == null)
         {
-			if (GUILayout.Button ("Add animation controller to parent SimObj")) 
+			if (GUILayout.Button ("Add animation controller to parent SimObj"))
             {
 				Animator a = c.ParentObj.GetComponent <Animator> ();
-				if (a == null) 
+				if (a == null)
                 {
 					a = c.ParentObj.gameObject.AddComponent<Animator> ();
 				}

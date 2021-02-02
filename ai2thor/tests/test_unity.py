@@ -32,6 +32,7 @@ def build_controller(**args):
 
 wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
+stochastic_controller = build_controller(agentControllerType='stochastic')
 
 def teardown_module(module):
     wsgi_controller.stop()
@@ -150,7 +151,8 @@ def test_target_invocation_exception(controller):
     assert not event.metadata['lastActionSuccess'], 'OpenObject(x > 1) should fail.'
     assert event.metadata['errorMessage'], 'errorMessage should not be empty when OpenObject(x > 1).'
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_lookup(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))

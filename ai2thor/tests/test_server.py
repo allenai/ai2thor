@@ -64,6 +64,7 @@ def test_train_numpy_action():
         action='Teleport', 
         rotation=dict(y=np.array([24])[0]),
         moveMagnitude=np.array([55.5])[0],
+        myCustomArray=np.array([1, 2]),
     ))
     c = s.app.test_client()
     res = c.post(
@@ -72,7 +73,7 @@ def test_train_numpy_action():
         content_type='multipart/form-data; boundary=OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt',
         input_stream=BytesIO(generate_form(metadata_simple, s.sequence_id)))
     j = json.loads(res.get_data())
-    assert j == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5}
+    assert j == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5, 'myCustomArray': [1, 2]}
     assert res.status_code == 200
 
 def test_train():

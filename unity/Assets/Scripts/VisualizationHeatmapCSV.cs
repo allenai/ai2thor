@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VisualizationHeatmapCSV : MonoBehaviour 
+public class VisualizationHeatmapCSV : MonoBehaviour
 {
 	public TextAsset CSVFile;
 
@@ -15,7 +15,7 @@ public class VisualizationHeatmapCSV : MonoBehaviour
 	public GameObject prefabHeavy;
 
 	// Use this for initialization
-	void Start () 
+	void Start ()
 	{
 		string[] data = CSVFile.text.Split(new char[] { '\n'});
 		float x, z, r;
@@ -43,10 +43,10 @@ public class VisualizationHeatmapCSV : MonoBehaviour
 			Instantiate(prefabHeavy, pos, Quaternion.Euler(rot));
 		}
 	}
-	
+
 	// Update is called once per frame
-	void Update () 
+	void Update ()
 	{
-		
+
 	}
 }

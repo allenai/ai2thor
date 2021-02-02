@@ -21,8 +21,8 @@ namespace UnityStandardAssets.Utility
         public bool autoZeroVerticalOnMobile = true;
         public bool autoZeroHorizontalOnMobile = false;
         public bool relative = true;
-        
-        
+
+
         private Vector3 m_TargetAngles;
         private Vector3 m_FollowAngles;
         private Vector3 m_FollowVelocity;

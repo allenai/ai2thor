@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectSpecificReceptacle : MonoBehaviour 
+public class ObjectSpecificReceptacle : MonoBehaviour
 {
 	[Header("Only objects of these Types can be placed on this Receptacle")]
 	public SimObjType[] SpecificTypes;
@@ -44,9 +44,9 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		full = false;
 		return false;
 	}
-	
+
 	// Use this for initialization
-	void Start () 
+	void Start ()
 	{
 		#if UNITY_EDITOR
 		if(!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
@@ -55,5 +55,5 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		}
 		#endif
 	}
-	
+
 }

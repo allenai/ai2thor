@@ -73,7 +73,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
                 pointsOnGrid.Add(thisPoint + -agent.transform.right * gridIncrement * j);
             }
         }
-        
+
         // #if UNITY_EDITOR
         // debugCoords = pointsOnGrid;
         // #endif
@@ -236,7 +236,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
-        
+
         SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
 
@@ -292,7 +292,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     }
 
     //Note: always run ReturnValidSpawns - to get the current scene state's set of useable coordinates for the objType and Variation
-    //spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object at coordinate <point> 
+    //spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object at coordinate <point>
     //a valid <point> should be generated from the ReturnValidSpawns() return
     public bool SpawnExperimentObjAtPoint(string objType, int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0)
     {
@@ -359,7 +359,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             sceneManager.SetupScene();
             sceneManager.ResetObjectIdToSimObjPhysics();
         }
-        
+
         //no objects could be spawned at any of the spawn points
         //destroy the thing we tried to place on target receptacle
         if(!success)

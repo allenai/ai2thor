@@ -24,7 +24,7 @@ public class Bathtub : MonoBehaviour {
 			}
 		}
 	}
-		
+
 	void Update () {
 		bool filled = EditorFilled;
 		if (Application.isPlaying) {

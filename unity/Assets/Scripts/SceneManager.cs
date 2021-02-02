@@ -67,7 +67,7 @@ public class SceneManager : MonoBehaviour {
         this.AnimationMode = SceneAnimationMode.Instant;
 
 	}
-   
+
 	//generates a object ID for a sim object
 	public void AssignObjectID (SimObj obj) {
 		//object ID is a string consisting of:
@@ -91,7 +91,7 @@ public class SceneManager : MonoBehaviour {
 	#if UNITY_EDITOR
 	//returns an array of required types NOT found in scene
 	public SimObjType[] CheckSceneForRequiredTypes () {
-		
+
 		List<SimObjType> typesToCheck = null;
 		switch (LocalSceneType) {
 		case SceneType.Kitchen:

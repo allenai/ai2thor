@@ -10,15 +10,15 @@ static class CopyLightingSettings
     // Written by Peter Schraut
     //     http://www.console-dev.de
     //
-    // This Unity editor extension allows yoyu to copy&paste lighting settings 
+    // This Unity editor extension allows yoyu to copy&paste lighting settings
     // from one scene to another. Check the following video to see it in action
-    // https://youtu.be/-TQzrVn1kWM 
+    // https://youtu.be/-TQzrVn1kWM
     //
     // Save this file as "Assets/Editor/CopyLightingSettings.cs"
     //
     // Download most recent version from:
     //     https://bitbucket.org/snippets/pschraut/LeykeL
-    //	
+    //
 
     static SerializedObject s_SourceLightmapSettings;
     static SerializedObject s_SourceRenderSettings;

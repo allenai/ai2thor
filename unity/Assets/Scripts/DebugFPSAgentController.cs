@@ -51,8 +51,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_CharacterController = GetComponent<CharacterController>();
             m_Camera = Camera.main;
             m_MouseLook.Init(transform, m_Camera.transform);
-            
-            //find debug canvas related objects 
+
+            //find debug canvas related objects
             Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
 			InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
@@ -64,11 +64,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
             {
-				Debug_Canvas.GetComponent<Canvas>().enabled = true;            
+				Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
             }
-          
+
             // FlightMode = PhysicsController.FlightMode;
 
             #if UNITY_WEBGL
@@ -108,11 +108,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void OnEnable()
         {
-            
+
                 FPSEnabled = true;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
-                
+
                 InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
                 InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
                 if (InputMode_Text) {
@@ -121,9 +121,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
                 Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-  
+
                 Debug_Canvas.GetComponent<Canvas>().enabled = true;
-              
+
         }
 
         public void OnDisable()
@@ -177,7 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     return;
                 }
                 else
-                 {               
+                 {
                     if (InputMode_Text) {
 					    InputMode_Text.GetComponent<Text>().text = "FPS Mode (mouse free)";
                     }
@@ -205,7 +205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
             }
-            
+
 
             if (Input.GetKeyDown(KeyCode.R))
             {
@@ -238,7 +238,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             highlightController.MouseControls();
 
 			DebugKeyboardControls();
-         
+
             ///////////////////////////////////////////////////////////////////////////
 			//we are not in focus mode, so use WASD and mouse to move around
 			if(FPSEnabled) {
@@ -290,7 +290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				m_Input.Normalize();
 			}
-            
+
 		}
 
         public MouseLook GetMouseLook() {
@@ -299,10 +299,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void MouseRotateView()
 		{
-   			m_MouseLook.LookRotation (transform, m_Camera.transform);         
+   			m_MouseLook.LookRotation (transform, m_Camera.transform);
 		}
 
-        private void FPSInput() {                  
+        private void FPSInput() {
             //take WASD input and do magic, turning it into movement!
             float speed;
             GetInput(out speed);
@@ -316,10 +316,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
             m_MoveDir.x = desiredMove.x * speed;
-            m_MoveDir.z = desiredMove.z * speed;    
+            m_MoveDir.z = desiredMove.z * speed;
 
 			// if(!FlightMode)
-            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
+            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
 
             //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
             if (m_CharacterController.enabled) {

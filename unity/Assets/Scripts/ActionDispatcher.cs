@@ -7,11 +7,11 @@ using Newtonsoft.Json.Linq;
 
 
 /*
-    The ActionDispatcher takes a dynamic object with an 'action' property and 
-    maps this to a method.  Matching is performed using the parameter names. 
+    The ActionDispatcher takes a dynamic object with an 'action' property and
+    maps this to a method.  Matching is performed using the parameter names.
     In the case of method overloading, the best match is returned based on the
     number of matched named parameters.  For a method to qualify for dispatching
-    it must be public and have a return type of void.  The following method 
+    it must be public and have a return type of void.  The following method
     definitions are permitted:
 
     public void MoveAhead()
@@ -33,7 +33,7 @@ using Newtonsoft.Json.Linq;
 
     The reason for the aforementioned restrictions is twofold, we pass the arguments to
     Unity serialized using json.  This restricts the types that can be passed to
-    C# as well even if we serialized using a different format, Python does not 
+    C# as well even if we serialized using a different format, Python does not
     have all the same primitives, such as 'short'.  Second, we allow actions
     to be invoked from the Python side using keyword args which don't preserve order.
 
@@ -44,7 +44,7 @@ using Newtonsoft.Json.Linq;
 
     Ambiguous Actions
 
-    The following method signatures are not permitted since they can create ambiguity as 
+    The following method signatures are not permitted since they can create ambiguity as
     to which method to dispatch to:
 
     case 1:
@@ -53,7 +53,7 @@ using Newtonsoft.Json.Linq;
             public void Teleport(float x, float y, float z)
         reason:
             Mixing ServerAction methods and non-server action methods creates ambiguity
-            if one param is omitted from the (x,y,z) method.  You could default back to 
+            if one param is omitted from the (x,y,z) method.  You could default back to
             ServerAction method, but you can't be sure that is what the user intended.
 
     case 2:
@@ -76,10 +76,10 @@ using Newtonsoft.Json.Linq;
             This is similar to case #2, but the methods are spread across two classes.
             The way to resolve this is to define the following methods:
             Subclass
-                public override void LookUp(float degrees) 
+                public override void LookUp(float degrees)
                 public void LookUp(float degrees, bool forceThing)
-            
-            Within the override method, the author can dispatch to LookUp with a default 
+
+            Within the override method, the author can dispatch to LookUp with a default
             value for forceThing.
 
 */
@@ -220,7 +220,7 @@ public static class ActionDispatcher {
 
                     if (signatureMatch)
                     {
-                        // this happens if one method has a trailing optional value and all 
+                        // this happens if one method has a trailing optional value and all
                         // other parameter types match
                         if (targetParams.Length != sourceParams.Length)
                         {
@@ -258,11 +258,11 @@ public static class ActionDispatcher {
 
         List<MethodInfo> actionMethods = getCandidateMethods(targetType,  dynamicServerAction.action);
         MethodInfo matchedMethod = null;
-        int bestMatchCount = -1; // we do this so that 
+        int bestMatchCount = -1; // we do this so that
 
         // This is where the the actual matching occurs.  The matching is done strictly based on
         // variable names.  In the future, this could be modified to include type information from
-        // the inbound JSON object by mapping JSON types to csharp primitive types 
+        // the inbound JSON object by mapping JSON types to csharp primitive types
         // (i.e. number -> [short, float, int], bool -> bool, string -> string, dict -> object, list -> list)
         foreach (var method in actionMethods) {
             int matchCount = 0;
@@ -309,7 +309,7 @@ public static class ActionDispatcher {
             throw new InvalidActionException();
         }
 
-        List<string> missingArguments = null; 
+        List<string> missingArguments = null;
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         object[] arguments = new object[methodParams.Length];
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
@@ -373,7 +373,7 @@ public class MethodParamComparer: IComparer<MethodInfo> {
 public class InvalidActionException : Exception { }
 
 [Serializable]
-public class AmbiguousActionException : Exception { 
+public class AmbiguousActionException : Exception {
     public AmbiguousActionException(string message) : base(message) {}
 }
 

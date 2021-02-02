@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FixedUpdate()
         {
-            isColliding = false;         
+            isColliding = false;
         }
 
         public void OnTriggerStay(Collider other)

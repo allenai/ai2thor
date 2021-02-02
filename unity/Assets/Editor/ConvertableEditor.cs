@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [CustomEditor(typeof(Convertable))]
-public class ConvertableEditor : Editor 
+public class ConvertableEditor : Editor
 {
 	public override void OnInspectorGUI ()
 	{

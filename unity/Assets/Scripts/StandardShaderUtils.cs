@@ -1,7 +1,7 @@
  // Code from https://answers.unity.com/questions/1004666/change-material-rendering-mode-in-runtime.html
- 
+
  using UnityEngine;
- 
+
  public static class StandardShaderUtils
  {
      public enum BlendMode
@@ -11,7 +11,7 @@
          Fade,
          Transparent
      }
- 
+
      public static void ChangeRenderMode(Material standardShaderMaterial, BlendMode blendMode)
      {
          switch (blendMode)
@@ -53,6 +53,6 @@
                  standardShaderMaterial.renderQueue = 3000;
                  break;
          }
- 
+
      }
  }

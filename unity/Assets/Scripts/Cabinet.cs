@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-public enum CabinetOpenStyle 
+public enum CabinetOpenStyle
 {
 	SingleDoorLeft,
 	SingleDoorRight,
@@ -11,7 +11,7 @@ public enum CabinetOpenStyle
 }
 
 [ExecuteInEditMode]
-public class Cabinet : MonoBehaviour 
+public class Cabinet : MonoBehaviour
 {
 
 	public bool Animate = false;
@@ -37,11 +37,11 @@ public class Cabinet : MonoBehaviour
 	Vector3 rightDoorTargetRotation;
 	Vector3 leftDoorTargetRotation;
 
-    //Drawer Stuff// 
+    //Drawer Stuff//
     /*
     In order for any drawer to be visible under the visibiliy checking sphere, make sure that
     the drawer parenting heirarchy is set up as:
-    
+
     -Cabinet
         -Base
             -Door
@@ -49,7 +49,7 @@ public class Cabinet : MonoBehaviour
                  -Pivot
 
     When a drawer is in the closed position, the visibiliy collider will become flat and move up to the forward
-    face of the drawer so the agent's sight is not occluded by stacked drawers or geometry. 
+    face of the drawer so the agent's sight is not occluded by stacked drawers or geometry.
 
     When a drawer is in the open position, the visibility collider resets the position to the
     center and expands so that the Agent can see what is inside the drawer.
@@ -102,7 +102,7 @@ public class Cabinet : MonoBehaviour
 		case SceneAnimationMode.Instant:
 		default:
 			UpdateAnimationInstant (open);
-			break;			
+			break;
 
 		case SceneAnimationMode.Smooth:
 			if (Application.isPlaying) {
@@ -161,7 +161,7 @@ public class Cabinet : MonoBehaviour
 
             //drawerVisColScale = open ? OpenVisColScale : ClosedVisColScale;
             //drawerVisColPosition = open ? OpenVisColPosition : ClosedVisColPosition;
-            
+
 			break;
 		}
 
@@ -171,7 +171,7 @@ public class Cabinet : MonoBehaviour
 		ParentObj.IsAnimating = (animatingDistance > 0.0025f);
 	}
 
-	void UpdateAnimationInstant(bool open) 
+	void UpdateAnimationInstant(bool open)
     {
 		if (VisCollider) {
 			VisCollider.gameObject.SetActive(open);
@@ -180,7 +180,7 @@ public class Cabinet : MonoBehaviour
 			ParentObj.Receptacle.VisibilityCollider.gameObject.SetActive(open);
 		}
 
-		switch (OpenStyle) 
+		switch (OpenStyle)
         {
 		case CabinetOpenStyle.DoubleDoors:
 			RightDoor.transform.localEulerAngles = open ? OpenAngleRight : ClosedAngleRight;
@@ -197,7 +197,7 @@ public class Cabinet : MonoBehaviour
 
 		case CabinetOpenStyle.Drawer:
 			DrawerDoor.transform.localPosition = open ? OpenLocalPosition : ClosedLocalPosition;
-            
+
             //if the drawer is closed, move the vis collider to the outer edge so it is visible
             //if the door is open, move visibility collider so agent can pick up/place things in drawer
             VisCollider.transform.localPosition = open ? OpenVisColPosition : ClosedVisColPosition;

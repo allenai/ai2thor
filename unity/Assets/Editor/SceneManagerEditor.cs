@@ -6,7 +6,7 @@ using System;
 using UnityEngine.SceneManagement;
 
 [CustomEditor(typeof(SceneManager))]
-public class SceneManagerEditor : Editor 
+public class SceneManagerEditor : Editor
 {
 	public BuildTarget[] Targets = new BuildTarget[] {
 #if UNITY_2017_3_OR_NEWER

@@ -34,11 +34,11 @@ namespace UnityStandardAssets.Utility
         {
             public Entry[] entries;
         }
-        
-        
+
+
         public Entries entries = new Entries();
 
-        
+
         private void Awake()
         {
             foreach (Entry entry in entries.entries)
@@ -164,7 +164,7 @@ namespace UnityStandardAssets.Utility.Inspector
                     }
                 }
             }
-            
+
             // add & sort buttons
             y += k_LineHeight + k_Spacing;
 

@@ -29,7 +29,7 @@ public class Bed : MonoBehaviour {
 	}
 
 	void Update () {
-		
+
 		int state = EditorState;
 		if (Application.isPlaying) {
 			state = ParentObj.Animator.GetInteger ("AnimState1");

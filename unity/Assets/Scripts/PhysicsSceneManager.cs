@@ -28,7 +28,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     #if UNITY_EDITOR
         private bool m_Started = false;
     #endif
-    
+
     private Vector3 gizmopos;
     private Vector3 gizmoscale;
     private Quaternion gizmoquaternion;
@@ -70,7 +70,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         // NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
         rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
     }
-    
+
     void LateUpdate() {
         // check what objects in the scene are currently in motion
         // Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
@@ -83,7 +83,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             // make sure the object is actually active, otherwise skip the check
             if (rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf) {
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                
+
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
@@ -175,7 +175,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             // debug in editor, make sure no two object share ids for some reason
             #if UNITY_EDITOR
                 if (CheckForDuplicateObjectIDs(o)) {
-                    Debug.Log("Yo there are duplicate ObjectIDs! Check" + o.ObjectID + "in scene "+ UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);    
+                    Debug.Log("Yo there are duplicate ObjectIDs! Check" + o.ObjectID + "in scene "+ UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
                 } else {
                     AddToObjectsInScene(o);
                     continue;
@@ -224,7 +224,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         ReceptaclesInScene.Sort((r0, r1) => (r0.gameObject.GetInstanceID().CompareTo(r1.gameObject.GetInstanceID())));
         return ReceptaclesInScene;
     }
-    
+
     public void Generate_ObjectID(SimObjPhysics o) {
         // check if this object requires it's parent simObjs ObjectID as a prefix
         if (ReceptacleRestrictions.UseParentObjectIDasPrefix.Contains(o.Type)) {
@@ -261,7 +261,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         createdObject.ObjectID = sourceObject.ObjectID + "|" + createdObject.ObjType + "_" + count;
         AddToObjectsInScene(createdObject);
     }
-    
+
     private bool CheckForDuplicateObjectIDs(SimObjPhysics sop) {
         return ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID);
     }
@@ -349,7 +349,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             // compare to receptacles that exist in scene, get the ones that are the same
             foreach(SimObjPhysics receptacleSop in receptaclesInScene) {
                 // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
-                if (receptacleSop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) { 
+                if (receptacleSop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
                     if (typesOfObjectsPrefabIsAllowedToSpawnIn.Contains(receptacleSop.ObjType)) {
                         yield return receptacleSop;
                     }
@@ -369,7 +369,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     // @maxPlacementAttempts - the max number of times an object will attempt to be placed in within a receptacle
     // @StaticPlacement - set to true if objects should be placed so they don't roll around after being repositioned
     // @numDuplicatesOfType - used to duplicate the first instance of an object type found in a scene
-    // @excludedReceptacles - 
+    // @excludedReceptacles -
     public bool RandomSpawnRequiredSceneObjects(
         int seed,
         bool spawnOnlyOutside,
@@ -498,7 +498,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                 List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
-        
+
                 // check if the target Receptacle is an ObjectSpecificReceptacle
                 // if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
                 // this is specifically for things like spawning a mug inside a coffee maker
@@ -513,7 +513,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                             break;
                         }
 
-                        // perform additional checks if this is a Stove Burner! 
+                        // perform additional checks if this is a Stove Burner!
                         if (receptacleSop.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
                             if (StoveTopCheckSpawnArea(
                                     sopToPlaceInReceptacle,
@@ -526,7 +526,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                                 gameObjToPlaceInReceptacle.transform.position = osr.attachPoint.position;
                                 gameObjToPlaceInReceptacle.transform.SetParent(osr.attachPoint.transform);
                                 gameObjToPlaceInReceptacle.transform.localRotation = Quaternion.identity;
-                                
+
                                 gameObjToPlaceInReceptacle.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                                 gameObjToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
 
@@ -542,7 +542,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                             Rigidbody rb = gameObjToPlaceInReceptacle.GetComponent<Rigidbody>();
                             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                             rb.isKinematic = true;
-                
+
                             howManyCouldntSpawn--;
                             break;
                         }
@@ -563,7 +563,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 )) {
                     howManyCouldntSpawn--;
                     break;
-                } 
+                }
             }
         }
 
@@ -625,7 +625,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         #if UNITY_EDITOR
             m_Started = true;
-            gizmopos = bb.transform.TransformPoint(bbcol.center); 
+            gizmopos = bb.transform.TransformPoint(bbcol.center);
             // gizmopos = inst.transform.position;
             gizmoscale = bbcol.size;
             // gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
@@ -634,7 +634,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         // we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
         Collider[] hitColliders = Physics.OverlapBox(bb.transform.TransformPoint(bbcol.center),
-                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
+                                                     bbcol.size / 2.0f, simObj.transform.rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
 
         // now check if any of the hit colliders were any object EXCEPT other stove top objects i guess
@@ -662,14 +662,14 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
         }
-         
+
         // nothing hit in colliders, so we are good to spawn.
         foreach (Collider col in objcols) {
             if (col.gameObject.name != "BoundingBox") {
                 col.enabled = true;
             }
         }
-        
+
         simObj.transform.position = originalPos;
         simObj.transform.rotation = originalRot;
         return result; // we are good to spawn, return true

@@ -41,7 +41,7 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanBeCleanedDishware = 2,
     CanBeCleanedGlass = 3,
 
-    //OTHER SECONDARY PROPERTIES 
+    //OTHER SECONDARY PROPERTIES
     CanBeDirty = 4,
     CanBeFilled = 5,
     CanBeUsedUp = 6,
@@ -81,7 +81,7 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanMakeOmelette = 40,
     CanFlush = 41,
     CanTurnOnTV = 42,
-	
+
 	// Might not use this, as picking up paintings is not really feasible if we have to lift and carry it. They are just way too big....
 	// All Painting Mount Stuff Here
     CanMountSmall = 43,
@@ -187,7 +187,7 @@ public enum SimObjType : int
 	Pen = 80,
 	Pencil = 81,
 	Blinds = 82,
-	Mirror = 83, 
+	Mirror = 83,
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
@@ -202,7 +202,7 @@ public enum SimObjType : int
     DishSponge = 94,
     Drawer = 95,
     FloorLamp= 96,
-    Kettle = 97,   
+    Kettle = 97,
     LaundryHamper = 98,
     LaundryHamperLid = 99,
     Lighter = 100,
@@ -280,7 +280,7 @@ public static class ReceptacleRestrictions
 
     //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
-    public static List<SimObjType> InReceptacles = new List<SimObjType>() 
+    public static List<SimObjType> InReceptacles = new List<SimObjType>()
     {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper, SimObjType.Box};
 
     //Objects are "placed on top of/placed on" these receptacles
@@ -315,7 +315,7 @@ public static class ReceptacleRestrictions
 	//These receptacle sim objects MUST be in the open state before objects can be placed in them
 	public static List<SimObjType> MustBeOpenToPlaceObjectsIn = new List<SimObjType>()
 	{
-		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Box 
+		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Box
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place
@@ -324,7 +324,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Bottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
+		SimObjType.Bottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase,
 		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked, SimObjType.Dumbbell, SimObjType.TableTopDecor
 	};
 
@@ -349,14 +349,14 @@ public static class ReceptacleRestrictions
 
 		//BASEBALL BAT
 		{SimObjType.BaseballBat, new List<SimObjType>()
-		{SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop, SimObjType.Floor}}, ///place on floor? 
+		{SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop, SimObjType.Floor}}, ///place on floor?
 
 		//BASKETBALL
 		{SimObjType.BasketBall, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop,
 		 SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}},
 
-		//BOOK 
+		//BOOK
 		{SimObjType.Book, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Cabinet, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}},
@@ -376,7 +376,7 @@ public static class ReceptacleRestrictions
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
 		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
-		 SimObjType.CounterTop, SimObjType.Shelf, 
+		 SimObjType.CounterTop, SimObjType.Shelf,
 		}},
 
 		//BOX
@@ -418,7 +418,7 @@ public static class ReceptacleRestrictions
 		//CLOTH
 		{SimObjType.Cloth, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.LaundryHamper, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart,
-		 SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,  
+		 SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
          SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool, SimObjType.Floor
          }},
 
@@ -434,22 +434,22 @@ public static class ReceptacleRestrictions
 
 		//DISH SPONGE
 		{SimObjType.DishSponge, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cart, SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, 
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cart, SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink,
 		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//EGG
 		{SimObjType.Egg, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
          SimObjType.CounterTop, SimObjType.GarbageCan}},
-	
+
 		//EGG CRACKED
 		{SimObjType.EggCracked, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
          SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//FORK
 		{SimObjType.Fork, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
          SimObjType.CounterTop, SimObjType.Drawer,}},
 
 		//HAND TOWEL- small hand towel
@@ -489,12 +489,12 @@ public static class ReceptacleRestrictions
 		//MUG
 		{SimObjType.Mug, new List<SimObjType>()
 		{SimObjType.CoffeeMachine, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.Sink,
-		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
+		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf,
 		}},
 
 		//NEWSPAPER
 		{SimObjType.Newspaper, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Toilet, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Toilet, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool, SimObjType.Floor
 		}},
 
@@ -548,7 +548,7 @@ public static class ReceptacleRestrictions
 
 		//REMOTE CONTROL
 		{SimObjType.RemoteControl, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf,
 		 SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool,}},
 
 		//SALT SHAKER
@@ -563,7 +563,7 @@ public static class ReceptacleRestrictions
 
 		//SOAP BOTTLE
 		{SimObjType.SoapBottle, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Sink, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Sink, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop,
 		 SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan,
 		}},
 
@@ -577,13 +577,13 @@ public static class ReceptacleRestrictions
 
 		//SPRAY BOTTLE
 		{SimObjType.SprayBottle, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
 		 SimObjType.GarbageCan
 		}},
-		
+
 		//STATUE
 		{SimObjType.Statue, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf,
 		 SimObjType.Safe,}},
 
 		//TEDDY BEAR
@@ -593,11 +593,11 @@ public static class ReceptacleRestrictions
 
 		//TENNIS RACKET
 		{SimObjType.TennisRacket, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}}, ///place on floor? 
-	
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}}, ///place on floor?
+
 		//TISSUE BOX
 		{SimObjType.TissueBox, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf,
 		 SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool,}},
 
 		//TOILET PAPER
@@ -632,7 +632,7 @@ public static class ReceptacleRestrictions
 
 		//WATCH
 		{SimObjType.Watch, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Safe, SimObjType.Stool, 
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Safe, SimObjType.Stool,
         SimObjType.Chair, SimObjType.Footstool,}},
 
 		//WATERING CAN
@@ -645,7 +645,7 @@ public static class ReceptacleRestrictions
 
 		//DUMBBELL
 		{SimObjType.Dumbbell, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Bed, SimObjType.Chair, SimObjType.ArmChair, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Bed, SimObjType.Chair, SimObjType.ArmChair,
         SimObjType.Sofa, SimObjType.Stool, SimObjType.Footstool, SimObjType.Floor}},
 
 		//ALUMINUMFOIL

@@ -1409,7 +1409,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
+                //default high level hand when teleporting
                 DefaultAgentHand();
+
+                //if in arm mode, set colliders of arm to trigger so upon teleporting, they don't collide and move
+                //anything that the arm might be clipped into
+                //note- this should not affect the isArmColliding check, which uses physics overlap casts based on the dimensions of arm colliders
+                ToggleArmColliders(Arm, true);
+
+
+                //here we actually teleport
                 transform.position = targetTeleport;
 
                 // apply gravity after teleport so we aren't floating in the air
@@ -1431,11 +1440,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
 
                 bool handObjectCollides = isHandObjectColliding(true);
+                bool armCollides = false;
                 if (handObjectCollides && !agentCollides) {
                     errorMessage = "Cannot teleport due to hand object collision.";
                 }
 
-                if (agentCollides || handObjectCollides) {
+                if(Arm != null)
+                {
+                    if(Arm.IsArmColliding())
+                    {
+                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
+                        armCollides = true;
+                    }
+                }
+
+                if (agentCollides || handObjectCollides || armCollides) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
@@ -1444,7 +1463,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
+
+                    //reset arm colliders on fail actionFinish
+                    ToggleArmColliders(Arm, false);
+
+
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -1454,7 +1478,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.Move(v);
 
             snapAgentToGrid();
+
+            //reset arm colliders on actionFinish
+            ToggleArmColliders(Arm, false);
+
             actionFinished(true);
+        }
+
+        public void ToggleArmColliders(IK_Robot_Arm_Controller Arm, bool value)
+        {
+            if(Arm != null)
+            {
+                foreach(CapsuleCollider c in Arm.ArmCapsuleColliders)
+                {
+                    c.isTrigger = value;
+                }
+
+                foreach(BoxCollider b in Arm.ArmBoxColliders)
+                {
+                    b.isTrigger = value;
+                }
+            }
         }
 
         public override void Teleport(ServerAction action) {
@@ -1908,7 +1952,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // NOTE: this does nearly the same thing as getTargetObject, but we care a lot
             // more about the returns from the intermediate steps here. See getTargetObject
             // for more on what's going on.
-            y = 1 - y; 
+            y = 1 - y;
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
             bool hitSomething = Physics.Raycast(
@@ -3536,6 +3580,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+<<<<<<< HEAD
+=======
+        protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
+        {
+            if(ctof != null)
+            ctof.Toggle();
+
+            bool success = false;
+
+            bool ctofInitialState = ctof.isOn;
+
+            // TODO: ctof isn't bool though...?
+            // also, this has been moved.
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
+            success = true;
+>>>>>>> origin/ExpRoom
+
         // Hide and Seek helper function, makes overlap box at x,z coordinates
         protected HashSet<SimObjPhysics> objectsInBox(float x, float z) {
             Collider[] colliders = Physics.OverlapBox(
@@ -4265,28 +4326,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) {
-                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-                    float ViewPointRangeHigh = 1.0f;
-                    float ViewPointRangeLow = 0.0f;
-
-                    if (viewPoint.z > 0 &&
-                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && // within x bounds of viewport
-                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow // within y bounds of viewport
-                    ) {
-                            return true;
-                    }
-                }
-            } else {
-                #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
-            }
-            return false;
-        }
 
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
@@ -4379,7 +4418,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // Standing / Crouching
-                for (int j = 0; j < 2; j++) { 
+                for (int j = 0; j < 2; j++) {
                     if (j == 0) {
                         stand();
                     } else {
@@ -6914,5 +6953,311 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        #if UNITY_EDITOR
+            //debug for static arm collisions from collision listener
+            public void GetMidLevelArmCollisions() {
+                var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                if (arm == null) {
+                    throw new NullReferenceException("Agent does not have kinematic arm or is not enabled.");
+                }
+
+                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
+                if (collisionListener != null) {
+                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                    foreach(var sc in collisionListener.StaticCollisions()){
+                        var element = new Dictionary<string, string>();
+                        if (sc.simObjPhysics != null) {
+                            element["objectType"] = "simObjPhysics";
+                            element["name"] = sc.simObjPhysics.objectID;
+                        }
+                        else
+                        {
+                            element["objectType"] = "gameObject";
+                            element["name"] = sc.gameObject.name;
+                        }
+                        collisions.Add(element);
+                    }
+                    actionFinished(true, collisions);
+                }
+            }
+
+            //debug for static arm collisions from collision listener
+            public void DebugMidLevelArmCollisions() {
+                var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                if (arm != null) {
+                    var scs = arm.collisionListener.StaticCollisions();
+                    Debug.Log("Total current active static arm collisions: " + scs.Count);
+                    foreach(var sc  in scs) {
+                        Debug.Log("Arm static collision: " + sc.name);
+                    }
+
+                }
+
+                actionFinished(true);
+            }
+        #endif
+
+        public void MoveMidLevelArm(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm == null) {
+                throw new NullReferenceException(
+                    "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent."
+                );
+            }
+
+            arm.moveArmTarget(
+                this,
+                action.position,
+                action.speed,
+                action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                action.returnToStart,
+                action.coordinateSpace,
+                action.restrictMovement,
+                action.disableRendering
+            );
+        }
+
+        // constrain arm's y position based on the agent's current capsule collider center and extents
+        // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        // arm constrained by the agent's capsule
+        public void MoveMidLevelArmHeight(ServerAction action) {
+            if (action.y < 0 || action.y > 1.0) {
+                errorMessage = "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive";
+                actionFinished(false, errorMessage);
+                return;
+            }
+
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if(arm != null)
+            {
+                arm.moveArmHeight(
+                    this,
+                    action.y,
+                    action.speed,
+                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                    action.returnToStart,
+                    action.disableRendering
+                );
+            }
+
+            else {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
+        //between a given arm joint an other arm joints.
+        public void RotateMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+
+                var target = new Quaternion();
+                //rotate around axis aliged x, y, z with magnitude based on vector3
+                if(action.degrees == 0)
+                {
+                    //use euler angles
+                    target = Quaternion.Euler(action.rotation);
+                }
+
+                //rotate action.degrees about axis
+                else {
+                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
+                }
+
+                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
+
+            }
+            else {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //perhaps this should fail if no object is picked up?
+        //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
+        public void PickUpMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null)
+            {
+                actionFinished(arm.PickupObject());
+                return;
+            }
+
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void DropMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null)
+            {
+                arm.DropObject();
+
+                //todo- only return after object(s) droped have finished moving
+                //currently this will return the frame the object is released
+
+                actionFinished(true);
+                return;
+            }
+
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void WhatObjectsCanHandPickUp(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+
+            if (arm != null)
+            {
+                StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
+            }
+
+            else
+            {
+
+            }
+        }
+
+        //note this does not reposition the center point of the magnet orb
+        //so expanding the radius too much will cause it to clip backward into the wrist joint
+        public void SetMidLevelHandRadius(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            if (arm != null)
+            {
+                if(action.radius < 0.04 || action.radius > 0.5)
+                {
+                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+
+                else
+                {
+                    arm.SetHandMagnetRadius(action.radius);
+                    actionFinished(true);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);            }
+        }
+
+        public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            collisionListener.Reset();
+
+
+            // this.transform.Rotate()
+            var rotate = ContinuousMovement.rotate(
+                    this,
+                    this.GetComponentInParent<CollisionListener>(),
+                    this.transform,
+                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart
+            );
+
+            if (disableRendering) {
+                this.unrollSimulatePhysics(
+                    rotate,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    rotate
+                );
+            }
+        }
+
+        // Signature does not work with debuginput field
+        // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        public void MoveContinuous(ServerAction action)
+        {
+            var direction = action.direction;
+            float speed = action.speed;
+            bool returnToStart = action.returnToStart;
+            bool disableRendering = action.disableRendering;
+            float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            var directionWorld = transform.TransformDirection(direction);
+            var targetPosition = transform.position + directionWorld;
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            collisionListener.Reset();
+
+            var move = ContinuousMovement.move(
+                    this,
+                    collisionListener,
+                    this.transform,
+                    targetPosition,
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart,
+                    false
+            );
+
+            if (disableRendering) {
+                this.unrollSimulatePhysics(
+                    move,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    move
+                );
+            }
+        }
+
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            //  Gizmos.color = Color.magenta;
+            //     if(validpointlist.Count > 0)
+            //     {
+            //         foreach(Vector3 yes in validpointlist)
+            //         {
+            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //         }
+            //     }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
+        }
+        #endif
+>>>>>>> origin/ExpRoom
     }
 }

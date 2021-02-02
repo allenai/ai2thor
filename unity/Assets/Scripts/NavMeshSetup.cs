@@ -18,8 +18,8 @@ public class NavMeshSetup : MonoBehaviour
 
     void Start()
     {
-         
-        
+
+
     }
 
     #if UNITY_EDITOR
@@ -29,7 +29,7 @@ public class NavMeshSetup : MonoBehaviour
         {
             var trainSceneNames = houdiniScenes();
 
-            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
+            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually
             trainSceneNames.ForEach((x) => saveSceneAsPrefab(x));
         }
 
@@ -42,7 +42,7 @@ public class NavMeshSetup : MonoBehaviour
             {
                 if (obj.transform.parent == null && (obj.name == "Objects" || obj.name == "Structure" || obj.name == "Lighting"))
                 {
-                    
+
                     // create new object then destroy it
                     GameObject copyObj = Instantiate(obj) as GameObject;
                     copyObj.transform.parent = sceneParent.transform;
@@ -50,7 +50,7 @@ public class NavMeshSetup : MonoBehaviour
                     copyObj.name = copyObj.name.Replace("(Clone)", "");
                 }
             }
-            
+
             sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
             sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
             PrefabUtility.SaveAsPrefabAsset(sceneParent, "Assets/Scenes/prefab_exports/" + sceneName.Substring(0, sceneName.Length - ".unity".Length) + ".prefab");
@@ -118,8 +118,8 @@ public class NavMeshSetup : MonoBehaviour
             selection.AddRange(GetSceneNames(501, 530));
 
             //selection.Add("Assets/Scenes/FloorPlan227_physics.unity");
-            
-            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
+
+            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually
             var exclude = new List<string>() {
                 "Assets/Scenes/FloorPlan_Train7_1.unity", // Radius of agent made smaller to fit between table small path where reachable positions exist
                 "Assets/Scenes/FloorPlan_Train11_3.unity", // Unmade bed obstructs conectivity of navmesh
@@ -144,10 +144,10 @@ public class NavMeshSetup : MonoBehaviour
         private static  List<string> GetSceneNames(int startIndex, int lastIndex, string nameTemplate="", string pathPrefix="Assets/Scenes") {
             var scenes = new List<string>();
             for (var i = startIndex; i <= lastIndex; i++) {
-                
+
                     var scene = pathPrefix + "/FloorPlan" + nameTemplate + i + "_physics.unity";
                     scenes.Add(scene);
-            
+
             }
             return scenes;
         }
@@ -170,13 +170,13 @@ public class NavMeshSetup : MonoBehaviour
             // if (floorStruct != null) {
             //     SetNavMeshWalkable(floorStruct.gameObject);
             // }
-           
+
             var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
             navmeshAgent.enabled = true;
             // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
-            //var buildSettings = 
+            //var buildSettings =
             new NavMeshBuildSettings() {
                 agentTypeID = navmeshAgent.agentTypeID,
                 agentRadius = 0.2f,
@@ -187,13 +187,13 @@ public class NavMeshSetup : MonoBehaviour
                 overrideVoxelSize = false,
                 overrideTileSize = false
             };
-    
+
             UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         }
 
         private static void SetNavMeshNotWalkable(GameObject hirerarchy) {
-            
+
              var objectHierarchy = GameObject.Find("Objects");
              if (objectHierarchy == null) {
                  objectHierarchy = GameObject.Find("Object");
@@ -210,7 +210,7 @@ public class NavMeshSetup : MonoBehaviour
         }
 
         private static void SetNavMeshWalkable(GameObject hirerarchy) {
-            
+
             //  var objectHierarchy = hirerarchy.transform.FirstChildOrDefault(x => x.name.Contains("Floor"));
               hirerarchy.GetComponentsInChildren<MeshRenderer>().ToList().ForEach( meshRenderer => {
                      Debug.Log("Mesh Renderer " + meshRenderer.gameObject.name + " layer ");

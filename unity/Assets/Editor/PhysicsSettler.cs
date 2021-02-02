@@ -39,7 +39,7 @@ class PhysicsSettler
         }
     }
 
-    // let users turn on 
+    // let users turn on
     [MenuItem("GameMenu/Settle Physics")]
     static void Activate()
     {
@@ -109,7 +109,7 @@ class PhysicsSettler
             // make sure we are not autosimulating
             Physics.autoSimulation = false;
 
-            // see if all our 
+            // see if all our
             bool allSleeping = true;
             foreach( Rigidbody body in workList )
             {
@@ -131,7 +131,7 @@ class PhysicsSettler
         }
     }
 
-    static void OnSceneGUI(SceneView sceneView) 
+    static void OnSceneGUI(SceneView sceneView)
     {
         if( active )
         {

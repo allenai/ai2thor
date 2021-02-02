@@ -29,7 +29,7 @@ public class Fill : MonoBehaviour {
             if(!gameObject.GetComponent<SimObjPhysics>().hasSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
                 Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
             }
-        #endif 
+        #endif
 
         Liquids.Add("water", WaterObject);
         Liquids.Add("coffee", CoffeeObject);
@@ -104,7 +104,7 @@ public class Fill : MonoBehaviour {
 
         // for each thing in Liquids, if it exists set it to false and then set bools appropriately
         foreach (KeyValuePair<string, GameObject> liquid in Liquids) {
-            // if the value field is not null and has a reference to a liquid object 
+            // if the value field is not null and has a reference to a liquid object
             if (liquid.Value != null) {
                 liquid.Value.SetActive(false);
             }

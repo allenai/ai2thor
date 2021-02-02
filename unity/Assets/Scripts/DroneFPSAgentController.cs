@@ -1,4 +1,4 @@
-﻿﻿using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -71,7 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // it's unclear whether this is only an in-editor debug draw issue, or the actual metadata for the axis
             // aligned box is messed up, but yeah.
 
-            if (hasFixedUpdateHappened) {   
+            if (hasFixedUpdateHappened) {
                 Time.timeScale = 0;
                 Physics.autoSimulation = false;
                 physicsSceneManager.physicsSimulationPaused = true;
@@ -100,14 +100,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metadata based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
             objMeta.isCaught = this.GetComponent<DroneFPSAgentController>().isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;
             objMeta.numFloorHits = simObj.numFloorHit;
             objMeta.numStructureHits = simObj.numStructureHit;
             objMeta.lastVelocity = simObj.lastVelocity;
-            
+
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
             objMeta.position = o.transform.position;
@@ -195,7 +195,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.isMoving = simObj.inMotion;  //keep track of if this object is actively moving
 
             objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
-            
+
             // return world axis aligned bounds for this sim object
             objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
 
@@ -218,7 +218,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
-    
+
             // For Drone controller, currentTime should be based on
             // fixed update passes so use DroneTimeSinceStart instead of TimeSinceStart
             metaMessage.currentTime = DroneTimeSinceStart();
@@ -362,7 +362,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void FlyRandomStart(float y) {   
+        public void FlyRandomStart(float y) {
             System.Random rnd = new System.Random();
             Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
             Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
@@ -374,7 +374,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
             actionFinished(true);
-        }   
+        }
 
         // move drone and launcher to some start position
         // using the 'position' variable name is an artifact from using position for the thrust_dt
@@ -472,7 +472,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public bool HasLaunch(SimObjPhysics obj) {   
+        public bool HasLaunch(SimObjPhysics obj) {
             return DroneObjectLauncher.HasLaunch(obj);
         }
 

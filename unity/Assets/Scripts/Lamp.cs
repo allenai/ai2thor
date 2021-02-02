@@ -32,7 +32,7 @@ public class Lamp : MonoBehaviour {
 			}
 		}
 	}
-	
+
 	void Update () {
 		bool on = EditorOn;
 		if (Application.isPlaying) {

@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class Toaster : MonoBehaviour 
+public class Toaster : MonoBehaviour
 {
 
 	//private ObjectSpecificReceptacle osr;
@@ -17,7 +17,7 @@ public class Toaster : MonoBehaviour
 	{
 		//Note: Moved This call to the HeatZone that is turned on when the toaster is turned on
 
-		
+
 		// //on update.... maybe check if toaster is on? if so.... try and toast the object
 		// if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
 		// {
@@ -40,5 +40,5 @@ public class Toaster : MonoBehaviour
 	// 		toast.Cook();
 	// 	}
 	// }
-	
+
 }

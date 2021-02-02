@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 
 [CustomEditor(typeof(SimObj))]
-public class SimObjectEditor : Editor 
+public class SimObjectEditor : Editor
 {
 	void OnSceneGUI () {
 		SimObj simObj = (SimObj)target;
@@ -16,7 +16,7 @@ public class SimObjectEditor : Editor
 			Handles.color = Color.white;
             //this was originally Handles.CircleCap, which is obsolete, had to add the EventType.Repaint parameter in upgrading to new CircleHandleCap implementation
             //not sure if the event type should be EventType.Repaint or EventType.Layout, but if Repaint isn't working change it to Layout
-			Handles.CircleHandleCap (0, simObj.transform.position, Quaternion.Euler (-90f, 0f, 0f), 1f,EventType.Repaint); 
+			Handles.CircleHandleCap (0, simObj.transform.position, Quaternion.Euler (-90f, 0f, 0f), 1f,EventType.Repaint);
 		}
 	}
 

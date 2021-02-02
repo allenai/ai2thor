@@ -24,7 +24,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 	SimObj currentCabinet;
 	List<Vector3> positions = new List<Vector3>();
 
-	void OnDrawGizmos(){ 
+	void OnDrawGizmos(){
 		Gizmos.color = Color.white;
 		foreach (Vector3 pos in positions) {
 			Gizmos.DrawWireCube (pos + Vector3.down, Vector3.one * 0.05f);

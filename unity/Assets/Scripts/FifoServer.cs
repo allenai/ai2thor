@@ -18,7 +18,7 @@ namespace FifoServer {
         private string clientPipePath;
         private byte[] eomHeader;
 
-        
+
         public static Dictionary<string, FieldType> FormMap = new Dictionary<string, FieldType>{
             {"image", FieldType.RGBImage},
             {"image_depth", FieldType.DepthImage},

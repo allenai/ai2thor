@@ -22,14 +22,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool hidingPhase = false;
         public string onlyPickableObjectId = null;
         public bool disableCollistionWithPickupObject = false;
-        void Start() 
+        void Start()
         {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-            Debug_Canvas.GetComponent<Canvas>().enabled = true; 
+            Debug_Canvas.GetComponent<Canvas>().enabled = true;
 
             highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false, 0, 0, true);
             highlightController.SetDisplayTargetText(false);
@@ -146,28 +146,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (Input.GetKeyDown(KeyCode.W)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
-                        action.moveMagnitude = WalkMagnitude;		
+                        action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.S)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveBack";
-                        action.moveMagnitude = WalkMagnitude;		
+                        action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.A)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
-                        action.moveMagnitude = WalkMagnitude;		
+                        action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.D)) {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
-                        action.moveMagnitude = WalkMagnitude;		
+                        action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
@@ -176,7 +176,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.action = "RotateLeft";
                         action.action = "RotateLeftSmooth";
                         action.timeStep = 0.4f;
-                        PhysicsController.ProcessControlCommand(action); 
+                        PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.RightArrow)) {
@@ -184,7 +184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.action = "RotateRight";
                         action.action = "RotateRightSmooth";
                         action.timeStep = 0.4f;
-                        PhysicsController.ProcessControlCommand(action); 
+                        PhysicsController.ProcessControlCommand(action);
                     }
                 }
 

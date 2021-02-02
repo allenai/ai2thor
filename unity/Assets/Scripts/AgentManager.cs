@@ -90,7 +90,7 @@ public class AgentManager : MonoBehaviour {
         if (serverType == serverTypes.FIFO) {
             string  serverPipePath = LoadStringVariable (null, "FIFO_SERVER_PIPE_PATH");
             string  clientPipePath = LoadStringVariable (null, "FIFO_CLIENT_PIPE_PATH");
-            
+
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
             this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
@@ -132,9 +132,11 @@ public class AgentManager : MonoBehaviour {
         // "default" agentMode can use either "physics" or "stochastic" agentControllerType
         // "bot" agentMode can use either default or "stochastic" agentControllerType
         // "drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
+        // TODO: use switch.
         if (action.agentMode.ToLower() == "default") {
             if (action.agentControllerType.ToLower() != "physics" || action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
+                action.agentControllerType = "";
                 SetUpPhysicsController();
             }
 
@@ -160,15 +162,47 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-
-                // ok now set up drone controller
                 SetUpDroneController(action);
             } else {
                 SetUpDroneController(action);
             }
+        } else if (action.agentMode.ToLower() == "arm") {
+            if (action.agentControllerType == "") {
+                Debug.Log("Defaulting to mid-level.");
+                SetUpArmController(true);
+            } else if (action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level") {
+                var error = "'arm' mode must use either low-level or mid-level controller.";
+                Debug.Log(error);
+                primaryAgent.actionFinished(false, error);
+                return;
+            } else if (action.agentControllerType.ToLower() == "mid-level") {
+                //set up physics controller
+                SetUpArmController(true);
+
+                if (action.useMassThreshold) {
+                    if (action.massThreshold > 0.0) {
+                        SetUpMassThreshold(action.massThreshold);
+                    } else {
+                        var error = "massThreshold must have nonzero value if useMassThreshold = True";
+                        Debug.Log(error);
+                        primaryAgent.actionFinished(false, error);
+                        return;
+                    }
+                }
+            }
+        } else {
+            var error = "unsupported";
+            Debug.Log(error);
+            primaryAgent.actionFinished(false, error);
+            return;
         }
 
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
+        Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        if (action.targetFrameRate > 0) {
+            Application.targetFrameRate = action.targetFrameRate;
+        }
+
         primaryAgent.IsVisible = action.makeAgentsVisible;
         this.renderClassImage = action.renderClassImage;
         this.renderDepthImage = action.renderDepthImage;
@@ -220,7 +254,29 @@ public class AgentManager : MonoBehaviour {
         this.agents.Add(primaryAgent);
     }
 
-    //return reference to primary agent in case we need a reference to the primary
+    private void SetUpArmController(bool midLevelArm) {
+        this.agents.Clear();
+        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        // TODO set correct component
+        primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+        primaryAgent.enabled = true;
+        primaryAgent.agentManager = this;
+        //primaryAgent.actionComplete = true;
+        this.agents.Add(primaryAgent);
+
+        var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
+        handObj.gameObject.SetActive(true);
+    }
+
+    // on initialization of agentMode = "arm" and agentControllerType = "mid-level"
+    // if mass threshold should be used to prevent arm from knocking over objects that
+    // are too big (table, sofa, shelf, etc) use this
+    private void SetUpMassThreshold(float massThreshold) {
+        CollisionListener.useMassThreshold = true;
+        CollisionListener.massThreshold = massThreshold;
+    }
+
+    // return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent() {
         return primaryAgent;
     }
@@ -296,6 +352,17 @@ public class AgentManager : MonoBehaviour {
         }
 
         ResetSceneBounds();
+    }
+
+
+    public void registerAsThirdPartyCamera(Camera camera) {
+        this.thirdPartyCameras.Add(camera);
+        // camera.gameObject.AddComponent(typeof(ImageSynthesis));
+    }
+
+    // If fov is <= min or > max, return defaultVal, else return fov
+    private float ClampFieldOfView(float fov, float defaultVal = 90f, float min = 0f, float max = 180f) {
+        return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
     private void updateImageSynthesis(bool status) {
@@ -783,6 +850,8 @@ public class AgentManager : MonoBehaviour {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
+            metadata.fixedUpdateCount = agent.fixedUpdateCount;
+            metadata.updateCount = agent.updateCount;
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -796,13 +865,14 @@ public class AgentManager : MonoBehaviour {
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
+            agent.ResetUpdateCounters();
         }
 
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
 
-        
+
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
@@ -862,7 +932,7 @@ public class AgentManager : MonoBehaviour {
                 }
             #endif
 
-            #if !UNITY_WEBGL 
+            #if !UNITY_WEBGL
                 if (serverType == serverTypes.WSGI) {
                     WWWForm form = new WWWForm();
                     foreach(var item in renderPayload) {
@@ -947,7 +1017,7 @@ public class AgentManager : MonoBehaviour {
                         ProcessControlCommand(msg);
                     }
                 } else if (serverType == serverTypes.FIFO){
-                    byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+                    byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta,
                         MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                     this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
@@ -962,7 +1032,7 @@ public class AgentManager : MonoBehaviour {
 
                         MetadataPatch patch = this.activeAgent().generateMetadataPatch();
                         patch.agentId = this.activeAgentId;
-                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
+                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch,
                         MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
                         this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
                         this.fifoClient.SendEOM();
@@ -1072,6 +1142,8 @@ public class MultiAgentMetadata {
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public int activeAgentId;
     public int sequenceId;
+    public int fixedUpdateCount;
+    public int updateCount;
 }
 
 [Serializable]
@@ -1285,6 +1357,35 @@ public class HandMetadata {
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
+public class JointMetadata {
+    public string name;
+    public Vector3 position;
+    public Vector3 rootRelativePosition;
+    public Vector4 rotation;
+    public Vector4 rootRelativeRotation;
+    public Vector4 localRotation;
+}
+
+[Serializable]
+public class ArmMetadata {
+
+    //public Vector3 handTarget;
+    //joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
+    public JointMetadata[] joints;
+
+    //all objects currently held by the hand sphere
+    public List<String> HeldObjects;
+
+    //all sim objects that are both pickupable and inside the hand sphere
+    public List<String> PickupableObjectsInsideHandSphere;
+
+    //world coordinates of the center of the hand's sphere
+    public Vector3 HandSphereCenter;
+    //current radius of the hand sphere
+    public float HandSphereRadius;
+}
+
+[Serializable]
 public class ObjectTypeCount
 {
     public string objectType; //specify object by type in scene
@@ -1325,6 +1426,7 @@ public struct MetadataWrapper
 {
     public ObjectMetadata[] objects;
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
+<<<<<<< HEAD
     public AgentMetadata agent;
     public HandMetadata hand;
     public float fov;
@@ -1361,9 +1463,50 @@ public struct MetadataWrapper
     public float[] actionFloatsReturn;
     public Vector3[] actionVector3sReturn;
     public List<Vector3> visibleRange;
+=======
+    public AgentMetadata agent;
+    public HandMetadata hand;
+    public ArmMetadata arm;
+    public float fov;
+    public Vector3 cameraPosition;
+    public float cameraOrthSize;
+    public ThirdPartyCameraMetadata[] thirdPartyCameras;
+    public bool collided;
+    public string[] collidedObjects;
+    public InventoryObject[] inventoryObjects;
+    public string sceneName;
+    public string lastAction;
+    public string errorMessage;
+    public string errorCode; // comes from ServerActionErrorCode
+    public bool lastActionSuccess;
+    public int screenWidth;
+    public int screenHeight;
+    public int agentId;
+    public ColorId [] colors;
+    public ColorBounds[] colorBounds;
+
+    // Extras
+    public Vector3[] reachablePositions;
+    public float[] flatSurfacesOnGrid;
+    public float[] distances;
+    public float[] normals;
+    public bool[] isOpenableGrid;
+    public string[] segmentedObjectIds;
+    public string[] objectIdsInBox;
+
+    public int actionIntReturn;
+    public float actionFloatReturn;
+    public string[] actionStringsReturn;
+
+    public float[] actionFloatsReturn;
+    public Vector3[] actionVector3sReturn;
+    public List<Vector3> visibleRange;
+>>>>>>> origin/ExpRoom
     public System.Object actionReturn;
     public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
+    public int updateCount;
+    public int fixedUpdateCount;
 }
 
 /*
@@ -1451,6 +1594,7 @@ public class DynamicServerAction {
 }
 
 [Serializable]
+<<<<<<< HEAD
 public class ServerAction {
     public string action;
     public int agentCount = 1;
@@ -1464,6 +1608,24 @@ public class ServerAction {
     public string receptacleObjectId;
     public float gridSize;
     public string[] excludeObjectIds;
+=======
+public class ServerAction
+{
+    public string action;
+    public int agentCount = 1;
+    public string quality;
+    public bool makeAgentsVisible = true;
+    public float timeScale = 1.0f;
+    public float? fixedDeltaTime;
+    public int targetFrameRate;
+    public float dronePositionRandomNoiseSigma = 0.00f;
+    public string objectType;
+    public int objectVariation;
+    public string receptacleObjectType;
+    public string receptacleObjectId;
+    public float gridSize;
+    public string[] excludeObjectIds;
+>>>>>>> origin/ExpRoom
     public string [] objectIds;
     public string objectId;
     public int agentId;
@@ -1533,14 +1695,19 @@ public class ServerAction {
     public float minDistance;//used in target circle spawning function
     public float maxDistance;//used in target circle spawning function
     public float noise;
+<<<<<<< HEAD
     public string agentControllerType = "physics";//default to physics controller
+=======
+    public ControllerInitialization controllerInitialization = null;
+    public string agentControllerType = "";//default to physics controller
+>>>>>>> origin/ExpRoom
     public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
     public int maxStepCount;
 
     // default rotation amount for RotateRight/RotateLeft actions
-    public float rotateStepDegrees = 90.0f; 
+    public float rotateStepDegrees = 90.0f;
 
     // for overriding the default degree amount in look up/lookdown/rotateRight/rotateLeft
     public float degrees;
@@ -1573,9 +1740,62 @@ public class ServerAction {
     // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
     public DynamicServerAction dynamicServerAction;
 
+<<<<<<< HEAD
     public SimObjType ReceptableSimObjType() {
         if (string.IsNullOrEmpty(receptacleObjectType)) {
             return SimObjType.Undefined;
+=======
+    public bool returnToStart = false;
+
+    public float speed = 1.0f;
+
+    public bool handCameraSpace = false;
+
+    public float radius;
+
+    public bool stopArmMovementOnContact = false;
+
+    public bool disableRendering = false;
+
+    //this restricts arm position to the hemisphere in front of the agent
+    public bool restrictMovement = false;
+
+    //used to determine which coordinate space is used in Mid Level Arm actions
+    //valid options are relative to: world, wrist, armBase
+    public string coordinateSpace = "armBase";
+
+    //if agent is using arm mode, determines if a mass threshold should be used
+    //for when the arm hits heavy objects. If threshold is used, the arm will
+    //collide and stop moving when hitting a heavy enough sim object rather than
+    //move through it (this is for when colliding with pickupable and moveable sim objs)
+    public bool useMassThreshold;
+
+    //the mass threshold for how massive a pickupable/moveable sim object needs to be
+    //for the arm to detect collisions and stop moving
+    public float massThreshold;
+
+
+    public SimObjType ReceptableSimObjType()
+    {
+        if (string.IsNullOrEmpty(receptacleObjectType))
+        {
+            return SimObjType.Undefined;
+        }
+        return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
+    }
+
+    public VisibilityScheme GetVisibilityScheme() {
+        VisibilityScheme result = VisibilityScheme.Collider;
+        try
+        {
+            result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
+        }
+        //including this pragma so the "ex variable declared but not used" warning stops yelling
+        #pragma warning disable 0168
+        catch (ArgumentException ex) {
+        #pragma warning restore 0168
+            Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
+>>>>>>> origin/ExpRoom
         }
         return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
     }
@@ -1638,9 +1858,9 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
 
         // exclude these properties to make serialization match JsonUtility
         if (property.DeclaringType == typeof(Vector3) && (
-                property.PropertyName == "sqrMagnitude" || 
+                property.PropertyName == "sqrMagnitude" ||
                 property.PropertyName == "magnitude"  ||
-                property.PropertyName == "normalized" 
+                property.PropertyName == "normalized"
             )
         ) {
             property.ShouldSerialize = instance => { return false; };

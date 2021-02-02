@@ -60,7 +60,7 @@ namespace UnityStandardAssets.ImageEffects
             m2Create = new Material (s);
             createdMaterials.Add (m2Create);
             m2Create.hideFlags = HideFlags.DontSave;
-                
+
             return m2Create;
 		}
 
@@ -71,7 +71,7 @@ namespace UnityStandardAssets.ImageEffects
 
         void OnDestroy ()
         {
-            RemoveCreatedMaterials ();    
+            RemoveCreatedMaterials ();
         }
 
         private void RemoveCreatedMaterials ()

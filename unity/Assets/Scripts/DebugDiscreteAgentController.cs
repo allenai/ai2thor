@@ -6,14 +6,14 @@ using UnityEngine.UI;
 namespace UnityStandardAssets.Characters.FirstPerson
 {
     public class DebugDiscreteAgentController : MonoBehaviour
-    {   
+    {
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
-        void Start() 
+        void Start()
         {
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
@@ -25,11 +25,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (this.isActiveAndEnabled)
             {
-				Debug_Canvas.GetComponent<Canvas>().enabled = true;            
+				Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
             }
-            
+
         }
 
         public void OnEnable() {
@@ -42,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void OnDisable() {
 
         }
-        
+
         void Update()
         {
                 //use these for the Breakable Window demo video
@@ -53,7 +53,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //     action.action = "PickupObject";
                 //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                 //     PhysicsController.ProcessControlCommand(action);
-                            
+
                 // }
 
                 // if(Input.GetKeyDown(KeyCode.T))
@@ -61,7 +61,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //     ServerAction action = new ServerAction();
                 //     action.action = "ThrowObject";
                 //     action.moveMagnitude = 600f;
-                //     PhysicsController.ProcessControlCommand(action);   
+                //     PhysicsController.ProcessControlCommand(action);
                 // }
 
                 // if(Input.GetKeyDown(KeyCode.U))
@@ -70,7 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //     action.action = "MoveHandMagnitude";
 
                 //     action.moveMagnitude = 0.1f;
-                    
+
                 //     action.x = 0f;
                 //     action.y = 1f;
                 //     action.z = 0f;
@@ -84,7 +84,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
                     }
 
-                
+
                     if(!inputField.isFocused)
                     {
                         // float FlyMagnitude = 1.0f;
@@ -102,7 +102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveAhead";
-                                action.moveMagnitude = WalkMagnitude;		
+                                action.moveMagnitude = WalkMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -120,7 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveBack";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = WalkMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -138,7 +138,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveLeft";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = WalkMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -156,7 +156,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveRight";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = WalkMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -187,28 +187,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             ServerAction action = new ServerAction();
                             action.action = "LookUp";
-                            PhysicsController.ProcessControlCommand(action); 
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.DownArrow))
                         {
                             ServerAction action = new ServerAction();
                             action.action = "LookDown";
-                            PhysicsController.ProcessControlCommand(action); 
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
                         {
                             ServerAction action = new ServerAction();
                             action.action = "RotateLeft";
-                            PhysicsController.ProcessControlCommand(action); 
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
                         {
                             ServerAction action = new ServerAction();
                             action.action = "RotateRight";
-                            PhysicsController.ProcessControlCommand(action); 
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         // if(Input.GetKeyDown(KeyCode.Space))

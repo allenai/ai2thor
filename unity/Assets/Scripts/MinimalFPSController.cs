@@ -87,7 +87,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 FPSEnabled = true;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
-                
+
                 InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
                 InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
                 if (InputMode_Text) {
@@ -96,10 +96,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
                 Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-  
+
                 Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 HideHUD();
-              
+
         }
 
         public new void OnDisable()

@@ -33,8 +33,8 @@ public class DecalCollision : Break
 
     private static int currentStencilId = 0;
 
-    
-    
+
+
     void OnEnable() {
         breakType = BreakType.Decal;
         prevTime = Time.time;
@@ -50,7 +50,7 @@ public class DecalCollision : Break
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
                     //Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
                     foreach (var spawnPlane in otherPlanes) {
-                       
+
                         if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
@@ -92,10 +92,10 @@ public class DecalCollision : Break
                     float newTime = Time.time;
                     float timeDiff = newTime - prevTime;
                     var scale = contact.otherCollider.bounds.size;
- 
+
                     if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
-            
+
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
@@ -121,7 +121,7 @@ public class DecalCollision : Break
 
                     if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
-            
+
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
@@ -139,7 +139,7 @@ public class DecalCollision : Break
             else {
                 // Debug.Log("Spawn decal break " + this.transform.rotation + " final " + this.transform.rotation * Quaternion.Euler(-90, 0, 0));
                 // spawnDecal(this.transform.position,  this.transform.rotation * Quaternion.Euler(-90, 0, 0), decalScale * 2);
-                  spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
+                  spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale);
             }
         }
     }
@@ -167,7 +167,7 @@ public class DecalCollision : Break
 
         var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation * randomRotation, this.transform.parent);
         decalCopy.transform.localScale = decalScale;
-        
+
         var mr = decalCopy.GetComponent<MeshRenderer>();
         if (transparent && mr && mr.enabled) {
             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
@@ -179,7 +179,7 @@ public class DecalCollision : Break
                 decal.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
         }
-        
+
         broken = true;
         readytobreak = true;
     }

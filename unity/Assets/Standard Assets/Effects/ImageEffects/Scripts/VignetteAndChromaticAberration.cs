@@ -26,8 +26,8 @@ namespace UnityStandardAssets.ImageEffects
         public Shader vignetteShader;
         public Shader separableBlurShader;
         public Shader chromAberrationShader;
-        
-        
+
+
         private Material m_VignetteMaterial;
         private Material m_SeparableBlurMaterial;
         private Material m_ChromAberrationMaterial;

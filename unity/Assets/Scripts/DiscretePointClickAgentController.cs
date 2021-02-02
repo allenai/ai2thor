@@ -13,14 +13,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private ObjectHighlightController highlightController = null;
         private GameObject throwForceBar = null;
         private bool handMode = false;
-        void Start() 
+        void Start()
         {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-            Debug_Canvas.GetComponent<Canvas>().enabled = true; 
+            Debug_Canvas.GetComponent<Canvas>().enabled = true;
 
             highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false);
         }
@@ -143,7 +143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action["x"] = localPos.x;
                                 action["y"] = localPos.y;
                                 action["z"] = localPos.z;
-                                    
+
                                 this.PhysicsController.ProcessControlCommand(action);
                             }
                         }

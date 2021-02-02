@@ -75,7 +75,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxChargeThrowSeconds = 1.4f,
             bool highlightWhileHolding = false,
             HighlightConfig highlightConfig = null
-        )   
+        )
         {
             this.PhysicsController = physicsController;
             this.MinHighlightDistance = minHighlightDistance;
@@ -96,7 +96,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.ThrowEnabled = ThrowEnabled;
             this.highlightShader = Shader.Find("Custom/TransparentOutline");
         }
-        
+
         public void SetDisplayTargetText(bool display)
         {
             this.DisplayTargetText = display;
@@ -222,13 +222,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         0.0f;
                 }
             }
-            
+
             // Throw action on left click release
             if (Input.GetKeyUp(KeyCode.Mouse0))
             {
                 if (!pickupState)
                 {
-                  
+
                     if (this.PhysicsController.WhatAmIHolding() != null)
                     {
                         var diff = Time.time - this.timerAtPress;
@@ -262,21 +262,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void UpdateHighlightedObject(Vector3 screenPosition) {
             RaycastHit hit = new RaycastHit();
             var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(screenPosition);
-            int layerMask = LayerMask.GetMask("SimObjVisible"); 
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             Physics.Raycast(ray, out hit, this.MinHighlightDistance, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 
             SimObjPhysics newHighlightedObject = null;
             Shader newPreviousShader = null;
 
-            if (hit.transform != null 
+            if (hit.transform != null
                 && hit.transform.tag == "SimObjPhysics"
                 && (this.PhysicsController.WhatAmIHolding() == null || this.highlightWhileHolding)
                )
             {
                 softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
-                Func<bool> validObjectLazy = () => { 
+                Func<bool> validObjectLazy = () => {
                     return (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (this.onlyPickableObjectId == null || this.onlyPickableObjectId == simObj.objectID)) ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
@@ -288,14 +288,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     var useHighlightShader = !(disableHighlightShaderForObject && simObj.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
-                    
+
                     if (mRenderer != null && useHighlightShader) {
                         if (this.highlightedObject != newHighlightedObject) {
                             newPreviousShader = mRenderer.material.shader;
                             this.previousRenderQueueValue = mRenderer.material.renderQueue;
                             mRenderer.material.renderQueue = -1;
                             mRenderer.material.shader = this.highlightShader;
-                        }  
+                        }
 
                         if (withinReach)
                         {
@@ -330,12 +330,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         mRenderer.material.renderQueue = this.previousRenderQueueValue;
                     }
             }
-            
+
             if (newPreviousShader != null) {
                 this.previousShader = newPreviousShader;
             }
-           
-           
+
+
             this.highlightedObject = newHighlightedObject;
         }
 
@@ -360,7 +360,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
         }
-  
+
 	}
 
 }

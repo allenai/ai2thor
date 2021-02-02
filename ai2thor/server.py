@@ -17,6 +17,8 @@ import sys
 class NumpyAwareEncoder(json.JSONEncoder):
 
     def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
         if isinstance(obj, np.generic):
             return np.asscalar(obj)
         return super(NumpyAwareEncoder, self).default(obj)

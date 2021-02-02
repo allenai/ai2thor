@@ -7,7 +7,7 @@ public class ColorEncoding
 {
 	public static byte ReverseBits(byte value)
 	{
-		return (byte)((value * 0x0202020202 & 0x010884422010) % 1023); 
+		return (byte)((value * 0x0202020202 & 0x010884422010) % 1023);
 	}
 
 	public static int SparsifyBits(byte value, int sparse)
@@ -32,11 +32,11 @@ public class ColorEncoding
 			(SparsifyBits((byte)(uid >>  8), 3) << 1) |
 			 SparsifyBits((byte)(uid      ), 3);
 		//Debug.Log(uid + " >>> " + System.Convert.ToString(sid, 2).PadLeft(24, '0'));
-	
+
 		var r = (byte)(sid >> 8);
 		var g = (byte)(sid >> 16);
 		var b = (byte)(sid);
-		
+
 		//Debug.Log(r + " " + g + " " + b);
 		return new Color32 (r, g, b, 255);
 	}
@@ -44,7 +44,7 @@ public class ColorEncoding
 	public static Color EncodeTagAsColor(string tag)
 	{
 		using (MD5 md5 = MD5.Create ()) {
-			
+
 			byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(tag));
 
 			return new Color32 (data[0], data[1], data[2], data[3]);
@@ -64,11 +64,11 @@ public class ColorEncoding
 		// Lets create palette of unique 16 colors
 		var uniqueColors = new Color[] {
 			new Color(1,1,1,1), new Color(z,z,z,1),						// 0
-			new Color(1,1,z,1), new Color(1,z,1,1), new Color(z,1,1,1), // 
+			new Color(1,1,z,1), new Color(1,z,1,1), new Color(z,1,1,1), //
 			new Color(1,z,0,1), new Color(z,0,1,1), new Color(0,1,z,1), // 7
-			
+
 			new Color(1,0,0,1), new Color(0,1,0,1), new Color(0,0,1,1), // 8
-			new Color(1,1,0,1), new Color(1,0,1,1), new Color(0,1,1,1), // 
+			new Color(1,1,0,1), new Color(1,0,1,1), new Color(0,1,1,1), //
 			new Color(1,z,z,1), new Color(z,1,z,1)						// 15
 		};
 

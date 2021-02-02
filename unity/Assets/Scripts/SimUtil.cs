@@ -35,7 +35,7 @@ public static class SimUtil {
 
 	#region SimObj utility functions
 
-    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance) 
+    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance)
     {
 		#if UNITY_EDITOR
 		if (ShowObjectVisibility) {
@@ -244,7 +244,7 @@ public static class SimUtil {
 		//reset the scale (to prevent floating point weirdness)
 		item.ResetScale ();
 	}
-    
+
 	//checks whether the item
 	public static bool CheckItemBounds (SimObj item, Vector3 agentPosition) {
 		//if the item doesn't use custom bounds this is an automatic pass
@@ -431,7 +431,7 @@ public static class SimUtil {
 	}
 
 	//tries to get a SimObj from a collider, returns false if none found
-	public static bool GetSimObjFromCollider (Collider c, out SimObj o) 
+	public static bool GetSimObjFromCollider (Collider c, out SimObj o)
     {
 		o = null;
 		if (c.attachedRigidbody == null) {

@@ -56,7 +56,8 @@ public class Build
             }
         }
 
-        return scenes;
+        //uncomment for faster builds for testing
+        return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
     }
 
     private static IEnumerable<string> GetSceneFromEnv()
@@ -69,7 +70,7 @@ public class Build
     private static bool IncludePrivateScenes()
     {
         string privateScenes = Environment.GetEnvironmentVariable("INCLUDE_PRIVATE_SCENES");
-        
+
         return privateScenes != null && privateScenes.ToLower() == "true";
     }
 

@@ -95,7 +95,7 @@ public class SimTesting : MonoBehaviour {
 			break;
 		}
 
-		
+
         //resize the array to avoid confusion in the test
 		if (SimObjsInView.Length != NumItems) {
 			Array.Resize<SimObj> (ref SimObjsInView, NumItems);

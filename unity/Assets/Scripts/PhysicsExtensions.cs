@@ -1,17 +1,17 @@
 ﻿// MIT License
-// 
+//
 // Copyright (c) 2017 Justin Larrabee <justonia@gmail.com>
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@ public static class PhysicsExtensions
     //
     // Box
     //
-    
+
     public static bool BoxCast(BoxCollider box, Vector3 direction, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 center, halfExtents;
@@ -72,7 +72,7 @@ public static class PhysicsExtensions
     }
 
     public static Collider[] OverlapBox(
-        BoxCollider box, 
+        BoxCollider box,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f)
@@ -106,7 +106,7 @@ public static class PhysicsExtensions
     //
     // Sphere
     //
-    
+
     public static bool SphereCast(SphereCollider sphere, Vector3 direction, out RaycastHit hitInfo, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 center;
@@ -160,7 +160,7 @@ public static class PhysicsExtensions
         return Physics.OverlapSphereNonAlloc(center, radius, results, layerMask, queryTriggerInteraction);
     }
 
-    public static void ToWorldSpaceSphere(this SphereCollider sphere, out Vector3 center, out float radius) 
+    public static void ToWorldSpaceSphere(this SphereCollider sphere, out Vector3 center, out float radius)
     {
         center = sphere.transform.TransformPoint(sphere.center);
         radius = sphere.radius * MaxVec3(AbsVec3(sphere.transform.lossyScale));
@@ -169,7 +169,7 @@ public static class PhysicsExtensions
     //
     // Capsule
     //
-    
+
     public static bool CapsuleCast(CapsuleCollider capsule, Vector3 direction, out RaycastHit hitInfo, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 point0, point1;
@@ -203,8 +203,8 @@ public static class PhysicsExtensions
     }
 
     public static Collider[] OverlapCapsule(
-        CapsuleCollider capsule, 
-        int layerMask = Physics.DefaultRaycastLayers, 
+        CapsuleCollider capsule,
+        int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f
     ) {
@@ -256,7 +256,7 @@ public static class PhysicsExtensions
         point1 = center - dir * (height * 0.5f - radius);
     }
 
-    //  
+    //
     // Util
     //
 
@@ -274,9 +274,9 @@ public static class PhysicsExtensions
     }
 
     //
-    // Private 
+    // Private
     //
-    
+
     private class AscendingDistanceComparer : IComparer<RaycastHit>
     {
         public int Compare(RaycastHit h1, RaycastHit h2)

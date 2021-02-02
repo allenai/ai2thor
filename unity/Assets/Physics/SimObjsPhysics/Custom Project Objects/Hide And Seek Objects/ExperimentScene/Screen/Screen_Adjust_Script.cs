@@ -38,7 +38,7 @@ public class Screen_Adjust_Script : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {   
+    {
         if (spacing != spacingPrev || topShift != topShiftPrev || bottomShift != bottomShiftPrev || widthShift != widthShiftPrev)
         {
             //Zero out rotation for entirety of operation, for simplicity
@@ -47,7 +47,7 @@ public class Screen_Adjust_Script : MonoBehaviour
 
             Transform screenObject = transform.Find("screen_reference");
             Transform sheetObject = transform.Find("screen_reference").transform.Find("screen_sheet");
-            
+
             Transform leftBaseJoint = screenObject.Find("screen_master_jnt").Find("screen_pillar_l_base_jnt");
             Transform rightBaseJoint = screenObject.Find("screen_master_jnt").Find("screen_pillar_r_base_jnt");
             Transform leftBottomJoint = screenObject.Find("screen_master_jnt").Find("screen_pillar_l_base_jnt").Find("screen_pillar_l_bottom_jnt");
@@ -191,7 +191,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                     //Debug.Log("Vispoint " + (i * sheetWidthVisCount + j + 1) + " has coordinates " + sheetVisPoints[i * sheetWidthVisCount + j]);
                 }
             }
-           
+
             //Delete any excess vispoints for sheet
             int prevSheetVisPoints = sheetObject.Find("VisibilityPoints").childCount;
             if (sheetVisPoints.Length < prevSheetVisPoints)
@@ -352,7 +352,7 @@ public class Screen_Adjust_Script : MonoBehaviour
             {
                 childGameObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
             }
-            
+
             //Restore initial rotation
             transform.rotation = rotationSaver;
 

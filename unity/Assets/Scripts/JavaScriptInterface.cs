@@ -42,7 +42,7 @@ public class JavaScriptInterface : MonoBehaviour {
         SendMetadata("" + GetComponentInChildren<Camera>().actualRenderingPath);
     }
 
-    public void SetController(string controlModeEnumString) 
+    public void SetController(string controlModeEnumString)
     {
         ControlMode controlMode = (ControlMode) Enum.Parse(typeof(ControlMode), controlModeEnumString, true);
         //inputField.setControlMode(controlMode);
@@ -53,7 +53,7 @@ public class JavaScriptInterface : MonoBehaviour {
         if (success) {
             var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
             if (previousComponent == null) {
-                previousComponent = Agent.AddComponent(componentType) as MonoBehaviour; 
+                previousComponent = Agent.AddComponent(componentType) as MonoBehaviour;
             }
             previousComponent.enabled = true;
         }

@@ -49,7 +49,7 @@ public class ImageSynthesis : MonoBehaviour {
         }
         return false;
     }
-    
+
     private Shader uberReplacementShader;
     private Shader opticalFlowShader;
     private Shader depthShader;
@@ -120,12 +120,12 @@ public class ImageSynthesis : MonoBehaviour {
         // @TODO: detect if camera properties actually changed
         // OnCameraChange();
     }
-    
+
     private Camera CreateHiddenCamera(string name) {
         var go = new GameObject (name, typeof (Camera));
         #if !UNITY_EDITOR
             // Useful to be able to see these cameras in the editor
-            go.hideFlags = HideFlags.HideAndDontSave; 
+            go.hideFlags = HideFlags.HideAndDontSave;
         #endif
         go.transform.parent = transform;
 
@@ -207,7 +207,7 @@ public class ImageSynthesis : MonoBehaviour {
 
             pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
         }
-    
+
         // set the display corresponding to which capturePass this is
         for (int i = 0; i < capturePasses.Length; i++) {
             capturePasses[i].camera.targetDisplay = i;
@@ -220,7 +220,7 @@ public class ImageSynthesis : MonoBehaviour {
         opticalFlowMaterial.SetFloat ("_Sensitivity", opticalFlowSensitivity);
 
         if (!depthMaterial || depthMaterial.shader != depthShader) {
-            depthMaterial = new Material (depthShader);    
+            depthMaterial = new Material (depthShader);
         }
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
@@ -258,7 +258,7 @@ public class ImageSynthesis : MonoBehaviour {
 
     private string getObjectId(GameObject gameObject) {
         // the object id is generated this way to handle the edge case
-        // where a non-simobject could get moved from its initial position 
+        // where a non-simobject could get moved from its initial position
         // during a simulation.  This forces the objectId to get generated once
         // on scene startup
         int key = gameObject.GetInstanceID();
@@ -295,7 +295,7 @@ public class ImageSynthesis : MonoBehaviour {
             if (so != null) {
                 classTag = "" + so.WhatIsMyStructureObjectTag;
                 // objTag = so.gameObject.name;
-            } 
+            }
             if (sop != null) {
                 classTag = "" + sop.Type;
                 objTag = sop.ObjectID;
@@ -344,10 +344,10 @@ public class ImageSynthesis : MonoBehaviour {
     // Must be called after end of Frame
     public byte[] Encode(
         string passName,
-        RenderTextureFormat format = RenderTextureFormat.Default, 
-        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default, 
-        int width = -1, 
-        int height = -1, 
+        RenderTextureFormat format = RenderTextureFormat.Default,
+        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default,
+        int width = -1,
+        int height = -1,
         bool jpg = false
     ) {
         if (width <= 0) {
@@ -400,11 +400,11 @@ public class ImageSynthesis : MonoBehaviour {
     private byte[] Encode(
         Camera cam,
         int width,
-        int height, 
-        bool supportsAntialiasing, 
-        bool needsRescale, 
-        bool jpg = false, 
-        RenderTextureFormat format = RenderTextureFormat.Default, 
+        int height,
+        bool supportsAntialiasing,
+        bool needsRescale,
+        bool jpg = false,
+        RenderTextureFormat format = RenderTextureFormat.Default,
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
     ) {
         var mainCamera = GetComponent<Camera>();
@@ -460,7 +460,7 @@ public class ImageSynthesis : MonoBehaviour {
 
     private void Save(Camera cam, string filename, int width, int height, bool supportsAntialiasing, bool needsRescale) {
         byte[] bytes = Encode(cam, width, height, supportsAntialiasing, needsRescale);
-        File.WriteAllBytes(filename, bytes);                    
+        File.WriteAllBytes(filename, bytes);
     }
 
     #if UNITY_EDITOR
@@ -470,7 +470,7 @@ public class ImageSynthesis : MonoBehaviour {
         private bool DetectPotentialSceneChangeInEditor() {
             bool change = false;
             // there is no callback in Unity Editor to automatically detect changes in scene objects
-            // as a workaround lets track selected objects and check, if properties that are 
+            // as a workaround lets track selected objects and check, if properties that are
             // interesting for us (layer or tag) did not change since the last frame
             if (UnityEditor.Selection.transforms.Length > 1) {
                 // multiple objects are selected, all bets are off!

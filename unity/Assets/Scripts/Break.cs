@@ -26,7 +26,7 @@ public class Break : MonoBehaviour {
     //if set to true, all breakable objects cannot be broken automatically. Instaed, only the Break() action targeting specific objects will allow them to be broken.
     public bool Unbreakable = false;
 
-    //what does this object need to do when it is in the broken state? 
+    //what does this object need to do when it is in the broken state?
     //Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
     protected enum BreakType {PrefabSwap, MaterialSwap, Decal};
 
@@ -40,7 +40,7 @@ public class Break : MonoBehaviour {
     private List<SimObjType> TooSmalOrSoftToBreakOtherObjects = new List<SimObjType>()
     {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
     SimObjType.EggCracked, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
-    SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel, 
+    SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel,
     SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD, SimObjType.HandTowel};
 
     public bool isBroken() {
@@ -74,7 +74,7 @@ public class Break : MonoBehaviour {
 
             // spawn in correct prefab to swap to at object's last location and rotation
             // make sure to change to the correct variant of Prefab if the object isDirty
-            
+
             // if gameObject.GetComponent<Dirty>() - first check to make sure if this object can become dirty
             // if object is dirty - probably get this from the "Dirty" component to keep everything nice and self contained
             // PrefabToSwapTo = DirtyPrefabToSwapTo
@@ -150,7 +150,7 @@ public class Break : MonoBehaviour {
         if (Unbreakable) {
             return;
         }
-        
+
         //first see if the object (col) or this object is in the list of objects that are too small or too soft
         // if(TooSmalOrSoftToBreakOtherObjects.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
         // {

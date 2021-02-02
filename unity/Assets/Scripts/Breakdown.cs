@@ -9,7 +9,7 @@ public class Breakdown : MonoBehaviour
 {
     public float power = 10.0f;
     protected float explosionRadius = 0.25f;
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -20,7 +20,7 @@ public class Breakdown : MonoBehaviour
       {
         if(col.GetComponent<Rigidbody>())
         {
-            Rigidbody rb = col.GetComponent<Rigidbody>();            
+            Rigidbody rb = col.GetComponent<Rigidbody>();
             rb.AddExplosionForce(power, gameObject.transform.position, explosionRadius, 0.005f);
             rb.AddTorque(new Vector3(Random.value, Random.value, Random.value));
 
@@ -33,6 +33,6 @@ public class Breakdown : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

@@ -115,13 +115,13 @@ public class Contains : MonoBehaviour
 
 		//////////////////////////////////////////////////
         //uncomment to debug "draw" where the OverlapBox goes
-        // GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);	
-        // Destroy(surrogateGeo.GetComponent<Collider>());	
-        // surrogateGeo.name = transform.parent.gameObject + "_dimensions";	
-        // surrogateGeo.transform.position = worldCenter;	
-        // surrogateGeo.transform.rotation = b.transform.rotation;	
-        // surrogateGeo.transform.localScale = worldHalfExtents * 2;	
-        // surrogateGeo.transform.parent = b.transform;	
+        // GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        // Destroy(surrogateGeo.GetComponent<Collider>());
+        // surrogateGeo.name = transform.parent.gameObject + "_dimensions";
+        // surrogateGeo.transform.position = worldCenter;
+        // surrogateGeo.transform.rotation = b.transform.rotation;
+        // surrogateGeo.transform.localScale = worldHalfExtents * 2;
+        // surrogateGeo.transform.parent = b.transform;
 		////////////////////////////////////////////////////
 
 		//ok now create an overlap box using these values and return all contained objects
@@ -133,7 +133,7 @@ public class Contains : MonoBehaviour
 				//grab reference to game object this collider is part of
 				SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
-                //don't add any colliders from our parent object, so things like a 
+                //don't add any colliders from our parent object, so things like a
 				//shelf or drawer nested inside another shelving unit or dresser sim object
 				//don't contain the object they are nested inside
                 if (!hasAncestor(this.transform.gameObject, sop.transform.gameObject))
@@ -299,7 +299,7 @@ public class Contains : MonoBehaviour
 			// #endif
 
 			RaycastHit hit;
-	
+
 			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Collide))//NOTE: QueryTriggerInteraction was previously Ignore
 			{
 
@@ -364,7 +364,7 @@ public class Contains : MonoBehaviour
 		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist)
 		return false;
 
-		//ok cool, it's within distance to the agent, now let's check 
+		//ok cool, it's within distance to the agent, now let's check
 		//if the point is within the viewport of the agent as well
 
 		Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
@@ -377,7 +377,7 @@ public class Contains : MonoBehaviour
 			if(agentController.CheckIfPointIsInViewport(point))
 			return true;
 		}
-		
+
 		else
 		{
 			//do this check if the point's y value is above the agent camera. This means we are
@@ -391,7 +391,7 @@ public class Contains : MonoBehaviour
 		}
 
 		return false;
-		
+
 	}
 
 	//used to check if a given Vector3 is inside this receptacle box in world space
@@ -405,12 +405,12 @@ public class Contains : MonoBehaviour
 		float halfX = (myBox.size.x * 0.5f);
         float halfY = (myBox.size.y * 0.5f);
         float halfZ = (myBox.size.z * 0.5f);
-        if( point.x < halfX && point.x > -halfX && 
-            point.y < halfY && point.y > -halfY && 
+        if( point.x < halfX && point.x > -halfX &&
+            point.y < halfY && point.y > -halfY &&
             point.z < halfZ && point.z > -halfZ )
             return true;
         else
-            return false;	
+            return false;
 	}
 
 	public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point)
@@ -422,19 +422,19 @@ public class Contains : MonoBehaviour
 		float halfX = (myBox.size.x * 0.5f);
         float BIGY = (myBox.size.y * 10.0f);
         float halfZ = (myBox.size.z * 0.5f);
-        if( point.x < halfX && point.x > -halfX && 
-            point.y < BIGY && point.y > -BIGY && 
+        if( point.x < halfX && point.x > -halfX &&
+            point.y < BIGY && point.y > -BIGY &&
             point.z < halfZ && point.z > -halfZ )
             return true;
         else
-            return false;	
+            return false;
 	}
 
     #if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		BoxCollider b = GetComponent<BoxCollider>();
-        
+
 		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
         //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         //as a "valid area" for spawning objects inside of receptacles.
@@ -456,7 +456,7 @@ public class Contains : MonoBehaviour
 
 		// Gizmos.color = Color.blue;
 		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
-		
+
 		// Gizmos.color = Color.magenta;
 		// if(validpointlist.Count > 0)
 		// {
@@ -478,7 +478,7 @@ public class Contains : MonoBehaviour
 		// 	Vector3 boxPosition = coll.transform.position;
 		// 	//Vector3 boxPosition = coll.transform.TransformPoint(coll.center);
 
-		// 	// convert from world position to local position 
+		// 	// convert from world position to local position
 		// 	boxPosition = transform.InverseTransformPoint(boxPosition) + coll.center;
 
 		// 	Gizmos.DrawWireCube(boxPosition, coll.size);

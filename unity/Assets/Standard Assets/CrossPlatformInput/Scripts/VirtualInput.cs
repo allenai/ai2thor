@@ -8,8 +8,8 @@ namespace UnityStandardAssets.CrossPlatformInput
     public abstract class VirtualInput
     {
         public Vector3 virtualMousePosition { get; private set; }
-        
-        
+
+
         protected Dictionary<string, CrossPlatformInputManager.VirtualAxis> m_VirtualAxes =
             new Dictionary<string, CrossPlatformInputManager.VirtualAxis>();
             // Dictionary to store the name relating to the virtual axes
@@ -17,7 +17,7 @@ namespace UnityStandardAssets.CrossPlatformInput
             new Dictionary<string, CrossPlatformInputManager.VirtualButton>();
         protected List<string> m_AlwaysUseVirtual = new List<string>();
             // list of the axis and button names that have been flagged to always use a virtual axis or button
-        
+
 
         public bool AxisExists(string name)
         {
@@ -118,7 +118,7 @@ namespace UnityStandardAssets.CrossPlatformInput
 
 
         public abstract float GetAxis(string name, bool raw);
-        
+
         public abstract bool GetButton(string name);
         public abstract bool GetButtonDown(string name);
         public abstract bool GetButtonUp(string name);

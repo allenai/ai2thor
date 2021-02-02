@@ -17,7 +17,7 @@ using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    
+
     // TODO: Why is this separate controller necessary, and why is it inheriting from base?
     public class StochasticRemoteFPSAgentController : BaseFPSAgentController {
 
@@ -109,7 +109,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 moveLocal = new Vector3(x, 0, z);
             var random = new System.Random();
-            
+
 
             // rotate a small amount with every movement since robot doesn't always move perfectly straight
             if (applyActionNoise) {
@@ -135,12 +135,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ));
         }
 
+<<<<<<< HEAD
         // TODO: manualInteract isn't even setable reachable...?
         public void Rotate(bool manualInteract = false) {
             // only default hand if not manually interacting with things
             if (!manualInteract) {
                 DefaultAgentHand();
             }
+=======
+        public override void LookDown(ServerAction action)
+        {
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("down", action.degrees))
+            {
+                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookDown(action);
+            return;
+        }
+
+        public override void LookUp(ServerAction action)
+        {
+
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("up", action.degrees))
+            {
+                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookUp(action);
+        }
+
+        public override void Rotate(ServerAction action)
+        {
+            //only default hand if not manually Interacting with things
+            if(!action.manualInteract)
+            DefaultAgentHand();
+>>>>>>> origin/ExpRoom
 
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 

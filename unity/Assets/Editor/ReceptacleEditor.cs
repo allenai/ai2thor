@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [CustomEditor(typeof(Receptacle))]
-public class ReceptacleEditor : Editor 
+public class ReceptacleEditor : Editor
 {
 	public override void OnInspectorGUI()
 	{
@@ -19,7 +19,7 @@ public class ReceptacleEditor : Editor
 			EditorGUILayout.TextArea ("You must define a visibility collider.\n" +
 				"If the item does not close, this should be the main collider.\n" +
 				"If the item closes, it should be a collider that is obscured when it is closed.", EditorStyles.miniLabel);
-			
+
 			CheckForDragDropColliders (r);
 		} else {
 			r.VisibilityCollider = (Collider)EditorGUILayout.ObjectField (r.VisibilityCollider, typeof(Collider), false);

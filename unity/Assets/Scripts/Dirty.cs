@@ -10,7 +10,7 @@ public class Dirty : MonoBehaviour {
     [SerializeField]
     public GameObject[] ObjectsToEnableIfClean; //for things like bed sheets, decals etc. that need to toggle on and off the entire game object
     [SerializeField]
-    public GameObject[] ObjectsToEnableIfDirty; 
+    public GameObject[] ObjectsToEnableIfDirty;
     [SerializeField]
     protected bool isDirty = false;
 

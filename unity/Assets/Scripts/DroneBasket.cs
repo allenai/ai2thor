@@ -7,7 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-public class DroneBasket : MonoBehaviour 
+public class DroneBasket : MonoBehaviour
 {
 	public GameObject myParent = null;
     private PhysicsSceneManager psManager;
@@ -15,15 +15,15 @@ public class DroneBasket : MonoBehaviour
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
 	// Use this for initialization
-	void Start () 
+	void Start ()
 	{
         psManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
-	
+
 	// Update is called once per frame
-	void Update () 
+	void Update ()
 	{
-		
+
 	}
 
 	public void OnTriggerStay(Collider other)
@@ -32,7 +32,7 @@ public class DroneBasket : MonoBehaviour
 		//don't detect other trigger colliders to prevent nested objects from containing each other
 		if (other.GetComponentInParent<SimObjPhysics>() && !other.isTrigger)
 		{
-			
+
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
 
 			//don't add any parent objects in case this is a child sim object

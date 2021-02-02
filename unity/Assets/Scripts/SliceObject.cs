@@ -49,13 +49,13 @@ public class SliceObject : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     //action to be called from PhysicsRemoteFPSAgentController
@@ -106,12 +106,12 @@ public class SliceObject : MonoBehaviour
 
 
         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-        if (psm != null) 
+        if (psm != null)
         {
             //if the spawned object is not a sim object itself, but if it's holding a ton of sim objects let's go
             if(!resultObject.transform.GetComponent<SimObjPhysics>())
             {
-                //each instantiated sliced version of the object is a bunch of sim objects held by a master parent transform, so go into each one and assign the id to each based on the parent's id so 
+                //each instantiated sliced version of the object is a bunch of sim objects held by a master parent transform, so go into each one and assign the id to each based on the parent's id so
                 //there is an association with the original source object
                 int count = 0;
                 foreach (Transform t in resultObject.transform)

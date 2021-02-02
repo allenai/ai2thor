@@ -7,7 +7,7 @@ using UnityEngine;
 public class Screenshot : EditorWindow
 {
 
-	int resWidth = Screen.width*4; 
+	int resWidth = Screen.width*4;
 	int resHeight = Screen.height*4;
 
 	public Camera myCamera;
@@ -47,10 +47,10 @@ public class Screenshot : EditorWindow
 		EditorGUILayout.HelpBox("The default mode of screenshot is crop - so choose a proper width and height. The scale is a factor " +
 			"to multiply or enlarge the renders without loosing quality.",MessageType.None);
 
-		
+
 		EditorGUILayout.Space();
-		
-		
+
+
 		GUILayout.Label ("Save Path", EditorStyles.boldLabel);
 
 		EditorGUILayout.BeginHorizontal();
@@ -94,7 +94,7 @@ public class Screenshot : EditorWindow
 		{
 			resHeight = (int)Handles.GetMainGameViewSize().y;
 			resWidth = (int)Handles.GetMainGameViewSize().x;
-		
+
 		}
 
 
@@ -152,7 +152,7 @@ public class Screenshot : EditorWindow
 		EditorGUILayout.EndHorizontal();
 
 
-		if (takeHiResShot) 
+		if (takeHiResShot)
 		{
 			int resWidthN = resWidth*scale;
 			int resHeightN = resHeight*scale;
@@ -171,10 +171,10 @@ public class Screenshot : EditorWindow
 			RenderTexture.active = rt;
 			screenShot.ReadPixels(new Rect(0, 0, resWidthN, resHeightN), 0, 0);
 			myCamera.targetTexture = null;
-			RenderTexture.active = null; 
+			RenderTexture.active = null;
 			byte[] bytes = screenShot.EncodeToPNG();
 			string filename = ScreenShotName(resWidthN, resHeightN);
-			
+
 			System.IO.File.WriteAllBytes(filename, bytes);
 			Debug.Log(string.Format("Took screenshot to: {0}", filename));
 			Application.OpenURL(filename);
@@ -187,21 +187,21 @@ public class Screenshot : EditorWindow
 	}
 
 
-	
+
 	private bool takeHiResShot = false;
 	public string lastScreenshot = "";
-	
-		
+
+
 	public string ScreenShotName(int width, int height) {
 
 		string strPath="";
 
-		strPath = string.Format("{0}/screen_{1}x{2}_{3}.png", 
-		                     path, 
-		                     width, height, 
+		strPath = string.Format("{0}/screen_{1}x{2}_{3}.png",
+		                     path,
+		                     width, height,
 		                               System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
 		lastScreenshot = strPath;
-	
+
 		return strPath;
 	}
 

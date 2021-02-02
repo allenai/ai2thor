@@ -755,7 +755,7 @@ def link_build_cache(branch):
 def travis_build(build_id):
     import requests
     res = requests.get(
-        "https://api.travis-ci.com/build/%s" % build_id,
+        "https://api.travis-ci.org/build/%s" % build_id,
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -2887,8 +2887,6 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
 
     print(evt.metadata["actionReturn"])
 
-
-
     evt = controller.step(
         dict(
             action="TeleportFull",
@@ -2902,3 +2900,48 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
 
+@task
+def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100):
+    import ai2thor.controller
+    import random
+    num_trials = n
+    width = 300
+    height = 300
+    fov = 100
+
+    def act(controller, actions, n):
+        for i in range(n):
+            action = random.choice(actions)
+            controller.step(dict(action=action))
+
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        scene=scene, gridSize=0.25,
+        width=width,
+        height=height,
+        agentMode=agent_mode,
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    from ai2thor.util.trials import trial_runner, ObjectPositionVarianceAverage
+
+    move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
+    rotate_actions = ["RotateRight", "RotateLeft"]
+    look_actions = ["LookUp", "LookDown"]
+    all_actions = move_actions + rotate_actions + look_actions
+
+    sample_number = samples
+    action_tuples = [
+        ("move", move_actions, sample_number),
+        ("rotate", rotate_actions, sample_number),
+        ("look", look_actions, sample_number),
+        ("all", all_actions, sample_number),
+    ]
+
+    for action_name, actions, n in action_tuples:
+        for controller, metric in trial_runner(controller, num_trials, ObjectPositionVarianceAverage()):
+            act(controller, actions, n)
+        print(" actions: '{}', object_position_variance_average: {} ".format(action_name, metric))

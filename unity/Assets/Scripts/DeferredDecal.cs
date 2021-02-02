@@ -31,7 +31,7 @@ public class DeferredDecal : MonoBehaviour
         this.viewCamera = Camera.main;
         viewCamera.AddCommandBuffer(atRenderEvent, buffer);
      }
- 
+
     public void OnWillRenderObject()
 	{
         // Happens when editor swap in code
@@ -40,7 +40,7 @@ public class DeferredDecal : MonoBehaviour
             buffer.name = "Deferred Decals";
         }
         buffer.Clear();
-        
+
         if (type == DecalType.EMISSIVE_SPECULAR) {
             // Diffuse + specular decals
             RenderTargetIdentifier[] multipleRenderTargets = {BuiltinRenderTextureType.GBuffer0, BuiltinRenderTextureType.GBuffer1, BuiltinRenderTextureType.GBuffer3};
@@ -63,13 +63,13 @@ public class DeferredDecal : MonoBehaviour
         else if (type == DecalType.FORWARD) {
             buffer.SetRenderTarget(BuiltinRenderTextureType.CurrentActive, BuiltinRenderTextureType.CameraTarget);
         }
-        
+
         buffer.DrawMesh(this.cubeMesh, this.transform.localToWorldMatrix, this.material);
 
-        
+
     }
      void OnDrawGizmos() {
-       
+
         Gizmos.color = new Color(1, 0.92f, 0.016f, 0.2f);
         Gizmos.DrawMesh(this.cubeMesh, this.transform.position, this.transform.rotation, this.transform.localScale);
 
