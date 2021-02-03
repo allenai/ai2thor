@@ -220,6 +220,24 @@ def test_add_third_party_camera(controller):
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'initial rotation should have been set')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
+    # expects position to be a Vector3, should fail!
+    event = controller.step(
+        action="AddThirdPartyCamera",
+        position=5,
+        rotation=dict(x=0, y=0, z=0)
+    )
+    assert not event.metadata['lastActionSuccess'], 'position should not allow float input!'
+
+    # orthographicSize expects float, not Vector3!
+    event = controller.step(
+        action="AddThirdPartyCamera",
+        position=dict(x=0, y=0, z=0),
+        rotation=dict(x=0, y=0, z=0),
+        orthographic=True,
+        orthographicSize=dict(x=0, y=0, z=0)
+    )
+    assert not event.metadata['lastActionSuccess'], 'orthographicSize should not allow Vector3 input!'
+
 
 def test_update_third_party_camera():
     controller = build_controller(server_class=FifoServer)
