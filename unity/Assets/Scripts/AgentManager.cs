@@ -1662,7 +1662,8 @@ public enum ServerActionErrorCode  {
 	LookDownCantExceedMin,
 	InvalidAction,
     MissingArguments,
-	AmbiguousAction
+	AmbiguousAction,
+    InvalidArgument
 }
 
 public enum VisibilityScheme {

@@ -1510,6 +1510,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             }
+            catch (ToObjectArgumentActionException e)
+            {
+                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot cast to: " + e.parameterType.Name;
+                errorCode = ServerActionErrorCode.InvalidArgument;
+                actionFinished(false);
+            }
             catch (MissingArgumentsActionException e)
             {
                 errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());

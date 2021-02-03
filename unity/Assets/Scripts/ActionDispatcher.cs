@@ -320,7 +320,11 @@ public static class ActionDispatcher {
             for(int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
                 if (dynamicServerAction.ContainsKey(pi.Name)) {
-                    arguments[i] = dynamicServerAction.GetValue(pi.Name).ToObject(pi.ParameterType);
+                    try {
+                        arguments[i] = dynamicServerAction.GetValue(pi.Name).ToObject(pi.ParameterType);
+                    } catch (ArgumentException ex) {
+                        throw new ToObjectArgumentActionException(pi.Name, pi.ParameterType, ex);
+                    }
                 } else {
                     if (!pi.HasDefaultValue)  {
                         if (missingArguments == null) {
@@ -375,6 +379,18 @@ public class InvalidActionException : Exception { }
 [Serializable]
 public class AmbiguousActionException : Exception { 
     public AmbiguousActionException(string message) : base(message) {}
+}
+
+[Serializable]
+public class ToObjectArgumentActionException : Exception {
+    public string parameterName;
+    public ArgumentException innerException;
+    public Type parameterType;
+    public ToObjectArgumentActionException (string parameterName, Type parameterType, ArgumentException ex) {
+        this.parameterName = parameterName;
+        this.parameterType = parameterType;
+        this.innerException = ex;
+    }
 }
 
 [Serializable]

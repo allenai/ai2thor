@@ -229,14 +229,18 @@ def test_add_third_party_camera(controller):
     assert not event.metadata['lastActionSuccess'], 'position should not allow float input!'
 
     # orthographicSize expects float, not Vector3!
-    event = controller.step(
-        action="AddThirdPartyCamera",
-        position=dict(x=0, y=0, z=0),
-        rotation=dict(x=0, y=0, z=0),
-        orthographic=True,
-        orthographicSize=dict(x=0, y=0, z=0)
-    )
-    assert not event.metadata['lastActionSuccess'], 'orthographicSize should not allow Vector3 input!'
+    error_message = None
+    try:
+        event = controller.step(
+            action="AddThirdPartyCamera",
+            position=dict(x=0, y=0, z=0),
+            rotation=dict(x=0, y=0, z=0),
+            orthographic=True,
+            orthographicSize=dict(x=0, y=0, z=0)
+        )
+    except ValueError as e:
+        error_message = str(e)
+    assert error_message == "action: AddThirdPartyCamera has invalid an argument: orthographicSize. Cannot cast to: Nullable`1"
 
 
 def test_update_third_party_camera():
