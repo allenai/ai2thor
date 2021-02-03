@@ -162,7 +162,8 @@ def dict_recursive_nan_check(arm_dict):
         elif type(v) == list:
             this_item_nan = dict_recursive_nan_check({i:v for (i,v) in enumerate(v)})
         elif v is None:
-            this_item_nan = False #TODO
+            this_item_nan = True
+            # print('nan', v)
         else:
             print(v)
             raise Exception('Not implemented')

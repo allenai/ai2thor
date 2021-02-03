@@ -81,6 +81,7 @@ for i in range(MAX_TESTS):
         if len(picked_up_before) > 0:
             obj_to_look_at = picked_up_before[0]
             obj_in_hand_values_dict = [o for o in controller.last_event.metadata['objects'] if o['objectId'] == obj_to_look_at][0]
+            obj_in_hand_values_dict = dict(position=obj_in_hand_values_dict['position'],rotation=obj_in_hand_values_dict['rotation'])
             if dict_recursive_nan_check(obj_in_hand_values_dict):
                 print('ObjInHand is nan inf', obj_in_hand_values_dict)
                 print('scene name', controller.last_event.metadata['sceneName'])
@@ -122,7 +123,7 @@ for i in range(MAX_TESTS):
                     print('scene name', controller.last_event.metadata['sceneName'])
                     print('initial pose', initial_pose)
                     print('list of actions', all_commands)
-                    print('action details', all_action_details)
+                    # print('action details', all_action_details)
                     break
 
 
