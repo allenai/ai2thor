@@ -1512,7 +1512,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             catch (ToObjectArgumentActionException e)
             {
-                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot cast to: " + e.parameterType.Name;
+                Dictionary<string, string> typeMap = new Dictionary<string, string>{
+                    {"Single", "float"},
+                    {"Double", "float"},
+                    {"Int16", "int"},
+                    {"Int32", "int"},
+                    {"Int64", "int"}
+                };
+                Type underlingType = Nullable.GetUnderlyingType(e.parameterType);
+                string typeName = underlingType == null ? e.parameterType.Name : underlingType.Name;
+                if (typeMap.ContainsKey(typeName)) {
+                    typeName = typeMap[typeName];
+                }
+                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot convert to: " + typeName;
                 errorCode = ServerActionErrorCode.InvalidArgument;
                 actionFinished(false);
             }

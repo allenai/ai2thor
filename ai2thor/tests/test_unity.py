@@ -240,7 +240,7 @@ def test_add_third_party_camera(controller):
         )
     except ValueError as e:
         error_message = str(e)
-    assert error_message == "action: AddThirdPartyCamera has invalid an argument: orthographicSize. Cannot cast to: Nullable`1"
+    assert error_message == "action: AddThirdPartyCamera has an invalid argument: orthographicSize. Cannot convert to: float"
 
 
 def test_update_third_party_camera():
