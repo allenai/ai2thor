@@ -83,7 +83,7 @@ class FifoServer(ai2thor.server.Server):
             FieldType.THIRD_PARTY_IMAGE_IDS,
             FieldType.THIRD_PARTY_CLASSES,
             FieldType.THIRD_PARTY_FLOW
-            }
+        }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b'')
         super().__init__(width, height, depth_format, add_depth_noise)
@@ -175,7 +175,7 @@ class FifoServer(ai2thor.server.Server):
 
         # need to switch this to msgpack
         self._send_message(FieldType.ACTION, json.dumps(action, cls=ai2thor.server.NumpyAwareEncoder).encode('utf8'))
-    
+
     def start(self):
         os.mkfifo(self.server_pipe_path)
         os.mkfifo(self.client_pipe_path)
