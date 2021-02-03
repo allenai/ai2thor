@@ -503,6 +503,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
+        Quaternion currentRotation;
 
         //Assign joint metadata to remaining joints, which all have identical hierarchies
         for (var i = 1; i <= 4; i++)
@@ -523,25 +524,62 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             //WORLD RELATIVE ROTATION
             //GetChild grabs angler since that is what actually changes the geometry angle
-            Quaternion.Euler(joint.GetChild(0).eulerAngles).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-            Debug.Log(joint.name + "'s euler-angles of " + joint.eulerAngles + " resulted (via Quaternion back-and-forth) in vector " + vectorRot + " and " + angleRot);
-            jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            currentRotation = joint.GetChild(0).rotation;
+
+            //Check that world-relative rotation is angle-axis-notation-compatible
+            if (currentRotation != new Quaternion(0, 0, 0, -1))
+            {
+                currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                //Debug.Log(joint.name + "'s euler-angles of " + joint.GetChild(0).eulerAngles + " resulted in Quaternion " + Quaternion.Euler(joint.GetChild(0).eulerAngles) + " which should either be the same as or a corrected version of " + joint.GetChild(0).rotation);
+                jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            }
+
+            else
+            {
+                //Debug.Log(joint.name + "'s world-rotation of " + currentRotation + " is EVILLLLL!");
+                jointMeta.rotation = new Vector4(1, 0, 0, 0);
+            }
 
             //ROOT-JOINT RELATIVE ROTATION
             //Root-forward and agent-forward are always the same
 
             //GetChild grabs angler since that is what actually changes the geometry angle
-            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-            jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            currentRotation = Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles));
+
+            //Check that root-relative rotation is angle-axis-notation-compatible
+            if (currentRotation != new Quaternion(0, 0, 0, -1))
+            {
+                currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            }
+
+            else
+            {
+                //Debug.Log(joint.name + "'s root-rotation of " + currentRotation + " is EVILLLLL!");
+                jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
+            }
 
             //PARENT-JOINT RELATIVE ROTATION
             if (i != 1)
             {
                 parentJoint = joint.parent;
 
-                //Grab rotation of current joint's angler relative to parent joint's angler, convert it to a quaternion, and then convert that to angle-axis notation
-                Quaternion.Euler(parentJoint.GetChild(0).InverseTransformDirection(joint.GetChild(0).eulerAngles)).ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                //Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
+                currentRotation = Quaternion.Euler(parentJoint.GetChild(0).InverseTransformDirection(joint.GetChild(0).eulerAngles));
+
+                //Check that parent-relative rotation is angle-axis-notation-compatible
+                if (currentRotation != new Quaternion(0, 0, 0, -1))
+                {
+                    //Convert parent-relative rotation to angle-axis notation
+                    currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                    jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                }
+
+                else
+                {
+                    //Debug.Log(joint.name + "'s parent-rotation of " + currentRotation + " is EVILLLLL!");
+                    jointMeta.localRotation = new Vector4(1, 0, 0, 0);
+                }
             }
 
             //Special case for robot_arm_1_jnt because it has no parent-joint
