@@ -1493,8 +1493,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand)
-        {
+        public void ProcessControlCommand(DynamicServerAction controlCommand, object target = this) {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1506,7 +1505,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             try
             {
-                ActionDispatcher.Dispatch(this, controlCommand);
+                ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             }
             catch (MissingArgumentsActionException e)
             {
@@ -1530,10 +1529,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // TargetInvocationException is called whenever an action
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
-                actionFinished(
-                    success: false,
-                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
-                );
+                string errorMsg = e.InnerException.Message;
+
+                // Newtonian.JSON doesn't provide particularly nice error messages.
+                // Let's give a better hint.
+                if (errorMsg.Contains("Newtonsoft.Json")) {
+                    actionFinished(
+                        success: false,
+                        errorMessage: (
+                            $"{e.InnerException.GetType().Name}: " + "An argument has an unparsable type." +
+                            $"(For instance, maybe you're passing in a dict, when we expect a float). {errorMsg}"
+                        )
+                    );
+                } else {
+                    actionFinished(
+                        success: false,
+                        errorMessage: $"{e.InnerException.GetType().Name}: {errorMsg}"
+                    );
+                }
             }
             catch (Exception e)
             {

@@ -1075,13 +1075,9 @@ public class AgentManager : MonoBehaviour
 
 		if (agentManagerActions.Contains(controlCommand.action)) {
             this.agentManagerState = AgentState.Processing;
-            try {
-                ActionDispatcher.Dispatch(this, controlCommand);
-            } catch (MissingArgumentsActionException e) {
-                string errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
-                Debug.LogError(errorMessage);
-                actionError(errorMessage, controlCommand.action.ToString(), ServerActionErrorCode.MissingArguments);
-            }
+
+            // let's look in this file for the action
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
@@ -1096,7 +1092,9 @@ public class AgentManager : MonoBehaviour
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
-			this.activeAgent().ProcessControlCommand (controlCommand);
+
+            // let's look in the agent's set of actions for the action
+			this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
 		}
 	}
 
