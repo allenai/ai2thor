@@ -1560,21 +1560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
                 errorMessage += e.ToString();
-
-                // Newtonian.JSON doesn't provide particularly nice error messages.
-                // Let's give a better hint.
-                if (errorMessage.Contains("Newtonsoft.Json")) {
-                    // sadly, the error message does not say which argument is invalid :(
-                    actionFinished(
-                        success: false,
-                        errorMessage: (
-                            "An argument has an invalid type. " +
-                            $"For instance, maybe you're passing in a dict/object, when we expect a float. {errorMessage}"
-                        )
-                    );
-                } else {
-                    actionFinished(success: false, errorMessage: errorMessage);
-                }
+                actionFinished(success: false, errorMessage: errorMessage);
             }
 
             #if UNITY_EDITOR
