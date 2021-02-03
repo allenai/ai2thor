@@ -1449,33 +1449,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // This should only be used by DebugInputField and HideNSeekController
         // Once all those invocations have been converted to Dictionary<string, object>
         // this can be removed
-        public void ProcessControlCommand(ServerAction controlCommand)
+        public void ProcessControlCommand(ServerAction serverAction)
         {
 
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
 
-            lastAction = controlCommand.action;
+            lastAction = serverAction.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(serverAction.action);
 			
             this.agentState = AgentState.Processing;
 			try
 			{
 				if (method == null) {
-					errorMessage = "Invalid action: " + controlCommand.action;
+					errorMessage = "Invalid action: " + serverAction.action;
 					errorCode = ServerActionErrorCode.InvalidAction;
 					Debug.LogError(errorMessage);
 					actionFinished(false);
 				} else {
-					method.Invoke(this, new object[] { controlCommand });
+					method.Invoke(this, new object[] { serverAction });
 				}
 			}
 			catch (Exception e)
 			{
-				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+				Debug.LogError("Caught error with invoke for action: " + serverAction.action);
                 Debug.LogError("Action error message: " + errorMessage);
 				Debug.LogError(e);
 

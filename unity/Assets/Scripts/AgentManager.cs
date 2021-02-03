@@ -753,7 +753,8 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 
-		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0}";
+        // NOTE: sequenceId is required in DynamicServerAction.
+		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0, \"sequenceId\": 0}";
 		ProcessControlCommand(msg);
 	}
 
