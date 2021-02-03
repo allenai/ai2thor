@@ -432,7 +432,6 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
-        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -443,7 +442,6 @@ def test_action_dispatch_find_conflicts_physics(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
-        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
