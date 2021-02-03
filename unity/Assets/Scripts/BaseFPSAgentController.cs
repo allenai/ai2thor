@@ -1493,7 +1493,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand, object target = this) {
+        public void ProcessControlCommand(DynamicServerAction controlCommand, object target = null) {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1505,7 +1505,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             try
             {
-                ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
+                ActionDispatcher.Dispatch(target: target == null ? this : target, dynamicServerAction: controlCommand);
             }
             catch (MissingArgumentsActionException e)
             {
