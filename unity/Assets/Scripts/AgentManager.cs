@@ -1061,11 +1061,10 @@ public class AgentManager : MonoBehaviour
 		return this.agents[activeAgentId];
 	}
 
-	private void ProcessControlCommand(string msg)
-	{
-
+    // making it public makes it accessible from debug input field
+	private void ProcessControlCommand(string msg) {
         this.renderObjectImage = this.defaultRenderObjectImage;
-        
+
         DynamicServerAction controlCommand = new DynamicServerAction(msg); //jObject);
 
 		this.currentSequenceId = controlCommand.sequenceId;
@@ -1074,9 +1073,7 @@ public class AgentManager : MonoBehaviour
         this.activeAgentId = controlCommand.agentId;
 
 		if (agentManagerActions.Contains(controlCommand.action)) {
-            this.agentManagerState = AgentState.Processing;
-
-            // let's look in this file for the action
+            // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
             //we only allow renderObjectImage to be flipped on
