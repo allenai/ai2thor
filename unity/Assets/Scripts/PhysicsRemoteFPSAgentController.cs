@@ -6963,7 +6963,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
 
             if (markActionFinished) {
-                actionFinished(success: true, actionReturn: validAgentPoses);
+                actionFinishedEmit(success: true, actionReturn: validAgentPoses);
             }
 
             return validAgentPoses;
@@ -7022,7 +7022,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
-            actionFinished(true, d);
+            actionFinishedEmit(true, d);
         }
 
         // private helper for NumberOfPositionsFromWhichItemIsVisible
@@ -7038,9 +7038,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // object id might have been invalid, causing failure
             if (markActionFinished) {
-                actionFinished(success: interactablePoses != null);
+                actionFinishedEmit(success: true, actionReturn: interactablePoses.Count);
             }
-            return interactablePoses == null ? 0 : interactablePoses.Count;
+            return interactablePoses.Count;
         }
 
         // Similar to GetInteractablePositions, but with horizon=0 and maxDistance like infinity
