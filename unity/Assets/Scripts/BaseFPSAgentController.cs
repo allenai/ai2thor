@@ -2598,7 +2598,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
-        public void GetSemanticHulls(List<string> objectTypes = null) {
+        public void Get2DSemanticHulls(List<string> objectTypes = null) {
             HashSet<string> allowedObjectTypesSet = null;
             if (objectTypes != null) {
                 allowedObjectTypesSet = new HashSet<string>(objectTypes);
@@ -2613,12 +2613,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     continue;
                 }
                 var vertices = new List<MIConvexHull.DefaultVertex2D>();
-                float maxY = -5f;
+                float maxY = -float.PositiveInfinity;
 
                 foreach (var meshFilter in sop.GetComponentsInChildren<MeshFilter>()) {
                     foreach (var localVertex in meshFilter.mesh.vertices) {
                         var globalVertex = meshFilter.transform.TransformPoint(localVertex);
-                        // var globalVertex = localVertex;
                         vertices.Add(new MIConvexHull.DefaultVertex2D(globalVertex.x, globalVertex.z));
                         maxY = Math.Max(maxY, globalVertex.y);
                     }
@@ -2643,23 +2642,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, objectIdToConvexHull);
 
         }
-
-        public void GetCameraToWorldMatrix() {
-            Matrix4x4 m = m_Camera.cameraToWorldMatrix;
-            // Vector3 p = m.MultiplyPoint(new Vector3(x, y, -z));
-            // Debug.DrawLine(
-            //             p,
-            //             p + new Vector3(0f, 1f, 0f),
-            //             Color.red, 
-            //             100.0f
-            //         );
-            actionFinished(true, m);
-        }
         
-        public void GetScreenToWorldPoint(float row, float col, float depth) {
+        public void GetPixelToWorldPoint(float row, float col, float depth) {
             actionFinished(
                 true, 
-                m_Camera.ScreenToWorldPoint(new Vector3(col, m_Camera.pixelHeight - row, m_Camera.nearClipPlane))
+                m_Camera.ScreenToWorldPoint(
+                    new Vector3(col, m_Camera.pixelHeight - row, m_Camera.nearClipPlane)
+                )
             );
         }
 
@@ -2667,12 +2656,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
             Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
+            #if UNITY_EDITOR
             Debug.DrawLine(
                 hit.point,
                 hit.point + new Vector3(0f, 1f, 0f),
                 Color.red, 
                 100.0f
             );
+            #endif
             actionFinished(true, hit.point);
         }
 
