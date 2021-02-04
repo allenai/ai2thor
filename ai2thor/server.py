@@ -17,6 +17,8 @@ import sys
 class NumpyAwareEncoder(json.JSONEncoder):
 
     def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
         if isinstance(obj, np.generic):
             return np.asscalar(obj)
         return super(NumpyAwareEncoder, self).default(obj)
@@ -76,7 +78,7 @@ def unique_rows(arr, return_index=False, return_inverse=False):
 
 class Event(object):
     """
-    Object that is returned from a call to  controller.step().
+    Object that is returned from a call to controller.step().
     This class wraps the screenshot that Unity captures as well
     as the metadata sent about each object
     """
@@ -113,6 +115,23 @@ class Event(object):
         self.third_party_flows_frames = []
 
         self.events = [self] # Ensure we have a similar API to MultiAgentEvent
+
+    def __repr__(self):
+        """Summarizes the results from an Event."""
+        action_return = str(self.metadata['actionReturn'])
+        if len(action_return) > 100:
+            action_return = action_return[:100] + '...'
+        return (
+            '<ai2thor.server.Event at ' + str(hex(id(self))) + '\n' +
+            '\t.metadata["lastAction"] = ' + str(self.metadata['lastAction']) + '\n' +
+            '\t.metadata["lastActionSuccess"] = ' + str(self.metadata['lastActionSuccess']) + '\n' +
+            '\t.metadata["errorMessage"] = "' + str(self.metadata['errorMessage']).replace('\n', ' ') + '"\n' +
+            '\t.metadata["actionReturn"] = ' + action_return + '\n' +
+            '>'
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
     @property
     def image_data(self):

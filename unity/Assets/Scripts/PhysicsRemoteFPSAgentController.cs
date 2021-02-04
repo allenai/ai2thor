@@ -1509,7 +1509,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
                 Quaternion oldRotation = sop.transform.rotation;
-                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round(sop.transform.rotation.y + 90f % 360), 0.0f));;
+                sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, (float) Math.Round((sop.transform.eulerAngles.y + 90f) % 360), 0.0f));;
                 if (!action.forceAction) {
                     if (action.maxAgentsDistance > 0.0f) {
                         for (int i = 0; i < agentManager.agents.Count; i++) {
@@ -4633,58 +4633,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
         }
 
-        //used for all actions that need a sim object target
-        //instead of objectId, use screen coordinates to raycast toward potential targets
-        //will set the target object by reference if raycast is succesful
-        public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange)
-        {
-            //float x = action.x;
-            y = 1.0f - y; //reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
-            //cast ray from screen coordinate into world space. If it hits an object
+        // used for all actions that need a sim object target
+        // instead of objectId, use screen coordinates to raycast toward potential targets
+        // will set the target object by reference if raycast is succesful
+        public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange) {
+            // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+            y = 1.0f - y;
+
+            // cast ray from screen coordinate into world space. If it hits an object
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
-            //if something was touched, actionFinished(true) always
-            if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-            {
-                if(hit.transform.GetComponent<SimObjPhysics>())
-                {
-                    //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                    //this should basically only happen if the handDistance value is too big
-                    if(requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point))
-                    {
-                        errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
-                        return false;
+
+            // if something was touched, actionFinished(true) always
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                if (hit.transform.GetComponent<SimObjPhysics>()) {
+                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                    // this should basically only happen if the handDistance value is too big
+                    if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
                     }
 
-                    //it is within viewport, so we are good, assign as target
+                    // it is within viewport, so we are good, assign as target
                     target = hit.transform.GetComponent<SimObjPhysics>();
                 }
             }
 
-            //try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            //if no target was found in the layers above, try the SimObjInvisible layer. 
-            //additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
-            //PlaceableSurfaces on it, also make sure to check again
-            if(target == null || hasPlaceableSurface.Contains(target.Type))
-            {
-                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore))
-                {
-                    if(hit.transform.GetComponentInParent<SimObjPhysics>())
-                    {
-                        //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                        //this should basically only happen if the handDistance value is too big
-                        if(requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point))
-                        {
-                            errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
-                            return false;
+            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
+            // if no target was found in the layers above, try the SimObjInvisible layer. 
+            // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
+            // PlaceableSurfaces on it, also make sure to check again
+            if (target == null || hasPlaceableSurface.Contains(target.Type)) {
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
+                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
+                        // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        // this should basically only happen if the handDistance value is too big
+                        if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
                         }
-                        //it is within viewport, so we are good, assign as target
+                        // it is within viewport, so we are good, assign as target
                         target = hit.transform.GetComponentInParent<SimObjPhysics>();
                     }
                 }
             }
 
-            //force update objects to be visible/interactable correctly
+            // force update objects to be visible/interactable correctly
             VisibleSimObjs(false);
             return true;
         }
@@ -5122,16 +5114,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Helper method that parses objectId and (x and y) parameters to return the
-        // sim object that they target.
-        private SimObjPhysics getTargetObject(
-                string objectId,
-                bool forceAction = false
-        ) {
+        // Helper method that parses objectId parameter to return the sim object that it target.
+        // The action is halted if the objectId does not appear in the scene.
+        private SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                return null;
+                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
             }
 
             // if object is in the scene and visible, assign it to 'target'
@@ -5139,30 +5127,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
                 target = sop;
             }
+
+            // target not found!
+            if (target == null) {
+                throw new NullReferenceException("Target object not found within the specified visibility.");
+            }
+
             return target;
         }
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        private SimObjPhysics getTargetObject(
-            float x,
-            float y,
-            bool forceAction
-        ) {
-            // no target object specified, so instead try and use x/y screen coordinates
-            SimObjPhysics target = null;
-            if(!ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction)) {
-                // error message is set inside ScreenToWorldTarget
-                return null;
+        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
+            SimObjPhysics target = null;
+            ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
             return target;
         }
 
         // syntactic sugar for open object with openness = 0.
-        public void CloseObject(
-            string objectId,
-            bool forceAction = false
-        ) {
+        public void CloseObject(string objectId, bool forceAction = false) {
             OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
         }
 
@@ -5707,8 +5693,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ctof.Toggle();
 
             bool success = false;
+
+            bool ctofInitialState = ctof.isOn;
             
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0));
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
             success = true;
 
             if (!success)
@@ -6741,16 +6729,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["objectSeen"] = objectSeen ? 1 : 0;
             toReturn["positionsTried"] = positionsTried;
 
-            if (wasStanding) {
-                stand();
-            } else {
-                crouch();
-            }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
             actionFinished(true, toReturn);
         }
 
@@ -6807,109 +6785,169 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return allVisible;
-
         }
 
-        public void PositionsFromWhichItemIsInteractable(ServerAction action) {
-
-            //default to increments of 30 for horizon
-            if(action.horizon == 0)
-            {
-                action.horizon = 30;
+        // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
+        // may encounter with basic agent navigation commands (excluding teleport).
+        private List<Dictionary<string, object>> getInteractablePoses(
+            string objectId,
+            bool markActionFinished,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            if (360 % rotateStepDegrees != 0 && rotations != null) {
+                throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
             }
 
-            //check if horizon is a multiple of 5
-            if(action.horizon % 5 != 0)
-            {
-                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be a multiple of 5";
-                actionFinished(false);
-                return;
+            if (maxPoses <= 0) {
+                throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
             }
 
-            if(action.horizon < 0 || action.horizon > 30)
-            {
-                errorMessage = "Horizon value for PositionsFromWhichItemIsInteractable must be in range [0, 30] inclusive";
-                actionFinished(false);
-                return;
-            }
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
+            // default "visibility" distance
+            float maxDistanceFloat;
+            if (maxDistance == null) {
+                maxDistanceFloat = maxVisibleDistance;
+            } else if ((float) maxDistance <= 0) {
+                throw new ArgumentOutOfRangeException("maxDistance must be >= 0 meters from the object.");
             } else {
+                maxDistanceFloat = (float) maxDistance;
+            }
+
+            SimObjPhysics theObject = getTargetObject(objectId: objectId, forceAction: true);
+
+            // Populate default standings. Note that these are boolean because that's
+            // the most natural integration with Teleport
+            if (standings == null) {
+                standings = new bool[] {false, true};
+            }
+
+            // populate default horizons
+            if (horizons == null) {
+                horizons = new float[] {-30, 0, 30, 60};
+            } else {
+                foreach (float horizon in horizons) {
+                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                        throw new ArgumentException($"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]");
+                    }
+                }
+            }
+
+            // populate the positions by those that are reachable
+            if (positions == null) {
                 positions = getReachablePositions();
             }
 
+            // populate the rotations based on rotateStepDegrees
+            if (rotations == null) {
+                // Consider the case where one does not want to move on a perfect grid, and is currently moving
+                // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
+                // This may happen if the agent starts by teleports with the rotation of 10 degrees.
+                int offset = (int) Math.Round(transform.eulerAngles.y % rotateStepDegrees);
+
+                // Examples:
+                // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
+                // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
+                rotations = new float[(int) Math.Round(360 / rotateStepDegrees)];
+                int i = 0;
+                for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
+                    rotations[i++] = rotation;
+                }
+            }
+
+            if (horizons.Length == 0 || rotations.Length == 0 || positions.Length == 0 || standings.Length == 0) {
+                throw new InvalidOperationException("Every degree of freedom must have at least 1 valid value.");
+            }
+
+            // save current agent pose
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
-
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(false);
             }
-
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
             Bounds objectBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
                 objectBounds.Encapsulate(vp.position);
             }
             float fudgeFactor = objectBounds.extents.magnitude;
-
             List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
+                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxDistanceFloat + fudgeFactor + gridSize)
             ).ToList();
 
-            Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
+            // set each key to store a list
+            List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
             string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
-            foreach (string key in keys) {
-                goodLocationsDict[key] = new List<float>();
-            }
 
-            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
-                for (int j = 0; j < 2; j++) { // Standing / Crouching
-                    if (j == 0) {
+            // iterate over each reasonable agent pose
+            bool stopEarly = false;
+            foreach (float horizon in horizons) {
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
+
+                foreach (bool standing in standings) {
+                    if (standing) {
                         stand();
                     } else {
                         crouch();
                     }
-                    for (int i = 0; i < 4; i++) { // 4 rotations
-                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
-                        foreach (Vector3 p in filteredPositions) {
-                            transform.position = p;
 
-                            if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
-                                goodLocationsDict["x"].Add(p.x);
-                                goodLocationsDict["y"].Add(p.y);
-                                goodLocationsDict["z"].Add(p.z);
-                                goodLocationsDict["rotation"].Add(90.0f * i);
-                                goodLocationsDict["standing"].Add((1 - j) * 1.0f);
-                                goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                    foreach (float rotation in rotations) {
+                        Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                        transform.rotation = Quaternion.Euler(rotationVector);
 
-#if UNITY_EDITOR
-                                // In the editor, draw lines indicating from where the object was visible.
-                                Debug.DrawLine(p, p + transform.forward * (gridSize * 0.5f), Color.red, 20f);
-#endif
+                        foreach (Vector3 position in filteredPositions) {
+                            transform.position = position;
+
+                            // Each of these values is directly compatible with TeleportFull
+                            // and should be used with .step(action='TeleportFull', **interactable_positions[0])
+                            if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
+                                validAgentPoses.Add(new Dictionary<string, object> {
+                                    ["x"] = position.x,
+                                    ["y"] = position.y,
+                                    ["z"] = position.z,
+                                    ["rotation"] = rotation,
+                                    ["standing"] = standing,
+                                    ["horizon"] = horizon
+                                });
+
+                                if (validAgentPoses.Count >= maxPoses) {
+                                    stopEarly = true;
+                                    break;
+                                }
+
+                                #if UNITY_EDITOR
+                                    // In the editor, draw lines indicating from where the object was visible.
+                                    Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+                                #endif
                             }
                         }
+                        if (stopEarly) {
+                            break;
+                        }
                     }
+                    if (stopEarly) {
+                        break;
+                    }
+                }
+                if (stopEarly) {
+                    break;
                 }
             }
 
+            // restore old agent pose
             if (wasStanding) {
                 stand();
             } else {
@@ -6922,80 +6960,95 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.gameObject.SetActive(true);
             }
 
-#if UNITY_EDITOR
-            Debug.Log(goodLocationsDict["x"].Count);
-            Debug.Log(goodLocationsDict["x"]);
-#endif
+            #if UNITY_EDITOR
+                Debug.Log(validAgentPoses.Count);
+                Debug.Log(validAgentPoses);
+            #endif
 
-            actionFinished(true, goodLocationsDict);
-        } 
-        
-        public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
-            bool wasStanding = isStanding();
-            Vector3 oldPosition = transform.position;
-            Quaternion oldRotation = transform.rotation;
-
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(false);
+            if (markActionFinished) {
+                actionFinishedEmit(success: true, actionReturn: validAgentPoses);
             }
 
-            int numTimesVisible = 0;
-            for (int j = 0; j < 2; j++) { // Standing / Crouching
-                if (j == 0) {
-                    stand();
-                } else {
-                    crouch();
-                }
-                for (int i = 0; i < 4; i++) { // 4 rotations
-                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
-                    foreach (Vector3 p in positions) {
-                        transform.position = p;
+            return validAgentPoses;
+        }
 
-                        if (objectIsCurrentlyVisible(theObject, 1000f)) {
-                            numTimesVisible += 1;
-                        }
+        // Get the poses with which the agent can interact with 'objectId'
+        // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
+        public void GetInteractablePoses(
+            string objectId,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            getInteractablePoses(
+                objectId: objectId,
+                markActionFinished: true,
+                positions: positions, rotations: rotations, horizons: horizons, standings: standings,
+                maxDistance: maxDistance,
+                maxPoses: maxPoses
+            );
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePoses instead.", error: false)]
+        public void PositionsFromWhichItemIsInteractable(string objectId, float horizon = 30, Vector3[] positions = null) {
+            // set horizons using the horizon as an increment
+            List<float> horizons = new List<float>();
+            for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
+                horizons.Add(h);
+            }
+            List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
+                objectId: objectId,
+                markActionFinished: false,
+                positions: positions,
+                horizons: horizons.ToArray()
+            );
+
+            // for backwards compatibility, PositionsFromWhichItemIsInteractable returns
+            // Dictionary<string, float> instead of List<Dictionary<string, object>>,
+            // where the latter is cleaner in python.
+            Dictionary<string, List<float>> d = new Dictionary<string, List<float>>();
+            string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
+            foreach (string key in keys) {
+                d[key] = new List<float>();
+            }
+            foreach(Dictionary<string, object> pose in interactablePoses) {
+                foreach (string key in keys) {
+                    if (key == "standing") {
+                        // standing is converted from true => 1 to false => 0, for backwards compatibility
+                        d[key].Add((bool) pose[key] ? 1 : 0);
+                    } else {
+                        // all other keys have float outputs
+                        d[key].Add((float) pose[key]);
                     }
                 }
             }
-
-            if (wasStanding) {
-                stand();
-            } else {
-                crouch();
-            }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
-
-#if UNITY_EDITOR
-            Debug.Log(4 * 2 * positions.Length);
-            Debug.Log(numTimesVisible);
-#endif
-
-            return numTimesVisible;
+            actionFinishedEmit(true, d);
         }
-        public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
-                positions = getReachablePositions();
+
+        // private helper for NumberOfPositionsFromWhichItemIsVisible
+        private int numVisiblePositions(string objectId, bool markActionFinished, Vector3[] positions = null, int maxPoses = int.MaxValue) {
+            List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
+                objectId: objectId,
+                positions: positions,
+                maxDistance: 1e5f,  // super large number for maximum distance!
+                horizons: new float[] { m_Camera.transform.localEulerAngles.x },  // don't care about every horizon here, just horizon={current horizon}
+                markActionFinished: false,
+                maxPoses: maxPoses
+            );
+
+            // object id might have been invalid, causing failure
+            if (markActionFinished) {
+                actionFinishedEmit(success: true, actionReturn: interactablePoses.Count);
             }
+            return interactablePoses.Count;
+        }
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-
-            int numTimesVisible = NumberOfPositionsFromWhichItemIsVisibleHelper(theObject, positions);
-
-            actionIntReturn = numTimesVisible;
-            actionFinished(true, numTimesVisible);
+        // Similar to GetInteractablePositions, but with horizon=0 and maxDistance like infinity
+        public void NumberOfPositionsFromWhichItemIsVisible(string objectId, Vector3[] positions = null) {
+            numVisiblePositions(objectId: objectId, positions: positions, markActionFinished: true);
         }
 
         public void TogglePhysics() {
@@ -8426,35 +8479,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             StartCoroutine(CoverSurfacesWithHelper(100, newObjects, reachablePositions));
         }
+    
 
-        public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            }
-            else {
-#if UNITY_EDITOR
-                List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
-                foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
-                    if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
-                        toReEnable.Add(sop);
-                        sop.gameObject.SetActive(false);
+        public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(
+            string objectType,
+            Vector3[] positions
+        ) {
+            #if UNITY_EDITOR
+                if (positions == null || positions.Length == 0) {
+                    List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
+                    foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                        if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
+                            toReEnable.Add(sop);
+                            sop.gameObject.SetActive(false);
+                        }
+                    }
+                    foreach (SimObjPhysics sop in toReEnable) {
+                        sop.gameObject.SetActive(true);
                     }
                 }
-#endif
-                positions = getReachablePositions();
-#if UNITY_EDITOR
-                foreach (SimObjPhysics sop in toReEnable) {
-                    sop.gameObject.SetActive(true);
-                }
-#endif
-            }
+            #endif
 
-            string objectType = action.objectType;
 
             List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
             foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
+                if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                     objectsOfType.Add(sop);
                     sop.gameObject.SetActive(false);
                 }
@@ -8465,12 +8514,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.gameObject.SetActive(true);
                 objectIdToPositionsVisibleFrom.Add(
                     sop.ObjectID,
-                    NumberOfPositionsFromWhichItemIsVisibleHelper(sop, positions)
+                    numVisiblePositions(objectId: sop.ObjectID, markActionFinished: false, positions: positions)
                 );
-#if UNITY_EDITOR
-                Debug.Log(sop.ObjectID);
-                Debug.Log(objectIdToPositionsVisibleFrom[sop.ObjectID]);
-#endif
+
+                #if UNITY_EDITOR
+                    Debug.Log(sop.ObjectID);
+                    Debug.Log(objectIdToPositionsVisibleFrom[sop.ObjectID]);
+                #endif
                 sop.gameObject.SetActive(false);
             }
 
