@@ -2639,12 +2639,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 #endif
             }
-            actionFinished(true, objectIdToConvexHull);
-
+            actionFinishedEmit(true, objectIdToConvexHull);
         }
         
         public void GetPixelToWorldPoint(float row, float col, float depth) {
-            actionFinished(
+            actionFinishedEmit(
                 true, 
                 m_Camera.ScreenToWorldPoint(
                     new Vector3(col, m_Camera.pixelHeight - row, m_Camera.nearClipPlane)
@@ -2655,7 +2654,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void CameraRayCast(float x, float y) {            
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
-            Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
+            Physics.Raycast(
+                ray,
+                out hit,
+                Mathf.Infinity,
+                1 << 0 | 1 << 8 | 1 << 10 | 1 << 11,
+                QueryTriggerInteraction.Ignore
+            );
             #if UNITY_EDITOR
             Debug.DrawLine(
                 hit.point,
@@ -2664,7 +2669,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 100.0f
             );
             #endif
-            actionFinished(true, hit.point);
+            actionFinishedEmit(true, hit.point);
         }
 
         public void UpdateDisplayGameObject(GameObject go, bool display) {
