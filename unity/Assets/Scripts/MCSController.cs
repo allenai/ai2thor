@@ -672,16 +672,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
-        // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
-        // receptacle objects) for its position because its transform's position may not be its actual position
-        // in the camera since the renderer may be defined in a child object with an offset position.
-        Renderer renderer = gameObject.GetComponentInChildren<Renderer>();
-        if (renderer != null) {
-            objectMetadata.position = renderer.bounds.center;
-            // Use the object's new position for the distance previously set in generateObjectMetadata.
-            objectMetadata.distance = Vector3.Distance(this.transform.position, objectMetadata.position);
-        }
-
         // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
         objectMetadata.heading = objectMetadata.position - this.transform.position;
         objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);

@@ -2269,6 +2269,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            // Must call this now because it will set target.isInteractable
+            bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
@@ -2276,7 +2279,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+            if (isNotVisible) {
                 Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
                 targetMoveYHeightToAgentHeight.y = transform.position.y;
                 if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
@@ -2289,7 +2292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+            if (isNotVisible) {
                 errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
                 Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
@@ -2686,9 +2689,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if ((res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>() == null) ||
-                            (res.transform.GetComponent<StructureObject>() != null))
-                        {
+                        SimObjPhysics simObjPhysics = res.transform.GetComponent<SimObjPhysics>();
+                        StructureObject structureObject = res.transform.GetComponent<StructureObject>();
+                        bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
+                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
+                        if (structureObject != null || immobile || res.rigidbody.mass > this.GetComponent<Rigidbody>().mass) {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
@@ -4192,6 +4197,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            // Must call this now because it will set target.isInteractable
+            bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = action.objectId + " is not interactable and perhaps it is occluded by something.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
@@ -4199,7 +4207,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
+            if (isNotVisible) {
                 Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
                 targetMoveYHeightToAgentHeight.y = transform.position.y;
                 if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
@@ -4212,7 +4220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 
             }
 
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+            if (!action.forceAction && isNotVisible) {
                 errorMessage = action.objectId + " is not visible.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 actionFinished(false);
