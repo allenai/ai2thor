@@ -220,6 +220,28 @@ def test_add_third_party_camera(controller):
     assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'initial rotation should have been set')
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
+    # expects position to be a Vector3, should fail!
+    event = controller.step(
+        action="AddThirdPartyCamera",
+        position=5,
+        rotation=dict(x=0, y=0, z=0)
+    )
+    assert not event.metadata['lastActionSuccess'], 'position should not allow float input!'
+
+    # orthographicSize expects float, not Vector3!
+    error_message = None
+    try:
+        event = controller.step(
+            action="AddThirdPartyCamera",
+            position=dict(x=0, y=0, z=0),
+            rotation=dict(x=0, y=0, z=0),
+            orthographic=True,
+            orthographicSize=dict(x=0, y=0, z=0)
+        )
+    except ValueError as e:
+        error_message = str(e)
+    assert error_message == "action: AddThirdPartyCamera has an invalid argument: orthographicSize. Cannot convert to: float"
+
 
 def test_update_third_party_camera():
     controller = build_controller(server_class=FifoServer)
@@ -414,7 +436,6 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
-        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts
@@ -425,7 +446,6 @@ def test_action_dispatch_find_conflicts_physics(controller):
     known_conflicts = {
         'GetComponent': ['type'],
         'StopCoroutine': ['routine'],
-        'ProcessControlCommand': ['controlCommand'],
         'TestActionDispatchConflict': ['param22']
     }
     assert event.metadata['actionReturn'] == known_conflicts

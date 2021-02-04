@@ -78,7 +78,7 @@ def unique_rows(arr, return_index=False, return_inverse=False):
 
 class Event(object):
     """
-    Object that is returned from a call to  controller.step().
+    Object that is returned from a call to controller.step().
     This class wraps the screenshot that Unity captures as well
     as the metadata sent about each object
     """

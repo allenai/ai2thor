@@ -129,11 +129,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected CollisionFlags m_CollisionFlags;
 		protected Vector3 lastPosition;
 
-        // These are public for actions outside of the agent context (e.g., AddThirdPartyCamera)
-        public string lastAction;
-        public bool lastActionSuccess;
-        public string errorMessage;
-        public ServerActionErrorCode errorCode;
+        protected string lastAction;
+        protected bool lastActionSuccess;
+        protected string errorMessage;
+        protected ServerActionErrorCode errorCode;
 
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
@@ -1450,33 +1449,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // This should only be used by DebugInputField and HideNSeekController
         // Once all those invocations have been converted to Dictionary<string, object>
         // this can be removed
-        public void ProcessControlCommand(ServerAction controlCommand)
+        public void ProcessControlCommand(ServerAction serverAction)
         {
 
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
 
-            lastAction = controlCommand.action;
+            lastAction = serverAction.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(serverAction.action);
 			
             this.agentState = AgentState.Processing;
 			try
 			{
 				if (method == null) {
-					errorMessage = "Invalid action: " + controlCommand.action;
+					errorMessage = "Invalid action: " + serverAction.action;
 					errorCode = ServerActionErrorCode.InvalidAction;
 					Debug.LogError(errorMessage);
 					actionFinished(false);
 				} else {
-					method.Invoke(this, new object[] { controlCommand });
+					method.Invoke(this, new object[] { serverAction });
 				}
 			}
 			catch (Exception e)
 			{
-				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+				Debug.LogError("Caught error with invoke for action: " + serverAction.action);
                 Debug.LogError("Action error message: " + errorMessage);
 				Debug.LogError(e);
 
@@ -1493,8 +1492,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ProcessControlCommand(new DynamicServerAction(actionDict));
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand)
-        {
+        public void ProcessControlCommand(DynamicServerAction controlCommand) {
+            ProcessControlCommand(controlCommand: controlCommand, target: this);
+        }
+
+        public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1506,7 +1508,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             try
             {
-                ActionDispatcher.Dispatch(this, controlCommand);
+                ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
+            }
+            catch (ToObjectArgumentActionException e)
+            {
+                Dictionary<string, string> typeMap = new Dictionary<string, string>{
+                    {"Single", "float"},
+                    {"Double", "float"},
+                    {"Int16", "int"},
+                    {"Int32", "int"},
+                    {"Int64", "int"}
+                };
+                Type underlingType = Nullable.GetUnderlyingType(e.parameterType);
+                string typeName = underlingType == null ? e.parameterType.Name : underlingType.Name;
+                if (typeMap.ContainsKey(typeName)) {
+                    typeName = typeMap[typeName];
+                }
+                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot convert to: " + typeName;
+                errorCode = ServerActionErrorCode.InvalidArgument;
+                actionFinished(false);
             }
             catch (MissingArgumentsActionException e)
             {
@@ -1540,7 +1560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
                 errorMessage += e.ToString();
-                actionFinished(false);
+                actionFinished(success: false, errorMessage: errorMessage);
             }
 
             #if UNITY_EDITOR
