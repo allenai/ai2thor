@@ -8,7 +8,7 @@ import copy
 import time
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, dict_recursive_nan_check
 
-MAX_TESTS = 300
+MAX_TESTS = 3000
 MAX_EP_LEN = 1000
 MAX_CONSECUTIVE_FAILURE = 10
 RESOLUTION=224
@@ -17,13 +17,16 @@ scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i 
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
-controller = ai2thor.controller.Controller(
-    scene=scene_names[0], gridSize=0.25,
-    width=RESOLUTION, height=RESOLUTION, agentMode='arm', fieldOfView=100,
-    agentControllerType='mid-level',
-    server_class=ai2thor.fifo_server.FifoServer,
-    useMassThreshold = True, massThreshold = 10,
-)
+# visualization_args=dict(
+#     scene=scene_names[0], gridSize=0.25,
+#     width=RESOLUTION, height=RESOLUTION, agentMode='arm', fieldOfView=100,
+#     agentControllerType='mid-level',
+#     server_class=ai2thor.fifo_server.FifoServer,
+#     useMassThreshold = True, massThreshold = 10,
+# )
+visualization_args = {'width': 224, 'height': 224, 'visibilityDistance': 1.0, 'fieldOfView':100, 'gridSize': 0.25, 'snapToGrid': False, 'agentMode': 'arm', 'agentControllerType': 'mid-level', 'useMassThreshold': True, 'massThreshold': 10, 'include_private_scenes': False, 'server_class': ai2thor.fifo_server.FifoServer}#, 'x_display': '0.-1'}
+
+controller = ai2thor.controller.Controller(**visualization_args)
 
 def reset_the_scene_and_get_reachables(scene_name=None):
     if scene_name is None:
