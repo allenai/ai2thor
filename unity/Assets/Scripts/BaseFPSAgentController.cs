@@ -721,6 +721,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        // TODO: allow only certain materials to be passed in.
+        public void RandomizeMaterials() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.RandomizeMaterials();
+            actionFinished(true);
+        }
+
+        public void ResetMaterials() {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent.ResetMaterials();
+            actionFinished(true);
+        }
+
         public void ResetColors() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetColors();

@@ -51,13 +51,59 @@ public class ColorChanger : MonoBehaviour {
     Material[] allMaterials;
     Color[] origColors;
 
-    public void Start() {
-        targetMaterials = alarmClockMaterials.Concat(appleMaterials).Concat(basketballMaterials).Concat(bowlMaterials).Concat(garbageBinMaterials).Concat(houseplantMaterials).Concat(pillowMaterials).Concat(sprayBottleMaterials).ToArray();
-        backgroundMaterials = bedMaterials.Concat(boxMaterials).Concat(cellphoneMaterials).Concat(cupMaterials).Concat(floorLampMaterials).Concat(penPencilMaterials).Concat(plateMaterials).Concat(potMaterials).Concat(statueMaterials).Concat(watchMaterials).ToArray();
-        furnitureMaterials = armchairMaterials.Concat(bedMaterials).Concat(chairMaterials).Concat(coffeeTableMaterials).Concat(deskMaterials).Concat(diningTableMaterials).Concat(dresserMaterials).Concat(officeChairMaterials).Concat(shelvingUnitMaterials).Concat(sideTableMaterials).Concat(sofaMaterials).ToArray();
-        quickMaterials = ceramicMaterials.Concat(fabricMaterials).Concat(glassMaterials).Concat(lightMaterials).Concat(metalMaterials).Concat(miscMaterials).Concat(plasticMaterials).Concat(woodMaterials).ToArray();
+    // Material[] backgroundMaterials;
 
-        allMaterials = targetMaterials.Concat(backgroundMaterials).Concat(furnitureMaterials).Concat(quickMaterials).ToArray();
+    public void Start() {
+        targetMaterials = alarmClockMaterials
+            .Concat(appleMaterials)
+            .Concat(basketballMaterials)
+            .Concat(bowlMaterials)
+            .Concat(garbageBinMaterials)
+            .Concat(houseplantMaterials)
+            .Concat(pillowMaterials)
+            .Concat(sprayBottleMaterials)
+            .ToArray();
+
+        backgroundMaterials = bedMaterials
+            .Concat(boxMaterials)
+            .Concat(cellphoneMaterials)
+            .Concat(cupMaterials)
+            .Concat(floorLampMaterials)
+            .Concat(penPencilMaterials)
+            .Concat(plateMaterials)
+            .Concat(potMaterials)
+            .Concat(statueMaterials)
+            .Concat(watchMaterials)
+            .ToArray();
+
+        furnitureMaterials = armchairMaterials
+            .Concat(bedMaterials)
+            .Concat(chairMaterials)
+            .Concat(coffeeTableMaterials)
+            .Concat(deskMaterials)
+            .Concat(diningTableMaterials)
+            .Concat(dresserMaterials)
+            .Concat(officeChairMaterials)
+            .Concat(shelvingUnitMaterials)
+            .Concat(sideTableMaterials)
+            .Concat(sofaMaterials)
+            .ToArray();
+
+        quickMaterials = ceramicMaterials
+            .Concat(fabricMaterials)
+            .Concat(glassMaterials)
+            .Concat(lightMaterials)
+            .Concat(metalMaterials)
+            .Concat(miscMaterials)
+            .Concat(plasticMaterials)
+            .Concat(woodMaterials)
+            .ToArray();
+
+        allMaterials = targetMaterials
+            .Concat(backgroundMaterials)
+            .Concat(furnitureMaterials)
+            .Concat(quickMaterials)
+            .ToArray();
 
         origColors = new Color[allMaterials.Length];
         for (int i = 0; i < allMaterials.Length; i++) {
@@ -65,6 +111,25 @@ public class ColorChanger : MonoBehaviour {
                 origColors[i] = allMaterials[i].color;
             }
         }
+    }
+
+    public void RandomizeMaterials() {
+        for (int i = 0; i < allMaterials.Length - 1; i++) {
+            if (allMaterials[i].HasProperty("_MainTex") &&
+                allMaterials[i + 1].HasProperty("_MainTex")
+            ) {
+                allMaterials[i].mainTexture = allMaterials[i + 1].mainTexture;
+            }
+            if (allMaterials[i].HasProperty("_Color") &&
+                allMaterials[i + 1].HasProperty("_Color")
+            ) {
+                allMaterials[i].color = allMaterials[i + 1].color;
+            }
+        }
+    }
+
+    public void ResetMaterials() {
+
     }
 
     public void RandomizeColor() {

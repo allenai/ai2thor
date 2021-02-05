@@ -556,19 +556,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                 case "color":
-                    {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RandomizeColors";
-                        PhysicsController.ProcessControlCommand(action);
+                        PhysicsController.ProcessControlCommand(new Dictionary<string, object>() {
+                            ["action"] = "RandomizeColors"
+                        });
                         break;
-                    }
                 case "resetcolor":
-                    {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ResetColors";
-                        PhysicsController.ProcessControlCommand(action);
+                        PhysicsController.ProcessControlCommand(new Dictionary<string, object>() {
+                            ["action"] = "ResetColors"
+                        });
                         break;
-                    }
+                case "material":
+                        PhysicsController.ProcessControlCommand(new Dictionary<string, object>() {
+                            ["action"] = "RandomizeMaterials"
+                        });
+                        break;
+                case "resetMaterial":
+                        PhysicsController.ProcessControlCommand(new Dictionary<string, object>() {
+                            ["action"] = "ResetMaterials"
+                        });
+                        break;
 
                 case "spawnabove":
                     {
