@@ -41,6 +41,9 @@ public class FK_IK_Solver : MonoBehaviour
             IKPole.parent.position = IKTarget.position;
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
 
+            //OLD
+            //if ((IKTarget.position - armShoulder.position).magnitude <= bone2Length + bone3Length)
+            //NEW
             //Check if manipulator location is reachable by arm, with 1e-5 bias towards hyperextension when comparing values, to account for rounding errors
             if ((IKTarget.position - armShoulder.position).magnitude + 1e-5 < bone2Length + bone3Length)
             {
