@@ -281,7 +281,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	public void ResetSceneBounds() {
-		// Recordining initially disabled renderers and scene bounds
+		// Recording initially disabled renderers and scene bounds
 		sceneBounds = new Bounds(
 			new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
 			new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
