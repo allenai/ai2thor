@@ -575,8 +575,6 @@ def test_get_scenes_in_build(controller):
     for g in glob.glob('unity/Assets/Scenes/*.unity'):
         scenes.add(os.path.splitext(os.path.basename(g))[0])
 
-
-
     event = controller.step(dict(action='GetScenesInBuild'), raise_for_failure=True)
     return_scenes = set(event.metadata['actionReturn'])
     # not testing for private scenes
@@ -658,3 +656,67 @@ def test_get_interactable_poses(controller):
     # test maxDistance
     event = controller.step('GetInteractablePoses', objectId=fridgeId, maxDistance=5)
     assert 1300 > len(event.metadata['actionReturn']) > 1200, 'GetInteractablePoses with large maxDistance is off!'
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_2d_semantic_hulls(controller):
+    controller.reset('FloorPlan28')
+
+    object_types = ["Tomato", "Drawer", "Fridge"]
+    object_ids = [
+        "Mug|-03.15|+00.82|-03.47",
+        "Faucet|-00.39|+00.93|-03.61",
+        "StoveBurner|-00.22|+00.92|-01.85"
+    ]
+
+    def get_rounded_hulls(**kwargs):
+        md = controller.step("Get2DSemanticHulls", **kwargs).metadata
+        assert md["lastActionSuccess"] and md["errorMessage"] == ""
+        hulls = md["actionReturn"]
+        if isinstance(hulls, list):
+            return np.array(hulls, dtype=float).round(2).tolist()
+        else:
+            return {
+                k: np.array(v, dtype=float).round(2).tolist()
+                for k, v in md["actionReturn"].items()
+            }
+
+    # All objects
+    hulls_all = get_rounded_hulls()
+
+    # Filtering by object types
+    hulls_type_filtered = get_rounded_hulls(objectTypes=object_types)
+
+    # Filtering by object ids
+    hulls_id_filtered = get_rounded_hulls(objectIds=object_ids)
+
+    # Single object id
+    hulls_single_object = get_rounded_hulls(objectId=object_ids[0])
+
+    # Used to save the ground truth values:
+    # with open("ai2thor/tests/data/semantic-2d-hulls.json", "w") as f:
+    #     json.dump(
+    #         {
+    #             "all": hulls_all,
+    #             "type_filtered": hulls_type_filtered,
+    #             "id_filtered": hulls_id_filtered,
+    #             "single_object": hulls_single_object,
+    #         },
+    #         f
+    #     )
+
+    with open("ai2thor/tests/data/semantic-2d-hulls.json") as f:
+        truth = json.load(f)
+
+    assert truth["all"] == hulls_all
+    assert truth["type_filtered"] == hulls_type_filtered
+    assert truth["id_filtered"] == hulls_id_filtered
+    assert truth["single_object"] == hulls_single_object
+
+    # Should fail when given types and ids
+    assert not controller.step(
+        "Get2DSemanticHulls",
+        objectTypes=object_types,
+        objectIds=object_ids
+    ).metadata["lastActionSuccess"]
+
