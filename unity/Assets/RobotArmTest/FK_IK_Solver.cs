@@ -101,7 +101,7 @@ public class FK_IK_Solver : MonoBehaviour
         }
 
         //Align individual arm components to their correct joint-angles 
-        AlignToJointNormal(armRoot.GetChild(1), armRoot, armShoulder, armElbow, false);
+        AlignToJointNormal(armRoot.GetChild(0), armRoot, armShoulder, armElbow, false);
         AlignToJointNormal(armShoulder.GetChild(0), armRoot, armShoulder, armElbow, true);
         AlignToJointNormal(armShoulder.GetChild(1), armShoulder, armElbow, armWrist, false);
         AlignToJointNormal(armElbow.GetChild(0), armShoulder, armElbow, armWrist, true);
