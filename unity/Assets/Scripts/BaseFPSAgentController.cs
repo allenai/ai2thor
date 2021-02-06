@@ -2603,7 +2603,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
         function for more information.
         */
-        protected List<(float, float)> Get2DSemanticHull(GameObject go) {
+        protected List<List<float>> Get2DSemanticHull(GameObject go) {
             List<MIConvexHull.DefaultVertex2D> vertices = new List<MIConvexHull.DefaultVertex2D>();
             float maxY = -float.PositiveInfinity;
 
@@ -2633,7 +2633,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             #endif
 
-            return miconvexHull.Result.Select(p => ((float) p.X, (float) p.Y)).ToList();
+            return miconvexHull.Result.Select(p => new List<float>() {(float) p.X, (float) p.Y}).ToList();
         }
 
         /*
@@ -2675,7 +2675,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            Dictionary<string, List<(float, float)>> objectIdToConvexHull = new Dictionary<string, List<(float, float)>>();
+            Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
             foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
 
                 // Skip objects that don't have one of the required types (if given)
