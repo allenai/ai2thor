@@ -2695,7 +2695,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(true, objectIdToConvexHull);
         }
 
-        public void Get2DSemanticHulls(string objectId) {
+        public void Get2DSemanticHull(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"No object with ID {objectId}";
                 actionFinishedEmit(false);

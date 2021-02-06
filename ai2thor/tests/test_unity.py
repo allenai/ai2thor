@@ -661,6 +661,29 @@ def test_get_interactable_poses(controller):
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_2d_semantic_hulls(controller):
     controller.reset('FloorPlan28')
+    obj_name_to_obj_id = {o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]}
+    # Used to save fixed object locations.
+    # with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "w") as f:
+    #     json.dump(
+    #         [
+    #             {k: o[k] for k in ["name", "position", "rotation"]}
+    #             for o in controller.last_event.metadata["objects"]
+    #         ],
+    #         f
+    #     )
+    with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "r") as f:
+        fixed_obj_poses = json.load(f)
+        for o in fixed_obj_poses:
+            teleport_success = controller.step(
+                "TeleportObject",
+                objectId=obj_name_to_obj_id[o["name"]],
+                position=o["position"],
+                rotation=o["rotation"],
+                forceAction=True,
+                forceKinematic=True,
+                makeUnbreakable=True
+            ).metadata["lastActionSuccess"]
+            assert teleport_success
 
     object_types = ["Tomato", "Drawer", "Fridge"]
     object_ids = [
@@ -670,7 +693,10 @@ def test_2d_semantic_hulls(controller):
     ]
 
     def get_rounded_hulls(**kwargs):
-        md = controller.step("Get2DSemanticHulls", **kwargs).metadata
+        if "objectId" in kwargs:
+            md = controller.step("Get2DSemanticHull", **kwargs).metadata
+        else:
+            md = controller.step("Get2DSemanticHulls", **kwargs).metadata
         assert md["lastActionSuccess"] and md["errorMessage"] == ""
         hulls = md["actionReturn"]
         if isinstance(hulls, list):
@@ -694,6 +720,11 @@ def test_2d_semantic_hulls(controller):
     hulls_single_object = get_rounded_hulls(objectId=object_ids[0])
 
     # Used to save the ground truth values:
+    # objects = controller.last_event.metadata["objects"]
+    # objects_poses = [
+    #     {"objectName": o["name"], "position": o["position"], "rotation": o["rotation"]} for o in objects
+    # ]
+    # print(controller.step("SetObjectPoses", objectPoses=objects_poses).metadata)
     # with open("ai2thor/tests/data/semantic-2d-hulls.json", "w") as f:
     #     json.dump(
     #         {
@@ -708,10 +739,16 @@ def test_2d_semantic_hulls(controller):
     with open("ai2thor/tests/data/semantic-2d-hulls.json") as f:
         truth = json.load(f)
 
-    assert truth["all"] == hulls_all
-    assert truth["type_filtered"] == hulls_type_filtered
-    assert truth["id_filtered"] == hulls_id_filtered
-    assert truth["single_object"] == hulls_single_object
+    def almost_equal(a, b):
+        if isinstance(a, list):
+            return np.abs(np.array(a) - np.array(b)).sum() < 1e-2
+        else:
+            return all(almost_equal(a[k], b[k]) for k in set(a.keys()) | set(b.keys()))
+
+    assert almost_equal(truth["all"], hulls_all)
+    assert almost_equal(truth["type_filtered"], hulls_type_filtered)
+    assert almost_equal(truth["id_filtered"], hulls_id_filtered)
+    assert almost_equal(truth["single_object"], hulls_single_object)
 
     # Should fail when given types and ids
     assert not controller.step(
@@ -719,4 +756,3 @@ def test_2d_semantic_hulls(controller):
         objectTypes=object_types,
         objectIds=object_ids
     ).metadata["lastActionSuccess"]
-
