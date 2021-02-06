@@ -2675,7 +2675,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            var objectIdToConvexHull = new Dictionary<string, List<(float x, float y)>>();
+            Dictionary<string, List<(float, float)>> objectIdToConvexHull = new Dictionary<string, List<(float, float)>>();
             foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
 
                 // Skip objects that don't have one of the required types (if given)

@@ -959,6 +959,13 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
+                Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(this.primaryAgent.actionReturn, Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings()
+                            {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+                ));
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
