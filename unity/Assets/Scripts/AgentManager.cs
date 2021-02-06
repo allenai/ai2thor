@@ -963,7 +963,7 @@ public class AgentManager : MonoBehaviour
                         new Newtonsoft.Json.JsonSerializerSettings()
                             {
                                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
+                                ContractResolver = new ShouldSerializeContractResolver()
                             }
                 ));
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
