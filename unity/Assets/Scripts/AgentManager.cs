@@ -959,15 +959,34 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
-                Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(this.primaryAgent.actionReturn, Newtonsoft.Json.Formatting.None,
+                Debug.Log("Serializing object...");
+                byte[] msgPackMetadata = null;
+                
+                try {
+                    msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
+                        multiMeta, 
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                    );
+                } catch (ArgumentNullException e) {
+                    string actionReturnStr = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        multiMeta.agents[0].actionReturn,
+                        Newtonsoft.Json.Formatting.None,
                         new Newtonsoft.Json.JsonSerializerSettings()
                             {
                                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                                 ContractResolver = new ShouldSerializeContractResolver()
                             }
-                ));
-                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                    );
+                    Debug.LogError($"Hit ArgumentNullException with actionReturn `{actionReturnStr}`.\n Will try deserializing and serializing again...");
+                    
+                    multiMeta.agents[0].actionReturn = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(actionReturnStr);
+                    
+                    msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
+                        multiMeta, 
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                    );
+                }
+                
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 foreach(var item in renderPayload) {
