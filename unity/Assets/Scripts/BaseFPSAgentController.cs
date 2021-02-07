@@ -2654,45 +2654,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
             List<string> objectIds = null,
             List<string> objectTypes = null
         ) {
-            if (objectIds != null && objectTypes != null) {
-                throw new ArgumentException(
-                    "Only one of objectIds and objectTypes can have a non-null value."
-                );
-            }
-
-            HashSet<string> allowedObjectTypesSet = null;
-            if (objectTypes != null) {
-                allowedObjectTypesSet = new HashSet<string>(objectTypes);
-            }
-
-            // Only consider sim objects which correspond to objectIds if given.
-            SimObjPhysics[] sopsFilteredByObjectIds = null;
-            if (objectIds != null) {
-                sopsFilteredByObjectIds = objectIds.Select(
-                    key => physicsSceneManager.ObjectIdToSimObjPhysics[key]
-                ).ToArray();
-            } else {
-                sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
-            }
-
-            Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
-            foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
-
-                // Skip objects that don't have one of the required types (if given)
-                if (
-                    allowedObjectTypesSet != null 
-                    && !allowedObjectTypesSet.Contains(sop.Type.ToString())
-                ) {
-                    continue;
+            try {
+                if (objectIds != null && objectTypes != null) {
+                    throw new ArgumentException(
+                        "Only one of objectIds and objectTypes can have a non-null value."
+                    );
                 }
 
-                #if UNITY_EDITOR
-                Debug.Log(sop.ObjectID);
-                #endif
+                HashSet<string> allowedObjectTypesSet = null;
+                if (objectTypes != null) {
+                    allowedObjectTypesSet = new HashSet<string>(objectTypes);
+                }
 
-                objectIdToConvexHull[sop.ObjectID] = Get2DSemanticHull(sop.gameObject);
+                // Only consider sim objects which correspond to objectIds if given.
+                SimObjPhysics[] sopsFilteredByObjectIds = null;
+                if (objectIds != null) {
+                    sopsFilteredByObjectIds = objectIds.Select(
+                        key => physicsSceneManager.ObjectIdToSimObjPhysics[key]
+                    ).ToArray();
+                } else {
+                    sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
+                }
+
+                Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
+                foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
+
+                    // Skip objects that don't have one of the required types (if given)
+                    if (
+                        allowedObjectTypesSet != null 
+                        && !allowedObjectTypesSet.Contains(sop.Type.ToString())
+                    ) {
+                        continue;
+                    }
+
+                    #if UNITY_EDITOR
+                    Debug.Log(sop.ObjectID);
+                    #endif
+
+                    objectIdToConvexHull[sop.ObjectID] = Get2DSemanticHull(sop.gameObject);
+                }
+                actionFinishedEmit(true, objectIdToConvexHull);
+            } catch (Exception e) {
+                errorMessage = $"Get2DSemanticHulls encountered an exception {e.StackTrace}";
+                actionFinishedEmit(false);
             }
-            actionFinishedEmit(true, objectIdToConvexHull);
         }
 
         public void Get2DSemanticHull(string objectId) {
