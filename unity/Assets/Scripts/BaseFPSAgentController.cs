@@ -2633,7 +2633,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             #endif
 
-            return miconvexHull.Result.Select(p => new List<float>() {(float) p.X, (float) p.Y}).ToList();
+            List<List<float>> toReturn = new List<List<float>>();
+            foreach (DefaultVertex2D v in miconvexHull.Result) {
+                List<float> tuple = new List<float>();
+                tuple.Add((float) v.X);
+                tuple.Add((float) v.Y);
+                toReturn.Add(tuple);
+            }
+            return toReturn;
         }
 
         /*
