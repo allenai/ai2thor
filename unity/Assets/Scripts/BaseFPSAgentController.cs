@@ -2612,7 +2612,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (MeshFilter meshFilter in go.GetComponentsInChildren<MeshFilter>()) {
                 foreach (Vector3 localVertex in meshFilter.mesh.vertices) {
                     Vector3 globalVertex = meshFilter.transform.TransformPoint(localVertex);
-                    globalPoints.Add(globalVertex);
                     vertices.Add(new MIConvexHull.DefaultVertex2D(x: globalVertex.x, y: globalVertex.z));
                     maxY = Math.Max(maxY, globalVertex.y);
                 }
