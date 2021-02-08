@@ -2616,26 +2616,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     maxY = Math.Max(maxY, globalVertex.y);
                 }
             }
-            ConvexHullCreationResult<DefaultVertex2D> miconvexHull = MIConvexHull.ConvexHull.Create2D(
-                data: vertices,
-                tolerance: 1e-10
-            );
-
-            #if UNITY_EDITOR
-            DefaultVertex2D[] pointsOnHullArray = miconvexHull.Result.ToArray();
-            for (int i = 0; i < pointsOnHullArray.Length; i++) {
-                DefaultVertex2D p0 = pointsOnHullArray[i];
-                DefaultVertex2D p1 = pointsOnHullArray[(i + 1) % pointsOnHullArray.Length];
-                Debug.DrawLine(
-                    start: new Vector3((float) p0.X, maxY, (float) p0.Y),
-                    end: new Vector3((float) p1.X, maxY, (float) p1.Y),
-                    color: Color.red,
-                    duration: 100.0f
-                );
-            }
-            #endif
-
+            ConvexHullCreationResult<DefaultVertex2D> miconvexHull = null;
             try {
+                miconvexHull = MIConvexHull.ConvexHull.Create2D(
+                    data: vertices,
+                    tolerance: 1e-10
+                );
+
+                #if UNITY_EDITOR
+                DefaultVertex2D[] pointsOnHullArray = miconvexHull.Result.ToArray();
+                for (int i = 0; i < pointsOnHullArray.Length; i++) {
+                    DefaultVertex2D p0 = pointsOnHullArray[i];
+                    DefaultVertex2D p1 = pointsOnHullArray[(i + 1) % pointsOnHullArray.Length];
+                    Debug.DrawLine(
+                        start: new Vector3((float) p0.X, maxY, (float) p0.Y),
+                        end: new Vector3((float) p1.X, maxY, (float) p1.Y),
+                        color: Color.red,
+                        duration: 100.0f
+                    );
+                }
+                #endif
+
                 List<List<float>> toReturn = new List<List<float>>();
                 foreach (DefaultVertex2D v in miconvexHull.Result) {
                     List<float> tuple = new List<float>();
@@ -2650,13 +2651,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     s += vec.ToString("F4") + ", ";
                 }
                 s += "]";
-                Debug.LogError(
+                Debug.Log(
                     $"Get2DSemanticHull error with object {go.GetComponentInChildren<SimObjPhysics>().ObjectID}." + 
                     $"It has vertices {s}."
                 );
-                Debug.LogError(
-                    $"miconvexHull.Result has length: {miconvexHull.Result.Count}"
-                );
+                if (miconvexHull == null) {
+                    Debug.Log($"miconvexHull is null");
+                } else {
+                    Debug.Log(
+                        $"miconvexHull.Result has length: {miconvexHull.Result.Count}"
+                    );
+                }
                 throw e;
             }
 
