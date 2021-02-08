@@ -959,59 +959,26 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
-                try {
-                    byte[] msgPackMetadata = null;
-                    
-                    try {
-                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
-                            multiMeta, 
-                            MessagePack.Resolvers.ThorContractlessStandardResolver.Options
-                        );
-                    } catch (ArgumentNullException e) {
-                        Debug.LogError($"Hit ArgumentNullException hit with MessagePack. Trying JsonConvert. Stacktrace {e.StackTrace}");
-                        string actionReturnStr = Newtonsoft.Json.JsonConvert.SerializeObject(
-                            multiMeta.agents[0].actionReturn,
-                            Newtonsoft.Json.Formatting.None,
-                            new Newtonsoft.Json.JsonSerializerSettings()
-                                {
-                                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                    ContractResolver = new ShouldSerializeContractResolver()
-                                }
-                        );
-                        Debug.LogError($"Hit ArgumentNullException with actionReturn `{actionReturnStr}`.\n Will try deserializing and serializing again...");
-                        
-                        multiMeta.agents[0].actionReturn = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(actionReturnStr);
-                        
-                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
-                            multiMeta, 
-                            MessagePack.Resolvers.ThorContractlessStandardResolver.Options
-                        );
-                    }
-                    
+                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
-                    this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
-                    foreach(var item in renderPayload) {
-                        this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
-                    }
+                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                foreach(var item in renderPayload) {
+                    this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+                }
+                this.fifoClient.SendEOM();
+                string msg = this.fifoClient.ReceiveMessage();
+                ProcessControlCommand(msg);
+
+                while (canEmit() && this.fastActionEmit) {
+                    MetadataPatch patch = this.activeAgent().generateMetadataPatch();
+                    patch.agentId = this.activeAgentId;
+                    msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                    this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
                     this.fifoClient.SendEOM();
-                    string msg = this.fifoClient.ReceiveMessage();
+                    msg = this.fifoClient.ReceiveMessage();
                     ProcessControlCommand(msg);
-
-                    while (canEmit() && this.fastActionEmit) {
-                        MetadataPatch patch = this.activeAgent().generateMetadataPatch();
-                        patch.agentId = this.activeAgentId;
-                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
-                            patch, 
-                            MessagePack.Resolvers.ThorContractlessStandardResolver.Options
-                        );
-                        this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
-                        this.fifoClient.SendEOM();
-                        msg = this.fifoClient.ReceiveMessage();
-                        ProcessControlCommand(msg);
-                    }
-                } catch (Exception e) {
-                    Debug.LogError($"Emit frame encountered an exception {e.StackTrace}");
-                    throw e;
                 }
             }
 
