@@ -5694,7 +5694,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool success = false;
 
             
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof.isOn == !ctofInitialState));
             success = true;
 
             if (!success)
