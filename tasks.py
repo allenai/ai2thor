@@ -627,9 +627,9 @@ def build_pip(context, version):
     current_maj, current_min, current_sub = list(map(int, latest_version.split('.')))
     next_maj, next_min, next_sub = list(map(int, version.split('.')))
 
-    if (next_maj > current_maj) or \
-        (next_maj >= current_maj and next_min > current_min) or \
-        (next_maj >= current_maj and next_min >= current_min and next_sub > current_sub):
+    if (next_maj == current_maj + 1) or \
+        (next_maj == current_maj and next_min == current_min + 1) or \
+        (next_maj == current_maj and next_min == current_min and next_sub == current_sub + 1):
 
         if os.path.isdir("dist"):
             shutil.rmtree("dist")
@@ -650,7 +650,7 @@ def build_pip(context, version):
         subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
     else:
-        raise Exception("Invalid version: %s is not greater than latest version %s" % (version, latest_version))
+        raise Exception("Invalid version increment: new version=%s,current version=%s; must increment the major, minor or patch by only 1" % (version, latest_version))
             
 
 @task
