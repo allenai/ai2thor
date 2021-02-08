@@ -5686,12 +5686,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
         {
+            bool ctofInitialState = ctof.isOn;
+            
             if(ctof != null)
             ctof.Toggle();
 
             bool success = false;
 
-            bool ctofInitialState = ctof.isOn;
             
             yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
             success = true;
