@@ -2607,9 +2607,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             List<MIConvexHull.DefaultVertex2D> vertices = new List<MIConvexHull.DefaultVertex2D>();
             float maxY = -float.PositiveInfinity;
 
+            List<Vector3> globalPoints = new List<Vector3>();
             foreach (MeshFilter meshFilter in go.GetComponentsInChildren<MeshFilter>()) {
                 foreach (Vector3 localVertex in meshFilter.mesh.vertices) {
                     Vector3 globalVertex = meshFilter.transform.TransformPoint(localVertex);
+                    globalPoints.Add(globalVertex);
                     vertices.Add(new MIConvexHull.DefaultVertex2D(x: globalVertex.x, y: globalVertex.z));
                     maxY = Math.Max(maxY, globalVertex.y);
                 }
@@ -2633,14 +2635,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             #endif
 
-            List<List<float>> toReturn = new List<List<float>>();
-            foreach (DefaultVertex2D v in miconvexHull.Result) {
-                List<float> tuple = new List<float>();
-                tuple.Add((float) v.X);
-                tuple.Add((float) v.Y);
-                toReturn.Add(tuple);
+            try {
+                List<List<float>> toReturn = new List<List<float>>();
+                foreach (DefaultVertex2D v in miconvexHull.Result) {
+                    List<float> tuple = new List<float>();
+                    tuple.Add((float) v.X);
+                    tuple.Add((float) v.Y);
+                    toReturn.Add(tuple);
+                }
+                return toReturn;
+            } catch (Exception e) {
+                string s = "[";
+                foreach (Vector3 vec in globalPoints) {
+                    s += vec.ToString("F4") + ", ";
+                }
+                s += "]";
+                Debug.LogError(
+                    $"Get2DSemanticHull error with object {go.GetComponentInChildren<SimObjPhysics>().ObjectID}." + 
+                    $"It has vertices {s}."
+                );
+                Debug.LogError(
+                    $"miconvexHull.Result has length: {miconvexHull.Result.Count}"
+                );
+                throw e;
             }
-            return toReturn;
+
         }
 
         /*
@@ -2685,7 +2704,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
                 foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
-
                     // Skip objects that don't have one of the required types (if given)
                     if (
                         allowedObjectTypesSet != null 
@@ -2702,7 +2720,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 actionFinishedEmit(true, objectIdToConvexHull);
             } catch (Exception e) {
-                errorMessage = $"Get2DSemanticHulls encountered an exception {e.StackTrace}";
+                errorMessage = $"Get2DSemanticHulls encountered an exception. Message {e.Message}. Stack trace: {e.StackTrace}.";
                 actionFinishedEmit(false);
             }
         }
