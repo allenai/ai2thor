@@ -2238,6 +2238,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // actionFinished(true);
         }
 
+        protected Vector3 FindClosestPoint(Vector3 position, SimObjPhysics target) {
+            bool isNull = true;
+            Vector3 bestClosestPoint = new Vector3();
+            float bestDistance = 0;
+            foreach (Collider collider in target.MyColliders) {
+                Vector3 closestPoint = collider.ClosestPoint(position);
+                float distance = Vector3.Distance(position, closestPoint);
+                if (isNull || distance < bestDistance) {
+                    isNull = false;
+                    bestClosestPoint = closestPoint;
+                    bestDistance = distance;
+                }
+            }
+            return bestClosestPoint;
+        }
+
         public void ApplyForceObject(ServerAction action) {
 
             GameObject player = this.gameObject;
@@ -2248,10 +2264,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
-            if (!target.GetComponent<SimObjPhysics>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
                 return;
             }
@@ -2264,7 +2280,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!canbepushed) {
                 errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_MOVEABLE);
                 actionFinished(false);
                 return;
             }
@@ -2272,17 +2288,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Must call this now because it will set target.isInteractable
             bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
 
-            if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = "Target is not interactable and is probably occluded by something!";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
-                actionFinished(false);
-                return;
-            }
-
-            if (isNotVisible) {
-                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
-                targetMoveYHeightToAgentHeight.y = transform.position.y;
-                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
+            if (isNotVisible || !target.isInteractable) {
+                if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
                     errorMessage = "Target " + action.objectId + " is obstructed.";
                     Debug.Log(errorMessage);
                     Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
@@ -2292,7 +2299,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (isNotVisible) {
+            if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
                 errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
                 Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
@@ -4176,6 +4183,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.HAND_IS_FULL);
@@ -4200,17 +4214,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Must call this now because it will set target.isInteractable
             bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
 
-            if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = action.objectId + " is not interactable and perhaps it is occluded by something.";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
-                actionFinished(false);
-                return;
-            }
-
-            if (isNotVisible) {
-                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
-                targetMoveYHeightToAgentHeight.y = transform.position.y;
-                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
+            if (isNotVisible || !target.isInteractable) {
+                if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
                     errorMessage = "Target " + action.objectId + " is obstructed.";
                     Debug.Log(errorMessage);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
@@ -4220,7 +4225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 
             }
 
-            if (!action.forceAction && isNotVisible) {
+            if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
                 errorMessage = action.objectId + " is not visible.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 actionFinished(false);
