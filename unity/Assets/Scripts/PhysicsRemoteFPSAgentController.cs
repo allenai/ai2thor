@@ -4159,7 +4159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 handSOP.transform.parent = previousParent;
 
                 errorMessage = "No valid positions to place object found";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                 actionFinished(false);
                 return;
             }
@@ -4251,7 +4251,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             target.transform.position = AgentHand.transform.position;
             // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
-            target.transform.rotation = transform.rotation;
+            // MCS remove next line
+            // target.transform.rotation = transform.rotation;
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
             ItemInHand.layer = 9; // SimObjInvisible
