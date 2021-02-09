@@ -782,7 +782,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public bool MoveInDirection(Vector3 direction) {
+        public void MoveInDirection(Vector3 direction) {
             actionFinished(moveInDirection(direction: direction));
         }
 
