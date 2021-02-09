@@ -690,18 +690,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         sizeY = sizeY * boundingBoxCollider.size.y;
         sizeZ = sizeZ * boundingBoxCollider.size.z;
 
-        float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.AgentHand.transform.parent.localScale.y);
-        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.AgentHand.transform.parent.localScale.z);
+        float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.transform.localScale.y);
+        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.transform.localScale.z);
         positionY = positionY * multiplierY;
         positionZ = positionZ * multiplierZ;
         sizeY = sizeY * multiplierY;
         sizeZ = sizeZ * multiplierZ;
 
-        this.AgentHand.transform.localPosition = new Vector3(
-            this.AgentHand.transform.localPosition.x,
-            -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y),
-            ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z)
-        );
+        float handY = -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y);
+        float handZ = ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z);
+
+        // Ensure that a tall held object is not positioned inside of the floor below.
+        float minY = (sizeY / 2.0f) - positionY - (this.transform.position.y / this.transform.localScale.y) +
+            MCSController.DISTANCE_HELD_OBJECT_Y;
+
+        this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x, Math.Max(handY, minY), handZ);
     }
 
     public void Crawl(ServerAction action) {
