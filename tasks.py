@@ -630,12 +630,12 @@ def build_pip(context, version):
     next_maj, next_min, next_sub = list(map(int, version.split(".")))
 
     if (
-        (next_maj > current_maj)
-        or (next_maj >= current_maj and next_min > current_min)
+        (next_maj == current_maj + 1)
+        or (next_maj == current_maj and next_min == current_min + 1)
         or (
-            next_maj >= current_maj
-            and next_min >= current_min
-            and next_sub > current_sub
+            next_maj == current_maj
+            and next_min == current_min
+            and next_sub == current_sub + 1
         )
     ):
 
@@ -660,7 +660,7 @@ def build_pip(context, version):
 
     else:
         raise Exception(
-            "Invalid version: %s is not greater than latest version %s"
+            "Invalid version increment: new version=%s,current version=%s; must increment the major, minor or patch by only 1"
             % (version, latest_version)
         )
 
