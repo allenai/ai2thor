@@ -749,6 +749,17 @@ class Controller(object):
             action["rotation"] = {}
             action["rotation"]["y"] = rotation
 
+        # support for deprecated parameter names (old: new)
+        changed_parameter_names = {
+            "renderClassImage": "renderSemanticSegmentation",
+            "renderObjectImage": "renderInstanceSegmentation",
+        }
+        for old, new in changed_parameter_names.items():
+            if old in action:
+                warnings.warn(old + " has been renamed to " + new)
+                action[new] = action[old]
+                del action[old]
+
         self.server.send(action)
         self.last_event = self.server.receive()
 
