@@ -31,9 +31,9 @@ public class AgentManager : MonoBehaviour
 	private int activeAgentId;
 	private bool renderImage = true;
 	private bool renderDepthImage;
-	private bool renderClassImage;
-	private bool renderObjectImage;
-    private bool defaultRenderObjectImage;
+	private bool renderSemanticSegmentation;
+	private bool renderInstanceSegmentation;
+    private bool initializedInstanceSeg;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private Socket sock = null;
@@ -196,10 +196,10 @@ public class AgentManager : MonoBehaviour
 
 		primaryAgent.ProcessControlCommand (action.dynamicServerAction);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		this.renderClassImage = action.renderClassImage;
+		this.renderSemanticSegmentation = action.renderSemanticSegmentation;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
-		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
+		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
 
@@ -417,7 +417,7 @@ public class AgentManager : MonoBehaviour
 
         // set up returned image
         camera.cullingMask = ~(1 << 11);
-        if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
+        if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
 
@@ -665,7 +665,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-		if (this.renderObjectImage) {
+		if (this.renderInstanceSegmentation) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
 			}
@@ -780,9 +780,9 @@ public class AgentManager : MonoBehaviour
                 addThirdPartyCameraImage (renderPayload, camera);
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -796,7 +796,7 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
                 addObjectImage (renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
 
                 metadata.thirdPartyCameras = cameraMetadata;
@@ -1022,7 +1022,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void ProcessControlCommand(string msg) {
-        this.renderObjectImage = this.defaultRenderObjectImage;
+        this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
         DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
 
@@ -1035,16 +1035,19 @@ public class AgentManager : MonoBehaviour
             // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
-            //we only allow renderObjectImage to be flipped on
-            //on a per step() basis, since by default the param is null
-            //so we don't know if a request is meant to turn the param off
-            //or if it is just the value by default
-            if (controlCommand.renderObjectImage == true) {
-                this.renderObjectImage = true;
+            // we only allow renderInstanceSegmentation to be flipped on
+            // on a per step() basis, since by default the param is null
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            if (controlCommand.renderInstanceSegmentation == true) {
+                this.renderInstanceSegmentation = true;
             }
 
-            if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
-            {
+            if (this.renderDepthImage ||
+                this.renderSemanticSegmentation ||
+                this.renderInstanceSegmentation ||
+                this.renderNormalsImage
+            ) {
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
@@ -1441,9 +1444,9 @@ public class DynamicServerAction
         return this.jObject.ContainsKey(name);
     }
 
-    public bool renderObjectImage {
+    public bool renderInstanceSegmentation {
         get {
-            return this.GetValue("renderObjectImage", false);
+            return this.GetValue("renderInstanceSegmentation", false);
         }
     }
 
@@ -1536,8 +1539,8 @@ public class ServerAction
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
-	public bool renderClassImage;
-	public bool renderObjectImage;
+	public bool renderSemanticSegmentation;
+	public bool renderInstanceSegmentation;
 	public bool renderNormalsImage;
     public bool renderFlowImage;
 	public float cameraY = 0.675f;
