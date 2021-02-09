@@ -100,19 +100,18 @@ def test_reset():
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
     controller.stop()
 
-def test_fast_emit():
-    fast_controller = build_controller(server_class=FifoServer, fastActionEmit=True)
-    event = fast_controller.step(dict(action='RotateRight'))
-    event_fast_emit = fast_controller.step(dict(action='TestFastEmit', rvalue='foo'))
-    event_no_fast_emit = fast_controller.step(dict(action='LookUp'))
-    event_no_fast_emit_2 = fast_controller.step(dict(action='RotateRight'))
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_fast_emit(controller):
+    event = controller.step(dict(action='RotateRight'))
+    event_fast_emit = controller.step(dict(action='TestFastEmit', rvalue='foo'))
+    event_no_fast_emit = controller.step(dict(action='LookUp'))
+    event_no_fast_emit_2 = controller.step(dict(action='RotateRight'))
 
     assert event.metadata['actionReturn'] is None
     assert event_fast_emit.metadata['actionReturn'] == 'foo' 
     assert id(event.metadata['objects']) ==  id(event_fast_emit.metadata['objects'])
     assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
     assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
-    fast_controller.stop()
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_fifo_large_input(controller):
@@ -120,12 +119,13 @@ def test_fifo_large_input(controller):
     event = controller.step(dict(action='TestActionReflectParam', rvalue=random_string))
     assert event.metadata['actionReturn'] == random_string
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_fast_emit_disabled(controller):
-    event = controller.step(dict(action='RotateRight'))
-    event_fast_emit = controller.step(dict(action='TestFastEmit', rvalue='foo'))
+def test_fast_emit_disabled():
+    slow_controller = build_controller(server_class=FifoServer, fastActionEmit=False)
+    event = slow_controller.step(dict(action='RotateRight'))
+    event_fast_emit = slow_controller.step(dict(action='TestFastEmit', rvalue='foo'))
     # assert that when actionFastEmit is off that the objects are different
     assert id(event.metadata['objects']) !=  id(event_fast_emit.metadata['objects'])
+    slow_controller.stop()
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])

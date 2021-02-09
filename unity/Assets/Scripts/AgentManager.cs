@@ -1591,7 +1591,7 @@ public class ServerAction
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
-    public bool fastActionEmit;
+    public bool fastActionEmit = true;
     // this allows us to chain the dispatch between two separate
     // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
     public DynamicServerAction dynamicServerAction;

@@ -1119,7 +1119,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ResetObjectFilter() {
             this.simObjFilter = null;
-            actionFinishedEmit(true);
+            // this could technically be a FastEmit action
+            // but could cause confusion since the result of this 
+            // action should return all the objects. Resetting the filter
+            // should cause all the objects to get returned, which FastEmit would not do.
+            actionFinished(true);
         }
         public void SetObjectFilter(string[] objectIds) {
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
@@ -1131,7 +1135,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             simObjFilter = filter.ToArray();
-            actionFinishedEmit(true);
+            // this could technically be a FastEmit action
+            // but could cause confusion since the result of this 
+            // action should return a limited set of objects. Setting the filter
+            // should cause only the objects in the filter to get returned, 
+            // which FastEmit would not do.
+            actionFinished(true);
         }
 
         public virtual ObjectMetadata[] generateObjectMetadata()
