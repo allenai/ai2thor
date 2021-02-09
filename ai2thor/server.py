@@ -130,20 +130,15 @@ class Event(object):
         return (
             "<ai2thor.server.Event at "
             + str(hex(id(self)))
-            + "\n"
-            + '\t.metadata["lastAction"] = '
+            + '\n    .metadata["lastAction"] = '
             + str(self.metadata["lastAction"])
-            + "\n"
-            + '\t.metadata["lastActionSuccess"] = '
+            + '\n    .metadata["lastActionSuccess"] = '
             + str(self.metadata["lastActionSuccess"])
-            + "\n"
-            + '\t.metadata["errorMessage"] = "'
+            + '\n    .metadata["errorMessage"] = "'
             + str(self.metadata["errorMessage"]).replace("\n", " ")
-            + '"\n'
-            + '\t.metadata["actionReturn"] = '
+            + '\n    .metadata["actionReturn"] = '
             + action_return
-            + "\n"
-            + ">"
+            + "\n>"
         )
 
     def __str__(self):
@@ -155,6 +150,13 @@ class Event(object):
             "Event.image_data has been removed - RGB data can be retrieved from event.frame and encoded to an image format"
         )
         return None
+
+    @property
+    def class_segmentation_frame(self):
+        warnings.warn(
+            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame."
+        )
+        return self.semantic_segmentation_frame
 
     def process_visible_bounds2D(self):
         if self.instance_detections2D and len(self.instance_detections2D) > 0:
