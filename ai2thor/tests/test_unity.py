@@ -118,14 +118,11 @@ def test_deprecated_segmentation_params():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(
-        scene="FloorPlan28",
-        width=128,
-        height=64,
         renderObjectImage=True,
         renderClassImage=True,
     )
     event = controller.last_event
-    assert event.class_segmentation_frame == event.semantic_segmentation_frame
+    assert event.class_segmentation_frame is event.semantic_segmentation_frame
     assert event.semantic_segmentation_frame is not None
     assert (
         event.instance_segmentation_frame is not None
@@ -136,14 +133,11 @@ def test_deprecated_segmentation_params2():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(
-        scene="FloorPlan28",
-        width=128,
-        height=64,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
     )
     event = controller.last_event
-    assert event.class_segmentation_frame == event.semantic_segmentation_frame
+    assert event.class_segmentation_frame is event.semantic_segmentation_frame
     assert event.semantic_segmentation_frame is not None
     assert (
         event.instance_segmentation_frame is not None
