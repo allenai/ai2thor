@@ -156,8 +156,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
             // We also want to know if we can currently see the object in our camera view.
             // Additionally, verify its renderer is enabled (it may be shrouded; see MCSMain).
-            metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId) &&
-                GameObject.Find(metadata.name).GetComponentInChildren<Renderer>().enabled;
+            // Note that interactable child objects like shelves, drawers, and cabinents may not have their own Renderer.
+            Renderer renderer = GameObject.Find(metadata.name).GetComponentInChildren<Renderer>();
+            metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId) && renderer != null && renderer.enabled;
             return metadata;
         }).ToArray();
 
