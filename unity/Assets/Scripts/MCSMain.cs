@@ -1445,6 +1445,11 @@ public class MCSMain : MonoBehaviour {
                 });
         }
     }
+
+    public string GetCurrentSceneName()
+    {
+        return currentScene.name;
+    }
 }
 
 // Definitions of serializable objects from JSON config files.
