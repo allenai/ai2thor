@@ -486,12 +486,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         this.bodyRotationActionData = //left right
-            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)), false);
+            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)));
         this.lookRotationActionData = !reset ? //if not reseting then free look up down
-            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f)), false) :
-            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero), true);
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f))) :
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero));
 
-        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), reset ? ActionStatus.CANNOT_ROTATE : ActionStatus.SUCCESSFUL);
     }
 
     public void SimulatePhysics() {
@@ -529,12 +529,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             }
         } //for rotation
         else if (this.inputWasRotateLook) {
-            if (this.lookRotationActionData.reset) {
-                ResetLookRotation(this.lookRotationActionData);
-            } else {
-                RotateLookAcrossFrames(this.lookRotationActionData);
-            }
-
+            RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             this.actionFrameCount++;
             if (this.actionFrameCount == this.substeps) {
@@ -897,19 +892,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
-
-    public void ResetLookRotation(MCSRotationData rotationActionData)
-    {
-        Quaternion currentAngle = rotationActionData.startingRotation;
-        Quaternion endAngle = rotationActionData.endRotation;
-
-        float horizonChange = currentAngle.eulerAngles.x - endAngle.eulerAngles.x;
-        horizonChange = horizonChange > maxHorizon ? horizonChange - 360 : horizonChange;
-        Vector3 lookChange = new Vector3(horizonChange, 0, 0);
-
-        Vector3 changePerFrame = -lookChange / 5f; //up or down per frame
-        m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + changePerFrame);
-    }
 }
 
 /* class for contatining movement data */
@@ -931,11 +913,9 @@ public class MCSMovementActionData {
 public class MCSRotationData {
     public Quaternion startingRotation;
     public Quaternion endRotation;
-    public bool reset;
 
-    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation, bool reset) {
+    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation) {
         this.startingRotation = startingRotation;
         this.endRotation = endRotation;
-        this.reset = reset;
     }
 }

@@ -132,6 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public enum ActionStatus
         {
+            CANNOT_ROTATE,
             HAND_IS_FULL,
             IS_CLOSED_COMPLETELY,
             IS_OPENED_COMPLETELY,
