@@ -782,6 +782,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        public bool MoveInDirection(Vector3 direction) {
+            actionFinished(moveInDirection(direction: direction));
+        }
+
         protected float distanceToObject(SimObjPhysics sop) {
             float dist = 10000.0f;
             foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
