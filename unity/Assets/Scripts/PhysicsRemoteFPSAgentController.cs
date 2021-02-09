@@ -3989,22 +3989,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            //get the target receptacle based on the action receptacle object ID
-            SimObjPhysics targetReceptacle = null;
-
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
-            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) && 
-                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
-                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
-                    targetReceptacle = sop; 
-                    break;
-                }
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+                errorMessage = "Object ID " + action.receptacleObjectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
             }
 
-            if (targetReceptacle == null) {
-                errorMessage = "No valid Receptacle found";
-                Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+            SimObjPhysics targetReceptacle = physicsSceneManager.UniqueIdToSimObjPhysics[action.receptacleObjectId];
+
+            if (targetReceptacle == null || !targetReceptacle.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.receptacleObjectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
                 return;
             }
@@ -4027,6 +4024,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
+            }
+
+            targetReceptacle = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
+            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) &&
+                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
+                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
+                    targetReceptacle = sop;
+                    break;
+                }
+            }
+
+            if (targetReceptacle == null) {
+                errorMessage = "No valid Receptacle found";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+                actionFinished(false);
+                return;
             }
 
             //if this receptacle only receives specific objects, check that the ItemInHand is compatible and
@@ -4723,7 +4739,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = null;
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = "This target object is NOT a receptacle!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                actionFinished(false);
+                return;
+            }
+
+            target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;
@@ -5371,7 +5412,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = null;
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = "This target object is NOT a receptacle!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                actionFinished(false);
+                return;
+            }
+
+            target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;
