@@ -236,6 +236,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -247,6 +248,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -315,6 +317,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -326,6 +329,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -430,7 +434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: ToiletPaper|-01.13|-00.27|-05.97
+  objectID: 
   Type: 65
   PrimaryProperty: 3
   SecondaryProperties: 06000000
@@ -451,17 +455,35 @@ MonoBehaviour:
   - {fileID: 65403814354210618}
   - {fileID: 65173587310040240}
   - {fileID: 4411287125745973158}
+  - {fileID: 4303929514401042140}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 1.8
   salientMaterials: 09000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54961830531127144
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -490,7 +512,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82c2105f4dc674ce9835e05ace7e011b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DisableThis: {fileID: 1290325862906222}
+  usedUpRenderer: {fileID: 23148481288926446}
+  usedUpColliders:
+  - {fileID: 136144517689340556}
+  - {fileID: 65403814354210618}
+  - {fileID: 65173587310040240}
+  usedUpTriggerColliders:
+  - {fileID: 136049883601522184}
+  - {fileID: 65841827059119436}
+  - {fileID: 65138048857102402}
+  alwaysActiveColliders:
+  - {fileID: 4411287125745973158}
+  - {fileID: 4303929514401042140}
+  alwaysActiveTriggerColliders:
+  - {fileID: 5072399854724290205}
+  - {fileID: 6044279301592907394}
   isUsedUp: 0
 --- !u!1 &1410181157742894
 GameObject:
@@ -892,6 +928,50 @@ Transform:
   m_Father: {fileID: 4771790017517024}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2544897981346548784
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8410371329745434860}
+  - component: {fileID: 4303929514401042140}
+  m_Layer: 8
+  m_Name: Col (1)
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8410371329745434860
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2544897981346548784}
+  m_LocalRotation: {x: 6.3948846e-13, y: -2.842171e-13, z: -0.7071068, w: 0.70710677}
+  m_LocalPosition: {x: 0.0000000171749, y: -0.000000017710041, z: -5.585442e-12}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 393504993539982341}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90.00001}
+--- !u!65 &4303929514401042140
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2544897981346548784}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.0040215068, y: 0.017580522, z: 0.0046396893}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2567121493157444320
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,6 +1045,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 8355071949489923324}
+  - {fileID: 8410371329745434860}
   m_Father: {fileID: 4565614244995874}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1041,6 +1122,51 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 7268964215067351098}
+  - {fileID: 7946363177769049686}
   m_Father: {fileID: 4565614244995874}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8338529351048980646
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7946363177769049686}
+  - component: {fileID: 6044279301592907394}
+  m_Layer: 8
+  m_Name: Col (1)
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7946363177769049686
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8338529351048980646}
+  m_LocalRotation: {x: -0, y: 1, z: -0.0000009835617, w: -0.00000019125079}
+  m_LocalPosition: {x: -1.1854918, y: 3.626348, z: 1.6049361}
+  m_LocalScale: {x: 6.73281, y: 6.73281, z: 6.73281}
+  m_Children: []
+  m_Father: {fileID: 7931856335779462579}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90.00001}
+--- !u!65 &6044279301592907394
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8338529351048980646}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.0040215068, y: 0.017580522, z: 0.0046396893}
+  m_Center: {x: 0, y: 0, z: 0}
