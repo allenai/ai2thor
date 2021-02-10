@@ -476,7 +476,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             this.snapToGrid = action.snapToGrid;
 
-            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) {
+            if (action.renderDepthImage || action.renderSemanticSegmentation || action.renderInstanceSegmentation || action.renderNormalsImage) {
     			this.updateImageSynthesis(true);
     		}
 

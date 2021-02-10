@@ -22,7 +22,9 @@ logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
 
-formatter = logging.Formatter("%(asctime)s [%(process)d] %(funcName)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s [%(process)d] %(funcName)s - %(levelname)s - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -42,11 +44,11 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource("s3")
-    acl = 'public-read'
+    acl = "public-read"
     bucket = PUBLIC_S3_BUCKET
     if include_private_scenes:
-        bucket = PRIVATE_S3_BUCKET 
-        acl = 'private'
+        bucket = PRIVATE_S3_BUCKET
+        acl = "private"
 
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
@@ -69,30 +71,42 @@ def _webgl_local_build_path(prefix, source_dir="builds"):
 
 def _unity_version():
     import yaml
+
     with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
         project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
 
-    return project_version['m_EditorVersion']
+    return project_version["m_EditorVersion"]
+
 
 def _build(unity_path, arch, build_dir, build_name, env={}):
     import yaml
-        
+
     project_path = os.path.join(os.getcwd(), unity_path)
     standalone_path = None
 
     unity_version = _unity_version()
 
-    if sys.platform.startswith('darwin'):
-        unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
+    if sys.platform.startswith("darwin"):
+        unity_hub_path = (
+            "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
+                unity_version
+            )
+        )
+        standalone_path = (
+            "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(
+                unity_version
+            )
+        )
+    elif "win" in sys.platform:
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(
             unity_version
         )
-        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(unity_version)
-    elif 'win' in sys.platform:
-        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(unity_version)
         # TODO: Verify windows unity standalone path
         standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
-    elif sys.platform.startswith('linux'):
-        unity_hub_path = "{}/Unity/{}/Editor/Unity".format(os.environ['HOME'], unity_version)
+    elif sys.platform.startswith("linux"):
+        unity_hub_path = "{}/Unity/{}/Editor/Unity".format(
+            os.environ["HOME"], unity_version
+        )
 
     if standalone_path and os.path.exists(standalone_path):
         unity_path = standalone_path
@@ -121,15 +135,17 @@ def generate_build_metadata(metadata_path):
     # to allow future versions of the Python API
     # to launch older versions of the Unity build
     # and know whether the Fifo server is available
-    server_types = ['WSGI']
+    server_types = ["WSGI"]
     try:
         import ai2thor.fifo_server
-        server_types.append('FIFO')
+
+        server_types.append("FIFO")
     except Exception as e:
         pass
 
     with open(os.path.join(metadata_path), "w") as f:
         f.write(json.dumps(dict(server_types=server_types)))
+
 
 def class_dataset_images_for_scene(scene_name):
     import ai2thor.controller
@@ -155,8 +171,8 @@ def class_dataset_images_for_scene(scene_name):
         dict(
             action="Initialize",
             gridSize=0.25,
-            renderObjectImage=True,
-            renderClassImage=False,
+            renderInstanceSegmentation=True,
+            renderSemanticSegmentation=False,
             renderImage=False,
         )
     )
@@ -358,10 +374,10 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, 'local', False)
+    build = ai2thor.build.Build(arch, "local", False)
     env = dict()
-    if os.path.isdir('unity/Assets/Private/Scenes'):
-        env['INCLUDE_PRIVATE_SCENES'] = 'true'
+    if os.path.isdir("unity/Assets/Private/Scenes"):
+        env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
 
@@ -377,21 +393,22 @@ def fix_webgl_unity_loader_regex(unity_loader_path):
     # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
     with open(unity_loader_path) as f:
         loader = f.read()
-    
+
     loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
     with open(unity_loader_path, "w") as f:
         f.write(loader)
 
+
 @task
 def webgl_build(
-        context,
-        scenes="",
-        room_ranges=None,
-        directory="builds",
-        prefix='local',
-        verbose=False,
-        content_addressable=False,
-        crowdsource_build=False
+    context,
+    scenes="",
+    room_ranges=None,
+    directory="builds",
+    prefix="local",
+    verbose=False,
+    content_addressable=False,
+    crowdsource_build=False,
 ):
     """
     Creates a WebGL build
@@ -411,17 +428,14 @@ def webgl_build(
         file_name = path_split[1]
 
         print("File name {} ".format(file_name))
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             h = hashlib.md5()
             h.update(f.read())
             md5_id = h.hexdigest()
         new_file_name = "{}_{}".format(md5_id, file_name)
-        os.rename(
-            file_path,
-            os.path.join(directory, new_file_name)
-        )
+        os.rename(file_path, os.path.join(directory, new_file_name))
 
-        with open(json_metadata_file_path, 'r+') as f:
+        with open(json_metadata_file_path, "r+") as f:
             unity_json = json.load(f)
             print("UNITY json {}".format(unity_json))
             unity_json[json_key] = new_file_name
@@ -431,19 +445,22 @@ def webgl_build(
             f.seek(0)
             json.dump(unity_json, f, indent=4)
 
-    arch = 'WebGL'
+    arch = "WebGL"
     build_name = local_build_name(prefix, arch)
     if room_ranges is not None:
-        floor_plans = ["FloorPlan{}_physics".format(i) for i in
-            reduce(
+        floor_plans = [
+            "FloorPlan{}_physics".format(i)
+            for i in reduce(
                 lambda x, y: x + y,
                 map(
                     lambda x: x + [x[-1] + 1],
-                    [list(range(*tuple(int(y) for y in x.split("-"))))
-                        for x in room_ranges.split(",")]
-                )
+                    [
+                        list(range(*tuple(int(y) for y in x.split("-"))))
+                        for x in room_ranges.split(",")
+                    ],
+                ),
             )
-         ]
+        ]
 
         scenes = ",".join(floor_plans)
     if verbose:
@@ -451,8 +468,8 @@ def webgl_build(
 
     env = dict(SCENE=scenes)
     if crowdsource_build:
-        env['DEFINES'] = 'CROWDSOURCE_TASK'
-    if _build('unity', arch, directory, build_name, env=env):
+        env["DEFINES"] = "CROWDSOURCE_TASK"
+    if _build("unity", arch, directory, build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -462,26 +479,11 @@ def webgl_build(
     generate_quality_settings(context)
 
     rooms = {
-        "kitchens": {
-            "name": "Kitchens",
-            "roomRanges": range(1, 31)
-        },
-        "livingRooms": {
-            "name": "Living Rooms",
-            "roomRanges": range(201, 231)
-        },
-        "bedrooms": {
-            "name": "Bedrooms",
-            "roomRanges": range(301, 331)
-        },
-        "bathrooms": {
-            "name": "Bathrooms",
-            "roomRanges": range(401, 431)
-        },
-        "foyers": {
-            "name": "Foyers",
-            "roomRanges": range(501, 531)
-        }
+        "kitchens": {"name": "Kitchens", "roomRanges": range(1, 31)},
+        "livingRooms": {"name": "Living Rooms", "roomRanges": range(201, 231)},
+        "bedrooms": {"name": "Bedrooms", "roomRanges": range(301, 331)},
+        "bathrooms": {"name": "Bathrooms", "roomRanges": range(401, 431)},
+        "foyers": {"name": "Foyers", "roomRanges": range(501, 531)},
     }
 
     room_type_by_id = {}
@@ -489,17 +491,14 @@ def webgl_build(
     for room_type, room_data in rooms.items():
         for room_num in room_data["roomRanges"]:
             room_id = "FloorPlan{}_physics".format(room_num)
-            room_type_by_id[room_id] = {
-                "type": room_type,
-                "name": room_data["name"]
-            }
+            room_type_by_id[room_id] = {"type": room_type, "name": room_data["name"]}
 
     for scene_name in scenes.split(","):
         room_type = room_type_by_id[scene_name]
         if room_type["type"] not in scene_metadata:
             scene_metadata[room_type["type"]] = {
                 "scenes": [],
-                "name": room_type["name"]
+                "name": room_type["name"],
             }
 
         scene_metadata[room_type["type"]]["scenes"].append(scene_name)
@@ -508,18 +507,18 @@ def webgl_build(
         print(scene_metadata)
 
     to_content_addressable = [
-        ('{}.data.unityweb'.format(build_name), 'dataUrl'),
-        ('{}.wasm.code.unityweb'.format(build_name), 'wasmCodeUrl'),
-        ('{}.wasm.framework.unityweb'.format(build_name), 'wasmFrameworkUrl')
+        ("{}.data.unityweb".format(build_name), "dataUrl"),
+        ("{}.wasm.code.unityweb".format(build_name), "wasmCodeUrl"),
+        ("{}.wasm.framework.unityweb".format(build_name), "wasmFrameworkUrl"),
     ]
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
             os.path.join(build_path, "Build/{}".format(file_name)),
             os.path.join(build_path, "Build/{}.json".format(build_name)),
-            key
+            key,
         )
 
-    with open(os.path.join(build_path, "scenes.json"), 'w') as f:
+    with open(os.path.join(build_path, "scenes.json"), "w") as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
 
 
@@ -553,7 +552,6 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-
 def build_sha256(path):
 
     m = hashlib.sha256()
@@ -573,27 +571,29 @@ def git_commit_id():
 
     return commit_id
 
+
 @task
 def deploy_pip(context):
-    if 'TWINE_PASSWORD' not in os.environ:
+    if "TWINE_PASSWORD" not in os.environ:
         raise Exception("Twine token not specified in environment")
     subprocess.check_call("twine upload -u __token__ dist/*", shell=True)
+
 
 @task
 def build_pip(context, version):
     from ai2thor.build import platform_map
     import re
-    import xml.etree.ElementTree as ET 
+    import xml.etree.ElementTree as ET
     import requests
 
-    res = requests.get('https://pypi.org/rss/project/ai2thor/releases.xml')
+    res = requests.get("https://pypi.org/rss/project/ai2thor/releases.xml")
 
     res.raise_for_status()
 
     root = ET.fromstring(res.content)
     latest_version = None
 
-    for title in root.findall('./channel/item/title'): 
+    for title in root.findall("./channel/item/title"):
         latest_version = title.text
         break
 
@@ -601,7 +601,8 @@ def build_pip(context, version):
     commit_tags = (
         subprocess.check_output("git tag --points-at", shell=True)
         .decode("ascii")
-        .strip().split("\n")
+        .strip()
+        .split("\n")
     )
 
     if version not in commit_tags:
@@ -609,13 +610,15 @@ def build_pip(context, version):
 
     commit_id = git_commit_id()
 
-    res = requests.get('https://api.github.com/repos/allenai/ai2thor/commits?sha=master')
+    res = requests.get(
+        "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
+    )
     res.raise_for_status()
 
-    if commit_id not in map(lambda c: c['sha'], res.json()):
+    if commit_id not in map(lambda c: c["sha"], res.json()):
         raise Exception("tag %s is not off the master branch" % version)
 
-    if not re.match(r'^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$', version):
+    if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
 
     for arch in platform_map.keys():
@@ -623,17 +626,21 @@ def build_pip(context, version):
         if not commit_build.exists():
             raise Exception("Build does not exist for %s/%s" % (commit_id, arch))
 
-    
-    current_maj, current_min, current_sub = list(map(int, latest_version.split('.')))
-    next_maj, next_min, next_sub = list(map(int, version.split('.')))
+    current_maj, current_min, current_sub = list(map(int, latest_version.split(".")))
+    next_maj, next_min, next_sub = list(map(int, version.split(".")))
 
-    if (next_maj == current_maj + 1) or \
-        (next_maj == current_maj and next_min == current_min + 1) or \
-        (next_maj == current_maj and next_min == current_min and next_sub == current_sub + 1):
+    if (
+        (next_maj == current_maj + 1)
+        or (next_maj == current_maj and next_min == current_min + 1)
+        or (
+            next_maj == current_maj
+            and next_min == current_min
+            and next_sub == current_sub + 1
+        )
+    ):
 
         if os.path.isdir("dist"):
             shutil.rmtree("dist")
-
 
         generate_quality_settings(context)
 
@@ -647,11 +654,16 @@ def build_pip(context, version):
             fi.write("__version__ = '%s'\n" % (version))
 
         subprocess.check_call("python setup.py clean --all", shell=True)
-        subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
+        subprocess.check_call(
+            "python setup.py sdist bdist_wheel --universal", shell=True
+        )
 
     else:
-        raise Exception("Invalid version increment: new version=%s,current version=%s; must increment the major, minor or patch by only 1" % (version, latest_version))
-            
+        raise Exception(
+            "Invalid version increment: new version=%s,current version=%s; must increment the major, minor or patch by only 1"
+            % (version, latest_version)
+        )
+
 
 @task
 def fetch_source_textures(context):
@@ -675,12 +687,12 @@ def build_log_push(build_info, include_private_scenes):
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
 
-    bucket = PUBLIC_S3_BUCKET 
+    bucket = PUBLIC_S3_BUCKET
     acl = "public-read"
 
     if include_private_scenes:
-        bucket = PRIVATE_S3_BUCKET 
-        acl = 'private'
+        bucket = PRIVATE_S3_BUCKET
+        acl = "private"
 
     s3.Object(bucket, build_log_key).put(
         Body=build_log, ACL=acl, ContentType="text/plain"
@@ -690,7 +702,7 @@ def build_log_push(build_info, include_private_scenes):
 def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
-    zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
+    zipf = zipfile.ZipFile(archive_name, "w", zipfile.ZIP_DEFLATED)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
 
@@ -716,9 +728,12 @@ def pre_test(context):
 
 def clean():
     import scripts.update_private
+
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
-    scripts.update_private.private_repo_url = 'git@ai2thor-private-github:allenai/ai2thor-private.git'
+    scripts.update_private.private_repo_url = (
+        "git@ai2thor-private-github:allenai/ai2thor-private.git"
+    )
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d", shell=True)
     subprocess.check_call("git clean -f -x", shell=True)
@@ -736,24 +751,28 @@ def link_build_cache(branch):
 
     # this takes takes care of branches with '/' in it
     # to avoid implicitly creating directories under the cache dir
-    encoded_branch = re.sub(r'[^a-zA-Z0-9_\-.]', '_', re.sub('_', '__', branch))
+    encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
-    master_cache_dir = os.path.join(cache_base_dir, 'master')
+    master_cache_dir = os.path.join(cache_base_dir, "master")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
     # use the master cache as a starting point to avoid
     # having to re-import all assets, which can take up to 1 hour
     if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
         logger.info("copying master cache for %s" % encoded_branch)
-        subprocess.check_call("cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True)
+        subprocess.check_call(
+            "cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True
+        )
         logger.info("copying master cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
     os.makedirs(branch_library_cache_dir, exist_ok=True)
     os.symlink(branch_library_cache_dir, library_path)
 
+
 def travis_build(build_id):
     import requests
+
     res = requests.get(
         "https://api.travis-ci.com/build/%s" % build_id,
         headers={
@@ -765,8 +784,8 @@ def travis_build(build_id):
 
     res.raise_for_status()
 
-
     return res.json()
+
 
 def pending_travis_build():
     import requests
@@ -781,45 +800,54 @@ def pending_travis_build():
     )
     for b in res.json()["builds"]:
         tag = None
-        if b['tag']:
-            tag = b['tag']['name']
+        if b["tag"]:
+            tag = b["tag"]["name"]
 
-        return {'branch':b["branch"]["name"], 'commit_id':b["commit"]["sha"], 'tag':tag, 'id': b['id']}
+        return {
+            "branch": b["branch"]["name"],
+            "commit_id": b["commit"]["sha"],
+            "tag": tag,
+            "id": b["id"],
+        }
 
 
 def pytest_s3_object(commit_id):
     s3 = boto3.resource("s3")
-    pytest_key = 'builds/pytest-%s.json' % commit_id
+    pytest_key = "builds/pytest-%s.json" % commit_id
 
     return s3.Object(PUBLIC_S3_BUCKET, pytest_key)
+
 
 @task
 def ci_pytest(context):
     import requests
+
     commit_id = git_commit_id()
 
     s3_obj = pytest_s3_object(commit_id)
-    s3_pytest_url = 'http://s3-us-west-2.amazonaws.com/%s/%s' % (s3_obj.bucket_name, s3_obj.key)
+    s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+        s3_obj.bucket_name,
+        s3_obj.key,
+    )
     print("pytest url %s" % s3_pytest_url)
     res = requests.get(s3_pytest_url)
 
-    if res.status_code == 200 and res.json()['success']:
+    if res.status_code == 200 and res.json()["success"]:
         # if we already have a successful pytest, skip running
         return
 
-
-    proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    proc = subprocess.run(
+        "pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
 
     result = dict(
         success=proc.returncode == 0,
-        stdout=proc.stdout.decode('ascii'),
-        stderr=proc.stderr.decode('ascii')
+        stdout=proc.stdout.decode("ascii"),
+        stderr=proc.stderr.decode("ascii"),
     )
 
-
     s3_obj.put(
-        Body=json.dumps(result), ACL="public-read", ContentType='application/json'
+        Body=json.dumps(result), ACL="public-read", ContentType="application/json"
     )
 
 
@@ -835,7 +863,9 @@ def ci_build(context):
         build = pending_travis_build()
         blacklist_branches = ["vids", "video"]
         if build and build["branch"] not in blacklist_branches:
-            logger.info("pending build for %s %s" % (build["branch"], build["commit_id"]))
+            logger.info(
+                "pending build for %s %s" % (build["branch"], build["commit_id"])
+            )
             clean()
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s" % build["branch"], shell=True)
@@ -845,50 +875,69 @@ def ci_build(context):
 
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
-                logger.info("starting build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
-                if ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=False).exists():
-                    logger.info("found build for commit %s %s" % (build["commit_id"], arch))
+                logger.info(
+                    "starting build for %s %s %s"
+                    % (arch, build["branch"], build["commit_id"])
+                )
+                if ai2thor.build.Build(
+                    arch, build["commit_id"], include_private_scenes=False
+                ).exists():
+                    logger.info(
+                        "found build for commit %s %s" % (build["commit_id"], arch)
+                    )
                     continue
                 # this is done here so that when a tag build request arrives and the commit_id has already
                 # been built, we avoid bootstrapping the cache since we short circuited on the line above
                 link_build_cache(build["branch"])
                 p = ci_build_arch(arch, False)
-                logger.info("finished build for %s %s %s" % (arch, build["branch"], build["commit_id"]))
+                logger.info(
+                    "finished build for %s %s %s"
+                    % (arch, build["branch"], build["commit_id"])
+                )
                 procs.append(p)
-
-
 
             # don't run tests for a tag since results should exist
             # for the branch commit
-            if build['tag'] is None:
+            if build["tag"] is None:
 
-                logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
+                logger.info(
+                    "running pytest for %s %s" % (build["branch"], build["commit_id"])
+                )
                 ci_pytest(context)
-                logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
+                logger.info(
+                    "finished pytest for %s %s" % (build["branch"], build["commit_id"])
+                )
 
             # give the travis poller time to see the result
             for i in range(6):
-                b = travis_build(build['id'])
-                logger.info("build state for %s: %s" % (build['id'], b['state']))
+                b = travis_build(build["id"])
+                logger.info("build state for %s: %s" % (build["id"], b["state"]))
 
-                if b['state'] != 'started': 
+                if b["state"] != "started":
                     break
                 time.sleep(10)
 
             if build["branch"] == "master":
-                logger.info("starting webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
+                logger.info(
+                    "starting webgl build deploy %s %s"
+                    % (build["branch"], build["commit_id"])
+                )
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
-                logger.info("finished webgl build deploy %s %s" % (build["branch"], build["commit_id"]))
+                logger.info(
+                    "finished webgl build deploy %s %s"
+                    % (build["branch"], build["commit_id"])
+                )
 
             for p in procs:
                 if p:
-                    logger.info("joining proc %s for %s %s" % (p.pid, build["branch"], build["commit_id"]))
+                    logger.info(
+                        "joining proc %s for %s %s"
+                        % (p.pid, build["branch"], build["commit_id"])
+                    )
                     p.join()
-            
 
-            
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -917,7 +966,14 @@ def ci_build_arch(arch, include_private_scenes=False):
 
         print("pushing archive")
         proc = Process(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
+            target=archive_push,
+            args=(
+                unity_path,
+                build_path,
+                build_dir,
+                build_info,
+                include_private_scenes,
+            ),
         )
         proc.start()
 
@@ -961,28 +1017,28 @@ def poll_ci_build(context):
     for arch in platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
         if not commit_build.exists():
-            print(
-                "Build log url: %s"
-                % commit_build.log_url()
-            )
+            print("Build log url: %s" % commit_build.log_url())
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
     pytest_missing = True
     for i in range(30):
         s3_obj = pytest_s3_object(commit_id)
-        s3_pytest_url = 'http://s3-us-west-2.amazonaws.com/%s/%s' % (s3_obj.bucket_name, s3_obj.key)
+        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+            s3_obj.bucket_name,
+            s3_obj.key,
+        )
         print("pytest url %s" % s3_pytest_url)
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
             pytest_missing = False
             pytest_result = res.json()
-            print(pytest_result['stdout']) # print so that it appears in travis log
-            print(pytest_result['stderr'])
-            if not pytest_result['success']:
+            print(pytest_result["stdout"])  # print so that it appears in travis log
+            print(pytest_result["stderr"])
+            if not pytest_result["success"]:
                 raise Exception("pytest failure")
             break
         time.sleep(10)
-    
+
     if pytest_missing:
         raise Exception("Missing pytest output")
 
@@ -991,7 +1047,6 @@ def poll_ci_build(context):
 def build(context, local=False):
     from multiprocessing import Process
     from ai2thor.build import platform_map
-
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
 
@@ -1002,7 +1057,7 @@ def build(context, local=False):
         for arch in platform_map.keys():
             env = {}
             if include_private_scenes:
-                env['INCLUDE_PRIVATE_SCENES'] = 'true'
+                env["INCLUDE_PRIVATE_SCENES"] = "true"
             unity_path = "unity"
             build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
             build_dir = os.path.join("builds", build_name)
@@ -1014,7 +1069,14 @@ def build(context, local=False):
 
             _build(unity_path, arch, build_dir, build_name, env=env)
             t = threading.Thread(
-                target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
+                target=archive_push,
+                args=(
+                    unity_path,
+                    build_path,
+                    build_dir,
+                    build_info,
+                    include_private_scenes,
+                ),
             )
             t.start()
             threads.append(t)
@@ -1031,6 +1093,7 @@ def build(context, local=False):
 
     generate_quality_settings(context)
 
+
 @task
 def interact(
     ctx,
@@ -1044,17 +1107,17 @@ def interact(
     metadata=False,
     robot=False,
     port=8200,
-    host='127.0.0.1',
-    image_directory='.',
+    host="127.0.0.1",
+    image_directory=".",
     width=300,
     height=300,
     include_private_scenes=False,
-    noise=False
+    noise=False,
 ):
     import ai2thor.controller
     import ai2thor.robot_controller
 
-    if image_directory != '.':
+    if image_directory != ".":
         if os.path.exists(image_directory):
             shutil.rmtree(image_directory)
         os.makedirs(image_directory)
@@ -1071,7 +1134,7 @@ def interact(
             save_image_per_frame=True,
             include_private_scenes=include_private_scenes,
             add_depth_noise=noise,
-            scene=scene
+            scene=scene,
         )
     else:
         env = ai2thor.robot_controller.Controller(
@@ -1080,7 +1143,7 @@ def interact(
             width=width,
             height=height,
             image_dir=image_directory,
-            save_image_per_frame=True
+            save_image_per_frame=True,
         )
 
     env.reset(scene)
@@ -1088,55 +1151,57 @@ def interact(
         dict(
             action="Initialize",
             gridSize=0.25,
-            renderObjectImage=object_image,
-            renderClassImage=class_image,
-            renderDepthImage=depth_image
+            renderInstanceSegmentation=object_image,
+            renderSemanticSegmentation=class_image,
+            renderDepthImage=depth_image,
         )
     )
 
     from ai2thor.interact import InteractiveControllerPrompt
+
     InteractiveControllerPrompt.write_image(
         initialize_event,
         image_directory,
-        '_init',
+        "_init",
         image_per_frame=True,
-        class_segmentation_frame=class_image,
+        semantic_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
         depth_frame=depth_image,
-        metadata=metadata
+        metadata=metadata,
     )
 
     env.interact(
-        class_segmentation_frame=class_image,
+        semantic_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         depth_frame=depth_image,
         color_frame=image,
-        metadata=metadata
+        metadata=metadata,
     )
     env.stop()
 
+
 @task
 def get_depth(
-        ctx,
-        scene=None,
-        image=False,
-        depth_image=False,
-        class_image=False,
-        object_image=False,
-        metadata=False,
-        port=8200,
-        host='127.0.0.1',
-        image_directory='.',
-        number=1,
-        local_build=False,
-        teleport=None,
-        rotation=0
-    ):
+    ctx,
+    scene=None,
+    image=False,
+    depth_image=False,
+    class_image=False,
+    object_image=False,
+    metadata=False,
+    port=8200,
+    host="127.0.0.1",
+    image_directory=".",
+    number=1,
+    local_build=False,
+    teleport=None,
+    rotation=0,
+):
     import ai2thor.controller
     import ai2thor.robot_controller
 
-    if image_directory != '.':
+    if image_directory != ".":
         if os.path.exists(image_directory):
             shutil.rmtree(image_directory)
         os.makedirs(image_directory)
@@ -1149,14 +1214,11 @@ def get_depth(
             width=600,
             height=600,
             image_dir=image_directory,
-            save_image_per_frame=True
-
+            save_image_per_frame=True,
         )
     else:
         env = ai2thor.controller.Controller(
-            width=600,
-            height=600,
-            local_build=local_build
+            width=600, height=600, local_build=local_build
         )
 
     if scene is not None:
@@ -1166,80 +1228,80 @@ def get_depth(
         dict(
             action="Initialize",
             gridSize=0.25,
-            renderObjectImage=object_image,
-            renderClassImage=class_image,
+            renderInstanceSegmentation=object_image,
+            renderSemanticSegmentation=class_image,
             renderDepthImage=depth_image,
             agentMode="locobot",
             fieldOfView=59,
             continuous=True,
-            snapToGrid=False
+            snapToGrid=False,
         )
     )
 
     from ai2thor.interact import InteractiveControllerPrompt
+
     if scene is not None:
         teleport_arg = dict(
-            action="TeleportFull",
-            y=0.9010001,
-            rotation=dict(x=0, y=rotation, z=0)
+            action="TeleportFull", y=0.9010001, rotation=dict(x=0, y=rotation, z=0)
         )
         if teleport is not None:
-            teleport = [float(pos) for pos in teleport.split(',')]
+            teleport = [float(pos) for pos in teleport.split(",")]
 
             t_size = len(teleport)
             if 1 <= t_size:
-                teleport_arg['x'] = teleport[0]
+                teleport_arg["x"] = teleport[0]
             if 2 <= t_size:
-                teleport_arg['z'] = teleport[1]
+                teleport_arg["z"] = teleport[1]
             if 3 <= t_size:
-                teleport_arg['y'] = teleport[2]
+                teleport_arg["y"] = teleport[2]
 
-        evt = env.step(
-            teleport_arg
-        )
+        evt = env.step(teleport_arg)
 
         InteractiveControllerPrompt.write_image(
             evt,
             image_directory,
-            '_{}'.format('teleport'),
+            "_{}".format("teleport"),
             image_per_frame=True,
-            class_segmentation_frame=class_image,
+            semantic_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
             depth_frame=depth_image,
-            metadata=metadata
+            metadata=metadata,
         )
 
     InteractiveControllerPrompt.write_image(
         initialize_event,
         image_directory,
-        '_init',
+        "_init",
         image_per_frame=True,
-        class_segmentation_frame=class_image,
+        semantic_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
         depth_frame=depth_image,
-        metadata=metadata
+        metadata=metadata,
     )
 
     for i in range(number):
-        event = env.step(action='MoveAhead', moveMagnitude=0.0)
+        event = env.step(action="MoveAhead", moveMagnitude=0.0)
 
         InteractiveControllerPrompt.write_image(
             event,
             image_directory,
-            '_{}'.format(i),
+            "_{}".format(i),
             image_per_frame=True,
-            class_segmentation_frame=class_image,
+            semantic_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
             depth_frame=depth_image,
-            metadata=metadata
+            metadata=metadata,
         )
     env.stop()
 
+
 @task
-def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_score=False):
+def inspect_depth(
+    ctx, directory, all=False, indices=None, jet=False, under_score=False
+):
     import numpy as np
     import cv2
     import glob
@@ -1260,7 +1322,7 @@ def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_scor
     if indices is None or all:
         images = sorted(
             glob.glob("{}/depth{}*.png".format(directory, under_prefix)),
-            key=sort_key_function
+            key=sort_key_function,
         )
         print(images)
     else:
@@ -1273,18 +1335,24 @@ def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_scor
         index = re.search(regex_str, split_fn[len(split_fn) - 1]).group(1)
         print("index {}".format(index))
         print("Inspecting: '{}'".format(depth_filename))
-        depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
+        depth_raw_filename = os.path.join(
+            directory, "depth_raw{}{}.npy".format("_" if under_score else "", index)
+        )
         raw_depth = np.load(depth_raw_filename)
 
         if jet:
             mn = np.min(raw_depth)
             mx = np.max(raw_depth)
             print("min depth value: {}, max depth: {}".format(mn, mx))
-            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
+            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(
+                np.uint8
+            )
 
             img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
         else:
-            grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
+            grayscale = (
+                255.0 / raw_depth.max() * (raw_depth - raw_depth.min())
+            ).astype(np.uint8)
             print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
             img = grayscale
 
@@ -1298,39 +1366,38 @@ def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_scor
         cv2.namedWindow("image")
         cv2.setMouseCallback("image", inspect_pixel)
 
-        cv2.imshow('image', img)
+        cv2.imshow("image", img)
         cv2.waitKey(0)
 
 
 @task
-def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False):
+def real_2_sim(
+    ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False
+):
     import json
     import numpy as np
     import cv2
     from ai2thor.util.transforms import transform_real_2_sim
+
     depth_real_fn = os.path.join(source_dir, "depth_raw_{}.npy".format(index))
-    depth_metadata_fn = depth_real = os.path.join(source_dir, "metadata_{}.json".format(index))
+    depth_metadata_fn = depth_real = os.path.join(
+        source_dir, "metadata_{}.json".format(index)
+    )
     color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
     color_sim_fn = os.path.join(output_dir, "color_teleport.png".format(index))
-    with open(depth_metadata_fn, 'r') as f:
+    with open(depth_metadata_fn, "r") as f:
         metadata = json.load(f)
 
-        pos = metadata['agent']['position']
+        pos = metadata["agent"]["position"]
 
         sim_pos = transform_real_2_sim(pos)
 
-        teleport_arg = "{},{},{}".format(sim_pos['x'], sim_pos['z'], sim_pos['y'])
+        teleport_arg = "{},{},{}".format(sim_pos["x"], sim_pos["z"], sim_pos["y"])
 
         print(sim_pos)
         print(teleport_arg)
 
-        inspect_depth(
-            ctx,
-            source_dir,
-            indices=index,
-            under_score=True,
-            jet=jet
-        )
+        inspect_depth(ctx, source_dir, indices=index, under_score=True, jet=jet)
 
         get_depth(
             ctx,
@@ -1344,7 +1411,7 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
             number=1,
             local_build=local_build,
             teleport=teleport_arg,
-            rotation=rotation
+            rotation=rotation,
         )
 
         im = cv2.imread(color_real_fn)
@@ -1353,13 +1420,8 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
         im2 = cv2.imread(color_sim_fn)
         cv2.imshow("color_sim.png", im2)
 
-        inspect_depth(
-            ctx,
-            output_dir,
-            indices="teleport",
-            under_score=True,
-            jet=jet
-        )
+        inspect_depth(ctx, output_dir, indices="teleport", under_score=True, jet=jet)
+
 
 @task
 def noise_depth(ctx, directory, show=False):
@@ -1380,7 +1442,7 @@ def noise_depth(ctx, directory, show=False):
         labeled_img[label_hue == 0] = 0
 
         if show:
-            cv2.imshow('labeled.png', labeled_img)
+            cv2.imshow("labeled.png", labeled_img)
             cv2.waitKey()
 
     images = glob.glob("{}/depth_*.png".format(directory))
@@ -1402,15 +1464,17 @@ def noise_depth(ctx, directory, show=False):
         print(img_size[0])
 
         indices_top_left = np.where(labels == labels[0][0])
-        indices_top_right = np.where(labels == labels[0][img_size[1]-1])
-        indices_bottom_left = np.where(labels == labels[img_size[0]-1][0])
-        indices_bottom_right = np.where(labels == labels[img_size[0]-1][img_size[1] - 1])
+        indices_top_right = np.where(labels == labels[0][img_size[1] - 1])
+        indices_bottom_left = np.where(labels == labels[img_size[0] - 1][0])
+        indices_bottom_right = np.where(
+            labels == labels[img_size[0] - 1][img_size[1] - 1]
+        )
 
         indices = [
-             indices_top_left,
-             indices_top_right,
-             indices_bottom_left,
-             indices_bottom_right
+            indices_top_left,
+            indices_top_right,
+            indices_bottom_left,
+            indices_bottom_right,
         ]
 
         blank_image = np.zeros((300, 300, 1), np.uint8)
@@ -1422,7 +1486,7 @@ def noise_depth(ctx, directory, show=False):
         blank_image[indices_bottom_right] = 0
 
         if show:
-            cv2.imshow('labeled.png', blank_image)
+            cv2.imshow("labeled.png", blank_image)
             cv2.waitKey()
         break
 
@@ -1432,6 +1496,7 @@ def noise_depth(ctx, directory, show=False):
         compressed.append(counts)
 
     np.save("depth_noise", compressed)
+
 
 @task
 def release(ctx):
@@ -1669,41 +1734,45 @@ def s3_etag_data(data):
 
 
 cache_seconds = 31536000
+
+
 @task
-def webgl_deploy(ctx, bucket='ai2-thor-webgl-public', prefix='local', source_dir='builds', target_dir='', verbose=False, force=False, extensions_no_cache=''):
+def webgl_deploy(
+    ctx,
+    bucket="ai2-thor-webgl-public",
+    prefix="local",
+    source_dir="builds",
+    target_dir="",
+    verbose=False,
+    force=False,
+    extensions_no_cache="",
+):
     from pathlib import Path
     from os.path import isfile, join, isdir
 
     content_types = {
-        '.js': 'application/javascript; charset=utf-8',
-        '.html': 'text/html; charset=utf-8',
-        '.ico': 'image/x-icon',
-        '.svg': 'image/svg+xml; charset=utf-8',
-        '.css': 'text/css; charset=utf-8',
-        '.png': 'image/png',
-        '.txt': 'text/plain',
-        '.jpg': 'image/jpeg',
-        '.unityweb': 'application/octet-stream',
-        '.json': 'application/json'
+        ".js": "application/javascript; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
+        ".ico": "image/x-icon",
+        ".svg": "image/svg+xml; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".png": "image/png",
+        ".txt": "text/plain",
+        ".jpg": "image/jpeg",
+        ".unityweb": "application/octet-stream",
+        ".json": "application/json",
     }
 
-    content_encoding = {
-        '.unityweb': 'gzip'
-    }
+    content_encoding = {".unityweb": "gzip"}
 
     bucket_name = bucket
-    s3 = boto3.resource('s3')
+    s3 = boto3.resource("s3")
 
     current_objects = list_objects_with_metadata(bucket_name)
 
-    no_cache_extensions = {
-        ".txt",
-        ".html",
-        ".json",
-        ".js"
-    }
+    no_cache_extensions = {".txt", ".html", ".json", ".js"}
 
-    no_cache_extensions.union(set(extensions_no_cache.split(',')))
+    no_cache_extensions.union(set(extensions_no_cache.split(",")))
 
     if verbose:
         session = boto3.Session()
@@ -1718,7 +1787,7 @@ def webgl_deploy(ctx, bucket='ai2-thor-webgl-public', prefix='local', source_dir
         # print("key:  {} pass: {}".format(access_key, secret_key))
         # print("Deploying to: {}/{}".format(bucket_name, target_dir))
 
-    def walk_recursive(path, func, parent_dir=''):
+    def walk_recursive(path, func, parent_dir=""):
         for file_name in os.listdir(path):
             f_path = join(path, file_name)
             relative_path = join(parent_dir, file_name)
@@ -1733,25 +1802,34 @@ def webgl_deploy(ctx, bucket='ai2-thor-webgl-public', prefix='local', source_dir
         if verbose:
             print("'{}'".format(key))
 
-        with open(f_path, 'rb') as f:
+        with open(f_path, "rb") as f:
             file_data = f.read()
             etag = s3_etag_data(file_data)
             kwargs = {}
             if ext in content_encoding:
-                kwargs['ContentEncoding'] = content_encoding[ext]
+                kwargs["ContentEncoding"] = content_encoding[ext]
 
-            if not force and key in current_objects and etag == current_objects[key]['ETag']:
+            if (
+                not force
+                and key in current_objects
+                and etag == current_objects[key]["ETag"]
+            ):
                 if verbose:
                     print("ETag match - skipping %s" % key)
                 return
 
             if ext in content_types:
-                cache = 'no-cache, no-store, must-revalidate' if ext in no_cache_extensions else 'public, max-age={}'.format(
-                    cache_seconds
+                cache = (
+                    "no-cache, no-store, must-revalidate"
+                    if ext in no_cache_extensions
+                    else "public, max-age={}".format(cache_seconds)
                 )
                 now = datetime.datetime.utcnow()
-                expires = now if ext == '.html' or ext == '.txt' else now + datetime.timedelta(
-                    seconds=cache_seconds)
+                expires = (
+                    now
+                    if ext == ".html" or ext == ".txt"
+                    else now + datetime.timedelta(seconds=cache_seconds)
+                )
                 s3.Object(bucket_name, key).put(
                     Body=file_data,
                     ACL="public-read",
@@ -1762,11 +1840,11 @@ def webgl_deploy(ctx, bucket='ai2-thor-webgl-public', prefix='local', source_dir
                 )
             else:
                 if verbose:
-                    print("Warning: Content type for extension '{}' not defined,"
-                          " uploading with no content type".format(ext))
-                s3.Object(bucket_name, key).put(
-                    Body=f.read(),
-                    ACL="public-read")
+                    print(
+                        "Warning: Content type for extension '{}' not defined,"
+                        " uploading with no content type".format(ext)
+                    )
+                s3.Object(bucket_name, key).put(Body=f.read(), ACL="public-read")
 
     if prefix is not None:
         build_path = _webgl_local_build_path(prefix, source_dir)
@@ -1861,9 +1939,10 @@ def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
             webgl_deploy(ctx, source_dir=build_dir, target_dir=key, verbose=verbose)
 
 
-
 @task
-def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False, deploy_skip=False):
+def webgl_s3_deploy(
+    ctx, bucket, target_dir, scenes="", verbose=False, all=False, deploy_skip=False
+):
     """
     Builds and deploys a WebGL unity site
     :param context:
@@ -1879,12 +1958,17 @@ def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False
         "kitchens": (1, 30),
         "livingRooms": (201, 230),
         "bedrooms": (301, 330),
-        "bathrooms": (401, 430)
+        "bathrooms": (401, 430),
     }
 
     if all:
         flatten = lambda l: [item for sublist in l for item in sublist]
-        room_numbers = flatten([[i for i in range(room_range[0], room_range[1])] for key, room_range in rooms.items()])
+        room_numbers = flatten(
+            [
+                [i for i in range(room_range[0], room_range[1])]
+                for key, room_range in rooms.items()
+            ]
+        )
     else:
         room_numbers = [s.strip() for s in scenes.split(",")]
 
@@ -1898,32 +1982,64 @@ def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False
         target_s3_dir = "{}/{}".format(target_dir, floor_plan_name)
         build_dir = "builds/{}".format(target_s3_dir)
 
-        webgl_build(ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True)
+        webgl_build(
+            ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True
+        )
         if verbose:
             print("Deploying room '{}'...".format(floor_plan_name))
         if not deploy_skip:
-            webgl_deploy(ctx, bucket=bucket,  source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose, extensions_no_cache='.css')
+            webgl_deploy(
+                ctx,
+                bucket=bucket,
+                source_dir=build_dir,
+                target_dir=target_s3_dir,
+                verbose=verbose,
+                extensions_no_cache=".css",
+            )
 
 
 @task
-def webgl_site_deploy(context, template_name, output_dir, bucket, unity_build_dir='', s3_target_dir='', force=False, verbose=False):
+def webgl_site_deploy(
+    context,
+    template_name,
+    output_dir,
+    bucket,
+    unity_build_dir="",
+    s3_target_dir="",
+    force=False,
+    verbose=False,
+):
     from pathlib import Path
     from os.path import isfile, join, isdir
+
     template_dir = Path("unity/Assets/WebGLTemplates/{}".format(template_name))
 
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     # os.mkdir(output_dir)
 
-    ignore_func = lambda d, files: [f for f in files if isfile(join(d, f)) and f.endswith('.meta')]
+    ignore_func = lambda d, files: [
+        f for f in files if isfile(join(d, f)) and f.endswith(".meta")
+    ]
 
-    if unity_build_dir != '':
+    if unity_build_dir != "":
         shutil.copytree(unity_build_dir, output_dir, ignore=ignore_func)
         # shutil.copytree(os.path.join(unity_build_dir, "Build"), os.path.join(output_dir, "Build"), ignore=ignore_func)
     else:
         shutil.copytree(template_dir, output_dir, ignore=ignore_func)
 
-    webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir=s3_target_dir, verbose=verbose, force=force, extensions_no_cache='.css')
+    webgl_deploy(
+        context,
+        bucket=bucket,
+        prefix=None,
+        source_dir=output_dir,
+        target_dir=s3_target_dir,
+        verbose=verbose,
+        force=force,
+        extensions_no_cache=".css",
+    )
+
+
 @task
 def mock_client_request(context):
     import msgpack
@@ -1932,14 +2048,19 @@ def mock_client_request(context):
     import cv2
     from pprint import pprint
 
-    r = requests.post('http://127.0.0.1:9200/step', json=dict(action='MoveAhead', sequenceId=1))
+    r = requests.post(
+        "http://127.0.0.1:9200/step", json=dict(action="MoveAhead", sequenceId=1)
+    )
     s = time.time()
     payload = msgpack.unpackb(r.content, raw=False)
-    metadata = payload['metadata']['agents'][0]
-    image = np.frombuffer(payload['frames'][0], dtype=np.uint8).reshape(metadata['screenHeight'], metadata['screenWidth'], 3)
+    metadata = payload["metadata"]["agents"][0]
+    image = np.frombuffer(payload["frames"][0], dtype=np.uint8).reshape(
+        metadata["screenHeight"], metadata["screenWidth"], 3
+    )
     pprint(metadata)
-    cv2.imshow('aoeu', image)
+    cv2.imshow("aoeu", image)
     cv2.waitKey(1000)
+
 
 @task
 def start_mock_real_server(context):
@@ -1952,18 +2073,18 @@ def start_mock_real_server(context):
 
 @task
 def create_robothor_dataset(
-        context,
-        local_build=False,
-        editor_mode=False,
-        width=300,
-        height=300,
-        output='robothor-dataset.json',
-        intermediate_directory='.',
-        visibility_distance=1.0,
-        objects_filter=None,
-        scene_filter=None,
-        filter_file=None
-    ):
+    context,
+    local_build=False,
+    editor_mode=False,
+    width=300,
+    height=300,
+    output="robothor-dataset.json",
+    intermediate_directory=".",
+    visibility_distance=1.0,
+    objects_filter=None,
+    scene_filter=None,
+    filter_file=None,
+):
     """
     Creates a dataset for the robothor challenge in `intermediate_directory`
     named `robothor-dataset.json`
@@ -1973,7 +2094,7 @@ def create_robothor_dataset(
     import json
     from pprint import pprint
 
-    scene = 'FloorPlan_Train1_1'
+    scene = "FloorPlan_Train1_1"
     angle = 45
     gridSize = 0.25
     # Restrict points visibility_multiplier_filter * visibility_distance away from the target object
@@ -1981,7 +2102,7 @@ def create_robothor_dataset(
 
     scene_object_filter = {}
     if filter_file is not None:
-        with open(filter_file, 'r') as f:
+        with open(filter_file, "r") as f:
             scene_object_filter = json.load(f)
             print("Filter:")
             pprint(scene_object_filter)
@@ -1994,12 +2115,12 @@ def create_robothor_dataset(
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         # Unity params
         gridSize=gridSize,
         fieldOfView=60,
         rotateStepDegrees=angle,
-        agentMode='bot',
+        agentMode="bot",
         visibilityDistance=visibility_distance,
     )
 
@@ -2017,8 +2138,7 @@ def create_robothor_dataset(
         "Vase",
         "Alarm Clock",
         "Television",
-        "Pillow"
-
+        "Pillow",
     ]
     failed_points = []
 
@@ -2029,10 +2149,10 @@ def create_robothor_dataset(
     desired_points = 30
     event = controller.step(
         dict(
-            action='GetScenesInBuild',
+            action="GetScenesInBuild",
         )
     )
-    scenes_in_build = event.metadata['actionReturn']
+    scenes_in_build = event.metadata["actionReturn"]
     objects_types_in_scene = set()
 
     def sqr_dist(a, b):
@@ -2041,8 +2161,8 @@ def create_robothor_dataset(
         return x * x + z * z
 
     def sqr_dist_dict(a, b):
-        x = a['x'] - b['x']
-        z = a['z'] - b['z']
+        x = a["x"] - b["x"]
+        z = a["z"] - b["z"]
         return x * x + z * z
 
     def get_points(contoller, object_type, scene):
@@ -2050,11 +2170,10 @@ def create_robothor_dataset(
         controller.reset(scene)
         event = controller.step(
             dict(
-                action='ObjectTypeToObjectIds',
-                objectType=object_type.replace(" ", "")
+                action="ObjectTypeToObjectIds", objectType=object_type.replace(" ", "")
             )
         )
-        object_ids = event.metadata['actionReturn']
+        object_ids = event.metadata["actionReturn"]
 
         if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
             print("Object type '{}' not available in scene.".format(object_type))
@@ -2064,20 +2183,22 @@ def create_robothor_dataset(
         object_id = object_ids[0]
 
         event_reachable = controller.step(
-            dict(
-                action='GetReachablePositions',
-                gridSize=0.25
-            )
+            dict(action="GetReachablePositions", gridSize=0.25)
         )
 
-        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
+        target_position = controller.step(
+            action="GetObjectPosition", objectId=object_id
+        ).metadata["actionReturn"]
 
-        reachable_positions = event_reachable.metadata['actionReturn']
+        reachable_positions = event_reachable.metadata["actionReturn"]
 
-        reachable_pos_set = set([
-            (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
-            # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
-        ])
+        reachable_pos_set = set(
+            [
+                (pos["x"], pos["y"], pos["z"])
+                for pos in reachable_positions
+                # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
+            ]
+        )
 
         def filter_points(selected_points, point_set, minimum_distance):
             result = set()
@@ -2085,19 +2206,25 @@ def create_robothor_dataset(
                 if selected in point_set:
                     result.add(selected)
                     remove_set = set(
-                        [p for p in point_set if sqr_dist(p, selected) <= minimum_distance * minimum_distance]
+                        [
+                            p
+                            for p in point_set
+                            if sqr_dist(p, selected)
+                            <= minimum_distance * minimum_distance
+                        ]
                     )
                     point_set = point_set.difference(remove_set)
             return result
 
         import random
+
         points = random.sample(reachable_pos_set, desired_points * 4)
 
         final_point_set = filter_points(points, reachable_pos_set, gridSize * 2)
 
         print("Total number of points: {}".format(len(final_point_set)))
 
-        print("Id {}".format(event.metadata['actionReturn']))
+        print("Id {}".format(event.metadata["actionReturn"]))
 
         point_objects = []
 
@@ -2108,10 +2235,7 @@ def create_robothor_dataset(
             pos_unity = dict(x=x, y=y, z=z)
             try:
                 path = metrics.get_shortest_path_to_object(
-                    controller,
-                    object_id,
-                    pos_unity,
-                    {'x': 0, 'y': 0, 'z': 0}
+                    controller, object_id, pos_unity, {"x": 0, "y": 0, "z": 0}
                 )
                 minimum_path_length = metrics.path_distance(path)
 
@@ -2123,62 +2247,64 @@ def create_robothor_dataset(
                     possible_orientations.remove(roatation_y)
                     evt = controller.step(
                         action="TeleportFull",
-                        x=pos_unity['x'],
-                        y=pos_unity['y'],
-                        z=pos_unity['z'],
-                        rotation=dict(x=0, y=roatation_y, z=0)
+                        x=pos_unity["x"],
+                        y=pos_unity["y"],
+                        z=pos_unity["z"],
+                        rotation=dict(x=0, y=roatation_y, z=0),
                     )
-                    rotation_allowed = evt.metadata['lastActionSuccess']
-                    if not evt.metadata['lastActionSuccess']:
-                        print(evt.metadata['errorMessage'])
-                        print("--------- Rotation not allowed! for pos {} rot {} ".format(pos_unity, roatation_y))
+                    rotation_allowed = evt.metadata["lastActionSuccess"]
+                    if not evt.metadata["lastActionSuccess"]:
+                        print(evt.metadata["errorMessage"])
+                        print(
+                            "--------- Rotation not allowed! for pos {} rot {} ".format(
+                                pos_unity, roatation_y
+                            )
+                        )
 
                 if minimum_path_length > eps and rotation_allowed:
-                    m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene)
+                    m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", scene)
                     point_id = "{}_{}_{}_{}_{}".format(
-                        m.group(1),
-                        m.group(2),
-                        m.group(3),
-                        object_type,
-                        counter
+                        m.group(1), m.group(2), m.group(3), object_type, counter
                     )
-                    point_objects.append({
-                        'id': point_id,
-                        'scene': scene,
-                        'object_type': object_type,
-                        'object_id': object_id,
-                        'target_position': target_position,
-                        'initial_position': pos_unity,
-                        'initial_orientation': roatation_y,
-                        'shortest_path': path,
-                        'shortest_path_length': minimum_path_length
-                    })
+                    point_objects.append(
+                        {
+                            "id": point_id,
+                            "scene": scene,
+                            "object_type": object_type,
+                            "object_id": object_id,
+                            "target_position": target_position,
+                            "initial_position": pos_unity,
+                            "initial_orientation": roatation_y,
+                            "shortest_path": path,
+                            "shortest_path_length": minimum_path_length,
+                        }
+                    )
                     counter += 1
 
             except ValueError:
                 print("-----Invalid path discarding point...")
-                failed_points.append({
-                    'scene': scene,
-                    'object_type': object_type,
-                    'object_id': object_id,
-                    'target_position': target_position,
-                    'initial_position': pos_unity
-                })
+                failed_points.append(
+                    {
+                        "scene": scene,
+                        "object_type": object_type,
+                        "object_id": object_id,
+                        "target_position": target_position,
+                        "initial_position": pos_unity,
+                    }
+                )
 
-
-        sorted_objs = sorted(point_objects,
-                             key=lambda m: m['shortest_path_length'])
+        sorted_objs = sorted(point_objects, key=lambda m: m["shortest_path_length"])
         third = int(len(sorted_objs) / 3.0)
 
         for i, obj in enumerate(sorted_objs):
             if i < third:
-                level = 'easy'
+                level = "easy"
             elif i < 2 * third:
-                level = 'medium'
+                level = "medium"
             else:
-                level = 'hard'
+                level = "hard"
 
-            sorted_objs[i]['difficulty'] = level
+            sorted_objs[i]["difficulty"] = level
 
         return sorted_objs
 
@@ -2186,20 +2312,20 @@ def create_robothor_dataset(
     dataset_flat = []
 
     if intermediate_directory is not None:
-        if intermediate_directory != '.':
+        if intermediate_directory != ".":
             if os.path.exists(intermediate_directory):
                 shutil.rmtree(intermediate_directory)
             os.makedirs(intermediate_directory)
     import re
 
     def key_sort_func(scene_name):
-        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", scene_name)
         return m.group(1), int(m.group(2)), int(m.group(3))
 
     scenes = sorted(
-        [scene for scene in scenes_in_build if 'physics' not in scene],
-                    key=key_sort_func
-                    )
+        [scene for scene in scenes_in_build if "physics" not in scene],
+        key=key_sort_func,
+    )
 
     if scene_filter is not None:
         scene_filter_set = set(scene_filter.split(","))
@@ -2208,11 +2334,14 @@ def create_robothor_dataset(
     print("Sorted scenes: {}".format(scenes))
     for scene in scenes:
         dataset[scene] = {}
-        dataset['object_types'] = targets
+        dataset["object_types"] = targets
         objects = []
         for objectType in targets:
 
-            if filter_file is None or (objectType in scene_object_filter and scene in scene_object_filter[objectType]):
+            if filter_file is None or (
+                objectType in scene_object_filter
+                and scene in scene_object_filter[objectType]
+            ):
                 dataset[scene][objectType] = []
                 obj = get_points(controller, objectType, scene)
                 if obj is not None:
@@ -2220,12 +2349,13 @@ def create_robothor_dataset(
                     objects = objects + obj
 
         dataset_flat = dataset_flat + objects
-        if intermediate_directory != '.':
-            with open(os.path.join(intermediate_directory, '{}.json'.format(scene)), 'w') as f:
+        if intermediate_directory != ".":
+            with open(
+                os.path.join(intermediate_directory, "{}.json".format(scene)), "w"
+            ) as f:
                 json.dump(objects, f, indent=4)
 
-
-    with open(os.path.join(intermediate_directory, output), 'w') as f:
+    with open(os.path.join(intermediate_directory, output), "w") as f:
         json.dump(dataset_flat, f, indent=4)
     print("Object types in scene union: {}".format(objects_types_in_scene))
     print("Total unique objects: {}".format(len(objects_types_in_scene)))
@@ -2233,23 +2363,23 @@ def create_robothor_dataset(
     print("Total datapoints: {}".format(len(dataset_flat)))
 
     print(failed_points)
-    with open(os.path.join(intermediate_directory, 'failed.json'), 'w') as f:
+    with open(os.path.join(intermediate_directory, "failed.json"), "w") as f:
         json.dump(failed_points, f, indent=4)
 
 
 @task
 def shortest_path_to_object(
-        context,
-        scene,
-        object,
-        x,
-        z,
-        y=0.9103442,
-        rotation=0,
-        editor_mode=False,
-        local_build=False,
-        visibility_distance=1.0,
-        grid_size=0.25
+    context,
+    scene,
+    object,
+    x,
+    z,
+    y=0.9103442,
+    rotation=0,
+    editor_mode=False,
+    local_build=False,
+    visibility_distance=1.0,
+    grid_size=0.25,
 ):
     p = dict(x=x, y=y, z=z)
 
@@ -2266,24 +2396,22 @@ def shortest_path_to_object(
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         # Unity params
         gridSize=gridSize,
         fieldOfView=60,
         rotateStepDegrees=angle,
-        agentMode='bot',
+        agentMode="bot",
         visibilityDistance=visibility_distance,
     )
     path = metrics.get_shortest_path_to_object_type(
-        controller,
-        object,
-        p,
-        {'x': 0, 'y': 0, 'z': 0}
+        controller, object, p, {"x": 0, "y": 0, "z": 0}
     )
     minimum_path_length = metrics.path_distance(path)
 
     print("Path: {}".format(path))
     print("Path lenght: {}".format(minimum_path_length))
+
 
 @task
 def filter_dataset(ctx, filename, output_filename, ids=False):
@@ -2293,7 +2421,8 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
     """
     import json
     from pprint import pprint
-    with open(filename, 'r') as f:
+
+    with open(filename, "r") as f:
         obj = json.load(f)
 
     targets = [
@@ -2309,16 +2438,16 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
         "Vase",
         "Alarm Clock",
         "Television",
-        "Pillow"
+        "Pillow",
     ]
 
     counter = {}
     for f in obj:
-        obj_type = f['object_type']
+        obj_type = f["object_type"]
 
-        if f['scene'] not in counter:
-            counter[f['scene']] = {target: 0 for target in targets}
-        scene_counter = counter[f['scene']]
+        if f["scene"] not in counter:
+            counter[f["scene"]] = {target: 0 for target in targets}
+        scene_counter = counter[f["scene"]]
         if obj_type not in scene_counter:
             scene_counter[obj_type] = 1
         else:
@@ -2339,44 +2468,43 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
                 objects_with_zero.add(obj_type)
 
     print("Objects with zero: {}".format(objects_with_zero))
-    with open('with_zero.json', 'w') as fw:
+    with open("with_zero.json", "w") as fw:
         dict_list = {k: list(v) for k, v in objects_with_zero_by_obj.items()}
         json.dump(dict_list, fw, sort_keys=True, indent=4)
     pprint(objects_with_zero_by_obj)
-    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+    filtered = [o for o in obj if o["object_type"] not in objects_with_zero]
     counter = 0
     current_scene = ""
     current_object_type = ""
     import re
-    for i, o in enumerate(filtered):
-        if current_scene != o['scene'] or current_object_type != o['object_type']:
-            counter = 0
-            current_scene = o['scene']
-            current_object_type = o['object_type']
 
-        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', o['scene'])
+    for i, o in enumerate(filtered):
+        if current_scene != o["scene"] or current_object_type != o["object_type"]:
+            counter = 0
+            current_scene = o["scene"]
+            current_object_type = o["object_type"]
+
+        m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", o["scene"])
         point_id = "{}_{}_{}_{}_{}".format(
-            m.group(1),
-            m.group(2),
-            m.group(3),
-            o['object_type'],
-            counter
+            m.group(1), m.group(2), m.group(3), o["object_type"], counter
         )
         counter += 1
 
-        o['id'] = point_id
-    with open(output_filename, 'w') as f:
+        o["id"] = point_id
+    with open(output_filename, "w") as f:
         json.dump(filtered, f, indent=4)
 
 
 @task
-def fix_dataset_object_types(ctx, input_file, output_file, editor_mode=False, local_build=False):
+def fix_dataset_object_types(
+    ctx, input_file, output_file, editor_mode=False, local_build=False
+):
     import json
     import ai2thor.controller
 
-    with open(input_file, 'r') as f:
+    with open(input_file, "r") as f:
         obj = json.load(f)
-        scene = 'FloorPlan_Train1_1'
+        scene = "FloorPlan_Train1_1"
         angle = 45
         gridSize = 0.25
         controller = ai2thor.controller.Controller(
@@ -2386,35 +2514,44 @@ def fix_dataset_object_types(ctx, input_file, output_file, editor_mode=False, lo
             start_unity=False if editor_mode else True,
             scene=scene,
             port=8200,
-            host='127.0.0.1',
+            host="127.0.0.1",
             # Unity params
             gridSize=gridSize,
             fieldOfView=60,
             rotateStepDegrees=angle,
-            agentMode='bot',
+            agentMode="bot",
             visibilityDistance=1,
         )
         current_scene = None
         object_map = {}
         for i, point in enumerate(obj):
-            if current_scene != point['scene']:
-                print("Fixing for scene '{}'...".format(point['scene']))
-                controller.reset(point['scene'])
-                current_scene = point['scene']
-                object_map = {o['objectType'].lower(): {'id': o['objectId'], 'type': o['objectType']} for o in controller.last_event.metadata['objects']}
-            key = point['object_type'].replace(" ", "").lower()
-            point['object_id'] = object_map[key]['id']
-            point['object_type'] = object_map[key]['type']
+            if current_scene != point["scene"]:
+                print("Fixing for scene '{}'...".format(point["scene"]))
+                controller.reset(point["scene"])
+                current_scene = point["scene"]
+                object_map = {
+                    o["objectType"].lower(): {
+                        "id": o["objectId"],
+                        "type": o["objectType"],
+                    }
+                    for o in controller.last_event.metadata["objects"]
+                }
+            key = point["object_type"].replace(" ", "").lower()
+            point["object_id"] = object_map[key]["id"]
+            point["object_type"] = object_map[key]["type"]
 
-        with open(output_file, 'w') as fw:
+        with open(output_file, "w") as fw:
             json.dump(obj, fw, indent=True)
 
 
 @task
-def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False):
+def test_dataset(
+    ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False
+):
     import json
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
+
     scene = "FloorPlan_Train1_1" if scenes is None else scenes.split(",")[0]
     controller = ai2thor.controller.Controller(
         width=300,
@@ -2423,43 +2560,45 @@ def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, lo
         start_unity=False if editor_mode else True,
         scene=scene,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         # Unity params
         gridSize=0.25,
         fieldOfView=60,
         rotateStepDegrees=45,
-        agentMode='bot',
+        agentMode="bot",
         visibilityDistance=1,
     )
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         dataset = json.load(f)
         filtered_dataset = dataset
         if scenes is not None:
             scene_set = set(scenes.split(","))
             print("Filtering {}".format(scene_set))
-            filtered_dataset = [d for d in dataset if d['scene'] in scene_set]
+            filtered_dataset = [d for d in dataset if d["scene"] in scene_set]
         if objects is not None:
             object_set = set(objects.split(","))
             print("Filtering {}".format(object_set))
-            filtered_dataset = [d for d in filtered_dataset if d['object_type'] in object_set]
+            filtered_dataset = [
+                d for d in filtered_dataset if d["object_type"] in object_set
+            ]
         current_scene = None
         current_object = None
         point_counter = 0
         print(len(filtered_dataset))
         for point in filtered_dataset:
-            if current_scene != point['scene']:
-                current_scene = point['scene']
+            if current_scene != point["scene"]:
+                current_scene = point["scene"]
                 print("Testing for scene '{}'...".format(current_scene))
-            if current_object != point['object_type']:
-                current_object = point['object_type']
+            if current_object != point["object_type"]:
+                current_object = point["object_type"]
                 point_counter = 0
                 print("    Object '{}'...".format(current_object))
             try:
                 path = metrics.get_shortest_path_to_object_type(
                     controller,
-                    point['object_type'],
-                    point['initial_position'],
-                    {'x': 0, 'y': point['initial_orientation'], 'z': 0}
+                    point["object_type"],
+                    point["initial_position"],
+                    {"x": 0, "y": point["initial_orientation"], "z": 0},
                 )
                 path_dist = metrics.path_distance(path)
                 point_counter += 1
@@ -2473,138 +2612,156 @@ def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, lo
 
 @task
 def visualize_shortest_paths(
-        ctx,
-        dataset_path,
-        width=600,
-        height=300,
-        editor_mode=False,
-        local_build=False,
-        scenes=None,
-        gridSize=0.25,
-        output_dir='.',
-        object_types=None
+    ctx,
+    dataset_path,
+    width=600,
+    height=300,
+    editor_mode=False,
+    local_build=False,
+    scenes=None,
+    gridSize=0.25,
+    output_dir=".",
+    object_types=None,
 ):
     angle = 45
     import ai2thor.controller
     import json
     from PIL import Image
+
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
         local_build=local_build,
         start_unity=False if editor_mode else True,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         # Unity params
         gridSize=gridSize,
         fieldOfView=60,
         rotateStepDegrees=angle,
-        agentMode='bot',
+        agentMode="bot",
         visibilityDistance=1,
     )
-    if output_dir != '.' and os.path.exists(output_dir):
+    if output_dir != "." and os.path.exists(output_dir):
         shutil.rmtree(output_dir)
-    if output_dir != '.':
+    if output_dir != ".":
         os.mkdir(output_dir)
     evt = controller.step(
-        action='AddThirdPartyCamera',
+        action="AddThirdPartyCamera",
         rotation=dict(x=90, y=0, z=0),
         position=dict(x=5.40, y=3.25, z=-3.0),
         fieldOfView=2.25,
-        orthographic=True
+        orthographic=True,
     )
 
-    evt = controller.step(action='SetTopLevelView', topView=True)
-    evt = controller.step(action='ToggleMapView')
+    evt = controller.step(action="SetTopLevelView", topView=True)
+    evt = controller.step(action="ToggleMapView")
 
     # im = Image.fromarray(evt.third_party_camera_frames[0])
     # im.save(os.path.join(output_dir, "top_view.jpg"))
 
-    with open(dataset_path, 'r') as f:
+    with open(dataset_path, "r") as f:
         dataset = json.load(f)
 
         dataset_filtered = dataset
         if scenes is not None:
             scene_f_set = set(scenes.split(","))
-            dataset_filtered = [d for d in dataset if d['scene'] in scene_f_set]
+            dataset_filtered = [d for d in dataset if d["scene"] in scene_f_set]
         if object_types is not None:
             object_f_set = set(object_types.split(","))
-            dataset_filtered = [d for d in dataset_filtered if d['object_type'] in object_f_set]
+            dataset_filtered = [
+                d for d in dataset_filtered if d["object_type"] in object_f_set
+            ]
         print("Running for {} points...".format(len(dataset_filtered)))
 
         index = 0
         print(index)
         print(len(dataset_filtered))
         datapoint = dataset_filtered[index]
-        current_scene = datapoint['scene']
-        current_object = datapoint['object_type']
-        failed ={}
+        current_scene = datapoint["scene"]
+        current_object = datapoint["object_type"]
+        failed = {}
         while index < len(dataset_filtered):
             previous_index = index
             controller.reset(current_scene)
-            while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
+            while (
+                current_scene == datapoint["scene"]
+                and current_object == datapoint["object_type"]
+            ):
                 index += 1
                 if index > len(dataset_filtered) - 1:
                     break
                 datapoint = dataset_filtered[index]
 
-            current_scene = datapoint['scene']
-            current_object = datapoint['object_type']
+            current_scene = datapoint["scene"]
+            current_object = datapoint["object_type"]
 
             key = "{}_{}".format(current_scene, current_object)
 
             failed[key] = []
 
-            print("Points for '{}' in scene '{}'...".format(current_object, current_scene))
+            print(
+                "Points for '{}' in scene '{}'...".format(current_object, current_scene)
+            )
             evt = controller.step(
-                action='AddThirdPartyCamera',
+                action="AddThirdPartyCamera",
                 rotation=dict(x=90, y=0, z=0),
                 position=dict(x=5.40, y=3.25, z=-3.0),
                 fieldOfView=2.25,
-                orthographic=True
+                orthographic=True,
             )
 
-            sc = dataset_filtered[previous_index]['scene']
-            obj_type = dataset_filtered[previous_index]['object_type']
-            positions = [d['initial_position'] for d in dataset_filtered[previous_index:index]]
+            sc = dataset_filtered[previous_index]["scene"]
+            obj_type = dataset_filtered[previous_index]["object_type"]
+            positions = [
+                d["initial_position"] for d in dataset_filtered[previous_index:index]
+            ]
             # print("{} : {} : {}".format(sc, obj_type, positions))
             evt = controller.step(
                 action="VisualizeShortestPaths",
                 objectType=obj_type,
                 positions=positions,
-                grid=True
+                grid=True,
             )
             im = Image.fromarray(evt.third_party_camera_frames[0])
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
 
             # print("Retur {}, {} ".format(evt.metadata['actionReturn'], evt.metadata['lastActionSuccess']))
             # print(evt.metadata['errorMessage'])
-            failed[key] = [positions[i] for i, success in enumerate(evt.metadata['actionReturn']) if not success]
+            failed[key] = [
+                positions[i]
+                for i, success in enumerate(evt.metadata["actionReturn"])
+                if not success
+            ]
 
         from pprint import pprint
+
         pprint(failed)
+
 
 @task
 def fill_in_dataset(
-        ctx,
-        dataset_dir,
-        dataset_filename,
-        filter_filename,
-        intermediate_dir,
-        output_filename='filled.json',
-        local_build=False,
-        editor_mode=False,
-        visibility_distance=1.0
+    ctx,
+    dataset_dir,
+    dataset_filename,
+    filter_filename,
+    intermediate_dir,
+    output_filename="filled.json",
+    local_build=False,
+    editor_mode=False,
+    visibility_distance=1.0,
 ):
     import json
     import re
     import glob
     import ai2thor.controller
+
     dataset_path = os.path.join(dataset_dir, dataset_filename)
     output_dataset_path = os.path.join(dataset_dir, output_filename)
     filled_dataset_path = os.path.join(intermediate_dir, output_filename)
+
     def key_sort_func(scene_name):
-        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", scene_name)
         return m.group(1), int(m.group(2)), int(m.group(3))
 
     targets = [
@@ -2621,7 +2778,7 @@ def fill_in_dataset(
         "Vase",
         "Alarm Clock",
         "Television",
-        "Pillow"
+        "Pillow",
     ]
 
     controller = ai2thor.controller.Controller(
@@ -2630,18 +2787,18 @@ def fill_in_dataset(
         local_build=local_build,
         start_unity=False if editor_mode else True,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         # Unity params
         gridSize=0.25,
         fieldOfView=60,
         rotateStepDegrees=45,
-        agentMode='bot',
+        agentMode="bot",
         visibilityDistance=1,
     )
 
     scenes = sorted(
-        [scene for scene in controller._scenes_in_build if 'physics' not in scene],
-        key=key_sort_func
+        [scene for scene in controller._scenes_in_build if "physics" not in scene],
+        key=key_sort_func,
     )
 
     missing_datapoints_by_scene = {}
@@ -2650,7 +2807,7 @@ def fill_in_dataset(
         missing_datapoints_by_scene[scene] = []
         partial_dataset_by_scene[scene] = []
 
-    with open(dataset_path, 'r') as f:
+    with open(dataset_path, "r") as f:
         dataset = json.load(f)
         fill_in_dataset = create_dataset(
             ctx,
@@ -2658,46 +2815,54 @@ def fill_in_dataset(
             editor_mode=editor_mode,
             output=output_filename,
             intermediate_directory=intermediate_dir,
-            visibility_distance=visibility_distance
+            visibility_distance=visibility_distance,
         )
 
         for datapoint in filter_dataset:
-            missing_datapoints_by_scene[datapoint['scene']].append(datapoint)
+            missing_datapoints_by_scene[datapoint["scene"]].append(datapoint)
 
-        partial_dataset_filenames = sorted(glob.glob("{}/FloorPlan_*.png".format(dataset_dir)))
+        partial_dataset_filenames = sorted(
+            glob.glob("{}/FloorPlan_*.png".format(dataset_dir))
+        )
         print("Datas")
 
-        difficulty_order_map = {
-            'easy': 0,
-            'medium': 1,
-            'hard': 2
-        }
+        difficulty_order_map = {"easy": 0, "medium": 1, "hard": 2}
 
         for d_filename in partial_dataset_filenames:
-            with open(d_filename, 'r') as fp:
+            with open(d_filename, "r") as fp:
                 partial_dataset = json.load(fp)
-                partial_dataset[0]['scene'] = partial_dataset
+                partial_dataset[0]["scene"] = partial_dataset
 
         final_dataset = []
         for scene in scenes:
             for object_type in targets:
-                arr = [p for p in partial_dataset[scene] if p['object_type'] == object_type] + \
-                      [p for p in missing_datapoints_by_scene[scene] if p['object_type'] == object_type]
+                arr = [
+                    p for p in partial_dataset[scene] if p["object_type"] == object_type
+                ] + [
+                    p
+                    for p in missing_datapoints_by_scene[scene]
+                    if p["object_type"] == object_type
+                ]
                 final_dataset = final_dataset + sorted(
                     arr,
-                    key=lambda p: (p['object_type'], difficulty_order_map[p['difficulty']])
+                    key=lambda p: (
+                        p["object_type"],
+                        difficulty_order_map[p["difficulty"]],
+                    ),
                 )
+
 
 @task
 def test_teleport(ctx, editor_mode=False, local_build=False):
     import ai2thor.controller
-    import  time
+    import time
+
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
         visibilityDistance=1.0,
         gridSize=0.25,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
@@ -2708,112 +2873,112 @@ def test_teleport(ctx, editor_mode=False, local_build=False):
         scene="FloorPlan_Train1_2",
         width=640,
         height=480,
-        continus=True
+        continus=True,
     )
 
-    controller.step(
-        action="GetReachablePositions",
-        gridSize=0.25
-    )
-    params = {'x': 8.0, 'y': 0.924999952, 'z': -1.75, 'rotation': {'x': 0.0, 'y': 240.0, 'z': 0.0}, 'horizon': 330.0}
-    evt = controller.step(
-        action="TeleportFull",
-        **params
-    )
+    controller.step(action="GetReachablePositions", gridSize=0.25)
+    params = {
+        "x": 8.0,
+        "y": 0.924999952,
+        "z": -1.75,
+        "rotation": {"x": 0.0, "y": 240.0, "z": 0.0},
+        "horizon": 330.0,
+    }
+    evt = controller.step(action="TeleportFull", **params)
 
     print("New pos: {}".format(evt.metadata["agent"]["position"]))
 
 
 @task
-def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build = True):
+def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build=True):
     import json
     import re
-    with open(dataset_path, 'r') as f:
+
+    with open(dataset_path, "r") as f:
         dataset = json.load(f)
 
     index = 0
     previous_index = 0
     datapoint = dataset[index]
-    current_scene = datapoint['scene']
-    current_object = datapoint['object_type']
+    current_scene = datapoint["scene"]
+    current_object = datapoint["object_type"]
     # controller.reset(current_scene)
     sum_t = 0
     new_dataset = []
     while index < len(dataset):
         previous_index = index
-        while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
+        while (
+            current_scene == datapoint["scene"]
+            and current_object == datapoint["object_type"]
+        ):
             index += 1
             if index > len(dataset) - 1:
                 break
             datapoint = dataset[index]
 
-        current_scene = datapoint['scene']
-        current_object = datapoint['object_type']
+        current_scene = datapoint["scene"]
+        current_object = datapoint["object_type"]
 
         print("Scene '{}'...".format(current_scene))
         sorted_datapoints = sorted(
-            dataset[previous_index:index],
-            key=lambda dp: dp['shortest_path_length']
+            dataset[previous_index:index], key=lambda dp: dp["shortest_path_length"]
         )
         third = int(len(sorted_datapoints) / 3.0)
         for i, obj in enumerate(sorted_datapoints):
             if i < third:
-                level = 'easy'
+                level = "easy"
             elif i < 2 * third:
-                level = 'medium'
+                level = "medium"
             else:
-                level = 'hard'
-            sorted_datapoints[i]['difficulty'] = level
-            m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', obj['scene'])
+                level = "hard"
+            sorted_datapoints[i]["difficulty"] = level
+            m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", obj["scene"])
             point_id = "{}_{}_{}_{}_{}".format(
-                m.group(1),
-                m.group(2),
-                m.group(3),
-                obj['object_type'],
-                i
+                m.group(1), m.group(2), m.group(3), obj["object_type"], i
             )
-            sorted_datapoints[i]['id'] = point_id
-            sorted_datapoints[i]['difficulty'] = level
+            sorted_datapoints[i]["id"] = point_id
+            sorted_datapoints[i]["difficulty"] = level
         new_dataset = new_dataset + sorted_datapoints
         sum_t += len(sorted_datapoints)
 
     print("original len: {}, new len: {}".format(len(dataset), sum_t))
 
-    with open(output_path, 'w') as fw:
+    with open(output_path, "w") as fw:
         json.dump(new_dataset, fw, indent=4)
 
 
 @task
 def remove_dataset_spaces(ctx, dataset_dir):
     import json
-    train = os.path.join(dataset_dir, 'train.json')
-    test = os.path.join(dataset_dir, 'val.json')
 
-    with open(train, 'r') as f:
+    train = os.path.join(dataset_dir, "train.json")
+    test = os.path.join(dataset_dir, "val.json")
+
+    with open(train, "r") as f:
         train_data = json.load(f)
 
-    with open(test, 'r') as f:
+    with open(test, "r") as f:
         test_data = json.load(f)
 
     id_set = set()
     for o in train_data:
-        o['id'] = o['id'].replace(" ", '')
-        id_set.add(o['id'])
+        o["id"] = o["id"].replace(" ", "")
+        id_set.add(o["id"])
 
     print(sorted(id_set))
 
     id_set = set()
 
     for o in test_data:
-        o['id'] = o['id'].replace(" ", '')
-        id_set.add(o['id'])
+        o["id"] = o["id"].replace(" ", "")
+        id_set.add(o["id"])
 
     print(sorted(id_set))
 
-    with open('train.json', 'w') as fw:
+    with open("train.json", "w") as fw:
         json.dump(train_data, fw, indent=4, sort_keys=True)
 
-    with open('val.json', 'w') as fw:
+    with open("val.json", "w") as fw:
         json.dump(test_data, fw, indent=4, sort_keys=True)
 
 
@@ -2821,12 +2986,13 @@ def remove_dataset_spaces(ctx, dataset_dir):
 def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False):
     import ai2thor.util.metrics as metrics
     import ai2thor.controller
+
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
         visibilityDistance=1.0,
         gridSize=0.25,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
@@ -2837,13 +3003,11 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
         scene=scene,
         width=300,
         height=300,
-        continus=True
+        continus=True,
     )
 
     evt = metrics.get_shortest_path_to_point(
-        controller,
-        dict(x=x0, y=y0, z=z0),
-        dict(x=x1, y=y1, z=z1)
+        controller, dict(x=x0, y=y0, z=z0), dict(x=x1, y=y1, z=z1)
     )
 
     print(evt.metadata["lastActionSuccess"])
@@ -2854,13 +3018,14 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
 def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     import ai2thor.util.metrics as metrics
     import ai2thor.controller
+
     gridSize = 0.25
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
         visibilityDistance=1.0,
         gridSize=gridSize,
         port=8200,
-        host='127.0.0.1',
+        host="127.0.0.1",
         local_build=local_build,
         start_unity=False if editor_mode else True,
         agentType="stochastic",
@@ -2871,14 +3036,18 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
         scene=scene,
         width=300,
         height=300,
-        continus=True
+        continus=True,
     )
 
-    print("constoller.last_action Agent Pos: {}".format(controller.last_event.metadata["agent"]["position"]))
+    print(
+        "constoller.last_action Agent Pos: {}".format(
+            controller.last_event.metadata["agent"]["position"]
+        )
+    )
 
     evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
 
-    print("After GetReachable AgentPos: {}".format(evt.metadata['agent']['position']))
+    print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
 
     print(evt.metadata["lastActionSuccess"])
     print(evt.metadata["errorMessage"])
@@ -2887,18 +3056,15 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
 
     print(evt.metadata["actionReturn"])
 
-
-
     evt = controller.step(
         dict(
             action="TeleportFull",
             x=3.0,
-            y=reachable_pos[0]['y'],
+            y=reachable_pos[0]["y"],
             z=-1.5,
             rotation=dict(x=0, y=45.0, z=0),
             horizon=0.0,
         )
     )
 
-    print("After teleport: {}".format(evt.metadata['agent']['position']))
-
+    print("After teleport: {}".format(evt.metadata["agent"]["position"]))
