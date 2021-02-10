@@ -270,7 +270,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
         
         //zero out rotation and velocity/angular velocity, then match the target receptacle's rotation
-        sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
+        // MCS remove next line
+        // sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         Rigidbody sopRB = sop.GetComponent<Rigidbody>();
         sopRB.velocity = Vector3.zero;
         sopRB.angularVelocity = Vector3.zero;
@@ -290,7 +291,7 @@ public class InstantiatePrefabTest : MonoBehaviour
             oabb.enabled = true;
 
             // Set the new rotation rather than using Transform.Rotate because we want to ignore the receptacle object's local rotation.
-            sop.transform.rotation = Quaternion.Euler(sop.transform.localRotation.x, i * degreeIncrement, sop.transform.localRotation.z);
+            sop.transform.rotation = Quaternion.Euler(sop.transform.localRotation.eulerAngles.x, i * degreeIncrement, sop.transform.localRotation.eulerAngles.z);
 
             Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + Vector3.down * 10);
             BoxBottom = new Plane(Vector3.up, Offset);
@@ -351,8 +352,16 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
+            Vector3 targetPosition = rsp.Point + Vector3.up * (quat.distance + yoffset);
+            Vector3 objectPosition = sop.BoundingBox.transform.TransformPoint(sop.transform.position);
+            Vector3 boundsPosition = sop.BoundingBox.transform.TransformPoint(sop.BoundingBox.transform.position);
+            targetPosition = new Vector3(
+                    targetPosition.x + sop.transform.localScale.x * (boundsPosition.x - objectPosition.x),
+                    targetPosition.y,
+                    targetPosition.z + sop.transform.localScale.z * (boundsPosition.z - objectPosition.z)
+            );
             //if spawn area is clear, spawn it and return true that we spawned it
-            if(CheckSpawnArea(sop, rsp.Point + Vector3.up * (quat.distance + yoffset), quat.rotation, false))
+            if(CheckSpawnArea(sop, targetPosition, quat.rotation, false))
             {
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
@@ -386,7 +395,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 }
 
                 //translate position of the target sim object to the rsp.Point and offset in local y up
-                sop.transform.position = rsp.Point + Vector3.up * (quat.distance + yoffset);//rsp.Point + Vector3.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.position = targetPosition;
                 sop.transform.rotation = quat.rotation;
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
