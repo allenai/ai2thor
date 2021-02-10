@@ -49,7 +49,11 @@ def compute_single_spl(path, shortest_path, successful_path):
     Si = 1 if successful_path == True or successful_path == 1 else 0
     li = path_distance(shortest_path)
     pi = path_distance(path)
-    spl = Si * (li / (max(pi, li)))
+    if max(pi, li) > 0:
+        pl_ratio = li / max(pi, li)
+    else:
+        pl_ratio = 1.0
+    spl = Si * pl_ratio
     return spl
 
 
