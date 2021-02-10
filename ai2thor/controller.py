@@ -490,14 +490,26 @@ class Controller(object):
                 if "FloorPlan28" in scenes_in_build:
                     scene = "FloorPlan28"
                 else:
-                    ithor_scenes = set(self.ithor_scenes())
-                    ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
-                    if ithor_scenes_in_build:
-                        # Prioritize iTHOR because that's what the default agent best uses.
-                        scene = random.choice(ithor_scenes_in_build)
+                    # use a robothor scene
+                    robothor_scenes = set(self.robothor_scenes())
+
+                    # prioritize robothor if locobot is being used
+                    robothor_scenes_in_build = robothor_scenes.intersection(scenes_in_build)
+
+                    if (
+                        "locobot" == unity_initialization_parameters.get("agentMode", "default").lower() and
+                        robothor_scenes_in_build
+                    ):
+                        scene = random.choice(robothor_scenes_in_build)
                     else:
-                        # perhaps only using RoboTHOR or using only custom scenes
-                        scene = random.choice(scenes_in_build)
+                        ithor_scenes = set(self.ithor_scenes())
+                        ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
+                        if ithor_scenes_in_build:
+                            # Prioritize iTHOR because that's what the default agent best uses.
+                            scene = random.choice(ithor_scenes_in_build)
+                        else:
+                            # perhaps only using RoboTHOR or using only custom scenes
+                            scene = random.choice(scenes_in_build)
 
             event = self.reset(scene)
 
@@ -603,7 +615,7 @@ class Controller(object):
 
         # RoboTHOR checks
         agent_mode = self.initialization_parameters.get("agentMode", "default")
-        if agent_mode == "locobot":
+        if agent_mode.lower() == "bot":
             self.initialization_parameters["agentMode"] = "locobot"
             warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
         if (
