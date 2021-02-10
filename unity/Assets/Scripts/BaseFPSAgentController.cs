@@ -1757,7 +1757,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //teleport full, base version does not consider being able to hold objects
         public virtual void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
-
+            print(targetTeleport);
             if (action.forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
@@ -1788,6 +1788,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m.y = Physics.gravity.y * this.m_GravityMultiplier;
                 m_CharacterController.Move(m);
 
+                bool xzMisMatch = false;
+
+                if(!Mathf.Approximately(transform.position.x, action.x) || 
+                !(Mathf.Approximately(transform.position.z, action.z))) {
+                    xzMisMatch = true;
+                    print("xz was diff");
+                    
+                    print("x pos is: " + transform.position.x);
+                    print("action x is : " + action.x);
+
+                    print("z pos is: " + transform.position.z);
+                    print("action z is: " + action.z);
+                }
+
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
@@ -1801,7 +1815,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     includeErrorMessage: true
                 );
 
-                if (agentCollides) {
+                if (agentCollides || xzMisMatch) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
@@ -2918,7 +2932,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (sop != null) {
                             collidedWithName = sop.ObjectID;
                         } else {
-                            collidedWithName = sop.gameObject.name;
+                            collidedWithName = c.gameObject.name;
                         }
                         errorMessage = $"Collided with: {collidedWithName}.";
                     }

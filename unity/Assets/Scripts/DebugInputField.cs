@@ -1306,6 +1306,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "teles":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportFull";
+                        action.x = 4.42f;
+                        action.y = 0.9009f;
+                        action.z = -1.05f;
+                        StochasticController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "map":
                     {
                         ExecuteAction("ToggleMapView");

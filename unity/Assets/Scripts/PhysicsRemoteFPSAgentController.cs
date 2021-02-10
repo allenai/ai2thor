@@ -1723,6 +1723,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m.y = Physics.gravity.y * this.m_GravityMultiplier;
                 m_CharacterController.Move(m);
 
+                bool xzMisMatch = false;
+
+                if(!Mathf.Approximately(transform.position.x, action.x) || 
+                !(Mathf.Approximately(transform.position.z, action.z))) {
+                    xzMisMatch = true;
+                }
+
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
@@ -1741,7 +1748,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Cannot teleport due to hand object collision.";
                 }
 
-                if (agentCollides || handObjectCollides) {
+                if (agentCollides || handObjectCollides || xzMisMatch) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
