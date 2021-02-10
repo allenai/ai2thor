@@ -370,7 +370,7 @@ class Controller(object):
             height=300,
             x_display=None,
             host='127.0.0.1',
-            scene='FloorPlan_Train1_1',
+            scene=None,
             image_dir='.',
             save_image_per_frame=False,
             depth_format=DepthFormat.Meters,
@@ -440,7 +440,7 @@ class Controller(object):
                 )
 
             if 'fastActionEmit' in self.initialization_parameters and self.server_class != ai2thor.fifo_server.FifoServer:
-                warnings.warn("fastAtionEmit is only available with the FifoServer");
+                warnings.warn("fastActionEmit is only available with the FifoServer");
 
             if 'continuousMode' in self.initialization_parameters:
                 warnings.warn(
@@ -450,17 +450,32 @@ class Controller(object):
                     DeprecationWarning
                 )
 
+            # Let's set the scene for them!
+            if scene is None:
+                scenes_in_build = self.scenes_in_build
+                if not scenes_in_build:
+                    raise RuntimeError("No scenes are in your build of AI2-THOR!")
+
+                # we use FloorPlan28 because it is used for all the testing actions
+                if "FloorPlan28" in scenes:
+                    scene = "FloorPlan28"
+                else:
+                    ithor_scenes = set(self.ithor_scenes())
+                    ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
+                    if ithor_scenes_in_build:
+                        # Prioritize iTHOR because that's what the default agent best uses.
+                        scene = random.choice(ithor_scenes_in_build)
+                    else:
+                        # perhaps only using RoboTHOR or using only custom scenes
+                        scene = random.choice(scenes_in_build)
+
             event = self.reset(scene)
-            if event.metadata['lastActionSuccess']:
-                init_return = event.metadata['actionReturn']
-                # older builds don't send actionReturn on Initialize
-                if init_return:
-                    self.server.set_init_params(init_return)
-                    logging.info("Initialize return: {}".format(init_return))
-            else:
-                raise RuntimeError('Initialize action failure: {}'.format(
-                    event.metadata['errorMessage'])
-                )
+
+            # older builds don't send actionReturn on Initialize
+            init_return = event.metadata['actionReturn']
+            if init_return:
+                self.server.set_init_params(init_return)
+                logging.info("Initialize return: {}".format(init_return))
 
     def _build_server(self, host, port, width, height):
 
@@ -509,7 +524,7 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    def reset(self, scene='FloorPlan_Train1_1', **init_params):
+    def reset(self, scene, **init_params):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
@@ -548,7 +563,25 @@ class Controller(object):
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
+
+        # RoboTHOR checks
+        agent_mode = self.initialization_parameters.get("agentMode", "default")
+        if agent_mode == "locobot":
+            self.initialization_parameters["agentMode"] = "locobot"
+            warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+        if (
+            scene in self.robothor_scenes and
+            self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
+        ):
+            warnings.warn("You are using a RoboTHOR scene without using the standard LoCoBot.\n" +
+             "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?")
+
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
+
+        if not self.last_event.metadata['lastActionSuccess']:
+            raise RuntimeError('Initialize action failure: {}'.format(
+                self.last_event.metadata['errorMessage'])
+            )
 
         return self.last_event
 
@@ -563,13 +596,55 @@ class Controller(object):
 
         raise Exception("RandomInitialize has been removed.  Use InitialRandomSpawn - https://ai2thor.allenai.org/ithor/documentation/actions/initialization/#object-position-randomization")
 
-    def scene_names(self):
+    def ithor_scenes(
+        self,
+        include_kitchens=True,
+        include_living_rooms=True,
+        include_bedrooms=True,
+        include_bathrooms=True
+    ):
+        # keep this as a list because the order may look weird otherwise
         scenes = []
-        for low, high in [(1,31), (201, 231), (301, 331), (401, 431)]:
+
+        types = []
+        if include_kitchens:
+            types.append((1, 31))
+        if include_living_rooms:
+            types.append((201, 231))
+        if include_bedrooms:
+            types.append((301, 331))
+        if include_bathrooms:
+            types.append((401, 431))
+
+        for low, high in types:
             for i in range(low, high):
-                scenes.append('FloorPlan%s_physics' % i)
+                scenes.append('FloorPlan%s' % i)
 
         return scenes
+
+    def robothor_scenes(self, include_train=True, include_val=True):
+        # keep this as a list because the order may look weird otherwise
+        scenes = []
+        stages = dict()
+
+        # from FloorPlan_Train[1:12]_[1:5]
+        if include_train:
+            stages["Train"] = range(1, 13)
+        if include_val:
+            # from FloorPlan_Val[1:12]_[1:5]
+            stages["Val"] = range(1, 4)
+
+        for stage, wall_config_i in stages.items():
+            for object_config_i in range(1, 6):
+                scenes.append('FloorPlan_{stage}{wall_config}_{object_config}'.format(
+                    stage=stage,
+                    wall_config=wall_config_i,
+                    object_config=object_config_i)
+                )
+        return scenes
+
+    def scene_names(self):
+        return self.ithor_scenes + self.robothor_scenes
 
     def _prune_release(self, release):
         try:

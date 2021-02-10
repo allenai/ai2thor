@@ -177,7 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
-                        //action.agentMode = "bot";
+                        //action.agentMode = "locobot";
                         action["fieldOfView"] = 90f;
                         //action.cameraY = 2.0f;
                         action["snapToGrid"] = true;
@@ -222,7 +222,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["visibilityDistance"] = 1.0f;
                         action["fieldOfView"] = 60;
                         action["rotateStepDegrees"] = 45;
-                        action["agentMode"] = "bot";
+                        action["agentMode"] = "locobot";
                         action["agentControllerType"] = "stochastic";
 
                         action["applyActionNoise"] = true;

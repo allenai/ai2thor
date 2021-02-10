@@ -138,7 +138,7 @@ public class AgentManager : MonoBehaviour
 	{
         //first parse agentMode and agentControllerType
         //"default" agentMode can use either default or "stochastic" agentControllerType
-        //"bot" agentMode can use either default or "stochastic" agentControllerType
+        //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if(action.agentMode.ToLower() == "default")
         {
@@ -163,7 +163,7 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-        else if(action.agentMode.ToLower() == "bot")
+        else if(action.agentMode.ToLower() == "locobot")
         {
             //if not stochastic, default to stochastic
             if(action.agentControllerType.ToLower() != "stochastic")
@@ -1561,7 +1561,7 @@ public class ServerAction
     public float noise;
     public ControllerInitialization controllerInitialization = null;
     public string agentControllerType = "physics";//default to physics controller
-    public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
+    public string agentMode = "default"; //mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
     public int maxStepCount;

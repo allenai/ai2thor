@@ -34,7 +34,7 @@ public class FirstPersonCharacterCull : MonoBehaviour
         if(mode == "default")
         RenderersToHide = TallRenderers;
 
-        else if(mode == "bot")
+        else if(mode == "locobot")
         RenderersToHide = BotRenderers;
 
         else if(mode == "drone")
