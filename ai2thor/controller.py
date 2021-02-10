@@ -457,7 +457,7 @@ class Controller(object):
                     raise RuntimeError("No scenes are in your build of AI2-THOR!")
 
                 # we use FloorPlan28 because it is used for all the testing actions
-                if "FloorPlan28" in scenes:
+                if "FloorPlan28" in scenes_in_build:
                     scene = "FloorPlan28"
                 else:
                     ithor_scenes = set(self.ithor_scenes())
@@ -618,7 +618,7 @@ class Controller(object):
 
         for low, high in types:
             for i in range(low, high):
-                scenes.append('FloorPlan%s' % i)
+                scenes.append('FloorPlan%s_physics' % i)
 
         return scenes
 
