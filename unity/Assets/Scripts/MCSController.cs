@@ -467,6 +467,16 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.ResetAgentHandPosition(action);
     }
 
+    public override void ResetAgentHandRotation(ServerAction action) {
+        // Don't reset the player's hand rotation if the player is just moving or rotating.
+        // Use this.lastAction here because this function's ServerAction argument is sometimes null.
+        if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
+            this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
+            return;
+        }
+        base.ResetAgentHandRotation(action);
+    }
+
     public override void RotateLook(ServerAction response)
     {
         // Need to calculate current rotation/horizon and increment by inputs given
@@ -487,12 +497,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         this.bodyRotationActionData = //left right
-            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)), false);
+            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)));
         this.lookRotationActionData = !reset ? //if not reseting then free look up down
-            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f)), false) :
-            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero), true);
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f))) :
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero));
 
-        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), reset ? ActionStatus.CANNOT_ROTATE : ActionStatus.SUCCESSFUL);
     }
 
     public void SimulatePhysics() {
@@ -530,12 +540,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             }
         } //for rotation
         else if (this.inputWasRotateLook) {
-            if (this.lookRotationActionData.reset) {
-                ResetLookRotation(this.lookRotationActionData);
-            } else {
-                RotateLookAcrossFrames(this.lookRotationActionData);
-            }
-
+            RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             this.actionFrameCount++;
             if (this.actionFrameCount == this.substeps) {
@@ -673,16 +678,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
-        // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
-        // receptacle objects) for its position because its transform's position may not be its actual position
-        // in the camera since the renderer may be defined in a child object with an offset position.
-        Renderer renderer = gameObject.GetComponentInChildren<Renderer>();
-        if (renderer != null) {
-            objectMetadata.position = renderer.bounds.center;
-            // Use the object's new position for the distance previously set in generateObjectMetadata.
-            objectMetadata.distance = Vector3.Distance(this.transform.position, objectMetadata.position);
-        }
-
         // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
         objectMetadata.heading = objectMetadata.position - this.transform.position;
         objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);
@@ -706,18 +701,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         sizeY = sizeY * boundingBoxCollider.size.y;
         sizeZ = sizeZ * boundingBoxCollider.size.z;
 
-        float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.AgentHand.transform.parent.localScale.y);
-        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.AgentHand.transform.parent.localScale.z);
+        float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.transform.localScale.y);
+        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.transform.localScale.z);
         positionY = positionY * multiplierY;
         positionZ = positionZ * multiplierZ;
         sizeY = sizeY * multiplierY;
         sizeZ = sizeZ * multiplierZ;
 
-        this.AgentHand.transform.localPosition = new Vector3(
-            this.AgentHand.transform.localPosition.x,
-            -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y),
-            ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z)
-        );
+        float handY = -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y);
+        float handZ = ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z);
+
+        // Ensure that a tall held object is not positioned inside of the floor below.
+        float minY = (sizeY / 2.0f) - positionY - (this.transform.position.y / this.transform.localScale.y) +
+            MCSController.DISTANCE_HELD_OBJECT_Y;
+
+        this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x, Math.Max(handY, minY), handZ);
     }
 
     public void Crawl(ServerAction action) {
@@ -908,19 +906,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
-
-    public void ResetLookRotation(MCSRotationData rotationActionData)
-    {
-        Quaternion currentAngle = rotationActionData.startingRotation;
-        Quaternion endAngle = rotationActionData.endRotation;
-
-        float horizonChange = currentAngle.eulerAngles.x - endAngle.eulerAngles.x;
-        horizonChange = horizonChange > maxHorizon ? horizonChange - 360 : horizonChange;
-        Vector3 lookChange = new Vector3(horizonChange, 0, 0);
-
-        Vector3 changePerFrame = -lookChange / 5f; //up or down per frame
-        m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + changePerFrame);
-    }
 }
 
 /* class for contatining movement data */
@@ -942,11 +927,9 @@ public class MCSMovementActionData {
 public class MCSRotationData {
     public Quaternion startingRotation;
     public Quaternion endRotation;
-    public bool reset;
 
-    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation, bool reset) {
+    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation) {
         this.startingRotation = startingRotation;
         this.endRotation = endRotation;
-        this.reset = reset;
     }
 }

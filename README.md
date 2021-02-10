@@ -231,12 +231,17 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `Scripts/InstantiatePrefabTest`:
   - In `PlaceObject`, fixed object rotation so that it always rotates around the global DOWN rather than using the receptacle object's local rotation.
   - In `PlaceObject`, removed the `HowManyCornersToCheck` behavior because it was buggy (there's no way to guarantee that the 4 correct corners are always the 4 bottom corners).
+  - In `PlaceObject`, removed setting the object's rotation to the receptacle trigger box's rotation to keep the original rotation.
+  - In `PlaceObject`, in the `HowManyRotationsToCheck` loop, fixed setting the object's rotation to properly use euler angles.
+  - In `PlaceObject`, in the `ToCheck` loop, fixed setting the object's target position to handle objects with non-zero rotations.
   - In `CheckSpawnArea`, fixed how the object bounding box center and size are calculated so that its transform, its parent's transform, and its collider are all used.
 - `Scripts/PhysicsRemoteFPSAgentController`:
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, `ObjectMetadataFromSimObjPhysics`
   - Added `virtual` to functions: `CloseObject`, `DropHandObject`, `OpenObject`, `PickupObject`, `PullObject`, `PushObject`, `PutObject`, `ResetAgentHandPosition`, `ThrowObject`, `ToggleObject`
   - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
   - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful.
+  - Added the `FindClosestPoint` function.
+  - In `ApplyForceObject` and `PickupObject`, use `FindClosestPoint` to decide whether an object is obstructed or just out-of-reach.
   - Added `lastActionStatus` to Move actions, as well as to `DropHandObject`, `PickupObject`, and `PutObject` to help indicate success or reason for failure
   - Added check to make sure object exists for `DropHandObject`
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
@@ -257,6 +262,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added properties: `shape`
   - Changed the `Start` function to `public` so we can call it from our scripts
   - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
+  - In `FindMySpawnPoints`, ignore receptacle trigger boxes of stacking receptacles that are currently positioned higher than the receptacle itself (in case the receptacle is rotated).
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.
