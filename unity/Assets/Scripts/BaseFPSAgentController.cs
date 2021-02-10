@@ -782,8 +782,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void MoveInDirection(Vector3 direction) {
-            actionFinished(moveInDirection(direction: direction));
+        public void MoveGlobal(float x, float z) {
+            actionFinished(moveInDirection(direction: new Vector3(x, 0f, z)));
         }
 
         protected float distanceToObject(SimObjPhysics sop) {
@@ -2913,7 +2913,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (sop != null) {
                             collidedWithName = sop.ObjectID;
                         } else {
-                            collidedWithName = sop.gameObject.name;
+                            collidedWithName = c.gameObject.name;
                         }
                         errorMessage = $"Collided with: {collidedWithName}.";
                     }
