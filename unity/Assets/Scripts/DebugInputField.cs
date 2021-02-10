@@ -170,8 +170,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
-                        // action.renderClassImage = true;
-                        // action.renderObjectImage = true;
+                        // action.renderSemanticSegmentation = true;
+                        // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
                         // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
@@ -214,8 +214,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
-                        // action.renderClassImage = true;
-                        // action.renderObjectImage = true;
+                        // action.renderSemanticSegmentation = true;
+                        // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
 
                         action["gridSize"] = 0.25f;
@@ -500,8 +500,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
-                        // action.renderClassImage = true;
-                        // action.renderObjectImage = true;
+                        // action.renderSemanticSegmentation = true;
+                        // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
 
                         action["action"] = "Initialize";
@@ -776,8 +776,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action["renderNormalsImage"] = true;
                         action["renderDepthImage"] = true;
-                        action["renderClassImage"] = true;
-                        action["renderObjectImage"] = true;
+                        action["renderSemanticSegmentation"] = true;
+                        action["renderInstanceSegmentation"] = true;
                         action["renderFlowImage"] = true;
 
                         //action.ssao = "default";
