@@ -203,7 +203,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             background.SetActive(false);
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public IEnumerator ExecuteBatch(List<string> commands) {
 
             foreach(var command in commands) {
@@ -324,22 +324,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "inita":
                     {
-						ServerAction action = new ServerAction();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
 						if (splitcommand.Length == 2 )
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3)
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
+							action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.gridSize = float.Parse(splitcommand[1]);
-                            action.agentCount = int.Parse(splitcommand[2]);
-                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
                         }
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
@@ -356,16 +356,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.cameraY = 2.0f;
                         //action.snapToGrid = true;
                         // action.rotateStepDegrees = 45;
-                        action.action = "Initialize";
+                        action["action"] = "Initialize";
 
-                        action.agentMode = "arm";
-                        action.agentControllerType = "mid-level";
+                        action["agentMode"] = "arm";
+                        action["agentControllerType"] = "mid-level";
 
                         //action.useMassThreshold = true;
                         //action.massThreshold = 10f;
 
 
-                        AManager.Initialize(action);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -430,7 +430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
 
                     // execute each action
-                    IEnumerator ExecuteBatch(JArray jActions) {
+                    IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
                             while (PhysicsController.IsProcessing) {
@@ -440,7 +440,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(new DynamicServerAction(action));
                         }
                     }
-                    StartCoroutine(ExecuteBatch(jActions: actions));
+                    StartCoroutine(executeBatch(jActions: actions));
                     break;
 
                  case "exp":
@@ -864,19 +864,77 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
                     break;
                 }
+                
+                case "slide1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_04_2021_16_44_01");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
+                case "slide2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_04_2021_20_51_23");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+        
                 case "slide3":
                 {
                     List<string> commands = new List<string>();
                     commands.Add("inita");
-                    commands.Add("telefull 0.25 0.9014922380447388 1.5 360 10");
-                    //commands.Add("mc 0.0 0.0 0.2 1");
-                    commands.Add("mmlah 0.38 1 true true false");
+                    commands.Add("run 02_04_2021_23_31_11");
                     commands.Add("debugarmjoints");
                     StartCoroutine(ExecuteBatch(commands));
-                    //run debugarmjoints to get rotation metadata
                     break;
-                }                
+                }
+        
+                case "slide4":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_01_26_52");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide5":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_02_58_54");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide6":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_07_28_25");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide7":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_08_36_10");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
                 case "ras1":
                 {
@@ -3409,7 +3467,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
-        #endif
+#endif
 
 #if UNITY_EDITOR
 

@@ -846,6 +846,7 @@ def test_change_resolution(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_get_interactable_poses(controller):
+
     controller.reset("FloorPlan28")
     fridgeId = next(
         obj["objectId"]
