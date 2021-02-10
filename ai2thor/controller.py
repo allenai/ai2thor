@@ -749,7 +749,8 @@ class Controller(object):
             action["rotation"] = {}
             action["rotation"]["y"] = rotation
 
-        # support for deprecated parameter names (old: new)
+        # Support for deprecated parameter names (old: new)
+        # Note that these parameters used to be applicable to ANY action.
         changed_parameter_names = {
             "renderClassImage": "renderSemanticSegmentation",
             "renderObjectImage": "renderInstanceSegmentation",
