@@ -84,6 +84,11 @@ def test_small_aspect():
     assert event.frame.shape == (64, 128, 3)
     controller.stop()
 
+def test_bot_deprecation():
+    controller = build_controller(agentMode="bot", width=128, height=64)
+    assert controller.initialization_parameters["agentMode"].lower() == "locobot", "bot should alias to locobot!"
+    controller.stop()
+
 def test_reset():
     controller = build_controller()
     width = 520
