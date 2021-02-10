@@ -466,6 +466,16 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.ResetAgentHandPosition(action);
     }
 
+    public override void ResetAgentHandRotation(ServerAction action) {
+        // Don't reset the player's hand rotation if the player is just moving or rotating.
+        // Use this.lastAction here because this function's ServerAction argument is sometimes null.
+        if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
+            this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
+            return;
+        }
+        base.ResetAgentHandRotation(action);
+    }
+
     public override void RotateLook(ServerAction response)
     {
         // Need to calculate current rotation/horizon and increment by inputs given

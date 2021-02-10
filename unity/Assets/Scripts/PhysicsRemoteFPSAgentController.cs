@@ -2969,7 +2969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
-        public void ResetAgentHandRotation(ServerAction action = null) {
+        public virtual void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             // if (sop != null) {
@@ -4070,6 +4070,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
                     ItemInHand.layer = 8; // SimObjVisible
+                    // MCS ADDED BLOCK
+                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                        collider.gameObject.layer = 8; // SimObjVisible
+                    });
                     ItemInHand = null;
                     DefaultAgentHand();
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
@@ -4159,6 +4163,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand.layer = 8; // SimObjVisible
+                // MCS ADDED BLOCK
+                ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                    collider.gameObject.layer = 8; // SimObjVisible
+                });
                 ItemInHand = null;
                 DefaultAgentHand();
 
@@ -4266,12 +4274,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 PickupContainedObjects(target);
 
             target.transform.position = AgentHand.transform.position;
-            // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
-            // MCS remove next line
-            // target.transform.rotation = transform.rotation;
+            // MCS ADDED NEXT LINE
+            Quaternion previousRotation = target.transform.localRotation;
             target.transform.SetParent(AgentHand.transform);
+            // MCS ADDED NEXT LINE
+            target.transform.localRotation = previousRotation;
             ItemInHand = target.gameObject;
             ItemInHand.layer = 9; // SimObjInvisible
+            // MCS ADDED BLOCK
+            ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                collider.gameObject.layer = 9; // SimObjInvisible
+            });
 
             /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
@@ -4470,7 +4483,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!action.forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     actionFinished(false);
                     return false;
                 } else {
@@ -4519,6 +4532,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand.layer = 8; // SimObjVisible
+                    // MCS ADDED BLOCK
+                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                        collider.gameObject.layer = 8; // SimObjVisible
+                    });
                     ItemInHand = null;
                     return true;
                 }
