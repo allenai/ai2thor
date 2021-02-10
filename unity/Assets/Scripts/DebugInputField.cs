@@ -203,7 +203,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             background.SetActive(false);
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public IEnumerator ExecuteBatch(List<string> commands) {
 
             foreach(var command in commands) {
@@ -864,19 +864,77 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
                     break;
                 }
+                
+                case "slide1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_04_2021_16_44_01");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
+                case "slide2":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_04_2021_20_51_23");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+        
                 case "slide3":
                 {
                     List<string> commands = new List<string>();
                     commands.Add("inita");
-                    commands.Add("telefull 0.25 0.9014922380447388 1.5 360 10");
-                    //commands.Add("mc 0.0 0.0 0.2 1");
-                    commands.Add("mmlah 0.38 1 true true false");
+                    commands.Add("run 02_04_2021_23_31_11");
                     commands.Add("debugarmjoints");
                     StartCoroutine(ExecuteBatch(commands));
-                    //run debugarmjoints to get rotation metadata
                     break;
-                }                
+                }
+        
+                case "slide4":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_01_26_52");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide5":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_02_58_54");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide6":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_07_28_25");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
+
+                case "slide7":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("run 02_05_2021_08_36_10");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
 
                 case "ras1":
                 {
@@ -3407,7 +3465,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
-        #endif
+#endif
 
 #if UNITY_EDITOR
 
