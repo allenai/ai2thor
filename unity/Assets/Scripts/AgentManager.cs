@@ -70,6 +70,32 @@ public class AgentManager : MonoBehaviour
 		}
     }
 
+    private void stripMetadataForTest(MultiAgentMetadata multiMeta) {
+        if (isTestScene()) {
+            HashSet<string> allowedActionReturnActions = new HashSet<string>{"Initialize", "GetScenesInBuild"};
+            Debug.Log("going to strip metadata");
+            for(int i = 0; i < multiMeta.agents.Length; i++) {
+                MetadataWrapper a = multiMeta.agents[i];
+                a.objects = new ObjectMetadata[]{};
+                a.inventoryObjects = new InventoryObject[]{};
+                a.collidedObjects= new string[]{};
+                a.segmentedObjectIds = new string[]{};
+                a.objectIdsInBox = new string[]{};
+                a.actionStringsReturn = new string[]{};
+                if (!allowedActionReturnActions.Contains(a.lastAction)){
+                    a.actionReturn = null;
+                }
+                a.colors = new ColorId[]{};
+                a.colorBounds = new ColorBounds[]{};
+            }
+
+        }
+    }
+    private bool isTestScene() {
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name;
+        return sceneName.StartsWith("FloorPlan_test");
+    }
+
 	void Awake() {
 
         tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
@@ -779,10 +805,12 @@ public class AgentManager : MonoBehaviour
                 ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
                 addThirdPartyCameraImage (renderPayload, camera);
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                if (!isTestScene()) {
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                }
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -794,15 +822,22 @@ public class AgentManager : MonoBehaviour
             if (shouldRender) {
                 addImage (renderPayload, agent);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                addObjectImage (renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
+                if (!isTestScene()) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                    addObjectImage (renderPayload, agent, ref metadata);
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+                }
 
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
         }
+
+        stripMetadataForTest(multiMeta);
+
+
 
         if (shouldRender) {
             RenderTexture.active = currentTexture;
@@ -1345,7 +1380,7 @@ public class SetObjectStates
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public struct MetadataWrapper
+public class MetadataWrapper
 {
 	public ObjectMetadata[] objects;
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
