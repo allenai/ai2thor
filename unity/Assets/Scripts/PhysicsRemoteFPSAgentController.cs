@@ -5655,14 +5655,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
         {
+            bool ctofInitialState = ctof.isOn;
+            
             if(ctof != null)
             ctof.Toggle();
 
             bool success = false;
 
-            bool ctofInitialState = ctof.isOn;
             
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof.isOn == !ctofInitialState));
             success = true;
 
             if (!success)
@@ -6902,7 +6903,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
 
             if (markActionFinished) {
-                actionFinished(success: true, actionReturn: validAgentPoses);
+                actionFinishedEmit(success: true, actionReturn: validAgentPoses);
             }
 
             return validAgentPoses;
@@ -6961,7 +6962,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
-            actionFinished(true, d);
+            actionFinishedEmit(true, d);
         }
 
         // private helper for NumberOfPositionsFromWhichItemIsVisible
@@ -6977,9 +6978,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // object id might have been invalid, causing failure
             if (markActionFinished) {
-                actionFinished(success: interactablePoses != null);
+                actionFinishedEmit(success: true, actionReturn: interactablePoses.Count);
             }
-            return interactablePoses == null ? 0 : interactablePoses.Count;
+            return interactablePoses.Count;
         }
 
         // Similar to GetInteractablePositions, but with horizon=0 and maxDistance like infinity

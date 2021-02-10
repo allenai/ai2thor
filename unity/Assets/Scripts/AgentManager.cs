@@ -31,9 +31,9 @@ public class AgentManager : MonoBehaviour
 	private int activeAgentId;
 	private bool renderImage = true;
 	private bool renderDepthImage;
-	private bool renderClassImage;
-	private bool renderObjectImage;
-    private bool defaultRenderObjectImage;
+	private bool renderSemanticSegmentation;
+	private bool renderInstanceSegmentation;
+    private bool initializedInstanceSeg;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private Socket sock = null;
@@ -46,7 +46,7 @@ public class AgentManager : MonoBehaviour
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
-    private bool fastActionEmit;
+    private bool fastActionEmit = true;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
     public const float DEFAULT_FOV = 90;
@@ -248,10 +248,10 @@ public class AgentManager : MonoBehaviour
         }
         
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		this.renderClassImage = action.renderClassImage;
+		this.renderSemanticSegmentation = action.renderSemanticSegmentation;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
-		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
+		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
 
@@ -440,9 +440,16 @@ public class AgentManager : MonoBehaviour
         float fieldOfView,
         string skyboxColor,
         bool? orthographic,
-        float? orthographicSize,
-        string actionName
+        float? orthographicSize
     ) {
+        if (orthographic != true && orthographicSize != null) {
+            throw new InvalidOperationException(
+                $"orthographicSize(: {orthographicSize}) can only be set when orthographic=True.\n" +
+                "Otherwise, we use assume perspective camera setting." +
+                "Hint: call .step(..., orthographic=True)."
+            );
+        }
+
         // update the position and rotation
         camera.gameObject.transform.position = position;
         camera.gameObject.transform.eulerAngles = rotation;
@@ -457,7 +464,6 @@ public class AgentManager : MonoBehaviour
         }
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
-        bool actionFailed = false;
         if (skyboxColor == "default") {
             camera.clearFlags = CameraClearFlags.Skybox;
         } else if (skyboxColor != null) {
@@ -467,55 +473,17 @@ public class AgentManager : MonoBehaviour
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = color;
             } else {
-                actionError(errorMessage: "Invalid skyboxColor! Cannot be parsed as an HTML color.", actionName: actionName);
-                actionFailed = true;
+                throw new ArgumentException($"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color.");
             }
         }
 
-        if (!actionFailed) {
-            actionSuccess(actionName: actionName);
+        this.activeAgent().actionFinished(success: true);
+    }
+
+    private void assertFovInBounds(float fov) {
+        if (fov <= MIN_FOV || fov >= MAX_FOV) {
+            throw new ArgumentOutOfRangeException($"fieldOfView: {fov} must be in {MIN_FOV} < fieldOfView > {MIN_FOV}.");
         }
-    }
-
-    private void actionError(string errorMessage, string actionName, ServerActionErrorCode errorCode) {
-        // update metadata
-        primaryAgent.errorMessage = errorMessage;
-        primaryAgent.lastAction = actionName;
-        primaryAgent.lastActionSuccess = false;
-        primaryAgent.errorCode = errorCode;
-
-        // end action
-        agentManagerState = AgentState.ActionComplete;
-    }
-
-    // Helper used to provide an error message and fail the action in the metadata from the agent manager
-    private void actionError(string errorMessage, string actionName) {
-        actionError(errorMessage, actionName, ServerActionErrorCode.Undefined);
-    }
-
-    // Helper used to update success of agent metadata from the agent manager
-    private void actionSuccess(string actionName) {
-        // update metadata
-        primaryAgent.errorMessage = "";
-        primaryAgent.lastAction = actionName;
-        primaryAgent.lastActionSuccess = true;
-        primaryAgent.errorCode = ServerActionErrorCode.Undefined;
-
-        // end action
-        agentManagerState = AgentState.ActionComplete;
-    }
-
-    // Returns true if the FOV is in the correct range, otherwise false.
-    // It updates the error message as well.
-    private bool fovInBounds(float fov, string actionName) {
-        if (fov <= MIN_FOV) {
-            actionError(errorMessage: $"fieldOfView must be > {MIN_FOV}.", actionName: actionName);
-            return false;
-        } else if (fov >= MAX_FOV) {
-            actionError(errorMessage: $"fieldOfView must be < {MAX_FOV}.", actionName: actionName);
-            return false;
-        }
-        return true;
     }
 
     public void AddThirdPartyCamera(
@@ -527,9 +495,7 @@ public class AgentManager : MonoBehaviour
         float? orthographicSize = null
     ) {
         // adds error if fieldOfView is out of bounds
-        if (!fovInBounds(fov: fieldOfView, actionName: "AddThirdPartyCamera")) {
-            return;
-        }
+        assertFovInBounds(fov: fieldOfView);
 
         GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
         gameObject.AddComponent(typeof(Camera));
@@ -537,7 +503,7 @@ public class AgentManager : MonoBehaviour
 
         // set up returned image
         camera.cullingMask = ~(1 << 11);
-        if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
+        if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
 
@@ -549,61 +515,65 @@ public class AgentManager : MonoBehaviour
             fieldOfView: fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize,
-            actionName: "AddThirdPartyCamera"
+            orthographicSize: orthographicSize
         );
     }
 
     // helper that can be used when converting Dictionary<string, float> to a Vector3.
-    private Vector3 parseDictAsVector3(
-        Dictionary<string, float> dict,
+    private Vector3 parseOptionalVector3(
+        OptionalVector3 optionalVector3,
         Vector3 defaultsOnNull
     ) {
-        if (dict == null) {
+        if (optionalVector3 == null) {
             return defaultsOnNull;
         }
 
         return new Vector3(
-            x: dict.ContainsKey("x") ? dict["x"] : defaultsOnNull.x,
-            y: dict.ContainsKey("y") ? dict["y"] : defaultsOnNull.y,
-            z: dict.ContainsKey("z") ? dict["z"] : defaultsOnNull.z
+            x: optionalVector3.x == null ? defaultsOnNull.x : (float) optionalVector3.x,
+            y: optionalVector3.y == null ? defaultsOnNull.y : (float) optionalVector3.y,
+            z: optionalVector3.z == null ? defaultsOnNull.z : (float) optionalVector3.z
         );
+    }
+
+    // Here, we don't want some dimensions set. For instance, set x, but not y.
+    public class OptionalVector3 {
+        public float? x = null;
+        public float? y = null;
+        public float? z = null;
     }
 
     // note that using a using a Dictionary<string, float> allows for only x, y, or z
     // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
     public void UpdateThirdPartyCamera(
         int thirdPartyCameraId = 0,
-        Dictionary<string, float> position = null,
-        Dictionary<string, float> rotation = null,
+        OptionalVector3 position = null,
+        OptionalVector3 rotation = null,
         float? fieldOfView = null,
         string skyboxColor = null,
         bool? orthographic = null,
         float? orthographicSize = null
     ) {
         // adds error if fieldOfView is out of bounds
-        if (fieldOfView !=null && !fovInBounds(fov: (float) fieldOfView, actionName: "UpdateThirdPartyCamera")) {
-            return;
+        if (fieldOfView != null) {
+            assertFovInBounds(fov: (float) fieldOfView);
         }
 
         // count is out of bounds
         if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
-            actionError(
-                errorMessage: $"thirdPartyCameraId (int: default=0) must be >= 0 and < len(thirdPartyCameras)={thirdPartyCameras.Count}.",
-                actionName: "UpdateThirdPartyCamera"
+            throw new ArgumentOutOfRangeException(
+                $"thirdPartyCameraId: {thirdPartyCameraId} (int: default=0) must in 0 <= thirdPartyCameraId < len(thirdPartyCameras)={thirdPartyCameras.Count}."
             );
-            return;
         }
 
         Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
 
         // keeps positions at default values, if unspecified.
         Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
-        Vector3 targetPosition = parseDictAsVector3(dict: position, defaultsOnNull: oldPosition);
+        Vector3 targetPosition = parseOptionalVector3(optionalVector3: position, defaultsOnNull: oldPosition);
 
         // keeps rotations at default values, if unspecified.
         Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
-        Vector3 targetRotation = parseDictAsVector3(dict: rotation, defaultsOnNull: oldRotation);
+        Vector3 targetRotation = parseOptionalVector3(optionalVector3: rotation, defaultsOnNull: oldRotation);
 
         updateCameraProperties(
             camera: thirdPartyCamera,
@@ -612,8 +582,7 @@ public class AgentManager : MonoBehaviour
             fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float) fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize,
-            actionName: "UpdateThirdPartyCamera"
+            orthographicSize: orthographicSize
         );
     }
 
@@ -782,7 +751,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-		if (this.renderObjectImage) {
+		if (this.renderInstanceSegmentation) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
 			}
@@ -870,7 +839,8 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 
-		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0}";
+        // NOTE: sequenceId is required in DynamicServerAction.
+		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0, \"sequenceId\": 0}";
 		ProcessControlCommand(msg);
 	}
 
@@ -896,9 +866,9 @@ public class AgentManager : MonoBehaviour
                 addThirdPartyCameraImage (renderPayload, camera);
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -915,7 +885,7 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
                 addObjectImage (renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
 
                 metadata.thirdPartyCameras = cameraMetadata;
@@ -1091,7 +1061,6 @@ public class AgentManager : MonoBehaviour
                 ProcessControlCommand(msg);
 
                 while (canEmit() && this.fastActionEmit) {
-
                     MetadataPatch patch = this.activeAgent().generateMetadataPatch();
                     patch.agentId = this.activeAgentId;
                     msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
@@ -1142,12 +1111,10 @@ public class AgentManager : MonoBehaviour
 		return this.agents[activeAgentId];
 	}
 
-	private void ProcessControlCommand(string msg)
-	{
+	private void ProcessControlCommand(string msg) {
+        this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
-        this.renderObjectImage = this.defaultRenderObjectImage;
-        
-        DynamicServerAction controlCommand = new DynamicServerAction(msg); //jObject);
+        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
@@ -1155,29 +1122,28 @@ public class AgentManager : MonoBehaviour
         this.activeAgentId = controlCommand.agentId;
 
 		if (agentManagerActions.Contains(controlCommand.action)) {
-            this.agentManagerState = AgentState.Processing;
-            try {
-                ActionDispatcher.Dispatch(this, controlCommand);
-            } catch (MissingArgumentsActionException e) {
-                string errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
-                Debug.LogError(errorMessage);
-                actionError(errorMessage, controlCommand.action.ToString(), ServerActionErrorCode.MissingArguments);
-            }
+            // let's look in this class for the action
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
-            //we only allow renderObjectImage to be flipped on
-            //on a per step() basis, since by default the param is null
-            //so we don't know if a request is meant to turn the param off
-            //or if it is just the value by default
-            if (controlCommand.renderObjectImage == true) {
-                this.renderObjectImage = true;
+            // we only allow renderInstanceSegmentation to be flipped on
+            // on a per step() basis, since by default the param is null
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            if (controlCommand.renderInstanceSegmentation == true) {
+                this.renderInstanceSegmentation = true;
             }
 
-            if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
-            {
+            if (this.renderDepthImage ||
+                this.renderSemanticSegmentation ||
+                this.renderInstanceSegmentation ||
+                this.renderNormalsImage
+            ) {
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
-			this.activeAgent().ProcessControlCommand (controlCommand);
+
+            // let's look in the agent's set of actions for the action
+			this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
 		}
 	}
 
@@ -1602,9 +1568,9 @@ public class DynamicServerAction
         return this.jObject.ContainsKey(name);
     }
 
-    public bool renderObjectImage {
+    public bool renderInstanceSegmentation {
         get {
-            return this.GetValue("renderObjectImage", false);
+            return this.GetValue("renderInstanceSegmentation", false);
         }
     }
 
@@ -1699,8 +1665,8 @@ public class ServerAction
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
-	public bool renderClassImage;
-	public bool renderObjectImage;
+	public bool renderSemanticSegmentation;
+	public bool renderInstanceSegmentation;
 	public bool renderNormalsImage;
     public bool renderFlowImage;
 	public float cameraY = 0.675f;
@@ -1754,7 +1720,7 @@ public class ServerAction
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
-    public bool fastActionEmit;
+    public bool fastActionEmit = true;
     // this allows us to chain the dispatch between two separate
     // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
     public DynamicServerAction dynamicServerAction;
@@ -1858,7 +1824,8 @@ public enum ServerActionErrorCode  {
 	LookDownCantExceedMin,
 	InvalidAction,
     MissingArguments,
-	AmbiguousAction
+	AmbiguousAction,
+    InvalidArgument
 }
 
 public enum VisibilityScheme {
