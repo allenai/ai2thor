@@ -31,9 +31,9 @@ public class AgentManager : MonoBehaviour
 	private int activeAgentId;
 	private bool renderImage = true;
 	private bool renderDepthImage;
-	private bool renderClassImage;
-	private bool renderObjectImage;
-    private bool defaultRenderObjectImage;
+	private bool renderSemanticSegmentation;
+	private bool renderInstanceSegmentation;
+    private bool initializedInstanceSeg;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private Socket sock = null;
@@ -142,9 +142,10 @@ public class AgentManager : MonoBehaviour
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if(action.agentMode.ToLower() == "default")
         {
-            if(action.agentControllerType.ToLower() != "physics" || action.agentControllerType.ToLower() != "stochastic")
+            if(action.agentControllerType.ToLower() != "physics" && action.agentControllerType.ToLower() != "stochastic")
             {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
+                action.agentControllerType = "";
                 SetUpPhysicsController();
             }
 
@@ -174,8 +175,10 @@ public class AgentManager : MonoBehaviour
                 SetUpStochasticController(action);
             }
 
-            else
-            SetUpStochasticController(action);
+            else 
+            {
+                SetUpStochasticController(action);
+            }
         }
 
         else if(action.agentMode.ToLower() == "drone")
@@ -189,17 +192,66 @@ public class AgentManager : MonoBehaviour
                 SetUpDroneController(action);
             }
 
-            else
-            SetUpDroneController(action);
+            else 
+            {
+                SetUpDroneController(action);
+            }
 
         }
 
+        else if(action.agentMode.ToLower() == "arm") {
+
+            if (action.agentControllerType == "") {
+                Debug.Log("Defaulting to mid-level.");
+                SetUpArmController(true);
+            }
+            else if(action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level")
+            {
+                var error = "'arm' mode must use either low-level or mid-level controller.";
+                Debug.Log(error);
+                primaryAgent.actionFinished(false, error);
+                return;
+            }
+
+            else if(action.agentControllerType.ToLower() == "mid-level")
+            {
+                //set up physics controller
+                SetUpArmController(true);
+
+				if(action.useMassThreshold)
+				{
+					if(action.massThreshold > 0.0)
+					SetUpMassThreshold(action.massThreshold);
+
+					else
+					{
+						var error = "massThreshold must have nonzero value if useMassThreshold = True";
+						Debug.Log(error);
+						primaryAgent.actionFinished(false, error);
+						return;
+					}
+				}
+            }
+
+            else {
+                var error = "unsupported";
+                Debug.Log(error);
+                primaryAgent.actionFinished(false, error);
+                return;
+            }
+        }
+
 		primaryAgent.ProcessControlCommand (action.dynamicServerAction);
+        Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        if (action.targetFrameRate > 0) {
+            Application.targetFrameRate = action.targetFrameRate;
+        }
+        
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		this.renderClassImage = action.renderClassImage;
+		this.renderSemanticSegmentation = action.renderSemanticSegmentation;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
-		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
+		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
 
@@ -250,6 +302,29 @@ public class AgentManager : MonoBehaviour
         this.agents.Add(primaryAgent);
     }
 
+    private void SetUpArmController(bool midLevelArm) {
+        this.agents.Clear();
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        // TODO set correct component
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
+		//primaryAgent.actionComplete = true;
+        this.agents.Add(primaryAgent);
+       
+        var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
+        handObj.gameObject.SetActive(true);
+    }
+
+	//on initialization of agentMode = "arm" and agentControllerType = "mid-level"
+	//if mass threshold should be used to prevent arm from knocking over objects that
+	//are too big (table, sofa, shelf, etc) use this
+	private void SetUpMassThreshold(float massThreshold)
+	{
+		CollisionListener.useMassThreshold = true;
+		CollisionListener.massThreshold = massThreshold;
+	}
+	
     //return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent()
     {
@@ -323,6 +398,17 @@ public class AgentManager : MonoBehaviour
 		}
 
 		ResetSceneBounds();
+	}
+
+
+  public void registerAsThirdPartyCamera(Camera camera) {
+        this.thirdPartyCameras.Add(camera);
+        // camera.gameObject.AddComponent(typeof(ImageSynthesis));
+    }
+	
+	// If fov is <= min or > max, return defaultVal, else return fov
+	private float ClampFieldOfView(float fov, float defaultVal = 90f, float min = 0f, float max = 180f) {
+		return (fov <= min || fov > max) ? defaultVal : fov;
 	}
 
     private void updateImageSynthesis(bool status) {
@@ -417,7 +503,7 @@ public class AgentManager : MonoBehaviour
 
         // set up returned image
         camera.cullingMask = ~(1 << 11);
-        if (renderDepthImage || renderClassImage || renderObjectImage || renderNormalsImage || renderFlowImage) {
+        if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
 
@@ -665,7 +751,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-		if (this.renderObjectImage) {
+		if (this.renderInstanceSegmentation) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
 			}
@@ -780,15 +866,18 @@ public class AgentManager : MonoBehaviour
                 addThirdPartyCameraImage (renderPayload, camera);
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
+            metadata.fixedUpdateCount = agent.fixedUpdateCount;
+            metadata.updateCount = agent.updateCount;
+            
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -796,12 +885,13 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
                 addObjectImage (renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
 
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
+            agent.ResetUpdateCounters();
         }
 
         if (shouldRender) {
@@ -1022,7 +1112,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void ProcessControlCommand(string msg) {
-        this.renderObjectImage = this.defaultRenderObjectImage;
+        this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
         DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
 
@@ -1035,16 +1125,19 @@ public class AgentManager : MonoBehaviour
             // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
-            //we only allow renderObjectImage to be flipped on
-            //on a per step() basis, since by default the param is null
-            //so we don't know if a request is meant to turn the param off
-            //or if it is just the value by default
-            if (controlCommand.renderObjectImage == true) {
-                this.renderObjectImage = true;
+            // we only allow renderInstanceSegmentation to be flipped on
+            // on a per step() basis, since by default the param is null
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            if (controlCommand.renderInstanceSegmentation == true) {
+                this.renderInstanceSegmentation = true;
             }
 
-            if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
-            {
+            if (this.renderDepthImage ||
+                this.renderSemanticSegmentation ||
+                this.renderInstanceSegmentation ||
+                this.renderNormalsImage
+            ) {
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
@@ -1093,6 +1186,8 @@ public class MultiAgentMetadata {
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public int activeAgentId;
 	public int sequenceId;
+    public int fixedUpdateCount;
+    public int updateCount;
 }
 
 [Serializable]
@@ -1308,6 +1403,35 @@ public class HandMetadata {
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
+public class JointMetadata {
+    public string name;
+	public Vector3 position;
+	public Vector3 rootRelativePosition;
+	public Vector4 rotation;
+	public Vector4 rootRelativeRotation;
+	public Vector4 localRotation;
+}
+
+[Serializable]
+public class ArmMetadata {
+
+    //public Vector3 handTarget;
+	//joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
+    public JointMetadata[] joints;
+
+	//all objects currently held by the hand sphere
+	public List<String> HeldObjects;
+
+	//all sim objects that are both pickupable and inside the hand sphere
+	public List<String> PickupableObjectsInsideHandSphere;
+
+	//world coordinates of the center of the hand's sphere
+	public Vector3 HandSphereCenter;
+	//current radius of the hand sphere
+	public float HandSphereRadius;
+}
+
+[Serializable]
 public class ObjectTypeCount
 {
     public string objectType; //specify object by type in scene
@@ -1351,6 +1475,7 @@ public struct MetadataWrapper
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public AgentMetadata agent;
 	public HandMetadata hand;
+    public ArmMetadata arm;
 	public float fov;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;
@@ -1388,6 +1513,8 @@ public struct MetadataWrapper
     public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
+    public int updateCount;
+    public int fixedUpdateCount;
 }
 
 /*
@@ -1441,9 +1568,9 @@ public class DynamicServerAction
         return this.jObject.ContainsKey(name);
     }
 
-    public bool renderObjectImage {
+    public bool renderInstanceSegmentation {
         get {
-            return this.GetValue("renderObjectImage", false);
+            return this.GetValue("renderInstanceSegmentation", false);
         }
     }
 
@@ -1483,7 +1610,9 @@ public class ServerAction
 	public string quality;
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
-	public float fixedDeltaTime = 0.02f;
+	public float? fixedDeltaTime;
+	public int targetFrameRate;
+    public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
@@ -1536,8 +1665,8 @@ public class ServerAction
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
-	public bool renderClassImage;
-	public bool renderObjectImage;
+	public bool renderSemanticSegmentation;
+	public bool renderInstanceSegmentation;
 	public bool renderNormalsImage;
     public bool renderFlowImage;
 	public float cameraY = 0.675f;
@@ -1560,7 +1689,7 @@ public class ServerAction
     public float maxDistance;//used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentControllerType = "physics";//default to physics controller
+    public string agentControllerType = "";//default to physics controller
     public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
@@ -1591,10 +1720,40 @@ public class ServerAction
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
-    public bool fastActionEmit;
+    public bool fastActionEmit = true;
     // this allows us to chain the dispatch between two separate
     // legacy action (e.g. AgentManager.Initialize and BaseFPSAgentController.Initialize)
     public DynamicServerAction dynamicServerAction;
+
+    public bool returnToStart = false;
+
+    public float speed = 1.0f;
+
+    public bool handCameraSpace = false;
+
+    public float radius;
+
+	public bool stopArmMovementOnContact = false;
+
+    public bool disableRendering = false;
+
+	//this restricts arm position to the hemisphere in front of the agent
+    public bool restrictMovement = false;
+
+	//used to determine which coordinate space is used in Mid Level Arm actions
+	//valid options are relative to: world, wrist, armBase
+	public string coordinateSpace = "armBase";
+
+	//if agent is using arm mode, determines if a mass threshold should be used
+	//for when the arm hits heavy objects. If threshold is used, the arm will
+	//collide and stop moving when hitting a heavy enough sim object rather than
+	//move through it (this is for when colliding with pickupable and moveable sim objs)
+	public bool useMassThreshold;
+
+	//the mass threshold for how massive a pickupable/moveable sim object needs to be
+	//for the arm to detect collisions and stop moving
+	public float massThreshold;
+	
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -1611,7 +1770,10 @@ public class ServerAction
         {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         } 
-        catch (ArgumentException) { 
+		//including this pragma so the "ex variable declared but not used" warning stops yelling
+		#pragma warning disable 0168
+        catch (ArgumentException ex) { 
+		#pragma warning restore 0168
             Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
         }
 
