@@ -165,7 +165,7 @@ def get_shortest_path_to_point(
 
 
 
-def get_episodes_with_shortest_paths(controller, episodes, initialize_func=None):
+def get_episodes_with_shortest_paths(controller, episodes):
     """
     Computes shortest path for an episode sequence
     :param controller: agent controller
@@ -174,14 +174,11 @@ def get_episodes_with_shortest_paths(controller, episodes, initialize_func=None)
                         'initial_position' dict(x=float, y=float, z=float) of starting position
                         'initial_rotation' dict(x=float, y=float, z=float) representing rotation
                                            around axes
-    :param initialize_func:
     :return:
     """
     episodes_with_golden = copy.deepcopy(episodes)
-    for i, episode in enumerate(episodes_with_golden):
-        event = controller.reset(episode['scene'])
-        if initialize_func is not None:
-            initialize_func()
+    for _, episode in enumerate(episodes_with_golden):
+        controller.reset(episode['scene'])
 
         try:
             if 'target_object_id' in episode:

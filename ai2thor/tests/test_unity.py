@@ -856,8 +856,9 @@ def test_get_interactable_poses(controller):
     event = controller.step("GetInteractablePoses", objectId=fridgeId)
     poses = event.metadata["actionReturn"]
     assert (
-        len(poses) > 460
-    ), "Should have around 460 interactable poses next to the fridge!"
+        600 > len(poses) > 400
+    ), "Should have around 400 interactable poses next to the fridge!"
+
 
     # teleport to a random pose
     pose = poses[len(poses) // 2]
