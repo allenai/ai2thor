@@ -778,7 +778,9 @@ class Controller(object):
             ]:
                 raise ValueError(self.last_event.metadata["errorMessage"])
             elif raise_for_failure:
-                raise RuntimeError(self.last_event.metadata["errorMessage"])
+                raise RuntimeError(
+                    self.last_event.metadata.get("errorMessage", f"{action} failed.")
+                )
 
         assert (not raise_for_failure) or self.last_event.metadata["lastActionSuccess"]
 
