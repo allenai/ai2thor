@@ -323,7 +323,12 @@ public static class ActionDispatcher {
                     try {
                         arguments[i] = dynamicServerAction.GetValue(pi.Name).ToObject(pi.ParameterType);
                     } catch (ArgumentException ex) {
-                        throw new ToObjectArgumentActionException(pi.Name, pi.ParameterType, ex);
+                        throw new ToObjectArgumentActionException(
+                            parameterName: pi.Name,
+                            parameterType: pi.ParameterType,
+                            parameterValueAsStr: dynamicServerAction.GetValue(pi.Name).ToString(),
+                            ex: ex
+                        );
                     }
                 } else {
                     if (!pi.HasDefaultValue)  {
@@ -386,9 +391,17 @@ public class ToObjectArgumentActionException : Exception {
     public string parameterName;
     public ArgumentException innerException;
     public Type parameterType;
-    public ToObjectArgumentActionException (string parameterName, Type parameterType, ArgumentException ex) {
+    public string parameterValueAsStr;
+
+    public ToObjectArgumentActionException (
+        string parameterName,
+        Type parameterType,
+        string parameterValueAsStr,
+        ArgumentException ex
+    ) {
         this.parameterName = parameterName;
         this.parameterType = parameterType;
+        this.parameterValueAsStr = parameterValueAsStr;
         this.innerException = ex;
     }
 }

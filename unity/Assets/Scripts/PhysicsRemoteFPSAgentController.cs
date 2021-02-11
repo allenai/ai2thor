@@ -1609,11 +1609,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void TeleportFull(
+        public override void TeleportFull(
             float x,
             float y,
             float z,
-            float rotation,
+            Vector3 rotation,
             float horizon,
             bool standing,
             bool forceAction = false
@@ -1623,7 +1623,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
                 if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
@@ -1681,7 +1681,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                      " Consider using `forceAction=true` if you'd like to teleport anyway.";
                 }
 
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
                 if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
@@ -1761,7 +1761,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: x,
                 y: y,
                 z: z,
-                rotation: transform.eulerAngles.y,
+                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
                 horizon: m_Camera.transform.localEulerAngles.x,
                 standing: isStanding(),
                 forceAction: forceAction

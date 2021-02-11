@@ -1572,7 +1572,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (typeMap.ContainsKey(typeName)) {
                     typeName = typeMap[typeName];
                 }
-                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot convert to: " + typeName;
+                errorMessage = $"action: {controlCommand.action} has an invalid argument: {e.parameterName} (=={e.parameterValueAsStr})." +
+                    $" Cannot convert to: {typeName}";
                 errorCode = ServerActionErrorCode.InvalidArgument;
                 actionFinished(false);
             }
@@ -1852,7 +1853,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float x,
             float y,
             float z,
-            float rotation,
+            Vector3 rotation,
             float horizon,
             bool standing,
             bool forceAction = false
@@ -1862,7 +1863,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
                 if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
@@ -1904,7 +1905,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      " Consider using `forceAction=true` if you'd like to teleport anyway.";
                 }
 
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
                 if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
@@ -1943,28 +1944,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 x: position.x,
                 y: position.y,
                 z: position.z,
-                rotation: rotation.y,
-                horizon: horizon,
-                standing: standing,
-                forceAction: forceAction
-            );
-        }
-
-        public void TeleportFull(
-            float x,
-            float y,
-            float z,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
-            bool forceAction = false
-
-        ) {
-            TeleportFull(
-                x: x,
-                y: y,
-                z: z,
-                rotation: rotation.y,
+                rotation: rotation,
                 horizon: horizon,
                 standing: standing,
                 forceAction: forceAction
@@ -1984,7 +1964,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 x: x,
                 y: y,
                 z: z,
-                rotation: transform.eulerAngles.y,
+                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
                 horizon: m_Camera.transform.localEulerAngles.x,
                 standing: isStanding(),
                 forceAction: forceAction
