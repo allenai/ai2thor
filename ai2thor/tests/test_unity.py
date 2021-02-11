@@ -859,6 +859,7 @@ def test_get_interactable_poses(controller):
         600 > len(poses) > 400
     ), "Should have around 400 interactable poses next to the fridge!"
 
+
     # teleport to a random pose
     pose = poses[len(poses) // 2]
     event = controller.step("TeleportFull", **pose)
