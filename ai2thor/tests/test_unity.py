@@ -36,6 +36,7 @@ def build_controller(**args):
 
 wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
+stochastic_controller = build_controller(agentControllerType='stochastic')
 
 
 def teardown_module(module):
@@ -242,7 +243,8 @@ def test_target_invocation_exception(controller):
     ], "errorMessage should not be empty when OpenObject(x > 1)."
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_lookup(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -850,6 +852,7 @@ def test_change_resolution(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_get_interactable_poses(controller):
+
     controller.reset("FloorPlan28")
     fridgeId = next(
         obj["objectId"]
@@ -859,8 +862,8 @@ def test_get_interactable_poses(controller):
     event = controller.step("GetInteractablePoses", objectId=fridgeId)
     poses = event.metadata["actionReturn"]
     assert (
-        len(poses) > 490
-    ), "Should have around 494 interactable poses next to the fridge!"
+        len(poses) > 470
+    ), "Should have around 470 interactable poses next to the fridge!"
 
     # teleport to a random pose
     pose = poses[len(poses) // 2]
@@ -945,5 +948,5 @@ def test_get_interactable_poses(controller):
     # test maxDistance
     event = controller.step("GetInteractablePoses", objectId=fridgeId, maxDistance=5)
     assert (
-        1300 > len(event.metadata["actionReturn"]) > 1200
+        1300 > len(event.metadata["actionReturn"]) > 1100
     ), "GetInteractablePoses with large maxDistance is off!"

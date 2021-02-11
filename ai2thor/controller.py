@@ -412,6 +412,7 @@ class Controller(object):
         self.height = height
 
         self.last_event = None
+        self.scene = None
         self._scenes_in_build = None
         self.killing_unity = False
         self.quality = quality
@@ -636,6 +637,7 @@ class Controller(object):
                 self.last_event.metadata['errorMessage'])
             )
 
+        self.scene = scene
         return self.last_event
 
     def random_initialize(
