@@ -276,6 +276,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
 
+            #if UNITY_EDITOR
+            if (!success) {
+                Debug.Log($"Action failed with error message '{this.errorMessage}'.");
+            }
+            #endif
+
             lastActionSuccess = success;
 			this.agentState = newState;
 			this.actionReturn = actionReturn;
@@ -1645,6 +1651,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        protected bool isPositionOnGrid(Vector3 xyz) {
+            if (this.snapToGrid) {
+                float mult = 1 / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(xyz.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(xyz.z * mult) / mult);
+
+                return (
+                    Mathf.Approximately(gridX, xyz.x) &&
+                    Mathf.Approximately(gridZ, xyz.z)
+                );
+            } else {
+                return true;
+            }
+        }
+
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
@@ -1757,7 +1778,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //teleport full, base version does not consider being able to hold objects
         public virtual void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
-            print(targetTeleport);
+
             if (action.forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
@@ -1768,9 +1789,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                actionFinished(true);
+                return;
+
             } else {
                 if (!agentManager.SceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                if (!isPositionOnGrid(targetTeleport)) {
+                    errorMessage = $"`snapToGrid` is True but target teleport position" +
+                        $" {targetTeleport.ToString("F6")} is not on the grid of size {gridSize}.";
                     actionFinished(false);
                     return;
                 }
@@ -1780,26 +1811,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
-                //DefaultAgentHand(action);
                 transform.position = targetTeleport;
 
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
+                // Adjust y position so that the agent is more on the floor
+                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
 
-                bool xzMisMatch = false;
-
-                if(!Mathf.Approximately(transform.position.x, action.x) || 
-                !(Mathf.Approximately(transform.position.z, action.z))) {
-                    xzMisMatch = true;
-                    print("xz was diff");
-                    
-                    print("x pos is: " + transform.position.x);
-                    print("action x is : " + action.x);
-
-                    print("z pos is: " + transform.position.z);
-                    print("action z is: " + action.z);
+                bool tooMuchYMovement = Mathf.Abs(transform.position.y - action.y) > 0.05f;
+                if (tooMuchYMovement) {
+                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
+                     $"({Mathf.Abs(transform.position.y - action.y)}>0.05) in the y component." +
+                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
                 }
 
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
@@ -1815,7 +1837,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     includeErrorMessage: true
                 );
 
-                if (agentCollides || xzMisMatch) {
+
+                if (agentCollides || tooMuchYMovement) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
@@ -1823,14 +1846,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(false);
                     return;
                 }
+
+                actionFinished(true);
             }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
-            snapAgentToGrid();
-            actionFinished(true);
         }
 
         public virtual void Teleport(ServerAction action) {

@@ -1697,9 +1697,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                actionFinished(true);
+                return;
+
             } else {
                 if (!agentManager.SceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                if (!isPositionOnGrid(targetTeleport)) {
+                    errorMessage = $"Target teleport position {targetTeleport.ToString("F6")} is not" +
+                        $" on the grid of size {gridSize}.";
                     actionFinished(false);
                     return;
                 }
@@ -1718,16 +1728,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
 
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
+                // Adjust y position so that the agent is more on the floor
+                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
 
-                bool xzMisMatch = false;
-
-                if(!Mathf.Approximately(transform.position.x, action.x) || 
-                !(Mathf.Approximately(transform.position.z, action.z))) {
-                    xzMisMatch = true;
+                bool tooMuchYMovement = Mathf.Abs(transform.position.y - action.y) > 0.05f;
+                if (tooMuchYMovement) {
+                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
+                     $"({Mathf.Abs(transform.position.y - action.y)}>0.05) in the y component." +
+                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
                 }
 
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
@@ -1748,7 +1757,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Cannot teleport due to hand object collision.";
                 }
 
-                if (agentCollides || handObjectCollides || xzMisMatch) {
+                if (agentCollides || handObjectCollides || tooMuchYMovement) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
@@ -1760,14 +1769,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
+
+                actionFinished(true);
             }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
-            snapAgentToGrid();
-            actionFinished(true);
         }
 
         public override void Teleport(ServerAction action) {
