@@ -488,30 +488,28 @@ class Controller(object):
                 if not scenes_in_build:
                     raise RuntimeError("No scenes are in your build of AI2-THOR!")
 
-                # we use FloorPlan28 because it is used for all the testing actions
-                if "FloorPlan28" in scenes_in_build:
-                    scene = "FloorPlan28"
+                # use a robothor scene
+                robothor_scenes = set(self.robothor_scenes())
+
+                # prioritize robothor if locobot is being used
+                robothor_scenes_in_build = robothor_scenes.intersection(scenes_in_build)
+
+                # check for bot as well, for backwards compatibility support
+                if (
+                    unity_initialization_parameters.get("agentMode", "default").lower() in {"locobot", "bot"} and
+                    robothor_scenes_in_build
+                ):
+                    # get the first robothor scene
+                    scene = sorted(list(robothor_scenes_in_build))[0]
                 else:
-                    # use a robothor scene
-                    robothor_scenes = set(self.robothor_scenes())
-
-                    # prioritize robothor if locobot is being used
-                    robothor_scenes_in_build = robothor_scenes.intersection(scenes_in_build)
-
-                    if (
-                        "locobot" == unity_initialization_parameters.get("agentMode", "default").lower() and
-                        robothor_scenes_in_build
-                    ):
-                        scene = random.choice(list(robothor_scenes_in_build))
+                    ithor_scenes = set(self.ithor_scenes())
+                    ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
+                    if ithor_scenes_in_build:
+                        # Prioritize iTHOR because that's what the default agent best uses.
+                        scene = sorted(list(ithor_scenes_in_build))[0]
                     else:
-                        ithor_scenes = set(self.ithor_scenes())
-                        ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
-                        if ithor_scenes_in_build:
-                            # Prioritize iTHOR because that's what the default agent best uses.
-                            scene = random.choice(list(ithor_scenes_in_build))
-                        else:
-                            # perhaps only using RoboTHOR or using only custom scenes
-                            scene = random.choice(list(scenes_in_build))
+                        # perhaps only using RoboTHOR or using only custom scenes
+                        scene = sorted(list(scenes_in_build))[0]
 
             event = self.reset(scene)
 
@@ -558,7 +556,6 @@ class Controller(object):
         self.stop()
 
     @property
-    @lru_cache()
     def scenes_in_build(self):
         if self._scenes_in_build is not None:
             return self._scenes_in_build
@@ -572,7 +569,10 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    def reset(self, scene, **init_params):
+    def reset(self, scene=None, **init_params):
+        if scene is None:
+            scene = self.last_scene
+
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
@@ -596,6 +596,7 @@ class Controller(object):
             )
 
         self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
+        self.last_scene = scene
         self.last_event = self.server.receive()
 
         # update the initialization parameters
