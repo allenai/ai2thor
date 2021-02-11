@@ -774,7 +774,7 @@ def travis_build(build_id):
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.org/build/%s" % build_id,
+        "https://api.travis-ci.com/build/%s" % build_id,
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
