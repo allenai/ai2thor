@@ -26,6 +26,7 @@ import uuid
 import tty
 import sys
 import termios
+from functools import lru_cache
 
 
 import numpy as np
@@ -556,6 +557,7 @@ class Controller(object):
         self.stop()
 
     @property
+    @lru_cache()
     def scenes_in_build(self):
         if self._scenes_in_build is not None:
             return self._scenes_in_build
@@ -650,6 +652,7 @@ class Controller(object):
             "RandomInitialize has been removed.  Use InitialRandomSpawn - https://ai2thor.allenai.org/ithor/documentation/actions/initialization/#object-position-randomization"
         )
 
+    @lru_cache()
     def ithor_scenes(
         self,
         include_kitchens=True,
@@ -674,6 +677,7 @@ class Controller(object):
                 scenes.append("FloorPlan%s_physics" % i)
         return scenes
 
+    @lru_cache()
     def robothor_scenes(self, include_train=True, include_val=True):
         # keep this as a list because the order may look weird otherwise
         scenes = []
@@ -696,6 +700,7 @@ class Controller(object):
                     )
         return scenes
 
+    @lru_cache()
     def scene_names(self):
         return self.ithor_scenes() + self.robothor_scenes()
 
