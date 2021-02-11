@@ -500,16 +500,16 @@ class Controller(object):
                         "locobot" == unity_initialization_parameters.get("agentMode", "default").lower() and
                         robothor_scenes_in_build
                     ):
-                        scene = random.choice(robothor_scenes_in_build)
+                        scene = random.choice(list(robothor_scenes_in_build))
                     else:
                         ithor_scenes = set(self.ithor_scenes())
                         ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
                         if ithor_scenes_in_build:
                             # Prioritize iTHOR because that's what the default agent best uses.
-                            scene = random.choice(ithor_scenes_in_build)
+                            scene = random.choice(list(ithor_scenes_in_build))
                         else:
                             # perhaps only using RoboTHOR or using only custom scenes
-                            scene = random.choice(scenes_in_build)
+                            scene = random.choice(list(scenes_in_build))
 
             event = self.reset(scene)
 
@@ -619,14 +619,14 @@ class Controller(object):
             self.initialization_parameters["agentMode"] = "locobot"
             warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
         if (
-            scene in self.robothor_scenes and
+            scene in self.robothor_scenes() and
             self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
         ):
             warnings.warn("You are using a RoboTHOR scene without using the standard LoCoBot.\n" +
              "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?")
 
         self.last_event = self.step(
-            action='Initialize', **self.initialization_parameters
+            action="Initialize", **self.initialization_parameters
         )
 
         if not self.last_event.metadata['lastActionSuccess']:
@@ -686,17 +686,18 @@ class Controller(object):
             # from FloorPlan_Val[1:12]_[1:5]
             stages["Val"] = range(1, 4)
 
-        for stage, wall_config_i in stages.items():
-            for object_config_i in range(1, 6):
-                scenes.append('FloorPlan_{stage}{wall_config}_{object_config}'.format(
-                    stage=stage,
-                    wall_config=wall_config_i,
-                    object_config=object_config_i)
-                )
+        for stage, wall_configs in stages.items():
+            for wall_config_i in wall_configs:
+                for object_config_i in range(1, 6):
+                    scenes.append('FloorPlan_{stage}{wall_config}_{object_config}'.format(
+                        stage=stage,
+                        wall_config=wall_config_i,
+                        object_config=object_config_i)
+                    )
         return scenes
 
     def scene_names(self):
-        return self.ithor_scenes + self.robothor_scenes
+        return self.ithor_scenes() + self.robothor_scenes()
 
     def _prune_release(self, release):
         try:
