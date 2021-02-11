@@ -135,7 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected string lastAction;
         protected bool lastActionSuccess;
-        protected string errorMessage;
+        public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
 
