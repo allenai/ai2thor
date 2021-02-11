@@ -942,5 +942,5 @@ def test_get_interactable_poses(controller):
     # test maxDistance
     event = controller.step("GetInteractablePoses", objectId=fridgeId, maxDistance=5)
     assert (
-        1300 > len(event.metadata["actionReturn"]) > 1200
+        1300 > len(event.metadata["actionReturn"]) > 1100
     ), "GetInteractablePoses with large maxDistance is off!"
