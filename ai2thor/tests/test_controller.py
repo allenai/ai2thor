@@ -59,7 +59,9 @@ def test_key_for_point():
 
 def test_scene_names():
     c = controller()
-    assert len(c.scene_names()) == 120
+    assert len(c.scene_names()) == 195
+    assert len(c.ithor_scenes()) == 120
+    assert len(c.robothor_scenes()) == 195 - 120
 
 def test_invalid_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='InvalidAction', errorMessage='Invalid method: moveaheadbadmethod'))

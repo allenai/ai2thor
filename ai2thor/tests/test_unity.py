@@ -115,6 +115,12 @@ def test_small_aspect():
     controller.stop()
 
 
+def test_bot_deprecation():
+    controller = build_controller(agentMode="bot", width=128, height=64)
+    assert controller.initialization_parameters["agentMode"].lower() == "locobot", "bot should alias to locobot!"
+    controller.stop()
+
+
 def test_deprecated_segmentation_params():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation

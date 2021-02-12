@@ -26,6 +26,7 @@ import uuid
 import tty
 import sys
 import termios
+from functools import lru_cache
 
 
 import numpy as np
@@ -393,7 +394,7 @@ class Controller(object):
         height=300,
         x_display=None,
         host="127.0.0.1",
-        scene="FloorPlan_Train1_1",
+        scene=None,
         image_dir=".",
         save_image_per_frame=False,
         depth_format=DepthFormat.Meters,
@@ -481,19 +482,42 @@ class Controller(object):
                     DeprecationWarning,
                 )
 
+            # Let's set the scene for them!
+            if scene is None:
+                scenes_in_build = self.scenes_in_build
+                if not scenes_in_build:
+                    raise RuntimeError("No scenes are in your build of AI2-THOR!")
+
+                # use a robothor scene
+                robothor_scenes = set(self.robothor_scenes())
+
+                # prioritize robothor if locobot is being used
+                robothor_scenes_in_build = robothor_scenes.intersection(scenes_in_build)
+
+                # check for bot as well, for backwards compatibility support
+                if (
+                    unity_initialization_parameters.get("agentMode", "default").lower() in {"locobot", "bot"} and
+                    robothor_scenes_in_build
+                ):
+                    # get the first robothor scene
+                    scene = sorted(list(robothor_scenes_in_build))[0]
+                else:
+                    ithor_scenes = set(self.ithor_scenes())
+                    ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
+                    if ithor_scenes_in_build:
+                        # prioritize iTHOR because that's what the default agent best uses
+                        scene = sorted(list(ithor_scenes_in_build))[0]
+                    else:
+                        # perhaps only using RoboTHOR or using only custom scenes
+                        scene = sorted(list(scenes_in_build))[0]
+
             event = self.reset(scene)
-            if event.metadata["lastActionSuccess"]:
-                init_return = event.metadata["actionReturn"]
-                # older builds don't send actionReturn on Initialize
-                if init_return:
-                    self.server.set_init_params(init_return)
-                    logging.info("Initialize return: {}".format(init_return))
-            else:
-                raise RuntimeError(
-                    "Initialize action failure: {}".format(
-                        event.metadata["errorMessage"]
-                    )
-                )
+
+            # older builds don't send actionReturn on Initialize
+            init_return = event.metadata['actionReturn']
+            if init_return:
+                self.server.set_init_params(init_return)
+                logging.info("Initialize return: {}".format(init_return))
 
     def _build_server(self, host, port, width, height):
 
@@ -545,8 +569,11 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    def reset(self, scene="FloorPlan_Train1_1", **init_params):
-        if re.match(r"^FloorPlan[0-9]+$", scene):
+    def reset(self, scene=None, **init_params):
+        if scene is None:
+            scene = self.scene
+
+        if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
@@ -584,16 +611,35 @@ class Controller(object):
             if "height" in init_params:
                 self.height = init_params["height"]
                 del init_params["height"]
-            self.step(action="ChangeResolution", x=self.width, y=self.height)
+            self.step(
+                action="ChangeResolution",
+                x=self.width,
+                y=self.height,
+                raise_for_failure=True
+            )
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
+
+        # RoboTHOR checks
+        agent_mode = self.initialization_parameters.get("agentMode", "default")
+        if agent_mode.lower() == "bot":
+            self.initialization_parameters["agentMode"] = "locobot"
+            warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+        if (
+            scene in self.robothor_scenes() and
+            self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
+        ):
+            warnings.warn("You are using a RoboTHOR scene without using the standard LoCoBot.\n" +
+             "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?")
+
         self.last_event = self.step(
-            action="Initialize", **self.initialization_parameters
+            action="Initialize",
+            raise_for_failure=True,
+            **self.initialization_parameters
         )
 
         self.scene = scene
-
         return self.last_event
 
     def random_initialize(
@@ -610,13 +656,57 @@ class Controller(object):
             "RandomInitialize has been removed.  Use InitialRandomSpawn - https://ai2thor.allenai.org/ithor/documentation/actions/initialization/#object-position-randomization"
         )
 
-    def scene_names(self):
+    @lru_cache()
+    def ithor_scenes(
+        self,
+        include_kitchens=True,
+        include_living_rooms=True,
+        include_bedrooms=True,
+        include_bathrooms=True
+    ):
+        types = []
+        if include_kitchens:
+            types.append((1, 31))
+        if include_living_rooms:
+            types.append((201, 231))
+        if include_bedrooms:
+            types.append((301, 331))
+        if include_bathrooms:
+            types.append((401, 431))
+
+        # keep this as a list because the order may look weird otherwise
         scenes = []
-        for low, high in [(1, 31), (201, 231), (301, 331), (401, 431)]:
+        for low, high in types:
             for i in range(low, high):
                 scenes.append("FloorPlan%s_physics" % i)
-
         return scenes
+
+    @lru_cache()
+    def robothor_scenes(self, include_train=True, include_val=True):
+        # keep this as a list because the order may look weird otherwise
+        scenes = []
+        stages = dict()
+
+        # from FloorPlan_Train[1:12]_[1:5]
+        if include_train:
+            stages["Train"] = range(1, 13)
+        if include_val:
+            # from FloorPlan_Val[1:12]_[1:5]
+            stages["Val"] = range(1, 4)
+
+        for stage, wall_configs in stages.items():
+            for wall_config_i in wall_configs:
+                for object_config_i in range(1, 6):
+                    scenes.append('FloorPlan_{stage}{wall_config}_{object_config}'.format(
+                        stage=stage,
+                        wall_config=wall_config_i,
+                        object_config=object_config_i)
+                    )
+        return scenes
+
+    @lru_cache()
+    def scene_names(self):
+        return self.ithor_scenes() + self.robothor_scenes()
 
     def _prune_release(self, release):
         try:

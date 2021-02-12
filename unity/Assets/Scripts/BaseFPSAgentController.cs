@@ -431,7 +431,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void Initialize(ServerAction action)
         {
             if(action.agentMode.ToLower() == "default" || 
-               action.agentMode.ToLower() == "bot" || 
+               action.agentMode.ToLower() == "locobot" || 
                action.agentMode.ToLower() == "drone" ||
                action.agentMode.ToLower() == "arm"
                )
@@ -597,7 +597,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            else if(whichMode == "bot")
+            else if(whichMode == "locobot")
             {
                 //toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
