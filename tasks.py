@@ -3114,30 +3114,3 @@ def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n
         for controller, metric in trial_runner(controller, num_trials, ObjectPositionVarianceAverage()):
             act(controller, actions, n)
         print(" actions: '{}', object_position_variance_average: {} ".format(action_name, metric))
-
-@task
-def challenge_push_build(context, archive_name):
-    archive_sha = build_sha256(archive_name)
-    push_build(archive_name, archive_sha, False)
-
-@task
-def challenge_build(context):
-    procs = []
-    commit_id = git_commit_id()
-    for arch in ["OSXIntel64", "Linux64"]:
-        logger.info("starting build for %s %s " % (arch, commit_id))
-        if ai2thor.build.Build(arch, git_commit_id, include_private_scenes=False).exists():
-            logger.info("found build for commit %s %s" % (commit_id, arch))
-            continue
-        # this is done here so that when a tag build request arrives and the commit_id has already
-        # been built, we avoid bootstrapping the cache since we short circuited on the line above
-        os.environ['INCLUDE_PRIVATE_SCENES'] = 'true'
-        p = ci_build_arch(arch, False)
-        logger.info("finished build for %s %s " % (arch, commit_id))
-        procs.append(p)
-
-    for p in procs:
-        if p:
-            logger.info("joining proc %s for %s %s" % (p.pid, build["branch"], build["commit_id"]))
-            p.join()
-
