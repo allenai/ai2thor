@@ -122,6 +122,9 @@ class Event(object):
 
         self.events = [self]  # Ensure we have a similar API to MultiAgentEvent
 
+    def __bool__(self):
+        return self.metadata["lastActionSuccess"]
+
     def __repr__(self):
         """Summarizes the results from an Event."""
         action_return = str(self.metadata["actionReturn"])
