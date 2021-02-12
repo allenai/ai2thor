@@ -94,7 +94,7 @@ def test_raise_for_failure():
     action1 = dict(action='MoveAhead')
     c.server.request_queue.put_nowait(fake_event)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         c.step(action1, raise_for_failure=True)
 
 def test_failure():

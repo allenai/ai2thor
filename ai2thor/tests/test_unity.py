@@ -7,6 +7,7 @@ import pytest
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
+from ai2thor.tests.constants import TESTS_DATA_DIR
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 import glob
@@ -848,7 +849,7 @@ def test_moveahead_fail(controller):
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_jsonschema_metadata(controller):
     event = controller.step(dict(action="Pass"))
-    with open("ai2thor/tests/data/metadata-schema.json") as f:
+    with open(os.path.join(TESTS_DATA_DIR, "metadata-schema.json")) as f:
         schema = json.loads(f.read())
 
     jsonschema.validate(instance=event.metadata, schema=schema)
