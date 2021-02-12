@@ -1752,7 +1752,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        public void GetTargetObject(float x, float y, bool forceAction = false) {
+        public void GetObjectInFrame(float x, float y, bool forceAction = false) {
             SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
         }
