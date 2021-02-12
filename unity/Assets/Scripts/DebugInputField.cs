@@ -1723,6 +1723,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "teles":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportFull";
+                        action.x = 4.42f;
+                        action.y = 0.9009f;
+                        action.z = -1.05f;
+                        StochasticController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "map":
                     {
                         ExecuteAction("ToggleMapView");
@@ -3314,31 +3325,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     case "telefull":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "TeleportFull";
-                        action.x = -1.0f;
-                        action.y = 0.9009995460510254f;
-                        action.z = 1;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportFull";
+                        action["x"] = -1.5f;
+                        action["y"] = 0.9009995460510254f;
+                        action["z"] = -1.5f;
                         float rotation = 135.0f;
                         int horizon = 0;
+                        bool standing = true;
+
 						if (splitcommand.Length > 1  && splitcommand.Length < 5) {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.y = float.Parse(splitcommand[2]);
-                            action.z = float.Parse(splitcommand[3]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[2]);
+                            action["z"] = float.Parse(splitcommand[3]);
                             rotation = float.Parse(splitcommand[4]);
                         }
 
                         else if(splitcommand.Length > 5)
                         {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.y = float.Parse(splitcommand[2]);
-                            action.z = float.Parse(splitcommand[3]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[2]);
+                            action["z"] = float.Parse(splitcommand[3]);
                             rotation = float.Parse(splitcommand[4]);
                             horizon = int.Parse(splitcommand[5]);
                         }
 
-                        action.rotation = new Vector3(0, rotation, 0);
-                        action.horizon = horizon;
+                        action["rotation"] = rotation;
+                        action["horizon"] = horizon;
+                        action["standing"] = standing;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

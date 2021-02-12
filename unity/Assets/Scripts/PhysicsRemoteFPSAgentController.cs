@@ -1609,22 +1609,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void TeleportFull(ServerAction action) {
-            targetTeleport = new Vector3(action.x, action.y, action.z);
+        public override void TeleportFull(
+            float x,
+            float y,
+            float z,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            targetTeleport = new Vector3(x, y, z);
 
-            if (action.forceAction) {
+            if (forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+                if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+
+                actionFinished(true);
+                return;
+
             } else {
                 if (!agentManager.SceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                if (!isPositionOnGrid(targetTeleport)) {
+                    errorMessage = $"Target teleport position {targetTeleport.ToString("F6")} is not" +
+                        $" on the grid of size {gridSize}.";
                     actionFinished(false);
                     return;
                 }
@@ -1648,22 +1667,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //note- this should not affect the isArmColliding check, which uses physics overlap casts based on the dimensions of arm colliders
                 ToggleArmColliders(Arm, true);
 
-
                 //here we actually teleport 
                 transform.position = targetTeleport;
 
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
+                // Adjust y position so that the agent is more on the floor
+                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
 
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
+                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
+                if (tooMuchYMovement) {
+                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
+                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
+                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
+                }
+
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+                if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding(
                     collidersToIgnore: collidersToIgnoreDuringMovement,
@@ -1685,7 +1709,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                if (agentCollides || handObjectCollides || armCollides) {
+                if (agentCollides || handObjectCollides || armCollides || tooMuchYMovement) {
                     if (ItemInHand != null) {
                         ItemInHand.transform.localPosition = oldLocalHandPosition;
                         ItemInHand.transform.localRotation = oldLocalHandRotation;
@@ -1698,22 +1722,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //reset arm colliders on fail actionFinish
                     ToggleArmColliders(Arm, false);
 
-
                     actionFinished(false, errorMessage);
                     return;
                 }
+
+                //reset arm colliders on actionFinish
+                ToggleArmColliders(Arm, false);
+                actionFinished(true);
             }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
-            snapAgentToGrid();
-
-            //reset arm colliders on actionFinish
-            ToggleArmColliders(Arm, false);
-
-            actionFinished(true);
         }
 
         public void ToggleArmColliders(IK_Robot_Arm_Controller Arm, bool value)
@@ -1732,13 +1748,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void Teleport(ServerAction action) {
-            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
-            action.standing = isStanding();
-            if (!action.rotateOnTeleport) {
-                action.rotation = transform.eulerAngles;
+        public override void Teleport(
+            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
+        ) {
+            if (rotateOnTeleport) {
+                throw new ArgumentException(
+                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
+                    " the agent, use the TeleportFull command instead."
+                );
             }
-            TeleportFull(action);
+            TeleportFull(
+                x: x,
+                y: y,
+                z: z,
+                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
+                horizon: m_Camera.transform.localEulerAngles.x,
+                standing: isStanding(),
+                forceAction: forceAction
+            );
         }
 
         protected HashSet<Collider> allAgentColliders() {
@@ -6344,11 +6371,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////////////////////
         ///// Crouch and Stand /////
         ////////////////////////////
-
-        public bool isStanding() {
-            return standingLocalCameraPosition == m_Camera.transform.localPosition;
-        }
-
         protected void crouch() {            
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
