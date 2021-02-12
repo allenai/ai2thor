@@ -505,7 +505,7 @@ class Controller(object):
                     ithor_scenes = set(self.ithor_scenes())
                     ithor_scenes_in_build = ithor_scenes.intersection(scenes_in_build)
                     if ithor_scenes_in_build:
-                        # Prioritize iTHOR because that's what the default agent best uses.
+                        # prioritize iTHOR because that's what the default agent best uses
                         scene = sorted(list(ithor_scenes_in_build))[0]
                     else:
                         # perhaps only using RoboTHOR or using only custom scenes
@@ -571,7 +571,7 @@ class Controller(object):
 
     def reset(self, scene=None, **init_params):
         if scene is None:
-            scene = self.last_scene
+            scene = self.scene
 
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
@@ -596,7 +596,6 @@ class Controller(object):
             )
 
         self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
-        self.last_scene = scene
         self.last_event = self.server.receive()
 
         # update the initialization parameters
@@ -612,7 +611,12 @@ class Controller(object):
             if "height" in init_params:
                 self.height = init_params["height"]
                 del init_params["height"]
-            self.step(action="ChangeResolution", x=self.width, y=self.height)
+            self.step(
+                action="ChangeResolution",
+                x=self.width,
+                y=self.height,
+                raise_for_failure=True
+            )
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
@@ -630,13 +634,10 @@ class Controller(object):
              "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?")
 
         self.last_event = self.step(
-            action="Initialize", **self.initialization_parameters
+            action="Initialize",
+            raise_for_failure=True,
+            **self.initialization_parameters
         )
-
-        if not self.last_event.metadata['lastActionSuccess']:
-            raise RuntimeError('Initialize action failure: {}'.format(
-                self.last_event.metadata['errorMessage'])
-            )
 
         self.scene = scene
         return self.last_event
