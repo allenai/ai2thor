@@ -4,11 +4,11 @@ using UnityEngine;
 /// <summary>
 /// 
 /// </summary>
-public class ServerActionRecorderWindow : EditorWindow
+public class MCSServerActionRecorderWindow : EditorWindow
 {
     private const string FILE_ERROR_MSG = "\nCheck recordings folder: \nStreamingAssets/Recordings";
 
-    private string source = string.Empty;
+    private string source = "";
     private bool playbackPending = false;
     private bool fileLoaded = false;
     private RecordedServerActions recordedServerActions = null;
@@ -16,7 +16,7 @@ public class ServerActionRecorderWindow : EditorWindow
     [MenuItem("Tools/ServerAction Recorder")]
     public static void ShowWindow()
     {
-        var window = GetWindow<ServerActionRecorderWindow>(false, "ServerAction Recorder", true);
+        var window = GetWindow<MCSServerActionRecorderWindow>(false, "ServerAction Recorder", true);
 
         window.maxSize = new Vector2(1000f, 500f);
         window.minSize = window.maxSize;
@@ -66,7 +66,7 @@ public class ServerActionRecorderWindow : EditorWindow
             {
                 try
                 {
-                    recordedServerActions = ServerActionRecorder.GetServerActionsFromFile(source);
+                    recordedServerActions = MCSServerActionRecorder.GetServerActionsFromFile(source);
                     if (recordedServerActions != null)
                     {
                         fileLoaded = true;
@@ -98,7 +98,7 @@ public class ServerActionRecorderWindow : EditorWindow
         if (playbackPending && Application.isPlaying)
         {
             playbackPending = false;
-            ServerActionRecorder.RunRecordedActions(recordedServerActions);
+            MCSServerActionRecorder.RunRecordedActions(recordedServerActions);
         }
     }
 }

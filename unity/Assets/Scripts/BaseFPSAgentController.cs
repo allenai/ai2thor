@@ -712,7 +712,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentManager.setReadyToEmit(true);
 
 #if RECORD_SERVERACTIONS
-			ServerActionRecorder.Instance.RecordAction(controlCommand);
+			MCSServerActionRecorder.Instance.RecordAction(controlCommand);
 #endif
 		}
 

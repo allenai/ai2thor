@@ -8,7 +8,7 @@ using UnityEngine;
 /// Utility for recording runtime ServerActions as they are performed. 
 /// ServerActions are recorded with timestamps then saved to a file which can then be loaded through the toolbar for playback [Tools -> ServerAction Recorder]
 /// </summary>
-public class ServerActionRecorder : MonoBehaviour
+public class MCSServerActionRecorder : MonoBehaviour
 {
     private static string RECORDING_PATH = "Recordings/";
     private static List<string> RECORDABLE_ACTIONS = new List<string>
@@ -53,10 +53,11 @@ public class ServerActionRecorder : MonoBehaviour
         "EndHabituation",
     };
 
+    // Lock is placed in anticipation of possibly networking access to this object, this may not even be required
     private static object instanceLock = new object();
-    private static ServerActionRecorder instance;
+    private static MCSServerActionRecorder instance;
 
-    public static ServerActionRecorder Instance
+    public static MCSServerActionRecorder Instance
     {
         get
         {
@@ -65,15 +66,15 @@ public class ServerActionRecorder : MonoBehaviour
                 if (instance == null)
                 {
                     // Search for existing instance.
-                    instance = (ServerActionRecorder)FindObjectOfType(typeof(ServerActionRecorder));
+                    instance = (MCSServerActionRecorder)FindObjectOfType(typeof(MCSServerActionRecorder));
 
                     // Create new instance if one doesn't already exist.
                     if (instance == null)
                     {
                         // Need to create a new GameObject to attach the singleton to.
                         var singletonObject = new GameObject();
-                        instance = singletonObject.AddComponent<ServerActionRecorder>();
-                        singletonObject.name = typeof(ServerActionRecorder).ToString();
+                        instance = singletonObject.AddComponent<MCSServerActionRecorder>();
+                        singletonObject.name = typeof(MCSServerActionRecorder).ToString();
 
                         // Make instance persistent.
                         DontDestroyOnLoad(singletonObject);
@@ -107,10 +108,11 @@ public class ServerActionRecorder : MonoBehaviour
             if (action.action == "Initialize")
             {
                 var mcs = GameObject.FindObjectOfType<MCSMain>();
-                action.sceneConfig = MCSMain.LoadCurrentSceneFromFile(mcs.GetCurrentSceneName());
+
+                action.sceneConfig = new MCSConfigScene();
+                action.sceneConfig.name = mcs.GetCurrentSceneName();
             }
             recordedActions.Add(new RecordedServerAction(Time.time, action));
-            //Debug.LogWarning("Recorded: " + Time.time + " : " + action.action);
         }
     }
 
@@ -143,6 +145,11 @@ public class ServerActionRecorder : MonoBehaviour
         {
             if (Time.time >= recordedServerActions.serverActions[currentStep].time)
             {
+                if (recordedServerActions.serverActions[currentStep].action.action == "Initialize")
+                {
+                    var mcs = FindObjectOfType<MCSMain>();
+                    recordedServerActions.serverActions[currentStep].action.sceneConfig = MCSMain.LoadCurrentSceneFromFile(recordedServerActions.serverActions[currentStep].action.sceneConfig.name);
+                }
                 physicsController.ProcessControlCommand(recordedServerActions.serverActions[currentStep].action);
                 currentStep += 1;
             }
@@ -179,6 +186,8 @@ public class ServerActionRecorder : MonoBehaviour
         {
             File.WriteAllText(filePath, jsonString);
         }
+
+        UnityEditor.AssetDatabase.Refresh();
     }
 }
 
