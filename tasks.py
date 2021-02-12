@@ -873,6 +873,9 @@ def ci_build(context):
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )
 
+            if build["branch"] == "erick/challenge2021":
+                os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
+
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
                 logger.info(
