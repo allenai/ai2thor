@@ -1017,7 +1017,7 @@ def poll_ci_build(context):
     for arch in platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
         if not commit_build.exists():
-            print("Build log url: %s" % commit_build.log_url())
+            print("Build log url: %s" % commit_build.log_url)
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
     pytest_missing = True
