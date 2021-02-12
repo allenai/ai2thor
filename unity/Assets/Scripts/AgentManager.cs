@@ -48,6 +48,7 @@ public class AgentManager : MonoBehaviour
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+    private HashSet<string> allowedTestActionReturnActions = new HashSet<string>{"Initialize", "GetScenesInBuild"};
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -70,10 +71,16 @@ public class AgentManager : MonoBehaviour
 		}
     }
 
+    private void stripMetadataForTest(MetadataPatch patch) {
+        if (isTestScene()) {
+            if (!allowedTestActionReturnActions.Contains(patch.lastAction)){
+                patch.actionReturn = null;
+            }
+        }
+    }
+
     private void stripMetadataForTest(MultiAgentMetadata multiMeta) {
         if (isTestScene()) {
-            HashSet<string> allowedActionReturnActions = new HashSet<string>{"Initialize", "GetScenesInBuild"};
-            Debug.Log("going to strip metadata");
             for(int i = 0; i < multiMeta.agents.Length; i++) {
                 MetadataWrapper a = multiMeta.agents[i];
                 a.objects = new ObjectMetadata[]{};
@@ -82,7 +89,7 @@ public class AgentManager : MonoBehaviour
                 a.segmentedObjectIds = new string[]{};
                 a.objectIdsInBox = new string[]{};
                 a.actionStringsReturn = new string[]{};
-                if (!allowedActionReturnActions.Contains(a.lastAction)){
+                if (!allowedTestActionReturnActions.Contains(a.lastAction)){
                     a.actionReturn = null;
                 }
                 a.colors = new ColorId[]{};
@@ -1008,6 +1015,8 @@ public class AgentManager : MonoBehaviour
                 while (canEmit() && this.fastActionEmit) {
                     MetadataPatch patch = this.activeAgent().generateMetadataPatch();
                     patch.agentId = this.activeAgentId;
+                    stripMetadataForTest(patch);
+
                     msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
                     this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
