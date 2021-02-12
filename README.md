@@ -31,7 +31,7 @@
 Please refer to the [Documentation Page on the AI2-THOR website](hhttps://ai2thor.allenai.org/ithor/documentation/) for information on Installation, API, Metadata, actions, object properties and other important framework information.
 ## Unity Development
 
-If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 2019.4.2 LTS for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
+If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 2019.4.20 LTS for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
 
 ```python
 pip install invoke
@@ -87,4 +87,3 @@ We have done our best to fix all bugs and issues. However, you might still encou
 
 AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
-
