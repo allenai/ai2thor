@@ -1,6 +1,8 @@
 
 import os
-if os.name == "nt":
+from platform import system
+
+if system() == "Windows":
     class fcntl:
         LOCK_UN = 0
         LOCK_SH = 0
