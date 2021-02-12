@@ -5080,39 +5080,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Helper method that parses objectId parameter to return the sim object that it target.
-        // The action is halted if the objectId does not appear in the scene.
-        private SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
-            // an objectId was given, so find that target in the scene if it exists
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
-            }
-
-            // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
-                target = sop;
-            }
-
-            // target not found!
-            if (target == null) {
-                throw new NullReferenceException("Target object not found within the specified visibility.");
-            }
-
-            return target;
-        }
-
-        // Helper method that parses (x and y) parameters to return the
-        // sim object that they target.
-        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
-            if (x < 0 || x > 1 || y < 0 || y > 1) {
-                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
-            }
-            SimObjPhysics target = null;
-            ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
-            return target;
-        }
-
         // syntactic sugar for open object with openness = 0.
         public void CloseObject(string objectId, bool forceAction = false) {
             OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
