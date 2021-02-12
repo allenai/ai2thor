@@ -23,9 +23,7 @@ import re
 import os
 import platform
 import uuid
-import tty
 import sys
-import termios
 from functools import lru_cache
 
 
@@ -342,16 +340,6 @@ RECEPTACLE_OBJECTS = {
     "TowelHolder": {"Cloth"},
 }
 
-
-def get_term_character():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
 
 
 def process_alive(pid):
@@ -753,6 +741,8 @@ class Controller(object):
             self._prune_release(release)
 
     def next_interact_command(self):
+        # NOTE: Leave this here because it is incompatible with Windows.
+        from ai2thor.interact import get_term_character
         current_buffer = ""
         while True:
             commands = self._interact_commands

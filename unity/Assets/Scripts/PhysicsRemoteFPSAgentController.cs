@@ -2654,30 +2654,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             public float armsLength;//the amount the hand moved from it's starting position to hit the object touched
         }
 
-        //checks if the target position in space is within the agent's current viewport
-        public bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
-        {
-            //now check if the target position is within bounds of the Agent's forward (z) view
-            Vector3 tmp = m_Camera.transform.position;
-            tmp.y = targetPosition.y;
-
-            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
-            {
-                errorMessage = "The target position is outside the agent's max visible distance.";
-                return false;
-            }
-
-            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
-            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
-            {
-                errorMessage = "The target position is outside the viewport.";
-                return false;
-            }
-
-            return true;
-        }
-
         //checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
         public bool CheckIfAgentCanMoveHand(Vector3 targetPosition, bool mustBeVisible = false) {
             bool result = false;

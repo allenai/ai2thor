@@ -77,8 +77,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
-        
+
+
         public AgentState agentState = AgentState.Emit;
+
+        // these object types can have a placeable surface mesh associated ith it
+        // this is to be used with ScreenToWorldTarget to filter out raycasts correctly
+        protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
+            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
+            SimObjType.CounterTop, SimObjType.Shelf
+        };
 
         public const float DefaultAllowedErrorInShortestPath = 0.0001f;
 
@@ -1702,6 +1710,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SimObjPhysics target = null;
             ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
             return target;
+        }
+
+        // checks if the target position in space is within the agent's current viewport
+        protected bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
+        {
+            //now check if the target position is within bounds of the Agent's forward (z) view
+            Vector3 tmp = m_Camera.transform.position;
+            tmp.y = targetPosition.y;
+
+            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
+            {
+                errorMessage = "The target position is outside the agent's max visible distance.";
+                return false;
+            }
+
+            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
+            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+            {
+                errorMessage = "The target position is outside the viewport.";
+                return false;
+            }
+
+            return true;
         }
 
         // used for all actions that need a sim object target
