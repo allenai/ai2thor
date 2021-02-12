@@ -7,6 +7,7 @@ import pytest
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
+from ai2thor.tests.constants import TESTS_DATA_DIR
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 import glob
@@ -38,6 +39,24 @@ wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
 stochastic_controller = build_controller(agentControllerType='stochastic')
 
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
+BASE_FP28_LOCATION = dict(
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
+)
+
+
+def teleport_to_base_location(controller: Controller):
+    assert controller.last_event.metadata["sceneName"].replace("_physics", "") == "FloorPlan28"
+
+    controller.step("TeleportFull", **BASE_FP28_LOCATION)
+    assert controller.last_event.metadata["lastActionSuccess"]
 
 def teardown_module(module):
     wsgi_controller.stop()
@@ -45,9 +64,9 @@ def teardown_module(module):
 
 
 def assert_near(point1, point2, error_message=""):
-    assert point1.keys() == point2.keys(), error_message
+    assert point1.keys() == point2.keys(), error_message + "Keys mismatch."
     for k in point1.keys():
-        assert round(point1[k], 3) == round(point2[k], 3), error_message
+        assert abs(point1[k] - point2[k]) < 1e-3, error_message + f"for {k} key, {point1[k]} != {point2[k]}"
 
 
 def test_stochastic_controller():
@@ -349,10 +368,8 @@ def test_add_third_party_camera(controller):
         )
     except ValueError as e:
         error_message = str(e)
-    assert (
-        error_message
-        == "action: AddThirdPartyCamera has an invalid argument: orthographicSize. Cannot convert to: float"
-    )
+
+    assert error_message.startswith("action: AddThirdPartyCamera has an invalid argument: orthographicSize")
 
 
 def test_update_third_party_camera():
@@ -487,19 +504,53 @@ def test_rotate_right(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_teleport(controller):
+    # Checking y coordinate adjustment works
     controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "y": 0.95},
+        raise_for_failure=True
     )
     position = controller.last_event.metadata["agent"]["position"]
-
-    assert_near(position, dict(x=-1.5, z=-1.5, y=0.901))
+    assert_near(position, BASE_FP28_POSITION)
 
     controller.step(
-        dict(action="Teleport", x=-2.0, z=-2.5, y=1.0), raise_for_failure=True
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
+        raise_for_failure=True
     )
     position = controller.last_event.metadata["agent"]["position"]
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
+    # Teleporting too high
+    before_position = controller.last_event.metadata["agent"]["position"]
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Teleport should not allow changes for more than 0.05 in the y coordinate."
+    )
+    assert controller.last_event.metadata["agent"]["position"] == before_position, (
+        "After failed teleport, the agent's position should not change."
+    )
+
+    # Teleporting into an object
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z":-3.5},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Should not be able to teleport into an object."
+    )
+
+    # Teleporting into a wall
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Should not be able to teleport into a wall."
+    )
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_open(controller):
@@ -756,59 +807,47 @@ def test_action_disptatch_some_default(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_moveahead(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
-    )
+    teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead"), raise_for_failure=True)
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-1.25, z=-1.5, y=0.901))
-
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_moveback(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
-    )
-    controller.step(dict(action="MoveBack"), raise_for_failure=True)
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-1.75, z=-1.5, y=0.900998652))
-
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_moveleft(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
-    )
-    controller.step(dict(action="MoveLeft"), raise_for_failure=True)
     position = controller.last_event.metadata["agent"]["position"]
     assert_near(position, dict(x=-1.5, z=-1.25, y=0.901))
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveback(controller):
+    teleport_to_base_location(controller)
+    controller.step(dict(action="MoveBack"), raise_for_failure=True)
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, dict(x=-1.5, z=-1.75, y=0.900998652))
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveleft(controller):
+    teleport_to_base_location(controller)
+    controller.step(dict(action="MoveLeft"), raise_for_failure=True)
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, dict(x=-1.75, z=-1.5, y=0.901))
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_moveright(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
-    )
+    teleport_to_base_location(controller)
     controller.step(dict(action="MoveRight"), raise_for_failure=True)
     position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-1.5, z=-1.75, y=0.901))
+    assert_near(position, dict(x=-1.25, z=-1.5, y=0.901))
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_moveahead_mag(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.1), raise_for_failure=True
-    )
+    teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead", moveMagnitude=0.5), raise_for_failure=True)
     position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-1.0, z=-1.5, y=0.9009983))
+    assert_near(position, dict(x=-1.5, z=-1, y=0.9009983))
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_moveahead_fail(controller):
-    controller.step(
-        dict(action="Teleport", x=-1.5, z=-1.5, y=1.0), raise_for_failure=True
-    )
+    teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead", moveMagnitude=5.0))
     assert not controller.last_event.metadata["lastActionSuccess"]
 
@@ -816,7 +855,7 @@ def test_moveahead_fail(controller):
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_jsonschema_metadata(controller):
     event = controller.step(dict(action="Pass"))
-    with open("ai2thor/tests/data/metadata-schema.json") as f:
+    with open(os.path.join(TESTS_DATA_DIR, "metadata-schema.json")) as f:
         schema = json.loads(f.read())
 
     jsonschema.validate(instance=event.metadata, schema=schema)
