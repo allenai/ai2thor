@@ -1583,7 +1583,15 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(Dictionary<string, object> action) {
-        this.jObject = JObject.FromObject(action);
+        try {
+            this.jObject = JObject.FromObject(action);
+        } catch (InvalidOperationException e)  {
+            throw new InvalidOperationException(
+                "TL;DR: Use 'run' from the debug input field. If you're seeing this, you're in the Debug Input Field. " +
+                "There is a weird case where actions like Teleport having xyz parameters and rotation: Vector3() which also has xyz parameters results in a self-recursing loop. " +
+                $"{e.Message}"
+            );
+        }
     }
 
     public DynamicServerAction(JObject action) {
