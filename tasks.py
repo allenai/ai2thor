@@ -873,31 +873,34 @@ def ci_build(context):
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )
 
+            private_scene_options = [False]
             if build["branch"] == "erick/challenge2021":
                 os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
+                private_scene_options = [False, True]
 
             procs = []
-            for arch in ["OSXIntel64", "Linux64"]:
-                logger.info(
-                    "starting build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                if ai2thor.build.Build(
-                    arch, build["commit_id"], include_private_scenes=False
-                ).exists():
+            for include_private_scenes in private_scene_options:
+                for arch in ["OSXIntel64", "Linux64"]:
                     logger.info(
-                        "found build for commit %s %s" % (build["commit_id"], arch)
+                        "starting build for %s %s %s"
+                        % (arch, build["branch"], build["commit_id"])
                     )
-                    continue
-                # this is done here so that when a tag build request arrives and the commit_id has already
-                # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                link_build_cache(build["branch"])
-                p = ci_build_arch(arch, False)
-                logger.info(
-                    "finished build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                procs.append(p)
+                    if ai2thor.build.Build(
+                        arch, build["commit_id"], include_private_scenes=include_private_scenes
+                    ).exists():
+                        logger.info(
+                            "found build for commit %s %s" % (build["commit_id"], arch)
+                        )
+                        continue
+                    # this is done here so that when a tag build request arrives and the commit_id has already
+                    # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                    link_build_cache(build["branch"])
+                    p = ci_build_arch(arch, include_private_scenes)
+                    logger.info(
+                        "finished build for %s %s %s"
+                        % (arch, build["branch"], build["commit_id"])
+                    )
+                    procs.append(p)
 
             # don't run tests for a tag since results should exist
             # for the branch commit
