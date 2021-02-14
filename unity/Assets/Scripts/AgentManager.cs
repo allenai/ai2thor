@@ -902,17 +902,17 @@ public class AgentManager : MonoBehaviour
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
-            var jsonResolver = new ShouldSerializeContractResolver();
-            return Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            }
-
-            );
+        var jsonResolver = new ShouldSerializeContractResolver();
+        return Newtonsoft.Json.JsonConvert.SerializeObject(
+            multiMeta,
+            Newtonsoft.Json.Formatting.None,
+            new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                ContractResolver = jsonResolver
+            }
+        );
     }
-
 
     private bool canEmit() {
         bool emit = true;
@@ -1851,28 +1851,27 @@ public class TypedVariable {
 
 
 
-public class ShouldSerializeContractResolver : DefaultContractResolver
-{
-   public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+public class ShouldSerializeContractResolver : DefaultContractResolver {
+    public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
 
-   protected override JsonProperty CreateProperty( MemberInfo member,
-                                    MemberSerialization memberSerialization )
-   {
-      JsonProperty property = base.CreateProperty( member, memberSerialization );
+    protected override JsonProperty CreateProperty(
+        MemberInfo member,
+        MemberSerialization memberSerialization
+    ) {
+       JsonProperty property = base.CreateProperty(member, memberSerialization);
 
-      // exclude these properties to make serialization match JsonUtility
-      if( property.DeclaringType == typeof(Vector3) &&
-            (property.PropertyName == "sqrMagnitude" || 
-            property.PropertyName == "magnitude"  ||
-            property.PropertyName == "normalized" 
-            ))
-      {
+       // exclude these properties to make serialization match JsonUtility
+      if (property.DeclaringType == typeof(Vector3) &&
+          (property.PropertyName == "sqrMagnitude" ||
+          property.PropertyName == "magnitude"  ||
+          property.PropertyName == "normalized")
+      ) {
          property.ShouldSerialize = instance => { return false; };
          return property;
       } else {
           return base.CreateProperty(member, memberSerialization);
       }
-
+      return base.CreateProperty(member, memberSerialization);
    }
 }
 
