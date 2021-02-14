@@ -204,9 +204,6 @@ public static class ActionDispatcher {
                     if (sourceParams.Length != targetParams.Length) {
                         // Some methods, like teleport full have
                         // add both required args and optional args to the end.
-
-                        // TODO: Prioritize the child class one in the case of teleport,
-                        // when it's ambiguous.
                         for (int i = minCommon - 1; i < sourceParams.Length; i++) {
                             if (!sourceParams[i].HasDefaultValue) {
                                 signatureMatch = false;
