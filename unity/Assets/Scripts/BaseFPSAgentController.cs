@@ -1393,12 +1393,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             agentMeta.name = "agent";
             agentMeta.position = transform.position;
             agentMeta.rotation = transform.eulerAngles;
-            agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-            if (agentMeta.cameraHorizon > 180) 
-            {
-                agentMeta.cameraHorizon -= 360;
-            }
-	        agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
+
+            float cameraX = m_Camera.transform.rotation.eulerAngles.x;
+            agentMeta.cameraHorizon = cameraX < 0 ? 360 + (cameraX % 360) : cameraX % 360;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
             // OTHER METADATA
@@ -1704,10 +1701,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public bool isStanding() {
-            return standingLocalCameraPosition == m_Camera.transform.localPosition;
-        }
-
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
@@ -1852,127 +1845,119 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        //teleport full, base version does not consider being able to hold objects
-        public virtual void TeleportFull(
-            float x,
-            float y,
-            float z,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null,
+            float? horizon = null,
             bool forceAction = false
         ) {
-            targetTeleport = new Vector3(x, y, z);
+            Teleport(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                forceAction: forceAction
+            );
+        }
 
-            if (forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-                actionFinished(true);
-                return;
+        public void Teleport(
+            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            TeleportFull(
+                position: position == null ? transform.position : (Vector3) position,
+                rotation: rotation == null ? transform.localEulerAngles : (Vector3) rotation,
+                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
+                forceAction: forceAction
+            );
+        }
 
-            } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
-                    errorMessage = "Teleport target out of scene bounds.";
-                    actionFinished(false);
-                    return;
-                }
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
 
-                if (!isPositionOnGrid(targetTeleport)) {
-                    errorMessage = $"`snapToGrid` is True but target teleport position" +
-                        $" {targetTeleport.ToString("F6")} is not on the grid of size {gridSize}.";
-                    actionFinished(false);
-                    return;
-                }
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(
+            float x, float y, float z,
+            Vector3 rotation,
+            float horizon,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                forceAction: forceAction
+            );
+        }
 
-                Vector3 oldPosition = transform.position;
-                Quaternion oldRotation = transform.rotation;
-                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
-                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
+        public void TeleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        ) {
+            // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
+            // smaller than 1e-2f. I'm not confident that will work in many cases.
+            if (!forceAction && (Mathf.Abs(rotation.x) >= 1e-2f || Mathf.Abs(rotation.z) >= 1e-2f)) {
+                throw new ArgumentOutOfRangeException(
+                    "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
+                    $" You gave {rotation.ToString("F6")}."
+                );
+            }
 
-                transform.position = targetTeleport;
+            // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                );
+            }
 
+            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                );
+            }
+
+            if (!forceAction && !isPositionOnGrid(position)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
+                );
+            }
+
+            // cache old values in case there's a failure
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            float oldHorizon = m_Camera.transform.localPosition.x;
+
+            // here we actually teleport 
+            transform.position = position;
+            transform.localEulerAngles = new Vector3(0, rotation.y, 0);
+            m_Camera.transform.eulerAngles = new Vector3(horizon, 0, 0);
+
+            if (!forceAction) {
                 // Adjust y position so that the agent is more on the floor
                 m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
-
-                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
+                bool tooMuchYMovement = Mathf.Abs(transform.position.y - position.y) > 0.05f;
                 if (tooMuchYMovement) {
                     errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
-                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
+                    $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
+                    " Consider using `forceAction=true` if you'd like to teleport anyway.";
                 }
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding(
                     collidersToIgnore: collidersToIgnoreDuringMovement,
                     includeErrorMessage: true
                 );
 
-
                 if (agentCollides || tooMuchYMovement) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
-                    m_Camera.transform.localPosition = oldCameraLocalPosition;
-                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
-                    return;
+                    m_Camera.transform.eulerAngles = new Vector3(oldHorizon, 0, 0);
+                    throw new InvalidOperationException(errorMessage);
                 }
-
-                actionFinished(true);
             }
-        }
-
-        public void TeleportFull(
-            Vector3 position,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
-            bool forceAction = false
-
-        ) {
-            TeleportFull(
-                x: position.x,
-                y: position.y,
-                z: position.z,
-                rotation: rotation,
-                horizon: horizon,
-                standing: standing,
-                forceAction: forceAction
-            );
-        }
-
-        public virtual void Teleport(
-            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
-        ) {
-            if (rotateOnTeleport) {
-                throw new ArgumentException(
-                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
-                    " the agent, use the TeleportFull command instead."
-                );
-            }
-            TeleportFull(
-                x: x,
-                y: y,
-                z: z,
-                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
-                horizon: m_Camera.transform.localEulerAngles.x,
-                standing: isStanding(),
-                forceAction: forceAction
-            );
+            actionFinished(success: true);
         }
 
         protected T[] flatten2DimArray<T>(T[, ] array) {

@@ -161,18 +161,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
         }
 
-        public override ObjectMetadata[] generateObjectMetadata() 
-        {
+        public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
         }
 
-        public override MetadataWrapper generateMetadataWrapper() 
-        {
-            return base.generateMetadataWrapper();
+        public bool isStanding() {
+            return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
         }
 
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible)
-        {
+        public override MetadataWrapper generateMetadataWrapper() {
+            MetadataWrapper metaWrapper = base.generateMetadataWrapper();
+	        metaWrapper.agent.isStanding = isStanding();
+            return metaWrapper;
+        }
+
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
         }
 
@@ -1609,163 +1612,207 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void TeleportFull(
-            float x,
-            float y,
-            float z,
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(
+            float x, float y, float z,
+            float rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: new Vector3(x, y, z),
+                rotation: new Vector3(0, rotation, 0),
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(
+            float x, float y, float z,
             Vector3 rotation,
             float horizon,
             bool standing,
             bool forceAction = false
         ) {
-            targetTeleport = new Vector3(x, y, z);
-
-            if (forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-
-                actionFinished(true);
-                return;
-
-            } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
-                    errorMessage = "Teleport target out of scene bounds.";
-                    actionFinished(false);
-                    return;
-                }
-
-                if (!isPositionOnGrid(targetTeleport)) {
-                    errorMessage = $"Target teleport position {targetTeleport.ToString("F6")} is not" +
-                        $" on the grid of size {gridSize}.";
-                    actionFinished(false);
-                    return;
-                }
-
-                Vector3 oldPosition = transform.position;
-                Quaternion oldRotation = transform.rotation;
-                Vector3 oldLocalHandPosition = new Vector3();
-                Quaternion oldLocalHandRotation = new Quaternion();
-                if (ItemInHand != null) {
-                    oldLocalHandPosition = ItemInHand.transform.localPosition;
-                    oldLocalHandRotation = ItemInHand.transform.localRotation;
-                }
-                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
-                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
-
-                //default high level hand when teleporting
-                DefaultAgentHand();
-
-                //if in arm mode, set colliders of arm to trigger so upon teleporting, they don't collide and move
-                //anything that the arm might be clipped into
-                //note- this should not affect the isArmColliding check, which uses physics overlap casts based on the dimensions of arm colliders
-                ToggleArmColliders(Arm, true);
-
-                //here we actually teleport 
-                transform.position = targetTeleport;
-
-                // Adjust y position so that the agent is more on the floor
-                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
-
-                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
-                if (tooMuchYMovement) {
-                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
-                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
-                }
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-
-                bool agentCollides = isAgentCapsuleColliding(
-                    collidersToIgnore: collidersToIgnoreDuringMovement,
-                    includeErrorMessage: true
-                );
-                
-                bool handObjectCollides = isHandObjectColliding(true);
-                bool armCollides = false;
-                if (handObjectCollides && !agentCollides) {
-                    errorMessage = "Cannot teleport due to hand object collision.";
-                }
-
-                if(Arm != null)
-                {
-                    if(Arm.IsArmColliding())
-                    {
-                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
-                        armCollides = true;
-                    }
-                }
-
-                if (agentCollides || handObjectCollides || armCollides || tooMuchYMovement) {
-                    if (ItemInHand != null) {
-                        ItemInHand.transform.localPosition = oldLocalHandPosition;
-                        ItemInHand.transform.localRotation = oldLocalHandRotation;
-                    }
-                    transform.position = oldPosition;
-                    transform.rotation = oldRotation;
-                    m_Camera.transform.localPosition = oldCameraLocalPosition;
-                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-
-                    //reset arm colliders on fail actionFinish
-                    ToggleArmColliders(Arm, false);
-
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-
-                //reset arm colliders on actionFinish
-                ToggleArmColliders(Arm, false);
-                actionFinished(true);
-            }
+            TeleportFull(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
         }
 
-        public void ToggleArmColliders(IK_Robot_Arm_Controller Arm, bool value)
-        {
-            if(Arm != null)
-            {
-                foreach(CapsuleCollider c in Arm.ArmCapsuleColliders)
-                {
-                    c.isTrigger = value;
+        // keep undocumented until float: rotation is added to Stochastic
+        public void TeleportFull(
+            Vector3 position,
+            float rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: position,
+                rotation: new Vector3(0, rotation, 0),
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        // has to consider both the arm and standing
+        public void TeleportFull(
+            Vector3 position,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            // cache old values in case there's a failure
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldCameraEulerAngle = m_Camera.transform.eulerAngles;
+
+            Vector3 oldLocalHandPosition = new Vector3();
+            Quaternion oldLocalHandRotation = new Quaternion();
+            if (ItemInHand != null) {
+                oldLocalHandPosition = ItemInHand.transform.localPosition;
+                oldLocalHandRotation = ItemInHand.transform.localRotation;
+            }
+
+            try {
+                // default high level hand when teleporting
+                DefaultAgentHand();
+                ToggleArmColliders(arm: Arm, value: forceAction);
+                base.TeleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+
+                // add arm value cases
+                if (!forceAction) {
+                    bool handObjectCollides = isHandObjectColliding(ignoreAgent: true);
+                    if (handObjectCollides) {
+                        errorMessage = "Cannot teleport due to hand object collision.";
+                    }
+
+                    bool armCollides = Arm != null && Arm.IsArmColliding();
+                    if (armCollides) {
+                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position.";
+                    }
+
+                    if (handObjectCollides || armCollides) {
+                        throw new InvalidOperationException(errorMessage);
+                    }
+                    ToggleArmColliders(arm: Arm, value: false);
+                }
+            } catch (InvalidOperationException e) {
+                ToggleArmColliders(arm: Arm, value: false);
+                if (wasStanding) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                if (ItemInHand != null) {
+                    ItemInHand.transform.localPosition = oldLocalHandPosition;
+                    ItemInHand.transform.localRotation = oldLocalHandRotation;
                 }
 
-                foreach(BoxCollider b in Arm.ArmBoxColliders)
-                {
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.eulerAngles = oldCameraEulerAngle;
+
+                throw new InvalidOperationException(e.Message);
+            }
+            actionFinished(success: true);
+        }
+
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            float? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        // keep undocumented until float: rotation is added to Stochastic
+        // DO NOT add float: rotation to base.
+        public void Teleport(
+            Vector3? position = null,
+            float? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            Teleport(
+                position: position,
+                rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        public void Teleport(
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: position == null ? transform.position : (Vector3) position,
+                rotation: rotation == null ? transform.localEulerAngles : (Vector3) rotation,
+                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
+                standing: standing == null ? isStanding() : (bool) standing,
+                forceAction: forceAction
+            );
+        }
+
+        public void ToggleArmColliders(IK_Robot_Arm_Controller arm, bool value) {
+            if (arm != null) {
+                foreach (CapsuleCollider c in arm.ArmCapsuleColliders) {
+                    c.isTrigger = value;
+                }
+                foreach (BoxCollider b in arm.ArmBoxColliders) {
                     b.isTrigger = value;
                 }
             }
-        }
-
-        public override void Teleport(
-            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
-        ) {
-            if (rotateOnTeleport) {
-                throw new ArgumentException(
-                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
-                    " the agent, use the TeleportFull command instead."
-                );
-            }
-            TeleportFull(
-                x: x,
-                y: y,
-                z: z,
-                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
-                horizon: m_Camera.transform.localEulerAngles.x,
-                standing: isStanding(),
-                forceAction: forceAction
-            );
         }
 
         protected HashSet<Collider> allAgentColliders() {
@@ -6791,7 +6838,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (float horizon in horizons) {
                     // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
                     if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                        throw new ArgumentException($"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]");
+                        throw new ArgumentException(
+                            $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                        );
                     }
                 }
             }
@@ -6806,7 +6855,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Consider the case where one does not want to move on a perfect grid, and is currently moving
                 // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
                 // This may happen if the agent starts by teleports with the rotation of 10 degrees.
-                int offset = (int) Math.Round(transform.eulerAngles.y % rotateStepDegrees);
+                int offset = (int) Math.Round(transform.localEulerAngles.y % rotateStepDegrees);
 
                 // Examples:
                 // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].

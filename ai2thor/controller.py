@@ -837,11 +837,6 @@ class Controller(object):
 
         self.last_action = action
 
-        rotation = action.get("rotation")
-        if rotation is not None and type(rotation) != dict:
-            action["rotation"] = {}
-            action["rotation"]["y"] = rotation
-
         # Support for deprecated parameter names (old: new)
         # Note that these parameters used to be applicable to ANY action.
         changed_parameter_names = {
@@ -859,20 +854,16 @@ class Controller(object):
 
         if not self.last_event.metadata[
             "lastActionSuccess"
-        ]:
-            if self.last_event.metadata["errorCode"] in [
+        ] and self.last_event.metadata["errorCode"] in [
             "InvalidAction",
             "MissingArguments",
             "AmbiguousAction",
             "InvalidArgument",
-            ]:
-                raise ValueError(self.last_event.metadata["errorMessage"])
-            elif raise_for_failure:
-                raise RuntimeError(
-                    self.last_event.metadata.get("errorMessage", f"{action} failed.")
-                )
+        ]:
+            raise ValueError(self.last_event.metadata["errorMessage"])
 
-        assert (not raise_for_failure) or self.last_event.metadata["lastActionSuccess"]
+        if raise_for_failure:
+            assert self.last_event.metadata["lastActionSuccess"]
 
         return self.last_event
 
