@@ -876,6 +876,7 @@ def ci_build(context):
             private_scene_options = [False]
             if build["branch"] == "erick/challenge2021":
                 os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
+            elif build["branch"] == "erick/challenge2021-eval":
                 private_scene_options = [False, True]
 
             procs = []
@@ -968,7 +969,11 @@ def ci_build_arch(arch, include_private_scenes=False):
     proc = None
     try:
         build_info["log"] = "%s.log" % (build_name,)
-        _build(unity_path, arch, build_dir, build_name)
+        env = {}
+        if include_private_scenes:
+            env["INCLUDE_PRIVATE_SCENES"] = "true"
+
+        _build(unity_path, arch, build_dir, build_name, env)
 
         print("pushing archive")
         proc = Process(
