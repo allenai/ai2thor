@@ -59,6 +59,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
         //determins default move distance for move actions
 		protected float moveMagnitude;
+
+        // this should eventually be removed if StochasticRemoteFPSAgentController overrides the 4 TeleportFull methods
+        private string agentMode;
+
         //determines rotation increment of rotate functions
         protected float rotateStepDegrees = 90.0f;
         protected bool snapToGrid;
@@ -546,14 +550,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.visibilityScheme = action.GetVisibilityScheme();
         }
 
-        public void SetAgentMode(string mode)
-        {
-            string whichMode;
-            whichMode = mode.ToLower();
+        public void SetAgentMode(string mode) {
+            string whichMode = mode.ToLower();
+
+            this.agentMode = whichMode;
 
             //null check for camera, used to ensure no missing references on initialization
-            if(m_Camera == null)
-            {
+            if(m_Camera == null) {
                 m_Camera = this.gameObject.GetComponentInChildren<Camera>();
             }
 
@@ -1937,12 +1940,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (!forceAction) {
                 // Adjust y position so that the agent is more on the floor
-                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                bool tooMuchYMovement = Mathf.Abs(transform.position.y - position.y) > 0.05f;
-                if (tooMuchYMovement) {
-                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                    $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
-                    " Consider using `forceAction=true` if you'd like to teleport anyway.";
+                bool tooMuchYMovement  = false;
+                if (this.agentMode != "drone") {
+                    m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+                    tooMuchYMovement = Mathf.Abs(transform.position.y - position.y) > 0.05f;
+                    if (tooMuchYMovement) {
+                        errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
+                        $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
+                        " Consider using `forceAction=true` if you'd like to teleport anyway.";
+                    }
                 }
 
                 bool agentCollides = isAgentCapsuleColliding(
