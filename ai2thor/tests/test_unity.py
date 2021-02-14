@@ -503,56 +503,6 @@ def test_rotate_right(controller):
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_teleport(controller):
-    # Checking y coordinate adjustment works
-    controller.step(
-        "TeleportFull",
-        **{**BASE_FP28_LOCATION, "y": 0.95},
-        raise_for_failure=True
-    )
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, BASE_FP28_POSITION)
-
-    controller.step(
-        "TeleportFull",
-        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
-        raise_for_failure=True
-    )
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
-
-    # Teleporting too high
-    before_position = controller.last_event.metadata["agent"]["position"]
-    controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
-    )
-    assert not controller.last_event.metadata["lastActionSuccess"], (
-        "Teleport should not allow changes for more than 0.05 in the y coordinate."
-    )
-    assert controller.last_event.metadata["agent"]["position"] == before_position, (
-        "After failed teleport, the agent's position should not change."
-    )
-
-    # Teleporting into an object
-    controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z":-3.5},
-    )
-    assert not controller.last_event.metadata["lastActionSuccess"], (
-        "Should not be able to teleport into an object."
-    )
-
-    # Teleporting into a wall
-    controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
-    )
-    assert not controller.last_event.metadata["lastActionSuccess"], (
-        "Should not be able to teleport into a wall."
-    )
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_open(controller):
     objects = controller.last_event.metadata["objects"]
     obj_to_open = next(obj for obj in objects if obj["objectType"] == "Fridge")
@@ -887,6 +837,147 @@ def test_change_resolution(controller):
     event = controller.step(
         dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True
     )
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_teleport(controller):
+    # Checking y coordinate adjustment works
+    controller.step(
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "y": 0.95},
+        raise_for_failure=True
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, BASE_FP28_POSITION)
+
+    controller.step(
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
+        raise_for_failure=True
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
+
+    # Teleporting too high
+    before_position = controller.last_event.metadata["agent"]["position"]
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Teleport should not allow changes for more than 0.05 in the y coordinate."
+    )
+    assert controller.last_event.metadata["agent"]["position"] == before_position, (
+        "After failed teleport, the agent's position should not change."
+    )
+
+    # Teleporting into an object
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z":-3.5},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Should not be able to teleport into an object."
+    )
+
+    # Teleporting into a wall
+    controller.step(
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
+    )
+    assert not controller.last_event.metadata["lastActionSuccess"], (
+        "Should not be able to teleport into a wall."
+    )
+
+    # DEFAULT AGENT TEST
+    # make sure Teleport works with default args
+    a1 = controller.last_event.metadata['agent']
+    a2 = controller.step("Teleport", horizon=10).metadata['agent']
+    assert_near(a2['cameraHorizon'], 10)
+
+    # all should be the same except for horizon
+    for dim in 'x y z'.split():
+        assert_near(a1['position'][dim], a2['position'][dim])
+        assert_near(a1['rotation'][dim], a2['rotation'][dim])
+    assert a1['isStanding'] == a2['isStanding'], "Agent should remain in same standing when unspecified!"
+    assert a1['isStanding'] != None, "Agent isStanding should be set for physics agent!"
+
+    # make sure float rotation works
+    agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+    assert_near(agent['rotation']['y'], 25)
+
+    # test out of bounds with default agent
+    for action in ['Teleport', 'TeleportFull']:
+        try:
+            controller.step(
+                action='TeleportFull',
+                position=dict(x=2000, y=0, z=9000),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                raise_for_failure=True
+            )
+            assert False, "Out of bounds teleport not caught by physics agent"
+        except:
+            pass
+
+    # Teleporting with the locobot and drone, which don't support standing
+    for agent in ['locobot', 'drone']:
+        event = controller.reset(agentMode=agent)
+        assert event.metadata['agent']['isStanding'] is None, agent + " cannot stand!"
+
+        # Only degrees of freedom on the locobot
+        for action in ["Teleport", "TeleportFull"]:
+            event = controller.step(
+                action=action,
+                position=dict(x=-1.5, y=0.9, z=1.5),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30
+            )
+            assert event.metadata['lastActionSuccess'], agent + " must be able to TeleportFull without passing in standing!"
+            try:
+                event = controller.step(
+                    action=action,
+                    position=dict(x=-1.5, y=0.9, z=1.5),
+                    rotation=dict(x=0, y=90, z=0),
+                    horizon=30,
+                    standing=True
+                )
+                assert False, agent + " should not be able to pass in standing to teleport!"
+            except:
+                pass
+
+            # test out of bounds with default agent
+            try:
+                controller.step(
+                    action=action,
+                    position=dict(x=2000, y=0, z=9000),
+                    rotation=dict(x=0, y=90, z=0),
+                    horizon=30,
+                    raise_for_failure=True
+                )
+                assert False, "Out of bounds teleport not caught by physics agent"
+            except:
+                pass
+
+        # make sure Teleport works with default args
+        a1 = controller.last_event.metadata['agent']
+        a2 = controller.step("Teleport", horizon=10).metadata['agent']
+        assert_near(a2['cameraHorizon'], 10)
+
+        # all should be the same except for horizon
+        for dim in 'x y z'.split():
+            assert_near(a1['position'][dim], a2['position'][dim])
+            assert_near(a1['rotation'][dim], a2['rotation'][dim])
+
+        # make sure float rotation works
+        if agent == "locobot":
+            agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+            assert_near(agent['rotation']['y'], 25)
+
+
+###################################################
+##### RESETTING WILL BE DONE AFTER THIS POINT #####
+###################################################
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])

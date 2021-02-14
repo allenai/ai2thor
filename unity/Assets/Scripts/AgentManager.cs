@@ -1216,30 +1216,32 @@ public class MetadataPatch
 //overlap between ObjectMetadata and AgentMetadata
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class AgentMetadata
-{
+public class AgentMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
     public float cameraHorizon;
-	public bool isStanding;
+
+    // TODO: this should be removed from base.
+    // some agents cannot stand (e.g., drone, locobot)
+	public bool? isStanding = null;
+
 	public bool inHighFrictionArea;
     public AgentMetadata() {}
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneAgentMetadata : AgentMetadata
-{
-    public float droneCurrentTime;
+public class DroneAgentMetadata : AgentMetadata {
+    // why is the launcher position even attached to the agent's metadata
+    // and not the generic metdata?
     public Vector3 LauncherPosition;
 }
 
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneObjectMetadata : ObjectMetadata
-{
+public class DroneObjectMetadata : ObjectMetadata {
     // Drone Related Metadata
     public int numSimObjHits;
     public int numFloorHits;

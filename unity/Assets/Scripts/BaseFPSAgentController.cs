@@ -1373,8 +1373,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
-		public virtual  MetadataPatch generateMetadataPatch()
-		{
+		public virtual  MetadataPatch generateMetadataPatch() {
             MetadataPatch patch = new MetadataPatch();
             patch.lastAction = this.lastAction;
             patch.lastActionSuccess = this.lastActionSuccess;
@@ -1386,8 +1385,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return patch;
         }
 
-		public virtual MetadataWrapper generateMetadataWrapper()
-		{
+		public virtual MetadataWrapper generateMetadataWrapper() {
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -1434,6 +1432,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             metaMessage.inventoryObjects = ios.ToArray();
 
+            // TODO: remove from base.
             // HAND
             metaMessage.hand = new HandMetadata();
             metaMessage.hand.position = AgentHand.transform.position;
@@ -1441,6 +1440,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
             metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
 
+            // TODO: remove from base.
              // ARM
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
