@@ -60,9 +60,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //determins default move distance for move actions
 		protected float moveMagnitude;
 
-        // this should eventually be removed if StochasticRemoteFPSAgentController overrides the 4 TeleportFull methods
-        private string agentMode;
-
         //determines rotation increment of rotate functions
         protected float rotateStepDegrees = 90.0f;
         protected bool snapToGrid;
@@ -552,8 +549,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void SetAgentMode(string mode) {
             string whichMode = mode.ToLower();
-
-            this.agentMode = whichMode;
 
             //null check for camera, used to ensure no missing references on initialization
             if(m_Camera == null) {
@@ -1852,25 +1847,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
-        public void Teleport(
-            float x, float y, float z,
-            Vector3? rotation = null,
-            float? horizon = null,
-            bool forceAction = false
+        // As opposed to an action, these args are required because we explicitly
+        // want base classes to pass all of them in.
+        protected void teleport(
+            Vector3? position, Vector3? rotation, float? horizon, bool forceAction
         ) {
-            Teleport(
-                position: new Vector3(x, y, z),
-                rotation: rotation,
-                horizon: horizon,
-                forceAction: forceAction
-            );
-        }
-
-        public void Teleport(
-            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
-        ) {
-            TeleportFull(
+            teleportFull(
                 position: position == null ? transform.position : (Vector3) position,
                 rotation: rotation == null ? transform.localEulerAngles : (Vector3) rotation,
                 horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
@@ -1882,23 +1864,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////////////// TELEPORT FULL //////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
-        public void TeleportFull(
-            float x, float y, float z,
-            Vector3 rotation,
-            float horizon,
-            bool forceAction = false
-        ) {
-            TeleportFull(
-                position: new Vector3(x, y, z),
-                rotation: rotation,
-                horizon: horizon,
-                forceAction: forceAction
-            );
+        // this is not used with non-grounded agents (e.g., drones)
+        protected void assertTeleportedNearGround() {
+            m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+
+            // perhaps like y=2 was specified, with an agent's standing height of 0.9
+            if (Mathf.Abs(transform.position.y - position.y) > 0.05f) {
+                throw new InvalidOperationException(
+                    "After teleporting and adjusting agent position to floor, there was too large a change" +
+                    $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
+                    " Consider using `forceAction=true` if you'd like to teleport anyway."
+                );
+            }
         }
 
-        public void TeleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        protected void teleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction
         ) {
             // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
             // smaller than 1e-2f. I'm not confident that will work in many cases.
@@ -1938,32 +1919,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             transform.localEulerAngles = new Vector3(0, rotation.y, 0);
             m_Camera.transform.eulerAngles = new Vector3(horizon, 0, 0);
 
-            if (!forceAction) {
-                // Adjust y position so that the agent is more on the floor
-                bool tooMuchYMovement  = false;
-                if (this.agentMode != "drone") {
-                    m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                    tooMuchYMovement = Mathf.Abs(transform.position.y - position.y) > 0.05f;
-                    if (tooMuchYMovement) {
-                        errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                        $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
-                        " Consider using `forceAction=true` if you'd like to teleport anyway.";
-                    }
-                }
-
-                bool agentCollides = isAgentCapsuleColliding(
-                    collidersToIgnore: collidersToIgnoreDuringMovement,
-                    includeErrorMessage: true
-                );
-
-                if (agentCollides || tooMuchYMovement) {
-                    transform.position = oldPosition;
-                    transform.rotation = oldRotation;
-                    m_Camera.transform.eulerAngles = new Vector3(oldHorizon, 0, 0);
-                    throw new InvalidOperationException(errorMessage);
-                }
+            if (!forceAction &&
+                isAgentCapsuleColliding(
+                    collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true
+                )
+            ) {
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.eulerAngles = new Vector3(oldHorizon, 0, 0);
+                throw new InvalidOperationException(errorMessage);
             }
-            actionFinished(success: true);
         }
 
         protected T[] flatten2DimArray<T>(T[, ] array) {

@@ -1879,7 +1879,6 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
       } else {
           return base.CreateProperty(member, memberSerialization);
       }
-      return base.CreateProperty(member, memberSerialization);
    }
 }
 

@@ -198,10 +198,11 @@ public static class ActionDispatcher {
                     for (int k = 0; k < minCommon; k++) {
                         if (sourceParams[k].ParameterType != targetParams[k].ParameterType) {
                             signatureMatch = false;
+                            break;
                         }
                     }
 
-                    if (sourceParams.Length != targetParams.Length) {
+                    if (signatureMatch && (sourceParams.Length != targetParams.Length)) {
                         // Some methods, like teleport full have
                         // add both required args and optional args to the end.
                         for (int i = minCommon - 1; i < sourceParams.Length; i++) {

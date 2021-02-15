@@ -323,11 +323,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return output;
         }
 
-        //change what timeScale is automatically reset to on emitFrame when in FlightMode
-        public void ChangeAutoResetTimeScale(float timeScale)
-        {
+        // change what timeScale is automatically reset to on emitFrame when in FlightMode
+        public void ChangeAutoResetTimeScale(float timeScale) {
             autoResetTimeScale = timeScale;
             actionFinished(true);
+        }
+
+        public void Teleport(
+            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            actionFinished(success: true);
+        }
+
+        public void TeleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        ) {
+            base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            actionFinished(success: true);
         }
 
         public void FlyRandomStart(float y)

@@ -1692,23 +1692,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // default high level hand when teleporting
                 DefaultAgentHand();
                 ToggleArmColliders(arm: Arm, value: forceAction);
-                base.TeleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+                base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
 
                 // add arm value cases
                 if (!forceAction) {
-                    bool handObjectCollides = isHandObjectColliding(ignoreAgent: true);
-                    if (handObjectCollides) {
-                        errorMessage = "Cannot teleport due to hand object collision.";
+                    if (isHandObjectColliding(ignoreAgent: true)) {
+                        throw new InvalidOperationException("Cannot teleport due to hand object collision.");
                     }
 
-                    bool armCollides = Arm != null && Arm.IsArmColliding();
-                    if (armCollides) {
-                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position.";
+                    if (Arm != null && Arm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
                     }
 
-                    if (handObjectCollides || armCollides) {
-                        throw new InvalidOperationException(errorMessage);
-                    }
+                    base.assertTeleportedNearGround();
+
                     ToggleArmColliders(arm: Arm, value: false);
                 }
             } catch (InvalidOperationException e) {

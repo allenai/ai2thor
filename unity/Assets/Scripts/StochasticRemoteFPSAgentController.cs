@@ -213,6 +213,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
         }
 
+        public void Teleport(
+            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.assertTeleportedNearGround();
+            actionFinished(success: true);
+        }
+
+        public void TeleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        ) {
+            base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.assertTeleportedNearGround();
+            actionFinished(success: true);
+        }
+
         public override void MoveAhead(ServerAction action)
         {
             action.x = 0.0f;
