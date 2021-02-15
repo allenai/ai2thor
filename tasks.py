@@ -608,7 +608,9 @@ def build_pip(context, version):
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
 
-    commit_id = git_commit_id()
+    # commit_id = git_commit_id()
+    # freezing Unity commit_id to 2.7.0 commit id until arm is released
+    commit_id = 'a6674babc132c5d63d18c82a0e14c01d236aa981'
 
     res = requests.get(
         "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
