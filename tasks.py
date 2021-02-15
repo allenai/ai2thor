@@ -637,7 +637,7 @@ def build_pip(context, version):
         or (
             next_maj == current_maj
             and next_min == current_min
-            and next_sub == current_sub + 1
+            and next_sub >= current_sub + 1
         )
     ):
 
