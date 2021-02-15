@@ -134,6 +134,7 @@ def test_small_aspect():
     controller.stop()
 
 
+@pytest.mark.skip(reason="temporarily skipping deprecation test")
 def test_bot_deprecation():
     controller = build_controller(agentMode="bot", width=128, height=64)
     assert controller.initialization_parameters["agentMode"].lower() == "locobot", "bot should alias to locobot!"
