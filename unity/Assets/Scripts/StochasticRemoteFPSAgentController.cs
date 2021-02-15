@@ -213,19 +213,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
         }
 
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
+            );
+        }
+
         public void Teleport(
             Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
         ) {
             base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
-            base.assertTeleportedNearGround();
+            base.assertTeleportedNearGround(targetPosition: position);
             actionFinished(success: true);
+        }
+
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false) {
+            TeleportFull(
+                position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
+            );
         }
 
         public void TeleportFull(
             Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
         ) {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
-            base.assertTeleportedNearGround();
+            base.assertTeleportedNearGround(targetPosition: position);
             actionFinished(success: true);
         }
 

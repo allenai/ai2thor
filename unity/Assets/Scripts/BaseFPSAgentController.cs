@@ -1865,14 +1865,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///////////////////////////////////////////
 
         // this is not used with non-grounded agents (e.g., drones)
-        protected void assertTeleportedNearGround() {
+        protected void assertTeleportedNearGround(Vector3? targetPosition) {
+            // position should not change if it's null.
+            if (targetPosition == null) {
+                return;
+            }
+
+            Vector3 pos = (Vector3) targetPosition;
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
-            if (Mathf.Abs(transform.position.y - position.y) > 0.05f) {
+            if (Mathf.Abs(transform.position.y - pos.y) > 0.05f) {
                 throw new InvalidOperationException(
                     "After teleporting and adjusting agent position to floor, there was too large a change" +
-                    $"({Mathf.Abs(transform.position.y - rotation.y)} > 0.05) in the y component." +
+                    $"({Mathf.Abs(transform.position.y - pos.y)} > 0.05) in the y component." +
                     " Consider using `forceAction=true` if you'd like to teleport anyway."
                 );
             }
