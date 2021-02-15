@@ -100,7 +100,8 @@ class FifoServer(ai2thor.server.Server):
         while True:
             header = self.server_pipe.read(self.header_size) # message type + length
             if len(header) == 0:
-                raise Exception("Unity process has exited - check Player.log for errors. Last action message: %s" % self._last_action_message)
+                self.unity_proc.wait(timeout=5)
+                raise Exception("Unity process has exited - check Player.log for errors. Last action message: %s, returncode=%s" % (self._last_action_message, self.unity_proc.returncode))
             
             if header[0] == FieldType.END_OF_MESSAGE.value:
                 #print("GOT EOM")
