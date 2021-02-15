@@ -145,7 +145,9 @@ public class MCSConfig {
 
     public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } },
-        { "AI2-THOR/Materials/Fabrics/Sofa2_White", new string[] { "white" } }
+        { "AI2-THOR/Materials/Fabrics/Sofa2_White", new string[] { "white" } },
+        // Default material
+        { "AI2-THOR/Materials/Fabrics/Sofa2_Fabric_AlbedoTransparency", new string[] { "grey" } }
     };
 
     public static Dictionary<string, string[]> SOFA_3_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {

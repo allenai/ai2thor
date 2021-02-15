@@ -483,10 +483,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		sortedReceptacleTriggerBoxes.Sort((GameObject one, GameObject two) =>
 			one.transform.position.y.CompareTo(two.transform.position.y));
 
+		List<SimObjSecondaryProperty> secondaryProperties = new List<SimObjSecondaryProperty>(this.SecondaryProperties);
+
 		foreach(GameObject rtb in sortedReceptacleTriggerBoxes)
 		{
-			Contains containsScript = rtb.GetComponent<Contains>();
-			temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            double centerY = System.Math.Round(transform.parent.TransformPoint(rtb.transform.position).y, 2);
+            double parentCenterY = System.Math.Round(transform.parent.TransformPoint(BoundingBox.transform.position).y, 2);
+            // MCS Only use a stacking receptacle trigger box that is positioned higher than its parent.
+            if (!secondaryProperties.Contains(SimObjSecondaryProperty.Stacking) || centerY > parentCenterY) {
+                Contains containsScript = rtb.GetComponent<Contains>();
+                temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            }
 		}
 
 		if(ReturnPointsCloseToAgent)

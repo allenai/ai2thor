@@ -2101,16 +2101,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
                 return;
             }
 
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
             }
 
@@ -2127,16 +2127,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
                 return;
             }
 
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
             }
 
@@ -2238,6 +2238,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // actionFinished(true);
         }
 
+        protected Vector3 FindClosestPoint(Vector3 position, SimObjPhysics target) {
+            bool isNull = true;
+            Vector3 bestClosestPoint = new Vector3();
+            float bestDistance = 0;
+            foreach (Collider collider in target.MyColliders) {
+                Vector3 closestPoint = collider.ClosestPoint(position);
+                float distance = Vector3.Distance(position, closestPoint);
+                if (isNull || distance < bestDistance) {
+                    isNull = false;
+                    bestClosestPoint = closestPoint;
+                    bestDistance = distance;
+                }
+            }
+            return bestClosestPoint;
+        }
+
         public void ApplyForceObject(ServerAction action) {
 
             GameObject player = this.gameObject;
@@ -2247,37 +2263,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
-            
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
-                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
-                targetMoveYHeightToAgentHeight.y = transform.position.y;
-                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
-                    errorMessage = "Target " + action.objectId + " is obstructed.";
-                    Debug.Log(errorMessage);
-                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
-                    actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                    return;
-                }
-                
-            }
-            
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = "Target " + action.objectId + " is not visible";
-                Debug.Log(errorMessage);
-                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
-                actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
-                return;
-            }
 
-            //print(target.name);
-
-            if (!target.GetComponent<SimObjPhysics>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
@@ -2289,15 +2280,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!canbepushed) {
                 errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_MOVEABLE);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = "Target is not interactable and is probably occluded by something!";
+            // Must call this now because it will set target.isInteractable
+            bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
+            if (isNotVisible || !target.isInteractable) {
+                if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
+                errorMessage = "Target " + action.objectId + " is not visible";
+                Debug.Log(errorMessage);
+                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
@@ -2689,9 +2696,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if ((res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>() == null) ||
-                            (res.transform.GetComponent<StructureObject>() != null))
-                        {
+                        SimObjPhysics simObjPhysics = res.transform.GetComponent<SimObjPhysics>();
+                        StructureObject structureObject = res.transform.GetComponent<StructureObject>();
+                        bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
+                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
+                        if (structureObject != null || immobile || res.rigidbody.mass > this.GetComponent<Rigidbody>().mass) {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
@@ -2960,7 +2969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
-        public void ResetAgentHandRotation(ServerAction action = null) {
+        public virtual void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             // if (sop != null) {
@@ -3966,45 +3975,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand == null) {
                 errorMessage = "Can't place an object if Agent isn't holding anything";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                actionFinished(false);
                 return;
             } else {
                 // Make sure object ID given is actually the item in hand
                 if (!ItemInHand.transform.name.Equals(action.objectId)) {
                     errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
                     Debug.Log(errorMessage);
-                    actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                    actionFinished(false);
                     return;
                 }
             }
 
-            //get the target receptacle based on the action receptacle object ID
-            SimObjPhysics targetReceptacle = null;
-
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
-            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) && 
-                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
-                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
-                    targetReceptacle = sop; 
-                    break;
-                }
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+                errorMessage = "Object ID " + action.receptacleObjectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
             }
 
-            if (targetReceptacle == null) {
-                errorMessage = "No valid Receptacle found";
-                Debug.Log(errorMessage);
+            SimObjPhysics targetReceptacle = physicsSceneManager.UniqueIdToSimObjPhysics[action.receptacleObjectId];
+
+            if (targetReceptacle == null || !targetReceptacle.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.receptacleObjectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
             }
 
             if (!targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                 errorMessage = "This target object is NOT a receptacle!";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                actionFinished(false);
                 return;
             }
 
@@ -4014,10 +4020,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!targetReceptacle.GetComponent<CanOpen_Object>().isOpen) {
                     errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
                     Debug.Log(errorMessage);
-                    actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    actionFinished(false);
                     return;
                 }
+            }
+
+            targetReceptacle = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
+            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) &&
+                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
+                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
+                    targetReceptacle = sop;
+                    break;
+                }
+            }
+
+            if (targetReceptacle == null) {
+                errorMessage = "No valid Receptacle found";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+                actionFinished(false);
+                return;
             }
 
             //if this receptacle only receives specific objects, check that the ItemInHand is compatible and
@@ -4032,8 +4057,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
                                 osr.attachPoint.transform.rotation, false) == false) {
                             errorMessage = "another object's collision is blocking held object from being placed";
-                            actionFinished(false);
                             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                            actionFinished(false);
                             return;
                         }
 
@@ -4045,10 +4070,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
                     ItemInHand.layer = 8; // SimObjVisible
+                    // MCS ADDED BLOCK
+                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                        collider.gameObject.layer = 8; // SimObjVisible
+                    });
                     ItemInHand = null;
                     DefaultAgentHand();
-                    actionFinished(true);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                    actionFinished(true);
                     return;
                 } else {
 
@@ -4076,8 +4105,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (!res.Value.Contains(targetReceptacle.ObjType)) {
                             errorMessage = ItemInHand.name + " cannot be placed in " + targetReceptacle.transform.name;
                             Debug.Log(errorMessage);
-                            actionFinished(false);
                             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                            actionFinished(false);
                             return;
                         }
 
@@ -4134,6 +4163,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand.layer = 8; // SimObjVisible
+                // MCS ADDED BLOCK
+                ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                    collider.gameObject.layer = 8; // SimObjVisible
+                });
                 ItemInHand = null;
                 DefaultAgentHand();
 
@@ -4150,7 +4183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 handSOP.transform.parent = previousParent;
 
                 errorMessage = "No valid positions to place object found";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                 actionFinished(false);
                 return;
             }
@@ -4167,58 +4200,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
                 return;
             }
             
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.HAND_IS_FULL);
+                actionFinished(false);
                 return;
             } 
 
             if (IsHandDefault == false) {
                 errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
-                return;
-            }
-
-            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
-                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
-                targetMoveYHeightToAgentHeight.y = transform.position.y;
-                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
-                    errorMessage = "Target " + action.objectId + " is obstructed.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                    return;
-                }
-                
-            }
-
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = action.objectId + " is not visible.";
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
             }
 
             if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
                 errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
+                actionFinished(false);
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = action.objectId + " is not interactable and (perhaps it is occluded by something).";
+            // Must call this now because it will set target.isInteractable
+            bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
+            if (isNotVisible || !target.isInteractable) {
+                if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    actionFinished(false);
+                    return;
+                }
+                
+            }
+
+            if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
+                errorMessage = action.objectId + " is not visible.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -4240,11 +4274,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 PickupContainedObjects(target);
 
             target.transform.position = AgentHand.transform.position;
-            // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
-            target.transform.rotation = transform.rotation;
+            // MCS ADDED NEXT LINE
+            Quaternion previousRotation = target.transform.localRotation;
             target.transform.SetParent(AgentHand.transform);
+            // MCS ADDED NEXT LINE
+            target.transform.localRotation = previousRotation;
             ItemInHand = target.gameObject;
             ItemInHand.layer = 9; // SimObjInvisible
+            // MCS ADDED BLOCK
+            ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                collider.gameObject.layer = 9; // SimObjInvisible
+            });
 
             /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
@@ -4267,8 +4307,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-            actionFinished(true, target.UniqueID);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true, target.UniqueID);
             return;
         }
 
@@ -4425,16 +4465,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
                     Debug.Log(errorMessage);
-                    actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                    actionFinished(false);
                     return false;
                 }
 
                 if(!ItemInHand.transform.name.Equals(action.objectId)) {
                     errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
                     Debug.Log(errorMessage);
-                    actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                    actionFinished(false);
                     return false;
                 }
 
@@ -4443,8 +4483,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!action.forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                     return false;
                 } else {
                     Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
@@ -4470,6 +4510,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
 
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+
                     //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
                     if(!physicsSceneManager.physicsSimulationPaused)
                     {
@@ -4490,15 +4532,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand.layer = 8; // SimObjVisible
+                    // MCS ADDED BLOCK
+                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                        collider.gameObject.layer = 8; // SimObjVisible
+                    });
                     ItemInHand = null;
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return true;
                 }
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                actionFinished(false);
                 return false;
             }
         }
@@ -4711,7 +4756,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = null;
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = "This target object is NOT a receptacle!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                actionFinished(false);
+                return;
+            }
+
+            target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;
@@ -5359,7 +5429,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = null;
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+                errorMessage = action.objectId + " is not interactable.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+                actionFinished(false);
+                return;
+            }
+
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = "This target object is NOT a receptacle!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                actionFinished(false);
+                return;
+            }
+
+            target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;

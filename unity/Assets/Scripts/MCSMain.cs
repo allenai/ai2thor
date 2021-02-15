@@ -71,6 +71,7 @@ public class MCSMain : MonoBehaviour {
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
+    public bool enableDebugLogsInEditor = true;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
@@ -143,6 +144,16 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.LATEST_SCENE_VERSION);
             ChangeCurrentScene(this.currentScene);
         }
+
+#if ENABLE_DEBUG_LOGS
+        Debug.unityLogger.logEnabled = true;
+#else
+        Debug.unityLogger.logEnabled = false;
+#endif
+
+#if UNITY_EDITOR
+        Debug.unityLogger.logEnabled = enableDebugLogsInEditor;
+#endif
     }
 
     // Unity's Update method is called once per frame.

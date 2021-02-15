@@ -132,21 +132,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public enum ActionStatus
         {
-			HAND_IS_FULL,
-			IS_CLOSED_COMPLETELY,
-			IS_OPENED_COMPLETELY,
-			NOT_HELD,
+            CANNOT_ROTATE,
+            HAND_IS_FULL,
+            IS_CLOSED_COMPLETELY,
+            IS_OPENED_COMPLETELY,
+            NOT_HELD,
             NOT_INTERACTABLE,
-			NOT_OBJECT,
+            NOT_MOVEABLE,
+            NOT_OBJECT,
             NOT_OPENABLE,
-			NOT_PICKUPABLE,
-			NOT_RECEPTACLE,
-			OBSTRUCTED,
-			OUT_OF_REACH,
-			SUCCESSFUL,
-			SUCCESSFUL_WITH_INVALID_PARAMETERS,
+            NOT_PICKUPABLE,
+            NOT_RECEPTACLE,
+            OBSTRUCTED,
+            OUT_OF_REACH,
+            SUCCESSFUL,
+            SUCCESSFUL_WITH_INVALID_PARAMETERS,
             WRONG_POSE,
-			FAILED // generic error code for unexpected failures
+            FAILED // generic error code for unexpected failures
         }
 
 		public Quaternion TargetRotation
@@ -248,6 +250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
+            Debug.Log("Last Action Status = " + this.lastActionStatus);
 		}
 
 		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000);
@@ -266,8 +269,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 print("the agent mode is set to: " + action.agentMode.ToLower());
                 errorMessage = "agentMode must be set to 'bot' or 'tall'";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
             }
 
@@ -286,8 +289,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             else if(action.fieldOfView < 0 || action.fieldOfView >= 180) {
 				errorMessage = "fov must be set to (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
 			}
 
@@ -321,8 +324,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 errorMessage = "Time scale must be >0";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
             }
 
@@ -341,8 +344,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 errorMessage = "grid size must be in the range (0,5]";
                 Debug.Log(errorMessage);
-                actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                actionFinished(false);
                 return;
             }
             else
@@ -364,8 +367,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
                     errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
                     Debug.Log(errorMessage);
-                    actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                    actionFinished(false);
                     return;
                 }
                 else {

@@ -479,9 +479,7 @@ public class Contains : MonoBehaviour
 
         SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
         if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
-			if (simObj.shape == "plate") //plates behave differently
-				return true;
-            return point.y >= (center.y - (size.y * 0.5f));
+            return true;
         }
 
         return point.x <= (center.x + (size.x * 0.5f)) && point.x >= (center.x - (size.x * 0.5f)) &&
