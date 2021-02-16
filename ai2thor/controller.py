@@ -32,6 +32,7 @@ from functools import lru_cache
 import numpy as np
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
+from ai2thor.exceptions import UnityCrashException
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 import ai2thor.build
@@ -410,6 +411,7 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+        self.x_display = x_display
 
         self.last_event = None
         self.scene = None
@@ -857,7 +859,22 @@ class Controller(object):
                 # del action[old]
 
         self.server.send(action)
-        self.last_event = self.server.receive()
+        try:
+            self.last_event = self.server.receive()
+        except UnityCrashException as e:
+            self.server.stop()
+            self.server = None
+            # we don't need to pass port or host, since this Exception
+            # is only thrown from the FifoServer, start_unity is also
+            # not passed since Unity would have to have been started
+            # for this to be thrown
+            message = "Restarting unity due to crash: %s" % e
+            warnings.warn(message)
+            self.start(width=self.width, height=self.height, x_display=self.x_display)
+            self.reset()
+            raise ai2thor.exceptions.RestartError(message)
+
+
 
         if not self.last_event.metadata[
             "lastActionSuccess"
