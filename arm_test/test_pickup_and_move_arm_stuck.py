@@ -8,8 +8,10 @@ import copy
 import time
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, dict_recursive_nan_check
 
+from save_bug_sequence_util import save_failed_sequence
+
 MAX_TESTS = 300
-MAX_EP_LEN = 1000
+MAX_EP_LEN = 2000
 MAX_CONSECUTIVE_FAILURE = 10
 RESOLUTION=224
 # scene_indices = [i + 1 for i in range(30)] #Only kitchens
@@ -43,7 +45,9 @@ for i in range(MAX_TESTS):
     initial_rotation = random.choice([i for i in range(0, 360, 45)])
     event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
     initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+    all_action_details.append(initial_pose)
     controller.step('PausePhysicsAutoSim')
+    all_action_details.append(dict(action='PausePhysicsAutoSim'))
     all_commands = []
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
@@ -97,10 +101,11 @@ for i in range(MAX_TESTS):
 
                 if not controller.last_event.metadata['lastActionSuccess']:
                     print('This means we are stuck')
-                    print('scene name', controller.last_event.metadata['sceneName'])
-                    print('initial pose', initial_pose)
-                    print('list of actions', all_commands)
-                    print('action details', all_action_details)
+                    # print('scene name', controller.last_event.metadata['sceneName'])
+                    # print('initial pose', initial_pose)
+                    # print('list of actions', all_commands)
+                    # print('action details', all_action_details)
+                    save_failed_sequence(controller, sequence = all_action_details, scene_name=controller.last_event.metadata['sceneName'])
                     break
 
 

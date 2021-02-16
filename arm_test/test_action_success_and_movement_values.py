@@ -9,6 +9,8 @@ import time
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state
 
 # RESOLUTION = 900
+from save_bug_sequence_util import save_failed_sequence
+
 RESOLUTION = 224
 MAX_TESTS = 300
 MAX_EP_LEN = 2000
@@ -52,6 +54,8 @@ for i in range(MAX_TESTS):
     initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
     all_exact_command.append(initial_pose)
     controller.step('PausePhysicsAutoSim')
+    all_exact_command.append(initial_pose)
+    all_exact_command.append(dict(action='PausePhysicsAutoSim'))
 
     before = datetime.datetime.now()
     for j in range(MAX_EP_LEN):
@@ -129,7 +133,8 @@ for i in range(MAX_TESTS):
                 all_actions = copy.copy(set_of_actions)
                 random.shuffle(all_actions)
                 for a in all_actions:
-                    execute_command(controller, a, ADITIONAL_ARM_ARGS)
+                    output_of_command = execute_command(controller, a, ADITIONAL_ARM_ARGS)
+                    all_exact_command.append(output_of_command)
                     all_commands.append(a)
 
                     if controller.last_event.metadata['lastActionSuccess']:
@@ -139,6 +144,7 @@ for i in range(MAX_TESTS):
                     print('scene name', controller.last_event.metadata['sceneName'])
                     print('initial pose', initial_pose)
                     print('list of actions', all_commands)
+                    save_failed_sequence(controller, sequence = all_exact_command, scene_name=controller.last_event.metadata['sceneName'])
                     break
 
 
