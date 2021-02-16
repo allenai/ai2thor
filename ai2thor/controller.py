@@ -32,7 +32,7 @@ from functools import lru_cache
 import numpy as np
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
-from ai2thor.exceptions import UnityCrashException
+from ai2thor.exceptions import UnityCrashException, RestartError
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 import ai2thor.build
@@ -872,7 +872,7 @@ class Controller(object):
             warnings.warn(message)
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
-            raise ai2thor.exceptions.RestartError(message)
+            raise RestartError(message)
 
 
 
