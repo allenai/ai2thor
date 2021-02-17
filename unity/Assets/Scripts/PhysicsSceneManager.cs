@@ -323,19 +323,24 @@ public class PhysicsSceneManager : MonoBehaviour {
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
 
-                //hey! one of the sim objects we are trying to set the pose of is neither Moveable nor Pickupable, or doesnt exist in this scene...
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
-                    errorMessage = "No object of name " + objectPose.objectName + " found in scene.";
+                    errorMessage = "No Pickupable or Moveable object of name " + objectPose.objectName + " found in scene.";
                     Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
                 if (isStaticNameToObject.ContainsKey(objectPose.objectName)){
-                    errorMessage = objectPose.objectName + "is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
+                    errorMessage = objectPose.objectName + " is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
                     Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
+                if (!nameToObject.ContainsKey(objectPose.objectName) && !isStaticNameToObject.ContainsKey(objectPose.objectName)) {
+                    errorMessage = objectPose.objectName + " does not exist in scene.";
+                    shouldFail = true;
+                    continue;
+                }
+
                 SimObjPhysics obj = nameToObject[objectPose.objectName];
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
                 SimObjPhysics copy;
