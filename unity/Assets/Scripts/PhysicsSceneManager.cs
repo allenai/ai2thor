@@ -294,6 +294,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public bool SetObjectPoses(ObjectPose[] objectPoses, out string errorMessage, bool placeStationary) {
         SetupScene();
+        errorMessage = "";
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0) {
             // Perform object location sets
