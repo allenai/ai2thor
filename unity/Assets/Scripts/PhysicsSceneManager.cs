@@ -292,7 +292,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         RequiredObjects.Remove(sop.gameObject);
     }
 
-    public bool SetObjectPoses(ObjectPose[] objectPoses, string errorMessage, bool placeStationary) {
+    public bool SetObjectPoses(ObjectPose[] objectPoses, out string errorMessage, bool placeStationary) {
         SetupScene();
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0) {

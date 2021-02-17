@@ -4052,7 +4052,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // a subsequent scene reset()
         protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary){
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses, errorMessage, placeStationary);
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
             actionFinished(success, errorMessage);
         }
 
