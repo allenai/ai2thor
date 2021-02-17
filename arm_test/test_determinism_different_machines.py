@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import json
 import pdb
@@ -25,6 +26,11 @@ controller = ai2thor.controller.Controller(
 )
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Data loader')
+    parser.add_argument('--generate_test', default=False, action='store_true')
+    args = parser.parse_args()
+    return args
 
 def reset_the_scene_and_get_reachables(scene_name=None):
     if scene_name is None:
@@ -126,8 +132,11 @@ def test_from_file():
     determinism_test(all_dict)
 
 if __name__ == '__main__':
-    # test_generator()
-    test_from_file()
+    args = parse_args()
+    if args.generate_test:
+        test_generator()
+    else:
+        test_from_file()
 
 
 
