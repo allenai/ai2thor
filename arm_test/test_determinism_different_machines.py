@@ -11,8 +11,7 @@ import time
 
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal
 
-MAX_TESTS = 20
-MAX_EP_LEN = 100
+
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
@@ -29,7 +28,13 @@ controller = ai2thor.controller.Controller(
 def parse_args():
     parser = argparse.ArgumentParser(description='Data loader')
     parser.add_argument('--generate_test', default=False, action='store_true')
+    parser.add_argument('--number_of_test', default=20,type=int)
+    parser.add_argument('--max_seq_len', default=100,type=int)
     args = parser.parse_args()
+    global MAX_TESTS
+    MAX_TESTS = args.number_of_test
+    global MAX_EP_LEN
+    MAX_EP_LEN = args.max_seq_len
     return args
 
 def reset_the_scene_and_get_reachables(scene_name=None):
@@ -104,15 +109,25 @@ def determinism_test(all_tests):
         final_state = test_point['final_state']
         initial_pose = test_point['initial_pose']
         scene_name = test_point['scene_name']
+        all_action_details = []
+        all_action_success = []
 
         controller.reset(scene_name)
-        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-        controller.step('PausePhysicsAutoSim')
+        teleport_action = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        event1 = controller.step(**teleport_action)
+        all_action_details.append(teleport_action)
+        all_action_success.append(event1.metadata['lastActionSuccess'])
+        pause_physics = dict(action='PausePhysicsAutoSim')
+        event = controller.step(**pause_physics)
+        all_action_success.append(event.metadata['lastActionSuccess'])
+        all_action_details.append(pause_physics)
         for cmd in all_commands:
-            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            action_detail = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            all_action_details.append(action_detail)
             last_event_success = controller.last_event.metadata['lastActionSuccess']
+            all_action_success.append(last_event_success)
         current_state = get_current_full_state(controller)
-        if not two_dict_equal(final_state, current_state):
+        if (not two_dict_equal(final_state, current_state)):
             print('not deterministic')
             print('scene name', controller.last_event.metadata['sceneName'])
             print('initial pose', initial_pose)
