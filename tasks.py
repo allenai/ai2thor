@@ -608,15 +608,17 @@ def build_pip(context, version):
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
 
-    commit_id = git_commit_id()
+    # commit_id = git_commit_id()
+    # freezing Unity commit_id to 2.7.0 commit id until arm is released
+    # res = requests.get(
+    #     "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
+    # )
+    # res.raise_for_status()
 
-    res = requests.get(
-        "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
-    )
-    res.raise_for_status()
+    # if commit_id not in map(lambda c: c["sha"], res.json()):
+    #     raise Exception("tag %s is not off the master branch" % version)
 
-    if commit_id not in map(lambda c: c["sha"], res.json()):
-        raise Exception("tag %s is not off the master branch" % version)
+    commit_id = 'a6674babc132c5d63d18c82a0e14c01d236aa981'
 
     if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
@@ -635,7 +637,7 @@ def build_pip(context, version):
         or (
             next_maj == current_maj
             and next_min == current_min
-            and next_sub == current_sub + 1
+            and next_sub >= current_sub + 1
         )
     ):
 
@@ -873,28 +875,35 @@ def ci_build(context):
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )
 
+            private_scene_options = [False]
+            if build["branch"] == "erick/challenge2021":
+                os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
+            elif build["branch"] == "erick/challenge2021-eval":
+                private_scene_options = [False, True]
+
             procs = []
-            for arch in ["OSXIntel64", "Linux64"]:
-                logger.info(
-                    "starting build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                if ai2thor.build.Build(
-                    arch, build["commit_id"], include_private_scenes=False
-                ).exists():
+            for include_private_scenes in private_scene_options:
+                for arch in ["OSXIntel64", "Linux64"]:
                     logger.info(
-                        "found build for commit %s %s" % (build["commit_id"], arch)
+                        "starting build for %s %s %s"
+                        % (arch, build["branch"], build["commit_id"])
                     )
-                    continue
-                # this is done here so that when a tag build request arrives and the commit_id has already
-                # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                link_build_cache(build["branch"])
-                p = ci_build_arch(arch, False)
-                logger.info(
-                    "finished build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                procs.append(p)
+                    if ai2thor.build.Build(
+                        arch, build["commit_id"], include_private_scenes=include_private_scenes
+                    ).exists():
+                        logger.info(
+                            "found build for commit %s %s" % (build["commit_id"], arch)
+                        )
+                        continue
+                    # this is done here so that when a tag build request arrives and the commit_id has already
+                    # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                    link_build_cache(build["branch"])
+                    p = ci_build_arch(arch, include_private_scenes)
+                    logger.info(
+                        "finished build for %s %s %s"
+                        % (arch, build["branch"], build["commit_id"])
+                    )
+                    procs.append(p)
 
             # don't run tests for a tag since results should exist
             # for the branch commit
@@ -962,7 +971,11 @@ def ci_build_arch(arch, include_private_scenes=False):
     proc = None
     try:
         build_info["log"] = "%s.log" % (build_name,)
-        _build(unity_path, arch, build_dir, build_name)
+        env = {}
+        if include_private_scenes:
+            env["INCLUDE_PRIVATE_SCENES"] = "true"
+
+        _build(unity_path, arch, build_dir, build_name, env)
 
         print("pushing archive")
         proc = Process(
@@ -1017,7 +1030,7 @@ def poll_ci_build(context):
     for arch in platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
         if not commit_build.exists():
-            print("Build log url: %s" % commit_build.log_url())
+            print("Build log url: %s" % commit_build.log_url)
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
     pytest_missing = True

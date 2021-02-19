@@ -1,6 +1,10 @@
+import os
+
 from ai2thor.server import Event
 import numpy as np
 import pytest
+
+from ai2thor.tests.constants import TESTS_DATA_DIR
 
 metadata_complex = {'agent': {'bounds3D': [],
            'cameraHorizon': 0.0,
@@ -2666,7 +2670,7 @@ def event():
 @pytest.fixture
 def event_with_frame(event):
     e = event
-    with open("ai2thor/tests/data/rgb-image.raw", "rb") as f:
+    with open(os.path.join(TESTS_DATA_DIR, "rgb-image.raw"), "rb") as f:
         raw_image = memoryview(f.read())
     e.add_image(raw_image)
 
@@ -2702,17 +2706,17 @@ def test_get_object(event):
     assert event.get_object('FOOO') is None
 
 def test_cv2img(event_with_frame):
-    cvf = np.load('ai2thor/tests/data/test-image1-bgr.npy')
+    cvf = np.load(os.path.join(TESTS_DATA_DIR, "test-image1-bgr.npy"))
     assert event_with_frame.cv2img.shape == event_with_frame.frame.shape
     assert np.all(cvf == event_with_frame.cv2img)
     assert not np.all(event_with_frame.frame == event_with_frame.cv2img)
 
 
 def test_add_image(event):
-    with open("ai2thor/tests/data/rgb-image.raw", "rb") as f:
+    with open(os.path.join(TESTS_DATA_DIR, "rgb-image.raw"), "rb") as f:
         raw_image = memoryview(f.read())
 
-    f = np.load('ai2thor/tests/data/test-image1-rgb.npy')
+    f = np.load(os.path.join(TESTS_DATA_DIR, "test-image1-rgb.npy"))
     assert event.frame is None
     event.add_image(raw_image)
     assert event.frame.shape == (300, 300, 3)

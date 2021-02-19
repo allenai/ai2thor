@@ -10,6 +10,7 @@ import json
 import msgpack
 import os
 import tempfile
+from ai2thor.exceptions import UnityCrashException
 from enum import IntEnum, unique
 from collections import defaultdict
 import struct
@@ -100,7 +101,16 @@ class FifoServer(ai2thor.server.Server):
         while True:
             header = self.server_pipe.read(self.header_size) # message type + length
             if len(header) == 0:
-                raise Exception("Unity process has exited - check Player.log for errors. Last action message: %s" % self._last_action_message)
+                self.unity_proc.wait(timeout=5)
+                returncode = self.unity_proc.returncode
+                message = "Unity process has exited - check Player.log for errors. Last action message: %s, returncode=%s" % (self._last_action_message, self.unity_proc.returncode)
+                # we don't want to restart all process exits since its possible that a user
+                # kills off a Unity process with SIGTERM to end a training run
+                # SIGABRT is the returncode for when Unity crashes due to a segfault
+                if returncode == -6: # SIGABRT
+                    raise UnityCrashException(message)
+                else:
+                    raise Exception(message)
             
             if header[0] == FieldType.END_OF_MESSAGE.value:
                 #print("GOT EOM")

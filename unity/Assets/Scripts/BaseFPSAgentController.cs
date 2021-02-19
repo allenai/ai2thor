@@ -295,6 +295,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 		}
 
+            #if UNITY_EDITOR
+            if (!success) {
+                Debug.Log($"Action failed with error message '{this.errorMessage}'.");
+            }
+            #endif
+
             lastActionSuccess = success;
 			this.agentState = newState;
 			this.actionReturn = actionReturn;
@@ -778,17 +784,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             HashSet<Collider> ignoreColliders=null
         ) {
             Vector3 targetPosition = transform.position + direction;
-            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
-
-            float right = Vector3.Dot(transform.right, direction);
-            if (right < 0) {
-                angle = 360f - angle;
-            }
-            int angleInt = Mathf.RoundToInt(angle) % 360;
-
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
+                CheckIfItemBlocksAgentMovement(direction, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction, ignoreColliders)) {
 
                 //only default hand if not manually interacting with things    
                 if(!manualInteract) {
@@ -842,40 +840,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool CheckIfAgentCanMove(
-            float moveMagnitude,
-            int orientation,
+            Vector3 offset,
             HashSet<Collider> ignoreColliders = null
         ) {
-            Vector3 dir = new Vector3();
-
-            switch (orientation) {
-                case 0: //forward
-                    dir = gameObject.transform.forward;
-                    break;
-
-                case 180: //backward
-                    dir = -gameObject.transform.forward;
-                    break;
-
-                case 270: //left
-                    dir = -gameObject.transform.right;
-                    break;
-
-                case 90: //right
-                    dir = gameObject.transform.right;
-                    break;
-
-                default:
-                    Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
-                    break;
-            }
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
                 transform.position,
-                dir,
-                moveMagnitude,
+                offset.normalized,
+                offset.magnitude,
                 1 << 8 | 1 << 10
             );
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
@@ -895,7 +869,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                        errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        errorMessage = $"Agent {otherAgentNum} is blocking Agent {thisAgentNum} from moving by {offset.ToString("F4")}.";
                         return false;
                     }
 
@@ -906,7 +880,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             res.transform.tag == "Untagged"
                         )) {
                         int thisAgentNum = agentManager.agents.IndexOf(this);
-                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        errorMessage = $"{res.transform.name} is blocking Agent {thisAgentNum} from moving by {offset.ToString("F4")}.";
                         //the moment we find a result that is blocking, return false here
                         return false;
                     }
@@ -988,53 +962,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
-        public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
+        public bool CheckIfItemBlocksAgentMovement(Vector3 offset, bool forceAction = false) {
             bool result = false;
 
             //if forceAction true, ignore collision restrictions caused by held objects
-            if(forceAction)
-            {
+            if(forceAction) {
                 return true;
             }
             //if there is nothing in our hand, we are good, return!
             if (ItemInHand == null) {
-                result = true;
                 //  Debug.Log("Agent has nothing in hand blocking movement");
-                return result;
-            }
-
-            //otherwise we are holding an object and need to do a sweep using that object's rb
-            else {
-                Vector3 dir = new Vector3();
-
-                //use the agent's forward as reference
-                switch (orientation) {
-                    case 0: //forward
-                        dir = gameObject.transform.forward;
-                        break;
-
-                    case 180: //backward
-                        dir = -gameObject.transform.forward;
-                        break;
-
-                    case 270: //left
-                        dir = -gameObject.transform.right;
-                        break;
-
-                    case 90: //right
-                        dir = gameObject.transform.right;
-                        break;
-
-                    default:
-                        Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
-                        break;
-                }
-                //otherwise we haev an item in our hand, so sweep using it's rigid body.
-                //RaycastHit hit;
+                return true;
+            } else {
+                //otherwise we are holding an object and need to do a sweep using that object's rb
 
                 Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
 
-                RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+                RaycastHit[] sweepResults = rb.SweepTestAll(
+                    offset.normalized,
+                    offset.magnitude,
+                    QueryTriggerInteraction.Ignore
+                );
                 if (sweepResults.Length > 0) {
                     foreach (RaycastHit res in sweepResults) {
                         //did the item in the hand touch the agent? if so, ignore it's fine
@@ -1042,7 +990,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             result = true;
                             break;
                         } else {
-                            errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
+                            errorMessage = $"{res.transform.name} is blocking the Agent from moving by {offset.ToString("F4")} with {ItemInHand.name}";
                             result = false;
                             return result;
                         }
@@ -1578,7 +1526,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (typeMap.ContainsKey(typeName)) {
                     typeName = typeMap[typeName];
                 }
-                errorMessage = "action: " + controlCommand.action + " has an invalid argument: " + e.parameterName + ". Cannot convert to: " + typeName;
+                errorMessage = $"action: {controlCommand.action} has an invalid argument: {e.parameterName} (=={e.parameterValueAsStr})." +
+                    $" Cannot convert to: {typeName}";
                 errorCode = ServerActionErrorCode.InvalidArgument;
                 actionFinished(false);
             }
@@ -1800,6 +1749,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        protected bool isPositionOnGrid(Vector3 xyz) {
+            if (this.snapToGrid) {
+                float mult = 1 / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(xyz.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(xyz.z * mult) / mult);
+
+                return (
+                    Mathf.Approximately(gridX, xyz.x) &&
+                    Mathf.Approximately(gridZ, xyz.z)
+                );
+            } else {
+                return true;
+            }
+        }
+
+        public bool isStanding() {
+            return standingLocalCameraPosition == m_Camera.transform.localPosition;
+        }
+
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
@@ -1945,22 +1913,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //teleport full, base version does not consider being able to hold objects
-        public virtual void TeleportFull(ServerAction action) {
-            targetTeleport = new Vector3(action.x, action.y, action.z);
+        public virtual void TeleportFull(
+            float x,
+            float y,
+            float z,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            targetTeleport = new Vector3(x, y, z);
 
-            if (action.forceAction) {
+            if (forceAction) {
                 DefaultAgentHand();
                 transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+                if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
+                actionFinished(true);
+                return;
+
             } else {
                 if (!agentManager.SceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                if (!isPositionOnGrid(targetTeleport)) {
+                    errorMessage = $"`snapToGrid` is True but target teleport position" +
+                        $" {targetTeleport.ToString("F6")} is not on the grid of size {gridSize}.";
                     actionFinished(false);
                     return;
                 }
@@ -1970,28 +1956,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
                 Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
 
-                //DefaultAgentHand(action);
                 transform.position = targetTeleport;
 
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
+                // Adjust y position so that the agent is more on the floor
+                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
 
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
+                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
+                if (tooMuchYMovement) {
+                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
+                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
+                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
+                }
+
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
+                if (standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding(
                     collidersToIgnore: collidersToIgnoreDuringMovement,
                     includeErrorMessage: true
                 );
 
-                if (agentCollides) {
+
+                if (agentCollides || tooMuchYMovement) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     m_Camera.transform.localPosition = oldCameraLocalPosition;
@@ -1999,22 +1991,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(false);
                     return;
                 }
+
+                actionFinished(true);
             }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
-            snapAgentToGrid();
-            actionFinished(true);
         }
 
-        public virtual void Teleport(ServerAction action) {
-            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
-            if (!action.rotateOnTeleport) {
-                action.rotation = transform.eulerAngles;
+        public void TeleportFull(
+            Vector3 position,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+
+        ) {
+            TeleportFull(
+                x: position.x,
+                y: position.y,
+                z: position.z,
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        public virtual void Teleport(
+            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
+        ) {
+            if (rotateOnTeleport) {
+                throw new ArgumentException(
+                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
+                    " the agent, use the TeleportFull command instead."
+                );
             }
-            TeleportFull(action);
+            TeleportFull(
+                x: x,
+                y: y,
+                z: z,
+                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
+                horizon: m_Camera.transform.localEulerAngles.x,
+                standing: isStanding(),
+                forceAction: forceAction
+            );
         }
 
         protected T[] flatten2DimArray<T>(T[, ] array) {

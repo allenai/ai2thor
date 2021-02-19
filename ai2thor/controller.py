@@ -30,6 +30,7 @@ from functools import lru_cache
 import numpy as np
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
+from ai2thor.exceptions import UnityCrashException, RestartError
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 import ai2thor.build
@@ -398,6 +399,7 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+        self.x_display = x_display
 
         self.last_event = None
         self.scene = None
@@ -611,9 +613,11 @@ class Controller(object):
 
         # RoboTHOR checks
         agent_mode = self.initialization_parameters.get("agentMode", "default")
-        if agent_mode.lower() == "bot":
-            self.initialization_parameters["agentMode"] = "locobot"
-            warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+        # disabling mapping temporarily so we can point to a previous Unity binary with 
+        # if agent_mode.lower() == "bot":
+        #     self.initialization_parameters["agentMode"] = "locobot"
+        #     warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+
         if (
             scene in self.robothor_scenes() and
             self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
@@ -840,25 +844,44 @@ class Controller(object):
         }
         for old, new in changed_parameter_names.items():
             if old in action:
-                warnings.warn(old + " has been renamed to " + new)
+                # warnings.warn(old + " has been renamed to " + new)
                 action[new] = action[old]
-                del action[old]
+                # del action[old]
 
         self.server.send(action)
-        self.last_event = self.server.receive()
+        try:
+            self.last_event = self.server.receive()
+        except UnityCrashException as e:
+            self.server.stop()
+            self.server = None
+            # we don't need to pass port or host, since this Exception
+            # is only thrown from the FifoServer, start_unity is also
+            # not passed since Unity would have to have been started
+            # for this to be thrown
+            message = "Restarting unity due to crash: %s" % e
+            warnings.warn(message)
+            self.start(width=self.width, height=self.height, x_display=self.x_display)
+            self.reset()
+            raise RestartError(message)
+
+
 
         if not self.last_event.metadata[
             "lastActionSuccess"
-        ] and self.last_event.metadata["errorCode"] in [
+        ]:
+            if self.last_event.metadata["errorCode"] in [
             "InvalidAction",
             "MissingArguments",
             "AmbiguousAction",
             "InvalidArgument",
-        ]:
-            raise ValueError(self.last_event.metadata["errorMessage"])
+            ]:
+                raise ValueError(self.last_event.metadata["errorMessage"])
+            elif raise_for_failure:
+                raise RuntimeError(
+                    self.last_event.metadata.get("errorMessage", f"{action} failed.")
+                )
 
-        if raise_for_failure:
-            assert self.last_event.metadata["lastActionSuccess"]
+        assert (not raise_for_failure) or self.last_event.metadata["lastActionSuccess"]
 
         return self.last_event
 
