@@ -1038,6 +1038,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void MakeAllObjectsStationary()
+        {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>())
+            {
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = true;
+
+                sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+            }
+
+            #if UNITY_EDITOR
+            Debug.Log("Echoes! Three Freeze!");
+            #endif
+            
+            actionFinished(true);
+        }
+
         //this does not appear to be used except for by the python unit test?
         //May deprecate this at some point?
 		public void RotateLook(ServerAction response)
