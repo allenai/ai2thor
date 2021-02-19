@@ -608,17 +608,14 @@ def build_pip(context, version):
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
 
-    # commit_id = git_commit_id()
-    # freezing Unity commit_id to 2.7.0 commit id until arm is released
-    # res = requests.get(
-    #     "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
-    # )
-    # res.raise_for_status()
+    commit_id = git_commit_id()
+    res = requests.get(
+        "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
+    )
+    res.raise_for_status()
 
-    # if commit_id not in map(lambda c: c["sha"], res.json()):
-    #     raise Exception("tag %s is not off the master branch" % version)
-
-    commit_id = 'a6674babc132c5d63d18c82a0e14c01d236aa981'
+    if commit_id not in map(lambda c: c["sha"], res.json()):
+        raise Exception("tag %s is not off the master branch" % version)
 
     if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
