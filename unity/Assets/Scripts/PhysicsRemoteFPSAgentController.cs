@@ -26,13 +26,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public MeshRenderer MyFaceMesh;
         public int AdvancePhysicsStepCount;
         public GameObject[] TargetCircles = null;
-        //these object types can have a placeable surface mesh associated ith it
-        //this is to be used with ScreenToWorldTarget to filter out raycasts correctly
-        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>()
-        {
-            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
-            SimObjType.CounterTop, SimObjType.Shelf
-        };
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
