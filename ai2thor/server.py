@@ -10,6 +10,7 @@ import warnings
 import numpy as np
 from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
+from functools import lru_cache
 import json
 import sys
 
@@ -82,7 +83,87 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique
 
 
-class Event(object):
+class MetadataList(list):
+    def __init__(self, child_metadata: dict, key_sequence: list):
+        """
+        Child_metadata stores the metadata dict after indexing into it
+        from each key in key_sequence. For instance, if key_sequence is
+        ["objects", 0], then child_metadata is Unity's metadata["objects"][0].
+        """
+        super().__init__(child_metadata)
+        self._child_metadata = child_metadata
+        self._key_sequence = key_sequence
+
+    def __getitem__(self, key):
+        # Let Python handle the KeyError
+        value = self._child_metadata[key]
+
+        if isinstance(value, dict):
+            return MetadataDict(
+                child_metadata=value, key_sequence=self._key_sequence + [key]
+            )
+        elif isinstance(value, list):
+            return MetadataList(
+                child_metadata=value, key_sequence=self._key_sequence + [key]
+            )
+
+        return value
+
+
+class MetadataDict(dict):
+    def __init__(self, child_metadata: dict, key_sequence: list):
+        """
+        Child_metadata stores the metadata dict after indexing into it
+        from each key in key_sequence. For instance, if key_sequence is
+        ["objects", 0], then child_metadata is Unity's metadata["objects"][0].
+        """
+        super().__init__(child_metadata)
+        self._child_metadata = child_metadata
+        self._key_sequence = key_sequence
+
+    def __getitem__(self, key):
+        # This automatically throws Python's default exception if key is not
+        # in the metadata. So, a separate check for key in self._child_metadata,
+        # is unnecessary.
+        value = self._child_metadata[key]
+
+        # deprecation tests
+        if self._key_sequence == [] and key == "reachablePositions":
+            warnings.warn(
+                "The key 'reachablePositions' is deprecated and has been remapped to 'actionReturn'."
+            )
+            if self._child_metadata["lastAction"] != "GetReachablePositions":
+                return []
+            return self._child_metadata["actionReturn"]
+        elif (
+            len(self._key_sequence) == 2
+            and self._key_sequence[0] == "objects"
+            and key == "visible"
+            and "isInteractable" in self._child_metadata
+        ):
+            warnings.warn(
+                "The key 'visible' is deprecated and has been remapped to 'isInteractable' ."
+                + "Please note that this key does not only mean the object is visible, "
+                + "but is both visible and within the initialized visibilityDistance (1.5 meters "
+                + "by default)."
+            )
+            return self._child_metadata["isInteractable"]
+
+        if len(self._key_sequence) >= 2:
+            # there are currently no deprecation tests beyond this point!
+            return value
+        elif isinstance(value, dict):
+            return MetadataDict(
+                child_metadata=value, key_sequence=self._key_sequence + [key]
+            )
+        elif isinstance(value, list):
+            return MetadataList(
+                child_metadata=value, key_sequence=self._key_sequence + [key]
+            )
+        return value
+
+
+class Event:
     """
     Object that is returned from a call to controller.step().
     This class wraps the screenshot that Unity captures as well
@@ -90,7 +171,7 @@ class Event(object):
     """
 
     def __init__(self, metadata):
-        self.metadata = metadata
+        self._metadata = metadata
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 
@@ -143,6 +224,11 @@ class Event(object):
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    @lru_cache
+    def metadata(self):
+        return MetadataDict(child_metadata=self._metadata, key_sequence=[])
 
     @property
     def image_data(self):
@@ -429,7 +515,7 @@ class Server(object):
 
             third_party_image_mapping = {
                 # if we want to convert this param to underscores in Unity, we will need to
-                # keep the mapping with the dash for bacwkwards compatibility with older
+                # keep the mapping with the dash for backwards compatibility with older
                 # Unity builds
                 "image-thirdParty-camera": e.add_third_party_camera_image,
                 "image_thirdParty_depth": lambda x: e.add_third_party_image_depth(
