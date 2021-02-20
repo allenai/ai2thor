@@ -1019,11 +1019,11 @@ def test_get_object_in_frame(controller):
     assert not query, "x=0.6, y=0.6 should fail!"
 
     query = controller.step("GetObjectInFrame", x=0.6, y=0.4)
-    assert query["actionReturn"].startswith(
+    assert query.metadata["actionReturn"].startswith(
         "Cabinet"
     ), "x=0.6, y=0.4 should have a cabinet!"
 
     query = controller.step("GetObjectInFrame", x=0.3, y=0.5)
-    assert query["actionReturn"].startswith(
+    assert query.metadata["actionReturn"].startswith(
         "Fridge"
     ), "x=0.3, y=0.5 should have a fridge!"
