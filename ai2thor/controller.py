@@ -625,10 +625,9 @@ class Controller(object):
 
         # RoboTHOR checks
         agent_mode = self.initialization_parameters.get("agentMode", "default")
-        # disabling mapping temporarily so we can point to a previous Unity binary with 
-        # if agent_mode.lower() == "bot":
-        #     self.initialization_parameters["agentMode"] = "locobot"
-        #     warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+        if agent_mode.lower() == "bot":
+            self.initialization_parameters["agentMode"] = "locobot"
+            warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
 
         if (
             scene in self.robothor_scenes() and
@@ -856,6 +855,7 @@ class Controller(object):
             if old in action:
                 # warnings.warn(old + " has been renamed to " + new)
                 action[new] = action[old]
+                # not deleting to allow for older builds to continue to work
                 # del action[old]
 
         self.server.send(action)
