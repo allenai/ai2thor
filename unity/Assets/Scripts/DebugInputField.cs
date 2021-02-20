@@ -1671,7 +1671,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "ChangeTimeScale";
                         action.timeScale = float.Parse(splitcommand[1]);
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log(PhysicsController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log(PhysicsController.reachablePositions.Length);
+
                         break;
                     }
 
@@ -1681,7 +1684,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log(PhysicsController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log(PhysicsController.reachablePositions.Length);
+
                         break;
                     }
 
@@ -1691,7 +1697,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
+
                         break;
                     }
 

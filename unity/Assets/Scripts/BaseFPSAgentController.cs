@@ -42,7 +42,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected Quaternion lastLocalCameraRotation;
         public float autoResetTimeScale = 1.0f;
 
-        public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
 		// first person controller parameters
@@ -345,12 +344,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            dir: d,
+                            moveMagnitude: (gridSize * gridMultiplier),
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -364,11 +363,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
-                        if (errorMessage == "" && !inBounds) {
-                            errorMessage = "In " +
-                                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+                        if (shouldEnqueue && !inBounds) {
+                            throw new InvalidOperationException(
+                                "In " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
                                 ", position " + newPosition.ToString() +
-                                " can be reached via capsule cast but is beyond the scene bounds.";
+                                " can be reached via capsule cast but is beyond the scene bounds."
+                            );
                         }
 
                         shouldEnqueue = shouldEnqueue && inBounds && (
@@ -403,10 +403,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
-                //default maxStepCount to scale based on gridSize
-                if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
-                    errorMessage = "Too many steps taken in GetReachablePositions.";
-                    break;
+                // default maxStepCount to scale based on gridSize
+                if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
+                    throw new InvalidOperationException("Too many steps taken in GetReachablePositions.");
                 }
             }
 
@@ -420,18 +419,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(int maxStepCount = 0) {
-            if(maxStepCount != 0) {
-                reachablePositions = getReachablePositions(1.0f, maxStepCount);
+        public void GetReachablePositions(int? maxStepCount = null) {
+            Vector3[] reachablePositions;
+            if (maxStepCount != null) {
+                reachablePositions = getReachablePositions(maxStepCount: (int) maxStepCount);
             } else {
                 reachablePositions = getReachablePositions();
             }
 
-            if (errorMessage != "") {
-                actionFinishedEmit(false);
-            } else {
-                actionFinishedEmit(true, reachablePositions);
-            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: reachablePositions
+            );
         }
 
 		public void Initialize(ServerAction action)
@@ -1409,7 +1408,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // EXTRAS
-            metaMessage.reachablePositions = reachablePositions;
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
             metaMessage.distances = flatten2DimArray(distances);
             metaMessage.normals = flatten3DimArray(normals);
@@ -1430,7 +1428,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.currentTime = TimeSinceStart();
 
             // Resetting things
-            reachablePositions = new Vector3[0];
             flatSurfacesOnGrid = new float[0, 0, 0];
             distances = new float[0, 0];
             normals = new float[0, 0, 0];
@@ -3224,26 +3221,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //cast a capsule the same size as the agent
         //used to check for collisions
         public RaycastHit[] capsuleCastAllForAgent(
-            CapsuleCollider cc,
+            CapsuleCollider capsuleCollider,
             float skinWidth,
             Vector3 startPosition,
             Vector3 dir,
             float moveMagnitude,
             int layerMask
-            ) {
-            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
-            float radius = cc.radius + skinWidth;
-            float innerHeight = cc.height / 2.0f - radius;
+        ) {
+            // make sure to offset this by capsuleCollider.center since we shrank the capsule size
+            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
+            float radius = capsuleCollider.radius + skinWidth;
+            float innerHeight = capsuleCollider.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
             return Physics.CapsuleCastAll(
-                point1,
-                point2,
-                radius,
-                dir,
-                moveMagnitude,
-                layerMask,
-                QueryTriggerInteraction.Ignore
+                point1: point1,
+                point2: point2,
+                radius: radius,
+                direction: dir,
+                maxDistance: moveMagnitude,
+                layerMask: layerMask,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
         }
 
@@ -3283,8 +3281,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
-
-
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -3328,7 +3324,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         return true;
                     }
 
-                    
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
@@ -3338,12 +3333,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            dir: d,
+                            moveMagnitude: (gridSize * gridMultiplier),
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -3634,6 +3629,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 enumerator,
                 fixedDeltaTime
             );
+        }
+
+        public void GetSceneBounds() {
+            Vector3[] positions = new Vector3[2];
+            positions[0] = agentManager.SceneBounds.min;
+            positions[1] = agentManager.SceneBounds.max;
+
+            #if UNITY_EDITOR
+                Debug.Log(positions[0]);
+                Debug.Log(positions[1]);
+            #endif
+            actionFinished(true, positions);
         }
 
         #if UNITY_EDITOR

@@ -307,7 +307,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
 
             // EXTRAS
-            metaMessage.reachablePositions = reachablePositions;
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
             metaMessage.distances = flatten2DimArray(distances);
             metaMessage.normals = flatten3DimArray(normals);
@@ -325,7 +324,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // Resetting things
-            reachablePositions = new Vector3[0];
             flatSurfacesOnGrid = new float[0, 0, 0];
             distances = new float[0, 0];
             normals = new float[0, 0, 0];
