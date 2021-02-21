@@ -12,6 +12,7 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import io
 import platform
 import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
@@ -38,7 +39,7 @@ def add_files(zipf, start_dir):
             zipf.write(fn, arcname)
 
 
-def push_build(build_archive_name, archive_sha256, include_private_scenes):
+def push_build(build_archive_name, zip_data, include_private_scenes):
     import boto3
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
@@ -54,11 +55,9 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
-    with open(build_archive_name, "rb") as af:
-        s3.Object(bucket, key).put(Body=af, ACL=acl)
-
+    s3.Object(bucket, key).put(Body=zip_data, ACL=acl)
     s3.Object(bucket, sha256_key).put(
-        Body=archive_sha256, ACL=acl, ContentType="text/plain"
+        Body=hashlib.sha256(zip_data).hexdigest(), ACL=acl, ContentType="text/plain"
     )
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
@@ -552,15 +551,6 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-def build_sha256(path):
-
-    m = hashlib.sha256()
-
-    with open(path, "rb") as f:
-        m.update(f.read())
-
-    return m.hexdigest()
-
 
 def git_commit_id():
     commit_id = (
@@ -701,12 +691,14 @@ def build_log_push(build_info, include_private_scenes):
 def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
-    zipf = zipfile.ZipFile(archive_name, "w", zipfile.ZIP_DEFLATED)
+    zip_buf = io.BytesIO()
+    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
+    zip_buf.seek(0)
+    zip_data = zip_buf.read()
 
-    build_info["sha256"] = build_sha256(archive_name)
-    push_build(archive_name, build_info["sha256"], include_private_scenes)
+    push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
     threading.current_thread().success = True
