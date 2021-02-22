@@ -33,6 +33,9 @@ class MultiAgentEvent(object):
         self.third_party_camera_frames = []
         # XXX add methods for depth,sem_seg
 
+    def __bool__(self):
+        return bool(self._active_event)
+
     @property
     def cv2img(self):
         return self._active_event.cv2img
@@ -121,6 +124,9 @@ class Event(object):
         self.third_party_flows_frames = []
 
         self.events = [self]  # Ensure we have a similar API to MultiAgentEvent
+
+    def __bool__(self):
+        return self.metadata["lastActionSuccess"]
 
     def __repr__(self):
         """Summarizes the results from an Event."""
