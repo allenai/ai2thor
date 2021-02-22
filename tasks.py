@@ -12,10 +12,11 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import botocore.exceptions
 import io
 import platform
 import ai2thor.build
-from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET
 import logging
 
 logger = logging.getLogger()
@@ -552,6 +553,15 @@ def generate_quality_settings(ctx):
 
 
 
+def git_commit_comment():
+    comment = (
+        subprocess.check_output("git log -n 1 --format=%s", shell=True)
+        .decode("utf8")
+        .strip()
+    )
+
+    return comment
+
 def git_commit_id():
     commit_id = (
         subprocess.check_output("git log -n 1 --format=%H", shell=True)
@@ -915,18 +925,9 @@ def ci_build(context):
                     break
                 time.sleep(10)
 
-            if build["branch"] == "master":
-                logger.info(
-                    "starting webgl build deploy %s %s"
-                    % (build["branch"], build["commit_id"])
-                )
-                webgl_build_deploy_demo(
-                    context, verbose=True, content_addressable=True, force=True
-                )
-                logger.info(
-                    "finished webgl build deploy %s %s"
-                    % (build["branch"], build["commit_id"])
-                )
+            # allow webgl to be force deployed with #webgl-deploy in the commit comment
+            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+                ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
                 if p:
@@ -937,6 +938,15 @@ def ci_build(context):
                     p.join()
 
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
+
+        # if we are in off hours, allow the nightly webgl build to be performed
+        elif datetime.datetime.now().hour in [2,3,4]:
+            clean()
+            subprocess.check_call("git checkout master", shell=True)
+            subprocess.check_call("git pull origin master", shell=True)
+            if current_webgl_autodeploy_commit_id() != git_commit_id():
+                ci_build_webgl(context, git_commit_id())
+
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
@@ -944,6 +954,25 @@ def ci_build(context):
 
     lock_f.close()
 
+@task
+def ci_build_webgl(context, commit_id):
+    branch = 'master'
+    logger.info(
+        "starting auto-build webgl build deploy %s %s"
+        % (branch, commit_id)
+    )
+    # linking here in the event we didn't link above since the builds had 
+    # already completed. Omitting this will cause the webgl build
+    # to import all assets from scratch into a new unity/Library
+    link_build_cache(branch)
+    webgl_build_deploy_demo(
+        context, verbose=True, content_addressable=True, force=True
+    )
+    logger.info(
+        "finished webgl build deploy %s %s"
+        % (branch, commit_id)
+    )
+    update_webgl_autodeploy_commit_id(commit_id)
 
 def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
@@ -1741,7 +1770,7 @@ cache_seconds = 31536000
 @task
 def webgl_deploy(
     ctx,
-    bucket="ai2-thor-webgl-public",
+    bucket=PUBLIC_WEBGL_S3_BUCKET,
     prefix="local",
     source_dir="builds",
     target_dir="",
@@ -1908,6 +1937,22 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
     if verbose:
         print("Deployed all scenes to bucket's root.")
 
+def current_webgl_autodeploy_commit_id():
+    s3 = boto3.resource("s3")
+    try:
+        res = s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').get()
+        return json.loads(res['Body'].read())['commit_id']
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "NoSuchKey":
+            return None
+        else:
+            raise e
+
+def update_webgl_autodeploy_commit_id(commit_id):
+    s3 = boto3.resource("s3")
+    s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').put(
+        Body=json.dumps(dict(timestamp=time.time(), commit_id=commit_id)), ContentType="application/json"
+    )
 
 @task
 def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
