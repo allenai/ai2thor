@@ -837,6 +837,13 @@ class Controller(object):
 
         self.last_action = action
 
+        # dangerously converts rotation(float) to rotation(dict(x=0, y=float, z=0))
+        # this should be removed when ServerActions have been removed from Unity
+        # for all relevant actions.
+        rotation = action.get("rotation")
+        if rotation is not None and not isinstance(rotation, dict):
+            action['rotation'] = dict(y=rotation)
+
         # Support for deprecated parameter names (old: new)
         # Note that these parameters used to be applicable to ANY action.
         changed_parameter_names = {
