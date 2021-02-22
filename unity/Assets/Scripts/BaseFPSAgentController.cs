@@ -1918,12 +1918,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // cache old values in case there's a failure
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            float oldHorizon = m_Camera.transform.localPosition.x;
+            float oldHorizon = m_Camera.transform.localEulerAngles.x;
 
             // here we actually teleport 
             transform.position = position;
             transform.localEulerAngles = new Vector3(0, rotation.y, 0);
-            m_Camera.transform.eulerAngles = new Vector3(horizon, 0, 0);
+            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0, 0);
 
             if (!forceAction &&
                 isAgentCapsuleColliding(
@@ -1932,7 +1932,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ) {
                 transform.position = oldPosition;
                 transform.rotation = oldRotation;
-                m_Camera.transform.eulerAngles = new Vector3(oldHorizon, 0, 0);
+                m_Camera.transform.localEulerAngles = new Vector3(oldHorizon, 0, 0);
                 throw new InvalidOperationException(errorMessage);
             }
         }

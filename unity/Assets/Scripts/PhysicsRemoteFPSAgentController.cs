@@ -1679,7 +1679,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            Vector3 oldCameraEulerAngle = m_Camera.transform.eulerAngles;
+            Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
 
             Vector3 oldLocalHandPosition = new Vector3();
             Quaternion oldLocalHandRotation = new Quaternion();
@@ -1722,7 +1722,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 transform.position = oldPosition;
                 transform.rotation = oldRotation;
-                m_Camera.transform.eulerAngles = oldCameraEulerAngle;
+                m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
 
                 throw new InvalidOperationException(e.Message);
             }
@@ -1794,7 +1794,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             TeleportFull(
                 position: position == null ? transform.position : (Vector3) position,
-                rotation: rotation == null ? transform.localEulerAngles : (Vector3) rotation,
+                rotation: rotation == null ? transform.eulerAngles : (Vector3) rotation,
                 horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
                 standing: standing == null ? isStanding() : (bool) standing,
                 forceAction: forceAction
