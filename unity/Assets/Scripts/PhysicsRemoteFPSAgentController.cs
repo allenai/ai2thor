@@ -6852,7 +6852,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Consider the case where one does not want to move on a perfect grid, and is currently moving
                 // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
                 // This may happen if the agent starts by teleports with the rotation of 10 degrees.
-                int offset = (int) Math.Round(transform.localEulerAngles.y % rotateStepDegrees);
+                int offset = (int) Math.Round(transform.eulerAngles.y % rotateStepDegrees);
 
                 // Examples:
                 // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
