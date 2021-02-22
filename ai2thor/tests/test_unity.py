@@ -839,6 +839,11 @@ def test_change_resolution(controller):
     )
 
 
+###################################################
+##### RESETTING WILL BE DONE AFTER THIS POINT #####
+###################################################
+
+
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_teleport(controller):
     # Checking y coordinate adjustment works
@@ -977,11 +982,6 @@ def test_teleport(controller):
             # assert_near(agent['rotation']['y'], 25)
 
     controller.reset(agentMode="default")
-
-
-###################################################
-##### RESETTING WILL BE DONE AFTER THIS POINT #####
-###################################################
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
