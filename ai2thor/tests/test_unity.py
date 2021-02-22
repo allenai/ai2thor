@@ -893,7 +893,7 @@ def test_teleport(controller):
     # make sure Teleport works with default args
     a1 = controller.last_event.metadata['agent']
     a2 = controller.step("Teleport", horizon=10).metadata['agent']
-    assert_near(a2['cameraHorizon'], 10)
+    assert abs(a2['cameraHorizon'] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
     # all should be the same except for horizon
     for dim in 'x y z'.split():
@@ -963,7 +963,7 @@ def test_teleport(controller):
         # make sure Teleport works with default args
         a1 = controller.last_event.metadata['agent']
         a2 = controller.step("Teleport", horizon=10).metadata['agent']
-        assert_near(a2['cameraHorizon'], 10)
+        assert abs(a2['cameraHorizon'] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
         # all should be the same except for horizon
         for dim in 'x y z'.split():
@@ -975,6 +975,8 @@ def test_teleport(controller):
         # if agent == "locobot":
             # agent = controller.step('TeleportFull', rotation=25).metadata['agent']
             # assert_near(agent['rotation']['y'], 25)
+
+    controller.reset(agentMode="default")
 
 
 ###################################################
