@@ -202,21 +202,10 @@ public static class ActionDispatcher {
                         }
                     }
 
-                    if (signatureMatch && (sourceParams.Length != targetParams.Length)) {
-                        // Some methods, like teleport full have
-                        // add both required args and optional args to the end.
-                        for (int i = minCommon - 1; i < sourceParams.Length; i++) {
-                            if (!sourceParams[i].HasDefaultValue) {
-                                signatureMatch = false;
-                                break;
-                            }
-                        }
-                        for (int i = minCommon - 1; i < targetParams.Length; i++) {
-                            if (!targetParams[i].HasDefaultValue) {
-                                signatureMatch = false;
-                                break;
-                            }
-                        }
+                    if (sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue) {
+                        signatureMatch = false;
+                    } else if (targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue) {
+                        signatureMatch = false;
                     }
 
                     // if the method is more specific and the parameters match
