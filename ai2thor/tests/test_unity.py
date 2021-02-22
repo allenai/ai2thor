@@ -901,9 +901,8 @@ def test_teleport(controller):
     assert abs(a2['cameraHorizon'] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
     # all should be the same except for horizon
-    for dim in 'x y z'.split():
-        assert_near(a1['position'][dim], a2['position'][dim])
-        assert_near(a1['rotation'][dim], a2['rotation'][dim])
+    assert_near(a1['position'], a2['position'])
+    assert_near(a1['rotation'], a2['rotation'])
     assert a1['isStanding'] == a2['isStanding'], "Agent should remain in same standing when unspecified!"
     assert a1['isStanding'] != None, "Agent isStanding should be set for physics agent!"
 
@@ -971,9 +970,8 @@ def test_teleport(controller):
         assert abs(a2['cameraHorizon'] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
         # all should be the same except for horizon
-        for dim in 'x y z'.split():
-            assert_near(a1['position'][dim], a2['position'][dim])
-            assert_near(a1['rotation'][dim], a2['rotation'][dim])
+        assert_near(a1['position'], a2['position'])
+        assert_near(a1['rotation'], a2['rotation'])
 
         # TODO: readd this when it actually works.
         # make sure float rotation works
