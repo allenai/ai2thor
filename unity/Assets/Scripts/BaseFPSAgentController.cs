@@ -1391,7 +1391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             agentMeta.rotation = transform.eulerAngles;
 
             float cameraX = m_Camera.transform.rotation.eulerAngles.x;
-            agentMeta.cameraHorizon = cameraX < 0 ? 360 + (cameraX % 360) : cameraX % 360;
+            agentMeta.cameraHorizon = cameraX > 180 ? cameraX - 360 : cameraX;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
             // OTHER METADATA
