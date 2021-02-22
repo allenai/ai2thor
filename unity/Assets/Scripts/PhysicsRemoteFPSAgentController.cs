@@ -1693,6 +1693,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 ToggleArmColliders(arm: Arm, value: forceAction);
                 base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+                if (standing) {
+                    stand();
+                } else {
+                    crouch();
+                }
 
                 // add arm value cases
                 if (!forceAction) {
