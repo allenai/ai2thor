@@ -201,10 +201,10 @@ def test_fast_emit(controller):
 
     assert event.metadata["actionReturn"] is None
     assert event_fast_emit.metadata["actionReturn"] == "foo"
-    assert id(event.metadata["objects"]) == id(event_fast_emit.metadata["objects"])
-    assert id(event.metadata["objects"]) != id(event_no_fast_emit.metadata["objects"])
-    assert id(event_no_fast_emit_2.metadata["objects"]) != id(
-        event_no_fast_emit.metadata["objects"]
+    assert id(event._metadata["objects"]) == id(event_fast_emit._metadata["objects"])
+    assert id(event._metadata["objects"]) != id(event_no_fast_emit._metadata["objects"])
+    assert id(event_no_fast_emit_2._metadata["objects"]) != id(
+        event_no_fast_emit._metadata["objects"]
     )
 
 
