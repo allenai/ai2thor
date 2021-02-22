@@ -852,18 +852,18 @@ class Controller(object):
         self.server.send(action)
         self.last_event = self.server.receive()
 
-        if not self.last_event.metadata[
-            "lastActionSuccess"
-        ] and self.last_event.metadata["errorCode"] in [
-            "InvalidAction",
-            "MissingArguments",
-            "AmbiguousAction",
-            "InvalidArgument",
-        ]:
-            raise ValueError(self.last_event.metadata["errorMessage"])
-
-        if raise_for_failure and not self._last_event.metadata["lastActionSuccess"]:
-            raise RuntimeError(self.last_event.metadata.get("errorMessage", f"{action} failed"))
+        if not self.last_event.metadata["lastActionSuccess"]:
+            if self.last_event.metadata["errorCode"] in [
+                "InvalidAction",
+                "MissingArguments",
+                "AmbiguousAction",
+                "InvalidArgument",
+            ]:
+                raise ValueError(self.last_event.metadata["errorMessage"])
+            elif raise_for_failure:
+                raise RuntimeError(
+                    self.last_event.metadata.get("errorMessage", f"{action} failed")
+                )
 
         return self.last_event
 
