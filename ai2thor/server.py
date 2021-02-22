@@ -10,7 +10,6 @@ import warnings
 import numpy as np
 from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
-from functools import lru_cache
 import json
 import sys
 
@@ -172,6 +171,7 @@ class Event:
 
     def __init__(self, metadata):
         self._metadata = metadata
+        self._cached_metadata = None
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 
@@ -226,9 +226,13 @@ class Event:
         return self.__repr__()
 
     @property
-    @lru_cache
     def metadata(self):
-        return MetadataDict(child_metadata=self._metadata, key_sequence=[])
+        if self._cached_metadata is not None:
+            return self._cached_metadata
+        self._cached_metadata = MetadataDict(
+            child_metadata=self._metadata, key_sequence=[]
+        )
+        return self._cached_metadata
 
     @property
     def image_data(self):

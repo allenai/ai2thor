@@ -39,16 +39,9 @@ wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
 stochastic_controller = build_controller(agentControllerType="stochastic")
 
-BASE_FP28_POSITION = dict(
-    x=-1.5,
-    z=-1.5,
-    y=0.901,
-)
+BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION,
-    rotation={"x": 0, "y": 0, "z": 0},
-    horizon=0,
-    standing=True,
+    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
 )
 
 
@@ -152,10 +145,7 @@ def test_bot_deprecation():
 def test_deprecated_segmentation_params():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
-    controller = build_controller(
-        renderObjectImage=True,
-        renderClassImage=True,
-    )
+    controller = build_controller(renderObjectImage=True, renderClassImage=True,)
     event = controller.last_event
     assert event.class_segmentation_frame is event.semantic_segmentation_frame
     assert event.semantic_segmentation_frame is not None
@@ -168,8 +158,7 @@ def test_deprecated_segmentation_params2():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(
-        renderSemanticSegmentation=True,
-        renderInstanceSegmentation=True,
+        renderSemanticSegmentation=True, renderInstanceSegmentation=True,
     )
     event = controller.last_event
     assert event.class_segmentation_frame is event.semantic_segmentation_frame
@@ -535,8 +524,7 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -547,8 +535,7 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -556,8 +543,7 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -889,7 +875,9 @@ def test_get_scenes_in_build(controller):
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_get_reachable_positions(controller):
     event = controller.step("GetReachablePositions")
-    assert event.metadata["actionReturn"] is event.metadata["reachablePositions"], "reachablePositions should map to actionReturn!"
+    assert (
+        event.metadata["actionReturn"] == event.metadata["reachablePositions"]
+    ), "reachablePositions should map to actionReturn!"
     assert len(event.metadata["reachablePositions"]) > 0 and isinstance(
         event.metadata["reachablePositions"], list
     ), "reachablePositions/actionReturn should not be empty after calling GetReachablePositions!"
