@@ -13,6 +13,7 @@ import pprint
 from invoke import task
 import boto3
 import botocore.exceptions
+import multiprocessing
 import io
 import platform
 import ai2thor.build
@@ -351,9 +352,8 @@ def class_dataset_images_for_scene(scene_name):
 def build_class_dataset(context):
     import concurrent.futures
     import ai2thor.controller
-    import multiprocessing as mp
 
-    mp.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn")
 
     controller = ai2thor.controller.Controller()
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=4)
@@ -819,10 +819,12 @@ def pytest_s3_object(commit_id):
     return s3.Object(PUBLIC_S3_BUCKET, pytest_key)
 
 
-@task
-def ci_pytest(context):
+def ci_pytest(build):
     import requests
 
+    logger.info(
+        "running pytest for %s %s" % (build["branch"], build["commit_id"])
+    )
     commit_id = git_commit_id()
 
     s3_obj = pytest_s3_object(commit_id)
@@ -830,11 +832,12 @@ def ci_pytest(context):
         s3_obj.bucket_name,
         s3_obj.key,
     )
-    print("pytest url %s" % s3_pytest_url)
+    logger.info("pytest url %s" % s3_pytest_url)
     res = requests.get(s3_pytest_url)
 
     if res.status_code == 200 and res.json()["success"]:
         # if we already have a successful pytest, skip running
+        logger.info("pytest results already exist for %s %s" % (build['branch'], build['commit_id']))
         return
 
     proc = subprocess.run(
@@ -849,6 +852,9 @@ def ci_pytest(context):
 
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType="application/json"
+    )
+    logger.info(
+        "finished pytest for %s %s" % (build["branch"], build["commit_id"])
     )
 
 
@@ -893,28 +899,28 @@ def ci_build(context):
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
-                        continue
-                    # this is done here so that when a tag build request arrives and the commit_id has already
-                    # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                    link_build_cache(build["branch"])
-                    p = ci_build_arch(arch, include_private_scenes)
-                    logger.info(
-                        "finished build for %s %s %s"
-                        % (arch, build["branch"], build["commit_id"])
-                    )
-                    procs.append(p)
+                    else:
+                        p = ci_build_arch(arch, include_private_scenes)
 
-            # don't run tests for a tag since results should exist
-            # for the branch commit
-            if build["tag"] is None:
+                        # this is done here so that when a tag build request arrives and the commit_id has already
+                        # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                        link_build_cache(build["branch"])
+                        logger.info(
+                            "finished build for %s %s %s"
+                            % (arch, build["branch"], build["commit_id"])
+                        )
+                        procs.append(p)
 
-                logger.info(
-                    "running pytest for %s %s" % (build["branch"], build["commit_id"])
-                )
-                ci_pytest(context)
-                logger.info(
-                    "finished pytest for %s %s" % (build["branch"], build["commit_id"])
-                )
+                    # don't run tests for a tag since results should exist
+                    # for the branch commit
+                    if arch == 'OSXIntel64' and build["tag"] is None:
+                        pytest_proc = multiprocessing.Process(
+                            target=ci_pytest,
+                            args=(build,)
+                        )
+                        pytest_proc.start()
+                        procs.append(pytest_proc)
+
 
             # give the travis poller time to see the result
             for i in range(6):
@@ -975,7 +981,6 @@ def ci_build_webgl(context, commit_id):
     update_webgl_autodeploy_commit_id(commit_id)
 
 def ci_build_arch(arch, include_private_scenes=False):
-    from multiprocessing import Process
 
     commit_id = git_commit_id()
     unity_path = "unity"
@@ -996,7 +1001,7 @@ def ci_build_arch(arch, include_private_scenes=False):
         _build(unity_path, arch, build_dir, build_name, env)
 
         print("pushing archive")
-        proc = Process(
+        proc = multiprocessing.Process(
             target=archive_push,
             args=(
                 unity_path,
@@ -1076,7 +1081,6 @@ def poll_ci_build(context):
 
 @task
 def build(context, local=False):
-    from multiprocessing import Process
     from ai2thor.build import platform_map
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
