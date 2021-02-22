@@ -900,11 +900,12 @@ def ci_build(context):
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
                     else:
-                        p = ci_build_arch(arch, include_private_scenes)
-
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
                         link_build_cache(build["branch"])
+
+                        p = ci_build_arch(arch, include_private_scenes)
+
                         logger.info(
                             "finished build for %s %s %s"
                             % (arch, build["branch"], build["commit_id"])
