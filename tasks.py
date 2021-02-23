@@ -1030,8 +1030,15 @@ def poll_ci_build(context):
 
     commit_id = git_commit_id()
 
+    last_emit_time = 0
     for i in range(360):
         missing = False
+        # must emit something at least once every 10 minutes 
+        # otherwise travis will time out the build
+        if (time.time() - last_emit_time) > 540: 
+            print("Polling for build logs")
+            last_emit_time = time.time()
+
         for arch in platform_map.keys():
             commit_build = ai2thor.build.Build(arch, commit_id, False)
             try:
