@@ -1010,3 +1010,29 @@ def test_get_interactable_poses(controller):
     assert (
         1300 > len(event.metadata["actionReturn"]) > 1100
     ), "GetInteractablePoses with large maxDistance is off!"
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_object_in_frame(controller):
+    controller.reset(scene="FloorPlan28", agentMode="default")
+    event = controller.step(
+        action="TeleportFull",
+        position=dict(x=-1, y=0.900998235, z=-1.25),
+        rotation=dict(x=0, y=90, z=0),
+        horizon=0,
+        standing=True,
+    )
+    assert event, "TeleportFull should have succeeded!"
+
+    query = controller.step("GetObjectInFrame", x=0.6, y=0.6)
+    assert not query, "x=0.6, y=0.6 should fail!"
+
+    query = controller.step("GetObjectInFrame", x=0.6, y=0.4)
+    assert query.metadata["actionReturn"].startswith(
+        "Cabinet"
+    ), "x=0.6, y=0.4 should have a cabinet!"
+
+    query = controller.step("GetObjectInFrame", x=0.3, y=0.5)
+    assert query.metadata["actionReturn"].startswith(
+        "Fridge"
+    ), "x=0.3, y=0.5 should have a fridge!"
