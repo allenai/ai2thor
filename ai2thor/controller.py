@@ -830,10 +830,12 @@ class Controller(object):
 
         self.last_action = action
 
+        # dangerously converts rotation(float) to rotation(dict(x=0, y=float, z=0))
+        # this should be removed when ServerActions have been removed from Unity
+        # for all relevant actions.
         rotation = action.get("rotation")
-        if rotation is not None and type(rotation) != dict:
-            action["rotation"] = {}
-            action["rotation"]["y"] = rotation
+        if rotation is not None and not isinstance(rotation, dict):
+            action['rotation'] = dict(y=rotation)
 
         # Support for deprecated parameter names (old: new)
         # Note that these parameters used to be applicable to ANY action.
@@ -866,22 +868,18 @@ class Controller(object):
 
 
 
-        if not self.last_event.metadata[
-            "lastActionSuccess"
-        ]:
+        if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
-            "InvalidAction",
-            "MissingArguments",
-            "AmbiguousAction",
-            "InvalidArgument",
+                "InvalidAction",
+                "MissingArguments",
+                "AmbiguousAction",
+                "InvalidArgument",
             ]:
                 raise ValueError(self.last_event.metadata["errorMessage"])
             elif raise_for_failure:
                 raise RuntimeError(
-                    self.last_event.metadata.get("errorMessage", f"{action} failed.")
+                    self.last_event.metadata.get("errorMessage", f"{action} failed")
                 )
-
-        assert (not raise_for_failure) or self.last_event.metadata["lastActionSuccess"]
 
         return self.last_event
 

@@ -59,6 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
         //determins default move distance for move actions
 		protected float moveMagnitude;
+
         //determines rotation increment of rotate functions
         protected float rotateStepDegrees = 90.0f;
         protected bool snapToGrid;
@@ -554,14 +555,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.visibilityScheme = action.GetVisibilityScheme();
         }
 
-        public void SetAgentMode(string mode)
-        {
-            string whichMode;
-            whichMode = mode.ToLower();
+        public void SetAgentMode(string mode) {
+            string whichMode = mode.ToLower();
 
             //null check for camera, used to ensure no missing references on initialization
-            if(m_Camera == null)
-            {
+            if(m_Camera == null) {
                 m_Camera = this.gameObject.GetComponentInChildren<Camera>();
             }
 
@@ -1340,8 +1338,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
-		public virtual  MetadataPatch generateMetadataPatch()
-		{
+		public virtual  MetadataPatch generateMetadataPatch() {
             MetadataPatch patch = new MetadataPatch();
             patch.lastAction = this.lastAction;
             patch.lastActionSuccess = this.lastActionSuccess;
@@ -1353,19 +1350,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return patch;
         }
 
-		public virtual MetadataWrapper generateMetadataWrapper()
-		{
+		public virtual MetadataWrapper generateMetadataWrapper() {
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
             agentMeta.position = transform.position;
             agentMeta.rotation = transform.eulerAngles;
-            agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-            if (agentMeta.cameraHorizon > 180) 
-            {
-                agentMeta.cameraHorizon -= 360;
-            }
-	        agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
+
+            float cameraX = m_Camera.transform.rotation.eulerAngles.x;
+            agentMeta.cameraHorizon = cameraX > 180 ? cameraX - 360 : cameraX;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
             // OTHER METADATA
@@ -1404,6 +1397,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             metaMessage.inventoryObjects = ios.ToArray();
 
+            // TODO: remove from base.
             // HAND
             metaMessage.hand = new HandMetadata();
             metaMessage.hand.position = AgentHand.transform.position;
@@ -1411,6 +1405,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
             metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
 
+            // TODO: remove from base.
              // ARM
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
@@ -1781,10 +1776,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public bool isStanding() {
-            return standingLocalCameraPosition == m_Camera.transform.localPosition;
-        }
-
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
@@ -1929,127 +1920,98 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        //teleport full, base version does not consider being able to hold objects
-        public virtual void TeleportFull(
-            float x,
-            float y,
-            float z,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
-            bool forceAction = false
-        ) {
-            targetTeleport = new Vector3(x, y, z);
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
 
-            if (forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-                actionFinished(true);
+        // As opposed to an action, these args are required because we explicitly
+        // want base classes to pass all of them in.
+        protected void teleport(
+            Vector3? position, Vector3? rotation, float? horizon, bool forceAction
+        ) {
+            teleportFull(
+                position: position == null ? transform.position : (Vector3) position,
+                rotation: rotation == null ? transform.localEulerAngles : (Vector3) rotation,
+                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
+                forceAction: forceAction
+            );
+        }
+
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
+
+        // this is not used with non-grounded agents (e.g., drones)
+        protected void assertTeleportedNearGround(Vector3? targetPosition) {
+            // position should not change if it's null.
+            if (targetPosition == null) {
                 return;
+            }
 
-            } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
-                    errorMessage = "Teleport target out of scene bounds.";
-                    actionFinished(false);
-                    return;
-                }
+            Vector3 pos = (Vector3) targetPosition;
+            m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
-                if (!isPositionOnGrid(targetTeleport)) {
-                    errorMessage = $"`snapToGrid` is True but target teleport position" +
-                        $" {targetTeleport.ToString("F6")} is not on the grid of size {gridSize}.";
-                    actionFinished(false);
-                    return;
-                }
-
-                Vector3 oldPosition = transform.position;
-                Quaternion oldRotation = transform.rotation;
-                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
-                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
-
-                transform.position = targetTeleport;
-
-                // Adjust y position so that the agent is more on the floor
-                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
-
-                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
-                if (tooMuchYMovement) {
-                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
-                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
-                }
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-
-                bool agentCollides = isAgentCapsuleColliding(
-                    collidersToIgnore: collidersToIgnoreDuringMovement,
-                    includeErrorMessage: true
+            // perhaps like y=2 was specified, with an agent's standing height of 0.9
+            if (Mathf.Abs(transform.position.y - pos.y) > 0.05f) {
+                throw new InvalidOperationException(
+                    "After teleporting and adjusting agent position to floor, there was too large a change" +
+                    $"({Mathf.Abs(transform.position.y - pos.y)} > 0.05) in the y component." +
+                    " Consider using `forceAction=true` if you'd like to teleport anyway."
                 );
-
-
-                if (agentCollides || tooMuchYMovement) {
-                    transform.position = oldPosition;
-                    transform.rotation = oldRotation;
-                    m_Camera.transform.localPosition = oldCameraLocalPosition;
-                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
-                    return;
-                }
-
-                actionFinished(true);
             }
         }
 
-        public void TeleportFull(
-            Vector3 position,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
-            bool forceAction = false
-
+        protected void teleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction
         ) {
-            TeleportFull(
-                x: position.x,
-                y: position.y,
-                z: position.z,
-                rotation: rotation,
-                horizon: horizon,
-                standing: standing,
-                forceAction: forceAction
-            );
-        }
-
-        public virtual void Teleport(
-            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
-        ) {
-            if (rotateOnTeleport) {
-                throw new ArgumentException(
-                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
-                    " the agent, use the TeleportFull command instead."
+            // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
+            // smaller than 1e-2f. I'm not confident that will work in many cases.
+            if (!forceAction && (Mathf.Abs(rotation.x) >= 1e-2f || Mathf.Abs(rotation.z) >= 1e-2f)) {
+                throw new ArgumentOutOfRangeException(
+                    "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
+                    $" You gave {rotation.ToString("F6")}."
                 );
             }
-            TeleportFull(
-                x: x,
-                y: y,
-                z: z,
-                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
-                horizon: m_Camera.transform.localEulerAngles.x,
-                standing: isStanding(),
-                forceAction: forceAction
-            );
+
+            // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                );
+            }
+
+            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                );
+            }
+
+            if (!forceAction && !isPositionOnGrid(position)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
+                );
+            }
+
+            // cache old values in case there's a failure
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            float oldHorizon = m_Camera.transform.localEulerAngles.x;
+
+            // here we actually teleport 
+            transform.position = position;
+            transform.localEulerAngles = new Vector3(0, rotation.y, 0);
+            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0, 0);
+
+            if (!forceAction &&
+                isAgentCapsuleColliding(
+                    collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true
+                )
+            ) {
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.localEulerAngles = new Vector3(oldHorizon, 0, 0);
+                throw new InvalidOperationException(errorMessage);
+            }
         }
 
         protected T[] flatten2DimArray<T>(T[, ] array) {
