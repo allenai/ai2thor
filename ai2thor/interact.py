@@ -1,6 +1,4 @@
-import tty
 import sys
-import termios
 from PIL import Image
 import numpy as np
 import os
@@ -37,6 +35,9 @@ class DefaultActions(Enum):
 
 
 def get_term_character():
+    # NOTE: Leave these imports here! They are incompatible with Windows.
+    import tty
+    import termios
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -215,6 +216,7 @@ class InteractiveControllerPrompt(object):
                 print(" ".join(command_info))
 
     def next_interact_command(self):
+        
         current_buffer = ""
         while True:
             commands = self._interact_commands

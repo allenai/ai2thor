@@ -292,28 +292,56 @@ public class PhysicsSceneManager : MonoBehaviour {
         RequiredObjects.Remove(sop.gameObject);
     }
 
-    public bool SetObjectPoses(ObjectPose[] objectPoses) {
+    public bool SetObjectPoses(ObjectPose[] objectPoses, out string errorMessage, bool placeStationary) {
         SetupScene();
+        errorMessage = "";
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0) {
             // Perform object location sets
             SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
+
+            //this will contain all pickupable and moveable objects currently in the scene
             Dictionary<string, SimObjPhysics> nameToObject = new Dictionary<string, SimObjPhysics>();
+            Dictionary<string, SimObjPhysics> isStaticNameToObject = new Dictionary<string, SimObjPhysics>();
+
+            //get all sim objects in scene that are either pickupable or moveable and prepare them to be repositioned, cloned, or disabled
             foreach (SimObjPhysics sop in sceneObjects) {
-                if (sop.IsPickupable) {
+
+                //note that any moveable or pickupable sim objects not explicitly passed in via objectPoses 
+                //will be disabled since we SetActive(false)
+                if (sop.IsPickupable || sop.IsMoveable) {
                     sop.gameObject.SetActive(false);
                     //sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
                     nameToObject[sop.name] = sop;
+                }
+
+                //track all static sim objects as well for reference later
+                if (sop.isStatic) {
+                    isStaticNameToObject[sop.name] = sop;
                 }
             }
             HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
+
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
-                    Debug.Log("No object of name " + objectPose.objectName + " found in scene.");
+                    errorMessage = "No Pickupable or Moveable object of name " + objectPose.objectName + " found in scene.";
+                    Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
+                if (isStaticNameToObject.ContainsKey(objectPose.objectName)){
+                    errorMessage = objectPose.objectName + " is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
+                    Debug.Log(errorMessage);
+                    shouldFail = true;
+                    continue;
+                }
+                if (!nameToObject.ContainsKey(objectPose.objectName) && !isStaticNameToObject.ContainsKey(objectPose.objectName)) {
+                    errorMessage = objectPose.objectName + " does not exist in scene.";
+                    shouldFail = true;
+                    continue;
+                }
+
                 SimObjPhysics obj = nameToObject[objectPose.objectName];
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
                 SimObjPhysics copy;
@@ -330,6 +358,11 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.transform.position = objectPose.position;
                 copy.transform.eulerAngles = objectPose.rotation;
                 copy.gameObject.SetActive(true);
+
+                if(placeStationary) {
+                    copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
+                    copy.GetComponent<Rigidbody>().isKinematic = true;
+                }
                 //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }

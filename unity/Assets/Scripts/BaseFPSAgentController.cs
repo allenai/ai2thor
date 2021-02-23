@@ -78,8 +78,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
-        
+
+
         public AgentState agentState = AgentState.Emit;
+
+        // these object types can have a placeable surface mesh associated ith it
+        // this is to be used with ScreenToWorldTarget to filter out raycasts correctly
+        protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
+            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
+            SimObjType.CounterTop, SimObjType.Shelf
+        };
 
         public const float DefaultAllowedErrorInShortestPath = 0.0001f;
 
@@ -774,17 +782,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             HashSet<Collider> ignoreColliders=null
         ) {
             Vector3 targetPosition = transform.position + direction;
-            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
-
-            float right = Vector3.Dot(transform.right, direction);
-            if (right < 0) {
-                angle = 360f - angle;
-            }
-            int angleInt = Mathf.RoundToInt(angle) % 360;
-
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
+                CheckIfItemBlocksAgentMovement(direction, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction, ignoreColliders)) {
 
                 //only default hand if not manually interacting with things    
                 if(!manualInteract) {
@@ -838,40 +838,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool CheckIfAgentCanMove(
-            float moveMagnitude,
-            int orientation,
+            Vector3 offset,
             HashSet<Collider> ignoreColliders = null
         ) {
-            Vector3 dir = new Vector3();
-
-            switch (orientation) {
-                case 0: //forward
-                    dir = gameObject.transform.forward;
-                    break;
-
-                case 180: //backward
-                    dir = -gameObject.transform.forward;
-                    break;
-
-                case 270: //left
-                    dir = -gameObject.transform.right;
-                    break;
-
-                case 90: //right
-                    dir = gameObject.transform.right;
-                    break;
-
-                default:
-                    Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
-                    break;
-            }
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
                 transform.position,
-                dir,
-                moveMagnitude,
+                offset.normalized,
+                offset.magnitude,
                 1 << 8 | 1 << 10
             );
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
@@ -891,7 +867,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                        errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        errorMessage = $"Agent {otherAgentNum} is blocking Agent {thisAgentNum} from moving by {offset.ToString("F4")}.";
                         return false;
                     }
 
@@ -902,7 +878,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             res.transform.tag == "Untagged"
                         )) {
                         int thisAgentNum = agentManager.agents.IndexOf(this);
-                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        errorMessage = $"{res.transform.name} is blocking Agent {thisAgentNum} from moving by {offset.ToString("F4")}.";
                         //the moment we find a result that is blocking, return false here
                         return false;
                     }
@@ -984,53 +960,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
-        public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
+        public bool CheckIfItemBlocksAgentMovement(Vector3 offset, bool forceAction = false) {
             bool result = false;
 
             //if forceAction true, ignore collision restrictions caused by held objects
-            if(forceAction)
-            {
+            if(forceAction) {
                 return true;
             }
             //if there is nothing in our hand, we are good, return!
             if (ItemInHand == null) {
-                result = true;
                 //  Debug.Log("Agent has nothing in hand blocking movement");
-                return result;
-            }
-
-            //otherwise we are holding an object and need to do a sweep using that object's rb
-            else {
-                Vector3 dir = new Vector3();
-
-                //use the agent's forward as reference
-                switch (orientation) {
-                    case 0: //forward
-                        dir = gameObject.transform.forward;
-                        break;
-
-                    case 180: //backward
-                        dir = -gameObject.transform.forward;
-                        break;
-
-                    case 270: //left
-                        dir = -gameObject.transform.right;
-                        break;
-
-                    case 90: //right
-                        dir = gameObject.transform.right;
-                        break;
-
-                    default:
-                        Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
-                        break;
-                }
-                //otherwise we haev an item in our hand, so sweep using it's rigid body.
-                //RaycastHit hit;
+                return true;
+            } else {
+                //otherwise we are holding an object and need to do a sweep using that object's rb
 
                 Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
 
-                RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+                RaycastHit[] sweepResults = rb.SweepTestAll(
+                    offset.normalized,
+                    offset.magnitude,
+                    QueryTriggerInteraction.Ignore
+                );
                 if (sweepResults.Length > 0) {
                     foreach (RaycastHit res in sweepResults) {
                         //did the item in the hand touch the agent? if so, ignore it's fine
@@ -1038,7 +988,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             result = true;
                             break;
                         } else {
-                            errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
+                            errorMessage = $"{res.transform.name} is blocking the Agent from moving by {offset.ToString("F4")} with {ItemInHand.name}";
                             result = false;
                             return result;
                         }
@@ -1091,6 +1041,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
             }
+            actionFinished(true);
+        }
+
+        public void MakeAllObjectsStationary()
+        {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>())
+            {
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = true;
+
+                sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+            }
+
+            #if UNITY_EDITOR
+            Debug.Log("Echoes! Three Freeze!");
+            #endif
+            
             actionFinished(true);
         }
 
@@ -1672,6 +1639,116 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
 			//body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
+
+        // Helper method that parses objectId parameter to return the sim object that it target.
+        // The action is halted if the objectId does not appear in the scene.
+        protected SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
+            // an objectId was given, so find that target in the scene if it exists
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
+            }
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
+                target = sop;
+            }
+
+            // target not found!
+            if (target == null) {
+                throw new NullReferenceException("Target object not found within the specified visibility.");
+            }
+
+            return target;
+        }
+
+        // Helper method that parses (x and y) parameters to return the
+        // sim object that they target.
+        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
+            }
+            SimObjPhysics target = null;
+            ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
+            return target;
+        }
+
+        // checks if the target position in space is within the agent's current viewport
+        protected bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
+        {
+            //now check if the target position is within bounds of the Agent's forward (z) view
+            Vector3 tmp = m_Camera.transform.position;
+            tmp.y = targetPosition.y;
+
+            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
+            {
+                errorMessage = "The target position is outside the agent's max visible distance.";
+                return false;
+            }
+
+            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
+            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+            {
+                errorMessage = "The target position is outside the viewport.";
+                return false;
+            }
+
+            return true;
+        }
+
+        // used for all actions that need a sim object target
+        // instead of objectId, use screen coordinates to raycast toward potential targets
+        // will set the target object by reference if raycast is successful
+        protected bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange) {
+            // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+            y = 1.0f - y;
+
+            // cast ray from screen coordinate into world space. If it hits an object
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+            RaycastHit hit;
+
+            // if something was touched, actionFinished(true) always
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+                if (hit.transform.GetComponent<SimObjPhysics>()) {
+                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                    // this should basically only happen if the handDistance value is too big
+                    if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
+                    }
+
+                    // it is within viewport, so we are good, assign as target
+                    target = hit.transform.GetComponent<SimObjPhysics>();
+                }
+            }
+
+            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
+            // if no target was found in the layers above, try the SimObjInvisible layer. 
+            // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
+            // PlaceableSurfaces on it, also make sure to check again
+            if (target == null || hasPlaceableSurface.Contains(target.Type)) {
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
+                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
+                        // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        // this should basically only happen if the handDistance value is too big
+                        if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
+                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
+                        }
+                        // it is within viewport, so we are good, assign as target
+                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
+                    }
+                }
+            }
+
+            // force update objects to be visible/interactable correctly
+            VisibleSimObjs(false);
+            return true;
+        }
+
+        public void GetObjectInFrame(float x, float y, bool forceAction = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            actionFinishedEmit(success: true, actionReturn: target.ObjectID);
+        }
 
 		protected void snapAgentToGrid()
 		{

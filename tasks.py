@@ -12,9 +12,12 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import botocore.exceptions
+import multiprocessing
+import io
 import platform
 import ai2thor.build
-from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET
 import logging
 
 logger = logging.getLogger()
@@ -38,7 +41,7 @@ def add_files(zipf, start_dir):
             zipf.write(fn, arcname)
 
 
-def push_build(build_archive_name, archive_sha256, include_private_scenes):
+def push_build(build_archive_name, zip_data, include_private_scenes):
     import boto3
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
@@ -54,11 +57,9 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
-    with open(build_archive_name, "rb") as af:
-        s3.Object(bucket, key).put(Body=af, ACL=acl)
-
+    s3.Object(bucket, key).put(Body=zip_data, ACL=acl)
     s3.Object(bucket, sha256_key).put(
-        Body=archive_sha256, ACL=acl, ContentType="text/plain"
+        Body=hashlib.sha256(zip_data).hexdigest(), ACL=acl, ContentType="text/plain"
     )
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
@@ -351,9 +352,8 @@ def class_dataset_images_for_scene(scene_name):
 def build_class_dataset(context):
     import concurrent.futures
     import ai2thor.controller
-    import multiprocessing as mp
 
-    mp.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn")
 
     controller = ai2thor.controller.Controller()
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=4)
@@ -552,15 +552,15 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-def build_sha256(path):
 
-    m = hashlib.sha256()
+def git_commit_comment():
+    comment = (
+        subprocess.check_output("git log -n 1 --format=%s", shell=True)
+        .decode("utf8")
+        .strip()
+    )
 
-    with open(path, "rb") as f:
-        m.update(f.read())
-
-    return m.hexdigest()
-
+    return comment
 
 def git_commit_id():
     commit_id = (
@@ -609,7 +609,6 @@ def build_pip(context, version):
         raise Exception("tag %s is not on current commit" % version)
 
     commit_id = git_commit_id()
-
     res = requests.get(
         "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
     )
@@ -635,7 +634,7 @@ def build_pip(context, version):
         or (
             next_maj == current_maj
             and next_min == current_min
-            and next_sub == current_sub + 1
+            and next_sub >= current_sub + 1
         )
     ):
 
@@ -702,12 +701,14 @@ def build_log_push(build_info, include_private_scenes):
 def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
-    zipf = zipfile.ZipFile(archive_name, "w", zipfile.ZIP_DEFLATED)
+    zip_buf = io.BytesIO()
+    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
+    zip_buf.seek(0)
+    zip_data = zip_buf.read()
 
-    build_info["sha256"] = build_sha256(archive_name)
-    push_build(archive_name, build_info["sha256"], include_private_scenes)
+    push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
     threading.current_thread().success = True
@@ -818,10 +819,12 @@ def pytest_s3_object(commit_id):
     return s3.Object(PUBLIC_S3_BUCKET, pytest_key)
 
 
-@task
-def ci_pytest(context):
+def ci_pytest(build):
     import requests
 
+    logger.info(
+        "running pytest for %s %s" % (build["branch"], build["commit_id"])
+    )
     commit_id = git_commit_id()
 
     s3_obj = pytest_s3_object(commit_id)
@@ -829,11 +832,12 @@ def ci_pytest(context):
         s3_obj.bucket_name,
         s3_obj.key,
     )
-    print("pytest url %s" % s3_pytest_url)
+    logger.info("pytest url %s" % s3_pytest_url)
     res = requests.get(s3_pytest_url)
 
     if res.status_code == 200 and res.json()["success"]:
         # if we already have a successful pytest, skip running
+        logger.info("pytest results already exist for %s %s" % (build['branch'], build['commit_id']))
         return
 
     proc = subprocess.run(
@@ -848,6 +852,9 @@ def ci_pytest(context):
 
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType="application/json"
+    )
+    logger.info(
+        "finished pytest for %s %s" % (build["branch"], build["commit_id"])
     )
 
 
@@ -873,43 +880,48 @@ def ci_build(context):
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )
 
+            private_scene_options = [False]
             if build["branch"] == "erick/challenge2021":
                 os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
+            elif build["branch"] == "erick/challenge2021-eval":
+                private_scene_options = [False, True]
 
             procs = []
-            for arch in ["OSXIntel64", "Linux64"]:
-                logger.info(
-                    "starting build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                if ai2thor.build.Build(
-                    arch, build["commit_id"], include_private_scenes=False
-                ).exists():
+            for include_private_scenes in private_scene_options:
+                for arch in ["OSXIntel64", "Linux64"]:
                     logger.info(
-                        "found build for commit %s %s" % (build["commit_id"], arch)
+                        "starting build for %s %s %s"
+                        % (arch, build["branch"], build["commit_id"])
                     )
-                    continue
-                # this is done here so that when a tag build request arrives and the commit_id has already
-                # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                link_build_cache(build["branch"])
-                p = ci_build_arch(arch, False)
-                logger.info(
-                    "finished build for %s %s %s"
-                    % (arch, build["branch"], build["commit_id"])
-                )
-                procs.append(p)
+                    if ai2thor.build.Build(
+                        arch, build["commit_id"], include_private_scenes=include_private_scenes
+                    ).exists():
+                        logger.info(
+                            "found build for commit %s %s" % (build["commit_id"], arch)
+                        )
+                    else:
+                        # this is done here so that when a tag build request arrives and the commit_id has already
+                        # been built, we avoid bootstrapping the cache since we short circuited on the line above
+                        link_build_cache(build["branch"])
 
-            # don't run tests for a tag since results should exist
-            # for the branch commit
-            if build["tag"] is None:
+                        p = ci_build_arch(arch, include_private_scenes)
 
-                logger.info(
-                    "running pytest for %s %s" % (build["branch"], build["commit_id"])
-                )
-                ci_pytest(context)
-                logger.info(
-                    "finished pytest for %s %s" % (build["branch"], build["commit_id"])
-                )
+                        logger.info(
+                            "finished build for %s %s %s"
+                            % (arch, build["branch"], build["commit_id"])
+                        )
+                        procs.append(p)
+
+                    # don't run tests for a tag since results should exist
+                    # for the branch commit
+                    if arch == 'OSXIntel64' and build["tag"] is None:
+                        pytest_proc = multiprocessing.Process(
+                            target=ci_pytest,
+                            args=(build,)
+                        )
+                        pytest_proc.start()
+                        procs.append(pytest_proc)
+
 
             # give the travis poller time to see the result
             for i in range(6):
@@ -920,18 +932,9 @@ def ci_build(context):
                     break
                 time.sleep(10)
 
-            if build["branch"] == "master":
-                logger.info(
-                    "starting webgl build deploy %s %s"
-                    % (build["branch"], build["commit_id"])
-                )
-                webgl_build_deploy_demo(
-                    context, verbose=True, content_addressable=True, force=True
-                )
-                logger.info(
-                    "finished webgl build deploy %s %s"
-                    % (build["branch"], build["commit_id"])
-                )
+            # allow webgl to be force deployed with #webgl-deploy in the commit comment
+            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+                ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
                 if p:
@@ -942,6 +945,15 @@ def ci_build(context):
                     p.join()
 
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
+
+        # if we are in off hours, allow the nightly webgl build to be performed
+        elif datetime.datetime.now().hour in [2,3,4]:
+            clean()
+            subprocess.check_call("git checkout master", shell=True)
+            subprocess.check_call("git pull origin master", shell=True)
+            if current_webgl_autodeploy_commit_id() != git_commit_id():
+                ci_build_webgl(context, git_commit_id())
+
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
@@ -949,9 +961,27 @@ def ci_build(context):
 
     lock_f.close()
 
+@task
+def ci_build_webgl(context, commit_id):
+    branch = 'master'
+    logger.info(
+        "starting auto-build webgl build deploy %s %s"
+        % (branch, commit_id)
+    )
+    # linking here in the event we didn't link above since the builds had 
+    # already completed. Omitting this will cause the webgl build
+    # to import all assets from scratch into a new unity/Library
+    link_build_cache(branch)
+    webgl_build_deploy_demo(
+        context, verbose=True, content_addressable=True, force=True
+    )
+    logger.info(
+        "finished webgl build deploy %s %s"
+        % (branch, commit_id)
+    )
+    update_webgl_autodeploy_commit_id(commit_id)
 
 def ci_build_arch(arch, include_private_scenes=False):
-    from multiprocessing import Process
 
     commit_id = git_commit_id()
     unity_path = "unity"
@@ -965,10 +995,14 @@ def ci_build_arch(arch, include_private_scenes=False):
     proc = None
     try:
         build_info["log"] = "%s.log" % (build_name,)
-        _build(unity_path, arch, build_dir, build_name)
+        env = {}
+        if include_private_scenes:
+            env["INCLUDE_PRIVATE_SCENES"] = "true"
+
+        _build(unity_path, arch, build_dir, build_name, env)
 
         print("pushing archive")
-        proc = Process(
+        proc = multiprocessing.Process(
             target=archive_push,
             args=(
                 unity_path,
@@ -1048,7 +1082,6 @@ def poll_ci_build(context):
 
 @task
 def build(context, local=False):
-    from multiprocessing import Process
     from ai2thor.build import platform_map
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
@@ -1742,7 +1775,7 @@ cache_seconds = 31536000
 @task
 def webgl_deploy(
     ctx,
-    bucket="ai2-thor-webgl-public",
+    bucket=PUBLIC_WEBGL_S3_BUCKET,
     prefix="local",
     source_dir="builds",
     target_dir="",
@@ -1909,6 +1942,22 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
     if verbose:
         print("Deployed all scenes to bucket's root.")
 
+def current_webgl_autodeploy_commit_id():
+    s3 = boto3.resource("s3")
+    try:
+        res = s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').get()
+        return json.loads(res['Body'].read())['commit_id']
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "NoSuchKey":
+            return None
+        else:
+            raise e
+
+def update_webgl_autodeploy_commit_id(commit_id):
+    s3 = boto3.resource("s3")
+    s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').put(
+        Body=json.dumps(dict(timestamp=time.time(), commit_id=commit_id)), ContentType="application/json"
+    )
 
 @task
 def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):

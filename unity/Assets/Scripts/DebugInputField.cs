@@ -1355,6 +1355,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "echoes":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeAllObjectsStationary";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "gip":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();

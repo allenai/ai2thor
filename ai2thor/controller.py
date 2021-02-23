@@ -23,15 +23,14 @@ import re
 import os
 import platform
 import uuid
-import tty
 import sys
-import termios
 from functools import lru_cache
 
 
 import numpy as np
 import ai2thor.wsgi_server
 import ai2thor.fifo_server
+from ai2thor.exceptions import UnityCrashException, RestartError
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 import ai2thor.build
@@ -343,16 +342,6 @@ RECEPTACLE_OBJECTS = {
 }
 
 
-def get_term_character():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
-
 
 def process_alive(pid):
     """
@@ -410,6 +399,7 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+        self.x_display = x_display
 
         self.last_event = None
         self.scene = None
@@ -626,6 +616,7 @@ class Controller(object):
         if agent_mode.lower() == "bot":
             self.initialization_parameters["agentMode"] = "locobot"
             warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+
         if (
             scene in self.robothor_scenes() and
             self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
@@ -753,6 +744,8 @@ class Controller(object):
             self._prune_release(release)
 
     def next_interact_command(self):
+        # NOTE: Leave this here because it is incompatible with Windows.
+        from ai2thor.interact import get_term_character
         current_buffer = ""
         while True:
             commands = self._interact_commands
@@ -852,12 +845,28 @@ class Controller(object):
         }
         for old, new in changed_parameter_names.items():
             if old in action:
-                warnings.warn(old + " has been renamed to " + new)
+                # warnings.warn(old + " has been renamed to " + new)
                 action[new] = action[old]
-                del action[old]
+                # not deleting to allow for older builds to continue to work
+                # del action[old]
 
         self.server.send(action)
-        self.last_event = self.server.receive()
+        try:
+            self.last_event = self.server.receive()
+        except UnityCrashException as e:
+            self.server.stop()
+            self.server = None
+            # we don't need to pass port or host, since this Exception
+            # is only thrown from the FifoServer, start_unity is also
+            # not passed since Unity would have to have been started
+            # for this to be thrown
+            message = "Restarting unity due to crash: %s" % e
+            warnings.warn(message)
+            self.start(width=self.width, height=self.height, x_display=self.x_display)
+            self.reset()
+            raise RestartError(message)
+
+
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
