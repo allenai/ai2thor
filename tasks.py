@@ -1033,13 +1033,9 @@ def poll_ci_build(context):
     for i in range(360):
         missing = False
         for arch in platform_map.keys():
-            if (i % 5) == 0:
-                print("checking %s for commit id %s" % (arch, commit_id))
             commit_build = ai2thor.build.Build(arch, commit_id, False)
             try:
-                if commit_build.log_exists():
-                    print("log exists %s" % commit_id)
-                else:
+                if not commit_build.log_exists():
                     missing = True
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
