@@ -1008,7 +1008,8 @@ def test_get_reachable_positions(controller):
     controller.reset("FloorPlan28")
 
     event = controller.step("GetReachablePositions")
-    assert len(event.metadata["actionReturn"]) == 116
+    num_reachable_aligned = event.metadata["actionReturn"]
+    assert 100 < num_reachable_aligned < 125
 
     controller.step(
         action="TeleportFull",
@@ -1018,10 +1019,16 @@ def test_get_reachable_positions(controller):
         standing=True,
     )
     event = controller.step("GetReachablePositions")
-    assert len(event.metadata["actionReturn"]) == 116
+    num_reachable_aligned_after_teleport = event.metadata["actionReturn"]
+    assert num_reachable_aligned == num_reachable_aligned_after_teleport
 
     event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
-    assert len(event.metadata["actionReturn"]) == 111
+    num_reachable_unaligned = event.metadata["actionReturn"]
+    assert 100 < num_reachable_unaligned < 125
+
+    assert (
+        num_reachable_unaligned != num_reachable_aligned
+    ), "Number of reachable positions should differ when using `directionsRelativeAgent`"
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
