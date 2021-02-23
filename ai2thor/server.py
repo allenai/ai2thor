@@ -254,7 +254,11 @@ class Event:
     @property
     @lru_cache
     def metadata(self):
-        return MetadataDict(child_metadata=self._metadata, key_sequence=tuple())
+        return MetadataDict(
+            child_metadata=self._metadata,
+            key_sequence=tuple(),
+            cached_key_sequences=dict(),
+        )
 
     @property
     def image_data(self):
