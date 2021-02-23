@@ -1004,6 +1004,27 @@ def test_get_interactable_poses(controller):
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_reachable_positions(controller):
+    controller.reset("FloorPlan28")
+
+    event = controller.step("GetReachablePositions")
+    assert len(event.metadata["actionReturn"]) == 116
+
+    controller.step(
+        action="TeleportFull",
+        position=dict(x=-1, y=0.900998235, z=-1.25),
+        rotation=dict(x=0, y=49.11111, z=0),
+        horizon=0,
+        standing=True,
+    )
+    event = controller.step("GetReachablePositions")
+    assert len(event.metadata["actionReturn"]) == 116
+
+    event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
+    assert len(event.metadata["actionReturn"]) == 111
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_get_object_in_frame(controller):
     controller.reset(scene="FloorPlan28", agentMode="default")
     event = controller.step(
