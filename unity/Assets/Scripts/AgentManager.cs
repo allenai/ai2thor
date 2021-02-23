@@ -1589,7 +1589,12 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(string jsonMessage) {
-        this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
+        try {
+            this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
+        } catch (Newtonsoft.Json.JsonReaderException ex) {
+            Debug.LogError("Error parsing invalid json: " + jsonMessage + " " + ex);
+            throw ex;
+        }
     }
 
     public System.Object ToObject(Type objectType) {
