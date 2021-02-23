@@ -84,7 +84,9 @@ def unique_rows(arr, return_index=False, return_inverse=False):
 
 
 class MetadataList(list):
-    def __init__(self, child_metadata: dict, key_sequence: list):
+    def __init__(
+        self, child_metadata: dict, key_sequence: tuple, cached_key_sequences: dict
+    ):
         """
         Child_metadata stores the metadata dict after indexing into it
         from each key in key_sequence. For instance, if key_sequence is
@@ -93,25 +95,33 @@ class MetadataList(list):
         super().__init__(child_metadata)
         self._child_metadata = child_metadata
         self._key_sequence = key_sequence
+        self._cached_key_sequences = cached_key_sequences
 
     def __getitem__(self, key):
+        key_sequence = self._key_sequence + (key,)
+        if key_sequence in self._cached_key_sequences:
+            return self._cached_key_sequences[key_sequence]
+
         # Let Python handle the KeyError
         value = self._child_metadata[key]
 
         if isinstance(value, dict):
-            return MetadataDict(
-                child_metadata=value, key_sequence=self._key_sequence + [key]
+            value = MetadataDict(
+                child_metadata=value, key_sequence=self._key_sequence + (key,)
             )
         elif isinstance(value, list):
-            return MetadataList(
-                child_metadata=value, key_sequence=self._key_sequence + [key]
+            value = MetadataList(
+                child_metadata=value, key_sequence=self._key_sequence + (key,)
             )
 
+        self._cached_key_sequences[key_sequence] = value
         return value
 
 
 class MetadataDict(dict):
-    def __init__(self, child_metadata: dict, key_sequence: list):
+    def __init__(
+        self, child_metadata: dict, key_sequence: tuple, cached_key_sequences: dict
+    ):
         """
         Child_metadata stores the metadata dict after indexing into it
         from each key in key_sequence. For instance, if key_sequence is
@@ -120,15 +130,20 @@ class MetadataDict(dict):
         super().__init__(child_metadata)
         self._child_metadata = child_metadata
         self._key_sequence = key_sequence
+        self._cached_key_sequences = cached_key_sequences
 
     def __getitem__(self, key):
+        key_sequence = self._key_sequence + (key,)
+        if key_sequence in self._cached_key_sequences:
+            return self._cached_key_sequences[key_sequence]
+
         # This automatically throws Python's default exception if key is not
         # in the metadata. So, a separate check for key in self._child_metadata,
         # is unnecessary.
         value = self._child_metadata[key]
 
         # deprecation tests
-        if self._key_sequence == [] and key == "reachablePositions":
+        if len(self._key_sequence) == 0 and key == "reachablePositions":
             warnings.warn(
                 "The key 'reachablePositions' is deprecated and has been remapped to 'actionReturn'."
             )
@@ -153,13 +168,18 @@ class MetadataDict(dict):
             # there are currently no deprecation tests beyond this point!
             return value
         elif isinstance(value, dict):
-            return MetadataDict(
-                child_metadata=value, key_sequence=self._key_sequence + [key]
+            value = MetadataDict(
+                child_metadata=value,
+                key_sequence=self._key_sequence + (key,),
+                cached_key_sequences=self._cached_key_sequences,
             )
         elif isinstance(value, list):
-            return MetadataList(
-                child_metadata=value, key_sequence=self._key_sequence + [key]
+            value = MetadataList(
+                child_metadata=value,
+                key_sequence=self._key_sequence + (key,),
+                cached_key_sequences=self._cached_key_sequences,
             )
+        self._cached_key_sequences[key_sequence] = value
         return value
 
 
@@ -228,7 +248,7 @@ class Event:
     @property
     @lru_cache
     def metadata(self):
-        return MetadataDict(child_metadata=self._metadata, key_sequence=[])
+        return MetadataDict(child_metadata=self._metadata, key_sequence=tuple())
 
     @property
     def image_data(self):
