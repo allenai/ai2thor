@@ -19,7 +19,7 @@ class NumpyAwareEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if isinstance(obj, np.generic):
-            return np.asscalar(obj)
+            return obj.item()
         return super(NumpyAwareEncoder, self).default(obj)
 
 
