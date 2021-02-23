@@ -34,16 +34,28 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
 # get with timeout to allow quit
 def queue_get(que, unity_proc=None):
     res = None
+    attempts = 0
+    max_attempts = 20
     while True:
         try:
             res = que.get(block=True, timeout=0.5)
             break
         except Empty:
+            attempts += 1
+
             # we poll here for the unity proc in the event that it has
             # exited otherwise we would wait indefinetly for the queue
-            if unity_proc and unity_proc.poll() is not None:
-                raise Exception("Unity process exited %s" % unity_proc.returncode)
-            pass
+            if unity_proc:
+                if unity_proc.poll() is not None:
+                    raise Exception("Unity process exited %s" % unity_proc.returncode)
+
+                # no Action should take > 10s to complete, so we assume that
+                # something has gone wrong within Unity
+                # max_attempts can also be triggered if an Exception is thrown from 
+                # within the thread used to run the wsgi server, in which case
+                # Unity will receive a corrupted response 
+                if attempts >= max_attempts:
+                    raise Exception("Could not get a message from the queue after %s attempts " % attempts)
     return res
 
 class BufferedIO(object):
@@ -224,7 +236,7 @@ class WsgiServer(ai2thor.server.Server):
         self.server_thread.start()
 
     def receive(self):
-        return queue_get(self.request_queue, self.unity_proc)
+        return queue_get(self.request_queue, unity_proc=self.unity_proc)
     
     def send(self, action):
         assert self.request_queue.empty()
