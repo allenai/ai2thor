@@ -1008,7 +1008,7 @@ def test_get_reachable_positions(controller):
     controller.reset("FloorPlan28")
 
     event = controller.step("GetReachablePositions")
-    num_reachable_aligned = event.metadata["actionReturn"]
+    num_reachable_aligned = len(event.metadata["actionReturn"])
     assert 100 < num_reachable_aligned < 125
 
     controller.step(
@@ -1019,11 +1019,11 @@ def test_get_reachable_positions(controller):
         standing=True,
     )
     event = controller.step("GetReachablePositions")
-    num_reachable_aligned_after_teleport = event.metadata["actionReturn"]
+    num_reachable_aligned_after_teleport = len(event.metadata["actionReturn"])
     assert num_reachable_aligned == num_reachable_aligned_after_teleport
 
     event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
-    num_reachable_unaligned = event.metadata["actionReturn"]
+    num_reachable_unaligned = len(event.metadata["actionReturn"])
     assert 100 < num_reachable_unaligned < 125
 
     assert (
