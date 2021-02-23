@@ -256,7 +256,9 @@ class Event:
         if self._cached_metadata is not None:
             return self._cached_metadata
         self._cached_metadata = MetadataDict(
-            child_metadata=self._metadata, key_sequence=[]
+            child_metadata=self._metadata,
+            key_sequence=tuple(),
+            cached_key_sequences=dict()
         )
         return self._cached_metadata
 
