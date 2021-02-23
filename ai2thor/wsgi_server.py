@@ -35,7 +35,7 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
 def queue_get(que, unity_proc=None):
     res = None
     attempts = 0
-    max_attempts = 20
+    max_attempts = 200
     while True:
         try:
             res = que.get(block=True, timeout=0.5)
@@ -49,7 +49,7 @@ def queue_get(que, unity_proc=None):
                 if unity_proc.poll() is not None:
                     raise Exception("Unity process exited %s" % unity_proc.returncode)
 
-                # no Action should take > 10s to complete, so we assume that
+                # no Action should take > 100s to complete, so we assume that
                 # something has gone wrong within Unity
                 # max_attempts can also be triggered if an Exception is thrown from 
                 # within the thread used to run the wsgi server, in which case
