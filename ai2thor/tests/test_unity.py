@@ -934,7 +934,7 @@ def test_teleport(controller):
         for action in ["Teleport", "TeleportFull"]:
             event = controller.step(
                 action=action,
-                position=dict(x=-1.5, y=0.9, z=1.5),
+                position=dict(x=-1.5, y=0.9, z=-1.5),
                 rotation=dict(x=0, y=90, z=0),
                 horizon=30
             )
@@ -942,7 +942,7 @@ def test_teleport(controller):
             try:
                 event = controller.step(
                     action=action,
-                    position=dict(x=-1.5, y=0.9, z=1.5),
+                    position=dict(x=-1.5, y=0.9, z=-1.5),
                     rotation=dict(x=0, y=90, z=0),
                     horizon=30,
                     standing=True
