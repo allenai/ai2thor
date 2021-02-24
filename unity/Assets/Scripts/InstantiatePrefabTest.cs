@@ -8,11 +8,13 @@ using System.Linq;
 //this script manages the spawning/placing of sim objects in the scene
 public class InstantiatePrefabTest : MonoBehaviour
 {
-
 	public GameObject[] prefabs = null;
 	private int spawnCount = 0;
-
+    
+    #if UNITY_EDITOR
 	private bool m_Started = false;
+    #endif
+
 	Vector3 gizmopos;
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
@@ -21,28 +23,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
-    // public GameObject TestPlaceObject;
-    // public Contains Testreceptbox;
-
     private List<Vector3> SpawnCorners = new List<Vector3>();
-
-    // //uses the PlaceIn action
-    // //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
-    // private List<SimObjType> InReceptacles = new List<SimObjType>() 
-    // {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
-
-    // //uses the PlaceOn action
-    // //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
-    // //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
-    // private List<SimObjType> OnReceptacles = new List <SimObjType>()
-    // {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-    //  SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
-
-    // //Uses the PlaceIn action
-    // //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
-    // //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
-    // private List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    // { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
 
 	// Use this for initialization
 	void Start()
@@ -75,7 +56,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 					so = go.GetComponentInChildren<SimObjPhysics>();
 				}
 
-				so.UniqueID = objectId;
+				so.ObjectID = objectId;
 				return so;
 			}
 		}
@@ -174,7 +155,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //ok make sure we did actually spawn something now, and give it an Id number
         if (simObj)
         {
-            simObj.uniqueID = objectType + "|" + spawnCount.ToString();
+            simObj.objectID = objectType + "|" + spawnCount.ToString();
             return simObj;
         }
 
@@ -185,7 +166,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
     //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
     //be randomized so that the random spawn is... random
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright, Dictionary<SimObjType, int> minFreePerReceptacleType)
+    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright)
     {
         if(rsps == null)
         {
@@ -200,31 +181,21 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
 
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
+
+        //only add spawn points to try if the point's parent is not an object specific receptacle, that is handled in RandomSpawnRequiredSceneObjects
         foreach (ReceptacleSpawnPoint p in rsps) {
             if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 goodRsps.Add(p);
             }
         }
-        // Make a seed that is pseudo-random (different for different objects even in the same area) but also reproducible.
-        //int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
 
+        //try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
-            SimObjType parentType = p.ParentSimObjPhys.ObjType;
-            if (minFreePerReceptacleType != null && minFreePerReceptacleType.ContainsKey(parentType) && goodRsps.Count < minFreePerReceptacleType[parentType])
-            {
-                return false;
-            }
-
-            //if this is an Object Specific Receptacle, stop this check right now! I mean it!
-            //Placing objects in/on an Object Specific Receptacle uses different logic to place the
-            //object at the Attachemnet point rather than in the spawn area, so stop this right now!
-
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
             {
-                //found a place to spawn! neato, return success
                 return true;
             }
             tries += 1;
@@ -233,10 +204,65 @@ public class InstantiatePrefabTest : MonoBehaviour
                 break;
             }
         }
+
         //couldn't find valid places to spawn
         return false;
-       
     }
+
+    //same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
+
+    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright)
+    {
+        
+        if(rsps == null)
+        {
+            #if UNITY_EDITOR
+            Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
+            #endif
+            return false; //uh, there was nothing in the List for some reason, so failed to spawn
+        }
+
+        if (rsps.Count == 0)
+        {
+            return false;
+        }
+
+        List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
+        foreach (ReceptacleSpawnPoint p in rsps) {
+            if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+                (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+                goodRsps.Add(p);
+            }
+        }
+
+        int tries = 0;
+        foreach (ReceptacleSpawnPoint p in goodRsps)
+        {
+            //if this is an Object Specific Receptacle, stop this check right now! I mean it!
+            //Placing objects in/on an Object Specific Receptacle uses different logic to place the
+            //object at the Attachemnet point rather than in the spawn area, so stop this right now!
+
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
+            {
+                //check to make sure the placed object is within the viewport
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                if(primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop))
+                {
+                    return true;
+                }
+            }
+
+            tries += 1;
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
+            {
+                break;
+            }
+        }
+
+        //couldn't find valid places to spawn
+        return false;
+    }
+
 
     //use this to keep track of a Rotation and Distance for use in PlaceObject
     public class RotationAndDistanceValues
@@ -363,6 +389,11 @@ public class InstantiatePrefabTest : MonoBehaviour
             //if spawn area is clear, spawn it and return true that we spawned it
             if(CheckSpawnArea(sop, targetPosition, quat.rotation, false))
             {
+
+                //translate position of the target sim object to the rsp.Point and offset in local y up
+                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.rotation = quat.rotation;
+                
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
 
@@ -445,22 +476,27 @@ public class InstantiatePrefabTest : MonoBehaviour
                 }
                 sop.isInAgentHand = false;//set agent hand flag
 
-                #if UNITY_EDITOR
-                //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                #endif       
+                // #if UNITY_EDITOR
+                // Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
+                // #endif
+
                 return true;
             }
         }
        
         //reset rotation if no valid spawns found
-        //sop.transform.rotation = originalRot;
         //oh now we couldn't spawn it, all the spawn areas were not clear
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;
         return false;
 	}
 
-    private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
+	//IMPORTANT INFO!//
+    //The prefab MUST have a Bounding Box with zeroed out transform, rotation, and 1, 1, 1 scale
+    //All adjustments to the Bounding Box must be done on the collider only using the
+    //"Edit Collider" button if you need to change the size
+    //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
+    public bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
 		int layermask;
 
@@ -479,6 +515,22 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 0); //(1 << 8) | (1 << 10);
 		}
 
+        //get list of all active colliders of sim object, then toggle them off for now
+        //disable all colliders of the object being placed
+        List<Collider> colsToDisable = new List<Collider>();
+        foreach(Collider g in simObj.MyColliders)
+        {
+            //only track this collider if it's enabled by default
+            //some objects, like houseplants, might have colliders in their simObj.MyColliders that are disabled
+            if(g.enabled)
+            colsToDisable.Add(g);
+        }
+
+        //disable collision before moving to check the spawn area
+        foreach(Collider c in colsToDisable)
+        {
+            c.enabled = false;
+        }
 
         //track original position and rotation in case we need to reset
         Vector3 originalPos = simObj.transform.position;
@@ -559,89 +611,5 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
     }
 #endif
-
-
-    // private bool CheckSpawnAreaOLD(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
-    // {
-    //     //create a dummy gameobject that is instantiated then rotated to get the actual
-    //     //location and orientation of the spawn area
-    //     Transform placeholderPosition = new GameObject("placeholderPosition").transform;
-
-    //     //this is now in the exact position the object will spawn at
-    //     placeholderPosition.transform.position = position;
-
-    //     GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
-    //     placeBox.transform.SetParent(placeholderPosition);
-    //     placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
-
-    //     //rotate it after creating the offset so that the offset's local position is maintained
-    //     placeholderPosition.transform.rotation = rotation;
-
-
-	// 	int layermask;
-
-	// 	//first do a check to see if the area is clear
-
-    //     //if spawning in the agent's hand, ignore collisions with the Agent
-	// 	if(spawningInHand)
-	// 	{
-	// 		layermask = 1 << 8;
-	// 	}
-
-    //     //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
-	// 	else
-	// 	{
-	// 		layermask = (1 << 8) | (1 << 10);
-	// 	}
-
-    //     BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
-    //     pbbc.isTrigger = true;
-
-    //     Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
-    //                                                  placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
-    //                                                  layermask, QueryTriggerInteraction.Ignore);
-
-    //     //keep track of all 8 corners of the OverlapBox
-    //     List<Vector3> corners = new List<Vector3>();
-    //     //bottom forward right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //bottom forward left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //bottom back left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
-    //     //bottom back right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
-
-    //     //top forward right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //top forward left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //top back left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
-    //     //top back right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
-
-    //     SpawnCorners = corners;
-
-    //     #if UNITY_EDITOR
-	// 	m_Started = true;     
-    //     gizmopos = placeBox.transform.TransformPoint(pbbc.center); 
-    //     //gizmopos = inst.transform.position;
-    //     gizmoscale = pbbc.size;
-    //     //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
-    //     gizmoquaternion = placeholderPosition.transform.rotation;
-    //     #endif
-
-    //     //destroy the dummy object, we don't need it anymore
-    //     Destroy(placeholderPosition.gameObject);
-
-    //     //if a collider was hit, then the space is not clear to spawn
-	// 	if (hitColliders.Length > 0)
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
 
 }

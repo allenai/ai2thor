@@ -1,0 +1,666 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "objects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "object",
+                        "properties": {
+                            "x": {
+                                "type": "number"
+                            },
+                            "y": {
+                                "type": "number"
+                            },
+                            "z": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "x",
+                            "y",
+                            "z"
+                        ]
+                    },
+                    "rotation": {
+                        "type": "object",
+                        "properties": {
+                            "x": {
+                                "type": "number"
+                            },
+                            "y": {
+                                "type": "number"
+                            },
+                            "z": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "x",
+                            "y",
+                            "z"
+                        ]
+                    },
+                    "visible": {
+                        "type": "boolean"
+                    },
+                    "obstructed": {
+                        "type": "boolean"
+                    },
+                    "receptacle": {
+                        "type": "boolean"
+                    },
+                    "toggleable": {
+                        "type": "boolean"
+                    },
+                    "isToggled": {
+                        "type": "boolean"
+                    },
+                    "breakable": {
+                        "type": "boolean"
+                    },
+                    "isBroken": {
+                        "type": "boolean"
+                    },
+                    "canFillWithLiquid": {
+                        "type": "boolean"
+                    },
+                    "isFilledWithLiquid": {
+                        "type": "boolean"
+                    },
+                    "dirtyable": {
+                        "type": "boolean"
+                    },
+                    "isDirty": {
+                        "type": "boolean"
+                    },
+                    "canBeUsedUp": {
+                        "type": "boolean"
+                    },
+                    "isUsedUp": {
+                        "type": "boolean"
+                    },
+                    "cookable": {
+                        "type": "boolean"
+                    },
+                    "isCooked": {
+                        "type": "boolean"
+                    },
+                    "ObjectTemperature": {
+                        "type": "string"
+                    },
+                    "canChangeTempToHot": {
+                        "type": "boolean"
+                    },
+                    "canChangeTempToCold": {
+                        "type": "boolean"
+                    },
+                    "sliceable": {
+                        "type": "boolean"
+                    },
+                    "isSliced": {
+                        "type": "boolean"
+                    },
+                    "openable": {
+                        "type": "boolean"
+                    },
+                    "isOpen": {
+                        "type": "boolean"
+                    },
+                    "pickupable": {
+                        "type": "boolean"
+                    },
+                    "isPickedUp": {
+                        "type": "boolean"
+                    },
+                    "moveable": {
+                        "type": "boolean"
+                    },
+                    "mass": {
+                        "type": "number"
+                    },
+                    "salientMaterials": {
+                        "anyOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "receptacleObjectIds": {
+                        "anyOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "distance": {
+                        "type": "number"
+                    },
+                    "objectType": {
+                        "type": "string"
+                    },
+                    "objectId": {
+                        "type": "string"
+                    },
+                    "parentReceptacles": {
+                        "anyOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "isMoving": {
+                        "type": "boolean"
+                    },
+                    "axisAlignedBoundingBox": {
+                        "type": "object",
+                        "properties": {
+                            "cornerPoints": {
+                                "type": "array",
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
+                            "center": {
+                                "type": "object",
+                                "properties": {
+                                    "x": {
+                                        "type": "number"
+                                    },
+                                    "y": {
+                                        "type": "number"
+                                    },
+                                    "z": {
+                                        "type": "number"
+                                    }
+                                },
+                                "required": [
+                                    "x",
+                                    "y",
+                                    "z"
+                                ]
+                            },
+                            "size": {
+                                "type": "object",
+                                "properties": {
+                                    "x": {
+                                        "type": "number"
+                                    },
+                                    "y": {
+                                        "type": "number"
+                                    },
+                                    "z": {
+                                        "type": "number"
+                                    }
+                                },
+                                "required": [
+                                    "x",
+                                    "y",
+                                    "z"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "center",
+                            "cornerPoints",
+                            "size"
+                        ]
+                    },
+                    "objectOrientedBoundingBox": {
+                        "anyOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "cornerPoints": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "cornerPoints"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "ObjectTemperature",
+                    "axisAlignedBoundingBox",
+                    "breakable",
+                    "canBeUsedUp",
+                    "canChangeTempToCold",
+                    "canChangeTempToHot",
+                    "canFillWithLiquid",
+                    "cookable",
+                    "dirtyable",
+                    "distance",
+                    "isBroken",
+                    "isCooked",
+                    "isDirty",
+                    "isFilledWithLiquid",
+                    "isMoving",
+                    "isOpen",
+                    "isPickedUp",
+                    "isSliced",
+                    "isToggled",
+                    "isUsedUp",
+                    "mass",
+                    "moveable",
+                    "name",
+                    "objectId",
+                    "objectOrientedBoundingBox",
+                    "objectType",
+                    "obstructed",
+                    "openable",
+                    "parentReceptacles",
+                    "pickupable",
+                    "position",
+                    "receptacle",
+                    "receptacleObjectIds",
+                    "rotation",
+                    "salientMaterials",
+                    "sliceable",
+                    "toggleable",
+                    "visible"
+                ]
+            }
+        },
+        "isSceneAtRest": {
+            "type": "boolean"
+        },
+        "agent": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "rotation": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "cameraHorizon": {
+                    "type": "number"
+                },
+                "isStanding": {
+                    "type": "boolean"
+                },
+                "inHighFrictionArea": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "cameraHorizon",
+                "inHighFrictionArea",
+                "isStanding",
+                "name",
+                "position",
+                "rotation"
+            ]
+        },
+        "hand": {
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "rotation": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "localPosition": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "localRotation": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                }
+            },
+            "required": [
+                "localPosition",
+                "localRotation",
+                "position",
+                "rotation"
+            ]
+        },
+        "fov": {
+            "type": "number"
+        },
+        "cameraPosition": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ]
+        },
+        "cameraOrthSize": {
+            "type": "number"
+        },
+        "thirdPartyCameras": {
+            "type": "array"
+        },
+        "collided": {
+            "type": "boolean"
+        },
+        "collidedObjects": {
+            "type": "array"
+        },
+        "inventoryObjects": {
+            "type": "array"
+        },
+        "sceneName": {
+            "type": "string"
+        },
+        "lastAction": {
+            "type": "string"
+        },
+        "errorMessage": {
+            "type": "string"
+        },
+        "errorCode": {
+            "type": "null"
+        },
+        "lastActionSuccess": {
+            "type": "boolean"
+        },
+        "screenWidth": {
+            "type": "integer"
+        },
+        "screenHeight": {
+            "type": "integer"
+        },
+        "agentId": {
+            "type": "integer"
+        },
+        "colors": {
+            "type": "null"
+        },
+        "colorBounds": {
+            "type": "null"
+        },
+        "reachablePositions": {
+            "type": "array"
+        },
+        "flatSurfacesOnGrid": {
+            "type": "array"
+        },
+        "distances": {
+            "type": "array"
+        },
+        "normals": {
+            "type": "array"
+        },
+        "isOpenableGrid": {
+            "type": "array"
+        },
+        "segmentedObjectIds": {
+            "type": "array"
+        },
+        "objectIdsInBox": {
+            "type": "array"
+        },
+        "actionIntReturn": {
+            "type": "integer"
+        },
+        "actionFloatReturn": {
+            "type": "number"
+        },
+        "actionStringsReturn": {
+            "type": "array"
+        },
+        "actionFloatsReturn": {
+            "type": "array"
+        },
+        "actionVector3sReturn": {
+            "type": "array"
+        },
+        "visibleRange": {
+            "type": ["object", "null"]
+        },
+        "actionReturn": {
+            "type": ["object", "null"]
+        },
+        "currentTime": {
+            "type": "number"
+        },
+        "sceneBounds": {
+            "type": "object",
+            "properties": {
+                "cornerPoints": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "center": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                },
+                "size": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        },
+                        "z": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "x",
+                        "y",
+                        "z"
+                    ]
+                }
+            },
+            "required": [
+                "center",
+                "cornerPoints",
+                "size"
+            ]
+        }
+    },
+    "required": [
+        "actionFloatReturn",
+        "actionFloatsReturn",
+        "actionIntReturn",
+        "actionReturn",
+        "actionStringsReturn",
+        "actionVector3sReturn",
+        "agent",
+        "agentId",
+        "cameraOrthSize",
+        "cameraPosition",
+        "collided",
+        "collidedObjects",
+        "colorBounds",
+        "colors",
+        "currentTime",
+        "distances",
+        "errorCode",
+        "errorMessage",
+        "flatSurfacesOnGrid",
+        "fov",
+        "hand",
+        "inventoryObjects",
+        "isOpenableGrid",
+        "isSceneAtRest",
+        "lastAction",
+        "lastActionSuccess",
+        "normals",
+        "objectIdsInBox",
+        "objects",
+        "reachablePositions",
+        "sceneBounds",
+        "sceneName",
+        "screenHeight",
+        "screenWidth",
+        "segmentedObjectIds",
+        "thirdPartyCameras",
+        "visibleRange"
+    ]
+}

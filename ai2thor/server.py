@@ -6,43 +6,13 @@ Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
 
-
-import json
-import logging
-import sys
-import os
-import os.path
-
-try:
-    from queue import Empty
-except ImportError:
-    from Queue import Empty
-
-import time
 import warnings
-
-from flask import Flask, request, make_response, abort
-import werkzeug
-import werkzeug.serving
-import werkzeug.http
 import numpy as np
+from enum import Enum
+from ai2thor.util.depth import apply_real_noise, generate_noise_indices
+import json
+import sys
 
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-
-werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
-
-MAX_DEPTH = 5000
-
-# get with timeout to allow quit
-def queue_get(que):
-    res = None
-    while True:
-        try:
-            res = que.get(block=True, timeout=0.5)
-            break
-        except Empty:
-            pass
-    return res
 
 class NumpyAwareEncoder(json.JSONEncoder):
 
@@ -51,32 +21,6 @@ class NumpyAwareEncoder(json.JSONEncoder):
             return np.asscalar(obj)
         return super(NumpyAwareEncoder, self).default(obj)
 
-class BufferedIO(object):
-    def __init__(self, wfile):
-        self.wfile = wfile
-        self.data = []
-
-    def write(self, output):
-        self.data.append(output)
-
-    def flush(self):
-        self.wfile.write(b"".join(self.data))
-        self.wfile.flush()
-
-    def close(self):
-        return self.wfile.close()
-
-    @property
-    def closed(self):
-        return self.wfile.closed
-
-class ThorRequestHandler(werkzeug.serving.WSGIRequestHandler):
-    def run_wsgi(self):
-        old_wfile = self.wfile
-        self.wfile = BufferedIO(self.wfile)
-        result = super(ThorRequestHandler, self).run_wsgi()
-        self.wfile = old_wfile
-        return result
 
 class MultiAgentEvent(object):
 
@@ -128,6 +72,7 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique, inv
     else:
         return unique
+
 
 class Event(object):
     """
@@ -230,25 +175,46 @@ class Event(object):
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
     def _image_depth(self, image_depth_data, **kwargs):
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs)
-        max_spots = image_depth[:,:,0] == 255
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height)
+        depth_format = kwargs['depth_format']
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
-        image_depth_out[max_spots] = 256
-        image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
-        image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
+        multiplier = 1.0
+        if depth_format != DepthFormat.Normalized:
+            multiplier = kwargs['camera_far_plane'] - kwargs['camera_near_plane']
+        elif depth_format == DepthFormat.Millimeters:
+            multiplier *= 1000
+        image_depth_out *= multiplier / 256.0
 
-        return image_depth_out.astype(np.float32)
+        depth_image_float = image_depth_out.astype(np.float32)
 
-    def add_image_depth_meters(self, image_depth_data, **kwargs):
-        # read image depth and convert to mm
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs).reshape(self.screen_height, self.screen_width) * 1000.0
+        if 'add_noise' in kwargs and kwargs['add_noise']:
+            depth_image_float = apply_real_noise(
+                depth_image_float,
+                self.screen_width,
+                indices=kwargs['noise_indices']
+            )
+
+        return depth_image_float
+
+    def add_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
+        multiplier = 1.0
+        camera_far_plane = kwargs.pop('camera_far_plane', 1)
+        camera_near_plane = kwargs.pop('camera_near_plane', 0)
+        if depth_format == DepthFormat.Normalized:
+            multiplier = 1.0 / (camera_far_plane - camera_near_plane)
+        elif depth_format == DepthFormat.Millimeters:
+            multiplier = 1000.0
+
+        image_depth = read_buffer_image(
+            image_depth_data, self.screen_width, self.screen_height, **kwargs
+        ).reshape(self.screen_height, self.screen_width) * multiplier
         self.depth_frame = image_depth.astype(np.float32)
 
     def add_image_depth(self, image_depth_data, **kwargs):
         self.depth_frame = self._image_depth(image_depth_data, **kwargs)
 
-    def add_third_party_image_depth(self, image_depth_data):
-        self.third_party_depth_frames.append(self._image_depth(image_depth_data))
+    def add_third_party_image_depth(self, image_depth_data, **kwargs):
+        self.third_party_depth_frames.append(self._image_depth(image_depth_data, **kwargs))
 
     def add_third_party_image_normals(self, normals_data):
         self.third_party_normals_frames.append(read_buffer_image(normals_data, self.screen_width, self.screen_height))
@@ -313,172 +279,91 @@ class Event(object):
                 return obj
         return None
 
-
-class MultipartFormParser(object):
-
-    @staticmethod
-    def get_boundary(request_headers):
-        for h, value in request_headers:
-            if h == 'Content-Type':
-                ctype, ct_opts = werkzeug.http.parse_options_header(value)
-                boundary = ct_opts['boundary'].encode('ascii')
-                return boundary
-        return None
-
-    def __init__(self, data, boundary):
-
-        self.form = {}
-        self.files = {}
-
-        full_boundary = b'\r\n--' + boundary
-        view = memoryview(data)
-        i = data.find(full_boundary)
-        while i >= 0:
-            next_offset = data.find(full_boundary, i + len(full_boundary))
-            if next_offset < 0:
-                break
-            headers_offset = i + len(full_boundary) + 2
-            body_offset = data.find(b'\r\n\r\n', headers_offset)
-            raw_headers = view[headers_offset: body_offset]
-            body = view[body_offset + 4: next_offset]
-            i = next_offset
-
-            headers = {}
-            for header in raw_headers.tobytes().decode('ascii').strip().split("\r\n"):
-
-                k,v = header.split(':')
-                headers[k.strip()] = v.strip()
-
-            ctype, ct_opts = werkzeug.http.parse_options_header(headers['Content-Type'])
-            cdisp, cd_opts = werkzeug.http.parse_options_header(headers['Content-disposition'])
-            assert cdisp == 'form-data'
-
-            if 'filename' in cd_opts:
-                if cd_opts['name'] not in self.files:
-                    self.files[cd_opts['name']] = []
-
-                self.files[cd_opts['name']].append(body)
-
-            else:
-                if ctype == 'text/plain' and 'charset' in ct_opts:
-                    body = body.tobytes().decode(ct_opts['charset'])
-                if cd_opts['name'] not in self.form:
-                    self.form[cd_opts['name']] = []
-
-                self.form[cd_opts['name']].append(body)
-
+class DepthFormat(Enum):
+    Meters = 0,
+    Normalized = 1,
+    Millimeters = 2
 
 class Server(object):
 
-    def __init__(self, request_queue, response_queue, host, port=0, threaded=False):
-
-        app = Flask(__name__,
-                    template_folder=os.path.realpath(
-                        os.path.join(
-                            os.path.dirname(os.path.abspath(__file__)), '..', 'templates')))
-
-        self.image_buffer = None
-
-        self.app = app
-        self.client_token = None
-        self.subscriptions = []
-        self.app.config.update(PROPAGATE_EXCEPTIONS=False, JSONIFY_PRETTYPRINT_REGULAR=False)
-        self.port = port
-        self.last_rate_timestamp = time.time()
-        self.frame_counter = 0
-        self.debug_frames_per_interval = 50
-        self.xwindow_id = None
-        self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded, request_handler=ThorRequestHandler)
-        # used to ensure that we are receiving frames for the action we sent
+    def __init__(self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False):
+        self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
+        self.noise_indices = None
+        self.camera_near_plane = 0.1
+        self.camera_far_plane = 20.0
         self.sequence_id = 0
-        self.last_event = None
+        self.started = False
+        self.client_token = None
 
-        @app.route('/ping', methods=['get'])
-        def ping():
-            return 'pong'
+        if add_depth_noise:
+            assert width == height,\
+                "Noise supported with square dimension images only."
+            self.noise_indices = generate_noise_indices(width)
 
-        @app.route('/train', methods=['post'])
-        def train():
+    def set_init_params(self, init_params):
+        self.camera_near_plane = init_params['cameraNearPlane']
+        self.camera_far_plane = init_params['cameraFarPlane']
 
-            if request.headers['Content-Type'].split(';')[0] == 'multipart/form-data':
-                form = MultipartFormParser(request.get_data(), MultipartFormParser.get_boundary(request.headers))
-                metadata = json.loads(form.form['metadata'][0])
-                token = form.form['token'][0]
-            else:
-                form = request
-                metadata = json.loads(form.form['metadata'])
-                token = form.form['token']
+    def create_event(self, metadata, files):
+        if metadata['sequenceId'] != self.sequence_id:
+            raise ValueError("Sequence id mismatch: %s vs %s" % (
+                metadata['sequenceId'], self.sequence_id))
 
-            if self.client_token and token != self.client_token:
-                abort(403)
+        events = []
 
-            if self.frame_counter % self.debug_frames_per_interval == 0:
-                now = time.time()
-                # rate = self.debug_frames_per_interval / float(now - self.last_rate_timestamp)
-                self.last_rate_timestamp = now
-                # import datetime
-                # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
+        for i, a in enumerate(metadata['agents']):
+            e = Event(a)
+            image_mapping = dict(
+                image=e.add_image,
+                image_depth=lambda x: e.add_image_depth(
+                    x,
+                    depth_format=self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane,
+                    add_noise=self.add_depth_noise,
+                    noise_indices=self.noise_indices
+                ),
+                image_ids=e.add_image_ids,
+                image_classes=e.add_image_classes,
+                image_normals=e.add_image_normals,
+                image_flow=e.add_image_flows
+            )
 
-            if metadata['sequenceId'] != self.sequence_id:
-                raise ValueError("Sequence id mismatch: %s vs %s" % (
-                    metadata['sequenceId'], self.sequence_id))
+            for key in image_mapping.keys():
+                if key in files:
+                    image_mapping[key](files[key][i])
 
-            events = []
-            for i, a in enumerate(metadata['agents']):
-                e = Event(a)
-                image_mapping = dict(
-                    image=e.add_image,
-                    image_depth=e.add_image_depth,
-                    image_ids=e.add_image_ids,
-                    image_classes=e.add_image_classes,
-                    image_normals=e.add_image_normals,
-                    image_flows=e.add_image_flows
-                )
+            third_party_image_mapping = dict(
+                image=e.add_image,
+                image_thirdParty_depth=lambda x: e.add_third_party_image_depth(
+                    x,
+                    depth_format=self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane
+                ),
+                image_thirdParty_image_ids=e.add_third_party_image_ids,
+                image_thirdParty_classes=e.add_third_party_image_classes,
+                image_thirdParty_normals=e.add_third_party_image_normals,
+                image_thirdParty_flows=e.add_third_party_image_flows
+            )
 
-                for key in image_mapping.keys():
-                    if key in form.files:
-                        image_mapping[key](form.files[key][i])
+            if a['thirdPartyCameras'] is not None:
+                for ti, t in enumerate(a['thirdPartyCameras']):
+                    for key in third_party_image_mapping.keys():
+                        if key in files:
+                            third_party_image_mapping[key](files[key][ti])
+            events.append(e)
 
-                third_party_image_mapping = dict(
-                    image=e.add_image,
-                    image_thirdParty_depth=e.add_third_party_image_depth,
-                    image_thirdParty_image_ids=e.add_third_party_image_ids,
-                    image_thirdParty_classes=e.add_third_party_image_classes,
-                    image_thirdParty_normals=e.add_third_party_image_normals,
-                    image_thirdParty_flows=e.add_third_party_image_flows
-                )
+        if len(events) > 1:
+            self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
+        else:
+            self.last_event = event = events[0]
 
-                if a['thirdPartyCameras'] is not None:
-                    for ti, t in enumerate(a['thirdPartyCameras']):
-                        for key in third_party_image_mapping.keys():
-                            if key in form.files:
-                                third_party_image_mapping[key](form.files[key][ti])
+        for img in files.get('image-thirdParty-camera', []):
+            self.last_event.add_third_party_camera_image(img)
+
+        return self.last_event
 
 
-                events.append(e)
 
-            if len(events) > 1:
-                self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
-            else:
-                self.last_event = event = events[0]
-
-            for img in form.files.get('image-thirdParty-camera', []):
-                self.last_event.add_third_party_camera_image(img)
-
-            request_queue.put_nowait(event)
-
-            self.frame_counter += 1
-
-            next_action = queue_get(response_queue)
-            if 'sequenceId' not in next_action:
-                self.sequence_id += 1
-                next_action['sequenceId'] = self.sequence_id
-            else:
-                self.sequence_id = next_action['sequenceId']
-
-            resp = make_response(json.dumps(next_action, cls=NumpyAwareEncoder))
-
-            return resp
-
-    def start(self):
-        self.wsgi_server.serve_forever()

@@ -568,7 +568,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Plate|+01.41|+00.00|+00.00
+  uniqueID: Plate|+00.00|+00.00|+00.00
   Type: 25
   PrimaryProperty: 3
   SecondaryProperties: 07000000040000000b000000
@@ -607,6 +607,8 @@ MonoBehaviour:
   salientMaterials: 04000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54867554357486828
 Rigidbody:
@@ -641,6 +643,7 @@ MonoBehaviour:
     type: 3}
   ImpulseThreshold: 3
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []

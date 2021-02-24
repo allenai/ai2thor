@@ -77,7 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //    // print("pickup");
                 //     ServerAction action = new ServerAction();
                 //     action.action = "PickupObject";
-                //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                 //     PhysicsController.ProcessControlCommand(action);
                             
                 // }
@@ -116,7 +116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // }
 
                 //if we press enter, select the input field
-                if (PhysicsController.actionComplete) {
+                if (PhysicsController.ReadyForCommand) {
                     if (Input.GetKeyDown(KeyCode.Return))
                     {
                         UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
@@ -133,91 +133,97 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.W))
                         {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyAhead";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
+                            ServerAction action = new ServerAction();
+                            // if(PhysicsController.FlightMode)
+                            // {
+                            //     action.action = "FlyAhead";
+                            //     action.moveMagnitude = FlyMagnitude;
+                            //     PhysicsController.ProcessControlCommand(action);
+                            // }
 
-                            else
-                            {
+                            // else
+                            // {
                                 action.action = "MoveAhead";
                                 action.moveMagnitude = WalkMagnitude;		
                                 PhysicsController.ProcessControlCommand(action);
-                            }
+                            // }
                         }
 
                         if(Input.GetKeyDown(KeyCode.S))
                         {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyBack";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
+                            ServerAction action = new ServerAction();
+                            // if(PhysicsController.FlightMode)
+                            // {
+                            //     action.action = "FlyBack";
+                            //     action.moveMagnitude = FlyMagnitude;
+                            //     PhysicsController.ProcessControlCommand(action);
+                            // }
 
-                            else
-                            {
+                            // else
+                            // {
                                 action.action = "MoveBack";
                                 action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
-                            }
+                            // }
                         }
 
                         if(Input.GetKeyDown(KeyCode.A))
                         {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyLeft";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
+                            ServerAction action = new ServerAction();
+                            // if(PhysicsController.FlightMode)
+                            // {
+                            //     action.action = "FlyLeft";
+                            //     action.moveMagnitude = FlyMagnitude;
+                            //     PhysicsController.ProcessControlCommand(action);
+                            // }
 
-                            else
-                            {
+                            // else
+                            // {
                                 action.action = "MoveLeft";
                                 action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
-                            }
+                            // }
                         }
 
                         if(Input.GetKeyDown(KeyCode.D))
                         {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyRight";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
+                            ServerAction action = new ServerAction();
+                            // if(PhysicsController.FlightMode)
+                            // {
+                            //     action.action = "FlyRight";
+                            //     action.moveMagnitude = FlyMagnitude;
+                            //     PhysicsController.ProcessControlCommand(action);
+                            // }
 
-                            else
-                            {
+                            // else
+                            // {
                                 action.action = "MoveRight";
                                 action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
-                            }
+                            // }
                         }
 
-                        if(Input.GetKeyDown(KeyCode.I))
-                        {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyUp";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
-                        }
+                        // if(Input.GetKeyDown(KeyCode.I))
+                        // {
+                        //     if(PhysicsController.FlightMode)
+                        //     {
+                        //         ServerAction action = new ServerAction();
+                        //         action.action = "FlyUp";
+                        //         action.moveMagnitude = FlyMagnitude;
+                        //         PhysicsController.ProcessControlCommand(action);
+                        //     }
+                        // }
 
-                        if(Input.GetKeyDown(KeyCode.K))
-                        {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "FlyDown";
-                                action.moveMagnitude = FlyMagnitude;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
-                        }
+                        // if(Input.GetKeyDown(KeyCode.K))
+                        // {
+                        //     if(PhysicsController.FlightMode)
+                        //     {
+                        //         ServerAction action = new ServerAction();
+                        //         action.action = "FlyDown";
+                        //         action.moveMagnitude = FlyMagnitude;
+                        //         PhysicsController.ProcessControlCommand(action);
+                        //     }
+                        // }
 
                         if(Input.GetKeyDown(KeyCode.UpArrow))
                         {
@@ -243,142 +249,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action); 
                         }
 
-                        if(Input.GetKeyDown(KeyCode.Space))
-                        {
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "LaunchDroneObject";
-                                action.moveMagnitude = 200f;
-                                //action. = new Vector3(0, 1, -1);
-                                action.x = 0;
-                                action.y = 1;
-                                action.z = -1;
-                                PhysicsController.ProcessControlCommand(action);
-                            }
-                        }
+                        // if(Input.GetKeyDown(KeyCode.Space))
+                        // {
+                        //     if(PhysicsController.FlightMode)
+                        //     {
+                        //         ServerAction action = new ServerAction();
+                        //         action.action = "LaunchDroneObject";
+                        //         action.moveMagnitude = 200f;
+                        //         //action. = new Vector3(0, 1, -1);
+                        //         action.x = 0;
+                        //         action.y = 1;
+                        //         action.z = -1;
+                        //         PhysicsController.ProcessControlCommand(action);
+                        //     }
+                        // }
 
-                        if (Input.GetKeyDown(KeyCode.Escape)) {
-                            action.action = "Pass";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if (Input.GetKeyDown(KeyCode.Backspace)) {
-                            action.action = "Initialize";
-                            if (!this.newSceneFile.Equals("")) {
-                                action.sceneConfig = MCSMain.LoadCurrentSceneFromFile(this.newSceneFile);
-                            }
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if (Input.GetKeyDown(KeyCode.H)) {
-                            action.action = "EndHabituation";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.O))
-                        {
-                            action.action = "OpenObject";
-                            action.moveMagnitude = 1.0f;
-                            action.objectImageCoords = this.receptacleObjectImageCoords;
-                            action.objectId = this.receptacleObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                            /*
-                            if(PhysicsController.FlightMode)
-                            {
-                                action.action = "CheckDroneCaught";
-                                PhysicsController.ProcessControlCommand(action);
-                            }
-                            */
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.C))
-                        {
-                            action.action = "CloseObject";
-                            action.moveMagnitude = 1.0f;
-                            action.objectImageCoords = this.receptacleObjectImageCoords;
-                            action.objectId = this.receptacleObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.P))
-                        {
-                            action.action = "PickupObject";
-                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
-                            action.objectId = this.moveOrPickupObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.Z))
-                        {
-                            action.action = "PutObject";
-                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
-                            action.objectId = this.moveOrPickupObjectId;
-                            action.receptacleObjectImageCoords = this.receptacleObjectImageCoords;
-                            action.receptacleObjectId = this.receptacleObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.X))
-                        {
-                            action.action = "DropHandObject";
-                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
-                            action.objectId = this.moveOrPickupObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.T)) {
-                            action.objectId = moveOrPickupObjectId;
-
-                            action.action = "ThrowObject";
-                            action.objectImageCoords = moveOrPickupObjectImageCoords;
-                            action.moveMagnitude = pushPullForce;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.U))
-                        {
-                            action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
-                            action.moveMagnitude = System.Math.Abs(this.pushPullForce);
-                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
-                            action.objectId = this.moveOrPickupObjectId;
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.R))
-                        {
-                            action.rotation.y = rotationIncrement;
-                            action.horizon = horizonIncrement;
-
-                            action.action = "RotateLook";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.Q))
-                        {
-                            action.action = "Crawl";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.E))
-                        {
-                            action.action = "Stand";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.L))
-                        {
-                            action.action = "LieDown";
-                            PhysicsController.ProcessControlCommand(action);
-                        }
-
-                        if(Input.GetKeyDown(KeyCode.Slash))
-                        {
-                            foreach (Transform child in this.objectParent.transform) {
-                                this.positionByStep[child.name] = new string[100];
-                            }
-                            action.action = "Pass";
-                            StartCoroutine(PassThenRecordPosition(action, 0));
-                        }
+                        // if(Input.GetKeyDown(KeyCode.O))
+                        // {
+                        //     if(PhysicsController.FlightMode)
+                        //     {
+                        //         ServerAction action = new ServerAction();
+                        //         action.action = "CheckDroneCaught";
+                        //         PhysicsController.ProcessControlCommand(action);
+                        //     }
+                        // }
                     }
             }
         }

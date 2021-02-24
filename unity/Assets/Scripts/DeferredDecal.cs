@@ -17,7 +17,7 @@ public class DeferredDecal : MonoBehaviour
      [SerializeField]
      public Material material;
      [SerializeField]
-     private Mesh cubeMesh;
+     private Mesh cubeMesh = null;
      [SerializeField]
      private DecalType type = DecalType.DIFFUSE_ONLY;
      [SerializeField]

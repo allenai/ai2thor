@@ -68,15 +68,15 @@ public class SceneManager : MonoBehaviour {
 
 	}
    
-	//generates a unique ID for a sim object
-	public void AssignUniqueID (SimObj obj) {
-		//unique ID is a string consisting of:
+	//generates a object ID for a sim object
+	public void AssignObjectID (SimObj obj) {
+		//object ID is a string consisting of:
 		//[SimObjType]_[X0.00]:[Y0.00]:[Z0.00]
 		Vector3 pos = obj.transform.position;
 		string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString ("00.00");
 		string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString ("00.00");
 		string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString ("00.00");
-		obj.UniqueID = obj.Type.ToString () + "|" + xPos + "|" + yPos + "|" + zPos;
+		obj.ObjectID = obj.Type.ToString () + "|" + xPos + "|" + yPos + "|" + zPos;
 	}
 
 	public void GatherSimObjsInScene () {
@@ -84,7 +84,7 @@ public class SceneManager : MonoBehaviour {
 		ObjectsInScene.AddRange (GameObject.FindObjectsOfType<SimObj> ());
 		ObjectsInScene.Sort ((x, y)=>(x.Type.ToString().CompareTo (y.Type.ToString())));
 		foreach (SimObj o in ObjectsInScene) {
-			AssignUniqueID (o);
+			AssignObjectID (o);
 		}
 	}
 

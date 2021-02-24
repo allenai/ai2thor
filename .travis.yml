@@ -2,9 +2,20 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install progressbar2 requests invoke boto3
+  - pip install progressbar2 requests invoke boto3 aws-requests-auth jsonschema
 cache: pip
 script:
   - invoke poll-ci-build
 git:
     depth: 3
+deploy:
+    provider: script
+    script: bash ./scripts/build_deploy.sh
+    on:
+        tags: true
+        condition: $TRAVIS_TAG =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$
+env:
+    global:
+        secure: cJZqMCBwtvSCWCUBrAMPnslOGa4ZL7SROkZTqJ60ycIxdF4872E3AEzckMl061P0wcm6bkQbt+aqGOWe+gdHqSKETOaC4zQSJBv7XziwOzhGzS2pFw05itG/nccqk4q+Sk29baIT0bQpOc07Odr5dwPmbro2A/YNoHGtA1ib3jIZUSVC7/TLeOgwR7Uz1Sv0QM5HFdVHJcyVBXEiA4pWSX/turmTBWDnZONct7phyciAHW9GwuKhUHPHVj32CwjNxT3eREp+RnfSB5DpIc3KFVSHxrNOse+3Ow5JeTQxtPiu/l2vdqGpVLrR6RbbkogiCrNlaE8dBvbAk30UGnuvDJN2vbMerM1+M3RJdUR0QNQc0KovMDID49rhHrJb7oTs4BaN9K/kS1hU4F/vP03b5NooiJd0LuWvAaZrjtz3ys6DrT6v++0ze6CDZvo+toxPL/ZpFQ26Sh1x3e2icuu5S72G5YeOwTf2imizaKDHSDBrs4mNPcT9zXySjTalsstYDQn44GJDMLCvzw4eGAGM/lTEZ74vkSlgbobM9+3ekGk8rOBRfPV10p7j7k4q1pMo99wrZfDmVNYZcBLukp/47bx+5JxbEmF8GcvmWg22gduEQOyQnjKA+0X7co/6ksVjUUg+LQhP+4zBNUPFSe8dtwIQ98tHmQTXX7YOvdQZVHI=
+
+

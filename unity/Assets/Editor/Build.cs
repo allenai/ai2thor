@@ -44,12 +44,18 @@ public class Build
         List<string> scenes = new List<string>();
         files.AddRange(Directory.GetFiles("Assets/Scenes/"));
 
+        if (IncludePrivateScenes()) {
+            files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
+
+        }
+
         foreach (string f in files) {
             if (f.EndsWith(".unity")) {
                 Debug.Log ("Adding Scene " + f);
 				scenes.Add (f);
             }
         }
+
         return scenes;
     }
 
@@ -58,6 +64,13 @@ public class Build
         return Environment.GetEnvironmentVariable("SCENE").Split(',').Select(
             x => "Assets/Scenes/" + x + ".unity"
         );
+    }
+
+    private static bool IncludePrivateScenes()
+    {
+        string privateScenes = Environment.GetEnvironmentVariable("INCLUDE_PRIVATE_SCENES");
+        
+        return privateScenes != null && privateScenes.ToLower() == "true";
     }
 
     private static string GetDefineSymbolsFromEnv()

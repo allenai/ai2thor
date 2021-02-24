@@ -1112,7 +1112,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4386512695228506
 Transform:
@@ -1470,6 +1470,8 @@ MonoBehaviour:
   salientMaterials: 04000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54409314236448392
 Rigidbody:
@@ -1483,7 +1485,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1504,6 +1506,7 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 4
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []

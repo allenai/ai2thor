@@ -845,7 +845,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -861,7 +861,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bowl|+00.28|+00.00|-00.39
+  uniqueID: Bowl|+00.00|+00.00|+00.00
   Type: 13
   PrimaryProperty: 3
   SecondaryProperties: 070000000b000000330000000400000005000000
@@ -895,6 +895,8 @@ MonoBehaviour:
   salientMaterials: 03000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1567752661649320546
 MonoBehaviour:
@@ -930,6 +932,7 @@ MonoBehaviour:
     type: 3}
   ImpulseThreshold: 2.5
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
