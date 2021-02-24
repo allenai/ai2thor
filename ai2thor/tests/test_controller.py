@@ -37,13 +37,15 @@ class FakeQueue(object):
     def empty(self):
         return True
 
-def controller():
+def controller(**args):
 
     # during a ci-build we will get a warning that we are using a commit_id for the
     # build instead of 'local'
+    default_args = dict(download_only=True, local_build=True)
+    default_args.update(args)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        c = ai2thor.controller.Controller(download_only=True, local_build=True)
+        c = ai2thor.controller.Controller(**default_args)
         c.server = FakeServer()
 
     return c
@@ -148,7 +150,7 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_build=True)
+    c = controller(fullscreen=True, quality='Low')
     assert c.unity_command(650, 550, False) == [
         c._build.executable_path,
         '-screen-fullscreen', 
