@@ -572,8 +572,8 @@ class Controller(object):
 
             def key_sort_func(scene_name):
                 m = re.search(
-                    "FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$", scene_name
-                )
+                        r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$",
+                    scene_name)
                 last_val = m.group(3) if m.group(3) is not None else -1
                 return m.group(1), int(m.group(2)), int(last_val)
 
