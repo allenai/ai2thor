@@ -1075,16 +1075,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
-        //this does not appear to be used except for by the python unit test?
-        //May deprecate this at some point?
-		public void RotateLook(ServerAction response)
-		{
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
-			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-			actionFinished(true);
-
-		}
-
 		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
 		protected virtual void RotateView()
 		{
@@ -1464,7 +1454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-        public void ProcessControlCommand(ServerAction controlCommand)
+        public virtual void ProcessControlCommand(ServerAction controlCommand)
         {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -1718,14 +1708,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-		//looks like thisfree rotates AND free changes camera look angle?
-		public virtual void RotateLook(ServerAction response)
+        //this does not appear to be used except for by the python unit test?
+        //May deprecate this at some point?
+        //looks like thisfree rotates AND free changes camera look angle?
+        public virtual void RotateLook(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
-
 		}
 
 		//rotates 90 degrees left w/ respect to current forward
@@ -2405,18 +2396,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ResetAgentHandPosition() {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.localPosition = Vector3.zero;
-            }
+            // MCS - This was commented out pre 2.5 update
+            //SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            //if (sop != null) {
+            //    sop.gameObject.transform.localPosition = Vector3.zero;
+            //}
         }
 
         public void ResetAgentHandRotation() {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.rotation = transform.rotation;
-            }
+            // MCS - This was commented out pre 2.5 update
+            //SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            //if (sop != null) {
+            //    sop.gameObject.transform.rotation = transform.rotation;
+            //}
         }
 
         //randomly repositions sim objects in the current scene

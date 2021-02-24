@@ -757,7 +757,7 @@ public class MCSMain : MonoBehaviour {
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
-            gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+            gameObject.GetComponent<SimObjPhysics>().objectID = gameObject.name;
             gameObject.GetComponent<SimObjPhysics>().shape = objectConfig.structure ? "structural" :
                 objectDefinition.shape;
         }
@@ -922,7 +922,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         // Always set the uniqueID to a new name (we don't want to use AI2-THOR's default names).
-        ai2thorPhysicsScript.uniqueID = gameObject.name;
+        ai2thorPhysicsScript.objectID = gameObject.name;
 
         // Remove the CanBreak property from the SecondaryProperties array (we don't want objects to break).
         ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.Where((property) =>
@@ -1212,7 +1212,7 @@ public class MCSMain : MonoBehaviour {
                 GameObject interactableObject = interactableTransform.gameObject;
                 SimObjPhysics ai2thorPhysicsScript = interactableObject.GetComponent<SimObjPhysics>();
                 if (ai2thorPhysicsScript) {
-                    ai2thorPhysicsScript.uniqueID = gameObject.name + "_" + interactableDefinition.id;
+                    ai2thorPhysicsScript.objectID = gameObject.name + "_" + interactableDefinition.id;
                     // The type of a child interactable should be something like "drawer" or "shelf" so use that as
                     // the object's shape.
                     ai2thorPhysicsScript.shape = ai2thorPhysicsScript.Type.ToString().ToLower();

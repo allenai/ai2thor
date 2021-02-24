@@ -526,7 +526,24 @@ public class Contains : MonoBehaviour
             point.z <= (center.z + (size.z * 0.5f)) && point.z >= (center.z - (size.z * 0.5f));
 	}
 
-    #if UNITY_EDITOR
+	public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point)
+	{
+		BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
+
+		point = myBox.transform.InverseTransformPoint(point) - myBox.center;
+
+		float halfX = (myBox.size.x * 0.5f);
+		float BIGY = (myBox.size.y * 10.0f);
+		float halfZ = (myBox.size.z * 0.5f);
+		if (point.x < halfX && point.x > -halfX &&
+			point.y < BIGY && point.y > -BIGY &&
+			point.z < halfZ && point.z > -halfZ)
+			return true;
+		else
+			return false;
+	}
+
+#if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
         BoxCollider triggerBoxCollider = GetComponent<BoxCollider>();

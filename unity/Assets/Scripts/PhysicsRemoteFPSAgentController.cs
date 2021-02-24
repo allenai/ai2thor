@@ -1672,7 +1672,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PushObject(ServerAction action) {
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -1680,7 +1680,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
@@ -1697,8 +1697,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ApplyForceObject(action);
         }
 
-        public void PullObject(ServerAction action) {
-            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+        public virtual void PullObject(ServerAction action) {
+            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
@@ -1854,7 +1854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
@@ -4215,7 +4215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
                 errorMessage = "Object ID " + action.receptacleObjectId + " appears to be invalid.";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -4223,7 +4223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics targetReceptacle = physicsSceneManager.UniqueIdToSimObjPhysics[action.receptacleObjectId];
+            SimObjPhysics targetReceptacle = physicsSceneManager.ObjectIdToSimObjPhysics[action.receptacleObjectId];
 
             if (targetReceptacle == null || !targetReceptacle.GetComponent<SimObjPhysics>()) {
                 errorMessage = action.receptacleObjectId + " is not interactable.";
@@ -4255,8 +4255,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetReceptacle = null;
 
             foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
-            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) &&
-                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
+                bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.ObjectID) &&
+                    (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
                 if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
                     targetReceptacle = sop;
                     break;
@@ -4373,44 +4373,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
 
-            // MCS CHANGE START
-            // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
-            Transform previousParent = handSOP.transform.parent;
-            handSOP.transform.parent = null;
-            // MCS CHANGE END
-
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
-                ItemInHand.layer = 8; // SimObjVisible
-                // MCS ADDED BLOCK
-                ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
-                    collider.gameObject.layer = 8; // SimObjVisible
-                });
-                ItemInHand = null;
-                DefaultAgentHand();
-
                 // MCS CHANGE START
-                if (!action.placeStationary) {
-                    // Reset isKinematic because it was set to true when the object was picked up.
-                    handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
-                }
+                // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
+                Transform previousParent = handSOP.transform.parent;
+                handSOP.transform.parent = null;
                 // MCS CHANGE END
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-                actionFinished(true);
-            } else {
-                // MCS CHANGE NEXT LINE
-                handSOP.transform.parent = previousParent;
 
-                errorMessage = "No valid positions to place object found";
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                actionFinished(false);
-                return;
+                if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
+                    ItemInHand.layer = 8; // SimObjVisible
+                                          // MCS ADDED BLOCK
+                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                        collider.gameObject.layer = 8; // SimObjVisible
+                    });
+                    ItemInHand = null;
+                    DefaultAgentHand();
+
+                    // MCS CHANGE START
+                    if (!action.placeStationary) {
+                        // Reset isKinematic because it was set to true when the object was picked up.
+                        handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
+                    }
+                    // MCS CHANGE END
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                    actionFinished(true);
+                } else {
+                    // MCS CHANGE NEXT LINE
+                    handSOP.transform.parent = previousParent;
+
+                    errorMessage = "No valid positions to place object found";
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    actionFinished(false);
+                    return;
+                }
+
+                // #if UNITY_EDITOR
+                // watch.Stop();
+                // var elapsed = watch.ElapsedMilliseconds;
+                // print("place object took: " + elapsed + "ms");
+                // #endif
             }
-
-            // #if UNITY_EDITOR
-            // watch.Stop();
-            // var elapsed = watch.ElapsedMilliseconds;
-            // print("place object took: " + elapsed + "ms");
-            // #endif
         }
 
         //used for all actions that need a sim object target
@@ -4469,7 +4470,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public virtual void PickupObject(ServerAction action) //use serveraction objectid
         {
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -4477,7 +4478,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = action.objectId + " is not interactable.";
@@ -4598,8 +4599,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true, target.UniqueID);
-            return;
+            actionFinished(true, target.ObjectID);
+            return true;
         }
 
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
@@ -4754,7 +4755,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
 
-                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
                     Debug.Log(errorMessage);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -4777,7 +4778,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log(errorMessage);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     actionFinished(false);
-                    return;
+                    return false;
                 } else {
                     Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
@@ -4829,14 +4830,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         collider.gameObject.layer = 8; // SimObjVisible
                     });
                     ItemInHand = null;
-                    return;
+                    return true;
                 }
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                 actionFinished(false);
-                return;
+                return false;
             }
         }
 
@@ -4938,7 +4939,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -4946,7 +4947,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = action.objectId + " is not interactable.";
@@ -5194,7 +5195,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
                 foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
-                    previousParents.Add(item.uniqueID, item.transform.parent);
+                    previousParents.Add(item.objectID, item.transform.parent);
                     item.transform.SetParent(canOpen.GetComponent<SimObjPhysics>().transform);
                 }
             }
@@ -5223,8 +5224,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
                 foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
-                    if (previousParents.ContainsKey(item.uniqueID)) {
-                        item.transform.SetParent(previousParents[item.uniqueID]);
+                    if (previousParents.ContainsKey(item.objectID)) {
+                        item.transform.SetParent(previousParents[item.objectID]);
                     }
                 }
             }
@@ -5232,13 +5233,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f) {
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f)
+        {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
+            if (ignoreAgentInTransition)
+            {
+                foreach (Collider c in this.GetComponentsInChildren<Collider>())
+                {
+                    if (c.enabled)
+                    {
                         collidersDisabled.Add(c);
                         c.enabled = false;
                     }
@@ -5247,10 +5252,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Dictionary<string, Transform> objectIdToOldParent = null;
             SimObjPhysics target = null;
-            if (freezeContained) {
+            if (freezeContained)
+            {
                 target = ancestorSimObjPhysics(coo.gameObject);
                 objectIdToOldParent = new Dictionary<string, Transform>();
-                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
+                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID())
+                {
                     SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                     objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
                     toReParent.transform.parent = coo.transform;
@@ -5260,68 +5267,82 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Dictionary<string, Transform> previousParents = new Dictionary<string, Transform>();
 
-            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
-                    previousParents.Add(item.uniqueID, item.transform.parent);
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle)
+            {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects)
+                {
+                    previousParents.Add(item.objectID, item.transform.parent);
                     item.transform.SetParent(coo.GetComponent<SimObjPhysics>().transform);
                 }
             }
 
             bool success = false;
-            if (coo != null) {
+            if (coo != null)
+            {
                 coo.Interact(openPercent);
             }
 
-            yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
+            yield return new WaitUntil(() => (coo != null && coo.GetiTweenCount() == 0));
             success = true;
             yield return null;
 
-            if (ignoreAgentInTransition) {
+            if (ignoreAgentInTransition)
+            {
                 GameObject openedObject = null;
                 openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
 
                 if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) ||
                     isHandObjectCollidingWith(openedObject) ||
-                    isAgentOnTopOfObject(coo)) {
+                    isAgentOnTopOfObject(coo))
+                {
                     Debug.Log("Object failed to open/close successfully.");
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     success = false;
-                    if (coo != null) {
+                    if (coo != null)
+                    {
                         coo.SetOpenPercent(previousOpenPercent);
                         coo.Interact();
                     }
 
-                    yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
+                    yield return new WaitUntil(() => (coo != null && coo.GetiTweenCount() == 0));
                     yield return null;
                 }
 
-                foreach (Collider c in collidersDisabled) {
+                foreach (Collider c in collidersDisabled)
+                {
                     c.enabled = true;
                 }
             }
 
-            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
-                    if(previousParents.ContainsKey(item.uniqueID)) {
-                        item.transform.SetParent(previousParents[item.uniqueID]);
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle)
+            {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects)
+                {
+                    if (previousParents.ContainsKey(item.objectID))
+                    {
+                        item.transform.SetParent(previousParents[item.objectID]);
                     }
                 }
-            if (freezeContained) {
-                foreach (string objectId in objectIdToOldParent.Keys) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                    rb.isKinematic = false;
+                if (freezeContained)
+                {
+                    foreach (string objectId in objectIdToOldParent.Keys)
+                    {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                        Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                        rb.velocity = new Vector3(0f, 0f, 0f);
+                        rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                        rb.isKinematic = false;
+                    }
                 }
-            }
 
-            if (!success) {
-                errorMessage = "Object failed to open/close successfully.";
-            }
+                if (!success)
+                {
+                    errorMessage = "Object failed to open/close successfully.";
+                }
 
-            actionFinished(success);
+                actionFinished(success);
+            }
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
@@ -5730,7 +5751,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -5738,7 +5759,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             if (target == null || !target.GetComponent<SimObjPhysics>()) {
                 errorMessage = action.objectId + " is not interactable.";
@@ -6933,7 +6954,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = (int)-30/action.horizon; k <= (int)60/action.horizon; k++) {
+            for (int k = (int)(-30/action.horizon); k <= (int)60/action.horizon; k++) {
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon * k, 0f, 0f);
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {

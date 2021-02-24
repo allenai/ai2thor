@@ -133,7 +133,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.W))
                         {
-                            ServerAction action = new ServerAction();
+                            //ServerAction action = new ServerAction();
                             // if(PhysicsController.FlightMode)
                             // {
                             //     action.action = "FlyAhead";
@@ -151,7 +151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.S))
                         {
-                            ServerAction action = new ServerAction();
+                            //ServerAction action = new ServerAction();
                             // if(PhysicsController.FlightMode)
                             // {
                             //     action.action = "FlyBack";
@@ -169,7 +169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.A))
                         {
-                            ServerAction action = new ServerAction();
+                            //ServerAction action = new ServerAction();
                             // if(PhysicsController.FlightMode)
                             // {
                             //     action.action = "FlyLeft";
@@ -187,7 +187,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.D))
                         {
-                            ServerAction action = new ServerAction();
+                            //ServerAction action = new ServerAction();
                             // if(PhysicsController.FlightMode)
                             // {
                             //     action.action = "FlyRight";

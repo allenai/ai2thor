@@ -41,7 +41,7 @@ public class AgentManager : MonoBehaviour
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
-    private PhysicsSceneManager physicsSceneManager;
+    protected PhysicsSceneManager physicsSceneManager;
     private FifoServer.Client fifoClient = null;
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
@@ -49,8 +49,6 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
-
-    protected PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
 	public bool consistentColors = false;
 	public Bounds sceneBounds = new Bounds(
@@ -763,7 +761,7 @@ public class AgentManager : MonoBehaviour
     }
 
 
-	public IEnumerator EmitFrame() {
+	public virtual IEnumerator EmitFrame() {
         while (true) 
         {
             bool shouldRender = this.renderImage && serverSideScreenshot;

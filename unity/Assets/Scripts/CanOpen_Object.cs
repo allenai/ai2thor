@@ -154,7 +154,7 @@ public class CanOpen_Object : MonoBehaviour
         if (val >= 0.0 && val <= 1.0)
         {
             //print(val);
-            openPercentage = val;
+            currentOpenPercentage = val;
             return true;
         }
         else
@@ -183,11 +183,11 @@ public class CanOpen_Object : MonoBehaviour
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
-        bool isOpening = (this.openPercentage > this.isOpenByPercentage);
-        float percentage = isOpening ? this.openPercentage : (1 - this.openPercentage);
+        bool isOpening = (this.currentOpenPercentage > this.isOpenByPercentage);
+        float percentage = isOpening ? this.currentOpenPercentage : (1 - this.currentOpenPercentage);
 
         // Update the global variables BEFORE running the loop.
-        this.isOpenByPercentage = this.openPercentage;
+        this.isOpenByPercentage = this.currentOpenPercentage;
         this.isOpen = (this.isOpenByPercentage > 0);
 
 		for (int i = 0; i < MovingParts.Length; i++)
