@@ -1036,7 +1036,7 @@ def poll_ci_build(context):
         # must emit something at least once every 10 minutes 
         # otherwise travis will time out the build
         if (time.time() - last_emit_time) > 540: 
-            print("Polling for build logs")
+            print(".", end='')
             last_emit_time = time.time()
 
         for arch in platform_map.keys():

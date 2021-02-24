@@ -4,6 +4,7 @@ import string
 import random
 import json
 import pytest
+import warnings
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
@@ -32,7 +33,12 @@ class ThirdPartyCameraMetadata:
 def build_controller(**args):
     default_args = dict(scene="FloorPlan28", local_build=True)
     default_args.update(args)
-    return Controller(**default_args)
+    # during a ci-build we will get a warning that we are using a commit_id for the
+    # build instead of 'local'
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        c = Controller(**default_args)
+    return c
 
 
 wsgi_controller = build_controller(server_class=WsgiServer)
@@ -140,7 +146,6 @@ def test_small_aspect():
     controller.stop()
 
 
-@pytest.mark.skip(reason="temporarily skipping deprecation test")
 def test_bot_deprecation():
     controller = build_controller(agentMode="bot", width=128, height=64)
     assert (
@@ -157,11 +162,13 @@ def test_deprecated_segmentation_params():
         renderClassImage=True,
     )
     event = controller.last_event
-    assert event.class_segmentation_frame is event.semantic_segmentation_frame
-    assert event.semantic_segmentation_frame is not None
-    assert (
-        event.instance_segmentation_frame is not None
-    ), "renderObjectImage should still render instance_segmentation_frame"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        assert event.class_segmentation_frame is event.semantic_segmentation_frame
+        assert event.semantic_segmentation_frame is not None
+        assert (
+            event.instance_segmentation_frame is not None
+        ), "renderObjectImage should still render instance_segmentation_frame"
 
 
 def test_deprecated_segmentation_params2():
@@ -172,11 +179,14 @@ def test_deprecated_segmentation_params2():
         renderInstanceSegmentation=True,
     )
     event = controller.last_event
-    assert event.class_segmentation_frame is event.semantic_segmentation_frame
-    assert event.semantic_segmentation_frame is not None
-    assert (
-        event.instance_segmentation_frame is not None
-    ), "renderObjectImage should still render instance_segmentation_frame"
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        assert event.class_segmentation_frame is event.semantic_segmentation_frame
+        assert event.semantic_segmentation_frame is not None
+        assert (
+            event.instance_segmentation_frame is not None
+        ), "renderObjectImage should still render instance_segmentation_frame"
 
 
 def test_reset():
