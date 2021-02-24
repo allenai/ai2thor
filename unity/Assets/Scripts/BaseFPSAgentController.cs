@@ -3811,6 +3811,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TestActionDispatchFindConflicts(string typeName) {
             Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
+            string[] ignore = new string[]{"GetComponent", "StopCoroutine"};
+            foreach(var methodName in ignore) {
+                if (conflicts.ContainsKey(methodName)) {
+                    conflicts.Remove(methodName);
+                }
+            }
             actionFinished(true, conflicts);
         }
 	}

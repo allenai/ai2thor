@@ -662,8 +662,6 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
         typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
     )
     known_conflicts = {
-        "GetComponent": ["type"],
-        "StopCoroutine": ["routine"],
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
@@ -676,8 +674,6 @@ def test_action_dispatch_find_conflicts_physics(controller):
         typeName="UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController",
     )
     known_conflicts = {
-        "GetComponent": ["type"],
-        "StopCoroutine": ["routine"],
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
