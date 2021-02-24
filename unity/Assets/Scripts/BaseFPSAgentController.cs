@@ -750,7 +750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(
+        protected virtual bool moveInDirection(
             Vector3 direction,
             string objectId="",
             float maxDistanceToObject=-1.0f,
@@ -767,12 +767,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
+            float directionMagnitude = direction.magnitude;
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
+                CheckIfAgentCanMove(ref directionMagnitude, angleInt, ignoreColliders)) {
+
+                if (directionMagnitude != direction.magnitude)
+                {
+                    Vector3 newDirection = direction * directionMagnitude;
+                    targetPosition = transform.position + newDirection;
+                }
 
                 //only default hand if not manually interacting with things    
-                if(!manualInteract) {
+                if (!manualInteract) {
                     DefaultAgentHand();
                 }
 
@@ -783,16 +790,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (objectId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                         errorMessage = "No object with ID " + objectId;
-                        transform.position = oldPosition; 
+                        transform.position = oldPosition;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                         return false;
                     }
                     SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                     if (distanceToObject(sop) > maxDistanceToObject) {
                         errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
                         transform.position = oldPosition;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                         return false;
                     }
                 }
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 return true;
             } else {
                 return false;
@@ -819,7 +829,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool CheckIfAgentCanMove(
-            float moveMagnitude,
+            ref float moveMagnitude,
             int orientation,
             HashSet<Collider> ignoreColliders = null
         ) {
@@ -855,38 +865,98 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 moveMagnitude,
                 1 << 8 | 1 << 10
             );
-            //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
-            if (sweepResults.Length > 0) {
-                foreach (RaycastHit res in sweepResults) {
-                    if (ignoreColliders != null && ignoreColliders.Contains(res.collider)) {
-                        continue;
-                    }
 
+            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, sweepResults);
+            return hasNoBlockingObjectsInWay;
+        }
+
+        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults)
+        {
+            if (sweepResults.Length > 0)
+            {
+                foreach (RaycastHit res in sweepResults)
+                {
+                    Debug.Log("RES = " + res.transform.name);
                     // Don't worry if we hit something thats in our hand.
-                    if (ItemInHand != null && ItemInHand.transform == res.transform) {
+                    if (ItemInHand != null && ItemInHand.transform == res.transform)
+                    {
                         continue;
                     }
 
-                    if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+                    if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>())
+                    {
+                        // Check if distance to object is greater than 0.1, if so than we can move partial amount
+                        // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
+                        if (moveMagnitude > res.distance && res.distance > 0.10)
+                        {
+                            moveMagnitude = res.distance - 0.1f / moveMagnitude;
+                            return true;
+                        }
 
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
                         errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                         return false;
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
-                    if ((!collidersToIgnoreDuringMovement.Contains(res.collider)) && (
-                            res.transform.GetComponent<SimObjPhysics>() ||
-                            res.transform.tag == "Structure" ||
-                            res.transform.tag == "Untagged"
-                        )) {
-                        int thisAgentNum = agentManager.agents.IndexOf(this);
-                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                        //the moment we find a result that is blocking, return false here
-                        return false;
+                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.GetComponent<StructureObject>() != null
+                        || res.transform.tag == "Untagged")
+                    {
+                        // Check if distance to object is greater than 0.1, if so than we can move partial amount
+                        // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
+                        if (moveMagnitude > res.distance && res.distance > 0.1)
+                        {
+                            moveMagnitude = res.distance - 0.1f / moveMagnitude;
+                            return true;
+                        }
+
+                        SimObjPhysics simObjPhysics = res.transform.GetComponent<SimObjPhysics>();
+                        StructureObject structureObject = res.transform.GetComponent<StructureObject>();
+                        bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
+                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
+                        if (structureObject != null || immobile || res.rigidbody.mass > this.GetComponent<Rigidbody>().mass)
+                        {
+                            int thisAgentNum = agentManager.agents.IndexOf(this);
+                            errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                            //the moment we find a result that is blocking, return false here
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                            return false;
+                        }
                     }
+                }
+            }
+            return true;
+        }
+
+        ////MCS Method////
+        //Acending and Descending Structures//
+        public bool ShootRay45DegreesUp(string inputDir, float length)
+        {
+            RaycastHit baseHit;
+            LayerMask layerMask = ~(1 << 10);
+            float baseHeight = 0f;
+            if (Physics.Raycast(transform.position, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore))
+            {
+                baseHeight = baseHit.point.y;
+            }
+
+            Vector3 origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
+            Vector3 direction =
+                inputDir == "left" ? Quaternion.AngleAxis(-45, transform.forward) * (-1 * transform.right) :
+                inputDir == "right" ? Quaternion.AngleAxis(45, transform.forward) * transform.right :
+                inputDir == "forward" ? Quaternion.AngleAxis(-45, transform.right) * transform.forward :
+                inputDir == "back" ? Quaternion.AngleAxis(45, transform.right) * (-1 * transform.forward) : new Vector3();
+
+            RaycastHit[] hit = Physics.RaycastAll(origin, direction, length, layerMask, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit point in hit)
+            {
+                if (point.transform.GetComponent<StructureObject>() != null ||
+                    (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass && point.transform.tag == "SimObjPhysics"))
+                {
+                    return false;
                 }
             }
             return true;
@@ -1040,6 +1110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
             if (!agentManager.SceneBounds.Contains(position)) {
                 errorMessage = "Scene bounds do not contain target position: " + position;
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return false;
             } else {
                 return true;
@@ -1236,8 +1307,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             //if the sim object is moveable or pickupable
-            if(simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0)
-            {
+            //if(simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0)
+            //{
                 //this object should report back mass and salient materials
 
                 string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
@@ -1250,9 +1321,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 objMeta.salientMaterials = salientMaterialsToString;
 
                 //this object should also report back mass since it is moveable/pickupable
-                objMeta.mass = simObj.Mass;
+                //objMeta.mass = simObj.Mass;
+                objMeta.mass = simObj.gameObject.GetComponent<Rigidbody>().mass;
                 
-            }
+            //}
 
             //can this object change others to hot?
             objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
@@ -1562,11 +1634,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //no op action
         public void Pass() {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }
 
         //no op action
         public void Done() {
+            // [REVIEW] This is a new function but with no reference, should we add lastActionStatus regardless?
+            // this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }
 
@@ -2136,6 +2211,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (Collider item in colliders_in_view) 
                 {
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
+
+                    // MCS Addition
+                    if (!sop.GetComponentInChildren<Renderer>().enabled)
+                    {
+                        continue;
+                    }
+
                     //now we have a reference to our sim object 
                     if ((sop != null && !testedSops.Contains(sop)) && (filter == null || filter.Contains(sop)))
                     {
@@ -2388,13 +2470,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
-        public void DefaultAgentHand() {
+        public virtual void DefaultAgentHand() {
             ResetAgentHandPosition();
             ResetAgentHandRotation();
             IsHandDefault = true;
         }
 
-        public void ResetAgentHandPosition() {
+        public virtual void ResetAgentHandPosition() {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
             // MCS - This was commented out pre 2.5 update
             //SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
@@ -2403,7 +2485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //}
         }
 
-        public void ResetAgentHandRotation() {
+        public virtual void ResetAgentHandRotation() {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             // MCS - This was commented out pre 2.5 update
             //SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
@@ -2826,11 +2908,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float moveMagnitude,
             int layerMask
             ) {
-            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
+
+            Vector3 center = cc.transform.position;
             float radius = cc.radius + skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+
+            //MCS large collider change
+            RaycastHit hit;
+            LayerMask layerMask2 = ~(1 << 10);
+
+            if (Physics.SphereCast(point1, cc.radius, Vector3.down, out hit, Mathf.Infinity, layerMask2))
+            {
+                float raiseMinHeightAboveGround = 0.01f;
+                point2.y = hit.point.y + radius + raiseMinHeightAboveGround;
+            }
+
             return Physics.CapsuleCastAll(
                 point1,
                 point2,

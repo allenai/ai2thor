@@ -4527,6 +4527,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
+            // MCS Addition
+            //if pickup action is being abstracted, don't teleport target to hand
+            //instead move hand to target and allow for immediate manipulation from
+            //where the object was
+            if (tryPickupTarget(target, action, action.manualInteract))
+            {
+                //we have succesfully picked up something! 
+                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
+                actionFinished(true, target.ObjectID);
+                return;
+            }
+
+            else
+            {
+                errorMessage = "Picking up object would cause it to collide and clip into something!";
+                actionFinished(false);
+                return;
+            }
         }
 
         public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)
