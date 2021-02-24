@@ -533,7 +533,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 gridSize = action.gridSize;
                 //StartCoroutine(checkInitializeAgentLocationAction());
-                snapToGrid();
+                // [REVIEW] This call now adds a check if the snapToGrid is set to true before allowing the snap, before this would just snapToGrid
+                snapAgentToGrid();
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);
             }

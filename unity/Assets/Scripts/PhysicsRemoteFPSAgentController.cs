@@ -4575,7 +4575,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //agent's hand is in default position in front of camera, teleport object into agent's hand
                 target.transform.position = AgentHand.transform.position;
                 // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
-                Quaternion previousRotation = target.transform.localRotation;
             } else {
                 //in manualInteract mode, move the hand to the object, and require agent hand manipulation to move object around
                 //or move closer to agent
@@ -4584,8 +4583,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //don't rotate target at all as we are moving the hand to the object in manualInteract = True mode
             }
 
-            target.transform.SetParent(AgentHand.transform);
             // MCS ADDED NEXT LINE
+            Quaternion previousRotation = target.transform.localRotation;
+            target.transform.SetParent(AgentHand.transform);
             target.transform.localRotation = previousRotation;
             ItemInHand = target.gameObject;
             ItemInHand.layer = 9; // SimObjInvisible
@@ -5024,7 +5024,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
-                    float previousOpenPercent = codd.GetOpenPercent();
+                    //[REVIEW] original line was using function no longer available
+                    //float previousOpenPercent = codd.GetOpenPercent();
+                    float previousOpenPercent = codd.currentOpenPercentage;
 
                     //pass in percentage close if desired
                     if (action.moveMagnitude > 0.0f) {
@@ -5319,6 +5321,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     success = false;
                     if (coo != null)
                     {
+                        //[REVIEW] original line was using function no longer available
+                        //float previousOpenPercent = codd.GetOpenPercent();
+                        float previousOpenPercent = coo.currentOpenPercentage;
                         coo.SetOpenPercent(previousOpenPercent);
                         coo.Interact();
                     }
@@ -5845,7 +5850,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-                    float previousOpenPercent = codd.GetOpenPercent();
+
+                    //[REVIEW] original line was using function no longer available
+                    //float previousOpenPercent = codd.GetOpenPercent();
+                    float previousOpenPercent = codd.currentOpenPercentage;
 
                     //check to make sure object is closed
                     if (codd.isOpen && codd.isOpenByPercentage == 1) {

@@ -126,7 +126,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if(!inputField.isFocused)
                     {
                         ServerAction action = new ServerAction();
-                        action.continuous = continuous;
+                        //[REVIEW] was continous used anywhere? Does not seem like it.
+                        //action.continuous = continuous;
                         action.forceAction = forceAction;
                         action.gridSize = gridSize;
                         action.visibilityDistance = visibilityDistance;
