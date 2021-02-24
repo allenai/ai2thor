@@ -2,6 +2,7 @@ import ai2thor.controller
 from ai2thor.server import Event
 import pytest
 import numpy as np
+import warnings
 import os
 import math
 
@@ -37,8 +38,14 @@ class FakeQueue(object):
         return True
 
 def controller():
-    c = ai2thor.controller.Controller(download_only=True, local_build=True)
-    c.server = FakeServer()
+
+    # during a ci-build we will get a warning that we are using a commit_id for the
+    # build instead of 'local'
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        c = ai2thor.controller.Controller(download_only=True, local_build=True)
+        c.server = FakeServer()
+
     return c
 
 def test_contstruct():
