@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -52,6 +53,7 @@ public class AgentManager : MonoBehaviour
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
+
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -1049,7 +1051,9 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
-                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+
+
+                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
@@ -1209,7 +1213,11 @@ public class MetadataPatch
 	public string errorCode;
 	public bool lastActionSuccess;
     public int agentId;
-    public System.Object actionReturn;
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
 }
 
 //adding AgentMetdata class so there is less confusing
@@ -1413,6 +1421,7 @@ public class JointMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ArmMetadata {
 
     //public Vector3 handTarget;
@@ -1510,11 +1519,17 @@ public struct MetadataWrapper
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
-    public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
     public int updateCount;
     public int fixedUpdateCount;
+
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
+
 }
 
 /*
