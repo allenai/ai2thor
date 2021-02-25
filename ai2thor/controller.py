@@ -886,7 +886,7 @@ class Controller(object):
     def unity_command(self, width, height, headless):
         command = self._build.executable_path
         if headless:
-            command += " -batchmode"
+            command += " -batchmode -nographics"
         else:
             fullscreen = 1 if self.fullscreen else 0
             if QUALITY_SETTINGS[self.quality] == 0:
