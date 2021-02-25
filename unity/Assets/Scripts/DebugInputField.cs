@@ -2730,12 +2730,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.moveMagnitude = 159f;
                         action.x = 0.5f;
                         action.y = 0.5f;
-<<<<<<< HEAD
+
                         action.autoSimulation = false;
-						PhysicsController.ProcessControlCommand(action);                  
-=======
-						CurrentActiveController().ProcessControlCommand(action);                  
->>>>>>> origin/master
+                        PhysicsController.ProcessControlCommand(action);                  
+                        CurrentActiveController().ProcessControlCommand(action);                  
 						break;
 					}
 
