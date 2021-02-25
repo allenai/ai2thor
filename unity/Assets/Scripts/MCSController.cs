@@ -325,7 +325,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 SimObjPhysics firstObject = hits.First().transform.gameObject
                     .GetComponentInParent<SimObjPhysics>();
 
-                if(firstObject != null && firstObject.IsReceptacle && firstObject.ReceptacleObjects.Contains(target)) {
+                if(firstObject != null && firstObject.IsReceptacle && firstObject.SimObjectsContainedByReceptacle.Contains(target)) {
                     containerObject = firstObject;
                 }
             }
@@ -675,12 +675,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
-        if (!this.actionComplete) {
+        if (agentState != AgentState.ActionComplete) {
             action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
-        return !this.actionComplete;
+        return agentState != AgentState.ActionComplete;
     }
 
     private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
@@ -784,7 +784,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }

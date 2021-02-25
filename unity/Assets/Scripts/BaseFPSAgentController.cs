@@ -1406,7 +1406,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
-		public virtual  MetadataPatch generateMetadataPatch()
+        public WorldSpaceBounds WorldCoordinatesOfBoundingBox(SimObjPhysics sop)
+        {
+            WorldSpaceBounds b = new WorldSpaceBounds();
+            Transform recBox = sop.BoundingBox == null && sop.transform.parent != null && sop.transform.parent.name != "Objects" ? sop.transform.Find("ReceptacleTriggerBox") : null;
+
+            if (sop.BoundingBox == null && recBox == null)
+            {
+                Debug.LogError(sop.transform.name + " is missing BoundingBox reference!");
+                return b;
+            }
+
+            BoxCollider col = sop.BoundingBox != null ? sop.BoundingBox.GetComponent<BoxCollider>() : recBox.GetComponent<BoxCollider>();
+            List<Vector3> corners = new List<Vector3>();
+
+            Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p1 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p2 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p3 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p4 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p5 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p6 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f);
+            Vector3 p7 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f);
+
+
+            corners.Add(p0);
+            corners.Add(p1);
+            corners.Add(p2);
+            corners.Add(p3);
+            corners.Add(p4);
+            corners.Add(p5);
+            corners.Add(p6);
+            corners.Add(p7);
+
+            b.objectBoundsCorners = corners.ToArray();
+
+            return b;
+        }
+
+        public virtual  MetadataPatch generateMetadataPatch()
 		{
             MetadataPatch patch = new MetadataPatch();
             patch.lastAction = this.lastAction;

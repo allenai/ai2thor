@@ -4613,7 +4613,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             */
 
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
 
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
@@ -5215,7 +5215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Dictionary<string, Transform> previousParents = new Dictionary<string, Transform>();
 
             if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().SimObjectsContainedByReceptacle) {
                     previousParents.Add(item.objectID, item.transform.parent);
                     item.transform.SetParent(canOpen.GetComponent<SimObjPhysics>().transform);
                 }
@@ -5244,7 +5244,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().SimObjectsContainedByReceptacle) {
                     if (previousParents.ContainsKey(item.objectID)) {
                         item.transform.SetParent(previousParents[item.objectID]);
                     }
@@ -5290,7 +5290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (coo.GetComponent<SimObjPhysics>().IsReceptacle)
             {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects)
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().SimObjectsContainedByReceptacle)
                 {
                     previousParents.Add(item.objectID, item.transform.parent);
                     item.transform.SetParent(coo.GetComponent<SimObjPhysics>().transform);
@@ -5300,7 +5300,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool success = false;
             if (coo != null)
             {
-                coo.Interact(openPercent);
+                coo.Interact();
             }
 
             yield return new WaitUntil(() => (coo != null && coo.GetiTweenCount() == 0));
@@ -5340,7 +5340,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (coo.GetComponent<SimObjPhysics>().IsReceptacle)
             {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects)
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().SimObjectsContainedByReceptacle)
                 {
                     if (previousParents.ContainsKey(item.objectID))
                     {
@@ -5885,7 +5885,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (Physics.autoSimulation) {
-                        StartCoroutine(InteractAndWait(codd, previousOpenPercent));
+                        StartCoroutine(InteractAndWait(codd, false, previousOpenPercent));
                     } else {
                         OpenOrCloseObject(codd, previousOpenPercent);
                     }

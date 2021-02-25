@@ -497,7 +497,7 @@ public class AgentManager : MonoBehaviour
     }
 
 	public virtual void setReadyToEmit(bool readyToEmit) {
-		this.readyToEmit = readyToEmit;
+		agentManagerState = AgentState.Emit;
 	}
 
     // Decide whether agent has stopped actions
@@ -1146,7 +1146,9 @@ public class ObjectMetadata
 	public string[] parentReceptacles;
 	//public float currentTime;
     public bool isMoving;//true if this game object currently has a non-zero velocity
-    public AxisAlignedBoundingBox axisAlignedBoundingBox;
+
+	public WorldSpaceBounds objectBounds;
+	public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
 
     // MCS Additions
@@ -1174,6 +1176,13 @@ public class SceneBounds
 
     //the size of the bounding box of the scene in worldspace coordinates (world x, y, z)
     public Vector3 size;
+}
+
+[Serializable]
+public class WorldSpaceBounds
+{
+	//8 corners of the box that bounds a sim object
+	public Vector3[] objectBoundsCorners;
 }
 
 //for returning a world axis aligned bounding box
