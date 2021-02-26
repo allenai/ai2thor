@@ -148,6 +148,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ikSolver.ManipulateArm();
 
             if (!Physics.autoSimulation) {
+                Physics.SyncTransforms();
                 Physics.Simulate(fixedDeltaTime);
             }
 

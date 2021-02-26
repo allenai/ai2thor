@@ -2193,6 +2193,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // pass in the timeStep to advance the physics simulation
+                Physics.SyncTransforms();
                 Physics.Simulate(timeStep);
                 this.AdvancePhysicsStepCount++;
             }
