@@ -173,6 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // we call this one more time in the event that the arm collided and was reset
         ikSolver.ManipulateArm();
         if (!Physics.autoSimulation) {
+            Physics.SyncTransforms();
             Physics.Simulate(fixedDeltaTime);
         }
 
