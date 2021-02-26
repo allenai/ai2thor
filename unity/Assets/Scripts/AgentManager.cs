@@ -261,6 +261,7 @@ public class AgentManager : MonoBehaviour
         // this value False allows the user complete control of all Physics Simulation
         // if they need deterministic simulations.
         Physics.autoSimulation = action.autoSimulation;
+        Physics.autoSyncTransforms = action.autoSyncTransforms;
 
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
@@ -1687,6 +1688,7 @@ public class ServerAction
 	public int randomSeed;
 	public float moveMagnitude;
 	public bool autoSimulation = true;
+	public bool autoSyncTransforms = true;
 	public bool simplifyPhysics = false;
 	public float startAgentsRotatedBy = 0f;
 	public float visibilityDistance;
