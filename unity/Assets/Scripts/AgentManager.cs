@@ -256,6 +256,11 @@ public class AgentManager : MonoBehaviour
 		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+        // we default Physics.autoSimulation to False in the built Player, but
+        // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
+        // this value False allows the user complete control of all Physics Simulation
+        // if they need deterministic simulations.
+        Physics.autoSimulation = action.autoSimulation;
 
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
