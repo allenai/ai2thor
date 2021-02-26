@@ -100,23 +100,30 @@ class MetadataList(list):
         self._cached_key_sequences = cached_key_sequences
 
     def __getitem__(self, key):
-        key_sequence = self._key_sequence + (key,)
-        if key_sequence in self._cached_key_sequences:
-            return self._cached_key_sequences[key_sequence]
+        is_slice = isinstance(key, slice)
+        if not is_slice:
+            key_sequence = self._key_sequence + (key,)
+            if key_sequence in self._cached_key_sequences:
+                return self._cached_key_sequences[key_sequence]
 
         # Let Python handle the KeyError
         value = self._child_metadata[key]
 
         if isinstance(value, dict):
             value = MetadataDict(
-                child_metadata=value, key_sequence=self._key_sequence + (key,)
+                child_metadata=value,
+                key_sequence=self._key_sequence + (key,),
+                cached_key_sequences=self._cached_key_sequences,
             )
         elif isinstance(value, list):
             value = MetadataList(
-                child_metadata=value, key_sequence=self._key_sequence + (key,)
+                child_metadata=value,
+                key_sequence=self._key_sequence + (key,),
+                cached_key_sequences=self._cached_key_sequences,
             )
 
-        self._cached_key_sequences[key_sequence] = value
+        if not is_slice:
+            self._cached_key_sequences[key_sequence] = value
         return value
 
 
@@ -258,7 +265,7 @@ class Event:
         self._cached_metadata = MetadataDict(
             child_metadata=self._metadata,
             key_sequence=tuple(),
-            cached_key_sequences=dict()
+            cached_key_sequences=dict(),
         )
         return self._cached_metadata
 
