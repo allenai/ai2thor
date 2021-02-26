@@ -2,6 +2,7 @@ import argparse
 import datetime
 import json
 import pdb
+import threading
 
 import ai2thor.controller
 import ai2thor
@@ -9,20 +10,13 @@ import random
 import copy
 import time
 
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS
 
 
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
-controller = ai2thor.controller.Controller(
-    scene=scene_names[0], gridSize=0.25,
-    width=224, height=224, agentMode='arm', fieldOfView=100,
-    agentControllerType='mid-level',
-    server_class=ai2thor.fifo_server.FifoServer,
-    useMassThreshold = True, massThreshold = 10,
-)
 
 
 def parse_args():
@@ -30,6 +24,10 @@ def parse_args():
     parser.add_argument('--generate_test', default=False, action='store_true')
     parser.add_argument('--number_of_test', default=20,type=int)
     parser.add_argument('--max_seq_len', default=100,type=int)
+    parser.add_argument('--parallel_thread', default=1,type=int)
+    parser.add_argument(
+        "--commit_id", type=str, default=None,
+    )
     args = parser.parse_args()
     global MAX_TESTS
     MAX_TESTS = args.number_of_test
@@ -37,27 +35,29 @@ def parse_args():
     MAX_EP_LEN = args.max_seq_len
     return args
 
-def reset_the_scene_and_get_reachables(scene_name=None):
+def reset_the_scene_and_get_reachables(controller, scene_name=None):
     if scene_name is None:
         scene_name = random.choice(scene_names)
     controller.reset(scene_name)
     return get_reachable_positions(controller)
 
 
-def random_tests():
+def random_tests(controller):
     all_timers = []
 
     all_dict = {}
 
     for i in range(MAX_TESTS):
         print('test number', i)
-        reachable_positions = reset_the_scene_and_get_reachables()
+        reachable_positions = reset_the_scene_and_get_reachables(controller)
 
         initial_location = random.choice(reachable_positions)
         initial_rotation = random.choice([i for i in range(0, 360, 45)])
-        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-        initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
+        initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
+
         controller.step('PausePhysicsAutoSim')
+        controller.step(action='MakeAllObjectsMoveable')
         all_commands = []
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
@@ -99,7 +99,7 @@ def random_tests():
         all_dict[len(all_dict)] = dict_to_add
         # print('FPS', sum(all_timers) / len(all_timers))
     return all_dict
-def determinism_test(all_tests):
+def determinism_test(controller, all_tests):
     # Redo the actions 20 times:
     # only do this if an object is picked up
     for k, test_point in all_tests.items():
@@ -136,23 +136,40 @@ def determinism_test(all_tests):
         else:
             print('test {} passed'.format(k))
 
-def test_generator():
-    all_dict = random_tests()
+def test_generator(controller):
+    all_dict = random_tests(controller)
     with open('determinism_json.json' ,'w') as f:
         json.dump(all_dict, f)
 
-def test_from_file():
+def test_from_file(controller):
     with open('determinism_json.json' ,'r') as f:
         all_dict = json.load(f)
-    determinism_test(all_dict)
+    determinism_test(controller, all_dict)
+
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.generate_test:
-        test_generator()
-    else:
-        test_from_file()
+    if args.commit_id is not None:
+        ENV_ARGS['commit_id'] = args.commit_id
+        ENV_ARGS['scene'] = 'FloorPlan1_physics'
 
+    if args.generate_test:
+
+        controller = ai2thor.controller.Controller(**ENV_ARGS)
+        print('controller build', controller._build.url)
+        test_generator(controller)
+    else:
+        threads = []
+        for i in range(args.parallel_thread):
+            controller = ai2thor.controller.Controller(**ENV_ARGS)
+            print('controller build', controller._build.url)
+            x = threading.Thread(target=test_from_file, args=(controller,))
+            threads.append(x)
+            x.start()
+        for index, thread in enumerate(threads):
+            print("Main    : before joining thread %d.", index)
+            thread.join()
+            print("Main    : thread %d done", index)
 
 
 

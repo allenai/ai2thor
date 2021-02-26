@@ -1,5 +1,6 @@
 import copy
 import math
+import ai2thor
 
 ADITIONAL_ARM_ARGS = {
     'disableRendering': True,
@@ -10,9 +11,17 @@ ADITIONAL_ARM_ARGS = {
     'move_constant': 0.05,
 }
 
+ENV_ARGS = dict(gridSize=0.25,
+                width=224, height=224, agentMode='arm', fieldOfView=100,
+                agentControllerType='mid-level',
+                server_class=ai2thor.fifo_server.FifoServer,
+                useMassThreshold = True, massThreshold = 10,)
+
 def get_reachable_positions(controller):
     event = controller.step('GetReachablePositions')
     reachable_positions = event.metadata['reachablePositions']
+    if len(reachable_positions) == 0:
+        reachable_positions = event.metadata['actionReturn'] #TODO we have to change this everywhere
     return reachable_positions
 def execute_command(controller, command,action_dict_addition):
 
