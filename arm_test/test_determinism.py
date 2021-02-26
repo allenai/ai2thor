@@ -29,27 +29,34 @@ def main(controller):
 
     for i in range(MAX_TESTS):
         reachable_positions = reset_the_scene_and_get_reachables(controller)
+        all_command_details = []
 
         initial_location = random.choice(reachable_positions)
         initial_rotation = random.choice([i for i in range(0, 360, 45)])
-        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
-        initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
+        initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
+        all_command_details.append(initial_pose)
 
         controller.step('PausePhysicsAutoSim')
         controller.step(action='MakeAllObjectsMoveable')
+        all_command_details.append(dict(action='PausePhysicsAutoSim'))
+        all_command_details.append(dict(action='MakeAllObjectsMoveable'))
         all_commands = []
+
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
-            execute_command(controller, command, ADITIONAL_ARM_ARGS)
+            details = execute_command(controller, command, ADITIONAL_ARM_ARGS)
             all_commands.append(command)
+            all_command_details.append(details)
             last_event_success = controller.last_event.metadata['lastActionSuccess']
 
             pickupable = controller.last_event.metadata['arm']['PickupableObjectsInsideHandSphere']
             picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
             if len(pickupable) > 0 and len(picked_up_before) == 0:
                 cmd = 'p'
-                execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+                details = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+                all_command_details.append(details)
                 all_commands.append(cmd)
                 if controller.last_event.metadata['lastActionSuccess'] is False:
                     print('Failed to pick up ')

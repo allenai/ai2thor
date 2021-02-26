@@ -1,6 +1,7 @@
 import copy
 import math
 import ai2thor
+import pdb
 
 ADITIONAL_ARM_ARGS = {
     'disableRendering': True,
@@ -15,13 +16,18 @@ ENV_ARGS = dict(gridSize=0.25,
                 width=224, height=224, agentMode='arm', fieldOfView=100,
                 agentControllerType='mid-level',
                 server_class=ai2thor.fifo_server.FifoServer,
-                useMassThreshold = True, massThreshold = 10,)
+                # useMassThreshold = True, massThreshold = 10, #TODO put back
+                autoSimulation=False, autoSyncTransforms=False #TODO Are you sure? change everywhere?
+                )
 
 def get_reachable_positions(controller):
     event = controller.step('GetReachablePositions')
     reachable_positions = event.metadata['reachablePositions']
-    if len(reachable_positions) == 0:
+    if reachable_positions is None or len(reachable_positions) == 0:
         reachable_positions = event.metadata['actionReturn'] #TODO we have to change this everywhere
+    if reachable_positions is None or len(reachable_positions) == 0:
+        print('Scene name', controller.last_event.metadata['sceneName'])
+        pdb.set_trace()
     return reachable_positions
 def execute_command(controller, command,action_dict_addition):
 
@@ -139,12 +145,18 @@ def get_current_full_state(controller):
 
 
 def two_dict_equal(dict1, dict2, threshold=0.001):
-    assert len(dict1) == len(dict2), print('different len', dict1, dict2)
+    if len(dict1) != len(dict2):
+        print('different len', dict1, dict2)
+        return False
+    # assert len(dict1) == len(dict2), print('different len', dict1, dict2)
     equal = True
     for k in dict1:
         val1 = dict1[k]
         val2 = dict2[k]
-        assert type(val1) == type(val2) or (type(val1) in [int, float] and type(val2) in [int, float]), (print('different type', dict1, dict2))
+        if not (type(val1) == type(val2) or (type(val1) in [int, float] and type(val2) in [int, float])):
+            print('different type', dict1, dict2)
+            return False
+        # assert type(val1) == type(val2) or (type(val1) in [int, float] and type(val2) in [int, float]), ()
         if type(val1) == dict:
             equal = two_dict_equal(val1, val2)
         elif type(val1) == list:

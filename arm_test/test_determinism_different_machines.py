@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument('--number_of_test', default=20,type=int)
     parser.add_argument('--max_seq_len', default=100,type=int)
     parser.add_argument('--parallel_thread', default=1,type=int)
+    parser.add_argument('--test_file_name', default='determinism_json.json',type=str)
     parser.add_argument(
         "--commit_id", type=str, default=None,
     )
@@ -113,7 +114,7 @@ def determinism_test(controller, all_tests):
         all_action_success = []
 
         controller.reset(scene_name)
-        teleport_action = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10)
+        teleport_action = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         event1 = controller.step(**teleport_action)
         all_action_details.append(teleport_action)
         all_action_success.append(event1.metadata['lastActionSuccess'])
@@ -136,13 +137,13 @@ def determinism_test(controller, all_tests):
         else:
             print('test {} passed'.format(k))
 
-def test_generator(controller):
+def test_generator(controller, args):
     all_dict = random_tests(controller)
-    with open('determinism_json.json' ,'w') as f:
+    with open(args.test_file_name ,'w') as f:
         json.dump(all_dict, f)
 
-def test_from_file(controller):
-    with open('determinism_json.json' ,'r') as f:
+def test_from_file(controller, args):
+    with open(args.test_file_name ,'r') as f:
         all_dict = json.load(f)
     determinism_test(controller, all_dict)
 
@@ -157,13 +158,13 @@ if __name__ == '__main__':
 
         controller = ai2thor.controller.Controller(**ENV_ARGS)
         print('controller build', controller._build.url)
-        test_generator(controller)
+        test_generator(controller, args)
     else:
         threads = []
         for i in range(args.parallel_thread):
             controller = ai2thor.controller.Controller(**ENV_ARGS)
             print('controller build', controller._build.url)
-            x = threading.Thread(target=test_from_file, args=(controller,))
+            x = threading.Thread(target=test_from_file, args=(controller,args,))
             threads.append(x)
             x.start()
         for index, thread in enumerate(threads):

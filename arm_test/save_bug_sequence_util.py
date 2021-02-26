@@ -1,10 +1,16 @@
-import pdb, os
+import pdb, os, sys
 import datetime
 import cv2
 def save_first_frame(controller, image_path):
     frame = controller.last_event.frame
     cv2.imwrite(image_path, frame[:,:,[2,1,0]])
-def save_failed_sequence(controller, sequence, scene_name, image_path='/Users/kianae/Desktop/bug_visualization'):
+def save_failed_sequence(controller, sequence, scene_name, image_path=None):
+    if not image_path:
+        if sys.platform == 'darwin':
+            image_path = '/Users/kianae/Desktop/bug_visualization'
+        else:
+            # sys.platform == 'linux':
+            image_path = '/home/kianae/bug_visualization'
     now = datetime.datetime.now()
     time_str = now.strftime("%m_%d_%Y_%H_%M_%S_%f")
     image_path = os.path.join(image_path, time_str)
