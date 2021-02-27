@@ -120,6 +120,62 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.Pass();
         }
 
+        public override void LookDown(ServerAction action) 
+        {
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("down", action.degrees))
+            {
+                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookDown(action);
+            return;
+        }
+
+        public override void LookUp(ServerAction action) 
+        {
+
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("up", action.degrees))
+            {
+                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookUp(action);
+        }
+
         public override void Rotate(ServerAction action)
         {
             //only default hand if not manually Interacting with things
@@ -155,6 +211,47 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
+        }
+
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
+            );
+        }
+
+        public void Teleport(
+            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.assertTeleportedNearGround(targetPosition: position);
+            actionFinished(success: true);
+        }
+
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false) {
+            TeleportFull(
+                position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
+            );
+        }
+
+        public void TeleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        ) {
+            base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.assertTeleportedNearGround(targetPosition: position);
+            actionFinished(success: true);
         }
 
         public override void MoveAhead(ServerAction action)

@@ -79,6 +79,10 @@ public class CanOpen_Object : MonoBehaviour {
 
         if(!isOpen)
         currentOpenness = 0.0f;
+
+        //make sure correct bounding box is referenced depending on if initial state at scene start is open or closed
+        //set initial state by toggling the isOpen bool on this component, and also adjusting the rotation/position of any openable parts accordingly
+        SwitchActiveBoundingBox();
 	}
 
 	// Update is called once per frame

@@ -31,10 +31,10 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     public void SwitchRenderersToHide(string mode)
     {
-        if(mode == "default")
+        if(mode == "default" || mode == "arm")
         RenderersToHide = TallRenderers;
 
-        else if(mode == "bot")
+        else if(mode == "locobot")
         RenderersToHide = BotRenderers;
 
         else if(mode == "drone")

@@ -101,6 +101,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsReceptacle;
     public bool IsPickupable;
     public bool IsMoveable;
+	public bool isStatic;
     public bool IsToggleable;
     public bool IsOpenable;
     public bool IsBreakable;
@@ -834,6 +835,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         this.IsReceptacle = Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && ReceptacleTriggerBoxes != null;
         this.IsPickupable = this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
         this.IsMoveable = this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+		this.isStatic = this.PrimaryProperty == SimObjPrimaryProperty.Static;
         this.IsToggleable = this.isToggleable;
         this.IsOpenable = this.GetComponent<CanOpen_Object>();
         this.IsBreakable = this.GetComponentInChildren<Break>();
