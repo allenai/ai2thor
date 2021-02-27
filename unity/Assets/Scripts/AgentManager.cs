@@ -1737,6 +1737,9 @@ public class ServerAction
     public string agentMode = "default"; //mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
+    public bool headless;
+    public int height;
+    public int width;
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
