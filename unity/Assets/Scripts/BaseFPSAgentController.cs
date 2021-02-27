@@ -489,6 +489,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
+            if (action.headless) {
+                if (action.height > 0 && action.width > 0) {
+                    RenderTexture rt = new RenderTexture(action.width, action.height, 24);
+                    rt.Create();
+                    m_Camera.targetTexture = rt;
+                } else {
+                    errorMessage = "height/width must be specified when running in headless mode";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
+            }
+
             //default is 90 defined in the ServerAction class, specify whatever you want the default to be
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
