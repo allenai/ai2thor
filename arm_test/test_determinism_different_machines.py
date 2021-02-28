@@ -10,7 +10,7 @@ import random
 import copy
 import time
 
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS, reset_the_scene_and_get_reachables
 
 
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
@@ -36,12 +36,7 @@ def parse_args():
     MAX_EP_LEN = args.max_seq_len
     return args
 
-def reset_the_scene_and_get_reachables(controller, scene_name=None):
-    if scene_name is None:
-        scene_name = random.choice(scene_names)
-    controller.reset(scene_name)
-    return get_reachable_positions(controller)
-
+#TODO add extra step here?
 
 def random_tests(controller):
     all_timers = []
@@ -57,8 +52,6 @@ def random_tests(controller):
         event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
 
-        controller.step('PausePhysicsAutoSim')
-        controller.step(action='MakeAllObjectsMoveable')
         all_commands = []
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
@@ -113,15 +106,11 @@ def determinism_test(controller, all_tests):
         all_action_details = []
         all_action_success = []
 
-        controller.reset(scene_name)
+        reset_the_scene_and_get_reachables(controller, scene_name)
         teleport_action = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         event1 = controller.step(**teleport_action)
         all_action_details.append(teleport_action)
         all_action_success.append(event1.metadata['lastActionSuccess'])
-        pause_physics = dict(action='PausePhysicsAutoSim')
-        event = controller.step(**pause_physics)
-        all_action_success.append(event.metadata['lastActionSuccess'])
-        all_action_details.append(pause_physics)
         for cmd in all_commands:
             action_detail = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
             all_action_details.append(action_detail)

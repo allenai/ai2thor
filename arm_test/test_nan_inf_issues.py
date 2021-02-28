@@ -7,7 +7,7 @@ import ai2thor
 import random
 import copy
 import time
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, dict_recursive_nan_check, ENV_ARGS
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, dict_recursive_nan_check, ENV_ARGS, reset_the_scene_and_get_reachables
 
 MAX_TESTS = 3000
 MAX_EP_LEN = 1000
@@ -29,12 +29,6 @@ visualization_args = {'width': 224, 'height': 224, 'visibilityDistance': 1.0, 'f
 
 # controller = ai2thor.controller.Controller(**visualization_args)
 
-def reset_the_scene_and_get_reachables(controller, scene_name=None):
-    if scene_name is None:
-        scene_name = random.choice(scene_names)
-    controller.reset(scene_name)
-    return get_reachable_positions(controller)
-
 def main(controller):
     all_timers = []
 
@@ -49,8 +43,6 @@ def main(controller):
         event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
 
-        controller.step('PausePhysicsAutoSim')
-        controller.step(action='MakeAllObjectsMoveable')
         all_commands = []
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):

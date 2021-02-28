@@ -7,7 +7,7 @@ import ai2thor
 import random
 import copy
 import time
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state, reset_the_scene_and_get_reachables
 
 # RESOLUTION = 900
 from save_bug_sequence_util import save_failed_sequence
@@ -25,11 +25,6 @@ set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 
 
-def reset_the_scene_and_get_reachables(controller, scene_name=None):
-    if scene_name is None:
-        scene_name = random.choice(scene_names)
-    controller.reset(scene_name)
-    return get_reachable_positions(controller)
 
 def main(controller):
 
@@ -49,10 +44,9 @@ def main(controller):
         initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         all_exact_command.append(initial_pose)
 
-        controller.step('PausePhysicsAutoSim')
-        controller.step(action='MakeAllObjectsMoveable')
-        all_exact_command.append(dict(action='PausePhysicsAutoSim'))
-        all_exact_command.append(dict(action='MakeAllObjectsMoveable'))
+
+        # all_exact_command.append(dict(action='PausePhysicsAutoSim'))
+        # all_exact_command.append(dict(action='MakeAllObjectsMoveable'))
 
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):

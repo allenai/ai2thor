@@ -7,7 +7,7 @@ import ai2thor
 import random
 import copy
 import time
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS, reset_the_scene_and_get_reachables
 
 MAX_TESTS = 300
 MAX_EP_LEN = 100
@@ -16,13 +16,9 @@ scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 
+def extra_step(controller): #TODO remove or add everywhere?
+    x = controller.step("AdvancePhysicsStep")
 
-
-def reset_the_scene_and_get_reachables(controller, scene_name=None):
-    if scene_name is None:
-        scene_name = random.choice(scene_names)
-    controller.reset(scene_name)
-    return get_reachable_positions(controller)
 
 def main(controller):
     all_timers = []
@@ -33,11 +29,14 @@ def main(controller):
 
         initial_location = random.choice(reachable_positions)
         initial_rotation = random.choice([i for i in range(0, 360, 45)])
+        extra_step(controller)
         event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         all_command_details.append(initial_pose)
 
+        extra_step(controller)
         controller.step('PausePhysicsAutoSim')
+        extra_step(controller)
         controller.step(action='MakeAllObjectsMoveable')
         all_command_details.append(dict(action='PausePhysicsAutoSim'))
         all_command_details.append(dict(action='MakeAllObjectsMoveable'))
@@ -46,6 +45,7 @@ def main(controller):
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
+            extra_step(controller)
             details = execute_command(controller, command, ADITIONAL_ARM_ARGS)
             all_commands.append(command)
             all_command_details.append(details)
@@ -55,6 +55,7 @@ def main(controller):
             picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
             if len(pickupable) > 0 and len(picked_up_before) == 0:
                 cmd = 'p'
+                extra_step(controller)
                 details = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
                 all_command_details.append(details)
                 all_commands.append(cmd)
@@ -80,11 +81,11 @@ def main(controller):
         picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
         if len(picked_up_before) > 0:
             for _ in range(10):
-                controller.reset(controller.last_event.metadata['sceneName'])
+                reset_the_scene_and_get_reachables(controller, controller.last_event.metadata['sceneName'])
+                extra_step(controller)
                 event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
-                controller.step('PausePhysicsAutoSim')
-                controller.step(action='MakeAllObjectsMoveable')
                 for cmd in all_commands:
+                    extra_step(controller)
                     execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
                     last_event_success = controller.last_event.metadata['lastActionSuccess']
                 current_state = get_current_full_state(controller)

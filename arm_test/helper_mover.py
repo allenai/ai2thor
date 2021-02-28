@@ -1,5 +1,6 @@
 import copy
 import math
+import random
 import ai2thor
 import pdb
 
@@ -12,13 +13,33 @@ ADITIONAL_ARM_ARGS = {
     'move_constant': 0.05,
 }
 
+SCENE_INDICES = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
+SCENE_NAMES = ['FloorPlan{}_physics'.format(i) for i in SCENE_INDICES if i != 12] #TODO put 12 back
+
 ENV_ARGS = dict(gridSize=0.25,
                 width=224, height=224, agentMode='arm', fieldOfView=100,
                 agentControllerType='mid-level',
                 server_class=ai2thor.fifo_server.FifoServer,
-                # useMassThreshold = True, massThreshold = 10, #TODO put back
+                useMassThreshold = True, massThreshold = 10,
                 autoSimulation=False, autoSyncTransforms=False #TODO Are you sure? change everywhere?
                 )
+
+def make_all_objects_unbreakable(controller):
+    all_breakable_objects = [o['objectType'] for o in controller.last_event.metadata['objects'] if o['breakable'] is True]
+    all_breakable_objects = set(all_breakable_objects)
+    for obj_type in all_breakable_objects:
+        controller.step(action='MakeObjectsOfTypeUnbreakable', objectType=obj_type)
+
+
+def reset_the_scene_and_get_reachables(controller, scene_name=None):
+    if scene_name is None:
+        scene_name = random.choice(SCENE_NAMES)
+    controller.reset(scene_name)
+    #TODO change these everywhere
+    controller.step('PausePhysicsAutoSim')
+    controller.step(action='MakeAllObjectsMoveable')
+    make_all_objects_unbreakable(controller)
+    return get_reachable_positions(controller)
 
 def get_reachable_positions(controller):
     event = controller.step('GetReachablePositions')
