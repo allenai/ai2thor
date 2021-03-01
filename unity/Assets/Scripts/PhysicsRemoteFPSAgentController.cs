@@ -4050,16 +4050,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-            StartCoroutine(setObjectPoses(action.objectPoses));
+            StartCoroutine(setObjectPoses(objectPoses: action.objectPoses, forceKinematic: action.forceKinematic));
         }
 
         // SetObjectPoses is performed in a coroutine otherwise if
         // a frame does not pass prior to this AND the imageSynthesis
         // is enabled for say depth or normals, Unity will crash on 
         // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses){
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool forceKinematic = false){
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses);
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses: objectPoses, forceKinematic: forceKinematic);
             actionFinished(success);
         }
 

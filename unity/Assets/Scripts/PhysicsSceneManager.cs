@@ -292,7 +292,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         RequiredObjects.Remove(sop.gameObject);
     }
 
-    public bool SetObjectPoses(ObjectPose[] objectPoses) {
+    public bool SetObjectPoses(
+        ObjectPose[] objectPoses, bool forceKinematic = false
+    ) {
         SetupScene();
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0) {
@@ -330,6 +332,14 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.transform.position = objectPose.position;
                 copy.transform.eulerAngles = objectPose.rotation;
                 copy.gameObject.SetActive(true);
+
+                if (forceKinematic) {
+                    Rigidbody rb = copy.GetComponent<Rigidbody>();
+                    if (rb != null) {
+                        rb.isKinematic = true;
+                    }
+                }
+
                 //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
