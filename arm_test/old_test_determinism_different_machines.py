@@ -10,16 +10,44 @@ import random
 import copy
 import time
 
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS, reset_the_scene_and_get_reachables
+from helper_mover import get_reachable_positions, execute_command, get_current_full_state, two_dict_equal
 
 
-scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
-scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
+
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 
-def extra_step(controller): #TODO remove or add everywhere?
-    x = controller.step("AdvancePhysicsStep")
+OLD_ENV_ARGS = dict(
+    width=224,
+    height=224, #LATER_TODO change this everywhere
+    # player_screen_width=self._start_player_screen_width,
+    # player_screen_height=self._start_player_screen_height,
+    agentMode='arm',
+    agentControllerType='mid-level',
+    server_class=ai2thor.fifo_server.FifoServer,
+)
+
+OLD_ADITIONAL_ARM_ARGS = {
+    'disableRendering': False,
+    'restrictMovement': False,
+    'waitForFixedUpdate': False,
+    'returnToStart': True,
+    'speed': 2,
+    'move_constant': 5,
+}
+
+
+def old_reset_the_scene_and_get_reachables(controller, scene_name = None):
+    SCENE_INDICES = [i + 1 for i in range(30)]# +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
+    SCENE_NAMES = ['FloorPlan{}_physics'.format(i) for i in SCENE_INDICES]
+    if scene_name is None:
+        scene_name = random.choice(SCENE_NAMES)
+    controller.reset(scene_name)
+    # controller.step('PausePhysicsAutoSim')
+    # controller.step(action='MakeAllObjectsMoveable')
+    # make_all_objects_unbreakable(controller)
+    return get_reachable_positions(controller)
+
 
 
 def parse_args():
@@ -47,11 +75,11 @@ def random_tests(controller):
 
     for i in range(MAX_TESTS):
         print('test number', i)
-        reachable_positions = reset_the_scene_and_get_reachables(controller)
+        reachable_positions = old_reset_the_scene_and_get_reachables(controller)
 
         initial_location = random.choice(reachable_positions)
         initial_rotation = random.choice([i for i in range(0, 360, 45)])
-        extra_step(controller)
+
         event1 = controller.step(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         initial_pose = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
 
@@ -59,8 +87,8 @@ def random_tests(controller):
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
-            extra_step(controller)
-            execute_command(controller, command, ADITIONAL_ARM_ARGS)
+
+            execute_command(controller, command, OLD_ADITIONAL_ARM_ARGS)
             all_commands.append(command)
             last_event_success = controller.last_event.metadata['lastActionSuccess']
 
@@ -68,8 +96,8 @@ def random_tests(controller):
             picked_up_before = controller.last_event.metadata['arm']['HeldObjects']
             if len(pickupable) > 0 and len(picked_up_before) == 0:
                 cmd = 'p'
-                extra_step(controller)
-                execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+
+                execute_command(controller, cmd, OLD_ADITIONAL_ARM_ARGS)
                 all_commands.append(cmd)
                 if controller.last_event.metadata['lastActionSuccess'] is False:
                     print('Failed to pick up ')
@@ -111,15 +139,15 @@ def determinism_test(controller, all_tests):
         all_action_details = []
         all_action_success = []
 
-        reset_the_scene_and_get_reachables(controller, scene_name)
-        extra_step(controller)
+        old_reset_the_scene_and_get_reachables(controller, scene_name)
+
         teleport_action = dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=10, standing=True)
         event1 = controller.step(**teleport_action)
         all_action_details.append(teleport_action)
         all_action_success.append(event1.metadata['lastActionSuccess'])
         for cmd in all_commands:
-            extra_step(controller)
-            action_detail = execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+
+            action_detail = execute_command(controller, cmd, OLD_ADITIONAL_ARM_ARGS)
             all_action_details.append(action_detail)
             last_event_success = controller.last_event.metadata['lastActionSuccess']
             all_action_success.append(last_event_success)
@@ -147,18 +175,18 @@ def test_from_file(controller, args):
 if __name__ == '__main__':
     args = parse_args()
     if args.commit_id is not None:
-        ENV_ARGS['commit_id'] = args.commit_id
-        ENV_ARGS['scene'] = 'FloorPlan1_physics'
+        OLD_ENV_ARGS['commit_id'] = args.commit_id
+        OLD_ENV_ARGS['scene'] = 'FloorPlan1_physics'
 
     if args.generate_test:
 
-        controller = ai2thor.controller.Controller(**ENV_ARGS)
+        controller = ai2thor.controller.Controller(**OLD_ENV_ARGS)
         print('controller build', controller._build.url)
         test_generator(controller, args)
     else:
         threads = []
         for i in range(args.parallel_thread):
-            controller = ai2thor.controller.Controller(**ENV_ARGS)
+            controller = ai2thor.controller.Controller(**OLD_ENV_ARGS)
             print('controller build', controller._build.url)
             x = threading.Thread(target=test_from_file, args=(controller,args,))
             threads.append(x)
