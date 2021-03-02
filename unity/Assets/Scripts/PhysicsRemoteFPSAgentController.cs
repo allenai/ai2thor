@@ -4041,6 +4041,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void MakeObjectBreakable(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Object ID {objectId} appears to be invalid.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (sop.GetComponent<Break>()) {
+                sop.GetComponent<Break>().Unbreakable = false;
+            }
+            actionFinishedEmit(true);
+        }
+
         public void SetObjectPoses(
             List<ObjectPose> objectPoses, bool forceKinematic, bool enablePhysicsJitter
         ) {
@@ -4981,12 +4994,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(ServerAction action) {
+        public void DropHandObject(
+            bool autoSimulation = true,
+            bool forceAction = false,
+            float randomMagnitude = 1.0f
+        ) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
+                if (!forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
@@ -5011,7 +5028,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // Add some random rotational momentum to the dropped object to make things
                     // less deterministic.
                     // TODO: Need a parameter to control how much randomness we introduce.
-                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+                    rb.angularVelocity = randomMagnitude * UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(
                         target: ItemInHand.GetComponent<SimObjPhysics>(),
@@ -5023,7 +5040,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(!physicsSceneManager.physicsSimulationPaused)
                     {
                         //this is true by default
-                        if (action.autoSimulation) 
+                        if (autoSimulation) 
                         {
                             StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                         } 
@@ -5060,7 +5077,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject go = ItemInHand;
-            DropHandObject(action);
+            DropHandObject(
+                forceAction: action.forceAction,
+                autoSimulation: false,
+                randomMagnitude: 0.0f
+            );
             if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
