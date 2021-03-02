@@ -30,8 +30,8 @@ public class AgentManager : MonoBehaviour
 	private int activeAgentId;
 	public bool renderImage = true;
 	protected bool renderDepthImage;
-	protected bool renderObjectImage;
 	protected bool renderClassImage;
+	protected bool renderObjectImage;
 	protected bool renderNormalsImage;
     protected bool renderFlowImage;
     private bool defaultRenderObjectImage;
@@ -964,7 +964,7 @@ public class AgentManager : MonoBehaviour
 
 		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
             this.agentManagerState = AgentState.Processing;
-            ActionDispatcher.Dispatch(this, controlCommand);
+			ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null

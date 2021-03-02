@@ -457,10 +457,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
     }
 
-    // [REVIEW] This is worth noting that in 2.5 this function does not take a serveraction
-    // I am keeping this here in case there is any reflection code passing in as it does
-    // not seem to be referenced directly in code.
-    public void ResetAgentHandPosition(ServerAction action) {
+    public override void ResetAgentHandPosition() {
         // Don't reset the player's hand position if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
@@ -470,10 +467,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.ResetAgentHandPosition();
     }
 
-    // [REVIEW] This is worth noting that in 2.5 this function does not take a serveraction
-    // I am keeping this here in case there is any reflection code passing in as it does
-    // not seem to be referenced directly in code.
-    public void ResetAgentHandRotation(ServerAction action) {
+    public override void ResetAgentHandRotation() {
         // Don't reset the player's hand rotation if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||

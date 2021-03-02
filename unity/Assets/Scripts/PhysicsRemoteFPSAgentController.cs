@@ -4371,47 +4371,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
+
+            // MCS CHANGE START
+            // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
+            Transform previousParent = handSOP.transform.parent;
+            handSOP.transform.parent = null;
+            // MCS CHANGE END
+
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
+                ItemInHand.layer = 8; // SimObjVisible
+                                        // MCS ADDED BLOCK
+                ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                    collider.gameObject.layer = 8; // SimObjVisible
+                });
+                ItemInHand = null;
+                DefaultAgentHand();
 
                 // MCS CHANGE START
-                // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
-                Transform previousParent = handSOP.transform.parent;
-                handSOP.transform.parent = null;
-                // MCS CHANGE END
-
-                if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
-                    ItemInHand.layer = 8; // SimObjVisible
-                                          // MCS ADDED BLOCK
-                    ItemInHand.GetComponent<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
-                        collider.gameObject.layer = 8; // SimObjVisible
-                    });
-                    ItemInHand = null;
-                    DefaultAgentHand();
-
-                    // MCS CHANGE START
-                    if (!action.placeStationary) {
-                        // Reset isKinematic because it was set to true when the object was picked up.
-                        handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
-                    }
-                    // MCS CHANGE END
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-                    actionFinished(true);
-                } else {
-                    // MCS CHANGE NEXT LINE
-                    handSOP.transform.parent = previousParent;
-
-                    errorMessage = "No valid positions to place object found";
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                    actionFinished(false);
-                    return;
+                if (!action.placeStationary) {
+                    // Reset isKinematic because it was set to true when the object was picked up.
+                    handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
                 }
+                // MCS CHANGE END
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                actionFinished(true);
+            } else {
+                // MCS CHANGE NEXT LINE
+                handSOP.transform.parent = previousParent;
 
-                // #if UNITY_EDITOR
-                // watch.Stop();
-                // var elapsed = watch.ElapsedMilliseconds;
-                // print("place object took: " + elapsed + "ms");
-                // #endif
+                errorMessage = "No valid positions to place object found";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                actionFinished(false);
+                return;
             }
+
+            // #if UNITY_EDITOR
+            // watch.Stop();
+            // var elapsed = watch.ElapsedMilliseconds;
+            // print("place object took: " + elapsed + "ms");
+            // #endif       
         }
 
         //used for all actions that need a sim object target
@@ -4536,6 +4534,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //we have succesfully picked up something! 
                 target.GetComponent<SimObjPhysics>().isInAgentHand = true;
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true, target.ObjectID);
                 return;
             }
@@ -4613,12 +4612,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             */
 
-            //SetUpRotationBoxChecks();
-
             //we have succesfully picked up something! 
-            target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true, target.ObjectID);
+            //target.GetComponent<SimObjPhysics>().isInAgentHand = true;
+            //this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            //actionFinished(true, target.ObjectID);
             return true;
         }
 

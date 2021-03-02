@@ -388,12 +388,7 @@ public class InstantiatePrefabTest : MonoBehaviour
             );
             //if spawn area is clear, spawn it and return true that we spawned it
             if(CheckSpawnArea(sop, targetPosition, quat.rotation, false))
-            {
-
-                //translate position of the target sim object to the rsp.Point and offset in local y up
-                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
-                sop.transform.rotation = quat.rotation;
-                
+            {             
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
 
@@ -491,11 +486,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         return false;
 	}
 
-	//IMPORTANT INFO!//
-    //The prefab MUST have a Bounding Box with zeroed out transform, rotation, and 1, 1, 1 scale
-    //All adjustments to the Bounding Box must be done on the collider only using the
-    //"Edit Collider" button if you need to change the size
-    //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
     public bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
 		int layermask;

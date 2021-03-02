@@ -84,7 +84,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	}
 
-    void LateUpdate()
+    public virtual void LateUpdate()
     {
         //check what objects in the scene are currently in motion
         //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
