@@ -4041,25 +4041,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void SetObjectPoses(ServerAction action)
-        {
+        public void SetObjectPoses(
+            List<ObjectPose> objectPoses, bool forceKinematic, bool enablePhysicsJitter
+        ) {
             //make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if(action.objectPoses == null || action.objectPoses[0] == null)
+            if(objectPoses == null || objectPoses[0] == null)
             {
                 errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
                 actionFinished(false);
                 return;
             }
-            StartCoroutine(setObjectPoses(objectPoses: action.objectPoses, forceKinematic: action.forceKinematic));
+            StartCoroutine(setObjectPoses(
+                objectPoses: objectPoses.ToArray(),
+                forceKinematic: forceKinematic,
+                enablePhysicsJitter: enablePhysicsJitter
+            ));
         }
 
         // SetObjectPoses is performed in a coroutine otherwise if
         // a frame does not pass prior to this AND the imageSynthesis
         // is enabled for say depth or normals, Unity will crash on 
         // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool forceKinematic = false){
+        protected IEnumerator setObjectPoses(
+            ObjectPose[] objectPoses,
+            bool forceKinematic = false,
+            bool enablePhysicsJitter = true
+        ){
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses: objectPoses, forceKinematic: forceKinematic);
+            bool success = physicsSceneManager.SetObjectPoses(
+                objectPoses: objectPoses,
+                forceKinematic: forceKinematic,
+                enablePhysicsJitter: enablePhysicsJitter
+            );
             actionFinished(success);
         }
 

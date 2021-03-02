@@ -358,12 +358,14 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, 'local', False)
+    build = ai2thor.build.Build(arch=arch, commit_id=prefix, include_private_scenes=False)
+
     env = dict()
     if os.path.isdir('unity/Assets/Private/Scenes'):
         env['INCLUDE_PRIVATE_SCENES'] = 'true'
 
     build_dir = os.path.join("builds", build.name)
+    print(f"Saving local build to '{os.path.abspath(os.path.join('unity', build_dir))}'")
 
     if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")

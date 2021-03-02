@@ -293,7 +293,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public bool SetObjectPoses(
-        ObjectPose[] objectPoses, bool forceKinematic = false
+        ObjectPose[] objectPoses, bool forceKinematic = false, bool enablePhysicsJitter = true
     ) {
         SetupScene();
         bool shouldFail = false;
@@ -309,6 +309,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
             HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
+            List<Rigidbody> posedRigidbodies = new List<Rigidbody>();
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
@@ -333,14 +334,43 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.transform.eulerAngles = objectPose.rotation;
                 copy.gameObject.SetActive(true);
 
-                if (forceKinematic) {
+                if (forceKinematic || enablePhysicsJitter) {
                     Rigidbody rb = copy.GetComponent<Rigidbody>();
                     if (rb != null) {
-                        rb.isKinematic = true;
+                        posedRigidbodies.Add(rb);
                     }
                 }
+            }
 
-                //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
+            if (enablePhysicsJitter) {
+                bool savedAutoSimulation = Physics.autoSimulation;
+                Physics.autoSimulation = false;
+
+                List<float> savedDrag = new List<float>();
+                List<float> savedAngularDrag = new List<float>();
+
+                foreach (Rigidbody rb in posedRigidbodies) {
+                    savedDrag.Add(rb.drag);
+                    savedAngularDrag.Add(rb.angularDrag);
+
+                    rb.drag = 100f;
+                    rb.angularDrag = 100f;
+                }
+                for (int i = 0; i < 10; i++) {
+                    Physics.Simulate(0.01f);
+                }
+                for (int i = 0; i < posedRigidbodies.Count; i++) {
+                    posedRigidbodies[i].drag = savedDrag[i];
+                    posedRigidbodies[i].angularDrag = savedAngularDrag[i];
+                }
+
+                Physics.autoSimulation = savedAutoSimulation;
+            }
+
+            if (forceKinematic) {
+                foreach (Rigidbody rb in posedRigidbodies) {
+                    rb.isKinematic = true;
+                }
             }
         }
         SetupScene();

@@ -1318,6 +1318,17 @@ public class ObjectTypeCount
 [MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose
 {
+    public ObjectPose() {}
+
+    public ObjectPose(
+        string objectName,
+        Vector3 position,
+        Vector3 rotation
+    ) {
+        this.objectName = objectName;
+        this.position = position;
+        this.rotation = rotation;
+    }
     public string objectName;
     public Vector3 position;
     public Vector3 rotation;
@@ -1454,7 +1465,21 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(Dictionary<string, object> action) {
-        this.jObject = JObject.FromObject(action);
+        try {
+            var jsonResolver = new ShouldSerializeContractResolver();
+            this.jObject  = JObject.FromObject(action,
+                new Newtonsoft.Json.JsonSerializer()
+                {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver
+            });
+        } catch (InvalidOperationException e)  {
+            throw new InvalidOperationException(
+                "TL;DR: Use 'run' from the debug input field. If you're seeing this, you're in the Debug Input Field. " +
+                "There is a weird case where actions like Teleport having xyz parameters and rotation: Vector3() which also has xyz parameters results in a self-recursing loop. " +
+                $"{e.Message}"
+            );
+        }
     }
 
     public DynamicServerAction(JObject action) {
