@@ -241,7 +241,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
-            this.GetComponent<NavMeshAgent>().enabled = false;
+            //this.GetComponent<NavMeshAgent>().enabled = false;
 
             // Recordining initially disabled renderers and scene bounds 
             //then setting up sceneBounds based on encapsulating all renderers
@@ -278,13 +278,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            foreach(Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>())
-            {
-                if(r.enabled)
-                {
-                    r.enabled = false;
-                }
-            }
+            //foreach(Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>())
+            //{
+            //    if(r.enabled)
+            //    {
+            //        r.enabled = false;
+            //    }
+            //}
         }
 
 		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 

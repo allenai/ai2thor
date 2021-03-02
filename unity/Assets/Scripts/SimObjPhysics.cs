@@ -916,10 +916,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			}
 		}
 
-        if(this.transform.localScale != new Vector3(1, 1, 1))
-        {
-            Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
-        }
+		// [REVIEW] Although all art should be scaled approriately, there is currently too many assets which trigger this message
+		// Commenting out but keeping to clear up log while debugging merge
+        //if(this.transform.localScale != new Vector3(1, 1, 1))
+        //{
+        //    Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
+        //}
 		#endif
 		
 		//end debug setup stuff

@@ -124,6 +124,7 @@ public class AgentManager : MonoBehaviour
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+		StartCoroutine(EmitFrame());
 	}
 
 	private void initializePrimaryAgent()
@@ -497,7 +498,7 @@ public class AgentManager : MonoBehaviour
     }
 
 	public virtual void setReadyToEmit(bool readyToEmit) {
-		agentManagerState = AgentState.Emit;
+		agentManagerState = AgentState.ActionComplete;
 	}
 
     // Decide whether agent has stopped actions
