@@ -1164,5 +1164,5 @@ def test_get_coordinate_at_pixel(controller):
     query = controller.step("GetCoordinateAtPixel", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {"x": -0.596839666, "y": 1.57599819, "z": -0.668121457},
+        {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
     )
