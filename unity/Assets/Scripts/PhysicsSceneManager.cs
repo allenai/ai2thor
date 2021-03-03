@@ -293,7 +293,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public bool SetObjectPoses(
-        ObjectPose[] objectPoses, bool forceKinematic = false, bool enablePhysicsJitter = true
+        ObjectPose[] objectPoses,
+        bool forceKinematic,
+        bool enablePhysicsJitter,
+        bool forceRigidbodySleep
     ) {
         SetupScene();
         bool shouldFail = false;
@@ -394,6 +397,11 @@ public class PhysicsSceneManager : MonoBehaviour {
             if (forceKinematic) {
                 foreach (Rigidbody rb in posedRigidbodies) {
                     rb.isKinematic = true;
+                }
+            }
+            if (forceRigidbodySleep) {
+                foreach (Rigidbody rb in FindObjectsOfType<Rigidbody>()) {
+                    rb.Sleep();
                 }
             }
         }

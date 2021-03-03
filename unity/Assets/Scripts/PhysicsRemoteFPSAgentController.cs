@@ -2938,6 +2938,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public bool moveHandToXYZDelta(float x, float y, float z, bool forceVisible = false) {
+            Vector3 handxyz = AgentHand.transform.position;
+            return moveHandToXYZ(handxyz.x + x, handxyz.y + y, handxyz.z + z, forceVisible);
+        }
+
         //coroutine to yield n frames before returning
         protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
             for (int i = 0; i < n; i++) {
@@ -5093,11 +5098,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(currentHandSimObj != null)
             {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-                Physics.autoSimulation = false;
-                yield return null;
+                bool oldAutoSimulation = Physics.autoSimulation;
 
-                for (int i = 0; i < 100; i++) 
-                {
+                Physics.autoSimulation = false;
+                for (int i = 0; i < 100; i++) {
+                    //Debug.Log($"AngularV at {i}: " + rb.angularVelocity.ToString("F4"));
+                    //Debug.Log($"V at {i}: " + rb.velocity.ToString("F4"));
                     Physics.Simulate(0.04f);
                     #if UNITY_EDITOR
                     yield return null;
@@ -5106,10 +5112,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 }
-                Physics.autoSimulation = true;
+                Physics.autoSimulation = oldAutoSimulation;
             }
 
             DefaultAgentHand();
+            yield return null;
             actionFinished(true);
         }
 
@@ -5146,7 +5153,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // Add some random rotational momentum to the dropped object to make things
                     // less deterministic.
-                    // TODO: Need a parameter to control how much randomness we introduce.
                     rb.angularVelocity = randomMagnitude * UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(
@@ -5155,28 +5161,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         forceKinematic: false
                     );
 
+                    SimObjPhysics objectInHand = ItemInHand.GetComponent<SimObjPhysics>();
+                    objectInHand.isInAgentHand = false;
+                    ItemInHand = null;
+
                     //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
                     if(!physicsSceneManager.physicsSimulationPaused)
                     {
                         //this is true by default
-                        if (autoSimulation) 
-                        {
-                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } 
-
-                        else 
-                        {
-                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                        if (autoSimulation) {
+                            StartCoroutine(checkIfObjectHasStoppedMoving(objectInHand, 0));
+                        } else {
+                            StartCoroutine(checkDropHandObjectActionFast(objectInHand));
                         }
+                    } else {
+                        actionFinished(true);
                     }
-
-                    else
-                    actionFinished(true);
-
-                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-                    ItemInHand = null;
                     return;
                 }
+            } else {
+                errorMessage = "nothing in hand to drop!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public void DropHandObjectAhead(
+            bool autoSimulation = true,
+            bool forceAction = false,
+            float randomMagnitude = 1.0f
+        ) {
+            if (ItemInHand != null) {
+                Vector3 handStartPosition = AgentHand.transform.position;
+
+                bool movedLeft = false;
+                bool movedRight = false;
+                bool movedUp = false;
+                bool movedDown = false;
+                Vector3 forward = 0.1f * transform.forward;
+                Vector3 right = 0.1f * transform.right;
+                Vector3 up = 0.1f * transform.up;
+                bool failed = false;
+                int k = 0;
+                while (isHandObjectColliding(false) && k < 50) {
+                    k++;
+                    if (moveHandToXYZDelta(x: forward.x, y: forward.y, z: forward.z, false)) {
+                        movedLeft = false;
+                        movedRight = false;
+                        movedUp = false;
+                        movedDown = false;
+                    } else if (
+                        (!movedLeft) && moveHandToXYZDelta(
+                            x: right.x,
+                            y: right.y,
+                            z: right.z, 
+                            false
+                    )) {
+                        movedRight = true;
+                    } else if (
+                        (!movedRight) && moveHandToXYZDelta(
+                            x: -right.x,
+                            y: -right.y,
+                            z: -right.z,
+                            false
+                    )) {
+                        movedLeft = true;
+                    } else if (
+                        (!movedDown) && moveHandToXYZDelta(x: up.x, y: up.y, z: up.z, false)
+                    ) {
+                        movedUp = true;
+                    } else if (
+                        (!movedUp) && moveHandToXYZDelta(x: -up.x, y: -up.y, z: -up.z, false)
+                    ) {
+                        movedDown = true;
+                    } else {
+                        failed = true;
+                        break;
+                    }
+                }
+
+                if ((!failed) || forceAction) {
+                    DropHandObject(
+                        autoSimulation: autoSimulation,
+                        forceAction: true,
+                        randomMagnitude: randomMagnitude
+                    );
+                    return;
+                } 
+
+                AgentHand.transform.position = handStartPosition;
+                errorMessage = "Could not find a free place to drop the object.";
+                actionFinished(false);
+                return;
+
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
