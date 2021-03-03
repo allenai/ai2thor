@@ -32,7 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         bool returnToStartPropIfFailed = false
     ) {
         var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
-        return updateTransformPropertyFixedUpdate(
+        return updateTransformPropertyFixedUpdateRotate(
             controller,
             collisionListener,
             moveTransform,
@@ -94,23 +94,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
     }
 
-    public static IEnumerator updateTransformPropertyFixedUpdate<T>(
+    public static IEnumerator updateTransformPropertyFixedUpdateRotate(
         PhysicsRemoteFPSAgentController controller,
         CollisionListener collisionListener,
         Transform moveTransform,
-        T target,
-        Func<Transform, T> getProp,
-        Action<Transform, T> setProp,
-        Func<Transform, T, T> nextProp,
+        Quaternion target,
+        Func<Transform, Quaternion> getProp,
+        Action<Transform, Quaternion> setProp,
+        Func<Transform, Quaternion, Quaternion> nextProp,
         // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
-        Func<T, T, T> getDirection,
-        Func<T, T, float> distanceMetric,
+        Func<Quaternion, Quaternion, Quaternion> getDirection,
+        Func<Quaternion, Quaternion, float> distanceMetric,
         float fixedDeltaTime,
         bool returnToStartPropIfFailed,
         double epsilon = 1e-3
     )
     {
-        T originalProperty = getProp(moveTransform);
+        //controller.agentMoves = new List<Vector3>();
+        Quaternion originalProperty = getProp(moveTransform);
         var previousProperty = originalProperty;
 
         var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
@@ -123,13 +124,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         var currentProperty = getProp(moveTransform);
         float currentDistance = distanceMetric(target, currentProperty);
 
-        T directionToTarget = getDirection(target, currentProperty);
+        Quaternion directionToTarget = getDirection(target, currentProperty);
+        Rigidbody rb = controller.gameObject.GetComponent<Rigidbody>();
 
         while ( currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
 
             previousProperty = getProp(moveTransform);
 
-            T next = nextProp(moveTransform, directionToTarget);
+            Quaternion next = nextProp(moveTransform, directionToTarget);
             float nextDistance = distanceMetric(target, next);
 
             // allows for snapping behaviour to target when the target is close
@@ -139,16 +141,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // this can happen if the speed it set high
                 nextDistance > distanceMetric(target, getProp(moveTransform))) 
             {
-                setProp(moveTransform, target);
+                //rb.MovePosition(target);
+                break;
+                //setProp(moveTransform, target);
             } else {
-                setProp(moveTransform, next);
+                rb.MoveRotation(next);
+                //setProp(moveTransform, next);
             }
 
             // this will be a NOOP for Rotate/Move/Height actions
-            ikSolver.ManipulateArm();
+            //ikSolver.ManipulateArm();
 
             if (!Physics.autoSimulation) {
-                Physics.SyncTransforms();
+                //Physics.SyncTransforms();
                 Physics.Simulate(fixedDeltaTime);
             }
 
@@ -157,7 +162,97 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             currentDistance = distanceMetric(target, getProp(moveTransform));
         }
 
-        T resetProp = previousProperty;
+        Quaternion resetProp = previousProperty;
+        if (returnToStartPropIfFailed) {
+            resetProp = originalProperty;
+        }
+        continuousMoveFinishRotate(
+            controller,
+            collisionListener,
+            moveTransform, 
+            rb,
+            setProp, 
+            target, 
+            resetProp
+        );
+
+        // we call this one more time in the event that the arm collided and was reset
+        //ikSolver.ManipulateArm();
+        if (!Physics.autoSimulation) {
+            //Physics.SyncTransforms();
+            Physics.Simulate(fixedDeltaTime);
+        }
+
+    }
+
+    public static IEnumerator updateTransformPropertyFixedUpdate(
+        PhysicsRemoteFPSAgentController controller,
+        CollisionListener collisionListener,
+        Transform moveTransform,
+        Vector3 target,
+        Func<Transform, Vector3> getProp,
+        Action<Transform, Vector3> setProp,
+        Func<Transform, Vector3, Vector3> nextProp,
+        // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
+        Func<Vector3, Vector3, Vector3> getDirection,
+        Func<Vector3, Vector3, float> distanceMetric,
+        float fixedDeltaTime,
+        bool returnToStartPropIfFailed,
+        double epsilon = 1e-3
+    )
+    {
+        Vector3 originalProperty = getProp(moveTransform);
+        var previousProperty = originalProperty;
+
+        var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+        var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
+
+        // commenting out the WaitForEndOfFrame here since we shoudn't need 
+        // this as we already wait for a frame to pass when we execute each action
+        //yield return yieldInstruction;
+
+        var currentProperty = getProp(moveTransform);
+        float currentDistance = distanceMetric(target, currentProperty);
+
+        Vector3 directionToTarget = getDirection(target, currentProperty);
+        Rigidbody rb = controller.gameObject.GetComponent<Rigidbody>();
+
+        while ( currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
+
+            previousProperty = getProp(moveTransform);
+
+            Vector3 next = nextProp(moveTransform, directionToTarget);
+            float nextDistance = distanceMetric(target, next);
+
+            // allows for snapping behaviour to target when the target is close
+            if (nextDistance <= epsilon ||
+
+                // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                // this can happen if the speed it set high
+                nextDistance > distanceMetric(target, getProp(moveTransform))) 
+            {
+                //rb.MovePosition(target);
+                break;
+                //setProp(moveTransform, target);
+            } else {
+                rb.MovePosition(next);
+                //setProp(moveTransform, next);
+            }
+
+            // this will be a NOOP for Rotate/Move/Height actions
+            //ikSolver.ManipulateArm();
+
+            if (!Physics.autoSimulation) {
+                //Physics.SyncTransforms();
+                Physics.Simulate(fixedDeltaTime);
+            }
+
+            yield return new WaitForFixedUpdate();
+
+            currentDistance = distanceMetric(target, getProp(moveTransform));
+        }
+
+        Vector3 resetProp = previousProperty;
         if (returnToStartPropIfFailed) {
             resetProp = originalProperty;
         }
@@ -165,27 +260,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             controller,
             collisionListener,
             moveTransform, 
+            rb,
             setProp, 
             target, 
             resetProp
         );
 
         // we call this one more time in the event that the arm collided and was reset
-        ikSolver.ManipulateArm();
+        //ikSolver.ManipulateArm();
         if (!Physics.autoSimulation) {
-            Physics.SyncTransforms();
+            //Physics.SyncTransforms();
             Physics.Simulate(fixedDeltaTime);
         }
 
     }
-
-    private static void continuousMoveFinish<T>(
+    private static void continuousMoveFinishRotate<T>(
         PhysicsRemoteFPSAgentController controller,
         CollisionListener collisionListener,
         Transform moveTransform,
+        Rigidbody rb,
         System.Action<Transform, T> setProp,
-        T target,
-        T resetProp
+        Quaternion target,
+        Quaternion resetProp
     ) {
         var actionSuccess = true;
         var debugMessage = "";
@@ -197,7 +293,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var sc = staticCollisions[0];
                 
                 //decide if we want to return to original property or last known property before collision
-                setProp(moveTransform, resetProp);
+                //setProp(moveTransform, resetProp);
+                rb.MoveRotation(resetProp);
+
+                //if we hit a sim object
+                if(sc.isSimObj)
+                {
+                    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                }
+
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!sc.isSimObj)
+                {
+                    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
+                }
+
+                actionSuccess = false;
+        }
+
+        controller.errorMessage = debugMessage;
+        controller.actionFinished(actionSuccess, debugMessage);
+    }
+
+    private static void continuousMoveFinish<T>(
+        PhysicsRemoteFPSAgentController controller,
+        CollisionListener collisionListener,
+        Transform moveTransform,
+        Rigidbody rb,
+        System.Action<Transform, T> setProp,
+        Vector3 target,
+        Vector3 resetProp
+    ) {
+        var actionSuccess = true;
+        var debugMessage = "";
+        var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+        var staticCollisions = collisionListener.StaticCollisions();
+
+        if (staticCollisions.Count > 0){
+                var sc = staticCollisions[0];
+                
+                //decide if we want to return to original property or last known property before collision
+                //setProp(moveTransform, resetProp);
+                rb.MovePosition(resetProp);
 
                 //if we hit a sim object
                 if(sc.isSimObj)

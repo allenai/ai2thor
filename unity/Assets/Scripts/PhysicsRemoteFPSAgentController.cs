@@ -2148,57 +2148,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? simSeconds = null,
             bool allowAutoSimulation = false
         ) {
-            if ((!allowAutoSimulation) && Physics.autoSimulation) {
-                errorMessage = (
-                    "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
-                    "paused or if you have passed allowAutoSimulation=true! Either use the" +
-                    " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
-                    " AutoSimulation has been turned back on already."
-                );
-                actionFinished(false);
-                return;
-            }
+            //if ((!allowAutoSimulation) && Physics.autoSimulation) {
+            //    errorMessage = (
+            //        "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
+            //        "paused or if you have passed allowAutoSimulation=true! Either use the" +
+            //        " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
+            //        " AutoSimulation has been turned back on already."
+            //    );
+            //    actionFinished(false);
+            //    return;
+            //}
 
-            if(timeStep <= 0.0f || timeStep > 0.05f)
-            {
-                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
-                actionFinished(false);
-                return;
-            }
+            //if(timeStep <= 0.0f || timeStep > 0.05f)
+            //{
+            //    errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
+            //    actionFinished(false);
+            //    return;
+            //}
 
-            if (!simSeconds.HasValue) {
-                simSeconds = timeStep;
-            }
-            if (simSeconds.Value < 0.0f) {
-                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
-                actionFinished(false);
-                return;
-            }
+            //if (!simSeconds.HasValue) {
+            //    simSeconds = timeStep;
+            //}
+            //if (simSeconds.Value < 0.0f) {
+            //    errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
+            //    actionFinished(false);
+            //    return;
+            //}
 
-            bool oldPhysicsAutoSim = Physics.autoSimulation;
-            Physics.autoSimulation = false;
+            //bool oldPhysicsAutoSim = Physics.autoSimulation;
+            //Physics.autoSimulation = false;
 
-            while (simSeconds.Value > 0.0f) {
-                simSeconds = simSeconds.Value - timeStep;
-                if (simSeconds.Value <= 0) {
-                    // This is necessary to keep lastVelocity up-to-date for all sim objects and is
-                    // called just before the last physics simulation step.
-                    Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-                    foreach (Rigidbody rb in rbs) {
-                        if (rb.GetComponentInParent<SimObjPhysics>()) {
-                            SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                            sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                        }
-                    }
-                }
+            //while (simSeconds.Value > 0.0f) {
+            //    simSeconds = simSeconds.Value - timeStep;
+            //    if (simSeconds.Value <= 0) {
+            //        // This is necessary to keep lastVelocity up-to-date for all sim objects and is
+            //        // called just before the last physics simulation step.
+            //        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+            //        foreach (Rigidbody rb in rbs) {
+            //            if (rb.GetComponentInParent<SimObjPhysics>()) {
+            //                SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+            //                sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+            //            }
+            //        }
+            //    }
 
-                // pass in the timeStep to advance the physics simulation
-                Physics.SyncTransforms();
-                Physics.Simulate(timeStep);
-                this.AdvancePhysicsStepCount++;
-            }
+            //    // pass in the timeStep to advance the physics simulation
+            //    //Physics.SyncTransforms();
+            //    this.AdvancePhysicsStepCount++;
+            //}
 
-            Physics.autoSimulation = oldPhysicsAutoSim;
+            Physics.Simulate(timeStep);
+            //Physics.autoSimulation = oldPhysicsAutoSim;
             actionFinished(true);
         }
 
