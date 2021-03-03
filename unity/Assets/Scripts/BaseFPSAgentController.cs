@@ -301,7 +301,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             lastActionSuccess = success;
 			this.agentState = newState;
-			this.actionReturn = actionReturn;
+			this.actionReturn = new InitializeReturn {
+                cameraNearPlane = this.m_Camera.nearClipPlane,
+                cameraFarPlane = this.m_Camera.farClipPlane
+            };
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
             Debug.Log("Last Action Status = " + this.lastActionStatus);
