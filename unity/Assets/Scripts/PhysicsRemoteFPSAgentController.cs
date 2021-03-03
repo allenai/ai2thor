@@ -2135,10 +2135,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
-        public void PausePhysicsAutoSim()
+        public void PausePhysicsAutoSim(bool autoSyncTransforms=false)
         {
             //print("ZA WARUDO!");
             Physics.autoSimulation = false;
+            Physics.autoSyncTransforms = autoSyncTransforms;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
@@ -2146,7 +2147,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void AdvancePhysicsStep(
             float timeStep = 0.02f,
             float? simSeconds = null,
-            bool allowAutoSimulation = false
+            bool allowAutoSimulation = false,
+            bool syncTransforms = false
         ) {
             if ((!allowAutoSimulation) && Physics.autoSimulation) {
                 errorMessage = (
@@ -2193,7 +2195,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // pass in the timeStep to advance the physics simulation
-                //Physics.SyncTransforms();
                 Physics.Simulate(timeStep);
                 this.AdvancePhysicsStepCount++;
             }
