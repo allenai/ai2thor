@@ -115,7 +115,7 @@ def random_tests(controller):
         final_state = get_current_full_state(controller) # made sure this does not require deep copy
         scene_name = controller.last_event.metadata['sceneName']
 
-        #TODO only when pick up has happened
+        # only when pick up has happened
         dict_to_add = ({'initial_location': initial_location,
                'initial_rotation': initial_rotation,
                'all_commands': all_commands,

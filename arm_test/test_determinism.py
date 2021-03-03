@@ -16,8 +16,9 @@ scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 
-def extra_step(controller): #TODO remove or add everywhere?
-    x = controller.step("AdvancePhysicsStep")
+def extra_step(controller): # remove or add everywhere?
+    # x = controller.step("AdvancePhysicsStep")
+    return
 
 
 def main(controller):

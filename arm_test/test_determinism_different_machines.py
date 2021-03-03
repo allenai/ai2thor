@@ -18,8 +18,9 @@ scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 
-def extra_step(controller): #TODO remove or add everywhere?
-    x = controller.step("AdvancePhysicsStep")
+def extra_step(controller): # remove or add everywhere?
+    # x = controller.step("AdvancePhysicsStep")
+    return
 
 
 def parse_args():
@@ -87,7 +88,7 @@ def random_tests(controller):
         final_state = get_current_full_state(controller) # made sure this does not require deep copy
         scene_name = controller.last_event.metadata['sceneName']
 
-        #TODO only when pick up has happened
+        # only when pick up has happened
         dict_to_add = ({'initial_location': initial_location,
                'initial_rotation': initial_rotation,
                'all_commands': all_commands,

@@ -95,7 +95,7 @@ def main(controller):
                     pdb.set_trace()
             else:
                 expected_arm_position = before_action_arm_value.copy()
-                if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=0.001):#TODO ADITIONAL_ARM_ARGS['move_constant'] / 2):
+                if not two_dict_equal(expected_arm_position, after_action_arm_value, threshold=0.001):# ADITIONAL_ARM_ARGS['move_constant'] / 2):
                     print('Failed action or non-arm movement errors')
                     print('before', before_action_arm_value, '\n after', after_action_arm_value, '\n expected', expected_arm_position, '\n action', command, 'success', last_event_success)
                     pdb.set_trace()
