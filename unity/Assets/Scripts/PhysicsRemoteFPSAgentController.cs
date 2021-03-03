@@ -4168,10 +4168,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SetObjectPoses(
-            List<ObjectPose> objectPoses, bool forceKinematic, bool enablePhysicsJitter
+            List<ObjectPose> objectPoses,
+            bool forceKinematic = false,
+            bool enablePhysicsJitter = true,
+            bool forceRigidbodySleep = false
         ) {
             //make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if(objectPoses == null || objectPoses[0] == null)
+            if (objectPoses == null || objectPoses[0] == null)
             {
                 errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
                 actionFinished(false);
@@ -4180,7 +4183,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(setObjectPoses(
                 objectPoses: objectPoses.ToArray(),
                 forceKinematic: forceKinematic,
-                enablePhysicsJitter: enablePhysicsJitter
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep
             ));
         }
 
@@ -4190,14 +4194,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // a subsequent scene reset()
         protected IEnumerator setObjectPoses(
             ObjectPose[] objectPoses,
-            bool forceKinematic = false,
-            bool enablePhysicsJitter = true
+            bool forceKinematic,
+            bool enablePhysicsJitter,
+            bool forceRigidbodySleep
         ){
             yield return new WaitForEndOfFrame();
             bool success = physicsSceneManager.SetObjectPoses(
                 objectPoses: objectPoses,
                 forceKinematic: forceKinematic,
-                enablePhysicsJitter: enablePhysicsJitter
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep
             );
             actionFinished(success);
         }
