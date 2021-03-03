@@ -310,6 +310,8 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
             HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
             List<Rigidbody> posedRigidbodies = new List<Rigidbody>();
+            List<Break> breakScripts = new List<Break>();
+            List<bool> wasUnbreakable = new List<bool>();
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
@@ -338,6 +340,13 @@ public class PhysicsSceneManager : MonoBehaviour {
                     Rigidbody rb = copy.GetComponent<Rigidbody>();
                     if (rb != null) {
                         posedRigidbodies.Add(rb);
+                        Break breakScript = copy.GetComponent<Break>();
+                        breakScripts.Add(breakScript);
+                        if (breakScript != null) {
+                            wasUnbreakable.Add(breakScript.Unbreakable);
+                        } else {
+                            wasUnbreakable.Add(false);
+                        }
                     }
                 }
             }
@@ -348,20 +357,35 @@ public class PhysicsSceneManager : MonoBehaviour {
 
                 List<float> savedDrag = new List<float>();
                 List<float> savedAngularDrag = new List<float>();
+                List<bool> wasKinematic = new List<bool>();
 
-                foreach (Rigidbody rb in posedRigidbodies) {
+                for (int i = 0; i < posedRigidbodies.Count; i++) {
+                    Rigidbody rb = posedRigidbodies[i];
                     savedDrag.Add(rb.drag);
                     savedAngularDrag.Add(rb.angularDrag);
+                    wasKinematic.Add(rb.isKinematic);
 
                     rb.drag = 100f;
                     rb.angularDrag = 100f;
+                    rb.isKinematic = false;
+
+                    Break breakScript = breakScripts[i];
+                    if (breakScript != null) {
+                        breakScript.Unbreakable = true;
+                    }
                 }
-                for (int i = 0; i < 10; i++) {
-                    Physics.Simulate(0.01f);
+                for (int i = 0; i < 20; i++) {
+                    Physics.Simulate(0.02f);
                 }
                 for (int i = 0; i < posedRigidbodies.Count; i++) {
                     posedRigidbodies[i].drag = savedDrag[i];
                     posedRigidbodies[i].angularDrag = savedAngularDrag[i];
+                    posedRigidbodies[i].isKinematic = wasKinematic[i];
+
+                    Break breakScript = breakScripts[i];
+                    if (breakScript != null) {
+                        breakScript.Unbreakable = wasUnbreakable[i];
+                    }
                 }
 
                 Physics.autoSimulation = savedAutoSimulation;
