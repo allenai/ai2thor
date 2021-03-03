@@ -369,13 +369,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
 
-                //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                DefaultAgentHand();
+                    base.LookDown(action);
+                } else {
+                    Quaternion mCameraStartRotation = m_Camera.transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
 
-                base.LookDown(action);
-                return;
+                    m_Camera.transform.Rotate(action.degrees, 0, 0);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        m_Camera.transform.rotation = mCameraStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after LookDown.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
+                }
             } 
 
             else
@@ -423,11 +449,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
-                //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                DefaultAgentHand();
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    base.LookUp(action);
 
-                base.LookUp(action);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+                } else {
+                    Quaternion mCameraStartRotation = m_Camera.transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    m_Camera.transform.Rotate(-action.degrees, 0, 0);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        m_Camera.transform.rotation = mCameraStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after LookUp.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
+                }
             }
 
             else
@@ -443,15 +497,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(action.degrees == 0f)
             action.degrees = rotateStepDegrees;
 
-            if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
-            {
+            if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
                 //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                {
-                    DefaultAgentHand();
-                }
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    base.RotateRight(action);
 
-                base.RotateRight(action);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+                } else {
+                    Quaternion agentStartRotation = transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    transform.Rotate(0, action.degrees, 0);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        transform.rotation = agentStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after rotation.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
+                }
             } 
 
             else 
@@ -469,11 +549,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
-                //only default hand if not manually Interacting with things
-                if(!action.manualInteract)
-                DefaultAgentHand();
-                
-                base.RotateLeft(action);
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    base.RotateLeft(action);
+
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+                } else {
+                    Quaternion agentStartRotation = transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    transform.Rotate(0, -action.degrees, 0);
+                    if(!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        transform.rotation = agentStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after rotation.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
+                }
             } 
 
             else 
@@ -483,30 +591,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir)
-        {
+        private bool checkArcForCollisions(
+            Vector3[] corners, Vector3 origin, float degrees, string dir
+        ) {
             bool result = true;
             
             //generate arc points in the positive y axis rotation
-            foreach(Vector3 v in corners)
-            {
+            foreach (Vector3 v in corners) {
                 Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
 
                 //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
                 for(int i = 0; i < pointsOnArc.Length; i++)
                 {
                     //debug draw spheres to show path of arc
+                    // #if UNITY_EDITOR
                     // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     // Sphere.transform.position = pointsOnArc[i];
                     // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
                     // Sphere.GetComponent<SphereCollider>().enabled = false;
+                    // #endif
                     
                     RaycastHit hit;
 
                     //do linecasts from the first point, sequentially, to the last
                     if(i < pointsOnArc.Length - 1)
                     {
-                        //Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
+                        // #if UNITY_EDITOR
+                        // Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
+                        // #endif
 
                         if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                         {
@@ -536,8 +648,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
         //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
         //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
-        {
+        private Vector3[] GenerateArcPoints(
+            Vector3 startingPoint, Vector3 origin, float angle, string dir
+        ) {
             float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
             Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
             float currentIncrementAngle;
@@ -645,13 +758,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //ok now we have each corner, let's rotate them the specified direction
             if(direction == "right" || direction == "left")
             {
-                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
-            }
-
-            else if(direction == "up" || direction == "down")
-            {
+                result = checkArcForCollisions(
+                    corners, m_CharacterController.transform.position, degrees, direction
+                );
+            } else if(direction == "up" || direction == "down") {
                 result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
             }
+
             //no checks flagged anything, good to go, return true i guess
             return result;
         }

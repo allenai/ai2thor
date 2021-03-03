@@ -282,6 +282,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
+            #if UNITY_EDITOR
+            Debug.Log(errorMessage);
+            #endif
         }
 
 		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
