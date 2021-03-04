@@ -584,7 +584,7 @@ def push_pip_commit(context):
     import glob
     commit_id = git_commit_id()
     s3 = boto3.resource("s3")
-    for g in glob.glob('dist/ai2thor-%s.*' % commit_id):
+    for g in glob.glob('dist/ai2thor-%s*' % commit_id):
         acl = "public-read"
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
@@ -960,8 +960,6 @@ def ci_build(context):
                         )
                         pytest_proc.start()
                         procs.append(pytest_proc)
-                        build_pip_commit(context)
-                        push_pip_commit(context)
 
 
             # give the travis poller time to see the result
@@ -985,6 +983,8 @@ def ci_build(context):
                     )
                     p.join()
 
+            build_pip_commit(context)
+            push_pip_commit(context)
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
