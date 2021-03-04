@@ -2139,6 +2139,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //print("ZA WARUDO!");
             Physics.autoSimulation = false;
+            Physics.autoSyncTransforms = false;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
