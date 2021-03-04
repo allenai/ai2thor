@@ -16,6 +16,7 @@ ADITIONAL_ARM_ARGS = {
 SCENE_INDICES = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 SCENE_NAMES = ['FloorPlan{}_physics'.format(i) for i in SCENE_INDICES]
 
+
 ENV_ARGS = dict(gridSize=0.25,
                 width=224, height=224, agentMode='arm', fieldOfView=100,
                 agentControllerType='mid-level',
@@ -36,7 +37,6 @@ def reset_the_scene_and_get_reachables(controller, scene_name=None):
         scene_name = random.choice(SCENE_NAMES)
     controller.reset(scene_name)
     controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
-    # controller.step('PausePhysicsAutoSim')
     controller.step(action='MakeAllObjectsMoveable')
     make_all_objects_unbreakable(controller)
     return get_reachable_positions(controller)
