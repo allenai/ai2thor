@@ -659,6 +659,8 @@ public class AgentManager : MonoBehaviour
 		if (string.IsNullOrEmpty(response.sceneName)){
 			UnityEngine.SceneManagement.SceneManager.LoadScene (UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name);
 		} else {
+            // must ensure this is enabled when we reload to ensure that objects settle correctly
+            Physics.autoSyncTransforms = true;
 			UnityEngine.SceneManagement.SceneManager.LoadScene (response.sceneName);
 		}
 	}
