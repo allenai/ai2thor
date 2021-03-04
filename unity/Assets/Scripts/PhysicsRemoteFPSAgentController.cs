@@ -4686,8 +4686,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //they are close together and can overlap and are weird
                     if (osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
                         //PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                        if (physicsSceneManager.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
-                                osr.attachPoint.transform.rotation, false) == false) {
+                        if (
+                            physicsSceneManager.StoveTopCheckSpawnArea(
+                                ItemInHand.GetComponent<SimObjPhysics>(),
+                                osr.attachPoint.transform.position,
+                                osr.attachPoint.transform.rotation,
+                                false
+                            ) == false
+                        ) {
                             errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
                             return;

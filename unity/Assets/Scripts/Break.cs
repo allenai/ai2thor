@@ -69,6 +69,37 @@ public class Break : MonoBehaviour
 
     public void BreakObject(Collision collision)
     {
+        SimObjPhysics target = this.transform.gameObject.GetComponent<SimObjPhysics>();
+        if (target) {
+            // Drop all objects contained by this object if applicable
+            // The below code is adapted from the DropContainedObjects method in the physics fps controller
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                GameObject topObject = null;
+                foreach (GameObject go in target.ContainedGameObjects()) {
+                    SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
+                    if (sop) {
+                        Debug.Log($"Has conotained object {sop.ObjectID}");
+                        // for every object that is contained by this object turn off
+                        // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                        sop.transform.Find("Colliders").gameObject.SetActive(true);
+                        sop.isInAgentHand = false; // Agent hand flag
+
+                        if (topObject == null) {
+                            topObject = GameObject.Find("Objects");
+                        }
+                        sop.transform.SetParent(topObject.transform);
+
+                        Rigidbody rb = sop.GetComponent<Rigidbody>();
+                        rb.isKinematic = false;
+                        rb.useGravity = true;
+                        rb.constraints = RigidbodyConstraints.None;
+                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    }
+                }
+                target.ClearContainedObjectReferences();
+            }
+        }
+
         //prefab swap will switch the entire object out with a new prefab object entirely
         if(breakType == BreakType.PrefabSwap)
         {
@@ -196,8 +227,10 @@ public class Break : MonoBehaviour
         }
 
         //ImpulseForce.Add(col.impulse.magnitude);
-        if(col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>())
-        {
+        if(
+            col.impulse.magnitude > CurrentImpulseThreshold &&
+            !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>()
+        ) {
             if(readytobreak)
             {
                 readytobreak = false;
