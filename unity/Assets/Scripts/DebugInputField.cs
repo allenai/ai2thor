@@ -3331,10 +3331,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    case "gcap":
+                    case "gcfr":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "GetCoordinateAtPixel";
+                        action["action"] = "GetCoordinateFromRaycast";
                         action["x"] = float.Parse(splitcommand[1]);
                         action["y"] = float.Parse(splitcommand[2]);
 

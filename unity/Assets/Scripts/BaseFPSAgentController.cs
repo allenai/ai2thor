@@ -1750,7 +1750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
         }
 
-        public void GetCoordinateAtPixel(float x, float y) {
+        public void GetCoordinateFromRaycast(float x, float y) {
             if (x < 0 || y < 0 || x > 1 || y > 1) {
                 throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
             }

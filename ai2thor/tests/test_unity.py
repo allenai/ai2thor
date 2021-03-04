@@ -1134,7 +1134,7 @@ def test_get_object_in_frame(controller):
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_get_coordinate_at_pixel(controller):
+def test_get_coordinate_from_raycast(controller):
     controller.reset(scene="FloorPlan28")
     event = controller.step(
         action="TeleportFull",
@@ -1146,22 +1146,22 @@ def test_get_coordinate_at_pixel(controller):
     assert event, "TeleportFull should have succeeded!"
 
     for x, y in [(1.5, 0.5), (1.1, 0.3), (-0.1, 0.8), (-0.5, -0.3)]:
-        query = controller.step("GetCoordinateAtPixel", x=x, y=y)
+        query = controller.step("GetCoordinateFromRaycast", x=x, y=y)
         assert not query, f"x={x}, y={y} should fail!"
 
-    query = controller.step("GetCoordinateAtPixel", x=0.5, y=0.5)
+    query = controller.step("GetCoordinateFromRaycast", x=0.5, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
         {"x": -0.344259053, "y": 1.57599819, "z": -1.49999917},
     )
 
-    query = controller.step("GetCoordinateAtPixel", x=0.5, y=0.2)
+    query = controller.step("GetCoordinateFromRaycast", x=0.5, y=0.2)
     assert_near(
         query.metadata["actionReturn"],
         {"x": -0.344259053, "y": 2.2694428, "z": -1.49999917},
     )
 
-    query = controller.step("GetCoordinateAtPixel", x=0.25, y=0.5)
+    query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
         {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
