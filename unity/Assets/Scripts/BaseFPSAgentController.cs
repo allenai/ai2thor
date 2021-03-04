@@ -430,8 +430,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void GetReachablePositions(int? maxStepCount = null) {
             Vector3[] reachablePositions;
-            if (maxStepCount != null) {
-                reachablePositions = getReachablePositions(maxStepCount: (int) maxStepCount);
+            if (maxStepCount.HasValue) {
+                reachablePositions = getReachablePositions(maxStepCount: maxStepCount.Value);
             } else {
                 reachablePositions = getReachablePositions();
             }
