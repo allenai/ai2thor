@@ -21,7 +21,7 @@ ENV_ARGS = dict(gridSize=0.25,
                 agentControllerType='mid-level',
                 server_class=ai2thor.fifo_server.FifoServer,
                 useMassThreshold = True, massThreshold = 10,
-                autoSimulation=False, autoSyncTransforms=False #TODO Are you sure? change everywhere?
+                autoSimulation=False, autoSyncTransforms=True
                 )
 
 def make_all_objects_unbreakable(controller):
@@ -35,8 +35,8 @@ def reset_the_scene_and_get_reachables(controller, scene_name=None):
     if scene_name is None:
         scene_name = random.choice(SCENE_NAMES)
     controller.reset(scene_name)
-    #TODO change these everywhere
-    controller.step('PausePhysicsAutoSim')
+    controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
+    # controller.step('PausePhysicsAutoSim')
     controller.step(action='MakeAllObjectsMoveable')
     make_all_objects_unbreakable(controller)
     return get_reachable_positions(controller)
@@ -81,21 +81,21 @@ def execute_command(controller, command,action_dict_addition):
         event = controller.step(action='DropMidLevelHand',**action_dict_addition)
         action_details = dict(action='DropMidLevelHand',**action_dict_addition)
     elif command == 'mm':
-        action_dict_addition = copy.copy(action_dict_addition)
+        action_dict_addition = copy.deepcopy(action_dict_addition)
         if 'moveSpeed' in action_dict_addition:
             action_dict_addition['speed'] = action_dict_addition['moveSpeed']
         event = controller.step(action='MoveContinuous', direction=dict(x=0.0, y=0.0, z=.2),**action_dict_addition)
         action_details = dict(action='MoveContinuous', direction=dict(x=0.0, y=0.0, z=.2),**action_dict_addition)
 
     elif command == 'rr':
-        action_dict_addition = copy.copy(action_dict_addition)
+        action_dict_addition = copy.deepcopy(action_dict_addition)
 
         if 'moveSpeed' in action_dict_addition:
             action_dict_addition['speed'] = action_dict_addition['moveSpeed']
         event = controller.step(action='RotateContinuous', degrees = 45,**action_dict_addition)
         action_details = dict(action='RotateContinuous', degrees = 45,**action_dict_addition)
     elif command == 'll':
-        action_dict_addition = copy.copy(action_dict_addition)
+        action_dict_addition = copy.deepcopy(action_dict_addition)
         event = controller.step(action='RotateContinuous', degrees = -45,**action_dict_addition)
         action_details = dict(action='RotateContinuous', degrees = -45,**action_dict_addition)
     elif command == 'm':
