@@ -602,7 +602,8 @@ def build_pip_commit(context):
 
     generate_quality_settings(context)
 
-    version = commit_id
+    # must use this form to create valid PEP440 version specifier
+    version = "0.0.0+" + commit_id
 
     with open("ai2thor/_builds.py", "w") as fi:
         fi.write("# GENERATED FILE - DO NOT EDIT\n")
