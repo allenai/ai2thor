@@ -580,6 +580,45 @@ def deploy_pip(context):
 
 
 @task
+def push_pip_commit(context):
+    import glob
+    commit_id = git_commit_id()
+    s3 = boto3.resource("s3")
+    for g in glob.glob('dist/ai2thor-%s.*' % commit_id):
+        acl = "public-read"
+        pip_name = os.path.basename(g)
+        logger.info("pushing pip file %s" % g)
+        with open(g, "rb") as f:
+            s3.Object(PUBLIC_S3_BUCKET, os.path.join('pip', pip_name)).put(Body=f, ACL=acl)
+
+
+@task
+def build_pip_commit(context):
+
+    commit_id = git_commit_id()
+
+    if os.path.isdir("dist"):
+        shutil.rmtree("dist")
+
+    generate_quality_settings(context)
+
+    version = commit_id
+
+    with open("ai2thor/_builds.py", "w") as fi:
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("COMMIT_ID = '%s'\n" % commit_id)
+
+    with open("ai2thor/_version.py", "w") as fi:
+        fi.write("# Copyright Allen Institute for Artificial Intelligence 2021\n")
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("__version__ = '%s'\n" % (version))
+
+    subprocess.check_call("python setup.py clean --all", shell=True)
+    subprocess.check_call(
+        "python setup.py sdist bdist_wheel --universal", shell=True
+    )
+
+@task
 def build_pip(context, version):
     from ai2thor.build import platform_map
     import re
@@ -648,7 +687,7 @@ def build_pip(context, version):
             fi.write("COMMIT_ID = '%s'\n" % commit_id)
 
         with open("ai2thor/_version.py", "w") as fi:
-            fi.write("# Copyright Allen Institute for Artificial Intelligence 2017\n")
+            fi.write("# Copyright Allen Institute for Artificial Intelligence 2021\n")
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
             fi.write("__version__ = '%s'\n" % (version))
 
@@ -921,6 +960,8 @@ def ci_build(context):
                         )
                         pytest_proc.start()
                         procs.append(pytest_proc)
+                        build_pip_commit(context)
+                        push_pip_commit(context)
 
 
             # give the travis poller time to see the result
