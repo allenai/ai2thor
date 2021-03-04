@@ -85,111 +85,22 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique
 
 
-class MetadataList(list):
-    def __init__(
-        self, child_metadata: dict, key_sequence: tuple, cached_key_sequences: dict
-    ):
-        """
-        Child_metadata stores the metadata dict after indexing into it
-        from each key in key_sequence. For instance, if key_sequence is
-        ["objects", 0], then child_metadata is Unity's metadata["objects"][0].
-        """
-        super().__init__(child_metadata)
-        self._child_metadata = child_metadata
-        self._key_sequence = key_sequence
-        self._cached_key_sequences = cached_key_sequences
+class MetadataWrapper(dict):
+    def __init__(self, raw_metadata: dict):
+        super().__init__(raw_metadata)
+        self._raw_metadata = raw_metadata
 
-    def __getitem__(self, key):
-        is_slice = isinstance(key, slice)
-        if not is_slice:
-            key_sequence = self._key_sequence + (key,)
-            if key_sequence in self._cached_key_sequences:
-                return self._cached_key_sequences[key_sequence]
-
-        # Let Python handle the KeyError
-        value = self._child_metadata[key]
-
-        if isinstance(value, dict):
-            value = MetadataDict(
-                child_metadata=value,
-                key_sequence=self._key_sequence + (key,),
-                cached_key_sequences=self._cached_key_sequences,
-            )
-        elif isinstance(value, list):
-            value = MetadataList(
-                child_metadata=value,
-                key_sequence=self._key_sequence + (key,),
-                cached_key_sequences=self._cached_key_sequences,
-            )
-
-        if not is_slice:
-            self._cached_key_sequences[key_sequence] = value
-        return value
-
-
-class MetadataDict(dict):
-    def __init__(
-        self, child_metadata: dict, key_sequence: tuple, cached_key_sequences: dict
-    ):
-        """
-        Child_metadata stores the metadata dict after indexing into it
-        from each key in key_sequence. For instance, if key_sequence is
-        ["objects", 0], then child_metadata is Unity's metadata["objects"][0].
-        """
-        super().__init__(child_metadata)
-        self._child_metadata = child_metadata
-        self._key_sequence = key_sequence
-        self._cached_key_sequences = cached_key_sequences
-
-    def __getitem__(self, key):
-        key_sequence = self._key_sequence + (key,)
-        if key_sequence in self._cached_key_sequences:
-            return self._cached_key_sequences[key_sequence]
-
-        # This automatically throws Python's default exception if key is not
-        # in the metadata. So, a separate check for key in self._child_metadata,
-        # is unnecessary.
-        value = self._child_metadata[key]
-
-        # deprecation tests
-        if len(self._key_sequence) == 0 and key == "reachablePositions":
-            warnings.warn(
-                "The key 'reachablePositions' is deprecated and has been remapped to 'actionReturn'."
-            )
-            if self._child_metadata["lastAction"] != "GetReachablePositions":
-                return []
-            return self._child_metadata["actionReturn"]
-        elif (
-            len(self._key_sequence) == 2
-            and self._key_sequence[0] == "objects"
-            and key == "visible"
-            and "isInteractable" in self._child_metadata
+    def __getitem__(self, x):
+        # alias deprecated functionality
+        if (
+            x == "reachablePositions"
+            and self._raw_metadata["lastAction"] == "GetReachablePositions"
         ):
             warnings.warn(
-                "The key 'visible' is deprecated and has been remapped to 'isInteractable' ."
-                + "Please note that this key does not only mean the object is visible, "
-                + "but is both visible and within the initialized visibilityDistance (1.5 meters "
-                + "by default)."
+                'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
             )
-            return self._child_metadata["isInteractable"]
-
-        if len(self._key_sequence) >= 2:
-            # there are currently no deprecation tests beyond this point!
-            return value
-        elif isinstance(value, dict):
-            value = MetadataDict(
-                child_metadata=value,
-                key_sequence=self._key_sequence + (key,),
-                cached_key_sequences=self._cached_key_sequences,
-            )
-        elif isinstance(value, list):
-            value = MetadataList(
-                child_metadata=value,
-                key_sequence=self._key_sequence + (key,),
-                cached_key_sequences=self._cached_key_sequences,
-            )
-        self._cached_key_sequences[key_sequence] = value
-        return value
+            x = "actionReturn"
+        return super().__getitem__(x)
 
 
 class Event:
@@ -200,8 +111,7 @@ class Event:
     """
 
     def __init__(self, metadata):
-        self._metadata = metadata
-        self._cached_metadata = None
+        self.metadata = MetadataWrapper(raw_metadata=metadata)
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 
@@ -257,17 +167,6 @@ class Event:
 
     def __str__(self):
         return self.__repr__()
-
-    @property
-    def metadata(self):
-        if self._cached_metadata is not None:
-            return self._cached_metadata
-        self._cached_metadata = MetadataDict(
-            child_metadata=self._metadata,
-            key_sequence=tuple(),
-            cached_key_sequences=dict(),
-        )
-        return self._cached_metadata
 
     @property
     def image_data(self):
