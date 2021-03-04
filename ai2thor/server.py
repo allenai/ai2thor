@@ -100,6 +100,12 @@ class MetadataWrapper(dict):
                 'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
             )
             x = "actionReturn"
+        elif x == "reachablePositions":
+            raise IndexError(
+                "You are trying to access event.metadata['reachablePositions'] without first "
+                + "calling controller.step(action='GetReachablePositions'). Also, "
+                + "the key 'reachablePositions' is deprecated in favor of event.metadata['actionReturn']."
+            )
         return super().__getitem__(x)
 
 

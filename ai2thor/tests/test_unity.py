@@ -199,12 +199,16 @@ def test_fast_emit(controller):
     event_no_fast_emit = controller.step(dict(action="LookUp"))
     event_no_fast_emit_2 = controller.step(dict(action="RotateRight"))
 
-    assert event.metadata["actionReturn"] is None
-    assert event_fast_emit.metadata["actionReturn"] == "foo"
-    assert id(event._metadata["objects"]) == id(event_fast_emit._metadata["objects"])
-    assert id(event._metadata["objects"]) != id(event_no_fast_emit._metadata["objects"])
-    assert id(event_no_fast_emit_2._metadata["objects"]) != id(
-        event_no_fast_emit._metadata["objects"]
+    assert event.metadata._raw_metadata["actionReturn"] is None
+    assert event_fast_emit.metadata._raw_metadata["actionReturn"] == "foo"
+    assert id(event.metadata._raw_metadata["objects"]) == id(
+        event_fast_emit.metadata._raw_metadata["objects"]
+    )
+    assert id(event.metadata._raw_metadata["objects"]) != id(
+        event_no_fast_emit.metadata._raw_metadata["objects"]
+    )
+    assert id(event_no_fast_emit_2.metadata._raw_metadata["objects"]) != id(
+        event_no_fast_emit.metadata._raw_metadata["objects"]
     )
 
 
@@ -715,7 +719,7 @@ def test_action_dispatch_find_conflicts_physics(controller):
         "StopCoroutine": ["routine"],
         "TestActionDispatchConflict": ["param22"],
     }
-    assert event.metadata["actionReturn"] == known_conflicts
+    assert event.metadata._raw_metadata["actionReturn"] == known_conflicts
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
@@ -881,6 +885,16 @@ def test_get_reachable_positions(controller):
     assert len(event.metadata["reachablePositions"]) > 0 and isinstance(
         event.metadata["reachablePositions"], list
     ), "reachablePositions/actionReturn should not be empty after calling GetReachablePositions!"
+
+    assert "reachablePositions" not in event.metadata.keys()
+    event = controller.step("Pass")
+    try:
+        event.metadata["reachablePositions"]
+        assert (
+            False
+        ), "reachablePositions shouldn't be available without calling action='GetReachablePositions'."
+    except:
+        pass
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])

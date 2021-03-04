@@ -1495,7 +1495,6 @@ public struct MetadataWrapper
 	public ColorBounds[] colorBounds;
 
 	// Extras
-	public Vector3[] reachablePositions;
 	public float[] flatSurfacesOnGrid;
 	public float[] distances;
 	public float[] normals;
