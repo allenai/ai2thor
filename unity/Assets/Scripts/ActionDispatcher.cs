@@ -167,75 +167,64 @@ public static class ActionDispatcher {
 
     private static List<MethodInfo> getCandidateMethods(Type targetType, string action) {
         Dictionary<string, List<MethodInfo>> methodDispatchTable = getMethodDispatchTable(targetType);
-        if (!methodDispatchTable.ContainsKey(action))
-        {
+        if (!methodDispatchTable.ContainsKey(action)) {
             List<MethodInfo> methods = new List<MethodInfo>();
 
             List<Type> hierarchy = new List<Type>();
+
             // not completely generic
             Type ht = targetType;
-            while (ht != typeof(object))
-            {
+            while (ht != typeof(object)) {
                 hierarchy.Add(ht);
                 ht = ht.BaseType;
             }
 
-            foreach (MethodInfo mi in getMethods(targetType))
-            {
-                if (mi.ReturnType != typeof(void) || mi.Name != action)
-                {
+            foreach (MethodInfo mi in getMethods(targetType)) {
+                if (mi.ReturnType != typeof(void) || mi.Name != action) {
                     // We only allow dispatching to public void methods
                     continue;
                 }
                 bool replaced = false;
+
                 // we do this to handle the case of a child method hiding a method in the parent
                 // in which case both methods will show up.  This happens if virtual, override or new
                 // are not used
                 ParameterInfo[] sourceParams = mi.GetParameters();
 
-                for (int j = 0; j < methods.Count && !replaced; j++)
-                {
+                for (int j = 0; j < methods.Count && !replaced; j++) {
                     bool signatureMatch = true;
                     ParameterInfo[] targetParams = methods[j].GetParameters();
                     int minCommon = Math.Min(sourceParams.Length, targetParams.Length);
-                    for (int k = 0; k < minCommon; k++)
-                    {
-                        if (sourceParams[k].ParameterType != targetParams[k].ParameterType)
-                        {
+                    for (int k = 0; k < minCommon; k++) {
+                        if (sourceParams[k].ParameterType != targetParams[k].ParameterType) {
                             signatureMatch = false;
+                            break;
                         }
                     }
 
-                    if (sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue)
-                    {
+                    if (sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue) {
                         signatureMatch = false;
-                    }
-                    else if (targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue)
-                    {
+                    } else if (targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue) {
                         signatureMatch = false;
                     }
 
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
-
-                    if (signatureMatch)
-                    {
+                    if (signatureMatch) {
                         // this happens if one method has a trailing optional value and all 
                         // other parameter types match
-                        if (targetParams.Length != sourceParams.Length)
-                        {
+                        if (targetParams.Length != sourceParams.Length) {
                             throw new AmbiguousActionException("Signature match found in the same class");
                         }
 
                         replaced = true;
-                        if (hierarchy.IndexOf(mi.DeclaringType) < hierarchy.IndexOf(methods[j].DeclaringType))
-                        {
+                        if (hierarchy.IndexOf(mi.DeclaringType) < hierarchy.IndexOf(methods[j].DeclaringType)) {
                             methods[j] = mi;
                         }
                     }
                 }
-                if (!replaced)
-                {
+
+                if (!replaced) {
                     // we sort the list of methods so that we evaluate
                     // methods with fewer and possible no params first
                     // and then match methods with greater params

@@ -4,6 +4,7 @@ import string
 import random
 import json
 import pytest
+import warnings
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
@@ -32,7 +33,12 @@ class ThirdPartyCameraMetadata:
 def build_controller(**args):
     default_args = dict(scene="FloorPlan28", local_build=True)
     default_args.update(args)
-    return Controller(**default_args)
+    # during a ci-build we will get a warning that we are using a commit_id for the
+    # build instead of 'local'
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        c = Controller(**default_args)
+    return c
 
 
 wsgi_controller = build_controller(server_class=WsgiServer)
@@ -133,7 +139,6 @@ def test_small_aspect():
     controller.stop()
 
 
-@pytest.mark.skip(reason="temporarily skipping deprecation test")
 def test_bot_deprecation():
     controller = build_controller(agentMode="bot", width=128, height=64)
     assert (
@@ -147,11 +152,13 @@ def test_deprecated_segmentation_params():
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(renderObjectImage=True, renderClassImage=True,)
     event = controller.last_event
-    assert event.class_segmentation_frame is event.semantic_segmentation_frame
-    assert event.semantic_segmentation_frame is not None
-    assert (
-        event.instance_segmentation_frame is not None
-    ), "renderObjectImage should still render instance_segmentation_frame"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        assert event.class_segmentation_frame is event.semantic_segmentation_frame
+        assert event.semantic_segmentation_frame is not None
+        assert (
+            event.instance_segmentation_frame is not None
+        ), "renderObjectImage should still render instance_segmentation_frame"
 
 
 def test_deprecated_segmentation_params2():
@@ -161,11 +168,14 @@ def test_deprecated_segmentation_params2():
         renderSemanticSegmentation=True, renderInstanceSegmentation=True,
     )
     event = controller.last_event
-    assert event.class_segmentation_frame is event.semantic_segmentation_frame
-    assert event.semantic_segmentation_frame is not None
-    assert (
-        event.instance_segmentation_frame is not None
-    ), "renderObjectImage should still render instance_segmentation_frame"
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        assert event.class_segmentation_frame is event.semantic_segmentation_frame
+        assert event.semantic_segmentation_frame is not None
+        assert (
+            event.instance_segmentation_frame is not None
+        ), "renderObjectImage should still render instance_segmentation_frame"
 
 
 def test_reset():
@@ -509,52 +519,6 @@ def test_rotate_right(controller):
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_teleport(controller):
-    # Checking y coordinate adjustment works
-    controller.step(
-        "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
-    )
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, BASE_FP28_POSITION)
-
-    controller.step(
-        "TeleportFull",
-        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
-        raise_for_failure=True,
-    )
-    position = controller.last_event.metadata["agent"]["position"]
-    assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
-
-    # Teleporting too high
-    before_position = controller.last_event.metadata["agent"]["position"]
-    controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
-    )
-    assert not controller.last_event.metadata[
-        "lastActionSuccess"
-    ], "Teleport should not allow changes for more than 0.05 in the y coordinate."
-    assert (
-        controller.last_event.metadata["agent"]["position"] == before_position
-    ), "After failed teleport, the agent's position should not change."
-
-    # Teleporting into an object
-    controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
-    )
-    assert not controller.last_event.metadata[
-        "lastActionSuccess"
-    ], "Should not be able to teleport into an object."
-
-    # Teleporting into a wall
-    controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
-    )
-    assert not controller.last_event.metadata[
-        "lastActionSuccess"
-    ], "Should not be able to teleport into a wall."
-
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_open(controller):
     objects = controller.last_event.metadata["objects"]
     obj_to_open = next(obj for obj in objects if obj["objectType"] == "Fridge")
@@ -701,8 +665,6 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
         typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
     )
     known_conflicts = {
-        "GetComponent": ["type"],
-        "StopCoroutine": ["routine"],
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
@@ -715,8 +677,6 @@ def test_action_dispatch_find_conflicts_physics(controller):
         typeName="UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController",
     )
     known_conflicts = {
-        "GetComponent": ["type"],
-        "StopCoroutine": ["routine"],
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata._raw_metadata["actionReturn"] == known_conflicts
@@ -910,6 +870,150 @@ def test_change_resolution(controller):
     event = controller.step(
         dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True
     )
+
+
+###################################################
+##### RESETTING WILL BE DONE AFTER THIS POINT #####
+###################################################
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_teleport(controller):
+    # Checking y coordinate adjustment works
+    controller.step(
+        "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, BASE_FP28_POSITION)
+
+    controller.step(
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
+        raise_for_failure=True,
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
+
+    # Teleporting too high
+    before_position = controller.last_event.metadata["agent"]["position"]
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Teleport should not allow changes for more than 0.05 in the y coordinate."
+    assert (
+        controller.last_event.metadata["agent"]["position"] == before_position
+    ), "After failed teleport, the agent's position should not change."
+
+    # Teleporting into an object
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Should not be able to teleport into an object."
+
+    # Teleporting into a wall
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Should not be able to teleport into a wall."
+
+    # DEFAULT AGENT TEST
+    # make sure Teleport works with default args
+    a1 = controller.last_event.metadata["agent"]
+    a2 = controller.step("Teleport", horizon=10).metadata["agent"]
+    assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
+
+    # all should be the same except for horizon
+    assert_near(a1["position"], a2["position"])
+    assert_near(a1["rotation"], a2["rotation"])
+    assert (
+        a1["isStanding"] == a2["isStanding"]
+    ), "Agent should remain in same standing when unspecified!"
+    assert a1["isStanding"] != None, "Agent isStanding should be set for physics agent!"
+
+    # make sure float rotation works
+    # TODO: readd this when it actually works
+    # agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+    # assert_near(agent['rotation']['y'], 25)
+
+    # test out of bounds with default agent
+    for action in ["Teleport", "TeleportFull"]:
+        try:
+            controller.step(
+                action="TeleportFull",
+                position=dict(x=2000, y=0, z=9000),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                raise_for_failure=True,
+            )
+            assert False, "Out of bounds teleport not caught by physics agent"
+        except:
+            pass
+
+    # Teleporting with the locobot and drone, which don't support standing
+    for agent in ["locobot", "drone"]:
+        event = controller.reset(agentMode=agent)
+        assert event.metadata["agent"]["isStanding"] is None, agent + " cannot stand!"
+
+        # Only degrees of freedom on the locobot
+        for action in ["Teleport", "TeleportFull"]:
+            event = controller.step(
+                action=action,
+                position=dict(x=-1.5, y=0.9, z=-1.5),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+            )
+            assert event.metadata["lastActionSuccess"], (
+                agent + " must be able to TeleportFull without passing in standing!"
+            )
+            try:
+                event = controller.step(
+                    action=action,
+                    position=dict(x=-1.5, y=0.9, z=-1.5),
+                    rotation=dict(x=0, y=90, z=0),
+                    horizon=30,
+                    standing=True,
+                )
+                assert False, (
+                    agent + " should not be able to pass in standing to teleport!"
+                )
+            except:
+                pass
+
+            # test out of bounds with default agent
+            try:
+                controller.step(
+                    action=action,
+                    position=dict(x=2000, y=0, z=9000),
+                    rotation=dict(x=0, y=90, z=0),
+                    horizon=30,
+                    raise_for_failure=True,
+                )
+                assert False, "Out of bounds teleport not caught by physics agent"
+            except:
+                pass
+
+        # make sure Teleport works with default args
+        a1 = controller.last_event.metadata["agent"]
+        a2 = controller.step("Teleport", horizon=10).metadata["agent"]
+        assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
+
+        # all should be the same except for horizon
+        assert_near(a1["position"], a2["position"])
+        assert_near(a1["rotation"], a2["rotation"])
+
+        # TODO: readd this when it actually works.
+        # make sure float rotation works
+        # if agent == "locobot":
+        # agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+        # assert_near(agent['rotation']['y'], 25)
+
+    controller.reset(agentMode="default")
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])

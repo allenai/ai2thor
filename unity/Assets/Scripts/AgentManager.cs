@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -52,6 +53,7 @@ public class AgentManager : MonoBehaviour
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
+
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -902,17 +904,17 @@ public class AgentManager : MonoBehaviour
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
-            var jsonResolver = new ShouldSerializeContractResolver();
-            return Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            }
-
-            );
+        var jsonResolver = new ShouldSerializeContractResolver();
+        return Newtonsoft.Json.JsonConvert.SerializeObject(
+            multiMeta,
+            Newtonsoft.Json.Formatting.None,
+            new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                ContractResolver = jsonResolver
+            }
+        );
     }
-
 
     private bool canEmit() {
         bool emit = true;
@@ -1049,7 +1051,9 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
-                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+
+
+                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
@@ -1209,37 +1213,43 @@ public class MetadataPatch
 	public string errorCode;
 	public bool lastActionSuccess;
     public int agentId;
-    public System.Object actionReturn;
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
 }
 
 //adding AgentMetdata class so there is less confusing
 //overlap between ObjectMetadata and AgentMetadata
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class AgentMetadata
-{
+public class AgentMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
     public float cameraHorizon;
-	public bool isStanding;
+
+    // TODO: this should be removed from base.
+    // some agents cannot stand (e.g., drone, locobot)
+	public bool? isStanding = null;
+
 	public bool inHighFrictionArea;
     public AgentMetadata() {}
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneAgentMetadata : AgentMetadata
-{
-    public float droneCurrentTime;
+public class DroneAgentMetadata : AgentMetadata {
+    // why is the launcher position even attached to the agent's metadata
+    // and not the generic metdata?
     public Vector3 LauncherPosition;
 }
 
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneObjectMetadata : ObjectMetadata
-{
+public class DroneObjectMetadata : ObjectMetadata {
     // Drone Related Metadata
     public int numSimObjHits;
     public int numFloorHits;
@@ -1413,6 +1423,7 @@ public class JointMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ArmMetadata {
 
     //public Vector3 handTarget;
@@ -1509,11 +1520,17 @@ public struct MetadataWrapper
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
-    public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
     public int updateCount;
     public int fixedUpdateCount;
+
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
+
 }
 
 /*
@@ -1580,7 +1597,15 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(Dictionary<string, object> action) {
-        this.jObject = JObject.FromObject(action);
+        try {
+            this.jObject = JObject.FromObject(action);
+        } catch (InvalidOperationException e)  {
+            throw new InvalidOperationException(
+                "TL;DR: Use 'run' from the debug input field. If you're seeing this, you're in the Debug Input Field. " +
+                "There is a weird case where actions like Teleport having xyz parameters and rotation: Vector3() which also has xyz parameters results in a self-recursing loop. " +
+                $"{e.Message}"
+            );
+        }
     }
 
     public DynamicServerAction(JObject action) {
@@ -1848,28 +1873,26 @@ public class TypedVariable {
 
 
 
-public class ShouldSerializeContractResolver : DefaultContractResolver
-{
-   public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+public class ShouldSerializeContractResolver : DefaultContractResolver {
+    public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
 
-   protected override JsonProperty CreateProperty( MemberInfo member,
-                                    MemberSerialization memberSerialization )
-   {
-      JsonProperty property = base.CreateProperty( member, memberSerialization );
+    protected override JsonProperty CreateProperty(
+        MemberInfo member,
+        MemberSerialization memberSerialization
+    ) {
+       JsonProperty property = base.CreateProperty(member, memberSerialization);
 
-      // exclude these properties to make serialization match JsonUtility
-      if( property.DeclaringType == typeof(Vector3) &&
-            (property.PropertyName == "sqrMagnitude" || 
-            property.PropertyName == "magnitude"  ||
-            property.PropertyName == "normalized" 
-            ))
-      {
+       // exclude these properties to make serialization match JsonUtility
+      if (property.DeclaringType == typeof(Vector3) &&
+          (property.PropertyName == "sqrMagnitude" ||
+          property.PropertyName == "magnitude"  ||
+          property.PropertyName == "normalized")
+      ) {
          property.ShouldSerialize = instance => { return false; };
          return property;
       } else {
           return base.CreateProperty(member, memberSerialization);
       }
-
    }
 }
 

@@ -19,7 +19,7 @@ class NumpyAwareEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if isinstance(obj, np.generic):
-            return np.asscalar(obj)
+            return obj.item()
         return super(NumpyAwareEncoder, self).default(obj)
 
 
@@ -184,7 +184,7 @@ class Event:
     @property
     def class_segmentation_frame(self):
         warnings.warn(
-            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame."
+            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.", DeprecationWarning
         )
         return self.semantic_segmentation_frame
 

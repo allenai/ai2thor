@@ -1030,16 +1030,19 @@ def poll_ci_build(context):
 
     commit_id = git_commit_id()
 
+    last_emit_time = 0
     for i in range(360):
         missing = False
+        # must emit something at least once every 10 minutes 
+        # otherwise travis will time out the build
+        if (time.time() - last_emit_time) > 540: 
+            print(".", end='')
+            last_emit_time = time.time()
+
         for arch in platform_map.keys():
-            if (i % 5) == 0:
-                print("checking %s for commit id %s" % (arch, commit_id))
             commit_build = ai2thor.build.Build(arch, commit_id, False)
             try:
-                if commit_build.log_exists():
-                    print("log exists %s" % commit_id)
-                else:
+                if not commit_build.log_exists():
                     missing = True
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
@@ -3166,3 +3169,22 @@ def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n
         for controller, metric in trial_runner(controller, num_trials, ObjectPositionVarianceAverage()):
             act(controller, actions, n)
         print(" actions: '{}', object_position_variance_average: {} ".format(action_name, metric))
+
+
+@task
+def generate_msgpack_resolver(task):
+    import glob
+    # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
+    # need to download/unzip into this path, add gatekeeper permission
+    target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
+    shutil.rmtree(target_dir, ignore_errors=True)
+    mpc_path = os.path.join(os.environ['HOME'], 'local/bin/mpc')
+    subprocess.check_call("%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir), shell=True)
+    for g in glob.glob(os.path.join(target_dir, "*.cs")):
+        with open(g) as f:
+            source_code = f.read()
+            source_code = "using UnityEngine;\n" + source_code
+        with open(g, "w") as f:
+            f.write(source_code)
+
+

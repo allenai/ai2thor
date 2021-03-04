@@ -3347,7 +3347,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["x"] = -1.5f;
                         action["y"] = 0.9009995460510254f;
                         action["z"] = -1.5f;
-                        float rotation = 135.0f;
+                        Vector3 rotation = new Vector3(0, 135.0f, 0);
                         int horizon = 0;
                         bool standing = true;
 
@@ -3355,7 +3355,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action["x"] = float.Parse(splitcommand[1]);
                             action["y"] = float.Parse(splitcommand[2]);
                             action["z"] = float.Parse(splitcommand[3]);
-                            rotation = float.Parse(splitcommand[4]);
+                            // rotation = float.Parse(splitcommand[4]);
                         }
 
                         else if(splitcommand.Length > 5)
@@ -3363,7 +3363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action["x"] = float.Parse(splitcommand[1]);
                             action["y"] = float.Parse(splitcommand[2]);
                             action["z"] = float.Parse(splitcommand[3]);
-                            rotation = float.Parse(splitcommand[4]);
+                            // rotation = float.Parse(splitcommand[4]);
                             horizon = int.Parse(splitcommand[5]);
                         }
 
