@@ -584,7 +584,7 @@ def push_pip_commit(context):
     import glob
     commit_id = git_commit_id()
     s3 = boto3.resource("s3")
-    for g in glob.glob('dist/ai2thor-%s*' % commit_id):
+    for g in glob.glob('dist/ai2thor-0.0.0+%s*' % commit_id):
         acl = "public-read"
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
