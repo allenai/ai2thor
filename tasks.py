@@ -988,12 +988,12 @@ def ci_build(context):
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
-        elif datetime.datetime.now().hour in [2,3,4]:
-            clean()
-            subprocess.check_call("git checkout master", shell=True)
-            subprocess.check_call("git pull origin master", shell=True)
-            if current_webgl_autodeploy_commit_id() != git_commit_id():
-                ci_build_webgl(context, git_commit_id())
+        #elif datetime.datetime.now().hour == 2:
+        #    clean()
+        #    subprocess.check_call("git checkout master", shell=True)
+        #    subprocess.check_call("git pull origin master", shell=True)
+        #    if current_webgl_autodeploy_commit_id() != git_commit_id():
+        #        ci_build_webgl(context, git_commit_id())
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
