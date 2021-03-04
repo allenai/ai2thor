@@ -71,7 +71,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
     }
     
-    void LateUpdate() {
+    // disabling LateUpdate to experiment with determinism
+    void LateUpdateXXX() {
         // check what objects in the scene are currently in motion
         // Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
         foreach (Rigidbody rb in rbsInScene) {
