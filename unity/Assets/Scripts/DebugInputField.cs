@@ -3476,8 +3476,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     case "pumlh":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PickUpMidLevelHand";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickUpMidLevelHand";
+                        action["objectIds"] = new List<string> {"Bread|-00.52|+01.17|-00.03", "Apple|-00.54|+01.15|+00.18"};
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
