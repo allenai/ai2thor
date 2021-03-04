@@ -55,6 +55,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             action.gridSize = gridSize;
             action.visibilityDistance = visibilityDistance;
             action.consistentColors = consistentColors;
+            action.snapToGrid = false; // default to false for MCS
             PhysicsController.ProcessControlCommand(action);
         }
 
