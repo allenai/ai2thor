@@ -4182,8 +4182,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 while (numStillGoing > 0) {
                     foreach (SimObjPhysics sop in animating) {
                         if (animatingType.ContainsKey(sop) &&
-                            (animatingType[sop] == "toggleable" || animatingType[sop] == "openable") && 
-                            sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0
+                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0 || animatingType[sop] == "openable") && 
+                            sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0
                         ) {
                             numStillGoing--;
                         }
