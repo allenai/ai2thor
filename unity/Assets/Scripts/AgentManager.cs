@@ -48,7 +48,9 @@ public class AgentManager : MonoBehaviour
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+
+    // it is public to be accessible from the debug input field.
+    public HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;

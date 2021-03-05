@@ -448,7 +448,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 yield return new WaitForEndOfFrame();
                             }
                             Debug.Log($"{++i} Executing: {action}");
-                            CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                            if (AManager.agentManagerActions.Contains((String) action["action"])) {
+                                ActionDispatcher.Dispatch(
+                                    AManager,
+                                    new DynamicServerAction(action)
+                                );
+                            } else {
+                                CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                            }
                         }
                     }
                     StartCoroutine(executeBatch(jActions: actions));
