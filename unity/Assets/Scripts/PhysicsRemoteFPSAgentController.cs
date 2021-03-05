@@ -2132,6 +2132,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }
+        public void PhysicsSyncTransforms()
+        {
+            Physics.SyncTransforms();
+            actionFinished(true);
+        }
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
