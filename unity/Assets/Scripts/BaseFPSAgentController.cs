@@ -1949,6 +1949,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Vector3 pos = (Vector3) targetPosition;
+            if (!Physics.autoSyncTransforms) {
+                // we must sync the rigidbody prior to executing the
+                // move otherwise the agent will end up in a different
+                // location from the targetPosition
+                Physics.SyncTransforms();
+            }
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
