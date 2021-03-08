@@ -953,6 +953,7 @@ public class AgentManager : MonoBehaviour
                 continue;
             }
 
+            Physics.SyncTransforms();
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
