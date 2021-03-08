@@ -39,21 +39,26 @@ public class AgentManager : MonoBehaviour
     private bool renderFlowImage;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
+	private Color[] agentColors = new Color[] {Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
     private PhysicsSceneManager physicsSceneManager;
     private FifoServer.Client fifoClient = null;
-	private enum serverTypes { WSGI, FIFO};
+	private enum serverTypes { WSGI, FIFO };
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+
+    private HashSet<string> agentManagerActions = new HashSet<string> {
+        "Reset",
+        "Initialize",
+        "AddThirdPartyCamera",
+        "UpdateThirdPartyCamera"
+    };
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
-
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -126,9 +131,9 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		#if !UNITY_EDITOR
+		// #if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
-		#endif
+		// #endif
 	}
 
 	private void initializePrimaryAgent()
@@ -604,47 +609,42 @@ public class AgentManager : MonoBehaviour
 		this.agents.Add (clone);
 	}
 
-	private Vector3 agentStartPosition(BaseFPSAgentController agent) {
+    private Vector3 agentStartPosition(BaseFPSAgentController agent) {
 
-		Transform t = agent.transform;
-		Vector3[] castDirections = new Vector3[]{ t.forward, t.forward * -1, t.right, t.right * -1 };
+        Transform t = agent.transform;
+        Vector3[] castDirections = new Vector3[]{ t.forward, t.forward * -1, t.right, t.right * -1 };
 
-		RaycastHit maxHit = new RaycastHit ();
-		Vector3 maxDirection = Vector3.zero;
+        RaycastHit maxHit = new RaycastHit ();
+        Vector3 maxDirection = Vector3.zero;
 
-		RaycastHit hit;
-		CharacterController charContr = agent.m_CharacterController;
-		Vector3 p1 = t.position + charContr.center + Vector3.up * -charContr.height * 0.5f;
-		Vector3 p2 = p1 + Vector3.up * charContr.height;
-		foreach (Vector3 d in castDirections) {
+        RaycastHit hit;
+        CharacterController charContr = agent.m_CharacterController;
+        Vector3 p1 = t.position + charContr.center + Vector3.up * -charContr.height * 0.5f;
+        Vector3 p2 = p1 + Vector3.up * charContr.height;
+        foreach (Vector3 d in castDirections) {
+            if (Physics.CapsuleCast(p1, p2, charContr.radius, d, out hit) && hit.distance > maxHit.distance) {
+                maxHit = hit;
+                maxDirection = d;
+            }
+        }
 
-			if (Physics.CapsuleCast (p1, p2, charContr.radius, d, out hit)) {
-				if (hit.distance > maxHit.distance) {
-					maxHit = hit;
-					maxDirection = d;
-				}
+        if (maxHit.distance > (charContr.radius * 5)) {
+            return t.position + (maxDirection * (charContr.radius * 4));
+        }
 
-			}
-		}
+        return Vector3.zero;
+    }
 
-		if (maxHit.distance > (charContr.radius * 5)) {
-			return t.position + (maxDirection * (charContr.radius * 4));
-
-		}
-
-		return Vector3.zero;
-	}
-
-	public void UpdateAgentColor(BaseFPSAgentController agent, Color color) {
-		foreach (MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
-			foreach (Material m in r.materials) {
-				if (m.name.Contains("Agent_Color_Mat")) {
-					m.color = color;
-				}
-			}
-
-		}
-	}
+    // NOTE: this does not do anything with the new agent mesh
+    public void UpdateAgentColor(BaseFPSAgentController agent, Color color) {
+        foreach (MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+            foreach (Material m in r.materials) {
+                if (m.name.Contains("Agent_Color_Mat")) {
+                    m.color = color;
+                }
+            }
+        }
+    }
 
 	public IEnumerator ResetCoroutine(ServerAction response) {
 		// Setting all the agents invisible here is silly but necessary
@@ -667,10 +667,8 @@ public class AgentManager : MonoBehaviour
 		StartCoroutine(ResetCoroutine(response));
 	}
 
-    public bool SwitchScene(string sceneName)
-    {
-        if (!string.IsNullOrEmpty(sceneName))
-        {
+    public bool SwitchScene(string sceneName) {
+        if (!string.IsNullOrEmpty(sceneName)) {
             UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
             return true;
         }
@@ -680,8 +678,7 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-    private void Update()
-    {
+    private void Update() {
         physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
     }
 
@@ -743,88 +740,91 @@ public class AgentManager : MonoBehaviour
 
 	private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
 		if (this.renderImage) {
-
 			if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
 				RenderTexture.active = agent.m_Camera.activeTexture;
-				agent.m_Camera.Render ();
+				agent.m_Camera.Render();
 			}
             payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
 		}
 	}
 
-	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-		if (this.renderInstanceSegmentation) {
-			if (!agent.imageSynthesis.hasCapturePass("_id")) {
-				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
-			}
-			byte[] bytes = agent.imageSynthesis.Encode ("_id");
-            payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
+	private void addObjectImage(
+        List<KeyValuePair<string, byte[]>> payload,
+        BaseFPSAgentController agent,
+        ref MetadataWrapper metadata
+    ) {
+        if (!this.renderInstanceSegmentation) {
+            return;
+        }
+        if (!agent.imageSynthesis.hasCapturePass("_id")) {
+            Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
+        }
+        byte[] bytes = agent.imageSynthesis.Encode ("_id");
+        payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
-			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
-			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
-			for (int yy = 0; yy < tex.height; yy++) {
-				for (int xx = 0; xx < tex.width; xx++) {
-					Color colorOn = id_image [yy * tex.width + xx];
-					if (!colorBounds.ContainsKey (colorOn)) {
-						colorBounds [colorOn] = new int[]{xx, yy, xx, yy};
-					} else {
-						int[] oldPoint = colorBounds [colorOn];
-						if (xx < oldPoint [0]) {
-							oldPoint [0] = xx;
-						}
-						if (yy < oldPoint [1]) {
-							oldPoint [1] = yy;
-						}
-						if (xx > oldPoint [2]) {
-							oldPoint [2] = xx;
-						}
-						if (yy > oldPoint [3]) {
-							oldPoint [3] = yy;
-						}
-					}
-				}
-			}
-			List<ColorBounds> boundsList = new List<ColorBounds> ();
-			foreach (Color key in colorBounds.Keys) {
-				ColorBounds bounds = new ColorBounds ();
-				bounds.color = new ushort[] {
-					(ushort)Math.Round (key.r * 255),
-					(ushort)Math.Round (key.g * 255),
-					(ushort)Math.Round (key.b * 255)
-				};
-				bounds.bounds = colorBounds [key];
-				boundsList.Add (bounds);
-			}
-			metadata.colorBounds = boundsList.ToArray ();
+        Color[] id_image = agent.imageSynthesis.tex.GetPixels();
+        Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]>();
+        for (int yy = 0; yy < tex.height; yy++) {
+            for (int xx = 0; xx < tex.width; xx++) {
+                Color colorOn = id_image[yy * tex.width + xx];
+                if (!colorBounds.ContainsKey (colorOn)) {
+                    colorBounds [colorOn] = new int[] {xx, yy, xx, yy};
+                } else {
+                    int[] oldPoint = colorBounds [colorOn];
+                    if (xx < oldPoint [0]) {
+                        oldPoint [0] = xx;
+                    }
+                    if (yy < oldPoint [1]) {
+                        oldPoint [1] = yy;
+                    }
+                    if (xx > oldPoint [2]) {
+                        oldPoint [2] = xx;
+                    }
+                    if (yy > oldPoint [3]) {
+                        oldPoint [3] = yy;
+                    }
+                }
+            }
+        }
+        List<ColorBounds> boundsList = new List<ColorBounds>();
+        foreach (Color key in colorBounds.Keys) {
+            ColorBounds bounds = new ColorBounds();
+            bounds.color = new ushort[] {
+                (ushort)Math.Round (key.r * 255),
+                (ushort)Math.Round (key.g * 255),
+                (ushort)Math.Round (key.b * 255)
+            };
+            bounds.bounds = colorBounds [key];
+            boundsList.Add (bounds);
+        }
+        metadata.colorBounds = boundsList.ToArray ();
 
-			List<ColorId> colors = new List<ColorId> ();
-			foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
-				ColorId cid = new ColorId ();
-				cid.color = new ushort[] {
-					(ushort)Math.Round (key.r * 255),
-					(ushort)Math.Round (key.g * 255),
-					(ushort)Math.Round (key.b * 255)
-				};
+        List<ColorId> colors = new List<ColorId> ();
+        foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
+            ColorId cid = new ColorId ();
+            cid.color = new ushort[] {
+                (ushort)Math.Round (key.r * 255),
+                (ushort)Math.Round (key.g * 255),
+                (ushort)Math.Round (key.b * 255)
+            };
 
-				cid.name = agent.imageSynthesis.colorIds [key];
-				colors.Add (cid);
-			}
-			metadata.colors = colors.ToArray ();
+            cid.name = agent.imageSynthesis.colorIds[key];
+            colors.Add (cid);
+        }
+        metadata.colors = colors.ToArray();
+    }
 
-		}
-	}
-
-	private void addImageSynthesisImage(List<KeyValuePair<string, byte[]>> payload, ImageSynthesis synth, bool flag, string captureName, string fieldName)
-	{
-		if (flag) {
-			if (!synth.hasCapturePass (captureName)) {
-				Debug.LogError (captureName + " not available - sending empty image");
-			}
-			byte[] bytes = synth.Encode (captureName);
-            payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
-
-
-		}
+	private void addImageSynthesisImage(
+        List<KeyValuePair<string, byte[]>> payload,
+        ImageSynthesis synth,
+        string captureName,
+        string fieldName
+    ) {
+        if (!synth.hasCapturePass(captureName)) {
+            Debug.LogError (captureName + " not available - sending empty image");
+        }
+        byte[] bytes = synth.Encode(captureName);
+        payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
 	}
 
 	// Used for benchmarking only the server-side
@@ -846,8 +846,12 @@ public class AgentManager : MonoBehaviour
 		ProcessControlCommand(msg);
 	}
 
-    private void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
-
+    private void createPayload(
+        MultiAgentMetadata multiMeta,
+        ThirdPartyCameraMetadata[] cameraMetadata,
+        List<KeyValuePair<string, byte[]>> renderPayload,
+        bool shouldRender
+    ) {
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
@@ -864,31 +868,54 @@ public class AgentManager : MonoBehaviour
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
 			    cMetadata.fieldOfView = camera.fieldOfView;
                 cameraMetadata[i] = cMetadata;
-                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-                addThirdPartyCameraImage (renderPayload, camera);
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
+                addThirdPartyCameraImage(renderPayload, camera);
+
+                if (this.renderDepthImage) {
+                    addImageSynthesisImage(renderPayload, imageSynthesis, "_depth", "image_thirdParty_depth");
+                }
+                if (this.renderNormalsImage) {
+                    addImageSynthesisImage(renderPayload, imageSynthesis, "_normals", "image_thirdParty_normals");
+                }
+                if (this.renderInstanceSegmentation) {
+                    addImageSynthesisImage(renderPayload, imageSynthesis, "_id", "image_thirdParty_image_ids");
+                }
+                if (this.renderSemanticSegmentation) {
+                    addImageSynthesisImage(renderPayload, imageSynthesis, "_class", "image_thirdParty_classes");
+                }
+                if (this.renderFlowImage) {
+                    //XXX fix this in a bit -- this appears to be broken
+                    addImageSynthesisImage(renderPayload, imageSynthesis, "_flow", "image_thirdParty_flow");
+                }
             }
         }
+
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
-            MetadataWrapper metadata = agent.generateMetadataWrapper ();
+            MetadataWrapper metadata = agent.generateMetadataWrapper();
             metadata.agentId = i;
             metadata.fixedUpdateCount = agent.fixedUpdateCount;
             metadata.updateCount = agent.updateCount;
             
-
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
-                addImage (renderPayload, agent);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                addObjectImage (renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+                addImage(renderPayload, agent);
+                if (this.renderDepthImage) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, "_depth", "image_depth");
+                }
+                if (this.renderNormalsImage) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, "_normals", "image_normals");
+                }
+                if (this.renderInstanceSegmentation) {
+                    // why does this have a separate method?
+                    addObjectImage(renderPayload, agent, ref metadata);
+                }
+                if (this.renderSemanticSegmentation) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, "_class", "image_classes");
+                }
+                if (this.renderFlowImage) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, "_flow", "image_flow");
+                }
 
                 metadata.thirdPartyCameras = cameraMetadata;
             }
@@ -899,8 +926,6 @@ public class AgentManager : MonoBehaviour
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
-
-        
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
@@ -908,8 +933,7 @@ public class AgentManager : MonoBehaviour
         return Newtonsoft.Json.JsonConvert.SerializeObject(
             multiMeta,
             Newtonsoft.Json.Formatting.None,
-            new Newtonsoft.Json.JsonSerializerSettings()
-            {
+            new Newtonsoft.Json.JsonSerializerSettings() {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }
@@ -930,8 +954,7 @@ public class AgentManager : MonoBehaviour
 
 
 	public IEnumerator EmitFrame() {
-        while (true) 
-        {
+        while (true) {
             bool shouldRender = this.renderImage && serverSideScreenshot;
 			yield return new WaitForEndOfFrame();
 
@@ -946,8 +969,7 @@ public class AgentManager : MonoBehaviour
                 }
             }
 
-            if (!this.canEmit()) 
-            {
+            if (!this.canEmit()) {
                 continue;
             }
 
@@ -962,140 +984,140 @@ public class AgentManager : MonoBehaviour
                 if (jsInterface != null) {
                     jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
                 }
-            #endif
-
-
-
-        #if !UNITY_WEBGL 
-            if (serverType == serverTypes.WSGI) {
-                WWWForm form = new WWWForm();
-                foreach(var item in renderPayload) {
-                    form.AddBinaryData(item.Key, item.Value);
-                }
-                form.AddField("metadata", serializeMetadataJson(multiMeta));
-                form.AddField("token", robosimsClientToken);
-
-
-                if (this.sock == null) {
-                    // Debug.Log("connecting to host: " + robosimsHost);
-                    IPAddress host = IPAddress.Parse(robosimsHost);
-                    IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-                    this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    try {
-                        this.sock.Connect(hostep);
+            #else
+                if (serverType == serverTypes.WSGI) {
+                    WWWForm form = new WWWForm();
+                    foreach (KeyValuePair<string, byte[]> item in renderPayload) {
+                        form.AddBinaryData(item.Key, item.Value);
                     }
-                    catch (SocketException e) {
-                        Debug.Log("Socket exception: " + e.ToString());
-                    }
-                }
+                    form.AddField("metadata", serializeMetadataJson(multiMeta));
+                    form.AddField("token", robosimsClientToken);
 
-                if (this.sock != null && this.sock.Connected) {
-                    byte[] rawData = form.data;
-
-                    string request = "POST /train HTTP/1.1\r\n" +
-                    "Content-Length: " + rawData.Length.ToString() + "\r\n";
-
-                    foreach(KeyValuePair<string, string> entry in form.headers) {
-                        request += entry.Key + ": " + entry.Value + "\r\n";
-                    }
-                    request += "\r\n";
-
-                    this.sock.Send(Encoding.ASCII.GetBytes(request));
-                    this.sock.Send(rawData);
-
-                    // waiting for a frame here keeps the Unity window in sync visually
-                    // its not strictly necessary, but allows the interact() command to work properly
-                    // and does not reduce the overall FPS
-                    yield return new WaitForEndOfFrame();
-
-                    byte[] headerBuffer = new byte[1024];
-                    int bytesReceived = 0;
-                    byte[] bodyBuffer = null;
-                    int bodyBytesReceived = 0;
-                    int contentLength = 0;
-
-                    // read header
-                    while (true) {
-                        int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
-                        if (received == 0) {
-                            Debug.LogError("0 bytes received attempting to read header - connection closed");
-                            break;
+                    if (!this.sock.HasValue) {
+                        // Debug.Log("connecting to host: " + robosimsHost);
+                        IPAddress host = IPAddress.Parse(robosimsHost);
+                        IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+                        this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        try {
+                            this.sock.Connect(hostep);
                         }
-
-                        bytesReceived += received;;
-                        string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
-                        int offset = headerMsg.IndexOf("\r\n\r\n");
-                        if (offset > 0){
-                            contentLength = parseContentLength(headerMsg.Substring(0, offset));
-                            bodyBuffer = new byte[contentLength];
-                            bodyBytesReceived = bytesReceived - (offset + 4);
-                            Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
-                            break;
+                        catch (SocketException e) {
+                            Debug.Log("Socket exception: " + e.ToString());
                         }
                     }
 
-                    // read body
-                    while (bodyBytesReceived < contentLength) {
-                        // check for 0 bytes received
-                        int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
-                        if (received == 0) {
-                            Debug.LogError("0 bytes received attempting to read body - connection closed");
-                            break;
+                    if (!this.sock.HasValue && this.sock.Connected) {
+                        byte[] rawData = form.data;
+
+                        string request = "POST /train HTTP/1.1\r\n" +
+                        "Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+                        foreach(KeyValuePair<string, string> entry in form.headers) {
+                            request += entry.Key + ": " + entry.Value + "\r\n";
+                        }
+                        request += "\r\n";
+
+                        this.sock.Send(Encoding.ASCII.GetBytes(request));
+                        this.sock.Send(rawData);
+
+                        // waiting for a frame here keeps the Unity window in sync visually
+                        // its not strictly necessary, but allows the interact() command to work properly
+                        // and does not reduce the overall FPS
+                        yield return new WaitForEndOfFrame();
+
+                        byte[] headerBuffer = new byte[1024];
+                        int bytesReceived = 0;
+                        byte[] bodyBuffer = null;
+                        int bodyBytesReceived = 0;
+                        int contentLength = 0;
+
+                        // read header
+                        while (true) {
+                            int received = this.sock.Receive(
+                                headerBuffer,
+                                bytesReceived,
+                                headerBuffer.Length - bytesReceived,
+                                SocketFlags.None
+                            );
+                            if (received == 0) {
+                                Debug.LogError("0 bytes received attempting to read header - connection closed");
+                                break;
+                            }
+
+                            bytesReceived += received;;
+                            string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                            int offset = headerMsg.IndexOf("\r\n\r\n");
+                            if (offset > 0){
+                                contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                                bodyBuffer = new byte[contentLength];
+                                bodyBytesReceived = bytesReceived - (offset + 4);
+                                Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                                break;
+                            }
                         }
 
-                        bodyBytesReceived += received;
-                        //Debug.Log("total bytes received: " + bodyBytesReceived);
+                        // read body
+                        while (bodyBytesReceived < contentLength) {
+                            // check for 0 bytes received
+                            int received = this.sock.Receive(
+                                bodyBuffer,
+                                bodyBytesReceived,
+                                bodyBuffer.Length - bodyBytesReceived,
+                                SocketFlags.None
+                            );
+
+                            if (received == 0) {
+                                Debug.LogError("0 bytes received attempting to read body - connection closed");
+                                break;
+                            }
+
+                            bodyBytesReceived += received;
+                            //Debug.Log("total bytes received: " + bodyBytesReceived);
+                        }
+
+                        string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+                        ProcessControlCommand(msg);
                     }
+                } else if (serverType == serverTypes.FIFO) {
+                    byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(
+                        multiMeta, 
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                    );
 
-                    string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
-                    ProcessControlCommand(msg);
-                }
-            } else if (serverType == serverTypes.FIFO){
-
-
-                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta, 
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-
-                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
-                foreach(var item in renderPayload) {
-                    this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
-                }
-                this.fifoClient.SendEOM();
-                string msg = this.fifoClient.ReceiveMessage();
-                ProcessControlCommand(msg);
-
-                while (canEmit() && this.fastActionEmit) {
-                    MetadataPatch patch = this.activeAgent().generateMetadataPatch();
-                    patch.agentId = this.activeAgentId;
-                    msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-                    this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
+                    this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                    foreach(KeyValuePair<string, byte[]> item in renderPayload) {
+                        this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+                    }
                     this.fifoClient.SendEOM();
-                    msg = this.fifoClient.ReceiveMessage();
+                    string msg = this.fifoClient.ReceiveMessage();
                     ProcessControlCommand(msg);
-                }
-            }
 
-            //if(droneMode)
-            //{
-            //    if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
-            //    {
-            //        DroneFPSAgentController agent_tmp = this.agents[0].GetComponent<DroneFPSAgentController>();
-            //        Time.timeScale = agent_tmp.autoResetTimeScale;
-            //        Physics.autoSimulation = true;
-            //        physicsSceneManager.physicsSimulationPaused = false;
-            //        agent_tmp.hasFixedUpdateHappened = false;
-            //    }
-            //}
+                    while (canEmit() && this.fastActionEmit) {
+                        MetadataPatch patch = this.activeAgent().generateMetadataPatch();
+                        patch.agentId = this.activeAgentId;
+                        msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(patch, 
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                        this.fifoClient.SendMessage(FifoServer.FieldType.MetadataPatch, msgPackMetadata);
+                        this.fifoClient.SendEOM();
+                        msg = this.fifoClient.ReceiveMessage();
+                        ProcessControlCommand(msg);
+                    }
+                }
+
+                //if(droneMode)
+                //{
+                //    if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+                //    {
+                //        DroneFPSAgentController agent_tmp = this.agents[0].GetComponent<DroneFPSAgentController>();
+                //        Time.timeScale = agent_tmp.autoResetTimeScale;
+                //        Physics.autoSimulation = true;
+                //        physicsSceneManager.physicsSimulationPaused = false;
+                //        agent_tmp.hasFixedUpdateHappened = false;
+                //    }
+                //}
 
             #endif
-
-
-
-
         }
-
-
     }
 
 	private int parseContentLength(string header) {
