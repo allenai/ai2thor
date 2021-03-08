@@ -21,6 +21,7 @@ MAX_CONSECUTIVE_FAILURE = 10
 # scene_indices = [i + 1 for i in range(30)] #Only kitchens
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]
+# controller.step('AdvancePhysicsStep', syncTransforms=True)
 set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p']
 
 

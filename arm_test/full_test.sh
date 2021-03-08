@@ -4,7 +4,7 @@ export COMMIT_ID="12a36839a9670e70ffe6f2171212147ce306d818"; export TEST_DETERMI
 python3 test_action_success_and_movement_values.py --commit_id $COMMIT_ID
 python3 test_pickup_and_move_arm_stuck.py --commit_id $COMMIT_ID
 python3 test_determinism.py --commit_id $COMMIT_ID
-python3 test_determinism_different_machines.py --commit_id $COMMIT_ID --generate_test --number_of_test 500 --test_file_name "${TEST_DETERMINISM_NAME}_bigger.json"
+python3 test_determinism_different_machines.py --commit_id $COMMIT_ID --generate_test --number_of_test 100 --test_file_name "${TEST_DETERMINISM_NAME}_big.json"
 python3 test_nan_inf_issues.py --commit_id $COMMIT_ID
 python3 test_pickup_and_move_arm_stuck.py --commit_id $COMMIT_ID
-python3 test_determinism_different_machines.py --commit_id $COMMIT_ID --test_file_name "${TEST_DETERMINISM_NAME}_bigger.json"
+python3 test_determinism_different_machines.py --commit_id $COMMIT_ID --test_file_name "${TEST_DETERMINISM_NAME}_big.json"

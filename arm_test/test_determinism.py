@@ -9,7 +9,7 @@ import copy
 import time
 from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, ENV_ARGS, reset_the_scene_and_get_reachables
 
-MAX_TESTS = 300
+MAX_TESTS = 3000
 MAX_EP_LEN = 100
 scene_indices = [i + 1 for i in range(30)] +[i + 1 for i in range(200,230)] +[i + 1 for i in range(300,330)] +[i + 1 for i in range(400,430)]
 scene_names = ['FloorPlan{}_physics'.format(i) for i in scene_indices]

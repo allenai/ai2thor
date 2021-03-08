@@ -4,6 +4,11 @@ import random
 import ai2thor
 import pdb
 
+
+### CONSTANTS
+
+
+
 ADITIONAL_ARM_ARGS = {
     'disableRendering': True,
     'restrictMovement': False,
@@ -22,8 +27,43 @@ ENV_ARGS = dict(gridSize=0.25,
                 agentControllerType='mid-level',
                 server_class=ai2thor.fifo_server.FifoServer,
                 useMassThreshold = True, massThreshold = 10,
-                autoSimulation=False, autoSyncTransforms=True
+                autoSimulation=False, autoSyncTransforms=True,
                 )
+
+#Functions
+
+def is_object_at_position(controller, action_detail):
+    objectId = action_detail['objectId']
+    position = action_detail['position']
+    current_object_position = get_object_details(controller, objectId)['position']
+    return two_dict_equal(dict(position=position), dict(position=current_object_position))
+
+def is_agent_at_position(controller, action_detail):
+    # dict(action='TeleportFull', x=initial_location['x'], y=initial_location['y'], z=initial_location['z'], rotation=dict(x=0, y=initial_rotation, z=0), horizon=horizon, standing=True)
+    target_pose = dict(
+        position={'x': action_detail['x'], 'y': action_detail['y'], 'z': action_detail['z'], },
+        rotation=action_detail['rotation'],
+        horizon=action_detail['horizon']
+    )
+    current_agent_pose = controller.last_event.metadata['agent']
+    current_agent_pose = dict(
+        position=current_agent_pose['position'],
+        rotation=current_agent_pose['rotation'],
+        horizon=current_agent_pose['cameraHorizon'],
+    )
+    return two_dict_equal(current_agent_pose, target_pose)
+
+
+def get_object_details(controller, obj_id):
+    return [o for o in controller.last_event.metadata['objects'] if o['objectId'] == obj_id][0]
+def initialize_arm(controller, scene_starting_cheating_locations):
+    # for start arm from high up as a cheating, this block is very important. never remove
+    scene = controller.last_event.metadata['sceneName']
+    initial_pose = scene_starting_cheating_locations[scene]
+    event1 = controller.step(dict(action='TeleportFull', standing=True, x=initial_pose['x'], y=initial_pose['y'], z=initial_pose['z'], rotation=dict(x=0, y=initial_pose['rotation'], z=0), horizon=initial_pose['horizon']))
+    event2 = controller.step(dict(action='MoveMidLevelArm',  position=dict(x=0.0, y=0, z=0.35), **ADITIONAL_ARM_ARGS))
+    event3 = controller.step(dict(action='MoveMidLevelArmHeight', y=0.8, **ADITIONAL_ARM_ARGS))
+    return event1, event2, event3
 
 def make_all_objects_unbreakable(controller):
     all_breakable_objects = [o['objectType'] for o in controller.last_event.metadata['objects'] if o['breakable'] is True]
@@ -32,20 +72,38 @@ def make_all_objects_unbreakable(controller):
         controller.step(action='MakeObjectsOfTypeUnbreakable', objectType=obj_type)
 
 
-def reset_the_scene_and_get_reachables(controller, scene_name=None):
+def reset_the_scene_and_get_reachables(controller, scene_name=None, scene_options=None):
     if scene_name is None:
-        scene_name = random.choice(SCENE_NAMES)
+        if scene_options is None:
+            scene_options = SCENE_NAMES
+        scene_name = random.choice(scene_options)
     controller.reset(scene_name)
     controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
     controller.step(action='MakeAllObjectsMoveable')
     make_all_objects_unbreakable(controller)
     return get_reachable_positions(controller)
 
+def only_reset_scene(controller, scene_name):
+    controller.reset(scene_name)
+    controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
+    controller.step(action='MakeAllObjectsMoveable')
+    make_all_objects_unbreakable(controller)
+
+def action_wrapper(controller, dict_action): #TODO add this everywhere
+    event = controller.step(**dict_action)
+    # #TODO are you sure
+    if dict_action['action'] == 'TeleportFull':
+        return event
+    controller.step('PhysicsSyncTransforms')
+    return event
+
+
+
 def get_reachable_positions(controller):
     event = controller.step('GetReachablePositions')
     reachable_positions = event.metadata['reachablePositions']
     if reachable_positions is None or len(reachable_positions) == 0:
-        reachable_positions = event.metadata['actionReturn'] #TODO we have to change this everywhere
+        reachable_positions = event.metadata['actionReturn']
     if reachable_positions is None or len(reachable_positions) == 0:
         print('Scene name', controller.last_event.metadata['sceneName'])
         pdb.set_trace()
@@ -124,12 +182,6 @@ def execute_command(controller, command,action_dict_addition):
 
 
     elif command in ['u', 'j']:
-        #TODO change this everywhere
-        # if base_position['h'] > 1:
-        #     base_position['h'] = 1
-        # elif base_position['h'] < 0:
-        #     base_position['h'] = 0
-
 
         event = controller.step(action='MoveMidLevelArmHeight', y=base_position['h'],**action_dict_addition)
         action_details=dict(action='MoveMidLevelArmHeight', y=base_position['h'],**action_dict_addition)
@@ -212,3 +264,4 @@ def dict_recursive_nan_check(arm_dict):
         if this_item_nan:
             return True
     return False
+
