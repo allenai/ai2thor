@@ -126,8 +126,8 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-        StartCoroutine (EmitFrame());
 		#if !UNITY_EDITOR
+        StartCoroutine (EmitFrame());
 		#endif
 	}
 

@@ -225,7 +225,8 @@ class Build(object):
         return os.path.splitext(self.url)[0] + '.sha256'
 
     def exists(self):
-        return os.path.isfile(self.executable_path) or (requests.head(self.url, auth=self.auth()).status_code == 200)
+        x = requests.head(self.url, auth=self.auth())
+        return x.status_code == 200
 
     def log_exists(self):
         return requests.head(self.log_url, auth=self.auth()).status_code == 200

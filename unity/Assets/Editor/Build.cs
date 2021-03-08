@@ -50,16 +50,7 @@ public class Build
         }
 
         foreach (string f in files) {
-            if (
-                
-                //f.EndsWith("FloorPlan330_physics.unity") ||
-                f.EndsWith("FloorPlan1_physics.unity")
-                //f.EndsWith("FloorPlan215_physics.unity") ||
-                //f.EndsWith("FloorPlan12_physics.unity") ||
-                //f.EndsWith("FloorPlan17_physics.unity")
-                //f.EndsWith("FloorPlan221_physics.unity") ||
-                //f.EndsWith("FloorPlan201_physics.unity")
-               ) {
+            if (f.EndsWith(".unity")) {
                 Debug.Log ("Adding Scene " + f);
 				scenes.Add (f);
             }
