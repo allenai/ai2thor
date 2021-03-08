@@ -4194,20 +4194,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SetObjectPoses(
             List<ObjectPose> objectPoses,
-            bool placeStationary = false,
-            bool enablePhysicsJitter = true,
-            bool forceRigidbodySleep = false
-        ) {
-            SetObjectPoses(
-                objectPoses: objectPoses,
-                forceKinematic: placeStationary,
-                enablePhysicsJitter: enablePhysicsJitter,
-                forceRigidbodySleep: forceRigidbodySleep
-            );
-        }
-
-        public void SetObjectPoses(
-            List<ObjectPose> objectPoses,
             bool forceKinematic = false,
             bool enablePhysicsJitter = true,
             bool forceRigidbodySleep = false
@@ -4240,16 +4226,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return new WaitForEndOfFrame();
             bool success = physicsSceneManager.SetObjectPoses(
                 objectPoses: objectPoses,
+                errorMessage: out errorMessage,
                 forceKinematic: forceKinematic,
                 enablePhysicsJitter: enablePhysicsJitter,
                 forceRigidbodySleep: forceRigidbodySleep
             );
-            actionFinished(success);
-        }
-
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary){
-            yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
             actionFinished(success, errorMessage);
         }
 

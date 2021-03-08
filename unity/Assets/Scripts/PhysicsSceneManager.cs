@@ -321,7 +321,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
-                    errorMessage = "No object of name " + objectPose.objectName + " found in scene."
+                    errorMessage = $"No object of name {objectPose.objectName} found in scene.";
                     Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
