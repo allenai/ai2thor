@@ -12,7 +12,7 @@ from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM
 # RESOLUTION = 900
 from save_bug_sequence_util import save_failed_sequence
 
-from helper_mover import ENV_ARGS, action_wrapper, is_object_at_position, is_agent_at_position
+from helper_mover import ENV_ARGS, action_wrapper, is_object_at_position, is_agent_at_position, get_object_details
 
 RESOLUTION = 224
 MAX_TESTS = 300
