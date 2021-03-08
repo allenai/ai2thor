@@ -1502,6 +1502,7 @@ public struct MetadataWrapper
 	public HandMetadata hand;
     public ArmMetadata arm;
 	public float fov;
+	public bool physicsAutoSimulation;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;

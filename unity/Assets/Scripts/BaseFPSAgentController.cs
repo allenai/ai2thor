@@ -1393,6 +1393,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
+            metaMessage.physicsAutoSimulation = Physics.autoSimulation;
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;
