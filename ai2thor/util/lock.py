@@ -1,6 +1,28 @@
 
 import os
-import fcntl
+from platform import system
+
+if system() == "Windows":
+    class fcntl:
+        LOCK_UN = 0
+        LOCK_SH = 0
+        LOCK_NB = 0
+        LOCK_EX = 0
+
+        @staticmethod
+        def fcntl(fd, op, arg=0):
+            return 0
+        
+        def ioctl(fd, op, arg=0, mutable_flag=True):
+            return 0 if mutable_flag else ""
+        
+        def flock(fd, op):
+            return
+        
+        def lockf(fd, operation, length=0, start=0, whence=0):
+            return
+else:
+    import fcntl
 
 
 class Lock:

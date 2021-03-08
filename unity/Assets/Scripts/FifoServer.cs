@@ -1,6 +1,4 @@
 using System;
-using System.IO.Pipes;
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
@@ -12,8 +10,8 @@ namespace FifoServer {
     public class Client {
         private static Client singletonClient;
         private int headerLength = 5;
-        private NamedPipeClientStream serverPipe;
-        private NamedPipeClientStream clientPipe;
+        private FileStream serverPipe;
+        private FileStream clientPipe;
         private string serverPipePath;
         private string clientPipePath;
         private byte[] eomHeader;
@@ -47,8 +45,7 @@ namespace FifoServer {
 
         public string ReceiveMessage() {
             if (clientPipe == null) {
-                clientPipe = new NamedPipeClientStream(".", this.clientPipePath, PipeDirection.In);
-                clientPipe.Connect();
+                this.clientPipe = new FileStream(this.clientPipePath, FileMode.Open, FileAccess.Read);
             }
             string action = null;
             while (true) {
@@ -93,8 +90,7 @@ namespace FifoServer {
 
         public void SendMessage(FieldType t, byte[] body) {
             if (this.serverPipe == null) {
-                this.serverPipe = new NamedPipeClientStream(".", this.serverPipePath, PipeDirection.Out);
-                this.serverPipe.Connect();
+                this.serverPipe = new FileStream(this.serverPipePath, FileMode.Open, FileAccess.Write);
             }
             //Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
             byte[] header = new byte[headerLength];

@@ -56,7 +56,8 @@ public class Build
             }
         }
 
-        return scenes;
+        //uncomment for faster builds for testing
+        return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
     }
 
     private static IEnumerable<string> GetSceneFromEnv()

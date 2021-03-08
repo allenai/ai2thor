@@ -71,7 +71,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
     }
     
-    void LateUpdate() {
+    // disabling LateUpdate to experiment with determinism
+    void LateUpdateXXX() {
         // check what objects in the scene are currently in motion
         // Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
         foreach (Rigidbody rb in rbsInScene) {
@@ -294,11 +295,14 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public bool SetObjectPoses(
         ObjectPose[] objectPoses,
+        out string errorMessage,
         bool forceKinematic,
         bool enablePhysicsJitter,
         bool forceRigidbodySleep
     ) {
         SetupScene();
+        errorMessage = "";
+
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0) {
             // Perform object location sets
@@ -307,7 +311,6 @@ public class PhysicsSceneManager : MonoBehaviour {
             foreach (SimObjPhysics sop in sceneObjects) {
                 if (sop.IsPickupable) {
                     sop.gameObject.SetActive(false);
-                    //sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
                     nameToObject[sop.name] = sop;
                 }
             }
@@ -318,7 +321,8 @@ public class PhysicsSceneManager : MonoBehaviour {
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
-                    Debug.Log("No object of name " + objectPose.objectName + " found in scene.");
+                    errorMessage = "No object of name " + objectPose.objectName + " found in scene."
+                    Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
@@ -396,6 +400,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             if (forceKinematic) {
                 foreach (Rigidbody rb in posedRigidbodies) {
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                     rb.isKinematic = true;
                 }
             }
