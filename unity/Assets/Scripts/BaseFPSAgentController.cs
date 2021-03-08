@@ -1953,7 +1953,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // we must sync the rigidbody prior to executing the
                 // move otherwise the agent will end up in a different
                 // location from the targetPosition
-                Physics.SyncTransforms();
+                //Physics.Simulate(0.02f);
+                //Physics.SyncTransforms();
             }
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 

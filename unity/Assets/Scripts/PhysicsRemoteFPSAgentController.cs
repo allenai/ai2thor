@@ -3594,6 +3594,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 originalPos = target.transform.position;
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
+
             bool wasInHand = false;
             if(ItemInHand)
             {
@@ -7182,6 +7183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 point = Vector3.zero;
 
             //raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
+            // Added the default layer per Winson to handle cases where cabinets are defined in the default layer and not SimObjVisible
             RaycastHit hit;
             if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<0 | 1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
             {

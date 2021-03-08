@@ -415,6 +415,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // Example: 'run', where a local file explorer will open, and you'll select a json file.
                     // Example: 'run simple', where simple.json exists in unity/debug/.
                     // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
+                case "nond1":
+                {
+                    List<string> commands = new List<string>();
+                    commands.Add("inita");
+                    commands.Add("pp");
+                    commands.Add("run nond1");
+                    commands.Add("debugarmjoints");
+                    StartCoroutine(ExecuteBatch(commands));
+                    break;
+                }
                 case "run":
                     // parse the file path
                     const string BASE_PATH = "./debug/";
@@ -441,6 +451,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log($"Running: {file}.json. It has {actions.Count} total actions.");
 
                     // execute each action
+                    Debug.Break();
                     IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
