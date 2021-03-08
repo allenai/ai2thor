@@ -2225,7 +2225,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        break;
+                        if (sop.IsInteractable) {
+                            // We only break if the object IsInteractable as otherwise we might
+                            // think an object that is partially occluded by a transparent object
+                            // is not interactable.
+                            break;
+                        }
                         #endif
                     }
                 }
@@ -2302,7 +2307,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        break;
+                        if (sop.IsInteractable) {
+                            // We only break if the object IsInteractable as otherwise we might
+                            // think an object that is partially occluded by a transparent object
+                            // is not interactable.
+                            break;
+                        }
                         #endif
                     }
                 }
@@ -2315,10 +2325,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     #endif
                     visible = true;
                 }
-            }
-
-            else
-            {
+            } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
             }
             return visible;
@@ -2474,7 +2481,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
-                                    break;
+                                    if (sop.IsInteractable) {
+                                        // We only break if the object IsInteractable as otherwise we might
+                                        // think an object that is partially occluded by a transparent object
+                                        // is not interactable.
+                                        break;
+                                    }
                                     #endif
                                 }
                             }
@@ -2539,8 +2551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     #if UNITY_EDITOR
                                     sop.isVisible = true;
                                     #endif
-                                    if (!currentlyVisibleItems.Contains(sop))
-                                    {
+                                    if (!currentlyVisibleItems.Contains(sop)) {
                                         currentlyVisibleItems.Add(sop);
                                     }
                                 }
@@ -2585,13 +2596,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(sop.Type == SimObjType.Floor)
             mask = (1 << 8) | (1 << 10);
 
-
             //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             //ignored by the other raycast
-            if (includeInvisible)
-            {
-                if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask))
-                {
+            if (includeInvisible) {
+                if (
+                    Physics.Raycast(
+                        agentCamera.transform.position,
+                        point.position - agentCamera.transform.position,
+                        out hit,
+                        raycastDistance,
+                        mask
+                    )
+                ){
                     if (hit.transform != sop.transform)
                     {
                         result = false;
@@ -2609,16 +2625,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #endif
                     }
                 }
-            }
-
-            //only check against the visible layer, ignore the invisible layer
-            //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
-            else
-            {
-                if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10)))
-                {
-                    if (hit.transform != sop.transform)
-                    {
+            } else {
+                //only check against the visible layer, ignore the invisible layer
+                //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
+                if (
+                    Physics.Raycast(
+                        agentCamera.transform.position,
+                        point.position - agentCamera.transform.position,
+                        out hit,
+                        raycastDistance,
+                        (1 << 8) | (1 << 10))
+                ) {
+                    if (hit.transform != sop.transform) {
                         //we didn't directly hit the sop we are checking for with this cast,
                         //check if it's because we hit something see-through
                         SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
@@ -2627,29 +2645,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //we hit something see through, so now find all objects in the path between
                             //the sop and the camera
                             RaycastHit[] hits;
-                            hits = Physics.RaycastAll(agentCamera.transform.position, point.position - agentCamera.transform.position,
-                                raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
+                            hits = Physics.RaycastAll(
+                                agentCamera.transform.position,
+                                point.position - agentCamera.transform.position,
+                                raycastDistance,
+                                (1 << 8),
+                                QueryTriggerInteraction.Ignore
+                            );
 
                             float[] hitDistances = new float[hits.Length];
-                            for (int i = 0; i < hitDistances.Length; i++)
-                            {
-                                hitDistances[i] = hits[i].distance; //Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
+                            for (int i = 0; i < hitDistances.Length; i++) {
+                                hitDistances[i] = hits[i].distance;
                             }
 
                             Array.Sort(hitDistances, hits);
 
-                            foreach (RaycastHit h in hits)
-                            {
-
-                                if (h.transform == sop.transform)
-                                {
+                            foreach (RaycastHit h in hits) {
+                                if (h.transform == sop.transform) {
                                     //found the object we are looking for, great!
                                     result = true;
                                     break;
-                                }
-
-                                else
-                                {
+                                } else {
                                     // Didn't find it, continue on only if the hit object was translucent
                                     SimObjPhysics sopHitOnPath = null;
                                     sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
@@ -2660,10 +2676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 }
                             }
                         }
-                    }
-
-                    else
-                    {
+                    } else {
                         //if this line is drawn, then this visibility point is in camera frame and not occluded
                         //might want to use this for a targeting check as well at some point....
                         result = true;
@@ -2698,8 +2711,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             #if UNITY_EDITOR
-            if (result == true)
-            {
+            if (result == true) {
                 Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
             }
             #endif
