@@ -313,7 +313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Physics.SyncTransforms();
             }
             while (simulationSeconds > 0.0f) {
-                float deltaTime = Mathf.Min(fixedDeltaTime.Value, simulationSeconds);
+                float deltaTime = Mathf.Min(fixedDeltaTime, simulationSeconds);
                 Physics.Simulate(deltaTime);
                 simulationSeconds -= deltaTime;
             }
