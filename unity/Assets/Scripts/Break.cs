@@ -78,7 +78,6 @@ public class Break : MonoBehaviour
                 foreach (GameObject go in target.ContainedGameObjects()) {
                     SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
                     if (sop) {
-                        Debug.Log($"Has conotained object {sop.ObjectID}");
                         // for every object that is contained by this object turn off
                         // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                         sop.transform.Find("Colliders").gameObject.SetActive(true);

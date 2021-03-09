@@ -4943,6 +4943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 target.transform.position = savedPos;
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);

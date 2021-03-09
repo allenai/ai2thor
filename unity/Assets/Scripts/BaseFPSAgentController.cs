@@ -309,13 +309,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.actionSimulationSeconds = 0.0f;
             this.actionFixedDeltaTime = null;
 
-            if (simulationSeconds <= 0.0f) {
+            if (simulationSeconds <= 1e-6) {
                 Physics.SyncTransforms();
             }
-            while (simulationSeconds > 0.0f) {
-                float deltaTime = Mathf.Min(fixedDeltaTime, simulationSeconds);
-                Physics.Simulate(deltaTime);
-                simulationSeconds -= deltaTime;
+            while (simulationSeconds > 1e-6) {
+                Physics.Simulate(fixedDeltaTime);
+                simulationSeconds -= fixedDeltaTime;
             }
 
             lastActionSuccess = success;
@@ -2796,8 +2795,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     ItemInHand.transform.parent = null;
                 }
 
-                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
                 ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; //agent hand flag
                 DefaultAgentHand();//also default agent hand
                 ItemInHand = null;
@@ -2860,7 +2857,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 for (int i = 0; i < 100; i++) {
                     Physics.Simulate(0.02f);
                 }
-                Physics.autoSimulation = Physics.autoSimulation;
+                Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
 

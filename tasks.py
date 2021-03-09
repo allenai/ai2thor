@@ -382,8 +382,9 @@ def local_build(context, prefix="local", arch="OSXIntel64"):
     build_dir = os.path.join("builds", build.name)
     print(f"Saving local build to '{os.path.abspath(os.path.join('unity', build_dir))}'")
 
+    start_time = time.time()
     if _build("unity", arch, build_dir, build.name, env=env):
-        print("Build Successful")
+        print(f"Build Successful, took {(time.time() - start_time) / 60:.2f} minutes.")
     else:
         print("Build Failure")
     generate_quality_settings(context)
