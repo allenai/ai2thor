@@ -2225,8 +2225,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        if (sop.IsInteractable) {
-                            // We only break if the object IsInteractable as otherwise we might
+                        if (sop.isInteractable) {
+                            // We only break if the object isInteractable as otherwise we might
                             // think an object that is partially occluded by a transparent object
                             // is not interactable.
                             break;
@@ -2307,8 +2307,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        if (sop.IsInteractable) {
-                            // We only break if the object IsInteractable as otherwise we might
+                        if (sop.isInteractable) {
+                            // We only break if the object isInteractable as otherwise we might
                             // think an object that is partially occluded by a transparent object
                             // is not interactable.
                             break;
@@ -2481,8 +2481,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
-                                    if (sop.IsInteractable) {
-                                        // We only break if the object IsInteractable as otherwise we might
+                                    if (sop.isInteractable) {
+                                        // We only break if the object isInteractable as otherwise we might
                                         // think an object that is partially occluded by a transparent object
                                         // is not interactable.
                                         break;
