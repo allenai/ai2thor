@@ -948,12 +948,10 @@ public class AgentManager : MonoBehaviour
                 }
             }
 
-            if (!this.canEmit()) 
-            {
+            if (!this.canEmit()) {
                 continue;
             }
 
-            Physics.SyncTransforms();
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -1573,6 +1571,18 @@ public class DynamicServerAction
     public string action {
         get {
             return this.jObject["action"].ToString();
+        }
+    }
+
+    public bool Remove(string name) {
+        return this.jObject.Remove(name);
+    }
+
+    public float GetValue(string name, float defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (float)this.GetValue(name);
+        } else {
+            return defaultValue;
         }
     }
 

@@ -147,7 +147,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected bool lastActionSuccess;
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
-
+        public float actionSimulationSeconds = 0.0f;
+        public float? actionFixedDeltaTime;
 
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
@@ -302,6 +303,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             }
             #endif
+
+            float simulationSeconds = this.actionSimulationSeconds;
+            float fixedDeltaTime = this.actionFixedDeltaTime.HasValue ? this.actionFixedDeltaTime.Value : 0.02f;
+            this.actionSimulationSeconds = 0.0f;
+            this.actionFixedDeltaTime = null;
+
+            if (simulationSeconds <= 0.0f) {
+                Physics.SyncTransforms();
+            }
+            while (simulationSeconds > 0.0f) {
+                float deltaTime = Mathf.Min(fixedDeltaTime.Value, simulationSeconds);
+                Physics.Simulate(deltaTime);
+                simulationSeconds -= deltaTime;
+            }
 
             lastActionSuccess = success;
 			this.agentState = newState;
@@ -1481,8 +1496,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // This should only be used by DebugInputField and HideNSeekController
         // Once all those invocations have been converted to Dictionary<string, object>
         // this can be removed
-        public void ProcessControlCommand(ServerAction serverAction)
-        {
+        public void ProcessControlCommand(ServerAction serverAction) {
 
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -1536,6 +1550,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+
+            actionSimulationSeconds = controlCommand.GetValue("actionSimulationSeconds", 0.0f);
+            controlCommand.Remove("actionSimulationSeconds");
+            if (controlCommand.ContainsKey("fixedDeltaTime")) {
+                actionFixedDeltaTime = (float) controlCommand.GetValue("fixedDeltaTime");
+                controlCommand.Remove("fixedDeltaTime");
+            }
+
             this.agentState = AgentState.Processing;
 
             try
