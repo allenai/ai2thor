@@ -29,7 +29,9 @@ ENV_ARGS = dict(gridSize=0.25,
                 useMassThreshold = True, massThreshold = 10,
                 autoSimulation=False, autoSyncTransforms=True,
                 )
-
+GOOD_COUNTERTOPS = ['CoffeeMachine', 'Pan', 'GarbageCan', 'CounterTop', 'Cup', 'Plate', 'Pot', 'SinkBasin', 'Mug', 'Bowl', 'Toaster', 'DiningTable', 'StoveBurner', 'Sink']
+#TODO
+GOOD_COUNTERTOPS = ['CoffeeMachine', 'GarbageCan', 'CounterTop', 'SinkBasin', 'DiningTable', 'StoveBurner', 'Sink']
 #Functions
 
 def is_object_at_position(controller, action_detail):
@@ -90,14 +92,30 @@ def only_reset_scene(controller, scene_name):
     make_all_objects_unbreakable(controller)
 
 def action_wrapper(controller, dict_action): #TODO add this everywhere
-    event = controller.step(**dict_action)
-    # #TODO are you sure
+    action_detail_list = []
     if dict_action['action'] == 'TeleportFull':
-        return event
-    controller.step('PhysicsSyncTransforms')
-    return event
+        return controller.step(**dict_action)
+    event = controller.step(**dict_action, forceKinematic=True) #TODO add this please
+    action_detail_list.append({**dict_action, 'forceKinematic':True})
+    # controller.step('PhysicsSyncTransforms')
+    advance_detail = dict(action='AdvancePhysicsStep', simSeconds=1.0)
+    controller.step(**advance_detail)
+    action_detail_list.append(advance_detail)
+    return event, action_detail_list
 
-
+def is_object_in_receptacle(event,target_obj,target_receptacle):
+    all_containing_receptacle = []
+    parent_queue = [target_obj]
+    while(len(parent_queue) > 0):
+        top_queue = parent_queue[0]
+        parent_queue = parent_queue[1:]
+        current_parent_list = event.get_object(top_queue)['parentReceptacles']
+        if current_parent_list is None:
+            continue
+        else:
+            parent_queue += current_parent_list
+            all_containing_receptacle += current_parent_list
+    return target_receptacle in all_containing_receptacle
 
 def get_reachable_positions(controller):
     event = controller.step('GetReachablePositions')

@@ -7,7 +7,7 @@ import ai2thor
 import random
 import copy
 import time
-from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state, reset_the_scene_and_get_reachables
+from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM_ARGS, get_current_full_state, two_dict_equal, get_current_arm_state, reset_the_scene_and_get_reachables, GOOD_COUNTERTOPS, is_object_in_receptacle
 
 # RESOLUTION = 900
 from save_bug_sequence_util import save_failed_sequence
@@ -69,10 +69,12 @@ def main(controller):
                     moveables = [o['objectId'] for o in controller.last_event.metadata['objects'] if o['pickupable']] #because moveable was only garbage can in room 411
                     target_obj = random.choice(moveables)
                     #check spawn on a counter
-                    all_receptacles = [o for o in controller.last_event.metadata['objects'] if o['receptacle'] == True]
-                    target_receptacle = random.choice(all_receptacles)['objectId']
-                    event = controller.step('GetSpawnCoordinatesAboveReceptacle', objectId=target_receptacle, anywhere=True)
-                    possible_xyz = event.metadata['actionReturn']
+                    possible_xyz = []
+                    while len(possible_xyz) == 0:
+                        all_receptacles = [o for o in controller.last_event.metadata['objects'] if (o['objectType'] in GOOD_COUNTERTOPS and not o['openable'] and o['receptacle'])] #TODO change this everywhere
+                        target_receptacle = random.choice(all_receptacles)['objectId']
+                        event = controller.step('GetSpawnCoordinatesAboveReceptacle', objectId=target_receptacle, anywhere=True)
+                        possible_xyz = event.metadata['actionReturn']
                     target_location = random.choice(possible_xyz)
                     #try to transport object with additional step or whatever
                     action_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
@@ -80,12 +82,18 @@ def main(controller):
                     #if success check the object pose
                     #if object pose not similar report
                     if event.metadata['lastActionSuccess']:
-                        if not is_object_at_position(controller, action_detail):
-                            print('Object is not at correct position')
-                            print('scene', controller.last_event.metadata['sceneName'])
-                            print('transport', action_detail)
-                            print('target obj', target_obj, 'target location', target_location)
-                            pdb.set_trace()
+                        #This is to check the object being at the parent receptacle in the beginning
+                        if not is_object_in_receptacle(event,target_obj,target_receptacle):
+                            #This is to check the object being in the parent receptacle in the end if it is not there in the beginning.
+                            if not is_object_in_receptacle(controller.last_event,target_obj,target_receptacle):
+                                print('Object is not at correct position')
+                                print('scene', event.metadata['sceneName'])
+                                print('transport', action_detail)
+                                print('target receptacle', target_receptacle)
+                                print('begin receptacle', event.get_object(target_obj)['parentReceptacles'])
+                                print('end receptacle', controller.last_event.get_object(target_obj)['parentReceptacles'])
+                                print('target obj', target_obj, 'target location', target_location, 'current_obj_location', event.get_object(target_obj)['position'])
+                                pdb.set_trace()
                     else:
                         transport_fail += 1
                 elif command == 'teleport':
