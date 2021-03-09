@@ -2738,8 +2738,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     ItemInHand.transform.parent = null;
                 }
 
-                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
                 ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; //agent hand flag
                 DefaultAgentHand();//also default agent hand
                 ItemInHand = null;
@@ -2802,7 +2800,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 for (int i = 0; i < 100; i++) {
                     Physics.Simulate(0.02f);
                 }
-                Physics.autoSimulation = Physics.autoSimulation;
+                Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
