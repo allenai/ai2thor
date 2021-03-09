@@ -12,16 +12,16 @@ from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM
 # RESOLUTION = 900
 from save_bug_sequence_util import save_failed_sequence
 
-from helper_mover import ENV_ARGS, action_wrapper, is_object_at_position, is_agent_at_position, get_object_details
+from helper_mover import ENV_ARGS, transport_wrapper, is_object_at_position, is_agent_at_position, get_object_details
 
 RESOLUTION = 224
 MAX_TESTS = 300
-MAX_EP_LEN = 2000
+MAX_EP_LEN = 200
 MAX_CONSECUTIVE_FAILURE = 10
 kitchen_indices = [i + 1 for i in range(30)]
 # controller.step('AdvancePhysicsStep', syncTransforms=True)
-set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p'] + ['teleport', 'transport'] * 5
-set_of_actions = ['transport', 'teleport'] #TODO remove
+# set_of_actions = ['mm', 'rr', 'll', 'w', 'z', 'a', 's', 'u', 'j', '3', '4', 'p'] + ['teleport', 'transport'] * 5
+set_of_actions = ['transport', 'teleport']
 kitchens = ['FloorPlan{}_physics'.format(i) for i in kitchen_indices]
 
 
@@ -61,26 +61,34 @@ def main(controller):
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
             all_commands.append(command)
-            if command in ['transport', 'teleport']: #TODO counter for how many times we tested these functions and how many success
+            if command in ['transport', 'teleport']:
 
                 if command == 'transport':
+
                     transport_check += 1
                     #get all moveable objects
                     moveables = [o['objectId'] for o in controller.last_event.metadata['objects'] if o['pickupable']] #because moveable was only garbage can in room 411
                     target_obj = random.choice(moveables)
                     #check spawn on a counter
+                    all_receptacles = [o for o in controller.last_event.metadata['objects'] if (o['objectType'] in GOOD_COUNTERTOPS and not o['openable'] and o['receptacle'])]
+                    random.shuffle(all_receptacles)
+                    index = 0
                     possible_xyz = []
                     while len(possible_xyz) == 0:
-                        all_receptacles = [o for o in controller.last_event.metadata['objects'] if (o['objectType'] in GOOD_COUNTERTOPS and not o['openable'] and o['receptacle'])] #TODO change this everywhere
-                        target_receptacle = random.choice(all_receptacles)['objectId']
+
+                        target_receptacle = (all_receptacles[index])['objectId']
+                        index += 1
+
                         event = controller.step('GetSpawnCoordinatesAboveReceptacle', objectId=target_receptacle, anywhere=True)
                         possible_xyz = event.metadata['actionReturn']
                     target_location = random.choice(possible_xyz)
                     #try to transport object with additional step or whatever
-                    action_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
-                    event = action_wrapper(controller, action_detail) #this returns the event before the additional step
+                    # action_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
+
+                    event, action_detail = transport_wrapper(controller, target_obj, target_location) #this returns the event before the additional step
                     #if success check the object pose
                     #if object pose not similar report
+
                     if event.metadata['lastActionSuccess']:
                         #This is to check the object being at the parent receptacle in the beginning
                         if not is_object_in_receptacle(event,target_obj,target_receptacle):
@@ -97,6 +105,7 @@ def main(controller):
                     else:
                         transport_fail += 1
                 elif command == 'teleport':
+
                     teleport_check += 1
                     reachable_positions = get_reachable_positions(controller)
                     initial_location = random.choice(reachable_positions)

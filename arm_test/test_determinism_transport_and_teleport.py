@@ -12,7 +12,7 @@ from helper_mover import get_reachable_positions, execute_command, ADITIONAL_ARM
 # RESOLUTION = 900
 from save_bug_sequence_util import save_failed_sequence
 
-from helper_mover import ENV_ARGS, action_wrapper, is_object_at_position, is_agent_at_position, get_object_details
+from helper_mover import ENV_ARGS, transport_wrapper, is_object_at_position, is_agent_at_position, get_object_details
 
 RESOLUTION = 224
 MAX_TESTS = 300
@@ -47,14 +47,14 @@ def main(controller):
                 #check spawn on a counter
                 possible_xyz = []
                 while len(possible_xyz) == 0:
-                    all_receptacles = [o for o in controller.last_event.metadata['objects'] if (o['objectType'] in GOOD_COUNTERTOPS and not o['openable'] and o['receptacle'])] #TODO change this everywhere
+                    all_receptacles = [o for o in controller.last_event.metadata['objects'] if (o['objectType'] in GOOD_COUNTERTOPS and not o['openable'] and o['receptacle'])]
                     target_receptacle = random.choice(all_receptacles)['objectId']
                     event = controller.step('GetSpawnCoordinatesAboveReceptacle', objectId=target_receptacle, anywhere=True)
                     possible_xyz = event.metadata['actionReturn']
                 target_location = random.choice(possible_xyz)
                 #try to transport object with additional step or whatever
-                transport_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
-                event, action_detail = action_wrapper(controller, transport_detail) #this returns the event before the additional step
+                # transport_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
+                event, action_detail = transport_wrapper(controller, target_obj, target_location) #this returns the event before the additional step
                 all_exact_command += action_detail
                 if event.metadata['lastActionSuccess']:
                     successful_transport += 1
@@ -74,7 +74,7 @@ def main(controller):
             'agent': controller.last_event.metadata['agent'],
             'objects': controller.last_event.metadata['objects']
         }
-        total_result = copy.deepcopy(total_result) #TODO we have to do this whenever we are working with a dict?
+        total_result = copy.deepcopy(total_result)
         for det_ind in range(10):
             reset_the_scene_and_get_reachables(controller, scene_name=controller.last_event.metadata['sceneName'])
             for action in all_exact_command:

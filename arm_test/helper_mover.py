@@ -32,6 +32,8 @@ ENV_ARGS = dict(gridSize=0.25,
 GOOD_COUNTERTOPS = ['CoffeeMachine', 'Pan', 'GarbageCan', 'CounterTop', 'Cup', 'Plate', 'Pot', 'SinkBasin', 'Mug', 'Bowl', 'Toaster', 'DiningTable', 'StoveBurner', 'Sink']
 #TODO
 GOOD_COUNTERTOPS = ['CoffeeMachine', 'GarbageCan', 'CounterTop', 'SinkBasin', 'DiningTable', 'StoveBurner', 'Sink']
+GOOD_COUNTERTOPS = ['GarbageCan', 'CounterTop', 'SinkBasin', 'DiningTable', 'Sink']
+
 #Functions
 
 def is_object_at_position(controller, action_detail):
@@ -58,6 +60,7 @@ def is_agent_at_position(controller, action_detail):
 
 def get_object_details(controller, obj_id):
     return [o for o in controller.last_event.metadata['objects'] if o['objectId'] == obj_id][0]
+
 def initialize_arm(controller, scene_starting_cheating_locations):
     # for start arm from high up as a cheating, this block is very important. never remove
     scene = controller.last_event.metadata['sceneName']
@@ -91,12 +94,11 @@ def only_reset_scene(controller, scene_name):
     controller.step(action='MakeAllObjectsMoveable')
     make_all_objects_unbreakable(controller)
 
-def action_wrapper(controller, dict_action): #TODO add this everywhere
+def transport_wrapper(controller, target_object, target_location):
     action_detail_list = []
-    if dict_action['action'] == 'TeleportFull':
-        return controller.step(**dict_action)
-    event = controller.step(**dict_action, forceKinematic=True) #TODO add this please
-    action_detail_list.append({**dict_action, 'forceKinematic':True})
+    transport_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_object, position=target_location, forceKinematic=True)
+    event = controller.step(**transport_detail)
+    action_detail_list.append(transport_detail)
     # controller.step('PhysicsSyncTransforms')
     advance_detail = dict(action='AdvancePhysicsStep', simSeconds=1.0)
     controller.step(**advance_detail)
@@ -104,17 +106,19 @@ def action_wrapper(controller, dict_action): #TODO add this everywhere
     return event, action_detail_list
 
 def is_object_in_receptacle(event,target_obj,target_receptacle):
-    all_containing_receptacle = []
+    all_containing_receptacle = set([])
     parent_queue = [target_obj]
     while(len(parent_queue) > 0):
         top_queue = parent_queue[0]
         parent_queue = parent_queue[1:]
+        if top_queue in all_containing_receptacle:
+            continue
         current_parent_list = event.get_object(top_queue)['parentReceptacles']
         if current_parent_list is None:
             continue
         else:
             parent_queue += current_parent_list
-            all_containing_receptacle += current_parent_list
+            all_containing_receptacle.update(set(current_parent_list))
     return target_receptacle in all_containing_receptacle
 
 def get_reachable_positions(controller):

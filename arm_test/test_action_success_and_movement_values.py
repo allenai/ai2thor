@@ -52,7 +52,7 @@ def main(controller):
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
-            before_action_arm_value = get_current_arm_state(controller)#.copy() #TODO this is important
+            before_action_arm_value = get_current_arm_state(controller)#.copy()
             before_full = copy.deepcopy(controller.last_event.metadata['arm'])
             output_of_command = execute_command(controller, command, ADITIONAL_ARM_ARGS)
             all_exact_command.append(output_of_command)
