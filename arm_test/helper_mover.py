@@ -3,6 +3,7 @@ import math
 import random
 import ai2thor
 import pdb
+import ai2thor.fifo_server
 
 
 ### CONSTANTS

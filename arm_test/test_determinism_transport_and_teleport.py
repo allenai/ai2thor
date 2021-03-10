@@ -53,7 +53,6 @@ def main(controller):
                     possible_xyz = event.metadata['actionReturn']
                 target_location = random.choice(possible_xyz)
                 #try to transport object with additional step or whatever
-                # transport_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
                 event, action_detail = transport_wrapper(controller, target_obj, target_location) #this returns the event before the additional step
                 all_exact_command += action_detail
                 if event.metadata['lastActionSuccess']:
@@ -85,7 +84,7 @@ def main(controller):
                 'objects': controller.last_event.metadata['objects']
             }
             final_result = copy.deepcopy(final_result)
-            if not two_dict_equal(final_result, total_result):
+            if not two_dict_equal(final_result, total_result, ignore_keys=['inHighFrictionArea']):
                 print('Two runs are different')
                 pdb.set_trace()
 

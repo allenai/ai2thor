@@ -83,7 +83,6 @@ def main(controller):
                         possible_xyz = event.metadata['actionReturn']
                     target_location = random.choice(possible_xyz)
                     #try to transport object with additional step or whatever
-                    # action_detail = dict(action = 'PlaceObjectAtPoint', objectId=target_obj, position=target_location)
 
                     event, action_detail = transport_wrapper(controller, target_obj, target_location) #this returns the event before the additional step
                     #if success check the object pose
