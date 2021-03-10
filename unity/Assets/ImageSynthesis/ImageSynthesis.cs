@@ -395,7 +395,7 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 
 		foreach (var pass in capturePasses)
-            if(pass.name == passName)
+            if(pass.name == passName && pass.camera != null)
                 return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg, format, textureReadMode);
 
 		return(new byte[0]);

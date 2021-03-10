@@ -763,6 +763,7 @@ public class AgentManager : MonoBehaviour
 
 
 	public virtual IEnumerator EmitFrame() {
+        Debug.Log("MCS: AGENT MANAGER STARTING EMIT FRAME LOOP");
         while (true) 
         {
             bool shouldRender = this.renderImage && serverSideScreenshot;
@@ -784,6 +785,7 @@ public class AgentManager : MonoBehaviour
                 continue;
             }
 
+            Debug.Log("MCS: AGENT MANAGER EMIT FRAME");
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -801,6 +803,7 @@ public class AgentManager : MonoBehaviour
 
         #if !UNITY_WEBGL 
             if (serverType == serverTypes.WSGI) {
+                Debug.Log("MCS: AGENT MANAGER WSGI WAITING");
                 WWWForm form = new WWWForm();
                 foreach(var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
@@ -884,6 +887,7 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
+                Debug.Log("MCS: AGENT MANAGER FIFO WAITING");
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
@@ -954,9 +958,10 @@ public class AgentManager : MonoBehaviour
 		ServerAction controlCommand = new ServerAction();
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
         #else
-        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
+        ServerAction controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<ServerAction>(msg);
         #endif
 
+        Debug.Log("MCS: AGENT MANAGER SERVER ACTION " + controlCommand.action);
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
@@ -964,6 +969,7 @@ public class AgentManager : MonoBehaviour
 
 		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
             this.agentManagerState = AgentState.Processing;
+            Debug.Log("MCS: AGENT MANAGER CALL ON ACTION DISPATCHER " + controlCommand.action);
 			ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on
@@ -979,6 +985,7 @@ public class AgentManager : MonoBehaviour
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
+            Debug.Log("MCS: AGENT MANAGER CALL ON AGENT CONTROLLER " + controlCommand.action);
 			this.activeAgent().ProcessControlCommand (controlCommand);
             this.setReadyToEmit(true);
 		}

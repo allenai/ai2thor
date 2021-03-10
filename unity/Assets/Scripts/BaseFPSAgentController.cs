@@ -1570,6 +1570,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public virtual void ProcessControlCommand(ServerAction controlCommand)
         {
+            Debug.Log("MCS: BASE FPS AGENT CONTROLLER SERVER ACTION " + controlCommand.action);
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1589,6 +1590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					Debug.LogError(errorMessage);
 					actionFinished(false);
 				} else {
+                    Debug.Log("MCS: BASE FPS AGENT CONTROLLER INVOKE METHOD " + controlCommand.action);
 					method.Invoke(this, new object[] { controlCommand });
 				}
 			}
@@ -1622,6 +1624,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ProcessControlCommand(dynamic controlCommand)
         {
+            Debug.Log("MCS: BASE FPS AGENT CONTROLLER DYNAMIC COMMAND " + controlCommand.action);
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1633,6 +1636,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             try
             {
+                Debug.Log("MCS: BASE FPS AGENT CONTROLLER CALL ON ACTION DISPATCHER " + controlCommand.action);
                 ActionDispatcher.Dispatch(this, controlCommand);
             }
             catch (MissingArgumentsActionException e)
