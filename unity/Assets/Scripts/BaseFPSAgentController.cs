@@ -1710,7 +1710,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // if something was touched, actionFinished(true) always
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
-                if (hit.transform.GetComponent<SimObjPhysics>()) {
+                if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
                     // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     // this should basically only happen if the handDistance value is too big
                     if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
@@ -1718,7 +1718,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     // it is within viewport, so we are good, assign as target
-                    target = hit.transform.GetComponent<SimObjPhysics>();
+                    target = hit.transform.GetComponentInParent<SimObjPhysics>();
                 }
             }
 
