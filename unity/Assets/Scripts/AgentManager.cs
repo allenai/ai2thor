@@ -588,7 +588,7 @@ public class AgentManager : MonoBehaviour
     }
 
     public MetadataWrapper UpdateMetadataColors(BaseFPSAgentController agent, MetadataWrapper metadata) {
-		if (this.renderObjectImage) {
+		if (this.renderObjectImage && agent != null && agent.imageSynthesis != null && agent.imageSynthesis.tex != null) {
 			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
 			for (int yy = 0; yy < tex.height; yy++) {
@@ -785,7 +785,9 @@ public class AgentManager : MonoBehaviour
                 continue;
             }
 
+            #if !UNITY_EDITOR
             Debug.Log("MCS: AGENT MANAGER EMIT FRAME");
+            #endif
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -803,7 +805,9 @@ public class AgentManager : MonoBehaviour
 
         #if !UNITY_WEBGL 
             if (serverType == serverTypes.WSGI) {
+                #if !UNITY_EDITOR
                 Debug.Log("MCS: AGENT MANAGER WSGI WAITING");
+                #endif
                 WWWForm form = new WWWForm();
                 foreach(var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);

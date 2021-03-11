@@ -314,7 +314,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
             actionFinished(success, AgentState.ActionComplete, actionReturn);
             this.resumePhysics();
-            Debug.Log("Last Action Status = " + this.lastActionStatus);
 		}
 
         protected virtual void resumePhysics() {}
@@ -1679,7 +1678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //no op action
-        public void Pass() {
+        public void Pass(ServerAction action=null) {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }

@@ -4184,8 +4184,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PutObject(ServerAction action) {
-            action.objectId = action.receptacleObjectId;
-            action.receptacleObjectId = null;
             PlaceHeldObject(action);
         }
 

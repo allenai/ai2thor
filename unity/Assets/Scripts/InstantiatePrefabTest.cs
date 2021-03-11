@@ -559,6 +559,12 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.position = originalPos;
         simObj.transform.rotation = originalRot;
 
+        //re-enable the collision after returning in place
+        foreach(Collider c in colsToDisable)
+        {
+            c.enabled = true;
+        }
+
         //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
         Collider[] hitColliders = Physics.OverlapBox(center, size / 2.0f, receptacleRotation, layermask, QueryTriggerInteraction.Ignore);
         // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             

@@ -1198,7 +1198,7 @@ public class MCSMain : MonoBehaviour {
         return objectRegistry.objects;
     }
 
-    private void LogVerbose(String text) {
+    public void LogVerbose(String text) {
         if (this.enableVerboseLog) {
             Debug.Log("MCS: " + text);
         }

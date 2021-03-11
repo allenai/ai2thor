@@ -256,9 +256,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (objectMetadata.objectBounds != null) {
             MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
             if (main != null && main.enableVerboseLog) {
-                Debug.Log("MCS: " + objectMetadata.objectId + " CENTER = " +
+                main.LogVerbose(objectMetadata.objectId + " CENTER = " +
                     (recBox != null ? recBox : simObj.BoundingBox.transform).position.ToString("F4"));
-                Debug.Log("MCS: " + objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
+                main.LogVerbose(objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
                     objectMetadata.objectBounds.objectBoundsCorners.Select(point => point.ToString("F4")).ToArray()));
             }
         }
