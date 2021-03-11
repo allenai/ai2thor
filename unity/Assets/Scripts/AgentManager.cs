@@ -52,6 +52,7 @@ public class AgentManager : MonoBehaviour
     private HashSet<string> agentManagerActions = new HashSet<string> {
         "Reset",
         "Initialize",
+        "Render360DegreeCamera",
         "AddThirdPartyCamera",
         "UpdateThirdPartyCamera"
     };
@@ -64,8 +65,8 @@ public class AgentManager : MonoBehaviour
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
 		new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
 	);
-	public Bounds SceneBounds
-    {
+
+	public Bounds SceneBounds {
         get {
 			if (sceneBounds.min.x == float.PositiveInfinity) {
 				ResetSceneBounds();
@@ -269,6 +270,12 @@ public class AgentManager : MonoBehaviour
 		StartCoroutine (addAgents (action));
 
 	}
+
+    public void Render360DegreeCamera(
+        int width
+    ) {
+        primaryAgent.actionFinished(true);
+    }
 
     private void SetUpStochasticController(ServerAction action)
     {
@@ -993,7 +1000,7 @@ public class AgentManager : MonoBehaviour
                     form.AddField("metadata", serializeMetadataJson(multiMeta));
                     form.AddField("token", robosimsClientToken);
 
-                    if (!this.sock.HasValue) {
+                    if (this.sock != null) {
                         // Debug.Log("connecting to host: " + robosimsHost);
                         IPAddress host = IPAddress.Parse(robosimsHost);
                         IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
@@ -1006,7 +1013,7 @@ public class AgentManager : MonoBehaviour
                         }
                     }
 
-                    if (!this.sock.HasValue && this.sock.Connected) {
+                    if (this.sock != null && this.sock.Connected) {
                         byte[] rawData = form.data;
 
                         string request = "POST /train HTTP/1.1\r\n" +
