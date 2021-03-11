@@ -4965,9 +4965,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
         public void PickupContainedObjects(SimObjPhysics target) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                // Notice that we run .Clone() below as we may remove items from target.SimObjectsContainedByReceptacle
-                //  in the loop and we want to remain consistent
-                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle.Clone()) {
+                // Notice that we run .ToList() (which creates a shallow copy) below as we may remove items from
+                // target.SimObjectsContainedByReceptacle in the loop and we want to remain consistent
+                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle.ToList()) {
                     //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     //turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) 
