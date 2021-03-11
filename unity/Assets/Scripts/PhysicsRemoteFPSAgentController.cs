@@ -4890,18 +4890,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.GetComponent<SimObjPhysics>().isInAgentHand = true;
                 actionFinished(true, target.ObjectID);
                 return;
-            }
-
-            else
-            {
+            } else {
                 errorMessage = "Picking up object would cause it to collide and clip into something!";
                 actionFinished(false);
                 return;
             }
         }
 
-        public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)
-        {
+        public bool tryPickupTarget(
+            SimObjPhysics target, ServerAction action, bool manualInteract = false
+        ){
             //save all initial values in case we need to reset on action fail
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
@@ -4939,14 +4937,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
-            if (!action.forceAction && isHandObjectColliding(true) && !manualInteract) 
-            {
+            if (
+                !action.forceAction &&
+                isHandObjectColliding(true) &&
+                !manualInteract
+            ) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 target.transform.position = savedPos;
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
+                target.isInAgentHand = false; // TODO: is this necessary? I'm getting bugs in THOR where an object that fails to be picked up has this bool as true anyway.
                 ItemInHand = null;
                 DropContainedObjects(
                     target: target,
@@ -4954,21 +4956,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceKinematic: false
                 );
                 return false;
-            }
-
-            else
-            {
+            } else {
+                target.isInAgentHand = true;
                 return true;
             }
         }
 
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
-        public void PickupContainedObjects(SimObjPhysics target) 
-        {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) 
-            {
-                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle) 
-                {
+        public void PickupContainedObjects(SimObjPhysics target) {
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                // Notice that we run .Clone() below as we may remove items from target.SimObjectsContainedByReceptacle
+                //  in the loop and we want to remain consistent
+                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle.Clone()) {
                     //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     //turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) 
@@ -4977,10 +4976,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
                         {
                             //if this object is sliced, don't pick it up because it is effectively disabled
-                            if(sop.GetComponent<SliceObject>().IsSliced())
-                            {
+                            if(sop.GetComponent<SliceObject>().IsSliced()) {
                                 target.RemoveFromContainedObjectReferences(sop);
-                                break;
+                                continue;
                             }
                         }
 
@@ -5082,9 +5080,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 Physics.autoSimulation = false;
                 for (int i = 0; i < 100; i++) {
-                    //Debug.Log($"AngularV at {i}: " + rb.angularVelocity.ToString("F4"));
-                    //Debug.Log($"V at {i}: " + rb.velocity.ToString("F4"));
-                    Physics.Simulate(0.04f);
+                    #if UNITY_EDITOR
+                    Debug.Log($"AngularV at {i}: " + rb.angularVelocity.ToString("F4"));
+                    Debug.Log($"V at {i}: " + rb.velocity.ToString("F4"));
+                    #endif
+                    Physics.Simulate(0.02f);
                     #if UNITY_EDITOR
                     yield return null;
                     #endif
