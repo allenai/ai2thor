@@ -487,8 +487,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //Generate arc points in the positive y-axis rotation
             OrientedPoint[] pointsOnArc = GenerateArcPoints(bbWorldCenter, bb.transform.rotation, origin, degrees, dirSign, dirAxis);
 
-            Debug.Log("Hello world!");
-
             //Raycast from first point in pointsOnArc, stepwise to last point. If any collisions are hit, immediately return 
             for (int i = 0; i < pointsOnArc.Length - 1; i++)
             {
@@ -497,7 +495,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //Debug.DrawLine(pointsOnArc[i].position, pointsOnArc[i+1].position, Color.magenta, 500.0f);
 
-                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit, pointsOnArc[i].orientation, (pointsOnArc[i + 1].position - pointsOnArc[i].position).magnitude, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit, Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), (pointsOnArc[i + 1].position - pointsOnArc[i].position).magnitude, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                     {
                         if (hit.transform.GetComponent<SimObjPhysics>())
                         {
@@ -555,12 +553,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arcPoints[i].orientation = rotPoint.transform.rotation;
                 //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
                 //arcPoints[(i - 1) / 2].orientation = rotPoint.transform.rotation;
-            }
-
-            //Update orientations of OrientedPoints so each reflects the average orientation over the course of its arc-increment (except for the final point, whose orientation isn't used)
-            for (int i = 0; i < arcPoints.Length - 1; i++)
-            {
-                arcPoints[i].orientation = Quaternion.Lerp(arcPoints[i].orientation, arcPoints[i + 1].orientation, 0.5f);
 
                 ////Visualize box volumes
                 //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
