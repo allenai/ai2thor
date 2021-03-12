@@ -533,7 +533,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //Returns an array of OrientedPoints along the arc of the rotation for a given starting point about an origin point for a total given angle
         private OrientedPoint[] GenerateArcPoints(Vector3 startingPoint, Quaternion startingRotation, Vector3 origin, float angle, int dirSign, Vector3 dirAxis)
         {
-            float incrementAngle = angle/10f; //divide the total amount we are rotating by 20 to get 10 points on the arc for positions, and another 10 for the correct BoxCast orientations
+            float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc for positions
             OrientedPoint[] arcPoints = new OrientedPoint[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
             float currentIncrementAngle;
 
