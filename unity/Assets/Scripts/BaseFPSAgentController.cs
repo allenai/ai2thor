@@ -1015,6 +1015,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+
+        // This effectively freezes objects that exceed the MassThreshold configured
+        // during initialization and reduces the chance of an object held by the
+        // arm from moving a large mass object.  This also eliminates the chance
+        // of a large mass object moving vs. relying on the CollisionListener to prevent it.
+        public void MakeObjectsStaticKinematicMassThreshold() {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
+                    }
+                }
+
+                if (CollisionListener.useMassThreshold && sop.Mass > CollisionListener.massThreshold) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = true;
+                    sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                }
+            }
+            actionFinished(true);
+        }
+
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
         //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
