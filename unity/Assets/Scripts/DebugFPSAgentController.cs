@@ -42,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Vector3 m_MoveDir = Vector3.zero;
         private CharacterController m_CharacterController;
         private PhysicsRemoteFPSAgentController PhysicsController;
-        private bool scroll2DEnabled = true;
+        private bool scroll2DEnabled = false;
 
         protected bool enableHighlightShader = true;
 
@@ -134,23 +134,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //  }
         }
 
-        public void EnableMouseControl()
-        {
+        public void EnableMouseControl() {
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode (mouse free)";
+            }
             FPSEnabled = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        public void DisableMouseControl()
-        {
-            Debug.Log("Disabled mouse");
+        public void DisableMouseControl() {
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode";
+            }
             FPSEnabled = false;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
 
-        private void DebugKeyboardControls()
-		{
+        private void DebugKeyboardControls() {
             if (InputFieldObj != null) {
                 InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
                 if (inField != null) {
@@ -162,8 +164,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
+
 			//swap between text input and not
-			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
+            /*
+			if (
+                Input.GetKeyDown(KeyCode.BackQuote)
+                // || Input.GetKeyDown(KeyCode.Escape)
+            )
             {
 				//Switch to Text Mode
                 if (FPSEnabled)
@@ -186,8 +193,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Cursor.lockState = CursorLockMode.Locked;
                     return;
                 }
-
-            }
+            }*/
 
             // 1D Scroll for hand movement
             if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null)
@@ -207,30 +213,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             
 
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                var action = new ServerAction
-                {
-                    action = "InitialRandomSpawn",
-                    randomSeed = 0,
-                    forceVisible = false,
-                    numPlacementAttempts = 5,
-                    placeStationary = true
-                };
-                PhysicsController.ProcessControlCommand(action);
-            }
+            // if (Input.GetKeyDown(KeyCode.R))
+            // {
+            //     var action = new ServerAction
+            //     {
+            //         action = "InitialRandomSpawn",
+            //         randomSeed = 0,
+            //         forceVisible = false,
+            //         numPlacementAttempts = 5,
+            //         placeStationary = true
+            //     };
+            //     PhysicsController.ProcessControlCommand(action);
+            // }
 
-            if(Input.GetKey(KeyCode.Space))
-            {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-            }
+            // if(Input.GetKey(KeyCode.Space))
+            // {
+            //     Cursor.visible = true;
+            //     Cursor.lockState = CursorLockMode.None;
+            // }
 
-            if(Input.GetKeyUp(KeyCode.Space))
-            {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+            // if(Input.GetKeyUp(KeyCode.Space))
+            // {
+            //     Cursor.visible = false;
+            //     Cursor.lockState = CursorLockMode.Locked;
+            // }
 		}
 
 		private void Update()	
