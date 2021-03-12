@@ -973,7 +973,7 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+            if build["branch"] in ["master", "demo-updates"] and '#webgl-deploy' in git_commit_comment():
                 ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
