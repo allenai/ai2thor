@@ -4782,7 +4782,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 target.transform.position = savedPos;
                 target.transform.rotation = savedRot;
-                Debug.Log(target.isInAgentHand + "...is it true or false...?");
                 target.transform.SetParent(savedParent);
                 ItemInHand = null;
                 DropContainedObjects(
