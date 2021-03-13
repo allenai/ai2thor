@@ -447,6 +447,7 @@ def webgl_build(
 
     arch = "WebGL"
     build_name = local_build_name(prefix, arch)
+
     if room_ranges is not None:
         floor_plans = [
             "FloorPlan{}_physics".format(i)
@@ -461,8 +462,8 @@ def webgl_build(
                 ),
             )
         ]
-
         scenes = ",".join(floor_plans)
+
     if verbose:
         print(scenes)
 
@@ -478,6 +479,8 @@ def webgl_build(
     fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
+    # the remainder of this is only used to generate scene metadata, but it
+    # is not part of building webgl player
     rooms = {
         "kitchens": {"name": "Kitchens", "roomRanges": range(1, 31)},
         "livingRooms": {"name": "Living Rooms", "roomRanges": range(201, 231)},
@@ -487,14 +490,21 @@ def webgl_build(
     }
 
     room_type_by_id = {}
-    scene_metadata = {}
     for room_type, room_data in rooms.items():
         for room_num in room_data["roomRanges"]:
             room_id = "FloorPlan{}_physics".format(room_num)
             room_type_by_id[room_id] = {"type": room_type, "name": room_data["name"]}
 
+    scene_metadata = {}
     for scene_name in scenes.split(","):
-        room_type = room_type_by_id[scene_name]
+        if scene_name not in room_type_by_id:
+            # allows for arbitrary scenes to be included dynamically
+            room_type = {
+                "type": "Other", "name": None
+            }
+        else:
+            room_type = room_type_by_id[scene_name]
+
         if room_type["type"] not in scene_metadata:
             scene_metadata[room_type["type"]] = {
                 "scenes": [],
@@ -973,7 +983,7 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+            if build["branch"] in ["master", "demo-updates"] and '#webgl-deploy' in git_commit_comment():
                 ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
@@ -1977,9 +1987,23 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         print("Deployed selected scenes to bucket's 'demo' directory")
 
     # Full framework demo
+    kitchens = [f"FloorPlan{i}_physics" for i in range(1, 31)]
+    living_rooms = [f"FloorPlan{200 + i}_physics" for i in range(1, 31)]
+    bedrooms = [f"FloorPlan{300 + i}_physics" for i in range(1, 31)]
+    bathrooms = [f"FloorPlan{400 + i}_physics" for i in range(1, 31)]
+    robothor_train = [
+        f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)
+    ]
+    robothor_val = [
+        f"FloorPlan_Val{i}_{j}" for i in range(1, 4) for j in range(1, 6)
+    ]
+    scenes = (
+        kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
+    )
+
     webgl_build(
         ctx,
-        room_ranges="1-30,201-230,301-330,401-430",
+        scenes=",".join(scenes),
         content_addressable=content_addressable,
     )
     webgl_deploy(ctx, verbose=verbose, force=force, target_dir="full")
