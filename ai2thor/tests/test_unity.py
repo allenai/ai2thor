@@ -45,16 +45,9 @@ wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
 stochastic_controller = build_controller(agentControllerType="stochastic")
 
-BASE_FP28_POSITION = dict(
-    x=-1.5,
-    z=-1.5,
-    y=0.901,
-)
+BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION,
-    rotation={"x": 0, "y": 0, "z": 0},
-    horizon=0,
-    standing=True,
+    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
 )
 
 
@@ -157,10 +150,7 @@ def test_bot_deprecation():
 def test_deprecated_segmentation_params():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
-    controller = build_controller(
-        renderObjectImage=True,
-        renderClassImage=True,
-    )
+    controller = build_controller(renderObjectImage=True, renderClassImage=True,)
     event = controller.last_event
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -175,8 +165,7 @@ def test_deprecated_segmentation_params2():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(
-        renderSemanticSegmentation=True,
-        renderInstanceSegmentation=True,
+        renderSemanticSegmentation=True, renderInstanceSegmentation=True,
     )
     event = controller.last_event
 
@@ -883,8 +872,7 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -895,8 +883,7 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -904,8 +891,7 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1131,3 +1117,23 @@ def test_get_object_in_frame(controller):
     assert query.metadata["actionReturn"].startswith(
         "Fridge"
     ), "x=0.3, y=0.5 should have a fridge!"
+
+    event = controller.reset(renderInstanceSegmentation=True)
+    assert event.metadata["screenHeight"] == 300
+    assert event.metadata["screenWidth"] == 300
+    for objectId in event.instance_masks.keys():
+        try:
+            obj = next(
+                obj for obj in event.metadata["objects"] if obj["objectId"] == objectId
+            )
+        except:
+            # not a sim object
+            continue
+        if obj["visible"]:
+            mask = event.instance_masks[objectId]
+            ys, xs = mask.nonzero()
+            for x, y in zip(xs, ys):
+                event = controller.step(action="GetObjectInFrame", x=x / 300, y=y / 300)
+                assert (
+                    event.metadata["actionReturn"] == objectId
+                ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
