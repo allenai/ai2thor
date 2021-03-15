@@ -481,11 +481,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool checkArcForCollisions(BoxCollider bb, Vector3 origin, float degrees, int dirSign, Vector3 dirAxis)
         {
             bool result = true;
+            float arcIncrementDistance;
             Vector3 bbWorldCenter = bb.transform.TransformPoint(bb.center);
             Vector3 bbHalfExtents = bb.size / 2.0f;
 
             //Generate arc points in the positive y-axis rotation
             OrientedPoint[] pointsOnArc = GenerateArcPoints(bbWorldCenter, bb.transform.rotation, origin, degrees, dirSign, dirAxis);
+
+            //Save the arc-distance to a value to reduce computation in the for-loop, since it's the same between every OrientedPoint
+            arcIncrementDistance = (pointsOnArc[1].position - pointsOnArc[0].position).magnitude;
 
             //Raycast from first point in pointsOnArc, stepwise to last point. If any collisions are hit, immediately return 
             for (int i = 0; i < pointsOnArc.Length - 1; i++)
@@ -495,7 +499,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //Debug.DrawLine(pointsOnArc[i].position, pointsOnArc[i+1].position, Color.magenta, 500.0f);
 
-                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit, Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), (pointsOnArc[i + 1].position - pointsOnArc[i].position).magnitude, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit, Quaternion.Lerp(pointsOnArc[i].orientation, arcIncrementDistance, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                     {
                         if (hit.transform.GetComponent<SimObjPhysics>())
                         {
