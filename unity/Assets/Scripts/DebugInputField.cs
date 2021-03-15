@@ -705,18 +705,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "color":
+                case "dangerouslyChangeColor":
                         CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
                             ["action"] = "RandomizeColors"
                         });
                         break;
-                case "resetcolor":
+                case "resetColor":
                         CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
                             ["action"] = "ResetColors"
                         });
                         break;
 
-                case "material":
+                case "dangerouslyChangeMaterial":
                         CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
                             ["action"] = "RandomizeMaterials"
                         });
