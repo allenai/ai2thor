@@ -24,6 +24,7 @@ import os
 import platform
 import uuid
 import sys
+from contextlib import contextmanager
 from functools import lru_cache
 
 
@@ -805,6 +806,29 @@ class Controller(object):
                 break
 
         return events
+
+    def _batch_step(self, action=None, **action_args):
+        action_args['forceActionEmit'] = True
+        return self._inner_batch_step(action, **action_args)
+
+    @contextmanager
+    def batch(self):
+        if (self.server_class != ai2thor.fifo_server.FifoServer):
+            raise ValueError("batch can only be used with the FifoServer")
+
+        if not hasattr(self, '_inner_batch_step'):
+            self._inner_batch_step = self.step
+            self.step = self._batch_step
+            # we keep track of the depth to allow users to nest batch statements
+            # this allows us to remove the filter when we exit from the outermost block
+            self._batch_depth = 0
+        self._batch_depth += 1
+        try:
+            yield
+        finally:
+            self._batch_depth -= 1
+            if self._batch_depth <= 0:
+                self.step = self._inner_batch_step
 
     def step(self, action=None, **action_args):
 

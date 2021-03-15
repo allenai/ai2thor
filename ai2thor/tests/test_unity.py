@@ -214,6 +214,22 @@ def test_reset():
 
 
 @pytest.mark.parametrize("controller", [fifo_controller])
+def test_batch(controller):
+    event = controller.step('RotateRight')
+    with controller.batch():
+        batch_event_1 = controller.step('RotateRight')
+        with controller.batch():
+            batch_event_2 = controller.step('RotateRight')
+        batch_event_3 = controller.step('RotateRight')
+
+    non_batch_event = controller.step('RotateRight')
+
+    assert id(event.metadata["objects"]) == id(batch_event_1.metadata["objects"])
+    assert id(event.metadata["objects"]) == id(batch_event_2.metadata["objects"])
+    assert id(event.metadata["objects"]) == id(batch_event_3.metadata["objects"])
+    assert id(event.metadata["objects"]) != id(non_batch_event.metadata["objects"])
+
+@pytest.mark.parametrize("controller", [fifo_controller])
 def test_fast_emit(controller):
     event = controller.step(dict(action="RotateRight"))
     event_fast_emit = controller.step(dict(action="TestFastEmit", rvalue="foo"))
