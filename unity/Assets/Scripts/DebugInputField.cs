@@ -705,6 +705,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                // This is dangerous because it will modify the underlying
+                // materials, and you'll have to call "git restore *.mat *maT"
+                // to revert the materials.
                 case "dangerouslyChangeColor":
                         CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
                             ["action"] = "RandomizeColors"
@@ -716,6 +719,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         });
                         break;
 
+                // This is dangerous because it will modify the underlying
+                // materials, and you'll have to call "git restore *.mat *maT"
+                // to revert the materials.
                 case "dangerouslyChangeMaterial":
                         CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
                             ["action"] = "RandomizeMaterials"
