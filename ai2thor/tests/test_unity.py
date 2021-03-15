@@ -1133,7 +1133,12 @@ def test_get_object_in_frame(controller):
             mask = event.instance_masks[objectId]
             ys, xs = mask.nonzero()
             for x, y in zip(xs, ys):
-                event = controller.step(action="GetObjectInFrame", x=x / 300, y=y / 300)
+                event = controller.step(
+                    action="GetObjectInFrame",
+                    x=x / 300,
+                    y=y / 300,
+                    forceAction=True
+                )
                 assert (
                     event.metadata["actionReturn"] == objectId
                 ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
