@@ -322,6 +322,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			return Type;
 		}
+        
+        set 
+        {
+            Type = value;
+        }
 	}
 
 	public int ReceptacleCount
