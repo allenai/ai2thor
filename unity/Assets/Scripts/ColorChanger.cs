@@ -51,7 +51,17 @@ public class ColorChanger : MonoBehaviour {
 
                       wallMaterials,
                       fridgeMaterials,
-                      microwaveMaterials;
+                      microwaveMaterials,
+                      toasterMaterials,
+
+                      lettuceMaterials,
+                      lettuceSlicedMaterials,
+
+                      soapBottleMaterials,
+
+                      potatoMaterials,
+                      potatoCookedMaterials,
+                      potatoSlicedMaterials;
 
     Dictionary<string, Material[]> materials;
     Dictionary<string, Color[]> origColors;
@@ -100,6 +110,12 @@ public class ColorChanger : MonoBehaviour {
             ["Wax"] = waxMaterials,
             ["Soap"] = soapMaterials,
             ["Microwave"] = microwaveMaterials,
+            ["Toaster"] = toasterMaterials,
+            ["Lettuce"] = lettuceMaterials,
+            ["SoapBottle"] = soapBottleMaterials,
+            ["Potato"] = potatoMaterials,
+            ["PotatoCooked"] = potatoCookedMaterials,
+            ["PotatoSliced"] = potatoSlicedMaterials,
         };
 
         // cache all the original values
