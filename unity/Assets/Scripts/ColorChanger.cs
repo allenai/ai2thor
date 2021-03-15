@@ -50,7 +50,8 @@ public class ColorChanger : MonoBehaviour {
                       woodMaterials,
 
                       wallMaterials,
-                      fridgeMaterials;
+                      fridgeMaterials,
+                      microwaveMaterials;
 
     Dictionary<string, Material[]> materials;
     Dictionary<string, Color[]> origColors;
@@ -97,7 +98,8 @@ public class ColorChanger : MonoBehaviour {
             ["Paper"] = paperMaterials,
             ["Grunge"] = grungeMaterials,
             ["Wax"] = waxMaterials,
-            ["Soap"] = soapMaterials
+            ["Soap"] = soapMaterials,
+            ["Microwave"] = microwaveMaterials,
         };
 
         // cache all the original values
