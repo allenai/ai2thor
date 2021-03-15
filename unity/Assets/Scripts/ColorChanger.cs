@@ -61,7 +61,9 @@ public class ColorChanger : MonoBehaviour {
 
                       potatoMaterials,
                       potatoCookedMaterials,
-                      potatoSlicedMaterials;
+                      potatoSlicedMaterials,
+
+                      laptopMaterials;
 
     Dictionary<string, Material[]> materials;
     Dictionary<string, Color[]> origColors;
@@ -116,6 +118,7 @@ public class ColorChanger : MonoBehaviour {
             ["Potato"] = potatoMaterials,
             ["PotatoCooked"] = potatoCookedMaterials,
             ["PotatoSliced"] = potatoSlicedMaterials,
+            ["Laptop"] = laptopMaterials,
         };
 
         // cache all the original values
