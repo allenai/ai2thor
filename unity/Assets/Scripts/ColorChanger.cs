@@ -101,6 +101,8 @@ public class ColorChanger : MonoBehaviour {
         };
 
         // cache all the original values
+        origColors = new Dictionary<string, Color[]>();
+        origTextures = new Dictionary<string, Texture[]>();
         foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
             Color[] groupColors = new Color[materialGroup.Value.Length];
             Texture[] groupTextures = new Texture[materialGroup.Value.Length];
