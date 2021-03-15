@@ -3,10 +3,8 @@ import random
 import time
 
 
-# python2.7 compatible makedirs
 def makedirs(directory):
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
 
 def atomic_write(path, data):
