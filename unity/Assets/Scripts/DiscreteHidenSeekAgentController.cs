@@ -118,19 +118,18 @@ public int objectVariation;
         }
 
         public void SetObjectVisible(bool visible) {
-            
-                                 visibleObject = visible;
-                                 // Debug.Log("Calling disply with "+ visibleObject);
-                                 var go = PhysicsController.WhatAmIHolding();
-                                PhysicsController.UpdateDisplayGameObject( go, visibleObject);
-                                var layer = go.layer;
-                                if (!visibleObject) {
-                                    // go.layer = LayerMask.NameToLayer("SimObjInvisible");
-                                    SetLayerRecursively(go, LayerMask.NameToLayer("SimObjInvisible"));
-                                }
-                                else {
-                                    SetLayerRecursively(go, LayerMask.NameToLayer("SimObjVisible"));
-                                }
+            visibleObject = visible;
+            // Debug.Log("Calling disply with "+ visibleObject);
+            var go = PhysicsController.WhatAmIHolding();
+            PhysicsController.UpdateDisplayGameObject( go, visibleObject);
+            var layer = go.layer;
+            if (!visibleObject) {
+                // go.layer = LayerMask.NameToLayer("SimObjInvisible");
+                SetLayerRecursively(go, LayerMask.NameToLayer("SimObjInvisible"));
+            }
+            else {
+                SetLayerRecursively(go, LayerMask.NameToLayer("SimObjVisible"));
+            }
         }
 
         public void Step(string serverAction)

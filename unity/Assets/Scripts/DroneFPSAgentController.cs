@@ -130,9 +130,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-        //generates object metatada based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) 
-        {            
+        //generates object metadata based on sim object's properties
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
             objMeta.isCaught = this.GetComponent<DroneFPSAgentController>().isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;
@@ -241,111 +240,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objMeta;
         }
 
-        public override MetadataWrapper generateMetadataWrapper()
-        {
-            // AGENT METADATA
-            DroneAgentMetadata agentMeta = new DroneAgentMetadata();
-            agentMeta.name = "agent";
-            agentMeta.position = transform.position;
-            agentMeta.rotation = transform.eulerAngles;
-            agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-            if (agentMeta.cameraHorizon > 180) 
-            {
-                agentMeta.cameraHorizon -= 360;
-            }
+        public override MetadataWrapper generateMetadataWrapper() {
+            MetadataWrapper metadata = base.generateMetadataWrapper();
 
-            //New Drone Stuff for agentMeta
-            agentMeta.LauncherPosition = GetLauncherPosition();
+            // For Drone controller, currentTime should be based on
+            // fixed update passes so use DroneTimeSinceStart instead of TimeSinceStart
+            metadata.currentTime = DroneTimeSinceStart();
 
-            // OTHER METADATA
-            MetadataWrapper metaMessage = new MetadataWrapper();
-    
-            //For Drone controller, currentTime should be based on
-            //fixed update passes so use DroneTimeSinceStart instead of TimeSinceStart
-            metaMessage.currentTime = DroneTimeSinceStart();
+            // TODO: clean this up with reflection.
+            // it works, but will not update when something changes to AgentMetadata
+            // metadata.agent = new 
+            AgentMetadata baseAgent = metadata.agent;
 
-            //agentMeta.FlightMode = FlightMode;
-            metaMessage.agent = agentMeta;
-            metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            metaMessage.objects = this.generateObjectMetadata();
-            //check scene manager to see if the scene's objects are at rest
-            metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
-            metaMessage.collided = collidedObjects.Length > 0;
-            metaMessage.collidedObjects = collidedObjects;
-            metaMessage.screenWidth = Screen.width;
-            metaMessage.screenHeight = Screen.height;
-            metaMessage.cameraPosition = m_Camera.transform.position;
-            metaMessage.cameraOrthSize = cameraOrthSize;
-            cameraOrthSize = -1f;
-            metaMessage.fov = m_Camera.fieldOfView;
-            metaMessage.lastAction = lastAction;
-            metaMessage.lastActionSuccess = lastActionSuccess;
-            metaMessage.errorMessage = errorMessage;
-            metaMessage.actionReturn = this.actionReturn;
+            DroneAgentMetadata droneMeta = new DroneAgentMetadata();
+            droneMeta.name = "drone";
+            droneMeta.position = baseAgent.position;
+            droneMeta.rotation = baseAgent.rotation;
+            droneMeta.cameraHorizon = baseAgent.cameraHorizon;
+            droneMeta.inHighFrictionArea = baseAgent.inHighFrictionArea;
 
-            if (errorCode != ServerActionErrorCode.Undefined) {
-                metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
-            }
+            // New drone stuff for agent metadata
+            droneMeta.LauncherPosition = GetLauncherPosition();
 
-            List<InventoryObject> ios = new List<InventoryObject>();
-
-            if (ItemInHand != null) {
-                SimObjPhysics so = ItemInHand.GetComponent<SimObjPhysics>();
-                InventoryObject io = new InventoryObject();
-                io.objectId = so.ObjectID;
-                io.objectType = Enum.GetName(typeof(SimObjType), so.Type);
-                ios.Add(io);
-            }
-
-            metaMessage.inventoryObjects = ios.ToArray();
-
-            // HAND
-            metaMessage.hand = new HandMetadata();
-            metaMessage.hand.position = AgentHand.transform.position;
-            metaMessage.hand.localPosition = AgentHand.transform.localPosition;
-            metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
-            metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
-
-            // EXTRAS
-            metaMessage.reachablePositions = reachablePositions;
-            metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
-            metaMessage.distances = flatten2DimArray(distances);
-            metaMessage.normals = flatten3DimArray(normals);
-            metaMessage.isOpenableGrid = flatten2DimArray(isOpenableGrid);
-            metaMessage.segmentedObjectIds = segmentedObjectIds;
-            metaMessage.objectIdsInBox = objectIdsInBox;
-            metaMessage.actionIntReturn = actionIntReturn;
-            metaMessage.actionFloatReturn = actionFloatReturn;
-            metaMessage.actionFloatsReturn = actionFloatsReturn;
-            metaMessage.actionStringsReturn = actionStringsReturn;
-            metaMessage.actionVector3sReturn = actionVector3sReturn;
-
-            if (alwaysReturnVisibleRange) {
-                metaMessage.visibleRange = visibleRange();
-            }
-
-            // Resetting things
-            reachablePositions = new Vector3[0];
-            flatSurfacesOnGrid = new float[0, 0, 0];
-            distances = new float[0, 0];
-            normals = new float[0, 0, 0];
-            isOpenableGrid = new bool[0, 0];
-            segmentedObjectIds = new string[0];
-            objectIdsInBox = new string[0];
-            actionIntReturn = 0;
-            actionFloatReturn = 0.0f;
-            actionFloatsReturn = new float[0];
-            actionStringsReturn = new string[0];
-            actionVector3sReturn = new Vector3[0];
-
-            return metaMessage;
+            metadata.agent = droneMeta;
+            return metadata;
 		}
 
         public float DroneTimeSinceStart() {
             return fixupdateCnt * Time.fixedDeltaTime;
         }
 
-        //Flying Drone Agent Controls
+        // Flying drone agent controls
         public Vector3 GetFlyingOrientation(float moveMagnitude, int targetOrientation) {
             Vector3 m;
             int currentRotation = (int) Math.Round(transform.rotation.eulerAngles.y, 0);
@@ -373,8 +298,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return m;
         }
 
-        //Flying Drone Agent Controls
-        //use get reachable positions, get two positions, one in front of the other
+        // Flying drone agent controls
+        // use get reachable positions, get two positions, one in front of the other
         public Vector3[] SeekTwoPos(Vector3[] shuffledCurrentlyReachable){
             Vector3[] output = new Vector3[2];
             System.Random rnd = new System.Random();
@@ -398,11 +323,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return output;
         }
 
-        //change what timeScale is automatically reset to on emitFrame when in FlightMode
-        public void ChangeAutoResetTimeScale(float timeScale)
-        {
+        // change what timeScale is automatically reset to on emitFrame when in FlightMode
+        public void ChangeAutoResetTimeScale(float timeScale) {
             autoResetTimeScale = timeScale;
             actionFinished(true);
+        }
+
+        public void Teleport(
+            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+        ) {
+            base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            actionFinished(success: true);
+        }
+
+        public void TeleportFull(
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+        ) {
+            base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            actionFinished(success: true);
         }
 
         public void FlyRandomStart(float y)
@@ -509,11 +447,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //in case you want to change the fixed delta time
-        public void ChangeFixedDeltaTime(float fixedDeltaTime) 
+        public void ChangeFixedDeltaTime(float? fixedDeltaTime=null) 
         {
-            if (fixedDeltaTime > 0) 
+            var fdtime = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
+            if (fdtime > 0) 
             {
-                Time.fixedDeltaTime = fixedDeltaTime;
+                Time.fixedDeltaTime = fdtime;
                 actionFinished(true);
             } 
             

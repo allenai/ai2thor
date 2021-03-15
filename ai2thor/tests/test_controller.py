@@ -2,6 +2,7 @@ import ai2thor.controller
 from ai2thor.server import Event
 import pytest
 import numpy as np
+import warnings
 import os
 import math
 
@@ -36,9 +37,17 @@ class FakeQueue(object):
     def empty(self):
         return True
 
-def controller():
-    c = ai2thor.controller.Controller(download_only=True, local_build=True)
-    c.server = FakeServer()
+def controller(**args):
+
+    # during a ci-build we will get a warning that we are using a commit_id for the
+    # build instead of 'local'
+    default_args = dict(download_only=True, local_build=True)
+    default_args.update(args)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        c = ai2thor.controller.Controller(**default_args)
+        c.server = FakeServer()
+
     return c
 
 def test_contstruct():
@@ -59,7 +68,9 @@ def test_key_for_point():
 
 def test_scene_names():
     c = controller()
-    assert len(c.scene_names()) == 120
+    assert len(c.scene_names()) == 195
+    assert len(c.ithor_scenes()) == 120
+    assert len(c.robothor_scenes()) == 195 - 120
 
 def test_invalid_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='InvalidAction', errorMessage='Invalid method: moveaheadbadmethod'))
@@ -94,7 +105,7 @@ def test_raise_for_failure():
     action1 = dict(action='MoveAhead')
     c.server.request_queue.put_nowait(fake_event)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         c.step(action1, raise_for_failure=True)
 
 def test_failure():
@@ -139,7 +150,7 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_build=True)
+    c = controller(fullscreen=True, quality='Low')
     assert c.unity_command(650, 550, False) == [
         c._build.executable_path,
         '-screen-fullscreen', 

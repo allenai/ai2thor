@@ -26,13 +26,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public MeshRenderer MyFaceMesh;
         public int AdvancePhysicsStepCount;
         public GameObject[] TargetCircles = null;
-        //these object types can have a placeable surface mesh associated ith it
-        //this is to be used with ScreenToWorldTarget to filter out raycasts correctly
-        private List<SimObjType> hasPlaceableSurface = new List<SimObjType>()
-        {
-            SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
-            SimObjType.CounterTop, SimObjType.Shelf
-        };
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
@@ -146,9 +139,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Update is called once per frame
-        void Update() {
-        }
 
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
@@ -164,18 +154,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
         }
 
-        public override ObjectMetadata[] generateObjectMetadata() 
-        {
+        public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
         }
 
-        public override MetadataWrapper generateMetadataWrapper() 
-        {
-            return base.generateMetadataWrapper();
+        public bool isStanding() {
+            return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
         }
 
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible)
-        {
+        public override MetadataWrapper generateMetadataWrapper() {
+            MetadataWrapper metaWrapper = base.generateMetadataWrapper();
+	        metaWrapper.agent.isStanding = isStanding();
+            return metaWrapper;
+        }
+
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
         }
 
@@ -653,41 +646,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        private bool checkForUpDownAngleLimit(string direction, float degrees)
-        {   
-            bool result = true;
-            //check the angle between the agent's forward vector and the proposed rotation vector
-            //if it exceeds the min/max based on if we are rotating up or down, return false
-
-            //first move the rotPoint to the camera
-            rotPoint.transform.position = m_Camera.transform.position;
-            //zero out the rotation first
-            rotPoint.transform.rotation = m_Camera.transform.rotation;
-
-
-            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
-            if(direction == "down")
-            {
-                rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
-                //degrees being positive, it still needs to check against this negatively signed direction.
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-
-            if(direction == "up")
-            {
-                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-            return result;
-        }
-
         public void TeleportObject(
             string objectId,
             Vector3 position,
@@ -868,43 +826,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 makeUnbreakable: makeUnbreakable
             );
         }
-
-        /* For some reason this does not work with the new action dispatcher and the above needed to be added.
-        public void TeleportObject(ServerAction action) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find object with id " + action.objectId;
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            } else {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
-                    errorMessage = "Cannot teleport object in hand.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-                Vector3 oldPosition = sop.transform.position;
-                Quaternion oldRotation = sop.transform.rotation;
-
-                sop.transform.position = new Vector3(action.x, action.y, action.z);
-                sop.transform.rotation = Quaternion.Euler(action.rotation);
-                if (action.forceKinematic) {
-                    sop.GetComponent<Rigidbody>().isKinematic = true;
-                }
-                if (!action.forceAction) {
-                    if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
-                        sop.transform.position = oldPosition;
-                        sop.transform.rotation = oldRotation;
-                        errorMessage = sop.ObjectID + " is colliding after teleport.";
-                        actionFinished(false);
-                        return;
-                    }
-                }
-                actionFinished(true);
-            }
-        }
-        */
 
         // params are named x,y,z due to the action orignally using ServerAction.x,y,z
         public void ChangeAgentColor(float x, float y, float z) {
@@ -1684,92 +1605,209 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void TeleportFull(ServerAction action) {
-            targetTeleport = new Vector3(action.x, action.y, action.z);
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
 
-            if (action.forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-            } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
-                    errorMessage = "Teleport target out of scene bounds.";
-                    actionFinished(false);
-                    return;
-                }
+        // [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        // public void TeleportFull(
+        //     float x, float y, float z,
+        //     float rotation,
+        //     float horizon,
+        //     bool standing,
+        //     bool forceAction = false
+        // ) {
+        //     TeleportFull(
+        //         position: new Vector3(x, y, z),
+        //         rotation: new Vector3(0, rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
 
-                Vector3 oldPosition = transform.position;
-                Quaternion oldRotation = transform.rotation;
-                Vector3 oldLocalHandPosition = new Vector3();
-                Quaternion oldLocalHandRotation = new Quaternion();
-                if (ItemInHand != null) {
-                    oldLocalHandPosition = ItemInHand.transform.localPosition;
-                    oldLocalHandRotation = ItemInHand.transform.localRotation;
-                }
-                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
-                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
-
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-
-                //apply gravity after teleport so we aren't floating in the air
-                Vector3 m = new Vector3();
-                m.y = Physics.gravity.y * this.m_GravityMultiplier;
-                m_CharacterController.Move(m);
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                if (action.standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-
-                bool agentCollides = isAgentCapsuleColliding(
-                    collidersToIgnore: collidersToIgnoreDuringMovement,
-                    includeErrorMessage: true
-                );
-                
-                bool handObjectCollides = isHandObjectColliding(true);
-                if (handObjectCollides && !agentCollides) {
-                    errorMessage = "Cannot teleport due to hand object collision.";
-                }
-
-                if (agentCollides || handObjectCollides) {
-                    if (ItemInHand != null) {
-                        ItemInHand.transform.localPosition = oldLocalHandPosition;
-                        ItemInHand.transform.localRotation = oldLocalHandRotation;
-                    }
-                    transform.position = oldPosition;
-                    transform.rotation = oldRotation;
-                    m_Camera.transform.localPosition = oldCameraLocalPosition;
-                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-                    actionFinished(false);
-                    return;
-                }
-            }
-
-            Vector3 v = new Vector3();
-            v.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(v);
-
-            snapAgentToGrid();
-            actionFinished(true);
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(
+            float x, float y, float z,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
         }
 
-        public override void Teleport(ServerAction action) {
-            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
-            action.standing = isStanding();
-            if (!action.rotateOnTeleport) {
-                action.rotation = transform.eulerAngles;
+        // keep undocumented until float: rotation is added to Stochastic
+        // public void TeleportFull(
+        //     Vector3 position,
+        //     float rotation,
+        //     float horizon,
+        //     bool standing,
+        //     bool forceAction = false
+        // ) {
+        //     TeleportFull(
+        //         position: position,
+        //         rotation: new Vector3(0, rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        // has to consider both the arm and standing
+        public void TeleportFull(
+            Vector3 position,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            // cache old values in case there's a failure
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
+
+            Vector3 oldLocalHandPosition = new Vector3();
+            Quaternion oldLocalHandRotation = new Quaternion();
+            if (ItemInHand != null) {
+                oldLocalHandPosition = ItemInHand.transform.localPosition;
+                oldLocalHandRotation = ItemInHand.transform.localRotation;
             }
-            TeleportFull(action);
+
+            try {
+                // default high level hand when teleporting
+                DefaultAgentHand();
+                ToggleArmColliders(arm: Arm, value: forceAction);
+                base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+                if (standing) {
+                    stand();
+                } else {
+                    crouch();
+                }
+
+                // add arm value cases
+                if (!forceAction) {
+                    if (isHandObjectColliding(ignoreAgent: true)) {
+                        throw new InvalidOperationException("Cannot teleport due to hand object collision.");
+                    }
+                    if (Arm != null && Arm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    }
+                    base.assertTeleportedNearGround(targetPosition: position);
+
+                    ToggleArmColliders(arm: Arm, value: false);
+                }
+            } catch (InvalidOperationException e) {
+                ToggleArmColliders(arm: Arm, value: false);
+                if (wasStanding) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                if (ItemInHand != null) {
+                    ItemInHand.transform.localPosition = oldLocalHandPosition;
+                    ItemInHand.transform.localRotation = oldLocalHandRotation;
+                }
+
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+
+                throw new InvalidOperationException(e.Message);
+            }
+            actionFinished(success: true);
+        }
+
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        // [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        // public void Teleport(
+        //     float x, float y, float z,
+        //     float? rotation = null,
+        //     float? horizon = null,
+        //     bool? standing = null,
+        //     bool forceAction = false
+        // ) {
+        //     Teleport(
+        //         position: new Vector3(x, y, z),
+        //         rotation: rotation,
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        // keep undocumented until float: rotation is added to Stochastic
+        // DO NOT add float: rotation to base.
+        // public void Teleport(
+        //     Vector3? position = null,
+        //     float? rotation = null,
+        //     float? horizon = null,
+        //     bool? standing = null,
+        //     bool forceAction = false
+        // ) {
+        //     Teleport(
+        //         position: position,
+        //         rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        public void Teleport(
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: position == null ? transform.position : (Vector3) position,
+                rotation: rotation == null ? transform.eulerAngles : (Vector3) rotation,
+                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
+                standing: standing == null ? isStanding() : (bool) standing,
+                forceAction: forceAction
+            );
+        }
+
+        public void ToggleArmColliders(IK_Robot_Arm_Controller arm, bool value) {
+            if (arm != null) {
+                foreach (CapsuleCollider c in arm.ArmCapsuleColliders) {
+                    c.isTrigger = value;
+                }
+                foreach (BoxCollider b in arm.ArmBoxColliders) {
+                    b.isTrigger = value;
+                }
+            }
         }
 
         protected HashSet<Collider> allAgentColliders() {
@@ -2683,30 +2721,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             public bool didHandTouchSomething;//did the hand touch something or did it hit nothing?
             public string objectId;//id of object touched, if it is a sim object
             public float armsLength;//the amount the hand moved from it's starting position to hit the object touched
-        }
-
-        //checks if the target position in space is within the agent's current viewport
-        public bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
-        {
-            //now check if the target position is within bounds of the Agent's forward (z) view
-            Vector3 tmp = m_Camera.transform.position;
-            tmp.y = targetPosition.y;
-
-            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
-            {
-                errorMessage = "The target position is outside the agent's max visible distance.";
-                return false;
-            }
-
-            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
-            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
-            {
-                errorMessage = "The target position is outside the viewport.";
-                return false;
-            }
-
-            return true;
         }
 
         //checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
@@ -4047,17 +4061,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-            StartCoroutine(setObjectPoses(action.objectPoses));
+            StartCoroutine(setObjectPoses(action.objectPoses, action.placeStationary));
         }
 
         // SetObjectPoses is performed in a coroutine otherwise if
         // a frame does not pass prior to this AND the imageSynthesis
         // is enabled for say depth or normals, Unity will crash on 
         // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses){
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary){
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses);
-            actionFinished(success);
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+            actionFinished(success, errorMessage);
         }
 
         //set all objects objects of a given type to a specific state, if that object has that state
@@ -4630,54 +4644,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
         }
 
-        // used for all actions that need a sim object target
-        // instead of objectId, use screen coordinates to raycast toward potential targets
-        // will set the target object by reference if raycast is succesful
-        public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange) {
-            // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
-            y = 1.0f - y;
-
-            // cast ray from screen coordinate into world space. If it hits an object
-            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
-            RaycastHit hit;
-
-            // if something was touched, actionFinished(true) always
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
-                if (hit.transform.GetComponent<SimObjPhysics>()) {
-                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                    // this should basically only happen if the handDistance value is too big
-                    if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                    }
-
-                    // it is within viewport, so we are good, assign as target
-                    target = hit.transform.GetComponent<SimObjPhysics>();
-                }
-            }
-
-            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            // if no target was found in the layers above, try the SimObjInvisible layer. 
-            // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
-            // PlaceableSurfaces on it, also make sure to check again
-            if (target == null || hasPlaceableSurface.Contains(target.Type)) {
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
-                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
-                        // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                        // this should basically only happen if the handDistance value is too big
-                        if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                        }
-                        // it is within viewport, so we are good, assign as target
-                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
-                    }
-                }
-            }
-
-            // force update objects to be visible/interactable correctly
-            VisibleSimObjs(false);
-            return true;
-        }
-
         public void PickupObject(ServerAction action) //use serveraction objectid
         {
             //specify target to pickup via objectId or coordinates
@@ -5109,39 +5075,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // While there are no objects to open, it was technically successful at opening all 0 objects.
             actionFinished(true);
-        }
-
-        // Helper method that parses objectId parameter to return the sim object that it target.
-        // The action is halted if the objectId does not appear in the scene.
-        private SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
-            // an objectId was given, so find that target in the scene if it exists
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
-            }
-
-            // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
-                target = sop;
-            }
-
-            // target not found!
-            if (target == null) {
-                throw new NullReferenceException("Target object not found within the specified visibility.");
-            }
-
-            return target;
-        }
-
-        // Helper method that parses (x and y) parameters to return the
-        // sim object that they target.
-        private SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
-            if (x < 0 || x > 1 || y < 0 || y > 1) {
-                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
-            }
-            SimObjPhysics target = null;
-            ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
-            return target;
         }
 
         // syntactic sugar for open object with openness = 0.
@@ -5686,14 +5619,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
         {
+            bool ctofInitialState = ctof.isOn;
+            
             if(ctof != null)
             ctof.Toggle();
 
             bool success = false;
 
-            bool ctofInitialState = ctof.isOn;
             
-            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof == !ctofInitialState));
+            yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0 && ctof.isOn == !ctofInitialState));
             success = true;
 
             if (!success)
@@ -6374,11 +6308,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////////////////////
         ///// Crouch and Stand /////
         ////////////////////////////
-
-        public bool isStanding() {
-            return standingLocalCameraPosition == m_Camera.transform.localPosition;
-        }
-
         protected void crouch() {            
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
@@ -6543,41 +6472,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(true);
                 return result;
-            }
-
-            else 
-            {
-                #if UNITY_EDITOR
+            } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
             }
             
             return false;
         }
-
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) {
-                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-                    float ViewPointRangeHigh = 1.0f;
-                    float ViewPointRangeLow = 0.0f;
-
-                    if (viewPoint.z > 0 &&
-                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
-                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-                    ) {
-                            return true;
-                    }
-                }
-            } else {
-                #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
-            }
-            return false;
-        }
-
+        
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {
             if (sop.VisibilityPoints.Length > 0) 
@@ -6601,9 +6502,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             } else {
-                #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
             }
             updateAllAgentCollidersForVisibilityCheck(true);
             return false;
@@ -6829,7 +6728,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (float horizon in horizons) {
                     // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
                     if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                        throw new ArgumentException($"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]");
+                        throw new ArgumentException(
+                            $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                        );
                     }
                 }
             }
@@ -9338,6 +9239,294 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        #if UNITY_EDITOR
+        //debug for static arm collisions from collision listener
+        public void GetMidLevelArmCollisions() {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
+                if (collisionListener != null) {
+                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                    foreach(var sc in collisionListener.StaticCollisions()){
+                        var element = new Dictionary<string, string>();
+                        if (sc.simObjPhysics != null) {
+                            element["objectType"] = "simObjPhysics";
+                            element["name"] = sc.simObjPhysics.objectID;
+                        }
+                        else
+                        {
+                            element["objectType"] = "gameObject";
+                            element["name"] = sc.gameObject.name;
+                        }
+                        collisions.Add(element);
+                    }
+                    actionFinished(true, collisions);
+                }
+            }
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled.";
+                actionFinished(false);
+            }
+
+        }
+        
+        //debug for static arm collisions from collision listener
+        public void DebugMidLevelArmCollisions() {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                var scs = arm.collisionListener.StaticCollisions();
+                Debug.Log("Total current active static arm collisions: " + scs.Count);
+                foreach(var sc  in scs) {
+                    Debug.Log("Arm static collision: " + sc.name);
+                }
+
+            }   
+
+            actionFinished(true);
+        }
+        #endif
+
+        public void MoveMidLevelArm(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                
+                arm.moveArmTarget(
+                    this,
+                    action.position, 
+                    action.speed, 
+                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
+                    action.returnToStart, 
+                    action.coordinateSpace, 
+                    action.restrictMovement, 
+                    action.disableRendering
+                );
+            }
+            else {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+
+        }
+
+        //constrain arm's y position based on the agent's current capsule collider center and extents
+        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        //arm constrained by the agent's capsule
+        public void MoveMidLevelArmHeight(ServerAction action)
+        {
+            if(action.y < 0 || action.y > 1.0)
+            {
+                errorMessage = "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive";
+                actionFinished(false, errorMessage);
+                return;
+            }
+
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if(arm != null)
+            {
+                arm.moveArmHeight(
+                    this, 
+                    action.y, 
+                    action.speed, 
+                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
+                    action.returnToStart, 
+                    action.disableRendering
+                );
+            }
+
+            else {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
+        //between a given arm joint an other arm joints.
+        public void RotateMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+
+                var target = new Quaternion();
+                //rotate around axis aliged x, y, z with magnitude based on vector3
+                if(action.degrees == 0)
+                {
+                    //use euler angles
+                    target = Quaternion.Euler(action.rotation);
+                }
+
+                //rotate action.degrees about axis
+                else {
+                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
+                }
+
+                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
+                    
+            }
+            else {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //perhaps this should fail if no object is picked up?
+        //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
+        public void PickUpMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                actionFinished(arm.PickupObject());
+                return;
+            }
+
+            else 
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void DropMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                arm.DropObject();
+
+                //todo- only return after object(s) droped have finished moving
+                //currently this will return the frame the object is released
+
+                actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void WhatObjectsCanHandPickUp(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            
+
+            if (arm != null) 
+            {
+                StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
+            }
+
+            else 
+            {
+
+            }
+        }
+
+        //note this does not reposition the center point of the magnet orb
+        //so expanding the radius too much will cause it to clip backward into the wrist joint
+        public void SetMidLevelHandRadius(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            if (arm != null) 
+            {
+                if(action.radius < 0.04 || action.radius > 0.5)
+                {
+                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+
+                else
+                {
+                    arm.SetHandMagnetRadius(action.radius);
+                    actionFinished(true);
+                    return;
+                }
+            }
+
+            else 
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
+                actionFinished(false, errorMessage);            }
+        }
+
+        public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            collisionListener.Reset();
+
+
+            // this.transform.Rotate()
+            var rotate = ContinuousMovement.rotate(
+                    this,
+                    this.GetComponentInParent<CollisionListener>(),
+                    this.transform,
+                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart
+            );
+
+            if (disableRendering) {
+                this.unrollSimulatePhysics(
+                    rotate,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    rotate
+                );
+            }
+        }
+
+        // Signature does not work with debuginput field
+        // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
+        public void MoveContinuous(ServerAction action)
+        {
+            var direction = action.direction;
+            float speed = action.speed; 
+            bool returnToStart = action.returnToStart;
+            bool disableRendering = action.disableRendering;
+            float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
+            var collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            var directionWorld = transform.TransformDirection(direction);
+            var targetPosition = transform.position + directionWorld;
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            collisionListener.Reset();
+
+            var move = ContinuousMovement.move(
+                    this,
+                    collisionListener,
+                    this.transform,
+                    targetPosition,
+                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                    speed,
+                    returnToStart,
+                    false
+            );
+
+            if (disableRendering) {
+                this.unrollSimulatePhysics(
+                    move,
+                    fixedDeltaTime
+                );
+            }
+            else {
+                StartCoroutine(
+                    move
+                );
+            }
+        }
+        
         #if UNITY_EDITOR
         void OnDrawGizmos()
         {
