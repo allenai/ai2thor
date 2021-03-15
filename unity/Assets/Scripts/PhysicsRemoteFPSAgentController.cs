@@ -1698,6 +1698,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PullObject(ServerAction action) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId))
+            {
+                errorMessage = "Object ID appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                actionFinished(false);
+                return;
+            }
+
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
