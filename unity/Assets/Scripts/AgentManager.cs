@@ -137,7 +137,10 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        // #if !UNITY_EDITOR
         StartCoroutine(EmitFrame());
+        // #endif
     }
 
 	private void initializePrimaryAgent()
@@ -1025,15 +1028,7 @@ public class AgentManager : MonoBehaviour
                         try {
                             this.sock.Connect(hostep);
                         } catch (SocketException e) {
-                            Debug.Log("Here!");
-                            string msg = e.ToString();
-                            #if UNITY_EDITOR
-                                break;
-                            #endif
-                            // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
-                            #if !UNITY_EDITOR
-                                Debug.Log($"Socket exception: {msg}");
-                            #endif
+                            Debug.Log($"Socket exception: {e.ToString()}");
                         }
                     }
 
