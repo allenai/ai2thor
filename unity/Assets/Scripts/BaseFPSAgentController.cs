@@ -443,6 +443,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        public void Capture360(int width) {
+            byte[] bytes = I360Render.Capture(
+                width: width,
+                encodeAsJPEG: true,
+                renderCam: m_Camera,
+                faceCameraDirection: true
+            );
+
+            actionFinishedEmit(success: true, actionReturn: bytes);
+        }
+
 		public void Initialize(ServerAction action)
         {
             if(action.agentMode.ToLower() == "default" || 
