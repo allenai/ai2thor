@@ -20,17 +20,17 @@ public class Screenshot360 : MonoBehaviour {
         string path;
 
         byte[] bytes = I360Render.Capture(imageWidth, saveAsJPEG);
-            if (bytes != null) {
-                while (!newFileName) {
-                    if (File.Exists("Assets/360Photos/360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"))) {
-                        currentCount++;
-                    } else {
-                        path = Path.Combine("Assets/360Photos", "360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"));
-                        File.WriteAllBytes(path, bytes);
-                        Debug.Log("360 render saved to " + path);
-                        newFileName = true;
-                    }
+        if (bytes != null) {
+            while (!newFileName) {
+                if (File.Exists("Assets/360Photos/360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"))) {
+                    currentCount++;
+                } else {
+                    path = Path.Combine("Assets/360Photos", "360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"));
+                    File.WriteAllBytes(path, bytes);
+                    Debug.Log("360 render saved to " + path);
+                    newFileName = true;
                 }
             }
         }
+    }
 }

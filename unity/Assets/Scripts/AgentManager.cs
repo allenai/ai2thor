@@ -30,6 +30,7 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
+
 	private bool renderImage = true;
 	private bool renderDepthImage;
 	private bool renderSemanticSegmentation;
@@ -37,6 +38,10 @@ public class AgentManager : MonoBehaviour
     private bool initializedInstanceSeg;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
+
+    private bool render360DegreeImage;
+    private int im360CameraWidth;
+
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private Color[] agentColors = new Color[] {Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
@@ -130,12 +135,10 @@ public class AgentManager : MonoBehaviour
         #endif
 
         primaryAgent.actionDuration = this.actionDuration;
-		// this.agents.Add (primaryAgent);
+        // this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		// #if !UNITY_EDITOR
-        StartCoroutine (EmitFrame());
-		// #endif
-	}
+        StartCoroutine(EmitFrame());
+    }
 
 	private void initializePrimaryAgent()
     {
@@ -271,9 +274,12 @@ public class AgentManager : MonoBehaviour
 
 	}
 
-    public void Render360DegreeCamera(
-        int width
-    ) {
+    public void Render360DegreeCamera(int width) {
+        if ((width & (width - 1)) != 0) {
+            throw new ArgumentOutOfRangeException($"width must be a power of 2, not {width}");
+        }
+        this.render360DegreeImage = true;
+        this.im360CameraWidth = width;
         primaryAgent.actionFinished(true);
     }
 
@@ -741,7 +747,7 @@ public class AgentManager : MonoBehaviour
 
 	private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 		RenderTexture.active = camera.activeTexture;
-		camera.Render ();
+		camera.Render();
         payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
 	}
 
@@ -810,9 +816,9 @@ public class AgentManager : MonoBehaviour
         foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
             ColorId cid = new ColorId ();
             cid.color = new ushort[] {
-                (ushort)Math.Round (key.r * 255),
-                (ushort)Math.Round (key.g * 255),
-                (ushort)Math.Round (key.b * 255)
+                (ushort) Math.Round (key.r * 255),
+                (ushort) Math.Round (key.g * 255),
+                (ushort) Math.Round (key.b * 255)
             };
 
             cid.name = agent.imageSynthesis.colorIds[key];
@@ -828,7 +834,7 @@ public class AgentManager : MonoBehaviour
         string fieldName
     ) {
         if (!synth.hasCapturePass(captureName)) {
-            Debug.LogError (captureName + " not available - sending empty image");
+            throw new InvalidOperationException($"{captureName} not available - sending empty image");
         }
         byte[] bytes = synth.Encode(captureName);
         payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
@@ -844,6 +850,7 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
+
             // must wait an additional frame when in synchronous mode otherwise the frame lags
 			yield return new WaitForEndOfFrame();
 		}
@@ -922,6 +929,16 @@ public class AgentManager : MonoBehaviour
                 }
                 if (this.renderFlowImage) {
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, "_flow", "image_flow");
+                }
+
+                if (this.render360DegreeImage) {
+                    byte[] bytes = I360Render.Capture(
+                        width: im360CameraWidth,
+                        encodeAsJPEG: true,
+                        renderCam: agent.m_Camera,
+                        faceCameraDirection: true
+                    );
+                    renderPayload.Add(new KeyValuePair<string, byte[]>("image_360", bytes));
                 }
 
                 metadata.thirdPartyCameras = cameraMetadata;
@@ -1007,20 +1024,29 @@ public class AgentManager : MonoBehaviour
                         this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                         try {
                             this.sock.Connect(hostep);
-                        }
-                        catch (SocketException e) {
-                            Debug.Log("Socket exception: " + e.ToString());
+                        } catch (SocketException e) {
+                            Debug.Log("Here!");
+                            string msg = e.ToString();
+                            #if UNITY_EDITOR
+                                break;
+                            #endif
+                            // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
+                            #if !UNITY_EDITOR
+                                Debug.Log($"Socket exception: {msg}");
+                            #endif
                         }
                     }
 
                     if (this.sock != null && this.sock.Connected) {
                         byte[] rawData = form.data;
 
-                        string request = "POST /train HTTP/1.1\r\n" +
-                        "Content-Length: " + rawData.Length.ToString() + "\r\n";
+                        string request = (
+                            "POST /train HTTP/1.1\r\n" +
+                            $"Content-Length: {rawData.Length.ToString()}\r\n"
+                        );
 
                         foreach(KeyValuePair<string, string> entry in form.headers) {
-                            request += entry.Key + ": " + entry.Value + "\r\n";
+                            request += $"{entry.Key}: {entry.Value}\r\n";
                         }
                         request += "\r\n";
 
@@ -1052,13 +1078,23 @@ public class AgentManager : MonoBehaviour
                             }
 
                             bytesReceived += received;;
-                            string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                            string headerMsg = Encoding.ASCII.GetString(
+                                bytes: headerBuffer,
+                                index: 0,
+                                count: bytesReceived
+                            );
                             int offset = headerMsg.IndexOf("\r\n\r\n");
-                            if (offset > 0){
+                            if (offset > 0) {
                                 contentLength = parseContentLength(headerMsg.Substring(0, offset));
                                 bodyBuffer = new byte[contentLength];
                                 bodyBytesReceived = bytesReceived - (offset + 4);
-                                Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                                Array.Copy(
+                                    sourceArray: headerBuffer,
+                                    sourceIndex: offset + 4,
+                                    destinationArray: bodyBuffer,
+                                    destinationIndex: 0,
+                                    length: bodyBytesReceived
+                                );
                                 break;
                             }
                         }
@@ -1067,12 +1103,11 @@ public class AgentManager : MonoBehaviour
                         while (bodyBytesReceived < contentLength) {
                             // check for 0 bytes received
                             int received = this.sock.Receive(
-                                bodyBuffer,
-                                bodyBytesReceived,
-                                bodyBuffer.Length - bodyBytesReceived,
-                                SocketFlags.None
+                                buffer: bodyBuffer,
+                                offset: bodyBytesReceived,
+                                size: bodyBuffer.Length - bodyBytesReceived,
+                                socketFlags: SocketFlags.None
                             );
-
                             if (received == 0) {
                                 Debug.LogError("0 bytes received attempting to read body - connection closed");
                                 break;
@@ -1082,7 +1117,11 @@ public class AgentManager : MonoBehaviour
                             //Debug.Log("total bytes received: " + bodyBytesReceived);
                         }
 
-                        string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+                        string msg = Encoding.ASCII.GetString(
+                            bytes: bodyBuffer,
+                            index: 0,
+                            count: bodyBytesReceived
+                        );
                         ProcessControlCommand(msg);
                     }
                 } else if (serverType == serverTypes.FIFO) {
