@@ -101,6 +101,7 @@ class Event(object):
         self.depth_frame = None
         self.normals_frame = None
         self.flow_frame = None
+        self.projection_360 = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -160,7 +161,8 @@ class Event(object):
     @property
     def class_segmentation_frame(self):
         warnings.warn(
-            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.", DeprecationWarning
+            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.",
+            DeprecationWarning,
         )
         return self.semantic_segmentation_frame
 
@@ -308,6 +310,10 @@ class Event(object):
             image_flows_data, self.screen_width, self.screen_height
         )
 
+    def add_image_360(self, image_360_data):
+        width = 512
+        self.projection_360 = read_buffer_image(image_360_data, width, width / 2)
+
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(
             read_buffer_image(
@@ -427,6 +433,7 @@ class Server(object):
                 image_classes=e.add_image_classes,
                 image_normals=e.add_image_normals,
                 image_flow=e.add_image_flows,
+                image_360=e.add_image_360,
             )
 
             for key in image_mapping.keys():

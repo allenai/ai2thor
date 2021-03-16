@@ -37,6 +37,10 @@ public class AgentManager : MonoBehaviour
     private bool initializedInstanceSeg;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
+
+    private bool render360Image;
+    private int im360Width;
+
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
@@ -48,7 +52,13 @@ public class AgentManager : MonoBehaviour
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+    private HashSet<string> agentManagerActions = new HashSet<string> {
+        "Reset",
+        "Initialize",
+        "AddThirdPartyCamera",
+        "Render360DegreeCamera",
+        "UpdateThirdPartyCamera"
+    };
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -126,9 +136,9 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		#if !UNITY_EDITOR
+		// #if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
-		#endif
+		// #endif
 	}
 
 	private void initializePrimaryAgent()
@@ -264,6 +274,16 @@ public class AgentManager : MonoBehaviour
 		StartCoroutine (addAgents (action));
 
 	}
+
+    public void Render360DegreeCamera(int width) {
+        Debug.Log("called action!");
+        if ((width & (width - 1)) != 0) {
+            throw new ArgumentOutOfRangeException($"width must be a power of 2, not {width}");
+        }
+        this.render360Image = true;
+        this.im360Width = width;
+        primaryAgent.actionFinished(true);
+    }
 
     private void SetUpStochasticController(ServerAction action)
     {
@@ -879,7 +899,6 @@ public class AgentManager : MonoBehaviour
             metadata.agentId = i;
             metadata.fixedUpdateCount = agent.fixedUpdateCount;
             metadata.updateCount = agent.updateCount;
-            
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -889,6 +908,17 @@ public class AgentManager : MonoBehaviour
                 addObjectImage (renderPayload, agent, ref metadata);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
+                if (this.render360Image) {
+                    Debug.Log("Rendering 360!");
+                    byte[] bytes = I360Render.Capture(
+                        width: im360Width,
+                        encodeAsJPEG: true,
+                        renderCam: agent.m_Camera,
+                        faceCameraDirection: true
+                    );
+                    renderPayload.Add(new KeyValuePair<string, byte[]>("image_360", bytes));
+                }
 
                 metadata.thirdPartyCameras = cameraMetadata;
             }
@@ -1126,9 +1156,11 @@ public class AgentManager : MonoBehaviour
         this.activeAgentId = controlCommand.agentId;
 
 		if (agentManagerActions.Contains(controlCommand.action)) {
+            Debug.Log("AM Contained!");
             // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
 		} else {
+            Debug.Log("Not AM Contained!");
             // we only allow renderInstanceSegmentation to be flipped on
             // on a per step() basis, since by default the param is null
             // so we don't know if a request is meant to turn the param off
