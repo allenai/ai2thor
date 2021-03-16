@@ -555,7 +555,7 @@ def generate_quality_settings(ctx):
 
 def git_commit_comment():
     comment = (
-        subprocess.check_output("git log -n 1 --format=%s", shell=True)
+        subprocess.check_output("git log -n 1 --format=%B", shell=True)
         .decode("utf8")
         .strip()
     )
@@ -973,7 +973,7 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+            if build["branch"] in ["master", "demo-updates"] and '#webgl-deploy' in git_commit_comment():
                 ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
