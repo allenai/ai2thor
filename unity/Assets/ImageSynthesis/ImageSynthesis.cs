@@ -268,7 +268,6 @@ public class ImageSynthesis : MonoBehaviour {
 		return sb.ToString();
 	}
 
-
 	private string getObjectId(GameObject gameObject) {
 		// the object id is generated this way to handle the edge case
 		// where a non-simobject could get moved from its initial position 
@@ -285,57 +284,41 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 	}
 
-
-	public void OnSceneChange()
-	{
+	public void OnSceneChange() {
 		sentColorCorrespondence = false;
 		var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
 		colorIds = new Dictionary<Color, string> ();
 		var mpb = new MaterialPropertyBlock();
 
-		foreach (var r in renderers)
-		{
+		foreach (var r in renderers) {
 			// var layer = r.gameObject.layer;
 			// var tag = r.gameObject.tag;
 
 			string classTag = r.name;
 			string objTag = getObjectId(r.gameObject);
 
-			StructureObject so = r.gameObject.GetComponent<StructureObject> ();
-			if (so == null) 
-			{
-				so = r.gameObject.GetComponentInParent<StructureObject> ();
-			}
-
-			SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics> ();
-			if (sop == null) {
-				sop = r.gameObject.GetComponentInParent<SimObjPhysics> ();
-			}
+			StructureObject so = r.gameObject.GetComponentInParent<StructureObject>();
+			SimObjPhysics sop = r.gameObject.GetComponentInParent<SimObjPhysics>();
 
 			if (so != null) {
 				classTag = "" + so.WhatIsMyStructureObjectTag;
 				//objTag = so.gameObject.name;
 			} 
-			if (sop != null) 
-			{
+
+			if (sop != null) {
 				classTag = "" + sop.Type;
 				objTag = sop.ObjectID;
 			}
-
 
 			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
 			Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
 			capturePasses[0].camera.WorldToScreenPoint (r.bounds.center);
 
-			if (so != null || sop != null) 
-			{
+			if (so != null || sop != null) {
 				colorIds [objColor] = objTag;
 				colorIds [classColor] = classTag;
-			} 
-
-			else 
-			{
+			} else {
 				colorIds [objColor] = r.gameObject.name;
 			}
 

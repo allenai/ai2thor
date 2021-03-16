@@ -47,9 +47,13 @@ public static class I360Render
 			equirectangularConverter.SetFloat( paddingX, faceCameraDirection ? ( renderCam.transform.eulerAngles.y / 360f ) : 0f );
 			Graphics.Blit( cubemap, equirectangularTexture, equirectangularConverter );
 
-			RenderTexture.active = equirectangularTexture;
-			output = new Texture2D( equirectangularTexture.width, equirectangularTexture.height, TextureFormat.RGB24, false );
-			output.ReadPixels( new Rect( 0, 0, equirectangularTexture.width, equirectangularTexture.height ), 0, 0 );
+			Material instanceMaterial = new Material(Shader.Find("Hidden/UberReplacement"));
+			RenderTexture dst = RenderTexture.GetTemporary( cubemapSize, cubemapSize / 2, 0 );
+			Graphics.Blit(equirectangularTexture, dst, instanceMaterial);
+
+			RenderTexture.active = dst;
+			output = new Texture2D( dst.width, dst.height, TextureFormat.RGB24, false );
+			output.ReadPixels( new Rect( 0, 0, dst.width, dst.height ), 0, 0 );
 
 			return encodeAsJPEG ? InsertXMPIntoTexture2D_JPEG( output ) : InsertXMPIntoTexture2D_PNG( output );
 		}
