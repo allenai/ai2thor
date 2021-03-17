@@ -212,21 +212,42 @@ def test_reset():
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
     controller.stop()
 
+@pytest.mark.parametrize("controller", [wsgi_controller])
+def test_batch_wsgi(controller):
+    exception_message = None
+    try:
+        with controller.batch():
+            batch_event_1 = controller.step('RotateRight')
+    except ValueError as e:
+        exception_message = str(e)
+    
+    assert exception_message == 'batch can only be used with the FifoServer'
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_batch_nested(controller):
+    exception_message = None
+    try:
+        with controller.batch():
+            batch_event_1 = controller.step('RotateRight')
+            with controller.batch():
+                batch_event_2 = controller.step('RotateRight')
+    except RuntimeError as e:
+        exception_message = str(e)
+    
+    assert exception_message == 'nested batch blocks are not permitted'
+
 
 @pytest.mark.parametrize("controller", [fifo_controller])
 def test_batch(controller):
     event = controller.step('RotateRight')
     with controller.batch():
         batch_event_1 = controller.step('RotateRight')
-        with controller.batch():
-            batch_event_2 = controller.step('RotateRight')
-        batch_event_3 = controller.step('RotateRight')
+        batch_event_2 = controller.step('RotateRight')
 
     non_batch_event = controller.step('RotateRight')
 
     assert id(event.metadata["objects"]) == id(batch_event_1.metadata["objects"])
     assert id(event.metadata["objects"]) == id(batch_event_2.metadata["objects"])
-    assert id(event.metadata["objects"]) == id(batch_event_3.metadata["objects"])
     assert id(event.metadata["objects"]) != id(non_batch_event.metadata["objects"])
 
 @pytest.mark.parametrize("controller", [fifo_controller])
