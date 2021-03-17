@@ -50,6 +50,7 @@ namespace FifoServer {
                 byte[] header = new byte[headerLength];
                 clientPipe.Read(header, 0, header.Length);
                 FieldType fieldType = (FieldType)header[0];
+                UnityEngine.Debug.Log("MCS Header value: " + header[0] + " and FieldType: " + fieldType.ToString());
                 if (fieldType == FieldType.EndOfMessage) {
                         //Console.WriteLine("Got eom");
                     break;
