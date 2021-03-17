@@ -145,11 +145,17 @@ public class MCSMain : MonoBehaviour {
             ChangeCurrentScene(this.currentScene);
         }
 
+        // We should always have debug logs enabled in debug builds.
+        if (Debug.isDebugBuild) {
+            Debug.unityLogger.logEnabled = true;
+        }
+        else {
 #if ENABLE_DEBUG_LOGS
-        Debug.unityLogger.logEnabled = true;
+            Debug.unityLogger.logEnabled = true;
 #else
-        Debug.unityLogger.logEnabled = false;
+            Debug.unityLogger.logEnabled = false;
 #endif
+        }
 
 #if UNITY_EDITOR
         Debug.unityLogger.logEnabled = enableDebugLogsInEditor;
