@@ -819,6 +819,11 @@ class Controller(object):
         if (self.server_class != ai2thor.fifo_server.FifoServer):
             raise ValueError("batch can only be used with the FifoServer")
 
+        # we default fastActionEmit to true since it gets enabled by default within 
+        # the AgentManager
+        if not self.initialization_parameters.get('fastActionEmit', True):
+            raise ValueError("fastActionEmit must be enabled for batch actions")
+
         # prevent nesting 
         if hasattr(self, '_inner_batch_step'):
             raise RuntimeError("nested batch blocks are not permitted")

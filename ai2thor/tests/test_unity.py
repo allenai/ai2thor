@@ -212,6 +212,17 @@ def test_reset():
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
     controller.stop()
 
+def test_batch_disable_fast_action_emit():
+    fast_action_disabled_controller = build_controller(server_class=FifoServer, fastActionEmit=False)
+    exception_message = None
+    try:
+        with fast_action_disabled_controller.batch():
+            batch_event_1 = controller.step('RotateRight')
+    except ValueError as e:
+        exception_message = str(e)
+    
+    assert exception_message == 'fastActionEmit must be enabled for batch actions'
+
 @pytest.mark.parametrize("controller", [wsgi_controller])
 def test_batch_wsgi(controller):
     exception_message = None
