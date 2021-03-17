@@ -2,6 +2,7 @@
 import os
 import string
 import random
+import copy
 import json
 import pytest
 import warnings
@@ -13,6 +14,8 @@ from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 import glob
 import re
+
+TEST_SCENE = 'FloorPlan28'
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -31,19 +34,55 @@ class ThirdPartyCameraMetadata:
 
 
 def build_controller(**args):
-    default_args = dict(scene="FloorPlan28", local_build=True)
+    default_args = dict(scene=TEST_SCENE, local_build=True)
     default_args.update(args)
     # during a ci-build we will get a warning that we are using a commit_id for the
     # build instead of 'local'
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         c = Controller(**default_args)
+
+    # used for resetting
+    c._original_initialization_parameters = c.initialization_parameters
     return c
 
 
-wsgi_controller = build_controller(server_class=WsgiServer)
-fifo_controller = build_controller(server_class=FifoServer)
-stochastic_controller = build_controller(agentControllerType="stochastic")
+_wsgi_controller = build_controller(server_class=WsgiServer)
+_fifo_controller = build_controller(server_class=FifoServer)
+_stochastic_controller = build_controller(agentControllerType="stochastic")
+
+# This custom list is needed because fixtures don't
+# work with pytest.mark.parametrize and we want/need
+#  to used fixtures to reset controllers prior to being used within a test
+# open issue requesting this feature https://github.com/pytest-dev/pytest/issues/349
+class Controllers(list):
+
+    def __iter__(self):
+        for o in super().__iter__():
+            yield reset_controller(o)
+
+# resetting on each use so that each tests works with
+# the scene in a pristine state
+def reset_controller(controller):
+    controller.initialization_parameters = copy.deepcopy(controller._original_initialization_parameters)
+    controller.reset(TEST_SCENE)
+    return controller
+
+@pytest.fixture
+def wsgi_controller():
+    return reset_controller(_wsgi_controller)
+
+@pytest.fixture
+def stochastic_controller():
+    return reset_controller(_stochastic_controller)
+
+@pytest.fixture
+def fifo_controller():
+    return reset_controller(_fifo_controller)
+
+
+fifo_wsgi = Controllers([_fifo_controller, _wsgi_controller])
+fifo_wsgi_stoch = Controllers([_fifo_controller, _wsgi_controller, _stochastic_controller])
 
 BASE_FP28_POSITION = dict(
     x=-1.5,
@@ -61,7 +100,7 @@ BASE_FP28_LOCATION = dict(
 def teleport_to_base_location(controller: Controller):
     assert (
         controller.last_event.metadata["sceneName"].replace("_physics", "")
-        == "FloorPlan28"
+        == TEST_SCENE
     )
 
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
@@ -69,8 +108,9 @@ def teleport_to_base_location(controller: Controller):
 
 
 def teardown_module(module):
-    wsgi_controller.stop()
-    fifo_controller.stop()
+    _wsgi_controller.stop()
+    _fifo_controller.stop()
+    _stochastic_controller.stop()
 
 
 def assert_near(point1, point2, error_message=""):
@@ -81,21 +121,19 @@ def assert_near(point1, point2, error_message=""):
         )
 
 
-def test_stochastic_controller():
-    controller = build_controller(agentControllerType="stochastic")
-    controller.reset("FloorPlan28")
-    assert controller.last_event.metadata["lastActionSuccess"]
-    controller.stop()
+def test_stochastic_controller(stochastic_controller):
+    stochastic_controller.reset(TEST_SCENE)
+    assert stochastic_controller.last_event.metadata["lastActionSuccess"]
 
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
 # up with the same frame
-def test_multi_agent_with_third_party_camera():
-    controller = build_controller(server_class=FifoServer, agentCount=2)
+def test_multi_agent_with_third_party_camera(fifo_controller):
+    fifo_controller.reset(TEST_SCENE, agentCount=2)
     assert not np.all(
-        controller.last_event.events[1].frame == controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
     )
-    event = controller.step(
+    event = fifo_controller.step(
         dict(
             action="AddThirdPartyCamera",
             rotation=dict(x=0, y=0, z=90),
@@ -103,20 +141,18 @@ def test_multi_agent_with_third_party_camera():
         )
     )
     assert not np.all(
-        controller.last_event.events[1].frame == controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
     )
-    controller.stop()
 
 
 # Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
-def test_third_party_camera_with_image_synthesis():
-    controller = build_controller(
-        server_class=FifoServer,
+def test_third_party_camera_with_image_synthesis(fifo_controller):
+    fifo_controller.reset(TEST_SCENE,
         renderInstanceSegmentation=True,
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
-    event = controller.step(
+    event = fifo_controller.step(
         dict(
             action="AddThirdPartyCamera",
             rotation=dict(x=0, y=0, z=90),
@@ -127,41 +163,36 @@ def test_third_party_camera_with_image_synthesis():
     assert len(event.third_party_semantic_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1
     assert len(event.third_party_instance_segmentation_frames) == 1
-    controller.stop()
 
 
-def test_rectangle_aspect():
-    controller = build_controller(width=600, height=300)
-    controller.reset("FloorPlan28")
-    event = controller.step(dict(action="Initialize", gridSize=0.25))
+def test_rectangle_aspect(fifo_controller):
+
+    fifo_controller.reset(TEST_SCENE, width=600, height=300)
+    event = fifo_controller.step(dict(action="Initialize", gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
-    controller.stop()
 
 
-def test_small_aspect():
-    controller = build_controller(width=128, height=64)
-    controller.reset("FloorPlan28")
-    event = controller.step(dict(action="Initialize", gridSize=0.25))
+def test_small_aspect(fifo_controller):
+    fifo_controller.reset(TEST_SCENE, width=128, height=64)
+    event = fifo_controller.step(dict(action="Initialize", gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
-    controller.stop()
 
 
-def test_bot_deprecation():
-    controller = build_controller(agentMode="bot", width=128, height=64)
+def test_bot_deprecation(fifo_controller):
+    fifo_controller.reset(TEST_SCENE, agentMode='bot')
     assert (
-        controller.initialization_parameters["agentMode"].lower() == "locobot"
+        fifo_controller.initialization_parameters["agentMode"].lower() == "locobot"
     ), "bot should alias to locobot!"
-    controller.stop()
 
 
-def test_deprecated_segmentation_params():
+def test_deprecated_segmentation_params(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
-    controller = build_controller(
+    fifo_controller.reset(TEST_SCENE,
         renderObjectImage=True,
         renderClassImage=True,
     )
-    event = controller.last_event
+    event = fifo_controller.last_event
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
         assert event.class_segmentation_frame is event.semantic_segmentation_frame
@@ -171,14 +202,14 @@ def test_deprecated_segmentation_params():
         ), "renderObjectImage should still render instance_segmentation_frame"
 
 
-def test_deprecated_segmentation_params2():
+def test_deprecated_segmentation_params2(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
-    controller = build_controller(
+    fifo_controller.reset(TEST_SCENE,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
     )
-    event = controller.last_event
+    event = fifo_controller.last_event
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -189,12 +220,11 @@ def test_deprecated_segmentation_params2():
         ), "renderObjectImage should still render instance_segmentation_frame"
 
 
-def test_reset():
-    controller = build_controller()
+def test_reset(fifo_controller):
     width = 520
     height = 310
-    event = controller.reset(
-        scene="FloorPlan28", width=width, height=height, renderDepthImage=True
+    event = fifo_controller.reset(
+        scene=TEST_SCENE, width=width, height=height, renderDepthImage=True
     )
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
     assert event.depth_frame is not None, "depth frame should have rendered!"
@@ -205,20 +235,18 @@ def test_reset():
 
     width = 300
     height = 300
-    event = controller.reset(
-        scene="FloorPlan28", width=width, height=height, renderDepthImage=False
+    event = fifo_controller.reset(
+        scene=TEST_SCENE, width=width, height=height, renderDepthImage=False
     )
     assert event.depth_frame is None, "depth frame shouldn't have rendered!"
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
-    controller.stop()
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_fast_emit(controller):
-    event = controller.step(dict(action="RotateRight"))
-    event_fast_emit = controller.step(dict(action="TestFastEmit", rvalue="foo"))
-    event_no_fast_emit = controller.step(dict(action="LookUp"))
-    event_no_fast_emit_2 = controller.step(dict(action="RotateRight"))
+def test_fast_emit(fifo_controller):
+    event = fifo_controller.step(dict(action="RotateRight"))
+    event_fast_emit = fifo_controller.step(dict(action="TestFastEmit", rvalue="foo"))
+    event_no_fast_emit = fifo_controller.step(dict(action="LookUp"))
+    event_no_fast_emit_2 = fifo_controller.step(dict(action="RotateRight"))
 
     assert event.metadata["actionReturn"] is None
     assert event_fast_emit.metadata["actionReturn"] == "foo"
@@ -229,25 +257,24 @@ def test_fast_emit(controller):
     )
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_fifo_large_input(controller):
+def test_fifo_large_input(fifo_controller):
     random_string = "".join(
         random.choice(string.ascii_letters) for i in range(1024 * 16)
     )
-    event = controller.step(dict(action="TestActionReflectParam", rvalue=random_string))
+    event = fifo_controller.step(dict(action="TestActionReflectParam", rvalue=random_string))
     assert event.metadata["actionReturn"] == random_string
 
 
-def test_fast_emit_disabled():
-    slow_controller = build_controller(server_class=FifoServer, fastActionEmit=False)
+def test_fast_emit_disabled(fifo_controller):
+    slow_controller = fifo_controller
+    slow_controller.reset(TEST_SCENE, fastActionEmit=False)
     event = slow_controller.step(dict(action="RotateRight"))
     event_fast_emit = slow_controller.step(dict(action="TestFastEmit", rvalue="foo"))
     # assert that when actionFastEmit is off that the objects are different
     assert id(event.metadata["objects"]) != id(event_fast_emit.metadata["objects"])
-    slow_controller.stop()
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_lookdown(controller):
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
     position = controller.last_event.metadata["agent"]["position"]
@@ -263,7 +290,7 @@ def test_lookdown(controller):
     assert round(e.metadata["agent"]["cameraHorizon"]) == 60
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_no_leak_params(controller):
 
     action = dict(action="RotateLook", rotation=0, horizon=0)
@@ -271,7 +298,7 @@ def test_no_leak_params(controller):
     assert "sequenceId" not in action
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_target_invocation_exception(controller):
     # TargetInvocationException is raised when short circuiting failures occur
     # on the Unity side. It often occurs when invalid arguments are used.
@@ -283,7 +310,7 @@ def test_target_invocation_exception(controller):
 
 
 @pytest.mark.parametrize(
-    "controller", [wsgi_controller, fifo_controller, stochastic_controller]
+    "controller", fifo_wsgi_stoch
 )
 def test_lookup(controller):
 
@@ -299,7 +326,7 @@ def test_lookup(controller):
     assert e.metadata["agent"]["cameraHorizon"] == -30.0
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_left(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -315,7 +342,7 @@ def test_rotate_left(controller):
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_simobj_filter(controller):
 
     objects = controller.last_event.metadata["objects"]
@@ -334,7 +361,7 @@ def test_simobj_filter(controller):
     assert unfiltered_object_ids == reset_filtered_object_ids
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_add_third_party_camera(controller):
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
@@ -395,14 +422,12 @@ def test_add_third_party_camera(controller):
     )
 
 
-def test_update_third_party_camera():
-    controller = build_controller(server_class=FifoServer)
-
+def test_update_third_party_camera(fifo_controller):
     # add a new camera
     expectedPosition = dict(x=1.2, y=2.3, z=3.4)
     expectedRotation = dict(x=30, y=40, z=50)
     expectedFieldOfView = 45.0
-    e = controller.step(
+    e = fifo_controller.step(
         dict(
             action=Actions.AddThirdPartyCamera,
             position=expectedPosition,
@@ -411,14 +436,14 @@ def test_update_third_party_camera():
         )
     )
     assert (
-        len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1
+        len(fifo_controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1
     ), "there should be 1 camera"
 
     # update camera pose fully
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
     expectedInitialFieldOfView = 45.0
-    e = controller.step(
+    e = fifo_controller.step(
         dict(
             action=Actions.UpdateThirdPartyCamera,
             thirdPartyCameraId=0,
@@ -445,7 +470,7 @@ def test_update_third_party_camera():
     changeFOV = 55.0
     expectedPosition2 = dict(x=3.2, z=5)
     expectedRotation2 = dict(y=90)
-    e = controller.step(
+    e = fifo_controller.step(
         action=Actions.UpdateThirdPartyCamera,
         thirdPartyCameraId=0,
         fieldOfView=changeFOV,
@@ -471,7 +496,7 @@ def test_update_third_party_camera():
     )
 
     for fov in [-1, 181, 0]:
-        e = controller.step(
+        e = fifo_controller.step(
             dict(
                 action=Actions.UpdateThirdPartyCamera,
                 thirdPartyCameraId=0,
@@ -491,10 +516,9 @@ def test_update_third_party_camera():
             expectedRotation,
             "rotation should not have updated",
         )
-    controller.stop()
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_look(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -509,7 +533,7 @@ def test_rotate_look(controller):
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_right(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -525,7 +549,7 @@ def test_rotate_right(controller):
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open(controller):
     objects = controller.last_event.metadata["objects"]
     obj_to_open = next(obj for obj in objects if obj["objectType"] == "Fridge")
@@ -597,8 +621,8 @@ def test_open(controller):
     assert not obj["isOpen"], "CloseObject should report isOpen==false!"
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_find_ambiguous(controller):
+def test_action_dispatch(fifo_controller):
+    controller = fifo_controller
     event = controller.step(
         dict(action="TestActionDispatchFindAmbiguous"),
         typeName="UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController",
@@ -613,10 +637,8 @@ def test_action_dispatch_find_ambiguous(controller):
     )
     assert sorted(event.metadata["actionReturn"]) == known_ambig
 
-
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_find_ambiguous_stochastic(controller):
-    event = controller.step(
+def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchFindAmbiguous"),
         typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
     )
@@ -631,12 +653,11 @@ def test_action_dispatch_find_ambiguous_stochastic(controller):
     assert sorted(event.metadata["actionReturn"]) == known_ambig
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_server_action_ambiguous2(controller):
+def test_action_dispatch_server_action_ambiguous2(fifo_controller):
     exception_thrown = False
     exception_message = None
     try:
-        controller.step("TestActionDispatchSAAmbig2")
+        fifo_controller.step("TestActionDispatchSAAmbig2")
     except ValueError as e:
         exception_thrown = True
         exception_message = str(e)
@@ -648,12 +669,11 @@ def test_action_dispatch_server_action_ambiguous2(controller):
     )
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_server_action_ambiguous(controller):
+def test_action_dispatch_server_action_ambiguous(fifo_controller):
     exception_thrown = False
     exception_message = None
     try:
-        controller.step("TestActionDispatchSAAmbig")
+        fifo_controller.step("TestActionDispatchSAAmbig")
     except ValueError as e:
         exception_thrown = True
         exception_message = str(e)
@@ -665,9 +685,8 @@ def test_action_dispatch_server_action_ambiguous(controller):
     )
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_find_conflicts_stochastic(controller):
-    event = controller.step(
+def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchFindConflicts"),
         typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
     )
@@ -677,9 +696,8 @@ def test_action_dispatch_find_conflicts_stochastic(controller):
     assert event.metadata["actionReturn"] == known_conflicts
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_action_dispatch_find_conflicts_physics(controller):
-    event = controller.step(
+def test_action_dispatch_find_conflicts_physics(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchFindConflicts"),
         typeName="UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController",
     )
@@ -689,92 +707,82 @@ def test_action_dispatch_find_conflicts_physics(controller):
     assert event.metadata["actionReturn"] == known_conflicts
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_dispatch_missing_args(controller):
+def test_action_dispatch_missing_args(fifo_controller):
     caught_exception = False
     try:
-        event = controller.step(dict(action="TestActionDispatchNoop", param6="foo"))
+        event = fifo_controller.step(dict(action="TestActionDispatchNoop", param6="foo"))
         print(event.metadata["actionReturn"])
     except ValueError as e:
         caught_exception = True
     assert caught_exception
-    assert controller.last_event.metadata["errorCode"] == "MissingArguments"
+    assert fifo_controller.last_event.metadata["errorCode"] == "MissingArguments"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_dispatch_invalid_action(controller):
+def test_action_dispatch_invalid_action(fifo_controller):
     caught_exception = False
     try:
-        event = controller.step(dict(action="TestActionDispatchNoopFoo"))
+        event = fifo_controller.step(dict(action="TestActionDispatchNoopFoo"))
     except ValueError as e:
         caught_exception = True
     assert caught_exception
-    assert controller.last_event.metadata["errorCode"] == "InvalidAction"
+    assert fifo_controller.last_event.metadata["errorCode"] == "InvalidAction"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_dispatch_empty(controller):
-    event = controller.step(dict(action="TestActionDispatchNoop"))
+def test_action_dispatch_empty(fifo_controller):
+    event = fifo_controller.step(dict(action="TestActionDispatchNoop"))
     assert event.metadata["actionReturn"] == "emptyargs"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_one_param(controller):
-    event = controller.step(dict(action="TestActionDispatchNoop", param1=True))
+def test_action_disptatch_one_param(fifo_controller):
+    event = fifo_controller.step(dict(action="TestActionDispatchNoop", param1=True))
     assert event.metadata["actionReturn"] == "param1"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_two_param(controller):
-    event = controller.step(
+def test_action_disptatch_two_param(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchNoop", param1=True, param2=False)
     )
     assert event.metadata["actionReturn"] == "param1 param2"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_two_param_with_default(controller):
-    event = controller.step(
+def test_action_disptatch_two_param_with_default(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchNoop2", param3=True, param4="foobar")
     )
     assert event.metadata["actionReturn"] == "param3 param4/default foobar"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_two_param_with_default_empty(controller):
-    event = controller.step(dict(action="TestActionDispatchNoop2", param3=True))
+def test_action_disptatch_two_param_with_default_empty(fifo_controller):
+    event = fifo_controller.step(dict(action="TestActionDispatchNoop2", param3=True))
     assert event.metadata["actionReturn"] == "param3 param4/default foo"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_serveraction_default(controller):
-    event = controller.step(dict(action="TestActionDispatchNoopServerAction"))
+def test_action_disptatch_serveraction_default(fifo_controller):
+    event = fifo_controller.step(dict(action="TestActionDispatchNoopServerAction"))
     assert event.metadata["actionReturn"] == "serveraction"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_serveraction_with_object_id(controller):
-    event = controller.step(
+def test_action_disptatch_serveraction_with_object_id(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchNoopServerAction", objectId="candle|1|2|3")
     )
     assert event.metadata["actionReturn"] == "serveraction"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_all_default(controller):
-    event = controller.step(dict(action="TestActionDispatchNoopAllDefault"))
+def test_action_disptatch_all_default(fifo_controller):
+    event = fifo_controller.step(dict(action="TestActionDispatchNoopAllDefault"))
     assert event.metadata["actionReturn"] == "alldefault"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
-def test_action_disptatch_some_default(controller):
-    event = controller.step(
+def test_action_disptatch_some_default(fifo_controller):
+    event = fifo_controller.step(
         dict(action="TestActionDispatchNoopAllDefault2", param12=9.0)
     )
     assert event.metadata["actionReturn"] == "somedefault"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveahead(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead"), raise_for_failure=True)
@@ -782,7 +790,7 @@ def test_moveahead(controller):
     assert_near(position, dict(x=-1.5, z=-1.25, y=0.901))
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveback(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveBack"), raise_for_failure=True)
@@ -790,7 +798,7 @@ def test_moveback(controller):
     assert_near(position, dict(x=-1.5, z=-1.75, y=0.900998652))
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveleft(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveLeft"), raise_for_failure=True)
@@ -798,7 +806,7 @@ def test_moveleft(controller):
     assert_near(position, dict(x=-1.75, z=-1.5, y=0.901))
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveright(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveRight"), raise_for_failure=True)
@@ -806,7 +814,7 @@ def test_moveright(controller):
     assert_near(position, dict(x=-1.25, z=-1.5, y=0.901))
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveahead_mag(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead", moveMagnitude=0.5), raise_for_failure=True)
@@ -814,14 +822,14 @@ def test_moveahead_mag(controller):
     assert_near(position, dict(x=-1.5, z=-1, y=0.9009983))
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_moveahead_fail(controller):
     teleport_to_base_location(controller)
     controller.step(dict(action="MoveAhead", moveMagnitude=5.0))
     assert not controller.last_event.metadata["lastActionSuccess"]
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_jsonschema_metadata(controller):
     event = controller.step(dict(action="Pass"))
     with open(os.path.join(TESTS_DATA_DIR, "metadata-schema.json")) as f:
@@ -830,7 +838,7 @@ def test_jsonschema_metadata(controller):
     jsonschema.validate(instance=event.metadata, schema=schema)
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_scenes_in_build(controller):
     scenes = set()
     for g in glob.glob("unity/Assets/Scenes/*.unity"):
@@ -843,7 +851,7 @@ def test_get_scenes_in_build(controller):
     assert len(diff) == 0, "scenes in build diff: %s" % diff
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_change_resolution(controller):
     event = controller.step(dict(action="Pass"), raise_for_failure=True)
     assert event.frame.shape == (300, 300, 3)
@@ -857,13 +865,7 @@ def test_change_resolution(controller):
         dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True
     )
 
-
-###################################################
-##### RESETTING WILL BE DONE AFTER THIS POINT #####
-###################################################
-
-
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_teleport(controller):
     # Checking y coordinate adjustment works
     controller.step(
@@ -1005,10 +1007,8 @@ def test_teleport(controller):
     controller.reset(agentMode="default")
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_interactable_poses(controller):
-
-    controller.reset("FloorPlan28")
     fridgeId = next(
         obj["objectId"]
         for obj in controller.last_event.metadata["objects"]
@@ -1107,9 +1107,9 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_object_in_frame(controller):
-    controller.reset(scene="FloorPlan28", agentMode="default")
+    controller.reset(scene=TEST_SCENE, agentMode="default")
     event = controller.step(
         action="TeleportFull",
         position=dict(x=-1, y=0.900998235, z=-1.25),
