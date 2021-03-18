@@ -88,8 +88,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return hit.point + new Vector3(0, yOffset, 0);
 		}
 
-        public void HideHUD()
-        {
+        public void HideHUD() {
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(false);
             }
@@ -102,56 +101,52 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void SetScroll2DEnabled(bool enabled)
-        {
+        public void SetScroll2DEnabled(bool enabled) {
             this.scroll2DEnabled = enabled;
         }
 
-        public void OnEnable()
-        {
-            
-                FPSEnabled = true;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-                
-                InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
-                InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-                if (InputMode_Text) {
-                    InputMode_Text.GetComponent<Text>().text = "FPS Mode";
-                }
+        public void OnEnable() {
+            FPSEnabled = true;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
 
+            InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode";
+            }
 
-                Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-  
-                Debug_Canvas.GetComponent<Canvas>().enabled = true;
-              
+            Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
+
+            Debug_Canvas.GetComponent<Canvas>().enabled = true;
         }
 
-        public void OnDisable()
-        {
+        public void OnDisable() {
             DisableMouseControl();
             //  if (InputFieldObj) {
             //     InputFieldObj.SetActive(true);
             //  }
         }
 
-        public void EnableMouseControl()
-        {
+        public void EnableMouseControl() {
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode (mouse free)";
+            }
             FPSEnabled = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        public void DisableMouseControl()
-        {
-            Debug.Log("Disabled mouse");
+        public void DisableMouseControl() {
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode";
+            }
             FPSEnabled = false;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
 
-        private void DebugKeyboardControls()
-		{
+        private void DebugKeyboardControls() {
             if (InputFieldObj != null) {
                 InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
                 if (inField != null) {
@@ -163,36 +158,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
-			//swap between text input and not
-			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
-            {
-				//Switch to Text Mode
-                if (FPSEnabled)
-                {
-                    if (InputMode_Text) {
-                        InputMode_Text.GetComponent<Text>().text = "FPS Mode";
-                    }
-                    FPSEnabled = false;
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
-                    return;
-                }
-                else
-                 {               
-                    if (InputMode_Text) {
-					    InputMode_Text.GetComponent<Text>().text = "FPS Mode (mouse free)";
-                    }
-                    FPSEnabled = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-                    return;
-                }
 
-            }
+			//swap between text input and not
+            #if !UNITY_WEBGL
+                if (
+                    Input.GetKeyDown(KeyCode.BackQuote)
+                    || Input.GetKeyDown(KeyCode.Escape)
+                ) {
+                    //Switch to Text Mode
+                    if (FPSEnabled) {
+                        DisableMouseControl();
+                        return;
+                    } else {               
+                        EnableMouseControl();
+                        return;
+                    }
+                }
+            #endif
 
             // 1D Scroll for hand movement
-            if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null)
-            {
+            if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null) {
                 var scrollAmount = Input.GetAxis("Mouse ScrollWheel");
 
                 var eps = 1e-6;
@@ -205,33 +190,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     
                     this.PhysicsController.ProcessControlCommand(action);
                 }
-
-            }
-            
-
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                var action = new ServerAction
-                {
-                    action = "InitialRandomSpawn",
-                    randomSeed = 0,
-                    forceVisible = false,
-                    numPlacementAttempts = 5,
-                    placeStationary = true
-                };
-                PhysicsController.ProcessControlCommand(action);
-            }
-
-            if(Input.GetKey(KeyCode.Space))
-            {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-            }
-
-            if(Input.GetKeyUp(KeyCode.Space))
-            {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
             }
 		}
 
