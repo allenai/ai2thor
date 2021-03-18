@@ -120,7 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public bool ReadyForCommand {
             get {
-                return this.agentState == AgentState.Emit;
+                return this.agentState == AgentState.Emit || this.agentState == AgentState.ActionComplete;
             }
 
         }

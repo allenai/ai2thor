@@ -146,9 +146,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
+            #if UNITY_WEBGL
+                // For object highlight shader to properly work, all visible objects should be populated not conditioned
+                // on the objectid of a completed action
+                VisibleSimObjPhysics = VisibleSimObjs(false);
+            #endif
             if (this.agentState == AgentState.ActionComplete) {
                 ServerAction action = new ServerAction();
-                VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+                #if UNITY_EDITOR
+                    VisibleSimObjPhysics = VisibleSimObjs(action);
+                #endif
+                
             }
 
             #endif
@@ -4936,6 +4944,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
+                Debug.Log($"Hand colliding {isHandObjectColliding(false)} tr {isHandObjectColliding(true)}");
                 if (!action.forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
@@ -4976,17 +4985,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (action.autoSimulation) 
                         {
                             StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } 
-
+                        }
                         else 
                         {
                             StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                         }
                     }
 
-                    else
-                    actionFinished(true);
-
+                    else {
+                        actionFinished(true);
+                    }
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return;
@@ -5011,10 +5019,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject go = ItemInHand;
             DropHandObject(action);
-            if (this.lastActionSuccess) {
+            Debug.Log($"Last action {this.lastActionSuccess} err {errorMessage}");
+            //if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-            }
+            //}
 
         }
 
