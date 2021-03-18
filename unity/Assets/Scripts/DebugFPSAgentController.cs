@@ -265,20 +265,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     var eps = 1e-6;
                     if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps)
                     {
-                        // ServerAction action = new ServerAction
-                        // {
-                        //     action = "MoveHandDelta",
-                        //     x = scrollAmount.x * 0.05f,
-                        //     z = scrollAmount.y * -0.05f,
-                        //     y = 0,
-                        //     forceVisible = false
-                        // };
-                        // dynamic action = new JObject();
-                        // action.action = "MoveHandDelta";
-                        // action.x = scrollAmount.x * 0.05f;
-                        // action.z = scrollAmount.y * -0.05f;
-                        // action.y = 0.0f;
-
                         // Actioned called through webGL, using dynamic not supported by IL2CPP
                         var action = new Dictionary<string, object>() {
                             {"action", "MoveHandDelta"},

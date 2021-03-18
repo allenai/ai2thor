@@ -4944,7 +4944,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                Debug.Log($"Hand colliding {isHandObjectColliding(false)} tr {isHandObjectColliding(true)}");
                 if (!action.forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
@@ -5019,7 +5018,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject go = ItemInHand;
             DropHandObject(action);
-            Debug.Log($"Last action {this.lastActionSuccess} err {errorMessage}");
+            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
+            // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
             //if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
