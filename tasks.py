@@ -17,7 +17,7 @@ import multiprocessing
 import io
 import platform
 import ai2thor.build
-from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET, PYPI_S3_BUCKET
 import logging
 
 logger = logging.getLogger()
@@ -584,12 +584,12 @@ def push_pip_commit(context):
     import glob
     commit_id = git_commit_id()
     s3 = boto3.resource("s3")
-    for g in glob.glob('dist/ai2thor-0.0.0+%s*' % commit_id):
+    for g in glob.glob('dist/ai2thor-0+%s*' % commit_id):
         acl = "public-read"
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(PUBLIC_S3_BUCKET, os.path.join('pip', pip_name)).put(Body=f, ACL=acl)
+            s3.Object(PYPI_S3_BUCKET, os.path.join('ai2thor', pip_name)).put(Body=f, ACL=acl)
 
 
 @task
@@ -603,7 +603,7 @@ def build_pip_commit(context):
     generate_quality_settings(context)
 
     # must use this form to create valid PEP440 version specifier
-    version = "0.0.0+" + commit_id
+    version = "0+" + commit_id
 
     with open("ai2thor/_builds.py", "w") as fi:
         fi.write("# GENERATED FILE - DO NOT EDIT\n")
@@ -986,6 +986,7 @@ def ci_build(context):
 
             build_pip_commit(context)
             push_pip_commit(context)
+            generate_pypi_index(context)
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
@@ -3229,4 +3230,30 @@ def generate_msgpack_resolver(task):
         with open(g, "w") as f:
             f.write(source_code)
 
+@task
+def generate_pypi_index(context):
+    s3 = boto3.resource("s3")
+    root_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    <a href="/ai2thor/index.html">/ai2thor/</a><br>
+  </BODY>
+</HTML>
+"""
+    s3.Object(PYPI_S3_BUCKET, 'index.html').put(Body=root_index, ACL='public-read', ContentType='text/html')
+    objects = list_objects_with_metadata(PYPI_S3_BUCKET)
+    links = []
+    for k,v in objects.items():
+        if k.split('/')[-1] != 'index.html':
+            links.append('<a href="/%s">/%s</a><br>' % (k,k))
+    ai2thor_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    %s
+  </BODY>
+</HTML>
+""" % "\n".join(links)
+    s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
