@@ -42,6 +42,11 @@ def build_controller(**args):
         warnings.simplefilter("ignore")
         c = Controller(**default_args)
 
+    # allow tests to indicate its okay to skip resetting
+    # this makes tests run faster in the event a test has not mutated 
+    # environment
+    c._skip_reset = False
+
     # used for resetting
     c._original_initialization_parameters = c.initialization_parameters
     return c
@@ -65,7 +70,11 @@ class Controllers(list):
 # the scene in a pristine state
 def reset_controller(controller):
     controller.initialization_parameters = copy.deepcopy(controller._original_initialization_parameters)
-    controller.reset(TEST_SCENE)
+    if not controller._skip_reset:
+        controller.reset(TEST_SCENE)
+
+    controller._skip_reset = False
+
     return controller
 
 @pytest.fixture
@@ -636,6 +645,7 @@ def test_action_dispatch(fifo_controller):
         ]
     )
     assert sorted(event.metadata["actionReturn"]) == known_ambig
+    fifo_controller._skip_reset = True
 
 def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
     event = fifo_controller.step(
@@ -651,6 +661,7 @@ def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
         ]
     )
     assert sorted(event.metadata["actionReturn"]) == known_ambig
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_server_action_ambiguous2(fifo_controller):
@@ -667,6 +678,7 @@ def test_action_dispatch_server_action_ambiguous2(fifo_controller):
         "Ambiguous action: TestActionDispatchSAAmbig2 Signature match found in the same class"
         == exception_message
     )
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_server_action_ambiguous(fifo_controller):
@@ -683,6 +695,7 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
         exception_message
         == "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
     )
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
@@ -694,6 +707,7 @@ def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_find_conflicts_physics(fifo_controller):
@@ -705,6 +719,7 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_missing_args(fifo_controller):
@@ -716,6 +731,7 @@ def test_action_dispatch_missing_args(fifo_controller):
         caught_exception = True
     assert caught_exception
     assert fifo_controller.last_event.metadata["errorCode"] == "MissingArguments"
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_invalid_action(fifo_controller):
@@ -726,16 +742,19 @@ def test_action_dispatch_invalid_action(fifo_controller):
         caught_exception = True
     assert caught_exception
     assert fifo_controller.last_event.metadata["errorCode"] == "InvalidAction"
+    fifo_controller._skip_reset = True
 
 
 def test_action_dispatch_empty(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop"))
     assert event.metadata["actionReturn"] == "emptyargs"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_one_param(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop", param1=True))
     assert event.metadata["actionReturn"] == "param1"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_two_param(fifo_controller):
@@ -743,6 +762,7 @@ def test_action_disptatch_two_param(fifo_controller):
         dict(action="TestActionDispatchNoop", param1=True, param2=False)
     )
     assert event.metadata["actionReturn"] == "param1 param2"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_two_param_with_default(fifo_controller):
@@ -750,16 +770,19 @@ def test_action_disptatch_two_param_with_default(fifo_controller):
         dict(action="TestActionDispatchNoop2", param3=True, param4="foobar")
     )
     assert event.metadata["actionReturn"] == "param3 param4/default foobar"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_two_param_with_default_empty(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop2", param3=True))
     assert event.metadata["actionReturn"] == "param3 param4/default foo"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_serveraction_default(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoopServerAction"))
     assert event.metadata["actionReturn"] == "serveraction"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_serveraction_with_object_id(fifo_controller):
@@ -767,11 +790,13 @@ def test_action_disptatch_serveraction_with_object_id(fifo_controller):
         dict(action="TestActionDispatchNoopServerAction", objectId="candle|1|2|3")
     )
     assert event.metadata["actionReturn"] == "serveraction"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_all_default(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoopAllDefault"))
     assert event.metadata["actionReturn"] == "alldefault"
+    fifo_controller._skip_reset = True
 
 
 def test_action_disptatch_some_default(fifo_controller):
@@ -779,6 +804,7 @@ def test_action_disptatch_some_default(fifo_controller):
         dict(action="TestActionDispatchNoopAllDefault2", param12=9.0)
     )
     assert event.metadata["actionReturn"] == "somedefault"
+    fifo_controller._skip_reset = True
 
 
 
@@ -836,6 +862,7 @@ def test_jsonschema_metadata(controller):
         schema = json.loads(f.read())
 
     jsonschema.validate(instance=event.metadata, schema=schema)
+    controller._skip_reset = True
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -849,6 +876,7 @@ def test_get_scenes_in_build(controller):
     # not testing for private scenes
     diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
+    controller._skip_reset = True
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
