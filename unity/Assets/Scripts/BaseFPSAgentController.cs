@@ -710,6 +710,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #endif
 
 			agentManager.setReadyToEmit(true);
+
+#if RECORD_SERVERACTIONS
+			MCSServerActionRecorder.Instance.RecordAction(controlCommand);
+#endif
 		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
