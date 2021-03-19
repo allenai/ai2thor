@@ -3680,6 +3680,55 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void Capture360(int width, string imageType = "_img") {
+            var validTypes = new string[] {
+                "_img",
+                "_depth",
+                "_id",
+                "_class",
+                "_normals"
+            };
+            if (!validTypes.Contains(imageType)) {
+                errorMessage = $"Invalid imageType '{imageType}'. Valid imageType values are: {string.Join(",", validTypes)}.";
+                actionFinished(false);
+                return;
+            }
+            var imageSynth = FindObjectOfType<ImageSynthesis>();
+            var camera = m_Camera;
+            // Getting segmentation depends on imageSynthesis being active
+            if (imageType != validTypes[0] && (imageSynth == null || !imageSynth.enabled)) {
+                errorMessage = $"Rendering for '{imageType}' is disabled. Call initialize with it's respective enable variable: 'renderDepthImage', 'renderInstanceSegmentation', 'renderSemanticSegmentation, 'renderNormalsImage' set to true";
+                actionFinished(false);
+                return;
+            }
+            
+            if (imageSynth.enabled) {
+                camera = imageSynth.GetCapturePassCamera(imageType);
+            }
+            
+            byte[] bytes = I360Render.Capture(
+                width: width,
+                encodeAsJPEG: true,
+                renderCam: camera,
+                faceCameraDirection: true
+            );
+
+            actionFinishedEmit(success: true, actionReturn: bytes);
+        }
+
+        public void Capture360_old(int width) {
+            byte[] bytes = I360Render.Capture(
+                width: width,
+                encodeAsJPEG: true,
+                renderCam: m_Camera,
+                faceCameraDirection: true
+            );
+
+            actionFinishedEmit(success: true, actionReturn: bytes);
+        }
+
+        //---- LIFECYCLE FUNCTIONS ----
+
         public void OnTriggerStay(Collider other)
         {
             if(other.CompareTag("HighFriction"))
@@ -3739,6 +3788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         #endif
 
+        //---- TESTS ----
         public void TestActionDispatchSAAmbig2(float foo, bool def=false) {
             actionFinished(true);
         }

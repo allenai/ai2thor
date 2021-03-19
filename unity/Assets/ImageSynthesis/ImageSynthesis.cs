@@ -19,42 +19,53 @@ using System.Collections.Generic;
 
 [RequireComponent (typeof(Camera))]
 public class ImageSynthesis : MonoBehaviour {
+    // pass configuration
+    private CapturePass[] capturePasses = new CapturePass[] {
+        new CapturePass() { name = "_img" },
+        new CapturePass() { name = "_depth" },
+        new CapturePass() { name = "_id", supportsAntialiasing = false },
+        new CapturePass() { name = "_class", supportsAntialiasing = false },
+        new CapturePass() { name = "_normals"},
 
-	// pass configuration
-	private CapturePass[] capturePasses = new CapturePass[] {
-		new CapturePass() { name = "_img" },
-		new CapturePass() { name = "_depth" },
-		new CapturePass() { name = "_id", supportsAntialiasing = false },
-		new CapturePass() { name = "_class", supportsAntialiasing = false },
-		new CapturePass() { name = "_normals"},
-		new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+        // (see issue with Motion Vectors in @KNOWN ISSUES)
+        new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true },
+    };
 
+    struct CapturePass {
+        // configuration
+        public string name;
+        public bool supportsAntialiasing;
+        public bool needsRescale;
+        public CapturePass(string name_) {
+            name = name_;
+            supportsAntialiasing = true;
+            needsRescale = false;
+            camera = null;
+        }
 
-		//new CapturePass() { name = "_position" },
+        // impl
+        public Camera camera;
+    };
 
-	};
+    public bool hasCapturePass(string name) {
+        for (int i = 0; i < capturePasses.Length; i++) {
+            if (capturePasses[i].name == name) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	struct CapturePass {
-		// configuration
-		public string name;
-		public bool supportsAntialiasing;
-		public bool needsRescale;
-		public CapturePass(string name_) { name = name_; supportsAntialiasing = true; needsRescale = false; camera = null; }
-
-		// impl
-		public Camera camera;
-	};
-
-	public bool hasCapturePass(string name) {
-		for (int i = 0; i < capturePasses.Length; i++) {
-			if (capturePasses[i].name == name) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private Shader uberReplacementShader;
+    public Camera GetCapturePassCamera(string name) {
+        for (int i = 0; i < capturePasses.Length; i++) {
+            if (capturePasses[i].name == name) {
+                return capturePasses[i].camera;
+            }
+        }
+        return null;
+    }
+    
+    private Shader uberReplacementShader;
     private Shader opticalFlowShader;
     private Shader depthShader;
 	//public Shader positionShader;
