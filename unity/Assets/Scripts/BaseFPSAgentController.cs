@@ -770,18 +770,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         /**
-         * Returns true if the current scene is a RoboTHOR scene, false otherwise.
-         */
-        protected bool insideRoboTHOR() {
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            return sceneName.Contains("Train") | sceneName.Contains("Val");
-        }
-
-        /**
          * @param fromMultiplier is the randomed lower bound that the light intensity is multiplied by.
          * @param toMultiplier is the randomed upper bound that the light intensity is multiplied by.
          * @param synchronized denotes if all lights should be multiplied by the same randomized
-         *        intensity, or if each light should get its own randomized intensity.
+         *        intensity and be randomized to the same color. When false, each lighting object gets
+                  its own independent randomized intensity and randomized color.
+         * @param changeColor specifies if the color of the light should be randomized, or if only
+                  its intensity should change.
          */
         public void RandomizeLighting(
             float fromMultiplier = 0.5f,
