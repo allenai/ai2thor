@@ -56,6 +56,15 @@ public class ImageSynthesis : MonoBehaviour {
         }
         return false;
     }
+
+    public Camera GetCapturePassCamera(string name) {
+        for (int i = 0; i < capturePasses.Length; i++) {
+            if (capturePasses[i].name == name) {
+                return capturePasses[i].camera;
+            }
+        }
+        return null;
+    }
     
     private Shader uberReplacementShader;
     private Shader opticalFlowShader;

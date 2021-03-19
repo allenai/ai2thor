@@ -7,6 +7,9 @@ using System.Linq;
 using UnityEditor;
 using Newtonsoft.Json.Linq;
 
+using System.IO;
+
+using System.Runtime.Serialization.Formatters;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -3429,6 +3432,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     } 
+                    case "360": 
+                    {
+                        dynamic action = new JObject();
+                        action.action = "Capture360";
+                        action.width = 1024;
+                        
+                        action.imageType = "_img";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        if (CurrentActiveController().actionReturn != null) {
+                            Debug.Log(string.Join(",", ObjectToByteArray(CurrentActiveController().actionReturn).Take(100).Select(x => x.ToString())));
+                            File.WriteAllBytes("test.jpeg", ObjectToByteArray(CurrentActiveController().actionReturn));
+                        }
+                        else {
+                            Debug.LogError("Null capture");
+                        }
+                        
+                        break;
+                    }
 
 				default:
                     {   
@@ -3513,6 +3534,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 #endif
+public static byte[] ObjectToByteArray(object obj)
+{
+    var bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+    using (var ms = new MemoryStream())
+    {
+        bf.Serialize(ms, obj);
+        return ms.ToArray();
+    }
+}
 
 #if UNITY_EDITOR
 

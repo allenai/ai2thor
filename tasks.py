@@ -3229,4 +3229,27 @@ def generate_msgpack_resolver(task):
         with open(g, "w") as f:
             f.write(source_code)
 
+@task
+def test_360_capture(ctx, width=128, scene="FloorPlan1_physics", image_type="_img", local_build=False):
 
+    from ai2thor.controller import Controller
+    from PIL import Image
+    import io
+
+    controller = Controller(
+        scene=scene,
+        local_build=local_build,
+        renderDepthImage=True,
+        renderInstanceSegmentation=True,
+        renderSemanticSegmentation=True,
+        renderNormalsImage=True,
+        makeAgentsVisible=False
+    )
+
+    event = controller.step(action="Capture360", width=width, imageType=image_type)
+    image_bytes = event.metadata['actionReturn']
+    print(event.metadata['lastActionSuccess'])
+    print(event.metadata['errorMessage'])
+    image = Image.open(io.BytesIO(image_bytes))
+    image.save("pano.jpeg")
+    print(event.color_to_object_id)
