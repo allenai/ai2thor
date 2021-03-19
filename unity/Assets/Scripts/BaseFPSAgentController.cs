@@ -79,6 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
 
+        private Dictionary<string, Dictionary<string, object>> originalLightingValues = null;
 
         public AgentState agentState = AgentState.Emit;
 
@@ -553,6 +554,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.visibilityScheme = action.GetVisibilityScheme();
+            this.originalLightingValues = null;
         }
 
         public void SetAgentMode(string mode) {
@@ -765,6 +767,105 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetColors();
             actionFinished(true);
+        }
+
+        /**
+         * Returns true if the current scene is a RoboTHOR scene, false otherwise.
+         */
+        protected bool insideRoboTHOR() {
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            return sceneName.Contains("Train") | sceneName.Contains("Val");
+        }
+
+        /**
+         * @param fromMultiplier is the randomed lower bound that the light intensity is multiplied by.
+         * @param toMultiplier is the randomed upper bound that the light intensity is multiplied by.
+         * @param synchronized denotes if all lights should be multiplied by the same randomized
+         *        intensity, or if each light should get its own randomized intensity.
+         */
+        public void RandomizeLighting(
+            float fromMultiplier = 0.5f,
+            float toMultiplier = 1.5f,
+            bool synchronized = false,
+            bool changeColor = true
+        ) {
+            if (fromMultiplier < 0) {
+                throw new ArgumentOutOfRangeException(
+                    $"fromMultiplier must be >= 0, not {fromMultiplier}."
+                );
+            } else if (toMultiplier < 0) {
+                throw new ArgumentOutOfRangeException(
+                    $"toMultiplier must be >= 0, not {fromMultiplier}."
+                );
+            } else if (toMultiplier < fromMultiplier) {
+                throw new ArgumentOutOfRangeException(
+                    $"toMultiplier must be >= fromMultiplier, not toMultiplier={toMultiplier} < fromMultiplier={fromMultiplier}."
+                );
+            }
+
+            float newRandomFloat() {
+                return Random.Range(fromMultiplier, toMultiplier);
+            }
+            Color newRandomColor() {
+                return Random.ColorHSV(
+                    hueMin: 0,
+                    hueMax: 1,
+                    saturationMin: 0.5f,
+                    saturationMax: 1,
+                    valueMin: 0,
+                    valueMax: 1
+                );
+            }
+
+            float intensityMultiplier = newRandomFloat();
+            Color randomColor = newRandomColor();
+
+            bool setOriginalMultipliers = originalLightingValues == null;
+            if (setOriginalMultipliers) {
+                originalLightingValues = new Dictionary<string, Dictionary<string, object>>();
+            }
+
+            // include both lights and reflection probes
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                    randomColor = newRandomColor();
+                }
+                string name = light.gameObject.name;
+                if (setOriginalMultipliers) {
+                    originalLightingValues[name] = new Dictionary<string, object>() {
+                        // NOTE: make sure these are synced with ResetLighting()!
+                        ["intensity"] = light.intensity,
+                        ["range"] = light.range,
+                        ["color"] = light.color
+                    };
+                }
+                light.intensity = (float) originalLightingValues[name]["intensity"] * intensityMultiplier;
+                light.range = (float) originalLightingValues[name]["range"] * intensityMultiplier;
+                if (changeColor) {
+                    light.color = randomColor;
+                }
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                }
+                string name = reflectionProbe.gameObject.name;
+                if (setOriginalMultipliers) {
+                    // NOTE: make sure these are synced with ResetLighting()!
+                    originalLightingValues[name] = new Dictionary<string, object>() {
+                        ["intensity"] = reflectionProbe.intensity,
+                        ["blendDistance"] = reflectionProbe.intensity
+                    };
+                }
+                reflectionProbe.intensity = (float) originalLightingValues[name]["intensity"] * intensityMultiplier;
+                reflectionProbe.blendDistance = (float) originalLightingValues[name]["blendDistance"] * intensityMultiplier;
+            }
+
+            actionFinished(success: true);
         }
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything

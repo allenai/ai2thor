@@ -705,6 +705,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "light":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "RandomizeLighting",
+                            ["synchronized"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "color":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
