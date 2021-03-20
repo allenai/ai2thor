@@ -340,19 +340,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             HashSet<Vector3> seenPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
+
+            //Visualize SceneBounds
+            //GameObject boundsVis = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //boundsVis.transform.position = agentManager.SceneBounds.center;
+            //boundsVis.transform.localScale = 2 * agentManager.SceneBounds.extents;
+
+            //Traverse entire room in every direction with every step, stopping at any points that repeat and continuing on from ones that don't yet
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
+                //Check if p is a point already reached from a different direction
                 if (!goodPoints.Contains(p)) {
+                    //Add p to HashSet of reachable positions
                     goodPoints.Add(p);
+                    //Initialize hashset ("list") of objects that agent is currently colliding with (but don't epxect it to have anything yet)
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+                    //From p, move in each cardinal direction by d (gridSize * gridMultiplier)
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        //If p + d is a point already reached from a different direction, move on to the next direction from p
                         if (seenPoints.Contains(newPosition)) {
                             continue;
                         }
+
+                        //Since p + d is a new point, run the checks to see if it is reachable by the agent
                         seenPoints.Add(newPosition);
 
+                        //Check 1: Does agent hit any non-agent, non-floor collider between p and p + d (other than what it was already colliding with on Awake())?
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -372,7 +387,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        //If CapsuleCast check failed, move on to next direction from p (otherwise Check 2's error message could return a false-positive)
+                        if(shouldEnqueue == false) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
+
+                        //Check 2: Is p + d within the bounds of the scene?
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -380,15 +403,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 " can be reached via capsule cast but is beyond the scene bounds.";
                         }
 
-                        shouldEnqueue = shouldEnqueue && inBounds && (
+                        //Check 3: Can the carried object fit into p + d's four cardinal orientations?
+                        shouldEnqueue = inBounds && (
                             handObjectCanFitInPosition(newPosition, 0.0f) ||
                             handObjectCanFitInPosition(newPosition, 90.0f) ||
                             handObjectCanFitInPosition(newPosition, 180.0f) ||
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
+
+                        //If all checks are successful, add p + d to the queue
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 
+                            //If visualize is enabled, draw line between p and p + d
                             if (visualize) {
                                 var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
                                 var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
@@ -412,6 +439,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
+
                 //default maxStepCount to scale based on gridSize
                 if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
@@ -454,7 +482,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set agent mode to Default, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
             }
-            
+
             else
             {
                 errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone' or 'hand'";
@@ -479,7 +507,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
 			}
 
-			if (action.timeScale > 0) {
+            if (action.timeScale > 0) {
 				if (Time.timeScale != action.timeScale) {
                 	Time.timeScale = action.timeScale;
 				}
@@ -520,7 +548,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
             }
-        
+
             //navmeshAgent.radius = 
 
             if (action.gridSize <= 0 || action.gridSize > 5)
@@ -539,7 +567,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //initialize how long the default wait time for objects to stop moving is
             this.TimeToWaitForObjectsToComeToRest = action.TimeToWaitForObjectsToComeToRest;
-            	
+
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 
             if (action.controllerInitialization != null && action.controllerInitialization.variableInitializations != null) {
@@ -691,7 +719,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float[] xs = new float[] { grid_x1, grid_x1 + gridSize };
             float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
             List<Vector3> validMovements = new List<Vector3>();
-
+            
             foreach (float x in xs)
             {
                 foreach (float z in zs)
