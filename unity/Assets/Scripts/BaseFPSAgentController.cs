@@ -911,7 +911,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void RemoveFromScene(string objectId) {
             //pass name of object in from action.objectId
             if (objectId == null) {
-                errorMessage = "objectId required for OpenObject";
+                errorMessage = "objectId required for RemoveFromScene";
                 actionFinished(false);
                 return;
             }
@@ -1666,15 +1666,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         // checks if the target position in space is within the agent's current viewport
         // and/or within the max visible distance
-        protected bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition, bool inViewport = true, bool inMaxVisibleDistance = true)
+        protected bool isPosInView(Vector3 targetPosition, bool inViewport = true, bool inMaxVisibleDistance = true)
         {
             //now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
             tmp.y = targetPosition.y;
 
-            if (inMaxVisibleDistance && Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
+            if (inMaxVisibleDistance && Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)
             {
-                errorMessage = "The target position is outside the agent's max visible distance.";
+                errorMessage = "target is outside of maxVisibleDistance";
                 return false;
             }
 
@@ -1682,18 +1682,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
             if(inViewport && (vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f))
             {
-                errorMessage = "The target position is outside the viewport.";
+                errorMessage = "target is outside of Agent Viewport";
                 return false;
             }
 
             return true;
         }
 
+        protected bool isPosInView(Vector3 targetPosition, SimObjPhysics target, float x, float y, bool inViewport = true, bool inMaxVisibleDistance = true)
+        {
+            bool result = isPosInView(
+                targetPosition: targetPosition,
+                inViewport: inViewport,
+                inMaxVisibleDistance: inMaxVisibleDistance);
+
+            if(errorMessage == "target is outside of maxVisibleDistance")
+            {
+                errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is outside the Agent's maxVisibleDistance range";
+
+            }
+
+            if(errorMessage == "target is outside of AgentViewport")
+            {
+                errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is outside the agent's viewport";
+            }
+
+            return result;
+        }
+
         // used for all actions that need a sim object target
         // instead of objectId, use screen coordinates to raycast toward potential targets
         // will set the target object by reference if raycast is successful
-        protected bool screenToWorldTarget(float x, float y, ref SimObjPhysics target, bool inViewport = true, bool inMaxVisibleDistance = true) {
-
+        protected bool screenToWorldTarget(
+            float x, 
+            float y, 
+            ref SimObjPhysics target, 
+            bool inViewport = true, 
+            bool inMaxVisibleDistance = true, 
+            bool forceAction = false,
+            bool checkVisible = true) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
@@ -1706,8 +1733,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             RaycastHit hit;
 
             // check if something was hit by raycast
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
-                print("hit point is: " + hit.point);
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11, QueryTriggerInteraction.Ignore)) {
                 if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
 
                     target = hit.transform.GetComponentInParent<SimObjPhysics>();
@@ -1715,74 +1741,66 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if(inViewport && inMaxVisibleDistance)
                     {
                         // if target should be within the camera viewport, check that here
-                        if (!CheckIfTargetPositionIsInViewportRange(targetPosition: hit.point, inMaxVisibleDistance: inMaxVisibleDistance)) {
-                            target = null;
-                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                        }
+                        isPosInView(
+                            targetPosition: hit.point, 
+                            inMaxVisibleDistance: true, 
+                            inViewport: true,
+                            x: x,
+                            y: y,
+                            target: target);
 
-                        //now check if the object is flagged as Visible by the visibility point logic
-                        if(!VisibleSimObjs(false).Contains(target))
-                        {
-                            //the potential target sim object hit by the ray is not currently visible to the agent
-                            target = null;
-                        }
                     }
 
                     if(inViewport && !inMaxVisibleDistance)
                     {
                         // if target should be within the camera viewport, check that here
-                        if (!CheckIfTargetPositionIsInViewportRange(targetPosition: hit.point, inMaxVisibleDistance: inMaxVisibleDistance)) {
-                            target = null;
-                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                        }
-                    }
-                }
-            }
+                        isPosInView(
+                            targetPosition: hit.point, 
+                            inMaxVisibleDistance: false, 
+                            inViewport: true,
+                            x: x,
+                            y: y,
+                            target: target);
 
-            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            // if no target was found in the layers above, try the SimObjInvisible layer. 
-            if (target == null || hasPlaceableSurface.Contains(target.Type) && target == null) {
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
-                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
-
-                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
-
-                        if(inViewport)
+                        //now check if the object is flagged as Visible by the visibility point logic
+                        if(checkVisible && !VisibleSimObjs(forceAction).Contains(target))
                         {
-                            // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                            // this should basically only happen if the handDistance value is too big
-                            if (!CheckIfTargetPositionIsInViewportRange(targetPosition: hit.point, inMaxVisibleDistance: inMaxVisibleDistance)) {
-                                target = null;
-                                throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                            }
-
-                            //now check if the object is flagged as Visible by the visibility point logic
-                            if(!VisibleSimObjs(false).Contains(target))
-                            {
-                                //the potential target sim object hit by the ray is not currently visible to the agent
-                                target = null;
-                            }
+                            //the potential target sim object hit by the ray is not currently visible to the agent
+                            errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is not currently Visible to Agent";
                         }
                     }
                 }
-            }
 
-            if(target == null)
-            {
-                return false;
+                //object hit was not a sim object
+                else
+                {
+                    errorMessage = $"no sim objects found at ({x},{y})";
+                    return false;
+                }
+
+                //something was hit by the raycast, but one of the checks failed
+                if(errorMessage != "")  {
+                    //errorMessage should be set in isPosInView
+                    return false;
+                }
             }
 
             //target should have been assigned so we are good to go
-            else
             return true;
         }
 
-        //returns whether an object hit at (x,y) screen coordinates is in the camera view
-        //note this does not check to see if the object is in the maxVisibleDistance of the agent
-        //so it can hit objects in-frame but not interactable by the agent.
+        //returns whether an object hit at (x,y) screen coordinates is in the camera viewport
+        //note this does not care if the object is outside of maxVisibleDistance, and ignores if
+        //the object hit is not currently Visible to the agent.
         public void GetObjectInFrame(float x, float y) {
             SimObjPhysics target = null;
-            screenToWorldTarget(x: x, y: y, target: ref target, inViewport: true, inMaxVisibleDistance: false);
+            screenToWorldTarget(
+                x: x,
+                y: y, 
+                target: ref target, 
+                inViewport: true, 
+                inMaxVisibleDistance: false,
+                checkVisible: false);
 
             if(target != null)
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
