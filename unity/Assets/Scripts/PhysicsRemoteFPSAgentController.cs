@@ -146,7 +146,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.agentState == AgentState.ActionComplete) {
+            //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
+            if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -1945,9 +1946,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -2041,9 +2042,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -3451,9 +3452,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
+                    //error message is set inside screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -4469,9 +4470,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
             SimObjPhysics targetReceptacle = null;
 
-            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
+            if(!screenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
+                //error message is set insice screenToWorldTarget
                 actionFinished(false);
                 return;
             }
@@ -4654,9 +4655,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
+                    //error message is set inside screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -5344,9 +5345,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -5476,9 +5477,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             SimObjPhysics target = null;
             //no target object specified, so instead try and use x/y screen coordinates
-            if(!ScreenToWorldTarget(x, y, ref target, !forceAction))
+            if(!screenToWorldTarget(x, y, ref target, !forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
+                //error message is set insice screenToWorldTarget
                 actionFinished(false);
                 return;
             }
@@ -5730,7 +5731,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            SimObjPhysics target = null;
+            screenToWorldTarget(x: x, y: y, target: ref target, inViewport: forceAction, inMaxVisibleDistance: forceAction);
             openObject(
                 target: target,
                 openness: openness,
@@ -8629,9 +8631,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -8694,9 +8696,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -8777,9 +8779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -8849,9 +8851,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -8922,9 +8924,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -9020,9 +9022,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
@@ -9094,9 +9096,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
+                    //error message is set insice screenToWorldTarget
                     actionFinished(false);
                     return;
                 }
