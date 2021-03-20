@@ -388,18 +388,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             continue;
                         }
 
+                        //Check 2: Is p + d within the bounds of the scene?
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
 
-                        //Check 2: Is p + d within the bounds of the scene?
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
                                 ", position " + newPosition.ToString() +
                                 " can be reached via capsule cast but is beyond the scene bounds.";
+                            
+                            shouldEnqueue = false;
+                            continue;
                         }
 
                         //Check 3: Can the carried object fit into p + d's four cardinal orientations?
-                        shouldEnqueue = inBounds && (
+                        shouldEnqueue = (
                             handObjectCanFitInPosition(newPosition, 0.0f) ||
                             handObjectCanFitInPosition(newPosition, 90.0f) ||
                             handObjectCanFitInPosition(newPosition, 180.0f) ||
