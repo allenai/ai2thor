@@ -328,7 +328,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(transform.position);
 
-            //float dirSkinWidthMultiplier = 1.0f + sw;
+            // float dirSkinWidthMultiplier = 1.0f + sw;
             Vector3[] directions = {
                 new Vector3(1.0f, 0.0f, 0.0f),
                 new Vector3(0.0f, 0.0f, 1.0f),
@@ -341,28 +341,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int layerMask = 1 << 8;
             int stepsTaken = 0;
 
-            //Traverse entire room in every direction with every step, stopping at any points that repeat and continuing on from ones that don't yet
+            // Traverse entire room in each direction with every step, stopping at any points that are repeats and
+            // continuing on from ones that aren't
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
-                //Check if p is a point already reached from a different direction
+
+                // Check if p is a point already reached from a different direction
                 if (!goodPoints.Contains(p)) {
-                    //Add p to HashSet of reachable positions
+                    // Add p to HashSet of reachable positions
                     goodPoints.Add(p);
-                    //Initialize hashset ("list") of objects that agent is currently colliding with (but don't epxect it to have anything yet)
+
+                    // Initialize HashSet of objects that agent is colliding with on Awake()
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
-                    //From p, move in each cardinal direction by d (gridSize * gridMultiplier)
+                    
+                    // From p, move in each cardinal direction by d (gridSize * gridMultiplier)
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
-                        //If p + d is a point already reached from a different direction, move on to the next direction from p
+
+                        // If p + d is a point already reached from a different direction, move on to the next direction from p
                         if (seenPoints.Contains(newPosition)) {
                             continue;
                         }
 
-                        //Since p + d is a new point, run the checks to see if it is reachable by the agent
+                        // Since p + d is a new point, run the checks to see if it is reachable by the agent
                         seenPoints.Add(newPosition);
 
-                        //Check 1: Does agent hit any non-agent, non-floor collider between p and p + d (other than what it was already colliding with on Awake())?
+                        // Check 1: Does agent hit any non-agent, non-floor collider between p and p + d (other than
+                        // what it was already colliding with on Awake())?
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -383,12 +389,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
 
-                        //If CapsuleCast check failed, move on to next direction from p (otherwise Check 2's error message could return a false-positive)
-                        if(shouldEnqueue == false) {
+                        // If CapsuleCast check failed, move on to next direction from p (otherwise Check 2's error message
+                        // could return a false-positive)
+                        if (!shouldEnqueue) {
                             continue;
                         }
 
-                        //Check 2: Is p + d within the bounds of the scene?
+                        // Check 2: Is p + d within the bounds of the scene?
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
 
                         if (errorMessage == "" && !inBounds) {
@@ -397,11 +404,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 ", position " + newPosition.ToString() +
                                 " can be reached via capsule cast but is beyond the scene bounds.";
                             
-                            shouldEnqueue = false;
                             continue;
                         }
 
-                        //Check 3: Can the carried object fit into p + d's four cardinal orientations?
+                        // Check 3: Can the carried object fit into p + d's four cardinal orientations?
                         shouldEnqueue = (
                             handObjectCanFitInPosition(newPosition, 0.0f) ||
                             handObjectCanFitInPosition(newPosition, 90.0f) ||
@@ -409,11 +415,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
 
-                        //If all checks are successful, add p + d to the queue
+                        // If all checks are successful, add p + d to the queue
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 
-                            //If visualize is enabled, draw line between p and p + d
+                            // If visualize is enabled, draw line between p and p + d
                             if (visualize) {
                                 var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
                                 var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
@@ -438,7 +444,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 
-                //default maxStepCount to scale based on gridSize
+                // default maxStepCount to scale based on gridSize
                 if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
@@ -717,7 +723,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float[] xs = new float[] { grid_x1, grid_x1 + gridSize };
             float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
             List<Vector3> validMovements = new List<Vector3>();
-            
+
             foreach (float x in xs)
             {
                 foreach (float z in zs)
