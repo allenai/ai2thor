@@ -341,11 +341,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int layerMask = 1 << 8;
             int stepsTaken = 0;
 
-            //Visualize SceneBounds
-            //GameObject boundsVis = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //boundsVis.transform.position = agentManager.SceneBounds.center;
-            //boundsVis.transform.localScale = 2 * agentManager.SceneBounds.extents;
-
             //Traverse entire room in every direction with every step, stopping at any points that repeat and continuing on from ones that don't yet
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
