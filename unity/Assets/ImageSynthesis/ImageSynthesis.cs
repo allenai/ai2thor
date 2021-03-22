@@ -65,7 +65,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public float opticalFlowSensitivity;
 
-	private Dictionary<int, string> nonSimObjUniqueIds = new Dictionary<int, string>();
+	private Dictionary<int, string> nonSimObjObjectIds = new Dictionary<int, string>();
 
 	// cached materials
 	private Material opticalFlowMaterial;
@@ -128,11 +128,15 @@ public class ImageSynthesis : MonoBehaviour {
 	private Camera CreateHiddenCamera(string name)
 	{
 		var go = new GameObject (name, typeof (Camera));
-#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
+    #if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
 		go.hideFlags = HideFlags.HideAndDontSave; 
-#endif
+    #endif
 		go.transform.parent = transform;
 
+        //this is a check for if the image synth is being added to a ThirdPartyCamera, which doesn't have a FirstPersonCharacterCull component
+        //Note: Check that all image synthesis works with third party cameras, as the image synth assumes that it is taking default settings
+        //from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
+        if(go.transform.parent.GetComponent<FirstPersonCharacterCull>())
 		//add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
 		go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
 
@@ -263,19 +267,19 @@ public class ImageSynthesis : MonoBehaviour {
 	}
 
 
-	private string getUniqueId(GameObject gameObject) {
-		// the uniqueid is generated this way to handle the edge case
+	private string getObjectId(GameObject gameObject) {
+		// the object id is generated this way to handle the edge case
 		// where a non-simobject could get moved from its initial position 
-		// during a simulation.  This forces the uniqueId to get generated once
+		// during a simulation.  This forces the objectId to get generated once
 		// on scene startup
 		int key = gameObject.GetInstanceID();
-		if (nonSimObjUniqueIds.ContainsKey(key)) {
-			return nonSimObjUniqueIds[key];
+		if (nonSimObjObjectIds.ContainsKey(key)) {
+			return nonSimObjObjectIds[key];
 		} else {
 			Transform t = gameObject.transform;
-			string uniqueId = gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
-			nonSimObjUniqueIds[key] = uniqueId;
-			return uniqueId;
+			string objectId = gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
+			nonSimObjObjectIds[key] = objectId;
+			return objectId;
 		}
 	}
 
@@ -297,15 +301,13 @@ public class ImageSynthesis : MonoBehaviour {
 		colorIds = new Dictionary<Color, string> ();
 		var mpb = new MaterialPropertyBlock();
 
-
-
 		foreach (var r in renderers)
 		{
 			// var layer = r.gameObject.layer;
 			// var tag = r.gameObject.tag;
 
 			string classTag = r.name;
-			string objTag = getUniqueId(r.gameObject);
+			string objTag = getObjectId(r.gameObject);
 
 			StructureObject so = r.gameObject.GetComponent<StructureObject> ();
 			if (so == null) 
@@ -325,14 +327,12 @@ public class ImageSynthesis : MonoBehaviour {
 			if (sop != null) 
 			{
 				classTag = "" + sop.Type;
-				objTag = sop.UniqueID;
+				objTag = sop.ObjectID;
 			}
 
 
-			Color classColor;
-			Color objColor;
-			classColor = ColorEncoding.EncodeTagAsColor (classTag);
-			objColor = ColorEncoding.EncodeTagAsColor(objTag + guidForColors);
+			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
+			Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
             if (capturePasses[0].camera != null) {
 			    capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
@@ -376,7 +376,14 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 	}
 
-    public byte[] Encode(string passName, int width = -1, int height = -1, bool jpg = false) 
+    public byte[] Encode(
+        string passName,
+        RenderTextureFormat format = RenderTextureFormat.Default, 
+        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default, 
+        int width = -1, 
+        int height = -1, 
+        bool jpg = false
+    ) 
     {
         // Must be called after end of Frame
 
@@ -388,8 +395,8 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 
 		foreach (var pass in capturePasses)
-            if(pass.name == passName)
-                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg);
+            if(pass.name == passName && pass.camera != null)
+                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg, format, textureReadMode);
 
 		return(new byte[0]);
     }
@@ -426,12 +433,20 @@ public class ImageSynthesis : MonoBehaviour {
 			Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale);
 	}
 
-	private byte[] Encode(Camera cam, int width, int height, bool supportsAntialiasing, bool needsRescale, bool jpg = false)
+	private byte[] Encode(
+        Camera cam,
+        int width,
+        int height, 
+        bool supportsAntialiasing, 
+        bool needsRescale, 
+        bool jpg = false, 
+        RenderTextureFormat format = RenderTextureFormat.Default, 
+        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
+    )
 	{
 		var mainCamera = GetComponent<Camera>();
 		var depth = 24;
-		var format = RenderTextureFormat.Default;
-		var readWrite = RenderTextureReadWrite.Default;
+		var readWrite = textureReadMode;
 		var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
 
 		var finalRT =

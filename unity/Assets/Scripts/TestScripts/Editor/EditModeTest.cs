@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
+//using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -11,7 +11,7 @@ namespace Tests
         private GameObject gameObject;
         private MCSMain main;
 
-        [SetUp]
+        //[SetUp]
         public void Setup()
         {
             gameObject = GameObject.Instantiate(new GameObject());
@@ -19,12 +19,12 @@ namespace Tests
         }
         
 
-        [Test]
+        //[Test]
         public void FirstTest() 
         {
-            Assert.AreEqual(true, true);
-            Assert.IsFalse(false);
-            Assert.False(false);        
+            //Assert.AreEqual(true, true);
+            //Assert.IsFalse(false);
+            //Assert.False(false);        
         }
     }
 }

@@ -47,7 +47,12 @@ public static class UtilityFunctions {
         }
     }
 
-    public static bool isObjectColliding(GameObject go, List<GameObject> ignoreGameObjects = null, float expandBy = 0.0f) {
+    public static bool isObjectColliding(
+        GameObject go,
+        List<GameObject> ignoreGameObjects = null,
+        float expandBy = 0.0f,
+        bool useBoundingBoxInChecks=false
+     ) {
         if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
         }
@@ -59,7 +64,7 @@ public static class UtilityFunctions {
             }
         }
 
-        int layerMask = 1 << 8 | 1<<10;
+        int layerMask = 1 << 8 | 1 << 10;
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
@@ -69,6 +74,9 @@ public static class UtilityFunctions {
         }
 
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
+            if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)) {
+                continue;
+            }
             if (!(bc.isTrigger && bc.tag.Equals("Receptacle"))) {
                 foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                     if (!ignoreColliders.Contains(c)) {
@@ -87,7 +95,12 @@ public static class UtilityFunctions {
         return false;
     }
 
-    public static Collider[] collidersObjectCollidingWith(GameObject go, List<GameObject> ignoreGameObjects = null, float expandBy = 0.0f) {
+    public static Collider[] collidersObjectCollidingWith(
+        GameObject go,
+        List<GameObject> ignoreGameObjects = null,
+        float expandBy = 0.0f,
+        bool useBoundingBoxInChecks = false
+        ) {
         if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
         }
@@ -109,6 +122,9 @@ public static class UtilityFunctions {
             }
         }
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
+            if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)) {
+                continue;
+            }
             foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
                     collidersSet.Add(c);
@@ -199,4 +215,20 @@ public static class UtilityFunctions {
              Mathf.Round(vector3.z * multiplier) / multiplier);
     }
 
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
+    {
+        Vector3[] corners = new Vector3[8];
+
+        corners[0] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[1] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[2] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
+        corners[3] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
+
+        corners[4] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[5] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[6] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
+        corners[7] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+
+        return corners;
+    }
 }

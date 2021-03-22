@@ -16,7 +16,7 @@ public class DecalCollision : Break
     [SerializeField]
     private int stencilWriteValue = 1;
     [SerializeField]
-    private GameObject[] decals;
+    private GameObject[] decals = null;
     [SerializeField]
     private float nextDecalWaitTimeSeconds = 1;
     [SerializeField]
@@ -48,14 +48,14 @@ public class DecalCollision : Break
                 else {
                     var otherPlanes = this.transform.parent.gameObject.GetComponentsInChildren<DecalCollision>();
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
-                    Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
+                    //Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
                     foreach (var spawnPlane in otherPlanes) {
                        
                         if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
                             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
-                            Debug.Log("Value for " + gameObject.name + " set to " + this.stencilWriteValue);
+                            //Debug.Log("Value for " + gameObject.name + " set to " + this.stencilWriteValue);
                             break;
                         }
                     }
@@ -77,10 +77,10 @@ public class DecalCollision : Break
         this.stencilWriteValue =  DecalCollision.currentStencilId << 1;
         if (this.stencilWriteValue > 0xFF) {
             this.stencilWriteValue = this.stencilWriteValue % 0xFF;
-            Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
+            //Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
         }
         mr.material.SetInt("_StencilRef", this.stencilWriteValue);
-        Debug.Log("Setting stencil for " +  this.gameObject.name + " write for shader to " + this.stencilWriteValue);
+        //Debug.Log("Setting stencil for " +  this.gameObject.name + " write for shader to " + this.stencilWriteValue);
         this.stencilSet = true;
     }
 

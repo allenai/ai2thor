@@ -145,11 +145,17 @@ public class MCSMain : MonoBehaviour {
             ChangeCurrentScene(this.currentScene);
         }
 
+        // We should always have debug logs enabled in debug builds.
+        if (Debug.isDebugBuild) {
+            Debug.unityLogger.logEnabled = true;
+        }
+        else {
 #if ENABLE_DEBUG_LOGS
-        Debug.unityLogger.logEnabled = true;
+            Debug.unityLogger.logEnabled = true;
 #else
-        Debug.unityLogger.logEnabled = false;
+            Debug.unityLogger.logEnabled = false;
 #endif
+        }
 
 #if UNITY_EDITOR
         Debug.unityLogger.logEnabled = enableDebugLogsInEditor;
@@ -217,7 +223,10 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene != null && this.currentScene.objects != null) {
+            Debug.Log("MCS: Initializing " + this.currentScene.objects.Count + " objects...");
             this.currentScene.objects.ForEach(InitializeGameObject);
+        } else {
+            Debug.Log("MCS: No objects to initialize!");
         }
 
         this.AdjustRoomStructuralObjects();
@@ -757,7 +766,7 @@ public class MCSMain : MonoBehaviour {
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
-            gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+            gameObject.GetComponent<SimObjPhysics>().objectID = gameObject.name;
             gameObject.GetComponent<SimObjPhysics>().shape = objectConfig.structure ? "structural" :
                 objectDefinition.shape;
         }
@@ -922,7 +931,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         // Always set the uniqueID to a new name (we don't want to use AI2-THOR's default names).
-        ai2thorPhysicsScript.uniqueID = gameObject.name;
+        ai2thorPhysicsScript.objectID = gameObject.name;
 
         // Remove the CanBreak property from the SecondaryProperties array (we don't want objects to break).
         ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.Where((property) =>
@@ -1196,7 +1205,7 @@ public class MCSMain : MonoBehaviour {
         return objectRegistry.objects;
     }
 
-    private void LogVerbose(String text) {
+    public void LogVerbose(String text) {
         if (this.enableVerboseLog) {
             Debug.Log("MCS: " + text);
         }
@@ -1213,7 +1222,7 @@ public class MCSMain : MonoBehaviour {
                 GameObject interactableObject = interactableTransform.gameObject;
                 SimObjPhysics ai2thorPhysicsScript = interactableObject.GetComponent<SimObjPhysics>();
                 if (ai2thorPhysicsScript) {
-                    ai2thorPhysicsScript.uniqueID = gameObject.name + "_" + interactableDefinition.id;
+                    ai2thorPhysicsScript.objectID = gameObject.name + "_" + interactableDefinition.id;
                     // The type of a child interactable should be something like "drawer" or "shelf" so use that as
                     // the object's shape.
                     ai2thorPhysicsScript.shape = ai2thorPhysicsScript.Type.ToString().ToLower();
@@ -1376,7 +1385,6 @@ public class MCSMain : MonoBehaviour {
             .ForEach((teleport) => {
                 gameOrParentObject.transform.localPosition = new Vector3(teleport.position.x, teleport.position.y,
                     teleport.position.z);
-                Debug.Log("TELEPORT " + gameOrParentObject.transform.position.ToString("F4"));
             });
 
         objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
@@ -1472,8 +1480,8 @@ public class MCSConfigAbstractObject {
     public bool pickupable;
     public bool receptacle;
     public bool stacking;
-    public List<string> materials;
-    public List<string> salientMaterials;
+    public List<string> materials = new List<string>();
+    public List<string> salientMaterials = new List<string>();
     public MCSConfigPhysicsProperties physicsProperties;
 }
 
@@ -1496,7 +1504,7 @@ public class MCSConfigAnimator {
 
 [Serializable]
 public class MCSConfigChangeMaterial : MCSConfigStepBegin {
-    public List<string> materials;
+    public List<string> materials = new List<string>();
 }
 
 [Serializable]
@@ -1515,18 +1523,18 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public MCSConfigTransform nullParent = null;
     public bool structure;
     public string type;
-    public List<MCSConfigAction> actions;
-    public List<MCSConfigChangeMaterial> changeMaterials;
-    public List<MCSConfigForce> forces;
-    public List<MCSConfigStepBegin> hides;
-    public List<MCSConfigMove> moves;
-    public List<MCSConfigResize> resizes;
-    public List<MCSConfigMove> rotates;
-    public List<MCSConfigShow> shows;
-    public List<MCSConfigStepBeginEnd> shrouds;
-    public List<MCSConfigTeleport> teleports;
-    public List<MCSConfigStepBegin> togglePhysics;
-    public List<MCSConfigMove> torques;
+    public List<MCSConfigAction> actions = new List<MCSConfigAction>();
+    public List<MCSConfigChangeMaterial> changeMaterials = new List<MCSConfigChangeMaterial>();
+    public List<MCSConfigForce> forces = new List<MCSConfigForce>();
+    public List<MCSConfigStepBegin> hides = new List<MCSConfigStepBegin>();
+    public List<MCSConfigMove> moves = new List<MCSConfigMove>();
+    public List<MCSConfigResize> resizes = new List<MCSConfigResize>();
+    public List<MCSConfigMove> rotates = new List<MCSConfigMove>();
+    public List<MCSConfigShow> shows = new List<MCSConfigShow>();
+    public List<MCSConfigStepBeginEnd> shrouds = new List<MCSConfigStepBeginEnd>();
+    public List<MCSConfigTeleport> teleports = new List<MCSConfigTeleport>();
+    public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
+    public List<MCSConfigMove> torques = new List<MCSConfigMove>();
 
     private GameObject gameObject;
     private GameObject parentObject;
@@ -1573,15 +1581,15 @@ public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public bool visibilityPointsScaleOne;
     public MCSConfigCollider boundingBox = null;
     public MCSConfigSize scale = null;
-    public List<MCSConfigAnimation> animations;
-    public List<MCSConfigAnimator> animators;
-    public List<MCSConfigCollider> colliders;
-    public List<MCSConfigInteractables> interactables;
-    public List<string> materialRestrictions;
-    public List<MCSConfigOverride> overrides;
-    public List<MCSConfigTransform> receptacleTriggerBoxes;
-    public List<MCSConfigVector> visibilityPoints;
-    public List<MCSConfigLegacyObjectDefinition> legacy;
+    public List<MCSConfigAnimation> animations = new List<MCSConfigAnimation>();
+    public List<MCSConfigAnimator> animators = new List<MCSConfigAnimator>();
+    public List<MCSConfigCollider> colliders = new List<MCSConfigCollider>();
+    public List<MCSConfigInteractables> interactables = new List<MCSConfigInteractables>();
+    public List<string> materialRestrictions = new List<string>();
+    public List<MCSConfigOverride> overrides = new List<MCSConfigOverride>();
+    public List<MCSConfigTransform> receptacleTriggerBoxes = new List<MCSConfigTransform>();
+    public List<MCSConfigVector> visibilityPoints = new List<MCSConfigVector>();
+    public List<MCSConfigLegacyObjectDefinition> legacy = new List<MCSConfigLegacyObjectDefinition>();
 }
 
 [Serializable]
@@ -1589,9 +1597,9 @@ public class MCSConfigLegacyObjectDefinition {
     public int version;
     public string resourceFile;
     public MCSConfigCollider boundingBox = null;
-    public List<MCSConfigCollider> colliders;
-    public List<MCSConfigTransform> receptacleTriggerBoxes;
-    public List<MCSConfigVector> visibilityPoints;
+    public List<MCSConfigCollider> colliders = new List<MCSConfigCollider>();
+    public List<MCSConfigTransform> receptacleTriggerBoxes = new List<MCSConfigTransform>();
+    public List<MCSConfigVector> visibilityPoints = new List<MCSConfigVector>();
 }
 
 [Serializable]
@@ -1613,12 +1621,13 @@ public class MCSConfigShow : MCSConfigStepBegin {
 
 [Serializable]
 public class MCSConfigSize {
+    // The X/Y/Z properties must be public or else they don't work correctly.
     [SerializeField]
-    private float x;
+    public float x;
     [SerializeField]
-    private float y;
+    public float y;
     [SerializeField]
-    private float z;
+    public float z;
 
     public float GetX() {
         return (this.x > 0 ? this.x : 1);
@@ -1675,7 +1684,7 @@ public class MCSConfigScene {
 
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
-    public List<MCSConfigGameObject> objects;
+    public List<MCSConfigGameObject> objects = new List<MCSConfigGameObject>();
     public MCSConfigPhysicsProperties floorProperties;
     public MCSConfigPhysicsProperties wallProperties;
 }
@@ -1692,7 +1701,7 @@ public class MCSConfigGoal {
 
 [Serializable]
 public class MCSConfigObjectRegistry {
-    public List<MCSConfigObjectDefinition> objects;
+    public List<MCSConfigObjectDefinition> objects = new List<MCSConfigObjectDefinition>();
 }
 
 [Serializable]

@@ -95,7 +95,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 this.actionFinished(false);
                 return previousObjectId;
             } else {
-                return simObjPhysics.UniqueID;
+                return simObjPhysics.ObjectID;
             }
         }
     }
@@ -110,8 +110,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         SimObjPhysics target = null;
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
         }
 
         // Reactivate the object BEFORE trying to drop it so that we can see if it's obstructed.
@@ -149,7 +149,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
-            MCSController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
+            MCSController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.ObjectID).ToList();
 
         ObjectMetadata[] objectMetadata = base.generateObjectMetadata().ToList().Select((metadata) => {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
@@ -207,7 +207,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return previousObjectId;
         } else {
             if (ItemInHand != null) {
-                return ItemInHand.GetComponent<SimObjPhysics>().uniqueID;
+                return ItemInHand.GetComponent<SimObjPhysics>().objectID;
             } else {
                 errorMessage = "No object found in hand.";
                 Debug.Log(errorMessage);
@@ -242,7 +242,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.OpenObject(action);
     }
 
-    protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+    public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
         ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
 
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
@@ -255,9 +255,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (objectMetadata.objectBounds != null) {
             MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
             if (main != null && main.enableVerboseLog) {
-                Debug.Log("MCS: " + objectMetadata.objectId + " CENTER = " +
+                main.LogVerbose(objectMetadata.objectId + " CENTER = " +
                     (recBox != null ? recBox : simObj.BoundingBox.transform).position.ToString("F4"));
-                Debug.Log("MCS: " + objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
+                main.LogVerbose(objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
                     objectMetadata.objectBounds.objectBoundsCorners.Select(point => point.ToString("F4")).ToArray()));
             }
         }
@@ -301,8 +301,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         SimObjPhysics target = null;
         SimObjPhysics containerObject = null;
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             // Update our hand's position so that the object we want to hold doesn't clip our body.
             // TODO MCS-77 We may want to change how this function is used.
@@ -324,7 +324,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 SimObjPhysics firstObject = hits.First().transform.gameObject
                     .GetComponentInParent<SimObjPhysics>();
 
-                if(firstObject != null && firstObject.IsReceptacle && firstObject.ReceptacleObjects.Contains(target)) {
+                if(firstObject != null && firstObject.IsReceptacle && firstObject.SimObjectsContainedByReceptacle.Contains(target)) {
                     containerObject = firstObject;
                 }
             }
@@ -389,8 +389,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
-            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
             Debug.Log("Cannot pull. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
@@ -406,8 +406,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
-            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
             Debug.Log("Cannot push. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
@@ -423,7 +423,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -431,7 +431,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
             errorMessage = "Receptacle Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -439,7 +439,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to place it so that we can see if it's obstructed.
         // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
@@ -456,24 +456,24 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
     }
 
-    public override void ResetAgentHandPosition(ServerAction action) {
+    public override void ResetAgentHandPosition() {
         // Don't reset the player's hand position if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
             this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
             return;
         }
-        base.ResetAgentHandPosition(action);
+        base.ResetAgentHandPosition();
     }
 
-    public override void ResetAgentHandRotation(ServerAction action) {
+    public override void ResetAgentHandRotation() {
         // Don't reset the player's hand rotation if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
             this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
             return;
         }
-        base.ResetAgentHandRotation(action);
+        base.ResetAgentHandRotation();
     }
 
     public override void RotateLook(ServerAction response)
@@ -585,7 +585,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -593,7 +593,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
         // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
@@ -668,12 +668,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
-        if (!this.actionComplete) {
+        if (agentState != AgentState.ActionComplete) {
             action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
-        return !this.actionComplete;
+        return agentState != AgentState.ActionComplete;
     }
 
     private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
@@ -777,7 +777,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }

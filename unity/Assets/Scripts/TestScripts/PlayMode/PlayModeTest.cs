@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using NUnit.Framework;
+//using NUnit.Framework;
 using UnityEngine.TestTools;
 
 
@@ -10,21 +10,21 @@ namespace Tests {
     {
         private GameObject gameObject;
 
-        [SetUp]
+        //[SetUp]
         public void Setup(){
             gameObject = GameObject.Instantiate(new GameObject());
 
         }
         
 
-        [UnityTest]
+        //[UnityTest]
         public IEnumerator FirstTest() {
             yield return null;
-            Assert.AreEqual(false, false);
+            //Assert.AreEqual(false, false);
 
         }
 
-        [TearDown]
+        //[TearDown]
         public void TearDown()
         {
             GameObject.Destroy(gameObject);

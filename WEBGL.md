@@ -61,14 +61,6 @@ window.onGameLoaded = function() {
 ```
 
 ```
-window.onUnityEvent = function(eventString) {
-    // When an Action is called, eventString is a json string with the schema of the class a ServerAction
-    let jsonEvent = JSON.parse(eventString);
-    // ...
-}
-```
-
-```
 window.onUnityMetadata = function(metadataString) {
     // When an action is finished metadataString is a json string with the scheme of MultiAgentMetadata, just like the return to the step function on python
     let jsonEvent = JSON.parse(metadataString);

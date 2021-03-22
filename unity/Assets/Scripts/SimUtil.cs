@@ -268,7 +268,7 @@ public static class SimUtil {
 			return false;
 		}
 
-		if (!IsUniqueIDValid (itemID)) {
+		if (!IsObjectIDValid (itemID)) {
 			Debug.LogError ("itemID " + itemID.ToString() + " is NOT valid, not searching for item");
 			return false;
 		}
@@ -276,7 +276,7 @@ public static class SimUtil {
 		for (int i = 0; i < r.Pivots.Length; i++) {
 			if (r.Pivots [i].childCount > 0) {
 				checkItem = r.Pivots [i].GetChild (0).GetComponent <SimObj> ();
-				if (checkItem != null && checkItem.UniqueID == itemID) {
+				if (checkItem != null && checkItem.ObjectID == itemID) {
 					//if the item under the pivot is a SimObj with the right id
 					//we've found what we're after
 					item = checkItem;
@@ -486,8 +486,8 @@ public static class SimUtil {
 		return items.ToArray();
 	}
 
-	public static bool IsUniqueIDValid (string uniqueID) {
-		return !string.IsNullOrEmpty (uniqueID);
+	public static bool IsObjectIDValid (string objectID) {
+		return !string.IsNullOrEmpty (objectID);
 	}
 
 	#endregion
@@ -523,7 +523,7 @@ public static class SimUtil {
 		UnityEditor.PlayerSettings.defaultScreenWidth = 300;
 		UnityEditor.PlayerSettings.runInBackground = true;
 		UnityEditor.PlayerSettings.captureSingleScreen = false;
-		UnityEditor.PlayerSettings.displayResolutionDialog = UnityEditor.ResolutionDialogSetting.Disabled;
+		//UnityEditor.PlayerSettings.displayResolutionDialog = UnityEditor.ResolutionDialogSetting.Disabled;
 		UnityEditor.PlayerSettings.usePlayerLog = true;
 		UnityEditor.PlayerSettings.resizableWindow = false;
         UnityEditor.PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
