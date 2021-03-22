@@ -391,6 +391,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (Transform child in this.objectParent.transform) {
                 if (child.gameObject.activeSelf) {
                     this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3);
+                    //this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3) + "," + Math.Round(child.position.y, 3);
+                    //this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3) + "," + Math.Round(child.position.z, 3);
                 }
             }
             if (i < 99) {
