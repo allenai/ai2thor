@@ -187,7 +187,9 @@ public class MCSServerActionRecorder : MonoBehaviour
             File.WriteAllText(filePath, jsonString);
         }
 
+#if UNITY_EDITOR
         UnityEditor.AssetDatabase.Refresh();
+#endif
     }
 }
 
