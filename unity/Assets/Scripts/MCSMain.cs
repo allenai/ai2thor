@@ -68,6 +68,7 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_POSITION_Y = 1.5f;
     private static float WALL_RIGHT_POSITION_X = 5.25f;
     private static float WALL_SCALE_Y = 3.0f;
+    private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10,3,10);
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
@@ -358,30 +359,8 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
         }
         else {
-            this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
-
-            this.wallLeft.transform.position = new Vector3(MCSMain.WALL_LEFT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
-
-            this.wallRight.transform.position = new Vector3(MCSMain.WALL_RIGHT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
-
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
-
-            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
-
-            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_SCALE_X,
-                MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
+            float wallWidth=.5f;
+            SetRoomInternalSize(currentScene.roomDimensions, wallWidth);
 
             if (this.currentScene.performerStart == null) {
                 this.currentScene.performerStart = new MCSConfigTransform();
@@ -474,6 +453,46 @@ public class MCSMain : MonoBehaviour {
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
+    }
+
+    //Sets a room to have the given dimensions between the walls, floor and ceiling.  
+    //The walls, floor, and ceiling will also have a width equal to the wall width.
+    private void SetRoomInternalSize(Vector3 roomDimensions, float wallWidth)
+    {
+        Vector3 wallWidths = new Vector3(wallWidth, wallWidth, wallWidth);
+        if (roomDimensions == null || roomDimensions == Vector3.zero)
+        {
+            roomDimensions = DEFAULT_ROOM_DIMENSIONS;
+        }
+        Vector3 roomHalfDimensions = roomDimensions * .5f;
+        Vector3 wallHalfWidths = wallWidths * .5f;
+        this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
+
+        this.wallLeft.transform.position = new Vector3(-roomHalfDimensions.x - wallHalfWidths.x,
+            roomHalfDimensions.y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+        this.wallLeft.transform.localScale = new Vector3(wallWidths.x,
+            roomDimensions.y, roomDimensions.z + wallWidths.z * 2);
+
+        this.wallRight.transform.position = new Vector3(roomHalfDimensions.x + wallHalfWidths.x,
+            roomHalfDimensions.y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+        this.wallRight.transform.localScale = new Vector3(wallWidths.x,
+            roomDimensions.y, roomDimensions.z + wallWidths.z * 2);
+
+        this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+            roomHalfDimensions.y, roomHalfDimensions.z + wallHalfWidths.z);
+        this.wallFront.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
+            roomDimensions.y, wallWidths.z);
+
+        this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+            roomHalfDimensions.y, -roomHalfDimensions.z - wallHalfWidths.z);
+        this.wallBack.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
+            roomDimensions.y, wallWidths.z);
+
+        this.floor.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
+            MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
+        this.ceiling.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
+            MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
+        this.ceiling.transform.position = new Vector3(0, roomDimensions.y + wallHalfWidths.y, 0);
     }
 
     private Collider AssignBoundingBox(
@@ -1687,6 +1706,8 @@ public class MCSConfigScene {
     public List<MCSConfigGameObject> objects = new List<MCSConfigGameObject>();
     public MCSConfigPhysicsProperties floorProperties;
     public MCSConfigPhysicsProperties wallProperties;
+
+    public Vector3 roomDimensions;
 }
 
 [Serializable]
