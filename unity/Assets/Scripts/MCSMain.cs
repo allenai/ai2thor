@@ -68,7 +68,11 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_POSITION_Y = 1.5f;
     private static float WALL_RIGHT_POSITION_X = 5.25f;
     private static float WALL_SCALE_Y = 3.0f;
+<<<<<<< HEAD
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
+=======
+    private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10,3,10);
+>>>>>>> Added function to set walls, floor, and ceiling such that internal dimensions are as given.  Also added roomDimenions to Scene schema
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
