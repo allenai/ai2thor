@@ -1150,6 +1150,7 @@ public class MCSMain : MonoBehaviour {
             objectConfig.nullParent.rotation != null)) {
 
             GameObject parentObject = new GameObject();
+            parentObject.transform.parent = objectConfig.GetGameObject().transform.parent;
             objectConfig.SetParentObject(parentObject);
             parentObject.name = objectConfig.id + "Parent";
             parentObject.transform.localPosition = new Vector3(objectConfig.nullParent.position.x,
@@ -1382,7 +1383,12 @@ public class MCSMain : MonoBehaviour {
             .ToList().ForEach((force) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    if (force.relative) {
+                        rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    }
+                    else {
+                        rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    }
                 }
             });
 
@@ -1511,7 +1517,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public string type;
     public List<MCSConfigAction> actions;
     public List<MCSConfigChangeMaterial> changeMaterials;
-    public List<MCSConfigMove> forces;
+    public List<MCSConfigForce> forces;
     public List<MCSConfigStepBegin> hides;
     public List<MCSConfigMove> moves;
     public List<MCSConfigResize> resizes;
@@ -1546,6 +1552,11 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
 public class MCSConfigInteractables {
     public string id;
     public string name;
+}
+
+[Serializable]
+public class MCSConfigForce : MCSConfigMove {
+    public bool relative;
 }
 
 [Serializable]
