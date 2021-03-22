@@ -193,6 +193,36 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 9. For each other receptacle within the Target (like a cabinet door, drawer, shelf, etc.), create an Empty Child under the Target (we'll call this the Sub-Target), give it a useful name, and move the mesh corresponding to the Sub-Target to be under the child. Repeat steps 1-8 (EXCEPT the Bounding Box) on each Sub-Target.
 10. Click-and-drag the finished Target into the Project tab of the Unity Editor to save it as a new Prefab file. Add a new entry for it in the mcs_object_registry file.
 
+## ServerActionRecorder
+
+A tool for recording of `ServerActions` to a file for playback. These files can currently only be played back within the Unity editor under `Tools -> ServerAction Recorder`.
+
+Recorded files will be saved when the executable has been closed, or when the editor `Play Mode` has stopped. The files will be located within the `StreamingAssets -> Recording` folder.
+
+To enable recording of a session:
+- Editor
+  - Add "RECORD_SERVERACTIONS" to `PlayerSettings -> Scripting Define Symbols`.
+
+- Build
+  - Add the command line argument `-RECORD_SERVERACTIONS` to your executable.
+
+Location of recorded files:
+- Editor
+    `"\unity\Assets\StreamingAssets\Recordings"`
+- Windows/Linux
+    `"MCS-AI2-THOR-Unity-App-v#.#.#_Data\StreamingAssets\Recordings"`
+- Mac
+    `"MCS-AI2-THOR-Unity-App-v#.#.#\Resources\Data\StreamingAssets\Recordings"`
+
+For playback:
+1. Copy your recorded file into the editor path `"ai2thor\unity\Assets\StreamingAssets\Recordings"`
+2. Open playback window through the toolbar `Tools -> ServerAction Recorder` 
+3. Type your recorded file name into the `File Name` text field.
+4. Click `Load` to load the file for playback
+    - Any errors with the file with be directly showed in the window, with exceptions showing in the `Console` window.
+5. Click `Play`
+    - This will automatically start the editor with the loaded recording file.
+
 ## Changelog of AI2-THOR Classes
 
 - `Scripts/AgentManager`:

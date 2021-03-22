@@ -1159,6 +1159,7 @@ public class MCSMain : MonoBehaviour {
             objectConfig.nullParent.rotation != null)) {
 
             GameObject parentObject = new GameObject();
+            parentObject.transform.parent = objectConfig.GetGameObject().transform.parent;
             objectConfig.SetParentObject(parentObject);
             parentObject.name = objectConfig.id + "Parent";
             parentObject.transform.localPosition = new Vector3(objectConfig.nullParent.position.x,
@@ -1390,7 +1391,12 @@ public class MCSMain : MonoBehaviour {
             .ToList().ForEach((force) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    if (force.relative) {
+                        rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    }
+                    else {
+                        rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                    }
                 }
             });
 
@@ -1453,6 +1459,11 @@ public class MCSMain : MonoBehaviour {
                 });
         }
     }
+
+    public string GetCurrentSceneName()
+    {
+        return currentScene.name;
+    }
 }
 
 // Definitions of serializable objects from JSON config files.
@@ -1514,7 +1525,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public string type;
     public List<MCSConfigAction> actions = new List<MCSConfigAction>();
     public List<MCSConfigChangeMaterial> changeMaterials = new List<MCSConfigChangeMaterial>();
-    public List<MCSConfigMove> forces = new List<MCSConfigMove>();
+    public List<MCSConfigForce> forces = new List<MCSConfigForce>();
     public List<MCSConfigStepBegin> hides = new List<MCSConfigStepBegin>();
     public List<MCSConfigMove> moves = new List<MCSConfigMove>();
     public List<MCSConfigResize> resizes = new List<MCSConfigResize>();
@@ -1549,6 +1560,11 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
 public class MCSConfigInteractables {
     public string id;
     public string name;
+}
+
+[Serializable]
+public class MCSConfigForce : MCSConfigMove {
+    public bool relative;
 }
 
 [Serializable]

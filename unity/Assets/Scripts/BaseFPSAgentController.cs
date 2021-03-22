@@ -1591,6 +1591,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				} else {
                     Debug.Log("MCS: BASE FPS AGENT CONTROLLER INVOKE METHOD " + controlCommand.action);
 					method.Invoke(this, new object[] { controlCommand });
+
+#if RECORD_SERVERACTIONS
+			        MCSServerActionRecorder.Instance.RecordAction(controlCommand);
+#endif
 				}
 			}
 			catch (Exception e)

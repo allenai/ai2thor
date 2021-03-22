@@ -8,6 +8,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 {
     public class DebugDiscreteAgentController : MonoBehaviour
     {   
+        public static float MOVE_MAX = 0.1f;
+
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
@@ -146,7 +148,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveAhead";
-                                action.moveMagnitude = WalkMagnitude;		
+                                action.moveMagnitude = Mathf.Min(WalkMagnitude, DebugDiscreteAgentController.MOVE_MAX);
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -164,7 +166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveBack";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = Mathf.Min(WalkMagnitude, DebugDiscreteAgentController.MOVE_MAX);
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -182,7 +184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveLeft";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = Mathf.Min(WalkMagnitude, DebugDiscreteAgentController.MOVE_MAX);
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -200,7 +202,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             // else
                             // {
                                 action.action = "MoveRight";
-                                action.moveMagnitude = WalkMagnitude;	
+                                action.moveMagnitude = Mathf.Min(WalkMagnitude, DebugDiscreteAgentController.MOVE_MAX);
                                 PhysicsController.ProcessControlCommand(action);
                             // }
                         }
@@ -415,6 +417,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (Transform child in this.objectParent.transform) {
                 if (child.gameObject.activeSelf) {
                     this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3);
+                    //this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3) + "," + Math.Round(child.position.y, 3);
+                    //this.positionByStep[child.name][i] = "" + Math.Round(child.position.x, 3) + "," + Math.Round(child.position.z, 3);
                 }
             }
             if (i < 99) {
