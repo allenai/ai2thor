@@ -172,7 +172,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         Quaternion rotation = this.gameObject.transform.rotation;
 
 		//note: figure out a way to cache this in the future
-        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
+        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
 
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
@@ -187,7 +187,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         boundingBoxCachePosition = position;
     }
 
-    private AxisAlignedBoundingBox axisAlignedBoundigBox() {
+    private AxisAlignedBoundingBox axisAlignedBoundingBox() {
         AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
         //get all colliders on the sop, excluding colliders if they are not enabled
