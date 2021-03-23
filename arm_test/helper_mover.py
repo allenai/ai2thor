@@ -86,7 +86,7 @@ def reset_the_scene_and_get_reachables(controller, scene_name=None, scene_option
     controller.reset(scene_name)
     controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
     controller.step(action='MakeAllObjectsMoveable')
-    controller.step(action='MakeObjectsStaticKinematicMassThreshold') #TODO what to do?
+    controller.step(action='MakeObjectsStaticKinematicMassThreshold')
     make_all_objects_unbreakable(controller)
     return get_reachable_positions(controller)
 
@@ -94,6 +94,7 @@ def only_reset_scene(controller, scene_name):
     controller.reset(scene_name)
     controller.step('PausePhysicsAutoSim', autoSyncTransforms=False)
     controller.step(action='MakeAllObjectsMoveable')
+    controller.step(action='MakeObjectsStaticKinematicMassThreshold')
     make_all_objects_unbreakable(controller)
 
 def transport_wrapper(controller, target_object, target_location):
