@@ -68,7 +68,7 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_POSITION_Y = 1.5f;
     private static float WALL_RIGHT_POSITION_X = 5.25f;
     private static float WALL_SCALE_Y = 3.0f;
-    private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10,3,10);
+    private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
@@ -241,8 +241,7 @@ public class MCSMain : MonoBehaviour {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
                 this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
-        }
-        else {
+        } else {
             controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
         }
 
@@ -251,8 +250,7 @@ public class MCSMain : MonoBehaviour {
             controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 this.currentScene.performerStart.rotation.x, 0, 0);
-        }
-        else {
+        } else {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
@@ -324,8 +322,7 @@ public class MCSMain : MonoBehaviour {
                 this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
                 this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
             }
-        }
-        else if (this.currentScene.isometric) {
+        } else if (this.currentScene.isometric) {
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();
             this.currentScene.performerStart.position.x = MCSMain.ISOMETRIC_PERFORMER_START_POSITION_X;
@@ -357,9 +354,8 @@ public class MCSMain : MonoBehaviour {
 
             this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
-        }
-        else {
-            float wallWidth=.5f;
+        } else {
+            float wallWidth = .5f;
             SetRoomInternalSize(currentScene.roomDimensions, wallWidth);
 
             if (this.currentScene.performerStart == null) {
@@ -389,9 +385,7 @@ public class MCSMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE_SCREENSHOT;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION_SCREENSHOT,
                 MCSMain.LIGHT_Z_POSITION_SCREENSHOT);
-        }
-
-        else {
+        } else {
             // Intuitive physics and isometric scenes don't have ceilings.
             if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
                 AssignMaterial(this.ceiling, ceilingMaterial);
@@ -434,8 +428,7 @@ public class MCSMain : MonoBehaviour {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
                 MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
-        }
-        else {
+        } else {
             controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
         }
 
@@ -444,8 +437,7 @@ public class MCSMain : MonoBehaviour {
             controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 this.currentScene.performerStart.rotation.x, 0, 0);
-        }
-        else {
+        } else {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
@@ -457,11 +449,9 @@ public class MCSMain : MonoBehaviour {
 
     //Sets a room to have the given dimensions between the walls, floor and ceiling.  
     //The walls, floor, and ceiling will also have a width equal to the wall width.
-    private void SetRoomInternalSize(Vector3 roomDimensions, float wallWidth)
-    {
+    private void SetRoomInternalSize(Vector3 roomDimensions, float wallWidth) {
         Vector3 wallWidths = new Vector3(wallWidth, wallWidth, wallWidth);
-        if (roomDimensions == null || roomDimensions == Vector3.zero)
-        {
+        if (roomDimensions == null || roomDimensions == Vector3.zero) {
             roomDimensions = DEFAULT_ROOM_DIMENSIONS;
         }
         Vector3 roomHalfDimensions = roomDimensions * .5f;
@@ -620,8 +610,7 @@ public class MCSMain : MonoBehaviour {
                 }
                 return collider;
             })).ToArray();
-        }
-        else {
+        } else {
             // Else, add the AI2-THOR layer and tag to the existing colliders so they work with the AI2-THOR scripts.
             colliders.ToList().ForEach((collider) => {
                 collider.gameObject.layer = 8; // AI2-THOR Layer SimObjVisible
@@ -925,9 +914,7 @@ public class MCSMain : MonoBehaviour {
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript);
-        }
-
-        else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
+        } else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject, ai2thorPhysicsScript);
         }
 
@@ -1412,8 +1399,7 @@ public class MCSMain : MonoBehaviour {
                 if (rigidbody != null) {
                     if (force.relative) {
                         rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
-                    }
-                    else {
+                    } else {
                         rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
                     }
                 }
@@ -1479,8 +1465,7 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    public string GetCurrentSceneName()
-    {
+    public string GetCurrentSceneName() {
         return currentScene.name;
     }
 }
