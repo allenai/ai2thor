@@ -1950,12 +1950,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -2052,12 +2050,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -3468,12 +3464,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set inside screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -4488,10 +4482,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
             SimObjPhysics targetReceptacle = null;
 
-            if(!screenToWorldTarget(x: x, y: y, target: ref targetReceptacle, inViewport: true, inMaxVisibleDistance: false, forceAction: forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref targetReceptacle, 
+                forceAction: forceAction))
             {
                 //error message is set insice screenToWorldTarget
-                actionFinished(false);
+                actionFinished(false, errorMessage);
                 return;
             }
 
@@ -4677,12 +4675,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set inside screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -5373,12 +5369,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -5507,10 +5501,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             SimObjPhysics target = null;
             //no target object specified, so instead try and use x/y screen coordinates
-            if(!screenToWorldTarget(x: x, y: y, target: ref target, inViewport: true, inMaxVisibleDistance: false, forceAction: forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))
             {
                 //error message is set insice screenToWorldTarget
-                actionFinished(false);
+                actionFinished(false, errorMessage);
                 return;
             }
             
@@ -5762,9 +5760,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             SimObjPhysics target = null;
-            if(!screenToWorldTarget(x: x, y: y, target: ref target, inViewport: true, inMaxVisibleDistance: false, forceAction: forceAction))  {
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))  {
                 //error message is set insice screenToWorldTarget
-                actionFinished(false);
+                actionFinished(false, errorMessage);
                 return;
             }
             openObject(
@@ -8669,12 +8671,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8740,12 +8740,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8829,12 +8827,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8907,12 +8903,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8986,12 +8980,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9090,12 +9082,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9170,12 +9160,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 x: action.x, 
                 y: action.y, 
                 target: ref target, 
-                inViewport: true, 
-                inMaxVisibleDistance: false, 
                 forceAction: action.forceAction))
                 {
                     //error message is set insice screenToWorldTarget
-                    actionFinished(false);
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
