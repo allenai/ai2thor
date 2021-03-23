@@ -303,10 +303,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 
             #if UNITY_EDITOR
+            Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             }
-            Debug.Log($"lastActionSuccess: '{success}'");
+
+            else if(actionReturn != null)
             Debug.Log($"actionReturn: '{actionReturn}'");
             #endif
         }
@@ -1580,11 +1582,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(success: false, errorMessage: errorMessage);
             }
 
-            #if UNITY_EDITOR
-                if (errorMessage != "") {
-                    Debug.LogError(errorMessage);
-                }
-            #endif
+            // #if UNITY_EDITOR
+            //     if (errorMessage != "") {
+            //         Debug.LogError(errorMessage);
+            //     }
+            // #endif
         }
 
         //no op action
@@ -1786,15 +1788,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //returns whether an object hit at (x,y) screen coordinates is in the camera viewport
-        //note this does not care if the object is outside of maxVisibleDistance, and ignores if
-        //the object hit is not currently Visible to the agent.
+        //if checkVisible = true, it will also check if the object hit is visible to the agent
         public void GetObjectInFrame(float x, float y, bool checkVisible = false) {
             SimObjPhysics target = null;
             screenToWorldTarget(
                 x: x,
                 y: y, 
                 target: ref target, 
-                checkVisible: checkVisible);
+                checkVisible: checkVisible); 
+                //if checkVisible is true and target is found, the object is also interactable to the agent
+                //this does not account for objects behind transparent objects like shower glass, as the raycast check
+                //will hit the transparent object FIRST
 
             if(target != null)
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
