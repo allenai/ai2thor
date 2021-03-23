@@ -347,8 +347,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
 
-                // Check if p is a point already reached from a different direction
-                if (!goodPoints.Contains(p)) {
+                // Check if p is a point already reached from a different direction (this method accounts for
+                // floating-point errors)
+                bool doesNotContain = true;
+
+                foreach (Vector3 goodPoint in goodPoints) {
+                    if (
+                        Mathf.Approximately(p.x, goodPoint.x) &&
+                        Mathf.Approximately(p.y, goodPoint.y) &&
+                        Mathf.Approximately(p.z, goodPoint.z)) {
+                        doesNotContain = false;
+                    }
+                }
+
+                if (doesNotContain) {
+
                     // Add p to HashSet of reachable positions
                     goodPoints.Add(p);
 
