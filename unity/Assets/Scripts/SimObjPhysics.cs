@@ -170,6 +170,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private void regenerateBoundingBoxes() {
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
+
+		//note: figure out a way to cache this in the future
+        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
+
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
@@ -177,9 +181,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             return;
         }
 
-        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
-            
 
         boundingBoxCacheRotation = rotation;
         boundingBoxCachePosition = position;
