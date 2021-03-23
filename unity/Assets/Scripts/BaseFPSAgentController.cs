@@ -350,7 +350,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // Check if p is a point already reached from a different direction (this method accounts for
                 // floating-point errors)
                 bool doesNotContain = true;
-
                 foreach (Vector3 goodPoint in goodPoints) {
                     if (
                         Mathf.Approximately(p.x, goodPoint.x) &&
@@ -410,7 +409,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         // Check 2: Is p + d within the bounds of the scene?
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
-
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -3405,9 +3403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
         }
 
-        public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
-
-
+        public bool getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -3428,7 +3424,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
-                if (!goodPoints.Contains(p)) {
+
+                bool doesNotContain = true;
+                foreach (Vector3 goodPoint in goodPoints)
+                {
+                    if (
+                        Mathf.Approximately(p.x, goodPoint.x) &&
+                        Mathf.Approximately(p.y, goodPoint.y) &&
+                        Mathf.Approximately(p.z, goodPoint.z))
+                    {
+                        doesNotContain = false;
+                    }
+                }
+
+                if (doesNotContain) {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
@@ -3479,6 +3488,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
