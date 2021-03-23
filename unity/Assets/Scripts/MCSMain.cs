@@ -354,14 +354,8 @@ public class MCSMain : MonoBehaviour {
 
             this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
-<<<<<<< HEAD
         } else {
             float wallWidth = .5f;
-=======
-        }
-        else {
-            float wallWidth=.5f;
->>>>>>> Added function to set walls, floor, and ceiling such that internal dimensions are as given.  Also added roomDimenions to Scene schema
             SetRoomInternalSize(currentScene.roomDimensions, wallWidth);
 
             if (this.currentScene.performerStart == null) {
@@ -455,17 +449,10 @@ public class MCSMain : MonoBehaviour {
 
     //Sets a room to have the given dimensions between the walls, floor and ceiling.  
     //The walls, floor, and ceiling will also have a width equal to the wall width.
-<<<<<<< HEAD
     private void SetRoomInternalSize(Vector3 roomDimensions, float wallWidth) {
         Vector3 wallWidths = new Vector3(wallWidth, wallWidth, wallWidth);
         if (roomDimensions == null || roomDimensions == Vector3.zero) {
-=======
-    private void SetRoomInternalSize(Vector3 roomDimensions, float wallWidth)
-    {
-        Vector3 wallWidths = new Vector3(wallWidth, wallWidth, wallWidth);
-        if (roomDimensions == null || roomDimensions == Vector3.zero)
-        {
->>>>>>> Added function to set walls, floor, and ceiling such that internal dimensions are as given.  Also added roomDimenions to Scene schema
+
             roomDimensions = DEFAULT_ROOM_DIMENSIONS;
         }
         Vector3 roomHalfDimensions = roomDimensions * .5f;
@@ -497,10 +484,7 @@ public class MCSMain : MonoBehaviour {
         this.ceiling.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
             MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
         this.ceiling.transform.position = new Vector3(0, roomDimensions.y + wallHalfWidths.y, 0);
-<<<<<<< HEAD
         agentController.agentManager.ResetSceneBounds();
-=======
->>>>>>> Added function to set walls, floor, and ceiling such that internal dimensions are as given.  Also added roomDimenions to Scene schema
     }
 
     private Collider AssignBoundingBox(
