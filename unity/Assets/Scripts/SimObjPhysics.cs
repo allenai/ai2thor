@@ -171,16 +171,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
 
-		//note: figure out a way to cache this in the future
-        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
-
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
-        if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
-            return;
-        }
+        // if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
+        //     return;
+        // }
 
+		//note: figure out a way to cache this in the future
+        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
 
         boundingBoxCacheRotation = rotation;
