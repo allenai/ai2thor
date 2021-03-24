@@ -800,11 +800,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float[] brightness = null,
             float[] hue = null,
             float[] saturation = null
-            // (float, float)? brightness = null,
-            // (float, float)? hue = null,
-            // (float, float)? saturation = null
         ) {
-            if (!randomizeColor && (HasValue != null || saturation != null)) {
+            if (!randomizeColor && (hue != null || saturation != null)) {
                 if (hue != null) {
                     throw new ArgumentException(
                         $"Cannot pass in randomizeColor=False while also providing hue={hue}."
@@ -826,22 +823,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 );
             }
 
-            if (hue != null) {
-                hue = (0, 1);
+            if (hue == null) {
+                hue = new float[] {0, 1};
             }
-            if (saturation != null) {
-                saturation = (0.5f, 1);
+            if (saturation == null) {
+                saturation = new float[] {0.5f, 1};
             }
 
             if (hue[0] < 0 || hue[0] > 1 || hue[1] < 0 || hue[1] > 1) {
-                throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue.Value}");
+                throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue}");
             }
             if (saturation[0] < 0 || saturation[0] > 1 || saturation[1] < 0 || saturation[1] > 1) {
-                throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation.Value}");
+                throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation}");
             }
 
             float newRandomFloat() {
-                return Random.Range(brightness.Value.Item1, brightness.Value.Item2);
+                return Random.Range(brightness[0], brightness[1]);
             }
             Color newRandomColor() {
                 // NOTE: This function weirdly IGNORES out of bounds arguments.
@@ -850,10 +847,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //       since it can be controlled by brightness.
                 //       Hence why value=1.
                 return Random.ColorHSV(
-                    hueMin: hue.Value.Item1,
-                    hueMax: hue.Value.Item2,
-                    saturationMin: saturation.Value.Item2,
-                    saturationMax: saturation.Value.Item2,
+                    hueMin: hue[0],
+                    hueMax: hue[1],
+                    saturationMin: saturation[0],
+                    saturationMax: saturation[1],
                     valueMin: 1,
                     valueMax: 1
                 );
