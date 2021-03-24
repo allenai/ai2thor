@@ -8,7 +8,7 @@ public class MCSConfig {
         { "Custom/Materials/Blue", new string[] { "blue" } },
         { "Custom/Materials/Brown", new string[] { "brown" } },
         { "Custom/Materials/Cyan", new string[] { "cyan" } },
-        { "Custom/Materials/GoldenRod", new string[] { "goldenrod" } },
+        { "Custom/Materials/Goldenrod", new string[] { "goldenrod" } },
         { "Custom/Materials/Green", new string[] { "green" } },
         { "Custom/Materials/Grey", new string[] { "grey" } },
         { "Custom/Materials/Indigo", new string[] { "indigo" } },

@@ -6,10 +6,9 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
-    public static float STANDING_POSITION_Y = 0.4625f;
+    public static float STANDING_POSITION_Y = 0.762f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
-    public static float MOVE_MAX = 0.1f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
@@ -788,7 +787,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
     public override void MoveLeft(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
         this.movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
@@ -798,7 +796,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void MoveRight(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
         this.movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
@@ -808,7 +805,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void MoveAhead(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
         this.movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
@@ -818,7 +814,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void MoveBack(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        action.moveMagnitude = Mathf.Min(action.moveMagnitude, MCSController.MOVE_MAX);
         this.movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
