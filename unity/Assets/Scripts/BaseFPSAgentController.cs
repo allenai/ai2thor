@@ -779,12 +779,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
          * @param synchronized denotes if all lights should be multiplied by the same randomized
          *        intensity and be randomized to the same color. When false, each lighting object gets
          *        its own independent randomized intensity and randomized color.
-         * @param randomizeColor specifies if the color of the light should be randomized, or if only
-         *        its intensity should change.
          * @param brightness sets the bounds with which the light intensity is multiplied by. If its a
          *        tuple(float, float), values must each be greater than 0, where the multiplier is
          *        then sampled from [brightness[0] : brightness[1]]. If brightness[0] is greater than
          *        brightness[1], the values are swapped. Defaults to (0.5, 1.5).
+         * @param randomizeColor specifies if the color of the light should be randomized, or if only
+         *        its intensity should change.
          * @param hue provides the (min, max) range of possible hue values for a light's color.
          *        Valid values are in [0 : 1], where:
          *          - 0 maps to a hue of 0 degrees (i.e., red-ish)
@@ -796,8 +796,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
          */
         public void RandomizeLighting(
             bool synchronized = false,
-            bool randomizeColor = true,
             float[] brightness = null,
+            bool randomizeColor = true,
             float[] hue = null,
             float[] saturation = null
         ) {
