@@ -268,9 +268,27 @@ public class MCSMain : MonoBehaviour {
         String floorMaterial = (this.currentScene.floorMaterial != null &&
             !this.currentScene.floorMaterial.Equals("")) ? this.currentScene.floorMaterial :
             this.defaultFloorMaterial;
-        String wallsMaterial = (this.currentScene.wallMaterial != null &&
+        String myDefaultWallMaterial = (this.currentScene.wallMaterial != null &&
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
+        // get material for each wall
+
+        String leftWallMaterial = (this.currentScene.roomMaterials?.left != null && 
+            !this.currentScene.roomMaterials.left.Equals("") ? 
+            this.currentScene.roomMaterials.left : 
+            myDefaultWallMaterial);
+        String rightWallMaterial = (this.currentScene.roomMaterials?.right != null && 
+            !this.currentScene.roomMaterials.right.Equals("") ? 
+            this.currentScene.roomMaterials.right : 
+            myDefaultWallMaterial);
+        String frontWallMaterial = (this.currentScene.roomMaterials?.front != null && 
+            !this.currentScene.roomMaterials.front.Equals("") ? 
+            this.currentScene.roomMaterials.front : 
+            myDefaultWallMaterial);
+        String backWallMaterial = (this.currentScene.roomMaterials?.back != null && 
+            !this.currentScene.roomMaterials.back.Equals("") ? 
+            this.currentScene.roomMaterials.back : 
+            myDefaultWallMaterial);
 
         // Remove the ceiling from all intuitive physics and isometric scenes.
         this.ceiling.SetActive(!(this.currentScene.intuitivePhysics || this.currentScene.observation ||
@@ -391,10 +409,10 @@ public class MCSMain : MonoBehaviour {
             }
 
             AssignMaterial(this.floor, floorMaterial);
-            AssignMaterial(this.wallLeft, wallsMaterial);
-            AssignMaterial(this.wallRight, wallsMaterial);
-            AssignMaterial(this.wallFront, wallsMaterial);
-            AssignMaterial(this.wallBack, wallsMaterial);
+            AssignMaterial(this.wallLeft, leftWallMaterial);
+            AssignMaterial(this.wallRight, rightWallMaterial);
+            AssignMaterial(this.wallFront, frontWallMaterial);
+            AssignMaterial(this.wallBack, backWallMaterial);
 
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
@@ -1681,6 +1699,8 @@ public class MCSConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
+
+    public MCSConfigWallMaterials roomMaterials;
     public bool intuitivePhysics;
     public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
@@ -1693,6 +1713,14 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
+}
+
+[Serializable]
+public class MCSConfigWallMaterials {
+    public string left;
+    public string right;
+    public string front;
+    public string back;
 }
 
 [Serializable]
