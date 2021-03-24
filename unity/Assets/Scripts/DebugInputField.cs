@@ -709,7 +709,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "RandomizeLighting",
-                            ["synchronized"] = false
+                            ["synchronized"] = false,
+                            ["brightness"] = (0.5, 1.5),
+                            ["hue"] = (0, 1),
+                            ["saturation"] = (0, 1)
                         };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

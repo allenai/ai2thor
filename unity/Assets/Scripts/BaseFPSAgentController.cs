@@ -770,44 +770,99 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         /**
-         * @param fromMultiplier is the randomed lower bound that the light intensity is multiplied by.
-         * @param toMultiplier is the randomed upper bound that the light intensity is multiplied by.
+         *
+         * @REMARK: (float, float) cannot be a compile time constant, hence why there are null defaults.
+         * @REMARK: Union types are not (intended) to be supported in C# until C# 10.0. So, sadly, one
+         *          must pass in hue=[value, value] for hue=value (and similarly for brightness and
+         *          saturation).
+         *
          * @param synchronized denotes if all lights should be multiplied by the same randomized
          *        intensity and be randomized to the same color. When false, each lighting object gets
-                  its own independent randomized intensity and randomized color.
-         * @param changeColor specifies if the color of the light should be randomized, or if only
-                  its intensity should change.
+         *        its own independent randomized intensity and randomized color.
+         * @param randomizeColor specifies if the color of the light should be randomized, or if only
+         *        its intensity should change.
+         * @param brightness sets the bounds with which the light intensity is multiplied by. If its a
+         *        tuple(float, float), values must each be greater than 0, where the multiplier is
+         *        then sampled from [brightness[0] : brightness[1]]. If brightness[0] is greater than
+         *        brightness[1], the values are swapped. Defaults to (0.5, 1.5).
+         * @param hue provides the (min, max) range of possible hue values for a light's color.
+         *        Valid values are in [0 : 1], where:
+         *          - 0 maps to a hue of 0 degrees (i.e., red-ish)
+         *          - 0.5 maps to a hue of 180 degrees (i.e., green-ish)
+         *          - 1 maps to a hue of 360 degrees (i.e., red-ish)
+         * @param saturation provides the (min, max) range of possible saturation values for a light's
+         *        color. Valid values are in [0 : 1], where 0 corresponds to grayscale and 1 corresponds
+         *        to full saturation. Defaults to [0.5 : 1].
          */
         public void RandomizeLighting(
-            float fromMultiplier = 0.5f,
-            float toMultiplier = 1.5f,
             bool synchronized = false,
-            bool changeColor = true
+            bool randomizeColor = true,
+            (float, float)? brightness = null,
+            (float, float)? hue = null,
+            (float, float)? saturation = null
         ) {
-            if (fromMultiplier < 0) {
+
+            if (!randomizeColor && (hue.HasValue || saturation.HasValue)) {
+                if (hue.HasValue) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing hue={hue.Value}."
+                    );
+                }
+                if (saturation.HasValue) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing saturation={saturation.Value}."
+                    );
+                }
+            }
+
+            if (!brightness.HasValue) {
+                brightness = (0.5f, 1.5f);
+            }
+            if (brightness.Value.Item1 < 0 || brightness.Value.Item2 < 0) {
                 throw new ArgumentOutOfRangeException(
-                    $"fromMultiplier must be >= 0, not {fromMultiplier}."
-                );
-            } else if (toMultiplier < 0) {
-                throw new ArgumentOutOfRangeException(
-                    $"toMultiplier must be >= 0, not {fromMultiplier}."
-                );
-            } else if (toMultiplier < fromMultiplier) {
-                throw new ArgumentOutOfRangeException(
-                    $"toMultiplier must be >= fromMultiplier, not toMultiplier={toMultiplier} < fromMultiplier={fromMultiplier}."
+                    $"Each brightness must be >= 0, not brightness={brightness.Value}."
                 );
             }
 
+            if (!hue.HasValue) {
+                hue = (0, 1);
+            }
+            if (!saturation.HasValue) {
+                saturation = (0.5f, 1);
+            }
+
+            if (
+                hue.Value.Item1 < 0
+                || hue.Value.Item1 > 1
+                || hue.Value.Item2 < 0
+                || hue.Value.Item2 > 1
+            ) {
+                throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue.Value}");
+            }
+            if (
+                saturation.Value.Item1 < 0
+                || saturation.Value.Item1 > 1
+                || saturation.Value.Item2 < 0
+                || saturation.Value.Item2 > 1
+            ) {
+                throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation.Value}");
+            }
+
             float newRandomFloat() {
-                return Random.Range(fromMultiplier, toMultiplier);
+                return Random.Range(brightness.Value.Item1, brightness.Value.Item2);
             }
             Color newRandomColor() {
+                // NOTE: This function weirdly IGNORES out of bounds arguments.
+                //       So, they are checked above.
+                // NOTE: value is an extraneous degree of freedom here,
+                //       since it can be controlled by brightness.
+                //       Hence why value=1.
                 return Random.ColorHSV(
-                    hueMin: 0,
-                    hueMax: 1,
-                    saturationMin: 0.5f,
-                    saturationMax: 1,
-                    valueMin: 0,
+                    hueMin: hue.Value.Item1,
+                    hueMax: hue.Value.Item2,
+                    saturationMin: saturation.Value.Item2,
+                    saturationMax: saturation.Value.Item2,
+                    valueMin: 1,
                     valueMax: 1
                 );
             }
@@ -838,7 +893,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 light.intensity = (float) originalLightingValues[name]["intensity"] * intensityMultiplier;
                 light.range = (float) originalLightingValues[name]["range"] * intensityMultiplier;
-                if (changeColor) {
+                if (randomizeColor) {
                     light.color = randomColor;
                 }
             }
@@ -3914,4 +3969,57 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, conflicts);
         }
 	}
+}
+
+// NOTE: Union types are not expected to be supported officially until C# 10.0.
+// This was taken from https://stackoverflow.com/questions/3151702/discriminated-union-in-c-sharp,
+// and helps prevent a combinatoric explosion of actions
+public class UnionBase<A> {
+    dynamic value;
+    public UnionBase(A a) { value = a; } 
+    protected UnionBase(object x) { value = x; }
+    protected T InternalMatch<T>(params Delegate[] ds) {
+        var vt = value.GetType();
+        foreach (Delegate d in ds) {
+            var mi = d.Method;
+            Debug.Assert(mi.GetParameters().Length == 1);
+            Debug.Assert(typeof(T).IsAssignableFrom(mi.ReturnType));
+            var pt = mi.GetParameters()[0].ParameterType;
+            if (pt.IsAssignableFrom(vt)) {
+                return (T)mi.Invoke(null, new object[] { value });
+            }
+        }
+        throw new Exception("No appropriate matching function was provided");
+    }
+    public T Match<T>(Func<A, T> fa) { return InternalMatch<T>(fa); }
+}
+public class Union<A, B> : UnionBase<A> {
+    public Union(A a) : base(a) {}
+    public Union(B b) : base(b) {}
+    protected Union(object x) : base(x) {}
+    public T Match<T>(Func<A, T> fa, Func<B, T> fb) { return InternalMatch<T>(fa, fb); }
+}
+public class Union<A, B, C> : Union<A, B> {
+    public Union(A a) : base(a) {}
+    public Union(B b) : base(b) {}
+    public Union(C c) : base(c) {}
+    protected Union(object x) : base(x) {}
+    public T Match<T>(Func<A, T> fa, Func<B, T> fb, Func<C, T> fc) { return InternalMatch<T>(fa, fb, fc); }
+}
+public class Union<A, B, C, D> : Union<A, B, C> {
+    public Union(A a) : base(a) {}
+    public Union(B b) : base(b) {}
+    public Union(C c) : base(c) {}
+    public Union(D d) : base(d) {}
+    protected Union(object x) : base(x) {}
+    public T Match<T>(Func<A, T> fa, Func<B, T> fb, Func<C, T> fc, Func<D, T> fd) { return InternalMatch<T>(fa, fb, fc, fd); }
+}
+public class Union<A, B, C, D, E> : Union<A, B, C, D> {
+    public Union(A a) : base(a) {}
+    public Union(B b) : base(b) {}
+    public Union(C c) : base(c) {}
+    public Union(D d) : base(d) {}
+    public Union(E e) : base(e) {}
+    protected Union(object x) : base(x) {}
+    public T Match<T>(Func<A, T> fa, Func<B, T> fb, Func<C, T> fc, Func<D, T> fd, Func<E, T> fe) { return InternalMatch<T>(fa, fb, fc, fd, fe); }
 }
