@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
-    public static float STANDING_POSITION_Y = 0.4625f;
+    public static float STANDING_POSITION_Y = 0.762f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
 
