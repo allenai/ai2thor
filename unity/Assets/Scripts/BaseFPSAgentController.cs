@@ -771,7 +771,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         /**
          *
-         * @REMARK: (float, float) cannot be a compile time constant, hence why there are null defaults.
+         * @REMARK: float[] = {float, float} cannot be a compile time constant, hence why there are
+         *          null defaults.
          * @REMARK: Union types are not (intended) to be supported in C# until C# 10.0. So, sadly, one
          *          must pass in hue=[value, value] for hue=value (and similarly for brightness and
          *          saturation).
