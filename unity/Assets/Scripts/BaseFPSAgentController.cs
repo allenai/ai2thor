@@ -797,54 +797,46 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void RandomizeLighting(
             bool synchronized = false,
             bool randomizeColor = true,
-            (float, float)? brightness = null,
-            (float, float)? hue = null,
-            (float, float)? saturation = null
+            float[] brightness = null,
+            float[] hue = null,
+            float[] saturation = null
+            // (float, float)? brightness = null,
+            // (float, float)? hue = null,
+            // (float, float)? saturation = null
         ) {
-
-            if (!randomizeColor && (hue.HasValue || saturation.HasValue)) {
-                if (hue.HasValue) {
+            if (!randomizeColor && (HasValue != null || saturation != null)) {
+                if (hue != null) {
                     throw new ArgumentException(
-                        $"Cannot pass in randomizeColor=False while also providing hue={hue.Value}."
+                        $"Cannot pass in randomizeColor=False while also providing hue={hue}."
                     );
                 }
-                if (saturation.HasValue) {
+                if (saturation != null) {
                     throw new ArgumentException(
-                        $"Cannot pass in randomizeColor=False while also providing saturation={saturation.Value}."
+                        $"Cannot pass in randomizeColor=False while also providing saturation={saturation}."
                     );
                 }
             }
 
-            if (!brightness.HasValue) {
-                brightness = (0.5f, 1.5f);
+            if (brightness == null) {
+                brightness = new float[] {0.5f, 1.5f};
             }
-            if (brightness.Value.Item1 < 0 || brightness.Value.Item2 < 0) {
+            if (brightness[0] < 0 || brightness[1] < 0) {
                 throw new ArgumentOutOfRangeException(
-                    $"Each brightness must be >= 0, not brightness={brightness.Value}."
+                    $"Each brightness must be >= 0, not brightness={brightness}."
                 );
             }
 
-            if (!hue.HasValue) {
+            if (hue != null) {
                 hue = (0, 1);
             }
-            if (!saturation.HasValue) {
+            if (saturation != null) {
                 saturation = (0.5f, 1);
             }
 
-            if (
-                hue.Value.Item1 < 0
-                || hue.Value.Item1 > 1
-                || hue.Value.Item2 < 0
-                || hue.Value.Item2 > 1
-            ) {
+            if (hue[0] < 0 || hue[0] > 1 || hue[1] < 0 || hue[1] > 1) {
                 throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue.Value}");
             }
-            if (
-                saturation.Value.Item1 < 0
-                || saturation.Value.Item1 > 1
-                || saturation.Value.Item2 < 0
-                || saturation.Value.Item2 > 1
-            ) {
+            if (saturation[0] < 0 || saturation[0] > 1 || saturation[1] < 0 || saturation[1] > 1) {
                 throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation.Value}");
             }
 
