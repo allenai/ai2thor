@@ -907,8 +907,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ["blendDistance"] = reflectionProbe.intensity
                     };
                 }
-                reflectionProbe.intensity = (float) originalLightingValues[id]["intensity"] * intensityMultiplier;
-                reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier;
+                reflectionProbe.intensity = (
+                    (float) originalLightingValues[id]["intensity"] * intensityMultiplier
+                );
+                reflectionProbe.blendDistance = (
+                    (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier
+                );
             }
 
             actionFinished(success: true);
