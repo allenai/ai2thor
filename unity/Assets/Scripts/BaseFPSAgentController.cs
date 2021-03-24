@@ -351,10 +351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // floating-point errors)
                 bool doesNotContain = true;
                 foreach (Vector3 goodPoint in goodPoints) {
-                    if (
-                        Mathf.Approximately(p.x, goodPoint.x) &&
-                        Mathf.Approximately(p.y, goodPoint.y) &&
-                        Mathf.Approximately(p.z, goodPoint.z)) {
+                    if (Vector3.Distance(p, goodPoint) < 1e-4f) {
                         doesNotContain = false;
                     }
                 }
@@ -3428,11 +3425,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 bool doesNotContain = true;
                 foreach (Vector3 goodPoint in goodPoints)
                 {
-                    if (
-                        Mathf.Approximately(p.x, goodPoint.x) &&
-                        Mathf.Approximately(p.y, goodPoint.y) &&
-                        Mathf.Approximately(p.z, goodPoint.z))
-                    {
+                    if (Vector3.Distance(p, goodPoint) < 1e-4f) {
                         doesNotContain = false;
                     }
                 }
