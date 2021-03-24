@@ -710,9 +710,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "RandomizeLighting",
                             ["synchronized"] = false,
-                            ["brightness"] = (0.5, 1.5),
-                            ["hue"] = (0, 1),
-                            ["saturation"] = (0, 1)
+                            ["brightness"] = new float[] {0.5f, 1.5f},
+                            ["hue"] = new float[] {0, 1},
+                            ["saturation"] = new float[] {0, 1}
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "resetlight":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "ResetLighting"
                         };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

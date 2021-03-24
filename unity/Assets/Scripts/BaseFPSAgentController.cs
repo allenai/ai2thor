@@ -879,7 +879,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     randomColor = newRandomColor();
                 }
                 int id = light.gameObject.GetInstanceID();
-                Debug.Log(id);
                 if (setOriginalMultipliers) {
                     originalLightingValues[id] = new Dictionary<string, object>() {
                         // NOTE: make sure these are synced with ResetLighting()!
@@ -901,7 +900,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     intensityMultiplier = newRandomFloat();
                 }
                 int id = reflectionProbe.gameObject.GetInstanceID();
-                Debug.Log(id);
                 if (setOriginalMultipliers) {
                     // NOTE: make sure these are synced with ResetLighting()!
                     originalLightingValues[id] = new Dictionary<string, object>() {
@@ -913,6 +911,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier;
             }
 
+            actionFinished(success: true);
+        }
+
+        public void ResetLighting() {
+            if (originalLightingValues == null) {
+                actionFinishedEmit(success: true);
+                return;
+            }
+
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                int id = light.gameObject.GetInstanceID();
+                light.intensity = (float) originalLightingValues[id]["intensity"];
+                light.range = (float) originalLightingValues[id]["range"];
+                light.color = (Color) originalLightingValues[id]["color"];
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                reflectionProbe.intensity = (float) originalLightingValues[id]["intensity"];
+                reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"];
+            }
+
+            originalLightingValues = null;
             actionFinished(success: true);
         }
 
