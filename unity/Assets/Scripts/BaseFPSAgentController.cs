@@ -830,6 +830,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 saturation = new float[] {0.5f, 1};
             }
 
+            if (saturation.Length != 2 || hue.Length != 2 || brightness.Length != 2) {
+                throw new ArgumentException(
+                    "Ranges for hue, saturation, and brightness must each have 2 values. You gave " +
+                    $"saturation={saturation}, hue={hue}, brightness={brightness}."
+                );
+            }
+
             if (hue[0] < 0 || hue[0] > 1 || hue[1] < 0 || hue[1] > 1) {
                 throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue}");
             }
