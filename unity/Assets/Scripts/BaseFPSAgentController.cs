@@ -1740,9 +1740,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11, QueryTriggerInteraction.Ignore)) {
 
                 //DEBUG STUFF PLEASE DELETE LATER//////
-                GameObject empty = new GameObject("empty");
-                Instantiate(empty, hit.point, Quaternion.identity);
-                GameObject.Destroy(empty);
+                // GameObject empty = new GameObject("empty");
+                // Instantiate(empty, hit.point, Quaternion.identity);
+                // GameObject.Destroy(empty);
                 ///////////////////////////////////////
                 
                 if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
