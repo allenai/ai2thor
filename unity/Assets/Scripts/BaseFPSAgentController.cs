@@ -79,7 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
 
-        private Dictionary<string, Dictionary<string, object>> originalLightingValues = null;
+        private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
 
         public AgentState agentState = AgentState.Emit;
 
@@ -868,7 +868,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             bool setOriginalMultipliers = originalLightingValues == null;
             if (setOriginalMultipliers) {
-                originalLightingValues = new Dictionary<string, Dictionary<string, object>>();
+                originalLightingValues = new Dictionary<int, Dictionary<string, object>>();
             }
 
             // include both lights and reflection probes
@@ -878,17 +878,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     intensityMultiplier = newRandomFloat();
                     randomColor = newRandomColor();
                 }
-                string name = light.gameObject.name;
+                int id = light.gameObject.GetInstanceID();
+                Debug.Log(id);
                 if (setOriginalMultipliers) {
-                    originalLightingValues[name] = new Dictionary<string, object>() {
+                    originalLightingValues[id] = new Dictionary<string, object>() {
                         // NOTE: make sure these are synced with ResetLighting()!
                         ["intensity"] = light.intensity,
                         ["range"] = light.range,
                         ["color"] = light.color
                     };
                 }
-                light.intensity = (float) originalLightingValues[name]["intensity"] * intensityMultiplier;
-                light.range = (float) originalLightingValues[name]["range"] * intensityMultiplier;
+                light.intensity = (float) originalLightingValues[id]["intensity"] * intensityMultiplier;
+                light.range = (float) originalLightingValues[id]["range"] * intensityMultiplier;
                 if (randomizeColor) {
                     light.color = randomColor;
                 }
@@ -899,16 +900,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (!synchronized) {
                     intensityMultiplier = newRandomFloat();
                 }
-                string name = reflectionProbe.gameObject.name;
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                Debug.Log(id);
                 if (setOriginalMultipliers) {
                     // NOTE: make sure these are synced with ResetLighting()!
-                    originalLightingValues[name] = new Dictionary<string, object>() {
+                    originalLightingValues[id] = new Dictionary<string, object>() {
                         ["intensity"] = reflectionProbe.intensity,
                         ["blendDistance"] = reflectionProbe.intensity
                     };
                 }
-                reflectionProbe.intensity = (float) originalLightingValues[name]["intensity"] * intensityMultiplier;
-                reflectionProbe.blendDistance = (float) originalLightingValues[name]["blendDistance"] * intensityMultiplier;
+                reflectionProbe.intensity = (float) originalLightingValues[id]["intensity"] * intensityMultiplier;
+                reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier;
             }
 
             actionFinished(success: true);
