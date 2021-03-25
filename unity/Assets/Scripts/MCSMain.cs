@@ -483,6 +483,7 @@ public class MCSMain : MonoBehaviour {
         this.ceiling.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
             MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
         this.ceiling.transform.position = new Vector3(0, roomDimensions.y + wallHalfWidths.y, 0);
+        agentController.agentManager.ResetSceneBounds();
     }
 
     private Collider AssignBoundingBox(
