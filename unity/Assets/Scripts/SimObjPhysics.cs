@@ -251,23 +251,46 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
       if(this.IsPickupable || this.IsMoveable) {
         ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
-        if(this.BoundingBox== null)
+        if(this.BoundingBox == null)
         {
             Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
             return b;
         }
 
-        BoxCollider col = this.BoundingBox.GetComponent<BoxCollider>();
-        
+		// Align SimObject to origin and axes
+		Vector3 cachedPosition = this.transform.position;
+		Quaternion cachedRotation = this.transform.rotation;
+
+		this.transform.position = Vector3.zero;
+		this.transform.rotation = Quaternion.identity;
+
+		// Initialize the bounds and encapsulate all active colliders in SimObject's array
+		Bounds newBB = MyColliders[0].bounds;
+
+		foreach (Collider c in MyColliders)
+		{
+			if (c.enabled)
+				newBB.Encapsulate(c.bounds);
+		}
+
+		// Update SimObject's BoundingBox collider to match new bounds
+		this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
+		this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
+
+		// Revert SimObject back to its initial transform
+		this.transform.position = cachedPosition;
+		this.transform.rotation = cachedRotation;
+
+		// Get corner points of SimObject's new BoundingBox, in its correct transformation
         List<Vector3> points = new List<Vector3>();
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, +newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, newBB.size.y, -newBB.size.z) * 0.5f));
 
         List<float[]> cornerPoints = new List<float[]>();
         foreach(Vector3 p in points) {
