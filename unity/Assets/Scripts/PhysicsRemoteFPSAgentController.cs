@@ -499,7 +499,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //Debug.DrawLine(pointsOnArc[i].position, pointsOnArc[i+1].position, Color.magenta, 500.0f);
 
-                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit, Quaternion.Lerp(pointsOnArc[i].orientation, arcIncrementDistance, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit,
+                    Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), arcIncrementDistance, 1 << 8 | 1 << 10,
+                    QueryTriggerInteraction.Ignore))
                     {
                         if (hit.transform.GetComponent<SimObjPhysics>())
                         {
