@@ -11,6 +11,7 @@ from ai2thor.controller import Controller
 from ai2thor.tests.constants import TESTS_DATA_DIR
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
+from PIL import ImageChops, ImageFilter, Image
 import glob
 import re
 
@@ -45,9 +46,16 @@ wsgi_controller = build_controller(server_class=WsgiServer)
 fifo_controller = build_controller(server_class=FifoServer)
 stochastic_controller = build_controller(agentControllerType="stochastic")
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -150,7 +158,10 @@ def test_bot_deprecation():
 def test_deprecated_segmentation_params():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
-    controller = build_controller(renderObjectImage=True, renderClassImage=True,)
+    controller = build_controller(
+        renderObjectImage=True,
+        renderClassImage=True,
+    )
     event = controller.last_event
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -165,7 +176,8 @@ def test_deprecated_segmentation_params2():
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
     controller = build_controller(
-        renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = controller.last_event
 
@@ -872,7 +884,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -883,7 +896,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -891,7 +905,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1121,24 +1136,37 @@ def test_get_object_in_frame(controller):
     event = controller.reset(renderInstanceSegmentation=True)
     assert event.metadata["screenHeight"] == 300
     assert event.metadata["screenWidth"] == 300
+
+    # exhaustive test
+    num_tested = 0
     for objectId in event.instance_masks.keys():
-        try:
-            obj = next(
-                obj for obj in event.metadata["objects"] if obj["objectId"] == objectId
-            )
-        except:
-            # not a sim object
+        for obj in event.metadata["objects"]:
+            if obj["objectId"] == objectId:
+                break
+        else:
+            # object may not be a sim object (e.g., ceiling, floor, wall, etc.)
             continue
-        if obj["visible"]:
-            mask = event.instance_masks[objectId]
-            ys, xs = mask.nonzero()
-            for x, y in zip(xs, ys):
-                event = controller.step(
-                    action="GetObjectInFrame",
-                    x=x / 300,
-                    y=y / 300,
-                    forceAction=True
-                )
-                assert (
-                    event.metadata["actionReturn"] == objectId
-                ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
+
+        num_tested += 1
+
+        mask = event.instance_masks[objectId]
+
+        # subtract 3 pixels off the edge due to pixels being rounded and collider issues
+        mask = Image.fromarray(mask)
+        for _ in range(3):
+            mask_edges = mask.filter(ImageFilter.FIND_EDGES)
+            mask = ImageChops.subtract(mask, mask_edges)
+        mask = np.array(mask)
+
+        ys, xs = mask.nonzero()
+        for x, y in zip(xs, ys):
+            event = controller.step(
+                action="GetObjectInFrame", x=x / 300, y=y / 300, forceAction=True
+            )
+            assert (
+                event.metadata["actionReturn"] == objectId
+            ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
+
+    assert (
+        num_tested == 29
+    ), "There should be 29 objects in the frame, based on the agent's pose!"
