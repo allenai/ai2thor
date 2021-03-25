@@ -189,11 +189,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
         AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
-        //get all colliders on the sop, excluding colliders if they are not enabled
-        Collider[] cols = this.GetComponentsInChildren<Collider>();
-
         //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
-        if(cols.Length == 0)
+        if(MyColliders.Length == 0)
         {
             SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
             if(sopc.IsBroken || sopc.IsSliced)
@@ -213,9 +210,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             }
         }
 
-        Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
+        Bounds bounding = MyColliders[0].bounds;//initialize the bounds to return with our first collider
 
-        foreach(Collider c in cols)
+        foreach(Collider c in MyColliders)
         {
             if(c.enabled)
             bounding.Encapsulate(c.bounds);
