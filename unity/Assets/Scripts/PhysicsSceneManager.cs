@@ -72,7 +72,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
     
     // disabling LateUpdate to experiment with determinism
-    void LateUpdateXXX() {
+    void LateUpdate() {
         // check what objects in the scene are currently in motion
         // Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
         foreach (Rigidbody rb in rbsInScene) {
@@ -100,7 +100,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                     // print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
                     // #endif
                 }
-            } else {
+            // only apply drag if autosimulation is on
+            } else if (Physics.autoSimulation){
                 // this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
                 if (rb.transform.gameObject.activeSelf) {
                     //is the rigidbody at non zero velocity? then the scene is not at rest

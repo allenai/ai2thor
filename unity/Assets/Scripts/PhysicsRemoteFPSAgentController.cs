@@ -2211,6 +2211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void UnpausePhysicsAutoSim()
         {
             Physics.autoSimulation = true;
+            Physics.autoSyncTransforms = true;
             physicsSceneManager.physicsSimulationPaused = false;
             actionFinished(true);
         }
