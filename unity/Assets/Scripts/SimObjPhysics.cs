@@ -193,8 +193,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		List<Transform> childSimObjects = new List<Transform>();
 		foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>())
         {
-			childSimObjects.Add(simObject.transform);
-			simObject.transform.parent = null;
+			if (simObject != this)
+			{
+				childSimObjects.Add(simObject.transform);
+				simObject.transform.parent = null;
+			}
 		}
 
 		//get all colliders on the sop, excluding colliders if they are not enabled
@@ -229,6 +232,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			bounding.Encapsulate(c.bounds);
 		}
 
+		//reparent child simobjects
+		foreach (Transform childSimObject in childSimObjects)
+		{
+			childSimObject.SetParent(this.transform);
+		}
+
 		//ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
 		List<float[]> cornerPoints = new List<float[]>();
 		float[] xs = new float[]{
@@ -255,12 +264,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		b.center = bounding.center;//also return the center of this bounding box in world coordinates
 		b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
 
-		//reparent child simobjects
-		foreach (Transform childSimObject in childSimObjects)
-		{
-			childSimObject.SetParent(this.transform);
-		}
-
 		return b;
 
     }
@@ -275,6 +278,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             return b;
         }
 
+		//unparent child simobjects during bounding box generation
+		List<Transform> childSimObjects = new List<Transform>();
+		foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>())
+        {
+            if (simObject != this)
+			{
+				childSimObjects.Add(simObject.transform);
+				simObject.transform.parent = null;
+			}
+			
+		}
+
 		// Align SimObject to origin and axes
 		Vector3 cachedPosition = this.transform.position;
 		Quaternion cachedRotation = this.transform.rotation;
@@ -282,16 +297,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.transform.position = Vector3.zero;
 		this.transform.rotation = Quaternion.identity;
 
-		// Initialize the bounds and encapsulate all active colliders in SimObject's array
-		Bounds newBB = MyColliders[0].bounds;
+		//get all colliders on the sop, excluding colliders if they are not enabled
+		Collider[] cols = this.GetComponentsInChildren<Collider>();
 
-		foreach (Collider c in MyColliders)
+		// Initialize the bounds and encapsulate all active colliders in SimObject's array
+		Bounds newBB = cols[0].bounds;
+
+		foreach (Collider c in cols)
 		{
 			if (c.enabled)
 				newBB.Encapsulate(c.bounds);
 		}
 
 		// Update SimObject's BoundingBox collider to match new bounds
+		this.BoundingBox.transform.rotation = Quaternion.identity;
 		this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
 		this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
 
@@ -299,8 +318,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.transform.position = cachedPosition;
 		this.transform.rotation = cachedRotation;
 
+		//reparent child simobjects
+		foreach (Transform childSimObject in childSimObjects)
+		{
+			childSimObject.SetParent(this.transform);
+		}
+
 		// Get corner points of SimObject's new BoundingBox, in its correct transformation
-        List<Vector3> points = new List<Vector3>();
+		List<Vector3> points = new List<Vector3>();
         points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
         points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
         points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, -newBB.size.z) * 0.5f));
