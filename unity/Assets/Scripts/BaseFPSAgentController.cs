@@ -118,6 +118,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        // convenciance function that can be called
+        // when autoSyncTransforms is disabled and the
+        // transform has been manually moved
+        public void autoSyncTransforms() {
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+        }
+
         public bool ReadyForCommand {
             get {
                 return this.agentState == AgentState.Emit;
@@ -697,6 +706,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (float z in zs)
                 {
                     this.transform.position = startingPosition;
+                    autoSyncTransforms();
+
                     yield return null;
 
                     Vector3 target = new Vector3(x, this.transform.position.y, z);
@@ -728,6 +739,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.transform.position = startingPosition;
+            autoSyncTransforms();
             yield return null;
             if (validMovements.Count > 0)
             {
@@ -1977,12 +1989,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Vector3 pos = (Vector3) targetPosition;
-            if (!Physics.autoSyncTransforms) {
-                // we must sync the rigidbody prior to executing the
-                // move otherwise the agent will end up in a different
-                // location from the targetPosition
-                Physics.SyncTransforms();
-            }
+            // we must sync the rigidbody prior to executing the
+            // move otherwise the agent will end up in a different
+            // location from the targetPosition
+            autoSyncTransforms();
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
