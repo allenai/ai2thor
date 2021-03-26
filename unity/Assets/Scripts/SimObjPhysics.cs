@@ -187,64 +187,69 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     }
 
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
-        AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+		if (this.IsPickupable || this.IsMoveable)
+		{
+			AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
-        //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
-        if(MyColliders.Length == 0)
-        {
-            SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
-            if(sopc.IsBroken || sopc.IsSliced)
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
-                #endif
-                return b;
-            }
+			//0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
+			if(MyColliders.Length == 0)
+			{
+				SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
+				if(sopc.IsBroken || sopc.IsSliced)
+				{
+					#if UNITY_EDITOR
+					Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
+					#endif
+					return b;
+				}
 
-            else
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Something went wrong, no Colliders were found on" + this.name);
-                #endif
-                return b;
-            }
-        }
+				else
+				{
+					#if UNITY_EDITOR
+					Debug.Log("Something went wrong, no Colliders were found on" + this.name);
+					#endif
+					return b;
+				}
+			}
 
-        Bounds bounding = MyColliders[0].bounds;//initialize the bounds to return with our first collider
+			Bounds bounding = MyColliders[0].bounds;//initialize the bounds to return with our first collider
 
-        foreach(Collider c in MyColliders)
-        {
-            if(c.enabled)
-            bounding.Encapsulate(c.bounds);
-        }
+			foreach(Collider c in MyColliders)
+			{
+				if(c.enabled)
+				bounding.Encapsulate(c.bounds);
+			}
 
-        //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
-        List<float[]> cornerPoints = new List<float[]>();
-        float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
-        };
-        float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
-        };
-        float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
-        };
-        foreach(float x in xs) {
-            foreach (float y in ys) {
-                foreach (float z in zs) {
-                    cornerPoints.Add(new float[]{x, y, z});
-                }
-            }
-        }
-        b.cornerPoints = cornerPoints.ToArray();
+			//ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+			List<float[]> cornerPoints = new List<float[]>();
+			float[] xs = new float[]{
+				bounding.center.x + bounding.size.x/2f,
+				bounding.center.x - bounding.size.x/2f
+			};
+			float[] ys = new float[]{
+				bounding.center.y + bounding.size.y/2f,
+				bounding.center.y - bounding.size.y/2f
+			};
+			float[] zs = new float[]{
+				bounding.center.z + bounding.size.z/2f,
+				bounding.center.z - bounding.size.z/2f
+			};
+			foreach(float x in xs) {
+				foreach (float y in ys) {
+					foreach (float z in zs) {
+						cornerPoints.Add(new float[]{x, y, z});
+					}
+				}
+			}
+			b.cornerPoints = cornerPoints.ToArray();
 
-        b.center = bounding.center;//also return the center of this bounding box in world coordinates
-        b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+			b.center = bounding.center;//also return the center of this bounding box in world coordinates
+			b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
 
-        return b;
+			return b;
+		}
+
+		return null;
     }
 
     private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
