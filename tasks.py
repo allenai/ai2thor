@@ -1703,6 +1703,8 @@ def benchmark(
     editor_mode=False,
     out="benchmark.json",
     verbose=False,
+    local_build=False,
+    commit_id=ai2thor.build.COMMIT_ID
 ):
     import ai2thor.controller
     import random
@@ -1734,16 +1736,17 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
-    env = ai2thor.controller.Controller(local_build=True)
+    args = {}
     if editor_mode:
-        env.start(
-            8200,
-            False,
-            width=screen_width,
-            height=screen_height,
-        )
+        args['port'] = 8200
+        args['start_unity'] = False
+    elif local_build:
+        args['local_build'] = local_build
     else:
-        env.start(width=screen_width, height=screen_height)
+        args['commit_id'] = commit_id
+
+    env = ai2thor.controller.Controller(width=screen_width, height=screen_height, **args)
+
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
     # Bedrooms:       FloorPlan301 - FloorPlan330
