@@ -15,17 +15,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
     // where dramatically changing the coordinate system's bias
     // may have dire results. The added values come from the structure
     // parent's position.
-    protected const float centerX = 2.696059f + 2.704441f;
-    protected const float centerY = -2.327353f + 2.327353f; // default panel height
-    protected const float centerZ = 1.3127378f - 4.268738f;
-
-    protected const float structureX = 2.704441f;
-    protected const float structureY = 2.327353f;
-    protected const float structureZ = -4.268738f;
-
-    protected const float wallCenterX = centerX + structureX;
-    protected const float wallCenterY = centerY + structureY;
-    protected const float wallCenterZ = centerZ + structureZ;
+    protected const float wallCenterX = 2.696059f + 2.704441f;
+    protected const float wallCenterY = -2.327353f + 2.327353f; // default panel height
+    protected const float wallCenterZ = 1.3127378f - 4.268738f;
 
     protected const float wallPanelWidth = 0.978f;
     protected WallCell[,] wallCells;
@@ -199,22 +191,59 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         float xPos = (
             xWalls % 2 == 1
-            ? centerX + wallPanelWidth * (xGridCell - xWalls / 2) - wallPanelWidth / 2
-            : centerX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1)
+            ? wallCenterX + wallPanelWidth * (xGridCell - xWalls / 2) - wallPanelWidth / 2
+            : wallCenterX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1)
         );
         float zPos = (
             zWalls % 2 == 1
-            ? centerZ + wallPanelWidth * (zGridCell - zWalls / 2 + 1) + wallPanelWidth / 2
-            : centerZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
+            ? wallCenterZ + wallPanelWidth * (zGridCell - zWalls / 2 + 1) + wallPanelWidth / 2
+            : wallCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
         );
 
         return new Vector3(
             x: xPos,
-            y: centerY,
+            y: wallCenterY,
             z: zPos
         );
     }
 
+    /**
+     * @param xGridCell is in [0:xWalls)
+     * @param zGridCell is in [0:zWalls)
+     */
+    protected Vector3 GetAgentGridPointCenter(int xGridCell, int zGridCell) {
+        if (xGridCell < 0 || xGridCell >= xWalls) {
+            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+        }
+
+        float agentCenterX = 5.387f;
+        float agentCenterZ = -2.967f;
+
+        float xPos = (
+            xWalls % 2 == 1
+            ? agentCenterX + wallPanelWidth * (xGridCell - xWalls / 2)
+            : agentCenterX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1) + wallPanelWidth / 2
+        );
+        float zPos = (
+            zWalls % 2 == 1
+            ? agentCenterZ + wallPanelWidth * (zGridCell - zWalls / 2 + 1)
+            : agentCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1) - wallPanelWidth / 2
+        );
+
+        // These are the empirical center position of the agent.
+        // They don't need to be super precise because the position is rounded.
+        return new Vector3(
+            x: xPos,
+            y: 0.9009997f,
+            z: zPos
+        );
+    }
+
+    /**
+     * Place a single wall at a position and orientation.
+     */
     protected void PlaceWall(Vector3 gridPointCenter, string orientation) {
         Quaternion rotation;
         Vector3 position = new Vector3(gridPointCenter.x, gridPointCenter.y, gridPointCenter.z);
@@ -247,11 +276,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
     }
 
+    /**
+     * Place a single wall at a position and orientation.
+     */
     protected void PlaceWall(int xGridCell, int zGridCell, string orientation) {
         Vector3 gridPointCenter = GetWallGridPointCenter(xGridCell: xGridCell, zGridCell: zGridCell);
         PlaceWall(gridPointCenter: gridPointCenter, orientation: orientation);
     }
 
+    /**
+     * Place all the walls based on wallCells.
+     */
     protected void PlaceWalls() {
         for (int x = 0; x < xWalls; x++) {
             PlaceWall(xGridCell: x, zGridCell: 0, orientation: "top");
@@ -279,7 +314,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
      *        and rotation to start the episode.
      */
     public void GenerateConfig(
-        Transform agentTransform, int xWalls = 9, int zWalls = 4
+        // Transform agentTransform, int xWalls = 9, int zWalls = 4
+        Transform agentTransform, int xWalls = 3, int zWalls = 3
     ) {
         if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
@@ -292,6 +328,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
         wallParent = GameObject.Find("WallPanels").transform;
 
         #if UNITY_EDITOR
+            // Only necessary because Initialize can be called within the
+            // editor without calling Reset(). However, this is not supported
+            // from the Python API.
             for (int i = wallParent.childCount - 1; i >= 0; i--) {
                 Debug.Log("destroying!");
                 Destroy(wallParent.GetChild(i).gameObject);
@@ -300,20 +339,6 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         wallCells = new WallCell[xWalls, zWalls];
         cellsVisited = 0;
-
-        // Teleport the agent to a new starting position
-        // round position to nearest 0.25 -- but make sure that doesn't collide with wall position!
-        /*
-        float pX = Random.Range(2, 8);
-        float pZ = Random.Range(-2, -4);
-        agentTransform.position = new Vector3(
-            x: pX,
-            y: agentTransform.position.y,
-            z: pZ
-        );
-        int startRotationI = Random.Range(0, validStartingRotations.Length);
-        agentTransform.localEulerAngles = new Vector3(0, validStartingRotations[startRotationI], 0);
-        */
 
         // Start with walls everywhere!
         for (int x = 0; x < xWalls; x++) {
@@ -328,10 +353,10 @@ public class GenerateRoboTHOR : MonoBehaviour {
             }
         }
 
+        // Search for good walls
         Stack<(int, int)> stack = new Stack<(int, int)>();
         (int, int) startingPosition = (Random.Range(0, xWalls), Random.Range(0, zWalls));
         stack.Push(startingPosition);
-
         while (cellsVisited != xWalls * zWalls) {
             (int xGridCell, int zGridCell) = stack.Peek();
             (int, int)? neighbor = VisitCell(xGridCell: xGridCell, zGridCell: zGridCell);
@@ -343,5 +368,21 @@ public class GenerateRoboTHOR : MonoBehaviour {
         }
 
         PlaceWalls();
+
+        // Teleport the agent to a new starting position
+        // round position to nearest 0.25 -- but make sure that doesn't collide with wall position!
+        int agentXCell = Random.Range(0, xWalls);
+        int agentZCell = Random.Range(0, zWalls);
+        Vector3 agentPosition = GetAgentGridPointCenter(
+            // xGridCell: agentXCell, zGridCell: agentZCell
+            xGridCell: 2, zGridCell: 2
+        );
+        agentPosition.y = agentTransform.position.y;
+        agentTransform.position = agentPosition;
+
+        // change agent rotation
+        int startRotationI = Random.Range(0, validStartingAgentRotations.Length);
+        agentTransform.localEulerAngles = new Vector3(0, validStartingAgentRotations[startRotationI], 0);
+
     }
 }
