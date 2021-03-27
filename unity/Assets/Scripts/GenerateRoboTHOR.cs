@@ -1,4 +1,7 @@
-﻿using System;
+﻿// TODO: Make Structure's parent position 0 so it's easier
+// to place the agent and perform calculations.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -34,8 +37,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
      * @param agentTransform allows the agent to be teleported to a position
      *        and rotation to start the episode.
      */
-    public void GenerateConfig(Transform agentTransform, uint xWalls = 10, uint zWalls = 5) {
-        if (xWalls == 0 || zWalls == 0) {
+    public void GenerateConfig(Transform agentTransform, int xWalls = 10, int zWalls = 5) {
+        if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
                 $"Must use > 0 walls in each direction, not xWalls={xWalls}, zWalls={zWalls}."
             );
@@ -139,9 +142,21 @@ public class GenerateRoboTHOR : MonoBehaviour {
             }
         }
 
-
         // Teleport the agent to a new starting position
-        agentTransform.position = new Vector3(agentTransform.position.x, agentTransform.position.y, agentTransform.position.z);
+
+        // round position to nearest 0.25 -- but make sure that doesn't collide with wall position!
+        float startingX = Random.Range(2, 8);
+        float startingZ = Random.Range(-2, -4);
+
+        // int startingX = Random.Range(0, xWalls);
+        // int startingZ = Random.Range(0, zWalls);
+        Debug.Log(agentTransform.position.y);
+
+        agentTransform.position = new Vector3(
+            x: startingX,
+            y: agentTransform.position.y,
+            z: startingZ
+        );
 
         int startRotationI = Random.Range(0, validStartingRotations.Length);
         agentTransform.localEulerAngles = new Vector3(0, validStartingRotations[startRotationI], 0);
