@@ -1,5 +1,5 @@
-﻿// TODO: Make Structure's parent position 0 so it's easier
-// to place the agent and perform calculations.
+﻿// TODO: randomize the agent starting position!
+// TODO: randomize object positions! This requires a bit of annotation.
 
 using System;
 using System.Collections;
@@ -19,20 +19,29 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected const float centerY = -2.327353f + 2.327353f; // default panel height
     protected const float centerZ = 1.3127378f - 4.268738f;
 
+    protected const float structureX = 2.704441f;
+    protected const float structureY = 2.327353f;
+    protected const float structureZ = -4.268738f;
+
+    protected const float wallCenterX = centerX + structureX;
+    protected const float wallCenterY = centerY + structureY;
+    protected const float wallCenterZ = centerZ + structureZ;
+
     protected const float wallPanelWidth = 0.978f;
     protected WallCell[,] wallCells;
+    protected int cellsVisited;
 
     protected int xWalls, zWalls;
     protected Transform wallParent;
 
     protected float[] validStartingAgentRotations = new float[] {0, 90, 180, 270};
+    protected string[] validOrientations = new string[] {
+        "left", "right", "top", "bottom"
+    };
 
     protected class WallCell {
         public bool visited;
         public Dictionary<string, bool?> walls;
-        private string[] orientations = new string[] {
-            "left", "right", "top", "bottom"
-        };
 
         /**
          * Walls are null if they are boundary walls. That is,
@@ -53,70 +62,128 @@ public class GenerateRoboTHOR : MonoBehaviour {
                 ["bottom"] = bottom
             };
         }
-
-        /**
-         * Returns null if no more openings are possible;
-         * that is, each xWall = false.
-         */
-        public string Visit() {
-            this.visited = true;
-            List<string> choicesToRemove = new List<string>();
-            foreach (string orientation in orientations) {
-                if (walls[orientation] == true) {
-                    choicesToRemove.Add(orientation);
-                }
-            }
-            if (choicesToRemove.Count == 0) {
-                return null;
-            }
-            return choicesToRemove[Random.Range(0, choicesToRemove.Count)];
-        }
     }
 
-    /**
-     * Removes both instances of wall (for wall neighbors).
-     */
-    protected void RemoveWall(int xGridCell, int zGridCell, string orientation) {
+    // Returns the neighbor cell if a wall boundary is removed, and returns
+    // null if all neighbors have been visited.
+    protected (int, int)? VisitCell(int xGridCell, int zGridCell) {
         if (xGridCell < 0 || xGridCell >= xWalls) {
             throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
         } else if (zGridCell < 0 || zGridCell >= zWalls) {
             throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
         }
 
-        if (wallCells[xGridCell, zGridCell].walls[orientation] == null) {
-            throw new ArgumentException(
-                $"Cannot remove null wall at (x={xGridCell}, z={zGridCell}, orientation={orientation})."
+        if (!wallCells[xGridCell, zGridCell].visited) {
+            cellsVisited += 1;
+            wallCells[xGridCell, zGridCell].visited = true;
+        }
+
+        List<string> choicesToRemove = new List<string>();
+        foreach (string orientation in validOrientations) {
+            (int, int)? neighborCell = GetNeighbor(
+                xGridCell: xGridCell,
+                zGridCell: zGridCell,
+                orientation: orientation
             );
+
+            if (
+                neighborCell.HasValue
+                && !wallCells[neighborCell.Value.Item1, neighborCell.Value.Item2].visited
+            ) {
+                choicesToRemove.Add(orientation);
+            }
+        }
+
+        // all neighbors are visited
+        if (choicesToRemove.Count == 0) {
+            return null;
+        }
+
+        // remove self
+        string wallToRemove = choicesToRemove[Random.Range(0, choicesToRemove.Count)];
+        wallCells[xGridCell, zGridCell].walls[wallToRemove] = false;
+
+        // remove neighbor
+        (int, int)? neighbor = RemoveNeighborWallBoundary(
+            xGridCell: xGridCell,
+            zGridCell: zGridCell,
+            orientation: wallToRemove
+        );
+
+        return neighbor;
+    }
+
+    /**
+     * Returns the position of the neighbor. If the neighbor is out of bounds, null is returned.
+     */
+    protected (int, int)? GetNeighbor(int xGridCell, int zGridCell, string orientation) {
+        if (xGridCell < 0 || xGridCell >= xWalls) {
+            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+        }
+
+        if (!wallCells[xGridCell, zGridCell].walls[orientation].HasValue) {
+            return null;
         }
 
         // remove neighboring instance
         switch (orientation) {
             case "left":
-                if (xGridCell > 1) {
-                    wallCells[xGridCell - 1, zGridCell].walls["right"] = false;
+                if (xGridCell > 0) {
+                    return (xGridCell - 1, zGridCell);
                 }
                 break;
             case "right":
                 if (xGridCell < xWalls - 1) {
-                    wallCells[xGridCell + 1, zGridCell].walls["left"] = false;
+                    return (xGridCell + 1, zGridCell);
                 }
                 break;
             case "bottom":
                 if (zGridCell < zWalls - 1) {
-                    wallCells[xGridCell, zGridCell + 1].walls["top"] = false;
+                    return (xGridCell, zGridCell + 1);
                 }
                 break;
             case "top":
-                if (zGridCell > 1) {
-                    wallCells[xGridCell, zGridCell - 1].walls["bottom"] = false;
+                if (zGridCell > 0) {
+                    return (xGridCell, zGridCell - 1);
                 }
                 break;
             default:
                 throw new ArgumentException($"Invalid orientation {orientation}.");
         }
+        return null;
+    }
 
-        // remove own instance
-        wallCells[xGridCell, zGridCell].walls[orientation] = false;
+    /**
+     * Returns the position of the neighbor. If the neighbor is out of bounds, null is returned.
+     */
+    protected (int, int)? RemoveNeighborWallBoundary(int xGridCell, int zGridCell, string orientation) {
+        (int, int)? neighbor = GetNeighbor(
+            xGridCell: xGridCell,
+            zGridCell: zGridCell,
+            orientation: orientation
+        );
+
+        if (!neighbor.HasValue) {
+            return null;
+        }
+
+        switch (orientation) {
+            case "left":
+                wallCells[neighbor.Value.Item1, neighbor.Value.Item2].walls["right"] = false;
+                break;
+            case "right":
+                wallCells[neighbor.Value.Item1, neighbor.Value.Item2].walls["left"] = false;
+                break;
+            case "bottom":
+                wallCells[neighbor.Value.Item1, neighbor.Value.Item2].walls["top"] = false;
+                break;
+            case "top":
+                wallCells[neighbor.Value.Item1, neighbor.Value.Item2].walls["bottom"] = false;
+                break;
+        }
+        return neighbor;
     }
 
     /**
@@ -211,7 +278,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
      * @param agentTransform allows the agent to be teleported to a position
      *        and rotation to start the episode.
      */
-    public void GenerateConfig(Transform agentTransform, int xWalls = 9, int zWalls = 4) {
+    public void GenerateConfig(
+        Transform agentTransform, int xWalls = 9, int zWalls = 4
+    ) {
         if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
                 $"Must use > 0 walls in each direction, not xWalls={xWalls}, zWalls={zWalls}."
@@ -222,16 +291,19 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         wallParent = GameObject.Find("WallPanels").transform;
 
-        // Vector3 gridPointCenter = GetWallGridPointCenter(xGridCell: 0, zGridCell: 0);
-        // PlaceWall(gridPointCenter: gridPointCenter, orientation: "top");
-        // PlaceWall(gridPointCenter: gridPointCenter, orientation: "left");
-        // PlaceWall(gridPointCenter: gridPointCenter, orientation: "bottom");
-        // PlaceWall(gridPointCenter: gridPointCenter, orientation: "right");
+        #if UNITY_EDITOR
+            for (int i = wallParent.childCount - 1; i >= 0; i--) {
+                Debug.Log("destroying!");
+                Destroy(wallParent.GetChild(i).gameObject);
+            }
+        #endif
 
+        wallCells = new WallCell[xWalls, zWalls];
+        cellsVisited = 0;
 
-        /*
         // Teleport the agent to a new starting position
         // round position to nearest 0.25 -- but make sure that doesn't collide with wall position!
+        /*
         float pX = Random.Range(2, 8);
         float pZ = Random.Range(-2, -4);
         agentTransform.position = new Vector3(
@@ -242,8 +314,6 @@ public class GenerateRoboTHOR : MonoBehaviour {
         int startRotationI = Random.Range(0, validStartingRotations.Length);
         agentTransform.localEulerAngles = new Vector3(0, validStartingRotations[startRotationI], 0);
         */
-
-        wallCells = new WallCell[xWalls, zWalls];
 
         // Start with walls everywhere!
         for (int x = 0; x < xWalls; x++) {
@@ -259,13 +329,19 @@ public class GenerateRoboTHOR : MonoBehaviour {
         }
 
         Stack<(int, int)> stack = new Stack<(int, int)>();
-        // int startingX = Random.Range(0, xWalls);
-        // int startingZ = Random.Range(0, zWalls);
-
         (int, int) startingPosition = (Random.Range(0, xWalls), Random.Range(0, zWalls));
         stack.Push(startingPosition);
 
-        // TODO: randomize the agent starting position!
+        while (cellsVisited != xWalls * zWalls) {
+            (int xGridCell, int zGridCell) = stack.Peek();
+            (int, int)? neighbor = VisitCell(xGridCell: xGridCell, zGridCell: zGridCell);
+            if (neighbor.HasValue) {
+                stack.Push(neighbor.Value);
+            } else {
+                stack.Pop();
+            }
+        }
+
         PlaceWalls();
     }
 }
