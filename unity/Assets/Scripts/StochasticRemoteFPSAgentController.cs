@@ -56,6 +56,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
 
             base.Initialize(action);
+            if (
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+                == "FloorPlan_Train_Generated"
+            ) {
+                GenerateRoboTHOR colorChangeComponent = physicsSceneManager.GetComponent<GenerateRoboTHOR>();
+                colorChangeComponent.GenerateConfig(agentTransform: transform);
+            }
         }
 
         //reset visible objects while in editor, for debug purposes only
