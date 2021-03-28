@@ -8,7 +8,13 @@ using Random = UnityEngine.Random;
 
 public class GenerateRoboTHOR : MonoBehaviour {
     [SerializeField]
-    public GameObject wallPrefab;
+    protected GameObject wallPrefab;
+
+    [SerializeField]
+    protected GameObject floorPrefab;
+
+    [SerializeField]
+    protected GameObject outerWallPrefab;
 
     // Keeping these consistent matters because of PointNav,
     // where dramatically changing the coordinate system's bias
@@ -23,7 +29,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected int cellsVisited;
 
     protected int xWalls, zWalls;
+    protected int boundaryPadding;
     protected Transform wallParent;
+    protected Transform floorParent;
 
     protected float[] validStartingAgentRotations = new float[] {0, 90, 180, 270};
     protected string[] validOrientations = new string[] {
@@ -306,24 +314,130 @@ public class GenerateRoboTHOR : MonoBehaviour {
         }
     }
 
+    protected void AddOuterWalls() {
+        GameObject wall;
+
+        // side 1
+        wall = Instantiate(
+            original: outerWallPrefab,
+            parent: floorParent,
+            position: new Vector3(
+                x: wallCenterX,
+                y: 1.298f,
+                z: wallCenterZ + (float) (zWalls + boundaryPadding * 2) / 2
+            ),
+            rotation: Quaternion.identity
+        ) as GameObject;
+        wall.transform.localScale = new Vector3(
+            x: xWalls + boundaryPadding * 2,
+            y: wall.transform.localScale.y,
+            z: wall.transform.localScale.z
+        );
+
+        // side 2
+        wall = Instantiate(
+            original: outerWallPrefab,
+            parent: floorParent,
+            position: new Vector3(
+                x: wallCenterX,
+                y: 1.298f,
+                z: wallCenterZ - (float) (zWalls + boundaryPadding * 2) / 2
+            ),
+            rotation: Quaternion.Euler(0, 180, 0)
+        ) as GameObject;
+        wall.transform.localScale = new Vector3(
+            x: xWalls + boundaryPadding * 2,
+            y: wall.transform.localScale.y,
+            z: wall.transform.localScale.z
+        );
+
+        // side 3
+        wall = Instantiate(
+            original: outerWallPrefab,
+            parent: floorParent,
+            position: new Vector3(
+                x: wallCenterX - (float) (xWalls + boundaryPadding * 2) / 2,
+                y: 1.298f,
+                z: wallCenterZ
+            ),
+            rotation: Quaternion.Euler(0, -90, 0)
+        ) as GameObject;
+        wall.transform.localScale = new Vector3(
+            x: zWalls + boundaryPadding * 2,
+            y: wall.transform.localScale.y,
+            z: wall.transform.localScale.z
+        );
+
+        // side 4
+        wall = Instantiate(
+            original: outerWallPrefab,
+            parent: floorParent,
+            position: new Vector3(
+                x: wallCenterX + (float) (xWalls + boundaryPadding * 2) / 2,
+                y: 1.298f,
+                z: wallCenterZ
+            ),
+            rotation: Quaternion.Euler(0, 90, 0)
+        ) as GameObject;
+        wall.transform.localScale = new Vector3(
+            x: zWalls + boundaryPadding * 2,
+            y: wall.transform.localScale.y,
+            z: wall.transform.localScale.z
+        );
+    }
+
     /**
      * Defaults are set based on the current RoboTHOR room configurations.
      *
      * @param agentTransform allows the agent to be teleported to a position
      *        and rotation to start the episode.
+     * @param boundaryPadding is the padding between the boundary inner wall panels
+              and the outer wall.
      */
     public void GenerateConfig(
-        Transform agentTransform, int xWalls = 9, int zWalls = 4
+        Transform agentTransform,
+        int xWalls = 4,
+        int zWalls = 2,
+        int boundaryPadding = 1
     ) {
         if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
                 $"Must use > 0 walls in each direction, not xWalls={xWalls}, zWalls={zWalls}."
             );
         }
+        if (boundaryPadding < 0) {
+            throw new ArgumentOutOfRangeException(
+                $"boundaryPadding must be >= 0, not {boundaryPadding}"
+            );
+        }
         this.xWalls = xWalls;
         this.zWalls = zWalls;
+        this.boundaryPadding = boundaryPadding;
 
         wallParent = GameObject.Find("WallPanels").transform;
+        floorParent = GameObject.Find("FloorTiles").transform;
+
+        // There is a single floor tile under the agent at the start so that it
+        // is caught by gravity.
+        for (int i = floorParent.childCount - 1; i >= 0; i--) {
+            Destroy(floorParent.GetChild(i).gameObject);
+        }
+
+        for (int x = 0; x < xWalls + boundaryPadding * 2; x++) {
+            for (int z = 0; z < zWalls + boundaryPadding * 2; z++) {
+                Instantiate(
+                    original: floorPrefab,
+                    parent: floorParent,
+                    position: new Vector3(
+                        x: wallCenterX + (x - (float) (xWalls + boundaryPadding * 2) / 2) + 0.5f,
+                        y: 0,
+                        z: wallCenterZ + (z - (float) (zWalls + boundaryPadding * 2) / 2) + 0.5f
+                    ),
+                    rotation: Quaternion.identity
+                );
+            }
+        }
+        AddOuterWalls();
 
         #if UNITY_EDITOR
             // Only necessary because Initialize can be called within the
