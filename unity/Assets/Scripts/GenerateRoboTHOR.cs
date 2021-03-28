@@ -397,6 +397,27 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
     }
 
+    protected void PlaceCeilings() {
+        int xCeilings = (int) Math.Ceiling((xWalls + 2 * boundaryPadding) / ceilingSizeX);
+        int zCeilings = (int) Math.Ceiling((zWalls + 2 * boundaryPadding) / ceilingSizeZ);
+
+        for (int x = 0; x < xCeilings; x++) {
+            for (int z = 0; z < zCeilings; z++) {
+                // Place ceilings
+                Instantiate(
+                    original: ceilingPrefab,
+                    parent: structure,
+                    position: new Vector3(
+                        x: ceilingCenterX + ceilingSizeX * (x - (float) xCeilings / 2) + ceilingSizeX / 2,
+                        y: ceilingCenterY,
+                        z: ceilingCenterZ + ceilingSizeZ * (z - (float) zCeilings / 2) + ceilingSizeZ / 2
+                    ),
+                    rotation: Quaternion.identity
+                );
+            }
+        }
+    }
+
     /**
      * Defaults are set based on the current RoboTHOR room configurations.
      *
@@ -435,17 +456,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
             Destroy(floorParent.GetChild(i).gameObject);
         }
 
-        // Place ceilings
-        Instantiate(
-            original: ceilingPrefab,
-            parent: structure,
-            position: new Vector3(
-                x: ceilingCenterX,
-                y: ceilingCenterY,
-                z: ceilingCenterZ
-            ),
-            rotation: Quaternion.identity
-        );
+        PlaceCeilings();
 
         for (int x = 0; x < xWalls + boundaryPadding * 2; x++) {
             for (int z = 0; z < zWalls + boundaryPadding * 2; z++) {
