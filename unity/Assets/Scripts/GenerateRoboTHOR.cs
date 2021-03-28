@@ -1,5 +1,4 @@
-﻿// TODO: randomize the agent starting position!
-// TODO: randomize object positions! This requires a bit of annotation.
+﻿// TODO: randomize object positions! This requires a bit of annotation.
 
 using System;
 using System.Collections;
