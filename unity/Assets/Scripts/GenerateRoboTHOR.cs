@@ -16,6 +16,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
     [SerializeField]
     protected GameObject outerWallPrefab;
 
+    [SerializeField]
+    protected GameObject ceilingPrefab;
+
     // Keeping these consistent matters because of PointNav,
     // where dramatically changing the coordinate system's bias
     // may have dire results. The added values come from the structure
@@ -23,6 +26,13 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected const float wallCenterX = 2.696059f + 2.704441f;
     protected const float wallCenterY = -2.327353f + 2.327353f; // default panel height
     protected const float wallCenterZ = 1.3127378f - 4.268738f;
+
+    protected const float ceilingSizeX = 9.76f;
+    protected const float ceilingSizeZ = 5.95f;
+
+    protected const float ceilingCenterX = 2.704441f - 0.18f;
+    protected const float ceilingCenterY = 2.327353f;
+    protected const float ceilingCenterZ = -4.268738f - 0.63f;
 
     protected const float wallPanelWidth = 0.978f;
     protected WallCell[,] wallCells;
@@ -32,6 +42,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected int boundaryPadding;
     protected Transform wallParent;
     protected Transform floorParent;
+    protected Transform structure;
 
     protected float[] validStartingAgentRotations = new float[] {0, 90, 180, 270};
     protected string[] validOrientations = new string[] {
@@ -396,9 +407,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
      */
     public void GenerateConfig(
         Transform agentTransform,
-        int xWalls = 4,
-        int zWalls = 2,
-        int boundaryPadding = 1
+        int xWalls = 16,
+        int zWalls = 8,
+        int boundaryPadding = 0
     ) {
         if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
@@ -416,12 +427,25 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         wallParent = GameObject.Find("WallPanels").transform;
         floorParent = GameObject.Find("FloorTiles").transform;
+        structure = GameObject.Find("Structure").transform;
 
         // There is a single floor tile under the agent at the start so that it
         // is caught by gravity.
         for (int i = floorParent.childCount - 1; i >= 0; i--) {
             Destroy(floorParent.GetChild(i).gameObject);
         }
+
+        // Place ceilings
+        Instantiate(
+            original: ceilingPrefab,
+            parent: structure,
+            position: new Vector3(
+                x: ceilingCenterX,
+                y: ceilingCenterY,
+                z: ceilingCenterZ
+            ),
+            rotation: Quaternion.identity
+        );
 
         for (int x = 0; x < xWalls + boundaryPadding * 2; x++) {
             for (int z = 0; z < zWalls + boundaryPadding * 2; z++) {
