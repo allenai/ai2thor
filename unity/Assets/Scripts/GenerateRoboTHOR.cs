@@ -196,7 +196,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
         float zPos = (
             zWalls % 2 == 1
-            ? wallCenterZ + wallPanelWidth * (zGridCell - zWalls / 2 + 1) + wallPanelWidth / 2
+            ? wallCenterZ - wallPanelWidth * (zGridCell - zWalls / 2) + wallPanelWidth / 2
             : wallCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
         );
 
@@ -228,7 +228,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
         float zPos = (
             zWalls % 2 == 1
-            ? agentCenterZ + wallPanelWidth * (zGridCell - zWalls / 2 + 1)
+            ? agentCenterZ - wallPanelWidth * (zGridCell - zWalls / 2)
             : agentCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1) - wallPanelWidth / 2
         );
 
@@ -332,7 +332,6 @@ public class GenerateRoboTHOR : MonoBehaviour {
             // editor without calling Reset(). However, this is not supported
             // from the Python API.
             for (int i = wallParent.childCount - 1; i >= 0; i--) {
-                Debug.Log("destroying!");
                 Destroy(wallParent.GetChild(i).gameObject);
             }
         #endif
@@ -374,8 +373,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
         int agentXCell = Random.Range(0, xWalls);
         int agentZCell = Random.Range(0, zWalls);
         Vector3 agentPosition = GetAgentGridPointCenter(
-            // xGridCell: agentXCell, zGridCell: agentZCell
-            xGridCell: 2, zGridCell: 2
+            xGridCell: agentXCell, zGridCell: agentZCell
         );
         agentPosition.y = agentTransform.position.y;
         agentTransform.position = agentPosition;
@@ -383,6 +381,5 @@ public class GenerateRoboTHOR : MonoBehaviour {
         // change agent rotation
         int startRotationI = Random.Range(0, validStartingAgentRotations.Length);
         agentTransform.localEulerAngles = new Vector3(0, validStartingAgentRotations[startRotationI], 0);
-
     }
 }
