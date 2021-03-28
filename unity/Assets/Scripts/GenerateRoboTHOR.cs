@@ -314,8 +314,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
      *        and rotation to start the episode.
      */
     public void GenerateConfig(
-        // Transform agentTransform, int xWalls = 9, int zWalls = 4
-        Transform agentTransform, int xWalls = 3, int zWalls = 3
+        Transform agentTransform, int xWalls = 9, int zWalls = 4
     ) {
         if (xWalls <= 0 || zWalls <= 0) {
             throw new ArgumentOutOfRangeException(
