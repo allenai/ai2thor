@@ -788,6 +788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
+                SubPositionAdjustment();
                 this.snapAgentToGrid();
 
                 if (objectId != "" && maxDistanceToObject > 0.0f) {
@@ -810,6 +811,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 return false;
             }
+        }
+
+        protected virtual void SubPositionAdjustment() {
+
         }
 
         protected float distanceToObject(SimObjPhysics sop) {

@@ -196,6 +196,14 @@ public class MCSMain : MonoBehaviour {
                     }
                 }
             }
+            
+            // Objects aren't fully added in Start(), so we need to adjust the location here in case we are on a platform.
+            if (this.lastStep==0){
+                //testing 
+                Debug.Log("Setting y");
+                GameObject controller = GameObject.Find("FPSController");
+                controller.GetComponent<MCSController>().MatchAgentHeightToStructureBelow(false);
+            }
             this.agentController.SimulatePhysics();
         }
     }
@@ -381,7 +389,9 @@ public class MCSMain : MonoBehaviour {
             if (this.currentScene.performerStart.position == null) {
                 this.currentScene.performerStart.position = new MCSConfigVector();
             }
-            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
+            if (currentScene.performerStart.position.y < MCSController.STANDING_POSITION_Y) { 
+                this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
+            }
         }
 
         SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
