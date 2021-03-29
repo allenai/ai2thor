@@ -111,8 +111,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsSliceable;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
-    private Vector3 boundingBoxCachePosition;
-    private Quaternion boundingBoxCacheRotation;
+    private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
@@ -174,16 +173,30 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
-        // if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
-        //     return;
-        // }
-
-		//note: figure out a way to cache this in the future
+        if(this.boundingBoxCacheKey != null && 
+            (!this.IsOpenable || (this.IsOpen == this.boundingBoxCacheKey.IsOpen &&
+            Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f)) &&
+            (!this.IsSliceable  || this.IsSliced == this.boundingBoxCacheKey.IsSliced) &&
+            (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken) &&
+            Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f &&
+            Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f) {
+            return;
+        }
         this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
-
-        boundingBoxCacheRotation = rotation;
-        boundingBoxCachePosition = position;
+        this.boundingBoxCacheKey = new BoundingBoxCacheKey();
+        this.boundingBoxCacheKey.position = position;
+        this.boundingBoxCacheKey.rotation = rotation;
+        if (this.IsOpenable) {
+            this.boundingBoxCacheKey.IsOpen = this.IsOpen;
+            this.boundingBoxCacheKey.openness = this.openness;
+        }
+        if (this.IsBreakable) {
+            this.boundingBoxCacheKey.IsBroken = this.IsBroken;
+        }
+        if (this.IsSliced) {
+            this.boundingBoxCacheKey.IsSliced = this.IsSliced;
+        }
     }
 
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
@@ -2315,4 +2328,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     }
 
+
+    class BoundingBoxCacheKey {
+        public Vector3 position;
+        public Quaternion rotation;
+        public bool IsOpen;
+        public bool IsBroken;
+        public bool IsSliced;
+        public float openness;
+    }
 }

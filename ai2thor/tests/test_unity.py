@@ -524,6 +524,32 @@ def test_rotate_right(controller):
     assert e.metadata["agent"]["rotation"]["x"] == 0.0
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_open_aabb_cache(controller):
+    objects = controller.last_event.metadata["objects"]
+    obj = next(obj for obj in objects if obj["objectType"] == "Fridge")
+    start_aabb = obj['axisAlignedBoundingBox']
+
+    open_event = controller.step(
+        action="OpenObject",
+        objectId=obj["objectId"],
+        forceAction=True,
+        raise_for_failure=True,
+    )
+    obj = next(obj for obj in open_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    open_aabb = obj['axisAlignedBoundingBox']
+    assert start_aabb['size'] != open_aabb['size']
+
+    close_event = controller.step(
+        action="CloseObject",
+        objectId=obj["objectId"],
+        forceAction=True,
+        raise_for_failure=True,
+    )
+    obj = next(obj for obj in close_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    close_aabb = obj['axisAlignedBoundingBox']
+    assert start_aabb['size'] == close_aabb['size']
+
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_open(controller):
