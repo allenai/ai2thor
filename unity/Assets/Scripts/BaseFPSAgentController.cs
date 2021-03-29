@@ -397,6 +397,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
@@ -3509,6 +3514,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
