@@ -868,7 +868,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //Currently, the controller can be obstructed without the colliders colliding.  
         //This value is related to MCS-521 and hopefully will be removed when that ticket is fixed.
         float obstructionVsCollisionDifference = 0.15f;
-        
+
         numCollisions = 0;
         foreach (RaycastHit myHit in hits) {
             if (myHit.collider.gameObject == this.gameObject) {
@@ -885,6 +885,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 numCollisions++;
             }
         }
+    }
+
+    protected override void SubPositionAdjustment() {
+        MatchAgentHeightToStructureBelow(false);
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
