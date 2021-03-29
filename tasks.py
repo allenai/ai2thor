@@ -17,7 +17,7 @@ import multiprocessing
 import io
 import platform
 import ai2thor.build
-from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET, PYPI_S3_BUCKET
 import logging
 
 logger = logging.getLogger()
@@ -447,6 +447,7 @@ def webgl_build(
 
     arch = "WebGL"
     build_name = local_build_name(prefix, arch)
+
     if room_ranges is not None:
         floor_plans = [
             "FloorPlan{}_physics".format(i)
@@ -461,8 +462,8 @@ def webgl_build(
                 ),
             )
         ]
-
         scenes = ",".join(floor_plans)
+
     if verbose:
         print(scenes)
 
@@ -478,6 +479,8 @@ def webgl_build(
     fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
+    # the remainder of this is only used to generate scene metadata, but it
+    # is not part of building webgl player
     rooms = {
         "kitchens": {"name": "Kitchens", "roomRanges": range(1, 31)},
         "livingRooms": {"name": "Living Rooms", "roomRanges": range(201, 231)},
@@ -487,14 +490,21 @@ def webgl_build(
     }
 
     room_type_by_id = {}
-    scene_metadata = {}
     for room_type, room_data in rooms.items():
         for room_num in room_data["roomRanges"]:
             room_id = "FloorPlan{}_physics".format(room_num)
             room_type_by_id[room_id] = {"type": room_type, "name": room_data["name"]}
 
+    scene_metadata = {}
     for scene_name in scenes.split(","):
-        room_type = room_type_by_id[scene_name]
+        if scene_name not in room_type_by_id:
+            # allows for arbitrary scenes to be included dynamically
+            room_type = {
+                "type": "Other", "name": None
+            }
+        else:
+            room_type = room_type_by_id[scene_name]
+
         if room_type["type"] not in scene_metadata:
             scene_metadata[room_type["type"]] = {
                 "scenes": [],
@@ -555,7 +565,7 @@ def generate_quality_settings(ctx):
 
 def git_commit_comment():
     comment = (
-        subprocess.check_output("git log -n 1 --format=%s", shell=True)
+        subprocess.check_output("git log -n 1 --format=%B", shell=True)
         .decode("utf8")
         .strip()
     )
@@ -584,12 +594,12 @@ def push_pip_commit(context):
     import glob
     commit_id = git_commit_id()
     s3 = boto3.resource("s3")
-    for g in glob.glob('dist/ai2thor-0.0.0+%s*' % commit_id):
+    for g in glob.glob('dist/ai2thor-0+%s*' % commit_id):
         acl = "public-read"
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(PUBLIC_S3_BUCKET, os.path.join('pip', pip_name)).put(Body=f, ACL=acl)
+            s3.Object(PYPI_S3_BUCKET, os.path.join('ai2thor', pip_name)).put(Body=f, ACL=acl)
 
 
 @task
@@ -603,7 +613,7 @@ def build_pip_commit(context):
     generate_quality_settings(context)
 
     # must use this form to create valid PEP440 version specifier
-    version = "0.0.0+" + commit_id
+    version = "0+" + commit_id
 
     with open("ai2thor/_builds.py", "w") as fi:
         fi.write("# GENERATED FILE - DO NOT EDIT\n")
@@ -973,7 +983,8 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "main" and '#webgl-deploy' in git_commit_comment():
+
+            if build["branch"] in ["main", "demo-updates"] and '#webgl-deploy' in git_commit_comment():
                 ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
@@ -986,6 +997,7 @@ def ci_build(context):
 
             build_pip_commit(context)
             push_pip_commit(context)
+            generate_pypi_index(context)
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
@@ -1977,9 +1989,23 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         print("Deployed selected scenes to bucket's 'demo' directory")
 
     # Full framework demo
+    kitchens = [f"FloorPlan{i}_physics" for i in range(1, 31)]
+    living_rooms = [f"FloorPlan{200 + i}_physics" for i in range(1, 31)]
+    bedrooms = [f"FloorPlan{300 + i}_physics" for i in range(1, 31)]
+    bathrooms = [f"FloorPlan{400 + i}_physics" for i in range(1, 31)]
+    robothor_train = [
+        f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)
+    ]
+    robothor_val = [
+        f"FloorPlan_Val{i}_{j}" for i in range(1, 4) for j in range(1, 6)
+    ]
+    scenes = (
+        kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
+    )
+
     webgl_build(
         ctx,
-        room_ranges="1-30,201-230,301-330,401-430",
+        scenes=",".join(scenes),
         content_addressable=content_addressable,
     )
     webgl_deploy(ctx, verbose=verbose, force=force, target_dir="full")
@@ -3229,4 +3255,30 @@ def generate_msgpack_resolver(task):
         with open(g, "w") as f:
             f.write(source_code)
 
+@task
+def generate_pypi_index(context):
+    s3 = boto3.resource("s3")
+    root_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    <a href="/ai2thor/index.html">/ai2thor/</a><br>
+  </BODY>
+</HTML>
+"""
+    s3.Object(PYPI_S3_BUCKET, 'index.html').put(Body=root_index, ACL='public-read', ContentType='text/html')
+    objects = list_objects_with_metadata(PYPI_S3_BUCKET)
+    links = []
+    for k,v in objects.items():
+        if k.split('/')[-1] != 'index.html':
+            links.append('<a href="/%s">/%s</a><br>' % (k,k))
+    ai2thor_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    %s
+  </BODY>
+</HTML>
+""" % "\n".join(links)
+    s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
