@@ -856,7 +856,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         int numCollisions = 0;
 
         //detect if we fell into an object.  If so, we should shift.  This will only work
-        //for relatively simple situations.  If there are multipe objects, issues could occur.
+        //for relatively simple situations.  If there are multiple objects, issues could occur.
         CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
         hits = capsuleCastAllForAgent(myCollider,
             m_CharacterController.skinWidth,

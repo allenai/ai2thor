@@ -199,8 +199,6 @@ public class MCSMain : MonoBehaviour {
             
             // Objects aren't fully added in Start(), so we need to adjust the location here in case we are on a platform.
             if (this.lastStep==0){
-                //testing 
-                Debug.Log("Setting y");
                 GameObject controller = GameObject.Find("FPSController");
                 controller.GetComponent<MCSController>().MatchAgentHeightToStructureBelow(false);
             }
