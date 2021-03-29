@@ -821,7 +821,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
-    private float MatchAgentHeightToStructureBelow(bool poseChange) {
+    public float MatchAgentHeightToStructureBelow(bool poseChange) {
         float heightDifference;
         heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y :
             pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
@@ -833,18 +833,58 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         //raycast to traverse structures at anything <= 45 degree angle incline
         if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            (hit.transform.GetComponent<StructureObject>()!=null)) {
+            (hit.transform.GetComponent<StructureObject>() != null)) {
             //for pose changes on structures only
             if (poseChange)
                 return hit.point.y;
-            else
-            {
+            else {
+                float oldHeight = this.transform.position.y;
                 Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
                 this.transform.position = newHeight;
+                if (oldHeight != this.transform.position.y) {
+                    AdjustLocationAfterHeightAdjustment();
+                }
             }
         }
         //method needs a return value
         return 0;
+    }
+
+    private void AdjustLocationAfterHeightAdjustment() {
+        float moveMagnitude = 0;
+        RaycastHit[] hits = null;
+        int numCollisions = 0;
+
+        //detect if we fell into an object.  If so, we should shift.  This will only work
+        //for relatively simple situations.  If there are multipe objects, issues could occur.
+        CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
+        hits = capsuleCastAllForAgent(myCollider,
+            m_CharacterController.skinWidth,
+            transform.position,
+            gameObject.transform.forward,
+            moveMagnitude,
+            1 << 8 | 1 << 10);
+
+        //Currently, the controller can be obstructed without the colliders colliding.  
+        //This value is related to MCS-521 and hopefully will be removed when that ticket is fixed.
+        float obstructionVsCollisionDifference = 0.15f;
+        
+        numCollisions = 0;
+        foreach (RaycastHit myHit in hits) {
+            if (myHit.collider.gameObject == this.gameObject) {
+                continue;
+            }
+            Vector3 direction;
+            float distance;
+            Physics.ComputePenetration(myCollider, transform.position, transform.rotation, myHit.collider, myHit.collider.transform.position,
+                myHit.collider.transform.rotation, out direction, out distance);
+            Vector3 newPos = transform.position;
+            if (distance > 0) {
+                newPos += direction * (distance + obstructionVsCollisionDifference);
+                transform.position = newPos;
+                numCollisions++;
+            }
+        }
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
