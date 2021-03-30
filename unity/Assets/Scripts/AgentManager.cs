@@ -217,6 +217,9 @@ public class AgentManager : MonoBehaviour
             {
                 //set up physics controller
                 SetUpArmController(true);
+                // the arm should currently be used only with autoSimulation off
+                // as we manually control Physics during its movement
+                action.autoSimulation = false;
 
 				if(action.useMassThreshold)
 				{
@@ -254,6 +257,12 @@ public class AgentManager : MonoBehaviour
 		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+        // we default Physics.autoSimulation to False in the built Player, but
+        // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
+        // this value False allows the user complete control of all Physics Simulation
+        // if they need deterministic simulations.
+        Physics.autoSimulation = action.autoSimulation;
+        Physics.autoSyncTransforms = Physics.autoSimulation;
 
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
@@ -323,6 +332,7 @@ public class AgentManager : MonoBehaviour
 	{
 		CollisionListener.useMassThreshold = true;
 		CollisionListener.massThreshold = massThreshold;
+        primaryAgent.MakeObjectsStaticKinematicMassThreshold();
 	}
 	
     //return reference to primary agent in case we need a reference to the primary

@@ -2133,6 +2133,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }
+        public void PhysicsSyncTransforms()
+        {
+            Physics.SyncTransforms();
+            actionFinished(true);
+        }
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
@@ -2140,6 +2145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //print("ZA WARUDO!");
             Physics.autoSimulation = false;
+            Physics.autoSyncTransforms = false;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
@@ -2206,6 +2212,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void UnpausePhysicsAutoSim()
         {
             Physics.autoSimulation = true;
+            Physics.autoSyncTransforms = true;
             physicsSceneManager.physicsSimulationPaused = false;
             actionFinished(true);
         }
@@ -7178,7 +7185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
             RaycastHit hit;
-            if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
+            if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<0 | 1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
             {
                 point = hit.point;
                 return point;

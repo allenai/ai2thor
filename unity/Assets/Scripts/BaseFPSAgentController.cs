@@ -118,6 +118,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        // convenciance function that can be called
+        // when autoSyncTransforms is disabled and the
+        // transform has been manually moved
+        public void autoSyncTransforms() {
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+        }
+
         public bool ReadyForCommand {
             get {
                 return this.agentState == AgentState.Emit;
@@ -697,6 +706,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (float z in zs)
                 {
                     this.transform.position = startingPosition;
+                    autoSyncTransforms();
+
                     yield return null;
 
                     Vector3 target = new Vector3(x, this.transform.position.y, z);
@@ -728,6 +739,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.transform.position = startingPosition;
+            autoSyncTransforms();
             yield return null;
             if (validMovements.Count > 0)
             {
@@ -1013,6 +1025,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 return true;
             }
+        }
+
+
+        // This effectively freezes objects that exceed the MassThreshold configured
+        // during initialization and reduces the chance of an object held by the
+        // arm from moving a large mass object.  This also eliminates the chance
+        // of a large mass object moving vs. relying on the CollisionListener to prevent it.
+        public void MakeObjectsStaticKinematicMassThreshold() {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
+                    }
+                }
+
+                if (CollisionListener.useMassThreshold && sop.Mass > CollisionListener.massThreshold) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = true;
+                    sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                }
+            }
+            actionFinished(true);
         }
 
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
@@ -1949,6 +1989,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Vector3 pos = (Vector3) targetPosition;
+            // we must sync the rigidbody prior to executing the
+            // move otherwise the agent will end up in a different
+            // location from the targetPosition
+            autoSyncTransforms();
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
