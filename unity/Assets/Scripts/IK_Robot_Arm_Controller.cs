@@ -427,6 +427,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            if (sop.IsOpenable) {
+                CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
+                // if an openable object receives OnTriggerEnter events
+                // the RigidBody can be switched to Kinematic false 
+                coj.triggerEnabled = false;
+            }
 
             //ok new plan, clone the "myColliders" of the sop and
             //then set them all to isTrigger = True
@@ -437,6 +443,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 Collider clone = Instantiate(c, c.transform.position, c.transform.rotation, FourthJoint);
                 clone.isTrigger = true;
+                // must disable the colliders on the held object so they 
+                // don't interact with anything
+                c.enabled = false;
                 cols.Add(clone);
             }
 
@@ -462,6 +471,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             foreach (Collider c in sop.Value)
             {
                 Destroy(c.gameObject);
+            }
+
+            foreach (Collider c in sop.Key.MyColliders)
+            {
+                // re-enable colliders since they were disabled during pickup
+                c.enabled = true;
+            }
+
+            if (sop.Key.IsOpenable) {
+                CanOpen_Object coj = sop.Key.gameObject.GetComponent<CanOpen_Object>();
+                coj.triggerEnabled = true;
             }
 
             GameObject topObject = GameObject.Find("Objects");

@@ -19,6 +19,8 @@ public class CanOpen_Object : MonoBehaviour {
     //[SerializeField]
     public float animationTime = 0.2f;
 
+    public bool triggerEnabled = true;
+
     [SerializeField]
     public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
     private float startOpenness; // used to reset on failure
@@ -250,6 +252,9 @@ public class CanOpen_Object : MonoBehaviour {
 
 	public void OnTriggerEnter(Collider other) {
 		if (other.CompareTag("Receptacle")) {
+            return;
+        }
+		if (!triggerEnabled){
             return;
         }
 		// note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
