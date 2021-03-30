@@ -243,7 +243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            // Recordining initially disabled renderers and scene bounds 
+            // Recording initially disabled renderers and scene bounds
             //then setting up sceneBounds based on encapsulating all renderers
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
@@ -2820,19 +2820,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void ToggleMapView() {
-
             SyncTransform[] syncInChildren;
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+            StructureObject ceiling = null;
 
-            foreach(StructureObject so in structureObjs)
-            {
-                if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
-                ) {
-                    structureObjsList.Add(so);
+            foreach (StructureObject structure in structureObjs) {
+                switch (structure.WhatIsMyStructureObjectTag) {
+                    case StructureObjectTag.Ceiling:
+                        ceiling = structure;
+                        goto case StructureObjectTag.LightFixture;
+                    case StructureObjectTag.LightFixture:
+                    case StructureObjectTag.CeilingLight:
+                        structureObjsList.Add(structure);
+                        break;
                 }
             }
 
@@ -2842,27 +2844,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.transform.localPosition = lastLocalCameraPosition;
                 m_Camera.transform.localRotation = lastLocalCameraRotation;
 
-                //restore agent body culling
+                // restore agent body culling
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = false;
                 }
 
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, true);
                 }
-            }
-
-            else {
-
-                //stop culling the agent's body so it's visible from the top?
+            } else {
+                // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = true;
                 }
 
@@ -2870,9 +2866,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
-                Bounds b = new Bounds();
-                b.min = agentManager.SceneBounds.min;
-                b.max = agentManager.SceneBounds.max;
+                Bounds b;
+                if (ceiling != null) {
+                    // There's a ceiling component in the room!
+                    // Let's use it's bounds. (Likely iTHOR.)
+                    b = ceiling.GetComponent<Renderer>().bounds;
+                } else {
+                    // There's no component in the room!
+                    // Let's use the bounds from every object. (Likely RoboTHOR.)
+                    b = new Bounds();
+                    b.min = agentManager.SceneBounds.min;
+                    b.max = agentManager.SceneBounds.max;
+                }
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
@@ -2882,10 +2887,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
 
                 cameraOrthSize = m_Camera.orthographicSize;
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);
-                }            }
+                }
+            }
             actionFinished(true);
         }
 
