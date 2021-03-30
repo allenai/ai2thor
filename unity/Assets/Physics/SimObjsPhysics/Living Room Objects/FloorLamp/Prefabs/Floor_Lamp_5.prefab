@@ -1244,7 +1244,44 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65759049839243368}
+  - {fileID: 65491170517667536}
+  - {fileID: 65481636789189436}
+  - {fileID: 65076653664708228}
+  - {fileID: 65700316467509722}
+  - {fileID: 65123590904115702}
+  - {fileID: 65412076494877906}
+  - {fileID: 65064535371004184}
+  - {fileID: 65018264087153430}
+  - {fileID: 65691022052823044}
+  - {fileID: 65471475309327886}
+  - {fileID: 65978307958142074}
+  - {fileID: 65626651507315976}
+  - {fileID: 65775155016184556}
+  - {fileID: 65104837360188174}
+  - {fileID: 65370646120763566}
+  - {fileID: 65479880750236274}
+  - {fileID: 65214595235438556}
+  - {fileID: 65946209007617580}
+  - {fileID: 65720738597585974}
+  - {fileID: 65529037971811904}
+  - {fileID: 65397986145466286}
+  - {fileID: 65450017417859084}
+  - {fileID: 65462453687892772}
+  - {fileID: 65753869618918890}
+  - {fileID: 65703657027530886}
+  - {fileID: 65478683952698606}
+  - {fileID: 65983810989473286}
+  - {fileID: 65515474790619906}
+  - {fileID: 65912134243242844}
+  - {fileID: 65314437188465016}
+  - {fileID: 65043466919679660}
+  - {fileID: 65946676971390318}
+  - {fileID: 65855921955806484}
+  - {fileID: 136391758361210692}
+  - {fileID: 136269774741229818}
+  - {fileID: 136076062547780100}
   HFdynamicfriction: 0.9
   HFstaticfriction: 0.9
   HFbounciness: 0
@@ -1255,8 +1292,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54826847176711858
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1688,6 +1742,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1702,6 +1757,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3880,8 +3936,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.44280362, y: 1.8936758, z: 0.43762773}
-  m_Center: {x: 0, y: 0.9225588, z: 0}
+  m_Size: {x: 0.40891483, y: 1.8673712, z: 0.40891415}
+  m_Center: {x: -0.00029987097, y: 0.9286856, z: -0.0005992949}
 --- !u!1 &1884312325103368
 GameObject:
   m_ObjectHideFlags: 0
@@ -4113,12 +4169,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1934997098922968}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 1, g: 0.82716054, b: 0, a: 1}
   m_Intensity: 0.15
   m_Range: 5
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -4128,6 +4186,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -4135,12 +4211,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!1 &1945464240284702
