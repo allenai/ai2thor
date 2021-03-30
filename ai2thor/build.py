@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 PUBLIC_S3_BUCKET = "ai2-thor-public"
 PUBLIC_WEBGL_S3_BUCKET = "ai2-thor-webgl-public"
 PRIVATE_S3_BUCKET = "ai2-thor-private"
+PYPI_S3_BUCKET = "ai2-thor-pypi"
 
 COMMIT_ID = None
 try:
