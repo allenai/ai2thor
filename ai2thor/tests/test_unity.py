@@ -1109,6 +1109,7 @@ def test_get_interactable_poses(controller):
 
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.skip(reason="Colliders need to be moved closer to objects.")
 def test_get_object_in_frame(controller):
     controller.reset(scene="FloorPlan28", agentMode="default")
     event = controller.step(
