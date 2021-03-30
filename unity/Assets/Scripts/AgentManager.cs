@@ -1464,6 +1464,7 @@ public class ServerAction
     public Vector2 receptacleObjectImageCoords;
     public MCSConfigScene sceneConfig;
 	public bool consistentColors = false;
+	public bool teleportOnEndHabituation = false;
 
     public SimObjType ReceptableSimObjType()
 	{
