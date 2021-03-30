@@ -863,7 +863,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             transform.position,
             gameObject.transform.forward,
             moveMagnitude,
-            1 << 8 | 1 << 10);
+            1 << 8);
 
         //Currently, the controller can be obstructed without the colliders colliding.  
         //This value is related to MCS-521 and hopefully will be removed when that ticket is fixed.
@@ -871,9 +871,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         numCollisions = 0;
         foreach (RaycastHit myHit in hits) {
-            if (myHit.collider.gameObject == this.gameObject) {
-                continue;
-            }
             Vector3 direction;
             float distance;
             Physics.ComputePenetration(myCollider, transform.position, transform.rotation, myHit.collider, myHit.collider.transform.position,
