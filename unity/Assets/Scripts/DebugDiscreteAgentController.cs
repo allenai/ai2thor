@@ -28,9 +28,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
         public string newSceneFile = "";
-        public float teleportPosX = 0;
-        public float teleportPosZ = 0;
         public bool teleportOnEndHabituation = false;
+        public float teleportXPosition;
+        public float teleportZPosition;
+        public bool rotateOnEndHabituation = false;
+        public float teleportYRotate;
 
         private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
         private GameObject objectParent = null;
@@ -300,9 +302,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     if (Input.GetKeyDown(KeyCode.H))
                     {
-                        action.rotation.y = rotationIncrement;
-                        action.position = new Vector3(teleportPosX, MCSController.STANDING_POSITION_Y, teleportPosZ);
-                        action.teleportOnEndHabituation = teleportOnEndHabituation;
+                        if(teleportOnEndHabituation) {
+                            action.teleportPosition = new Vector3(
+                                teleportXPosition,
+                                MCSController.STANDING_POSITION_Y,
+                                teleportZPosition);
+                        }
+
+                        if (rotateOnEndHabituation) {
+                            action.teleportRotation = new Vector3(0, teleportYRotate, 0);
+                        }
 
                         action.action = "EndHabituation";
                         PhysicsController.ProcessControlCommand(action);
