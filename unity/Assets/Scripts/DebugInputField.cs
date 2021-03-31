@@ -3331,6 +3331,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "gcfr":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetCoordinateFromRaycast";
+                        action["x"] = float.Parse(splitcommand[1]);
+                        action["y"] = float.Parse(splitcommand[2]);
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                     case "telefull":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();

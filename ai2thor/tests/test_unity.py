@@ -558,6 +558,32 @@ def test_rotate_right(controller):
     assert e.metadata["agent"]["rotation"]["x"] == 0.0
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_open_aabb_cache(controller):
+    objects = controller.last_event.metadata["objects"]
+    obj = next(obj for obj in objects if obj["objectType"] == "Fridge")
+    start_aabb = obj['axisAlignedBoundingBox']
+
+    open_event = controller.step(
+        action="OpenObject",
+        objectId=obj["objectId"],
+        forceAction=True,
+        raise_for_failure=True,
+    )
+    obj = next(obj for obj in open_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    open_aabb = obj['axisAlignedBoundingBox']
+    assert start_aabb['size'] != open_aabb['size']
+
+    close_event = controller.step(
+        action="CloseObject",
+        objectId=obj["objectId"],
+        forceAction=True,
+        raise_for_failure=True,
+    )
+    obj = next(obj for obj in close_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    close_aabb = obj['axisAlignedBoundingBox']
+    assert start_aabb['size'] == close_aabb['size']
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open(controller):
@@ -1137,7 +1163,7 @@ def test_get_interactable_poses(controller):
 
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 @pytest.mark.skip(reason="Colliders need to be moved closer to objects.")
 def test_get_object_in_frame(controller):
     controller.reset(scene=TEST_SCENE, agentMode="default")
@@ -1200,3 +1226,38 @@ def test_get_object_in_frame(controller):
     assert (
         num_tested == 29
     ), "There should be 29 objects in the frame, based on the agent's pose!"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_get_coordinate_from_raycast(controller):
+    controller.reset(scene="FloorPlan28")
+    event = controller.step(
+        action="TeleportFull",
+        position=dict(x=-1.5, y=0.900998235, z=-1.5),
+        rotation=dict(x=0, y=90, z=0),
+        horizon=0,
+        standing=True,
+    )
+    assert event, "TeleportFull should have succeeded!"
+
+    for x, y in [(1.5, 0.5), (1.1, 0.3), (-0.1, 0.8), (-0.5, -0.3)]:
+        query = controller.step("GetCoordinateFromRaycast", x=x, y=y)
+        assert not query, f"x={x}, y={y} should fail!"
+
+    query = controller.step("GetCoordinateFromRaycast", x=0.5, y=0.5)
+    assert_near(
+        query.metadata["actionReturn"],
+        {"x": -0.344259053, "y": 1.57599819, "z": -1.49999917},
+    )
+
+    query = controller.step("GetCoordinateFromRaycast", x=0.5, y=0.2)
+    assert_near(
+        query.metadata["actionReturn"],
+        {"x": -0.344259053, "y": 2.2694428, "z": -1.49999917},
+    )
+
+    query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
+    assert_near(
+        query.metadata["actionReturn"],
+        {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
+    )

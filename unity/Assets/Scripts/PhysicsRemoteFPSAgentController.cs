@@ -4987,11 +4987,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ItemInHand.transform.parent = null;
                     }
 
-                    // Add some random rotational momentum to the dropped object to make things
-                    // less deterministic.
-                    // TODO: Need a parameter to control how much randomness we introduce.
-                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
                     DropContainedObjects(
                         target: ItemInHand.GetComponent<SimObjPhysics>(),
                         reparentContainedObjects: true,

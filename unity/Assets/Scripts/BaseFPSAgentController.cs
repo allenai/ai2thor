@@ -1847,6 +1847,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(success: false, actionReturn: errorMessage);
         }
 
+        public void GetCoordinateFromRaycast(float x, float y) {
+            if (x < 0 || y < 0 || x > 1 || y > 1) {
+                throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
+            }
+
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
+            RaycastHit hit;
+            Physics.Raycast(
+                ray: ray,
+                hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
+                layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+
+            actionFinishedEmit(
+                success: true,
+                actionReturn: hit.point
+            );
+        }
+
 		protected void snapAgentToGrid()
 		{
             if (this.snapToGrid) {
