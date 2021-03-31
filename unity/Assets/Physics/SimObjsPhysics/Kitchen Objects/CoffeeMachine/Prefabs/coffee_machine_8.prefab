@@ -136,7 +136,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1835877609780652}
-  occupied: 0
 --- !u!1 &1214852996279672
 GameObject:
   m_ObjectHideFlags: 0
@@ -322,8 +321,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.3021371, y: 0.46023995, z: 0.50634384}
-  m_Center: {x: 0, y: 0.23011997, z: 0.094414234}
+  m_Size: {x: 0.3033226, y: 0.4591627, z: 0.506975}
+  m_Center: {x: -0.0000008791685, y: 0.22457439, z: 0.09027055}
 --- !u!1 &1561004388992850
 GameObject:
   m_ObjectHideFlags: 0
@@ -723,7 +722,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: CoffeeMachine|+00.00|+00.00|+00.00
+  objectID: 
   Type: 15
   PrimaryProperty: 2
   SecondaryProperties: 1d00000007000000340000000c000000
@@ -743,18 +742,39 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65171703852862644}
+  - {fileID: 65838329105259720}
+  - {fileID: 65039024974968850}
   HFdynamicfriction: 0.8
   HFstaticfriction: 0.8
   HFbounciness: 0
   HFrbdrag: 0.1
   HFrbangulardrag: 0.05
   salientMaterials: 02000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54016642721994756
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -965,6 +985,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -982,6 +1003,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
