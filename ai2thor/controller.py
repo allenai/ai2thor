@@ -886,7 +886,7 @@ class Controller(object):
     def unity_command(self, width, height, headless):
         command = self._build.executable_path
         if headless:
-            command += " -batchmode"
+            command += " -batchmode -nographics"
         else:
             fullscreen = 1 if self.fullscreen else 0
             if QUALITY_SETTINGS[self.quality] == 0:
@@ -953,7 +953,8 @@ class Controller(object):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
 
     def _cache_commit_filename(self, branch):
-        return os.path.join(self.commits_cache_dir, branch + ".json")
+        encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
+        return os.path.join(self.commits_cache_dir, encoded_branch + ".json")
 
     def _cache_commit_history(self, branch, payload):
         makedirs(self.commits_cache_dir)

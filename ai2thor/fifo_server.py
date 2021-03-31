@@ -107,7 +107,7 @@ class FifoServer(ai2thor.server.Server):
                 # we don't want to restart all process exits since its possible that a user
                 # kills off a Unity process with SIGTERM to end a training run
                 # SIGABRT is the returncode for when Unity crashes due to a segfault
-                if returncode == -6: # SIGABRT
+                if returncode in [-6, -11]: # SIGABRT, SIGSEGV
                     raise UnityCrashException(message)
                 else:
                     raise Exception(message)

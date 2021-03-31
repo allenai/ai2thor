@@ -29,10 +29,10 @@ def checkout_branch(remote="origin"):
         subprocess.check_call(f"git checkout {branch}", shell=True)
         subprocess.check_call(f"git pull {remote} {branch}", shell=True)
     except subprocess.CalledProcessError as e:
-        print(f"No branch exists for private: {branch} - remaining on master" )
-        subprocess.check_call(f"git fetch {remote} master", shell=True)
-        subprocess.check_call(f"git checkout master", shell=True)
-        subprocess.check_call(f"git pull {remote} master", shell=True)
+        print(f"No branch exists for private: {branch} - remaining on main" )
+        subprocess.check_call(f"git fetch {remote} main", shell=True)
+        subprocess.check_call(f"git checkout main", shell=True)
+        subprocess.check_call(f"git pull {remote} main", shell=True)
 
     os.chdir(cwd)
 

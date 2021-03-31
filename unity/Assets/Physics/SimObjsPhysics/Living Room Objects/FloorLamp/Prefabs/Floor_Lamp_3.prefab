@@ -2950,8 +2950,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.6001761, y: 1.9538269, z: 0.528623}
-  m_Center: {x: 0, y: 0.9521537, z: 0}
+  m_Size: {x: 0.5608953, y: 1.9218876, z: 0.49749857}
+  m_Center: {x: -0.00046792626, y: 0.95501924, z: -0.0005853921}
 --- !u!1 &1607267286559946
 GameObject:
   m_ObjectHideFlags: 0
@@ -3319,7 +3319,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+00.00|+00.00|+00.00
+  objectID: 
   Type: 96
   PrimaryProperty: 2
   SecondaryProperties: 1d000000
@@ -3351,18 +3351,83 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65085554924300676}
+  - {fileID: 65358577130258478}
+  - {fileID: 65054589621950052}
+  - {fileID: 65617345896238988}
+  - {fileID: 65101312715304760}
+  - {fileID: 65383471028686830}
+  - {fileID: 65887515034183732}
+  - {fileID: 65873270045266568}
+  - {fileID: 65740705460046028}
+  - {fileID: 65640122323888084}
+  - {fileID: 65742197315061354}
+  - {fileID: 65313603813801108}
+  - {fileID: 136341209996004838}
+  - {fileID: 65738785440025968}
+  - {fileID: 65104266147528710}
+  - {fileID: 65522688444161158}
+  - {fileID: 65307118021456960}
+  - {fileID: 65013499903763046}
+  - {fileID: 65884460775060374}
+  - {fileID: 65585628261349210}
+  - {fileID: 65061268290883728}
+  - {fileID: 65382345943614270}
+  - {fileID: 65707206315552010}
+  - {fileID: 65073736681592602}
+  - {fileID: 65007996790465044}
+  - {fileID: 65496349559092528}
+  - {fileID: 65776327218936540}
+  - {fileID: 65230276302612322}
+  - {fileID: 65899105207181046}
+  - {fileID: 65549513794561252}
+  - {fileID: 65397671077417740}
+  - {fileID: 65503961721838290}
+  - {fileID: 65419917229317968}
+  - {fileID: 65328800268098312}
+  - {fileID: 65030520679323688}
+  - {fileID: 65883786019686774}
+  - {fileID: 65615352777272318}
+  - {fileID: 65604712287364842}
+  - {fileID: 65283806550879304}
+  - {fileID: 65862543879379962}
+  - {fileID: 65669180099353210}
+  - {fileID: 65953767730337284}
+  - {fileID: 65043957696108940}
+  - {fileID: 65996172482899654}
+  - {fileID: 65659128496516404}
+  - {fileID: 65874123604932016}
+  - {fileID: 65564998101921218}
   HFdynamicfriction: 0.9
   HFstaticfriction: 0.9
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0.8
   salientMaterials: 00000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54606716883783952
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3555,6 +3620,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3569,6 +3635,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -4224,12 +4291,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1789033515963744}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.49
   m_Range: 10
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -4239,6 +4308,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -4246,12 +4333,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!1 &1801926003187058

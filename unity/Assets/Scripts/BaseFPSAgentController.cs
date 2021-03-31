@@ -118,6 +118,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        // convenciance function that can be called
+        // when autoSyncTransforms is disabled and the
+        // transform has been manually moved
+        public void autoSyncTransforms() {
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+        }
+
         public bool ReadyForCommand {
             get {
                 return this.agentState == AgentState.Emit;
@@ -243,7 +252,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            // Recordining initially disabled renderers and scene bounds 
+            // Recording initially disabled renderers and scene bounds
             //then setting up sceneBounds based on encapsulating all renderers
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
@@ -697,6 +706,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (float z in zs)
                 {
                     this.transform.position = startingPosition;
+                    autoSyncTransforms();
+
                     yield return null;
 
                     Vector3 target = new Vector3(x, this.transform.position.y, z);
@@ -728,6 +739,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.transform.position = startingPosition;
+            autoSyncTransforms();
             yield return null;
             if (validMovements.Count > 0)
             {
@@ -1013,6 +1025,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 return true;
             }
+        }
+
+
+        // This effectively freezes objects that exceed the MassThreshold configured
+        // during initialization and reduces the chance of an object held by the
+        // arm from moving a large mass object.  This also eliminates the chance
+        // of a large mass object moving vs. relying on the CollisionListener to prevent it.
+        public void MakeObjectsStaticKinematicMassThreshold() {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
+                    }
+                }
+
+                if (CollisionListener.useMassThreshold && sop.Mass > CollisionListener.massThreshold) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = true;
+                    sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                }
+            }
+            actionFinished(true);
         }
 
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
@@ -1750,6 +1790,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
         }
 
+        public void GetCoordinateFromRaycast(float x, float y) {
+            if (x < 0 || y < 0 || x > 1 || y > 1) {
+                throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
+            }
+
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
+            RaycastHit hit;
+            Physics.Raycast(
+                ray: ray,
+                hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
+                layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+
+            actionFinishedEmit(
+                success: true,
+                actionReturn: hit.point
+            );
+        }
+
 		protected void snapAgentToGrid()
 		{
             if (this.snapToGrid) {
@@ -1949,6 +2010,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Vector3 pos = (Vector3) targetPosition;
+            // we must sync the rigidbody prior to executing the
+            // move otherwise the agent will end up in a different
+            // location from the targetPosition
+            autoSyncTransforms();
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
@@ -2738,8 +2803,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     ItemInHand.transform.parent = null;
                 }
 
-                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
                 ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; //agent hand flag
                 DefaultAgentHand();//also default agent hand
                 ItemInHand = null;
@@ -2802,7 +2865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 for (int i = 0; i < 100; i++) {
                     Physics.Simulate(0.02f);
                 }
-                Physics.autoSimulation = Physics.autoSimulation;
+                Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
@@ -2822,19 +2885,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void ToggleMapView() {
-
             SyncTransform[] syncInChildren;
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+            StructureObject ceiling = null;
 
-            foreach(StructureObject so in structureObjs)
-            {
-                if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
-                ) {
-                    structureObjsList.Add(so);
+            foreach (StructureObject structure in structureObjs) {
+                switch (structure.WhatIsMyStructureObjectTag) {
+                    case StructureObjectTag.Ceiling:
+                        ceiling = structure;
+                        goto case StructureObjectTag.LightFixture;
+                    case StructureObjectTag.LightFixture:
+                    case StructureObjectTag.CeilingLight:
+                        structureObjsList.Add(structure);
+                        break;
                 }
             }
 
@@ -2844,27 +2909,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.transform.localPosition = lastLocalCameraPosition;
                 m_Camera.transform.localRotation = lastLocalCameraRotation;
 
-                //restore agent body culling
+                // restore agent body culling
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = false;
                 }
 
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, true);
                 }
-            }
-
-            else {
-
-                //stop culling the agent's body so it's visible from the top?
+            } else {
+                // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = true;
                 }
 
@@ -2872,9 +2931,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
-                Bounds b = new Bounds();
-                b.min = agentManager.SceneBounds.min;
-                b.max = agentManager.SceneBounds.max;
+                Bounds b;
+                if (ceiling != null) {
+                    // There's a ceiling component in the room!
+                    // Let's use it's bounds. (Likely iTHOR.)
+                    b = ceiling.GetComponent<Renderer>().bounds;
+                } else {
+                    // There's no component in the room!
+                    // Let's use the bounds from every object. (Likely RoboTHOR.)
+                    b = new Bounds();
+                    b.min = agentManager.SceneBounds.min;
+                    b.max = agentManager.SceneBounds.max;
+                }
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
@@ -2884,10 +2952,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
 
                 cameraOrthSize = m_Camera.orthographicSize;
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);
-                }            }
+                }
+            }
             actionFinished(true);
         }
 
