@@ -1187,7 +1187,7 @@ def test_get_object_in_frame(controller):
     ), "x=0.3, y=0.5 should have a fridge!"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_coordinate_from_raycast(controller):
     controller.reset(scene="FloorPlan28")
     event = controller.step(
