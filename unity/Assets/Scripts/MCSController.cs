@@ -144,6 +144,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void MCSTeleportFull(ServerAction action) {
+        // reset camera
+        m_Camera.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+
         if((!action.teleportPosition.HasValue) && (!action.teleportRotation.HasValue)) {
             return;
         }
@@ -159,9 +162,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if(action.teleportRotation.HasValue) {
             transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.teleportRotation.Value.y, 0.0f));
         }
-
-        // reset camera
-        m_Camera.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
