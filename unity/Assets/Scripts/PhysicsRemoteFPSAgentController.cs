@@ -9374,12 +9374,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //perhaps this should fail if no object is picked up?
         //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
-        public void PickUpMidLevelHand(ServerAction action)
+        public void PickUpMidLevelHand(List<string> objectIds = null)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                actionFinished(arm.PickupObject());
+                actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
                 return;
             }
 

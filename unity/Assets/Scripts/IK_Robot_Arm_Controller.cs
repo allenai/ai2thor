@@ -415,7 +415,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true, listOfSOP);
     }
 
-    public bool PickupObject()
+    public bool PickupObject(List <string> objectIds, ref string errorMessage)
     {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
@@ -423,6 +423,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //grab all sim objects that are currently colliding with magnet sphere
         foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
         {
+            if(objectIds != null)
+            {
+                if(!objectIds.Contains(sop.objectID))
+                {
+                    continue;
+                }
+            }
+
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
@@ -451,6 +459,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             pickedUp = true;
             HeldObjects.Add(sop, cols);
+        }
+
+        if(!pickedUp)
+        {
+            if(objectIds != null)
+            {
+                errorMessage = "No objects (specified by objectId) were valid to be picked up by the arm";
+            }
+
+            else
+            errorMessage = "No objects were valid to be picked up by the arm";
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
