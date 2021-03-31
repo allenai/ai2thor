@@ -228,6 +228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if (!pickupState)
                 {
+                  
                     if (this.PhysicsController.WhatAmIHolding() != null)
                     {
                         var diff = Time.time - this.timerAtPress;
@@ -296,7 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             this.previousRenderQueueValue = mRenderer.material.renderQueue;
                             mRenderer.material.renderQueue = -1;
                             mRenderer.material.shader = this.highlightShader;
-                        } 
+                        }  
 
                         if (withinReach)
                         {

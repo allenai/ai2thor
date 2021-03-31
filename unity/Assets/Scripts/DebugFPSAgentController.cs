@@ -10,7 +10,6 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -43,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Vector3 m_MoveDir = Vector3.zero;
         private CharacterController m_CharacterController;
         private PhysicsRemoteFPSAgentController PhysicsController;
-        private bool scroll2DEnabled = true;
+        private bool scroll2DEnabled = false;
 
         protected bool enableHighlightShader = true;
 
@@ -182,12 +181,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 var eps = 1e-6;
                 if (Mathf.Abs(scrollAmount) > eps) {
-                    // webGL action
-                     var action = new Dictionary<string, object>() {
-                            {"action", "MoveHandAhead"},
-                            {"moveMagnitude", scrollAmount}
-                        };
-                    
+                    ServerAction action = new ServerAction {
+                        action = "MoveHandAhead",
+                        moveMagnitude = scrollAmount
+                    };
                     this.PhysicsController.ProcessControlCommand(action);
                 }
             }
@@ -223,12 +220,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     var eps = 1e-6;
                     if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps)
                     {
-                        // Actioned called through webGL, using dynamic not supported by IL2CPP
-                        var action = new Dictionary<string, object>() {
-                            {"action", "MoveHandDelta"},
-                            {"x", scrollAmount.x * 0.05f},
-                            {"z", scrollAmount.y * -0.05f},
-                            {"y", 0.0f}
+                        ServerAction action = new ServerAction
+                        {
+                            action = "MoveHandDelta",
+                            x = scrollAmount.x * 0.05f,
+                            z = scrollAmount.y * -0.05f,
+                            y = 0
                         };
                         this.PhysicsController.ProcessControlCommand(action);
                     }
@@ -289,11 +286,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.z = desiredMove.z * speed;    
 
 			// if(!FlightMode)
-            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.deltaTime;   
+            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
 
             //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
             if(m_CharacterController.enabled == true)       
-            m_CharacterController.Move(m_MoveDir * Time.deltaTime);
+            m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 		}
 
   

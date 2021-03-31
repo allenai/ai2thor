@@ -146,17 +146,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            #if UNITY_WEBGL
-                // For object highlight shader to properly work, all visible objects should be populated not conditioned
-                // on the objectid of a completed action
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-            #endif
             if (this.agentState == AgentState.ActionComplete) {
                 ServerAction action = new ServerAction();
-                #if UNITY_EDITOR
-                    VisibleSimObjPhysics = VisibleSimObjs(action);
-                #endif
-                
+                VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
 
             #endif
@@ -4984,16 +4976,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (action.autoSimulation) 
                         {
                             StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        }
+                        } 
+
                         else 
                         {
                             StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                         }
                     }
 
-                    else {
-                        actionFinished(true);
-                    }
+                    else
+                    actionFinished(true);
+
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return;
@@ -5018,12 +5011,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject go = ItemInHand;
             DropHandObject(action);
-            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
-            // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
-            //if (this.lastActionSuccess) {
+            if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-            //}
+            }
 
         }
 
