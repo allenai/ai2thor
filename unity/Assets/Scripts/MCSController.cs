@@ -137,6 +137,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             child.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
 
+        // We may need to add additional validation logic for teleport later.
         MCSTeleportFull(action);
 
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
