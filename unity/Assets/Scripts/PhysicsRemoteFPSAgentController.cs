@@ -151,7 +151,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.agentState == AgentState.ActionComplete) {
+            //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
+            if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -1946,10 +1947,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -2042,10 +2047,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -2638,7 +2647,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     //this should basically only happen if the handDistance value is too big
-                    if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                    if(!isPosInView(targetPosition: hit.point, inMaxVisibleDistance: true, inViewport: true))
                     {
                         errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
                         WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
@@ -2702,7 +2711,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //get ray.origin, multiply handDistance with ray.direction, add to origin to get the final point
                 //if the final point was out of range, return actionFinished false, otherwise return actionFinished true with feedback
                 Vector3 testPosition = ((action.handDistance * ray.direction) + ray.origin);
-                if(!CheckIfTargetPositionIsInViewportRange(testPosition))
+                if(!isPosInView(targetPosition: testPosition, inMaxVisibleDistance: true, inViewport: true))
                 {
                     errorMessage = "the position the hand would have moved to is outside the agent's max interaction range";
                     WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
@@ -3459,10 +3468,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set inside screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -3826,7 +3839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
                 foreach(Vector3 v in targetPoints)
                 {
-                    if(CheckIfTargetPositionIsInViewportRange(v))
+                    if(isPosInView(targetPosition: v, inMaxVisibleDistance: true, inViewport: true))
                     {
                         filteredTargetPoints.Add(v);
                     }
@@ -4477,10 +4490,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
             SimObjPhysics targetReceptacle = null;
 
-            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref targetReceptacle, 
+                forceAction: forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
                 return;
             }
 
@@ -4662,10 +4679,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set inside screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -5347,10 +5368,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -5479,10 +5504,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             SimObjPhysics target = null;
             //no target object specified, so instead try and use x/y screen coordinates
-            if(!ScreenToWorldTarget(x, y, ref target, !forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
                 return;
             }
             
@@ -5733,7 +5762,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            SimObjPhysics target = null;
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))  {
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
+                return;
+            }
             openObject(
                 target: target,
                 openness: openness,
@@ -8632,10 +8670,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8697,10 +8739,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8780,10 +8826,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8852,10 +8902,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8925,10 +8979,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9023,10 +9081,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9097,10 +9159,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }

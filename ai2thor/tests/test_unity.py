@@ -12,6 +12,7 @@ from ai2thor.controller import Controller
 from ai2thor.tests.constants import TESTS_DATA_DIR
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
+from PIL import ImageChops, ImageFilter, Image
 import glob
 import re
 
@@ -1161,7 +1162,9 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.skip(reason="Colliders need to be moved closer to objects.")
 def test_get_object_in_frame(controller):
     controller.reset(scene=TEST_SCENE, agentMode="default")
     event = controller.step(
@@ -1185,6 +1188,44 @@ def test_get_object_in_frame(controller):
     assert query.metadata["actionReturn"].startswith(
         "Fridge"
     ), "x=0.3, y=0.5 should have a fridge!"
+
+    event = controller.reset(renderInstanceSegmentation=True)
+    assert event.metadata["screenHeight"] == 300
+    assert event.metadata["screenWidth"] == 300
+
+    # exhaustive test
+    num_tested = 0
+    for objectId in event.instance_masks.keys():
+        for obj in event.metadata["objects"]:
+            if obj["objectId"] == objectId:
+                break
+        else:
+            # object may not be a sim object (e.g., ceiling, floor, wall, etc.)
+            continue
+
+        num_tested += 1
+
+        mask = event.instance_masks[objectId]
+
+        # subtract 3 pixels off the edge due to pixels being rounded and collider issues
+        mask = Image.fromarray(mask)
+        for _ in range(3):
+            mask_edges = mask.filter(ImageFilter.FIND_EDGES)
+            mask = ImageChops.subtract(mask, mask_edges)
+        mask = np.array(mask)
+
+        ys, xs = mask.nonzero()
+        for x, y in zip(xs, ys):
+            event = controller.step(
+                action="GetObjectInFrame", x=x / 300, y=y / 300, forceAction=True
+            )
+            assert (
+                event.metadata["actionReturn"] == objectId
+            ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
+
+    assert (
+        num_tested == 29
+    ), "There should be 29 objects in the frame, based on the agent's pose!"
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
