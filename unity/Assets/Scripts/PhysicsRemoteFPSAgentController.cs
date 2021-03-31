@@ -2153,8 +2153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void AdvancePhysicsStep(
             float timeStep = 0.02f,
             float? simSeconds = null,
-            bool allowAutoSimulation = false,
-            bool syncTransforms = false
+            bool allowAutoSimulation = false
         ) {
             if ((!allowAutoSimulation) && Physics.autoSimulation) {
                 errorMessage = (
