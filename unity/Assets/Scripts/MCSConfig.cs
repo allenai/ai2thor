@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MCSConfig {
-    public static Dictionary<string, string[]> AGENT_SCENE_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+    public static Dictionary<string, string[]> FLAT_COLORS_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "Custom/Materials/Black", new string[] { "black" } },
         { "Custom/Materials/Blue", new string[] { "blue" } },
         { "Custom/Materials/Brown", new string[] { "brown" } },
@@ -22,6 +22,7 @@ public class MCSConfig {
         { "Custom/Materials/Purple", new string[] { "purple" } },
         { "Custom/Materials/Red", new string[] { "red" } },
         { "Custom/Materials/Silver", new string[] { "silver" } },
+        { "Custom/Materials/Tan", new string[] { "tan" } },
         { "Custom/Materials/Teal", new string[] { "teal" } },
         { "Custom/Materials/White", new string[] { "white" } },
         { "Custom/Materials/Violet", new string[] { "violet" } },
@@ -202,7 +203,7 @@ public class MCSConfig {
     };
 
     public static Dictionary<string, Dictionary<string, string[]>> MATERIAL_REGISTRY = new Dictionary<string, Dictionary<string, string[]>>() {
-        { "agent_scene", AGENT_SCENE_MATERIAL_REGISTRY },
+        { "flat_colors", FLAT_COLORS_MATERIAL_REGISTRY },
         { "block_blank", BLOCK_BLANK_MATERIAL_REGISTRY },
         { "block_design", BLOCK_DESIGN_MATERIAL_REGISTRY },
         { "cardboard", CARDBOARD_MATERIAL_REGISTRY },
