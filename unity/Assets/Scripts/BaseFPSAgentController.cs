@@ -2965,7 +2965,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int layerMask
             ) {
 
-            Debug.Log("capsuleCast - center: " + cc.transform.position + " skin: " + skinWidth + " start=" + startPosition + " dir=" + dir + " move:" + moveMagnitude);
             float adjustedRadiusAndSkin;
             Vector3 point1, point2;
             GetCapsuleInfoForAgent(cc, skinWidth, startPosition, out adjustedRadiusAndSkin, out point1, out point2);
@@ -2980,7 +2979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 point2.y = hit.point.y + adjustedRadiusAndSkin + raiseMinHeightAboveGround;
             }
 
-            RaycastHit[] hits = Physics.CapsuleCastAll(
+            return Physics.CapsuleCastAll(
                 point1,
                 point2,
                 adjustedRadiusAndSkin,
@@ -2989,14 +2988,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 layerMask,
                 QueryTriggerInteraction.Ignore
             );
-            Debug.DrawRay(point1, dir*(moveMagnitude+adjustedRadiusAndSkin), Color.red, 2);
-            Debug.DrawRay(point2, dir*(adjustedRadiusAndSkin), Color.green, 2);
-            Debug.Log("p1y:"+point1.y+" "+point2.y);
-         
-            string names = "";
-            hits.ToList().ForEach(h => names += " " + h.transform.name);
-            Debug.Log("capsuleCast - hits: " + hits.Length + " " + names);
-            return hits;
         }
 
         protected static void GetCapsuleInfoForAgent(CapsuleCollider cc, float skinWidth, Vector3 startPosition, out float radius, out Vector3 point1, out Vector3 point2) {
@@ -3007,9 +2998,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //We also assume that the capsulecollider stays vertically oriented.  We can then use the max of scale x and 
             //scale z to determine the radius.  Hopefully scale x and scale z are equal though.
             radius = cc.radius + skinWidth;
-            float innerHeight = cc.height  / 2.0f - radius + cc.center.y;
-            innerHeight*=Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
-            radius*=Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
+            float innerHeight = cc.height / 2.0f - radius + cc.center.y;
+            innerHeight *= Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
+            radius *= Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
             point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
         }

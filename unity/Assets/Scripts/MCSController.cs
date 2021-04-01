@@ -857,31 +857,25 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         float radius;
         Vector3 point1, point2;
         GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
-        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius ,1<<8);
+        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8);
 
-        float obstructionVsCollisionDifference = 0.15f*0;
-        obstructionVsCollisionDifference = m_CharacterController.skinWidth * skinMultiplier ;
+        float obstructionVsCollisionDifference = 0.15f * 0;
+        obstructionVsCollisionDifference = m_CharacterController.skinWidth * skinMultiplier;
 
-        Debug.Log("overlapColiders="+overlapColliders.Length);
-        if (overlapColliders.Length>0){
-            foreach(Collider c in overlapColliders){
+        if (overlapColliders.Length > 0) {
+            foreach (Collider c in overlapColliders) {
                 Vector3 direction;
                 float distance;
-                myCollider.radius+=obstructionVsCollisionDifference;
-                bool overlap=Physics.ComputePenetration(myCollider, transform.position, transform.rotation, c, c.transform.position, 
+                myCollider.radius += obstructionVsCollisionDifference;
+                bool overlap = Physics.ComputePenetration(myCollider, transform.position, transform.rotation, c, c.transform.position,
                     c.transform.rotation, out direction, out distance);
-                Debug.DrawRay(myCollider.transform.position, -myCollider.transform.forward, Color.magenta, 5);
-                myCollider.radius-=obstructionVsCollisionDifference;
+                myCollider.radius -= obstructionVsCollisionDifference;
                 Vector3 newPos = transform.position;
                 if (overlap) {
-                    Vector3 shift=direction * (distance);
-                    Debug.Log("moving by distance: "+distance+ " shift: "+shift);
+                    Vector3 shift = direction * (distance);
                     newPos += shift;
-                    Debug.Log(newPos.x +" "+ newPos.y+ " "+newPos.z);
                     transform.position = newPos;
                     snapAgentToGrid();
-                    newPos=transform.position;
-                    Debug.Log("Snaped to "+newPos.x +" "+ newPos.y+ " "+newPos.z);
                 }
             }
         }
