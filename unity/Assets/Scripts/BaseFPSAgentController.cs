@@ -2965,31 +2965,52 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int layerMask
             ) {
 
-            Vector3 center = cc.transform.position;
-            float radius = cc.radius + skinWidth;
-            float innerHeight = cc.height / 2.0f - radius;
-            Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
-            Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+            Debug.Log("capsuleCast - center: " + cc.transform.position + " skin: " + skinWidth + " start=" + startPosition + " dir=" + dir + " move:" + moveMagnitude);
+            float adjustedRadiusAndSkin;
+            Vector3 point1, point2;
+            GetCapsuleInfoForAgent(cc, skinWidth, startPosition, out adjustedRadiusAndSkin, out point1, out point2);
 
             //MCS large collider change
             RaycastHit hit;
             LayerMask layerMask2 = ~(1 << 10);
 
-            if (Physics.SphereCast(point1, cc.radius, Vector3.down, out hit, Mathf.Infinity, layerMask2))
-            {
+            float adjustedRadius = cc.radius * Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
+            if (Physics.SphereCast(point1, adjustedRadius, Vector3.down, out hit, Mathf.Infinity, layerMask2)) {
                 float raiseMinHeightAboveGround = 0.01f;
-                point2.y = hit.point.y + radius + raiseMinHeightAboveGround;
+                point2.y = hit.point.y + adjustedRadiusAndSkin + raiseMinHeightAboveGround;
             }
 
-            return Physics.CapsuleCastAll(
+            RaycastHit[] hits = Physics.CapsuleCastAll(
                 point1,
                 point2,
-                radius,
+                adjustedRadiusAndSkin,
                 dir,
                 moveMagnitude,
                 layerMask,
                 QueryTriggerInteraction.Ignore
             );
+            Debug.DrawRay(point1, dir*(moveMagnitude+adjustedRadiusAndSkin), Color.red, 2);
+            Debug.DrawRay(point2, dir*(adjustedRadiusAndSkin), Color.green, 2);
+         
+            string names = "";
+            hits.ToList().ForEach(h => names += " " + h.transform.name);
+            Debug.Log("capsuleCast - hits: " + hits.Length + " " + names);
+            return hits;
+        }
+
+        protected static void GetCapsuleInfoForAgent(CapsuleCollider cc, float skinWidth, Vector3 startPosition, out float radius, out Vector3 point1, out Vector3 point2) {
+            Vector3 center = cc.transform.position;
+            //The actual radius of the colider is determined by the scale.  As long as BaseFPSAgentController 
+            //is on a top level object, we can just multiply by local scale.  That is currently the case in MCS.
+            //
+            //We also assume that the capsulecollider stays vertically oriented.  We can then use the max of scale x and 
+            //scale z to determine the radius.  Hopefully scale x and scale z are equal though.
+            radius = cc.radius + skinWidth;
+            float innerHeight = cc.height / 2.0f - radius;
+            innerHeight*=Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
+            radius*=Mathf.Max(cc.transform.localScale.x, cc.transform.localScale.z);
+            point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
+            point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
         }
 
         protected bool isAgentCapsuleColliding(HashSet<Collider> collidersToIgnore = null) {
