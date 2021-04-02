@@ -309,17 +309,28 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		this.transform.position = Vector3.zero;
 		this.transform.rotation = Quaternion.identity;
+		Physics.SyncTransforms();
 
-		//get all colliders on the sop, excluding colliders if they are not enabled
-		Collider[] cols = this.GetComponentsInChildren<Collider>();
+		// Get all colliders on the sop, excluding colliders if they are not enabled, and disable them so they don't cause any collisions during a FixedUpdate
+		List<Collider> cols = new List<Collider>();
+		foreach (Collider c in this.transform.GetComponentsInChildren<Collider>())
+		{
+			if (c.enabled == true)
+			{
+				cols.Add(c);
+				c.enabled = false;
+			}
+		}
 
 		// Initialize the bounds and encapsulate all active colliders in SimObject's array
 		Bounds newBB = cols[0].bounds;
 
 		foreach (Collider c in cols)
 		{
-			if (c.enabled)
+			if (c.gameObject != this.BoundingBox)
+            {
 				newBB.Encapsulate(c.bounds);
+			}
 		}
 
 		// Update SimObject's BoundingBox collider to match new bounds
@@ -330,6 +341,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		// Revert SimObject back to its initial transform
 		this.transform.position = cachedPosition;
 		this.transform.rotation = cachedRotation;
+		Physics.SyncTransforms();
+
+		//Re-enable colliders
+		foreach (Collider c in cols)
+		{
+			c.enabled = true;
+		}
 
 		//reparent child simobjects
 		foreach (Transform childSimObject in childSimObjects)
