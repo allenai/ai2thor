@@ -94,16 +94,9 @@ def fifo_controller():
 fifo_wsgi = Controllers([_fifo_controller, _wsgi_controller])
 fifo_wsgi_stoch = Controllers([_fifo_controller, _wsgi_controller, _stochastic_controller])
 
-BASE_FP28_POSITION = dict(
-    x=-1.5,
-    z=-1.5,
-    y=0.901,
-)
+BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION,
-    rotation={"x": 0, "y": 0, "z": 0},
-    horizon=0,
-    standing=True,
+    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
 )
 
 
@@ -198,6 +191,7 @@ def test_bot_deprecation(fifo_controller):
 def test_deprecated_segmentation_params(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
+
     fifo_controller.reset(TEST_SCENE,
         renderObjectImage=True,
         renderClassImage=True,
@@ -215,6 +209,7 @@ def test_deprecated_segmentation_params(fifo_controller):
 def test_deprecated_segmentation_params2(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
+
     fifo_controller.reset(TEST_SCENE,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
@@ -258,12 +253,16 @@ def test_fast_emit(fifo_controller):
     event_no_fast_emit = fifo_controller.step(dict(action="LookUp"))
     event_no_fast_emit_2 = fifo_controller.step(dict(action="RotateRight"))
 
-    assert event.metadata["actionReturn"] is None
-    assert event_fast_emit.metadata["actionReturn"] == "foo"
-    assert id(event.metadata["objects"]) == id(event_fast_emit.metadata["objects"])
-    assert id(event.metadata["objects"]) != id(event_no_fast_emit.metadata["objects"])
-    assert id(event_no_fast_emit_2.metadata["objects"]) != id(
-        event_no_fast_emit.metadata["objects"]
+    assert event.metadata._raw_metadata["actionReturn"] is None
+    assert event_fast_emit.metadata._raw_metadata["actionReturn"] == "foo"
+    assert id(event.metadata._raw_metadata["objects"]) == id(
+        event_fast_emit.metadata._raw_metadata["objects"]
+    )
+    assert id(event.metadata._raw_metadata["objects"]) != id(
+        event_no_fast_emit.metadata._raw_metadata["objects"]
+    )
+    assert id(event_no_fast_emit_2.metadata._raw_metadata["objects"]) != id(
+        event_no_fast_emit.metadata._raw_metadata["objects"]
     )
 
 
@@ -745,8 +744,10 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
     known_conflicts = {
         "TestActionDispatchConflict": ["param22"],
     }
-    assert event.metadata["actionReturn"] == known_conflicts
+
+    assert event.metadata._raw_metadata["actionReturn"] == known_conflicts
     fifo_controller._skip_reset = True
+
 
 
 def test_action_dispatch_missing_args(fifo_controller):
@@ -907,6 +908,27 @@ def test_get_scenes_in_build(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_get_reachable_positions(controller):
+    event = controller.step("GetReachablePositions")
+    assert (
+        event.metadata["actionReturn"] == event.metadata["reachablePositions"]
+    ), "reachablePositions should map to actionReturn!"
+    assert len(event.metadata["reachablePositions"]) > 0 and isinstance(
+        event.metadata["reachablePositions"], list
+    ), "reachablePositions/actionReturn should not be empty after calling GetReachablePositions!"
+
+    assert "reachablePositions" not in event.metadata.keys()
+    event = controller.step("Pass")
+    try:
+        event.metadata["reachablePositions"]
+        assert (
+            False
+        ), "reachablePositions shouldn't be available without calling action='GetReachablePositions'."
+    except:
+        pass
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_change_resolution(controller):
     event = controller.step(dict(action="Pass"), raise_for_failure=True)
     assert event.frame.shape == (300, 300, 3)
@@ -940,8 +962,7 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -952,8 +973,7 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -961,8 +981,7 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"

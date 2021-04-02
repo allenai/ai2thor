@@ -7002,17 +7002,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void GetSceneBounds() {
-            reachablePositions = new Vector3[2];
-            reachablePositions[0] = agentManager.SceneBounds.min;
-            reachablePositions[1] = agentManager.SceneBounds.max;
-#if UNITY_EDITOR
-            Debug.Log(reachablePositions[0]);
-            Debug.Log(reachablePositions[1]);
-#endif
-            actionFinished(true);
-        }
-
         //to ignore the agent in this collision check, set ignoreAgent to true
         protected bool isHandObjectColliding(bool ignoreAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
@@ -7078,10 +7067,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void RandomlyMoveAgent(int randomSeed = 0) {
-#if UNITY_EDITOR
-            randomSeed = UnityEngine.Random.Range(0, 1000000);
-#endif
-            reachablePositions = getReachablePositions();
+            #if UNITY_EDITOR
+                randomSeed = UnityEngine.Random.Range(0, 1000000);
+            #endif
+            Vector3[] reachablePositions = getReachablePositions();
             var orientations = new float[]{
                 0,
                 90,
