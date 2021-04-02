@@ -136,8 +136,34 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         foreach (Transform child in GameObject.Find("Objects").transform) {
             child.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
+
+        // We may need to add additional validation logic for teleport later.
+        MCSTeleportFull(action);
+
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
         this.actionFinished(false);
+    }
+
+    private void MCSTeleportFull(ServerAction action) {
+        if((!action.teleportPosition.HasValue) && (!action.teleportRotation.HasValue)) {
+            return;
+        }
+
+        if(action.teleportPosition.HasValue) {
+            // X/Z positions are passed in. Y position should always be standing height for now,
+            // but this logic may need to change later if there's potential for the y position
+            // to change (ramps, crawling, etc).
+            targetTeleport = new Vector3(action.teleportPosition.Value.x, STANDING_POSITION_Y, action.teleportPosition.Value.z);
+            transform.position = targetTeleport;
+        }
+
+        if(action.teleportRotation.HasValue) {
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.teleportRotation.Value.y, 0.0f));
+
+            // reset camera as well
+            m_Camera.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+
+        }
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
