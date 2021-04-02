@@ -877,7 +877,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                     Vector3 shift = direction * (distance);
                     newPos += shift;
                     transform.position = newPos;
-                    snapAgentToGrid();
                 }
             }
         }
