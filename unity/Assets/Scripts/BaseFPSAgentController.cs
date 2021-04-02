@@ -79,6 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
 
+        private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
 
         public AgentState agentState = AgentState.Emit;
 
@@ -566,6 +567,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.visibilityScheme = action.GetVisibilityScheme();
+            this.originalLightingValues = null;
         }
 
         public void SetAgentMode(string mode) {
@@ -781,6 +783,181 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetColors();
             actionFinished(true);
+        }
+
+        /**
+         *
+         * @REMARK: float[] = {float, float} cannot be a compile time constant, hence why there are
+         *          null defaults.
+         * @REMARK: Union types are not (intended) to be supported in C# until C# 10.0. So, sadly, one
+         *          must pass in hue=[value, value] for hue=value (and similarly for brightness and
+         *          saturation).
+         *
+         * @param synchronized denotes if all lights should be multiplied by the same randomized
+         *        intensity and be randomized to the same color. When false, each lighting object gets
+         *        its own independent randomized intensity and randomized color.
+         * @param brightness sets the bounds with which the light intensity is multiplied by. If its a
+         *        tuple(float, float), values must each be greater than 0, where the multiplier is
+         *        then sampled from [brightness[0] : brightness[1]]. If brightness[0] is greater than
+         *        brightness[1], the values are swapped. Defaults to (0.5, 1.5).
+         * @param randomizeColor specifies if the color of the light should be randomized, or if only
+         *        its intensity should change.
+         * @param hue provides the (min, max) range of possible hue values for a light's color.
+         *        Valid values are in [0 : 1], where:
+         *          - 0 maps to a hue of 0 degrees (i.e., red-ish)
+         *          - 0.5 maps to a hue of 180 degrees (i.e., green-ish)
+         *          - 1 maps to a hue of 360 degrees (i.e., red-ish)
+         * @param saturation provides the (min, max) range of possible saturation values for a light's
+         *        color. Valid values are in [0 : 1], where 0 corresponds to grayscale and 1 corresponds
+         *        to full saturation. Defaults to [0.5 : 1].
+         */
+        public void RandomizeLighting(
+            bool synchronized = false,
+            float[] brightness = null,
+            bool randomizeColor = true,
+            float[] hue = null,
+            float[] saturation = null
+        ) {
+            if (!randomizeColor && (hue != null || saturation != null)) {
+                if (hue != null) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing hue={hue}."
+                    );
+                }
+                if (saturation != null) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing saturation={saturation}."
+                    );
+                }
+            }
+
+            if (brightness == null) {
+                brightness = new float[] {0.5f, 1.5f};
+            }
+            if (brightness[0] < 0 || brightness[1] < 0) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each brightness must be >= 0, not brightness={brightness}."
+                );
+            }
+
+            if (hue == null) {
+                hue = new float[] {0, 1};
+            }
+            if (saturation == null) {
+                saturation = new float[] {0.5f, 1};
+            }
+
+            if (saturation.Length != 2 || hue.Length != 2 || brightness.Length != 2) {
+                throw new ArgumentException(
+                    "Ranges for hue, saturation, and brightness must each have 2 values. You gave " +
+                    $"saturation={saturation}, hue={hue}, brightness={brightness}."
+                );
+            }
+
+            if (hue[0] < 0 || hue[0] > 1 || hue[1] < 0 || hue[1] > 1) {
+                throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue}");
+            }
+            if (saturation[0] < 0 || saturation[0] > 1 || saturation[1] < 0 || saturation[1] > 1) {
+                throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation}");
+            }
+
+            float newRandomFloat() {
+                return Random.Range(brightness[0], brightness[1]);
+            }
+            Color newRandomColor() {
+                // NOTE: This function weirdly IGNORES out of bounds arguments.
+                //       So, they are checked above.
+                // NOTE: value is an extraneous degree of freedom here,
+                //       since it can be controlled by brightness.
+                //       Hence why value=1.
+                return Random.ColorHSV(
+                    hueMin: hue[0],
+                    hueMax: hue[1],
+                    saturationMin: saturation[0],
+                    saturationMax: saturation[1],
+                    valueMin: 1,
+                    valueMax: 1
+                );
+            }
+
+            float intensityMultiplier = newRandomFloat();
+            Color randomColor = newRandomColor();
+
+            bool setOriginalMultipliers = originalLightingValues == null;
+            if (setOriginalMultipliers) {
+                originalLightingValues = new Dictionary<int, Dictionary<string, object>>();
+            }
+
+            // include both lights and reflection probes
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                    randomColor = newRandomColor();
+                }
+                int id = light.gameObject.GetInstanceID();
+                if (setOriginalMultipliers) {
+                    originalLightingValues[id] = new Dictionary<string, object>() {
+                        // NOTE: make sure these are synced with ResetLighting()!
+                        ["intensity"] = light.intensity,
+                        ["range"] = light.range,
+                        ["color"] = light.color
+                    };
+                }
+                light.intensity = (float) originalLightingValues[id]["intensity"] * intensityMultiplier;
+                light.range = (float) originalLightingValues[id]["range"] * intensityMultiplier;
+                if (randomizeColor) {
+                    light.color = randomColor;
+                }
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                }
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                if (setOriginalMultipliers) {
+                    // NOTE: make sure these are synced with ResetLighting()!
+                    originalLightingValues[id] = new Dictionary<string, object>() {
+                        ["intensity"] = reflectionProbe.intensity,
+                        ["blendDistance"] = reflectionProbe.intensity
+                    };
+                }
+                reflectionProbe.intensity = (
+                    (float) originalLightingValues[id]["intensity"] * intensityMultiplier
+                );
+                reflectionProbe.blendDistance = (
+                    (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier
+                );
+            }
+
+            actionFinished(success: true);
+        }
+
+        public void ResetLighting() {
+            if (originalLightingValues == null) {
+                actionFinishedEmit(success: true);
+                return;
+            }
+
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                int id = light.gameObject.GetInstanceID();
+                light.intensity = (float) originalLightingValues[id]["intensity"];
+                light.range = (float) originalLightingValues[id]["range"];
+                light.color = (Color) originalLightingValues[id]["color"];
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                reflectionProbe.intensity = (float) originalLightingValues[id]["intensity"];
+                reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"];
+            }
+
+            originalLightingValues = null;
+            actionFinished(success: true);
         }
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
