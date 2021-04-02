@@ -167,7 +167,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 
     private void regenerateBoundingBoxes() {
-        Vector3 position = this.gameObject.transform.position;
+		
+		//Pause autoSimulation during regeneration logic
+		bool isAutoSim = false;
+		if (Physics.autoSimulation)
+        {
+			isAutoSim = true;
+			Physics.autoSimulation = false;
+        }
+		
+		Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
 
         // position and rotation will vary slightly due to floating point errors
@@ -197,9 +206,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         if (this.IsSliced) {
             this.boundingBoxCacheKey.IsSliced = this.IsSliced;
         }
+
+		//Resume autoSimulation if it was already running
+		if (isAutoSim)
+        {
+			Physics.autoSimulation = true;
+        }
+
     }
 
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
+
 		AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
 		//unparent child simobjects during bounding box generation
@@ -309,17 +326,28 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		this.transform.position = Vector3.zero;
 		this.transform.rotation = Quaternion.identity;
+		Physics.SyncTransforms();
 
-		//get all colliders on the sop, excluding colliders if they are not enabled
-		Collider[] cols = this.GetComponentsInChildren<Collider>();
+		// Get all colliders on the sop, excluding colliders if they are not enabled and disabling the valid ones temporarily
+		List<Collider> cols = new List<Collider>();
+		foreach (Collider c in this.transform.GetComponentsInChildren<Collider>())
+		{
+			if (c.enabled)
+			{
+				cols.Add(c);
+				c.enabled = false;
+			}
+		}
 
 		// Initialize the bounds and encapsulate all active colliders in SimObject's array
 		Bounds newBB = cols[0].bounds;
 
 		foreach (Collider c in cols)
 		{
-			if (c.enabled)
+			if (c.gameObject != this.BoundingBox)
+            {
 				newBB.Encapsulate(c.bounds);
+			}
 		}
 
 		// Update SimObject's BoundingBox collider to match new bounds
@@ -330,6 +358,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		// Revert SimObject back to its initial transform
 		this.transform.position = cachedPosition;
 		this.transform.rotation = cachedRotation;
+		Physics.SyncTransforms();
+
+		//Re-enable colliders
+		foreach (Collider c in cols)
+		{
+			c.enabled = true;
+		}
 
 		//reparent child simobjects
 		foreach (Transform childSimObject in childSimObjects)
