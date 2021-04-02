@@ -100,6 +100,20 @@ class MetadataWrapper(dict):
                 'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
             )
             x = "actionReturn"
+        elif (
+            x == "reachablePositions"
+            and self._raw_metadata["lastAction"] == "GetSceneBounds"
+        ):
+            # Undocumented GetSceneBounds used to only populate reachablePositions,
+            # and not actionReturn. This now maintains both sideways and
+            # backwards compatibility in such a case.
+            if "reachablePositions" in self._raw_metadata.keys():
+                return super().__getitem__(x)
+            else:
+                warnings.warn(
+                    'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
+                )
+                x = "actionReturn"
         elif x == "reachablePositions":
             raise IndexError(
                 "You are trying to access event.metadata['reachablePositions'] without first "
