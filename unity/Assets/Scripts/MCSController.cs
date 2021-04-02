@@ -851,22 +851,24 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void AdjustLocationAfterHeightAdjustment() {
-        float skinMultiplier = 1f / Mathf.Max(transform.localScale.x, transform.localScale.z);
-
         CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
         float radius;
         Vector3 point1, point2;
+        //Determine if we are colliding (or within skin width) of another object
         GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
         Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8);
 
-        float obstructionVsCollisionDifference = 0.15f * 0;
-        obstructionVsCollisionDifference = m_CharacterController.skinWidth * skinMultiplier;
+        //we divide by scale here because we are going to expand the scaled collider by this value
+        float obstructionVsCollisionDifference = m_CharacterController.skinWidth / Mathf.Max(transform.localScale.x, transform.localScale.z);
 
+        //if we are colliding, we need to move a bit
         if (overlapColliders.Length > 0) {
             foreach (Collider c in overlapColliders) {
                 Vector3 direction;
                 float distance;
+                //Need to increase the collider radius temporarily to ensure we collide with something just outside but in our "skin"
                 myCollider.radius += obstructionVsCollisionDifference;
+                //This function determines the distance and direct we need to move to no longer be colliding.
                 bool overlap = Physics.ComputePenetration(myCollider, transform.position, transform.rotation, c, c.transform.position,
                     c.transform.rotation, out direction, out distance);
                 myCollider.radius -= obstructionVsCollisionDifference;
