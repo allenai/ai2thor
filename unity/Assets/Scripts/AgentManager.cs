@@ -48,7 +48,9 @@ public class AgentManager : MonoBehaviour
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+
+    // it is public to be accessible from the debug input field.
+    public HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -126,9 +128,7 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		#if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
-		#endif
 	}
 
 	private void initializePrimaryAgent()
@@ -219,6 +219,9 @@ public class AgentManager : MonoBehaviour
             {
                 //set up physics controller
                 SetUpArmController(true);
+                // the arm should currently be used only with autoSimulation off
+                // as we manually control Physics during its movement
+                action.autoSimulation = false;
 
 				if(action.useMassThreshold)
 				{
@@ -256,6 +259,12 @@ public class AgentManager : MonoBehaviour
 		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+        // we default Physics.autoSimulation to False in the built Player, but
+        // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
+        // this value False allows the user complete control of all Physics Simulation
+        // if they need deterministic simulations.
+        Physics.autoSimulation = action.autoSimulation;
+        Physics.autoSyncTransforms = Physics.autoSimulation;
 
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
@@ -325,6 +334,7 @@ public class AgentManager : MonoBehaviour
 	{
 		CollisionListener.useMassThreshold = true;
 		CollisionListener.massThreshold = massThreshold;
+        primaryAgent.MakeObjectsStaticKinematicMassThreshold();
 	}
 	
     //return reference to primary agent in case we need a reference to the primary
@@ -358,7 +368,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	public void ResetSceneBounds() {
-		// Recordining initially disabled renderers and scene bounds
+		// Recording initially disabled renderers and scene bounds
 		sceneBounds = new Bounds(
 			new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
 			new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -985,7 +995,14 @@ public class AgentManager : MonoBehaviour
                         this.sock.Connect(hostep);
                     }
                     catch (SocketException e) {
-                        Debug.Log("Socket exception: " + e.ToString());
+                        var msg = e.ToString();
+                        #if UNITY_EDITOR
+                        break;
+                        #endif
+                        // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
+                        #if !UNITY_EDITOR
+                        Debug.Log("Socket exception: " + msg);
+                        #endif
                     }
                 }
 
@@ -1597,15 +1614,13 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(Dictionary<string, object> action) {
-        try {
-            this.jObject = JObject.FromObject(action);
-        } catch (InvalidOperationException e)  {
-            throw new InvalidOperationException(
-                "TL;DR: Use 'run' from the debug input field. If you're seeing this, you're in the Debug Input Field. " +
-                "There is a weird case where actions like Teleport having xyz parameters and rotation: Vector3() which also has xyz parameters results in a self-recursing loop. " +
-                $"{e.Message}"
-            );
-        }
+        var jsonResolver = new ShouldSerializeContractResolver();
+        this.jObject  = JObject.FromObject(action,
+                    new Newtonsoft.Json.JsonSerializer()
+                        {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        });
     }
 
     public DynamicServerAction(JObject action) {
