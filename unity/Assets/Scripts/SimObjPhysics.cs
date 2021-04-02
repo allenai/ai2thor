@@ -948,11 +948,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         //default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
         if(myRigidbody.drag == 0)
         {
-            myRigidbody.drag = 0.01f;
+            // MCS: Don't change the drag!
+            // myRigidbody.drag = 0.01f;
         }
         if(myRigidbody.angularDrag == 0)
         {
-            myRigidbody.angularDrag = 0.01f;
+            // MCS: Don't change the drag!
+            // myRigidbody.angularDrag = 0.01f;
         }
 
         initializeProperties();

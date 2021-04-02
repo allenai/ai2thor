@@ -14,14 +14,14 @@ public class MCSMain : MonoBehaviour {
     private static float FLOOR_SCALE_X = 11f;
     private static float FLOOR_SCALE_Y = 0.5f;
     private static float FLOOR_SCALE_Z = 11f;
-    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 13f;
+    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 40f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
     private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 3f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 13f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 40f;
     private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 6f;
-    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.0f;
-    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.0f;
+    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -20.0f;
+    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 20.0f;
     private static float ISOMETRIC_FLOOR_SCALE_X = 20f;
     private static float ISOMETRIC_FLOOR_SCALE_Z = 20f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
@@ -1439,6 +1439,26 @@ public class MCSMain : MonoBehaviour {
                 }
             });
 
+        // Ghosting an object will make it temporarily intangible: disable its colliders and the effects of physics.
+        bool ghosted = false;
+        objectConfig.ghosts.Where(ghost => ghost.stepBegin <= step && ghost.stepEnd >= step).ToList()
+            .ForEach((ghost) => {
+                ghosted = true;
+                gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = true;
+                gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                    collider.enabled = false;
+                });
+            });
+
+        // If this object's config has a "ghosts" element, assume that is should always be non-kinematic and have its
+        // colliders enabled by default (whenever it's not ghosted).
+        if (!ghosted && objectConfig.ghosts.Count > 0) {
+            gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = false;
+            gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
+                collider.enabled = true;
+            });
+        }
+
         // Shrouding an object will make it temporarily invisible.
         bool shrouded = false;
         objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
@@ -1561,6 +1581,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigResize> resizes = new List<MCSConfigResize>();
     public List<MCSConfigMove> rotates = new List<MCSConfigMove>();
     public List<MCSConfigShow> shows = new List<MCSConfigShow>();
+    public List<MCSConfigStepBeginEnd> ghosts = new List<MCSConfigStepBeginEnd>();
     public List<MCSConfigStepBeginEnd> shrouds = new List<MCSConfigStepBeginEnd>();
     public List<MCSConfigTeleport> teleports = new List<MCSConfigTeleport>();
     public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
