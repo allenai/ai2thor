@@ -101,7 +101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // bottom left.
                     Debug.Log("MCS: Screen Point Clicked: " + Input.mousePosition.ToString());
                     Debug.Log("MCS: Screen Point as Image Pixel Coords: " + screenPtToPixels.ToString());
-                    if (Input.GetKey(KeyCode.LeftShift)) {
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) {
                         receptacleObjectImageCoords.x = Input.mousePosition.x;
                         receptacleObjectImageCoords.y = Input.mousePosition.y;
                     } else {
@@ -414,7 +414,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                     }
 
-                    if (Input.GetKeyDown(KeyCode.Slash))
+                    if (Input.GetKeyDown(KeyCode.Backslash))
                     {
                         foreach (Transform child in this.objectParent.transform)
                         {
