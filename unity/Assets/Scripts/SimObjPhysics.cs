@@ -168,14 +168,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     private void regenerateBoundingBoxes() {
 		
-		//Pause autoSimulation during regeneration logic
-		bool isAutoSim = false;
-		if (Physics.autoSimulation)
-        {
-			isAutoSim = true;
-			Physics.autoSimulation = false;
-        }
-		
 		Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
 
@@ -206,13 +198,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         if (this.IsSliced) {
             this.boundingBoxCacheKey.IsSliced = this.IsSliced;
         }
-
-		//Resume autoSimulation if it was already running
-		if (isAutoSim)
-        {
-			Physics.autoSimulation = true;
-        }
-
     }
 
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
