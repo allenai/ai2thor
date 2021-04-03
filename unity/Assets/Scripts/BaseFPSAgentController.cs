@@ -42,7 +42,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected Quaternion lastLocalCameraRotation;
         public float autoResetTimeScale = 1.0f;
 
-        public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
 		// first person controller parameters
@@ -79,11 +78,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
 
+        private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
 
         public AgentState agentState = AgentState.Emit;
 
         // these object types can have a placeable surface mesh associated ith it
-        // this is to be used with ScreenToWorldTarget to filter out raycasts correctly
+        // this is to be used with screenToWorldTarget to filter out raycasts correctly
         protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
             SimObjType.Bathtub, SimObjType.Sink, SimObjType.Drawer, SimObjType.Cabinet, 
             SimObjType.CounterTop, SimObjType.Shelf
@@ -115,6 +115,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool IsProcessing {
             get {
                 return this.agentState == AgentState.Processing;
+            }
+        }
+
+        // convenciance function that can be called
+        // when autoSyncTransforms is disabled and the
+        // transform has been manually moved
+        public void autoSyncTransforms() {
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
             }
         }
 
@@ -243,7 +252,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            // Recordining initially disabled renderers and scene bounds 
+            // Recording initially disabled renderers and scene bounds
             //then setting up sceneBounds based on encapsulating all renderers
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
@@ -296,17 +305,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
 		}
 
-            #if UNITY_EDITOR
-            if (!success) {
-                Debug.Log($"Action failed with error message '{this.errorMessage}'.");
-            }
-            #endif
-
             lastActionSuccess = success;
 			this.agentState = newState;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
+
+            #if UNITY_EDITOR
+            Debug.Log($"lastActionSuccess: '{success}'");
+            if (!success) {
+                Debug.Log($"Action failed with error message '{this.errorMessage}'.");
+            }
+
+            else if(actionReturn != null)
+            Debug.Log($"actionReturn: '{actionReturn}'");
+            #endif
         }
 
 		public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
@@ -354,12 +367,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            dir: d,
+                            moveMagnitude: (gridSize * gridMultiplier),
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -373,11 +386,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
-                        if (errorMessage == "" && !inBounds) {
-                            errorMessage = "In " +
-                                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+                        if (shouldEnqueue && !inBounds) {
+                            throw new InvalidOperationException(
+                                "In " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
                                 ", position " + newPosition.ToString() +
-                                " can be reached via capsule cast but is beyond the scene bounds.";
+                                " can be reached via capsule cast but is beyond the scene bounds."
+                            );
                         }
 
                         shouldEnqueue = shouldEnqueue && inBounds && (
@@ -412,10 +426,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
-                //default maxStepCount to scale based on gridSize
-                if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
-                    errorMessage = "Too many steps taken in GetReachablePositions.";
-                    break;
+                // default maxStepCount to scale based on gridSize
+                if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
+                    throw new InvalidOperationException("Too many steps taken in GetReachablePositions.");
                 }
             }
 
@@ -429,18 +442,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(int maxStepCount = 0) {
-            if(maxStepCount != 0) {
-                reachablePositions = getReachablePositions(1.0f, maxStepCount);
+        public void GetReachablePositions(int? maxStepCount = null) {
+            Vector3[] reachablePositions;
+            if (maxStepCount.HasValue) {
+                reachablePositions = getReachablePositions(maxStepCount: maxStepCount.Value);
             } else {
                 reachablePositions = getReachablePositions();
             }
 
-            if (errorMessage != "") {
-                actionFinishedEmit(false);
-            } else {
-                actionFinishedEmit(true, reachablePositions);
-            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: reachablePositions
+            );
         }
 
 		public void Initialize(ServerAction action)
@@ -553,6 +566,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.visibilityScheme = action.GetVisibilityScheme();
+            this.originalLightingValues = null;
         }
 
         public void SetAgentMode(string mode) {
@@ -697,6 +711,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (float z in zs)
                 {
                     this.transform.position = startingPosition;
+                    autoSyncTransforms();
+
                     yield return null;
 
                     Vector3 target = new Vector3(x, this.transform.position.y, z);
@@ -728,6 +744,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             this.transform.position = startingPosition;
+            autoSyncTransforms();
             yield return null;
             if (validMovements.Count > 0)
             {
@@ -765,6 +782,181 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetColors();
             actionFinished(true);
+        }
+
+        /**
+         *
+         * @REMARK: float[] = {float, float} cannot be a compile time constant, hence why there are
+         *          null defaults.
+         * @REMARK: Union types are not (intended) to be supported in C# until C# 10.0. So, sadly, one
+         *          must pass in hue=[value, value] for hue=value (and similarly for brightness and
+         *          saturation).
+         *
+         * @param synchronized denotes if all lights should be multiplied by the same randomized
+         *        intensity and be randomized to the same color. When false, each lighting object gets
+         *        its own independent randomized intensity and randomized color.
+         * @param brightness sets the bounds with which the light intensity is multiplied by. If its a
+         *        tuple(float, float), values must each be greater than 0, where the multiplier is
+         *        then sampled from [brightness[0] : brightness[1]]. If brightness[0] is greater than
+         *        brightness[1], the values are swapped. Defaults to (0.5, 1.5).
+         * @param randomizeColor specifies if the color of the light should be randomized, or if only
+         *        its intensity should change.
+         * @param hue provides the (min, max) range of possible hue values for a light's color.
+         *        Valid values are in [0 : 1], where:
+         *          - 0 maps to a hue of 0 degrees (i.e., red-ish)
+         *          - 0.5 maps to a hue of 180 degrees (i.e., green-ish)
+         *          - 1 maps to a hue of 360 degrees (i.e., red-ish)
+         * @param saturation provides the (min, max) range of possible saturation values for a light's
+         *        color. Valid values are in [0 : 1], where 0 corresponds to grayscale and 1 corresponds
+         *        to full saturation. Defaults to [0.5 : 1].
+         */
+        public void RandomizeLighting(
+            bool synchronized = false,
+            float[] brightness = null,
+            bool randomizeColor = true,
+            float[] hue = null,
+            float[] saturation = null
+        ) {
+            if (!randomizeColor && (hue != null || saturation != null)) {
+                if (hue != null) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing hue={hue}."
+                    );
+                }
+                if (saturation != null) {
+                    throw new ArgumentException(
+                        $"Cannot pass in randomizeColor=False while also providing saturation={saturation}."
+                    );
+                }
+            }
+
+            if (brightness == null) {
+                brightness = new float[] {0.5f, 1.5f};
+            }
+            if (brightness[0] < 0 || brightness[1] < 0) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each brightness must be >= 0, not brightness={brightness}."
+                );
+            }
+
+            if (hue == null) {
+                hue = new float[] {0, 1};
+            }
+            if (saturation == null) {
+                saturation = new float[] {0.5f, 1};
+            }
+
+            if (saturation.Length != 2 || hue.Length != 2 || brightness.Length != 2) {
+                throw new ArgumentException(
+                    "Ranges for hue, saturation, and brightness must each have 2 values. You gave " +
+                    $"saturation={saturation}, hue={hue}, brightness={brightness}."
+                );
+            }
+
+            if (hue[0] < 0 || hue[0] > 1 || hue[1] < 0 || hue[1] > 1) {
+                throw new ArgumentOutOfRangeException($"hue range must be in [0:1], not {hue}");
+            }
+            if (saturation[0] < 0 || saturation[0] > 1 || saturation[1] < 0 || saturation[1] > 1) {
+                throw new ArgumentOutOfRangeException($"saturation range must be in [0:1], not {saturation}");
+            }
+
+            float newRandomFloat() {
+                return Random.Range(brightness[0], brightness[1]);
+            }
+            Color newRandomColor() {
+                // NOTE: This function weirdly IGNORES out of bounds arguments.
+                //       So, they are checked above.
+                // NOTE: value is an extraneous degree of freedom here,
+                //       since it can be controlled by brightness.
+                //       Hence why value=1.
+                return Random.ColorHSV(
+                    hueMin: hue[0],
+                    hueMax: hue[1],
+                    saturationMin: saturation[0],
+                    saturationMax: saturation[1],
+                    valueMin: 1,
+                    valueMax: 1
+                );
+            }
+
+            float intensityMultiplier = newRandomFloat();
+            Color randomColor = newRandomColor();
+
+            bool setOriginalMultipliers = originalLightingValues == null;
+            if (setOriginalMultipliers) {
+                originalLightingValues = new Dictionary<int, Dictionary<string, object>>();
+            }
+
+            // include both lights and reflection probes
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                    randomColor = newRandomColor();
+                }
+                int id = light.gameObject.GetInstanceID();
+                if (setOriginalMultipliers) {
+                    originalLightingValues[id] = new Dictionary<string, object>() {
+                        // NOTE: make sure these are synced with ResetLighting()!
+                        ["intensity"] = light.intensity,
+                        ["range"] = light.range,
+                        ["color"] = light.color
+                    };
+                }
+                light.intensity = (float) originalLightingValues[id]["intensity"] * intensityMultiplier;
+                light.range = (float) originalLightingValues[id]["range"] * intensityMultiplier;
+                if (randomizeColor) {
+                    light.color = randomColor;
+                }
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                if (!synchronized) {
+                    intensityMultiplier = newRandomFloat();
+                }
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                if (setOriginalMultipliers) {
+                    // NOTE: make sure these are synced with ResetLighting()!
+                    originalLightingValues[id] = new Dictionary<string, object>() {
+                        ["intensity"] = reflectionProbe.intensity,
+                        ["blendDistance"] = reflectionProbe.intensity
+                    };
+                }
+                reflectionProbe.intensity = (
+                    (float) originalLightingValues[id]["intensity"] * intensityMultiplier
+                );
+                reflectionProbe.blendDistance = (
+                    (float) originalLightingValues[id]["blendDistance"] * intensityMultiplier
+                );
+            }
+
+            actionFinished(success: true);
+        }
+
+        public void ResetLighting() {
+            if (originalLightingValues == null) {
+                actionFinishedEmit(success: true);
+                return;
+            }
+
+            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            foreach (Light light in lights) {
+                int id = light.gameObject.GetInstanceID();
+                light.intensity = (float) originalLightingValues[id]["intensity"];
+                light.range = (float) originalLightingValues[id]["range"];
+                light.color = (Color) originalLightingValues[id]["color"];
+            }
+
+            ReflectionProbe[] reflectionProbes = GameObject.FindObjectsOfType<ReflectionProbe>();
+            foreach (ReflectionProbe reflectionProbe in reflectionProbes) {
+                int id = reflectionProbe.gameObject.GetInstanceID();
+                reflectionProbe.intensity = (float) originalLightingValues[id]["intensity"];
+                reflectionProbe.blendDistance = (float) originalLightingValues[id]["blendDistance"];
+            }
+
+            originalLightingValues = null;
+            actionFinished(success: true);
         }
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
@@ -909,7 +1101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void RemoveFromScene(string objectId) {
             //pass name of object in from action.objectId
             if (objectId == null) {
-                errorMessage = "objectId required for OpenObject";
+                errorMessage = "objectId required for RemoveFromScene";
                 actionFinished(false);
                 return;
             }
@@ -1013,6 +1205,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 return true;
             }
+        }
+
+
+        // This effectively freezes objects that exceed the MassThreshold configured
+        // during initialization and reduces the chance of an object held by the
+        // arm from moving a large mass object.  This also eliminates the chance
+        // of a large mass object moving vs. relying on the CollisionListener to prevent it.
+        public void MakeObjectsStaticKinematicMassThreshold() {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
+                    }
+                }
+
+                if (CollisionListener.useMassThreshold && sop.Mass > CollisionListener.massThreshold) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = true;
+                    sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                }
+            }
+            actionFinished(true);
         }
 
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
@@ -1412,7 +1632,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // EXTRAS
-            metaMessage.reachablePositions = reachablePositions;
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
             metaMessage.distances = flatten2DimArray(distances);
             metaMessage.normals = flatten3DimArray(normals);
@@ -1433,7 +1652,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.currentTime = TimeSinceStart();
 
             // Resetting things
-            reachablePositions = new Vector3[0];
             flatSurfacesOnGrid = new float[0, 0, 0];
             distances = new float[0, 0];
             normals = new float[0, 0, 0];
@@ -1578,11 +1796,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(success: false, errorMessage: errorMessage);
             }
 
-            #if UNITY_EDITOR
-                if (errorMessage != "") {
-                    Debug.LogError(errorMessage);
-                }
-            #endif
+            // #if UNITY_EDITOR
+            //     if (errorMessage != "") {
+            //         Debug.LogError(errorMessage);
+            //     }
+            // #endif
         }
 
         //no op action
@@ -1662,45 +1880,69 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return target;
         }
 
-        // Helper method that parses (x and y) parameters to return the
-        // sim object that they target.
-        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
-            if (x < 0 || x > 1 || y < 0 || y > 1) {
-                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
-            }
-            SimObjPhysics target = null;
-            ScreenToWorldTarget((float) x, (float) y, ref target, !forceAction);
-            return target;
-        }
-
         // checks if the target position in space is within the agent's current viewport
-        protected bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
+        // and/or within the max visible distance
+        protected bool isPosInView(Vector3 targetPosition, bool inViewport = true, bool inMaxVisibleDistance = true)
         {
             //now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
             tmp.y = targetPosition.y;
 
-            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
+            if (inMaxVisibleDistance && Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)
             {
-                errorMessage = "The target position is outside the agent's max visible distance.";
+                errorMessage = "target is outside of maxVisibleDistance";
                 return false;
             }
 
             //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
             Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
-            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+            if(inViewport && (vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f))
             {
-                errorMessage = "The target position is outside the viewport.";
+                errorMessage = "target is outside of Agent Viewport";
                 return false;
             }
 
             return true;
         }
 
+        protected bool isPosInView(Vector3 targetPosition, ref SimObjPhysics target, float x, float y, bool inViewport = true, bool inMaxVisibleDistance = true)
+        {
+            bool result = isPosInView(
+                targetPosition: targetPosition,
+                inViewport: inViewport,
+                inMaxVisibleDistance: inMaxVisibleDistance);
+
+            if(errorMessage == "target is outside of maxVisibleDistance")
+            {
+                errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is outside the Agent's maxVisibleDistance range";
+                target = null;
+
+            }
+
+            if(errorMessage == "target is outside of AgentViewport")
+            {
+                errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is outside the agent's viewport";
+                target = null;
+            }
+
+            return result;
+        }
+
         // used for all actions that need a sim object target
         // instead of objectId, use screen coordinates to raycast toward potential targets
         // will set the target object by reference if raycast is successful
-        protected bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange) {
+        protected bool screenToWorldTarget(
+            float x, 
+            float y, 
+            ref SimObjPhysics target, 
+            // bool inViewport = true, 
+            // bool inMaxVisibleDistance = false, 
+            bool forceAction = false,
+            bool checkVisible = true) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
+            }
+
             // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
             y = 1.0f - y;
 
@@ -1708,46 +1950,96 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
 
-            // if something was touched, actionFinished(true) always
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
-                if (hit.transform.GetComponent<SimObjPhysics>()) {
-                    // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                    // this should basically only happen if the handDistance value is too big
-                    if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                        throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                    }
+            // check if something was hit by raycast
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11, QueryTriggerInteraction.Ignore)) {
 
-                    // it is within viewport, so we are good, assign as target
-                    target = hit.transform.GetComponent<SimObjPhysics>();
+                //DEBUG STUFF PLEASE DELETE LATER//////
+                // GameObject empty = new GameObject("empty");
+                // Instantiate(empty, hit.point, Quaternion.identity);
+                // GameObject.Destroy(empty);
+                ///////////////////////////////////////
+                
+                if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
+
+                    target = hit.transform.GetComponentInParent<SimObjPhysics>();
+
+                    //if not in view, target passed by ref will be set to null after error message generation
+                    if(!isPosInView(
+                        targetPosition: hit.point, 
+                        inMaxVisibleDistance: false, 
+                        inViewport: true,
+                        x: x,
+                        y: y,
+                        target: ref target))
+                        return false;
+
+                    //now check if the object is flagged as Visible by the visibility point logic
+                    if(checkVisible && !VisibleSimObjs(forceAction).Contains(target))
+                    {
+                        //the potential target sim object hit by the ray is not currently visible to the agent
+                        errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is not currently Visible to Agent";
+                        target = null;
+                        return false;
+                    }
+                }
+
+                //object hit was not a sim object
+                else
+                {
+                    errorMessage = $"no sim objects found at ({x},{y})";
+                    return false;
+                }
+
+                //something was hit by the raycast, but one of the checks failed
+                if(errorMessage != "")  {
+                    //errorMessage should be set in isPosInView
+                    return false;
                 }
             }
 
-            // try again, this time cast for placeable surface for things like countertops or interior of cabinets
-            // if no target was found in the layers above, try the SimObjInvisible layer. 
-            // additionally, if a target was found above, but that target was one of the SimObjPhysics Types that can have
-            // PlaceableSurfaces on it, also make sure to check again
-            if (target == null || hasPlaceableSurface.Contains(target.Type)) {
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore)) {
-                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
-                        // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                        // this should basically only happen if the handDistance value is too big
-                        if (requireWithinViewportRange && !CheckIfTargetPositionIsInViewportRange(hit.point)) {
-                            throw new InvalidOperationException($"Target sim object at screen coordinate: ({x}, {y}) is not within the viewport");
-                        }
-                        // it is within viewport, so we are good, assign as target
-                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
-                    }
-                }
-            }
-
-            // force update objects to be visible/interactable correctly
-            VisibleSimObjs(false);
+            //target should have been assigned so we are good to go
             return true;
         }
 
-        public void GetObjectInFrame(float x, float y, bool forceAction = false) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+        //returns whether an object hit at (x,y) screen coordinates is in the camera viewport
+        //if checkVisible = true, it will also check if the object hit is visible to the agent
+        public void GetObjectInFrame(float x, float y, bool checkVisible = false) {
+            SimObjPhysics target = null;
+            screenToWorldTarget(
+                x: x,
+                y: y, 
+                target: ref target, 
+                checkVisible: checkVisible); 
+                //if checkVisible is true and target is found, the object is also interactable to the agent
+                //this does not account for objects behind transparent objects like shower glass, as the raycast check
+                //will hit the transparent object FIRST
+
+            if(target != null)
             actionFinishedEmit(success: true, actionReturn: target.ObjectID);
+
+            if(target == null)
+            actionFinishedEmit(success: false, actionReturn: errorMessage);
+        }
+
+        public void GetCoordinateFromRaycast(float x, float y) {
+            if (x < 0 || y < 0 || x > 1 || y > 1) {
+                throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
+            }
+
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
+            RaycastHit hit;
+            Physics.Raycast(
+                ray: ray,
+                hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
+                layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+
+            actionFinishedEmit(
+                success: true,
+                actionReturn: hit.point
+            );
         }
 
 		protected void snapAgentToGrid()
@@ -1949,6 +2241,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Vector3 pos = (Vector3) targetPosition;
+            // we must sync the rigidbody prior to executing the
+            // move otherwise the agent will end up in a different
+            // location from the targetPosition
+            autoSyncTransforms();
             m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
@@ -2820,19 +3116,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void ToggleMapView() {
-
             SyncTransform[] syncInChildren;
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+            StructureObject ceiling = null;
 
-            foreach(StructureObject so in structureObjs)
-            {
-                if ((so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.LightFixture) ||
-                    (so.WhatIsMyStructureObjectTag == StructureObjectTag.CeilingLight)
-                ) {
-                    structureObjsList.Add(so);
+            foreach (StructureObject structure in structureObjs) {
+                switch (structure.WhatIsMyStructureObjectTag) {
+                    case StructureObjectTag.Ceiling:
+                        ceiling = structure;
+                        goto case StructureObjectTag.LightFixture;
+                    case StructureObjectTag.LightFixture:
+                    case StructureObjectTag.CeilingLight:
+                        structureObjsList.Add(structure);
+                        break;
                 }
             }
 
@@ -2842,27 +3140,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.transform.localPosition = lastLocalCameraPosition;
                 m_Camera.transform.localRotation = lastLocalCameraRotation;
 
-                //restore agent body culling
+                // restore agent body culling
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = false;
                 }
 
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, true);
                 }
-            }
-
-            else {
-
-                //stop culling the agent's body so it's visible from the top?
+            } else {
+                // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
                 syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
+                foreach (SyncTransform sync in syncInChildren) {
                     sync.StopSyncingForASecond = true;
                 }
 
@@ -2870,9 +3162,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
-                Bounds b = new Bounds();
-                b.min = agentManager.SceneBounds.min;
-                b.max = agentManager.SceneBounds.max;
+                Bounds b;
+                if (ceiling != null) {
+                    // There's a ceiling component in the room!
+                    // Let's use it's bounds. (Likely iTHOR.)
+                    b = ceiling.GetComponent<Renderer>().bounds;
+                } else {
+                    // There's no component in the room!
+                    // Let's use the bounds from every object. (Likely RoboTHOR.)
+                    b = new Bounds();
+                    b.min = agentManager.SceneBounds.min;
+                    b.max = agentManager.SceneBounds.max;
+                }
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
@@ -2882,10 +3183,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
 
                 cameraOrthSize = m_Camera.orthographicSize;
-                foreach(StructureObject so in structureObjsList)
-                {
+                foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);
-                }            }
+                }
+            }
             actionFinished(true);
         }
 
@@ -3302,26 +3603,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //cast a capsule the same size as the agent
         //used to check for collisions
         public RaycastHit[] capsuleCastAllForAgent(
-            CapsuleCollider cc,
+            CapsuleCollider capsuleCollider,
             float skinWidth,
             Vector3 startPosition,
             Vector3 dir,
             float moveMagnitude,
             int layerMask
-            ) {
-            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
-            float radius = cc.radius + skinWidth;
-            float innerHeight = cc.height / 2.0f - radius;
+        ) {
+            // make sure to offset this by capsuleCollider.center since we shrank the capsule size
+            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
+            float radius = capsuleCollider.radius + skinWidth;
+            float innerHeight = capsuleCollider.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
             return Physics.CapsuleCastAll(
-                point1,
-                point2,
-                radius,
-                dir,
-                moveMagnitude,
-                layerMask,
-                QueryTriggerInteraction.Ignore
+                point1: point1,
+                point2: point2,
+                radius: radius,
+                direction: dir,
+                maxDistance: moveMagnitude,
+                layerMask: layerMask,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
         }
 
@@ -3361,8 +3663,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
-
-
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -3406,7 +3706,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         return true;
                     }
 
-                    
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
@@ -3416,12 +3715,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            cc,
-                            sw,
-                            p,
-                            d,
-                            (gridSize * gridMultiplier),
-                            layerMask
+                            capsuleCollider: cc,
+                            skinWidth: sw,
+                            startPosition: p,
+                            dir: d,
+                            moveMagnitude: (gridSize * gridMultiplier),
+                            layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
@@ -3712,6 +4011,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 enumerator,
                 fixedDeltaTime
             );
+        }
+
+        public void GetSceneBounds() {
+            Vector3[] positions = new Vector3[2];
+            positions[0] = agentManager.SceneBounds.min;
+            positions[1] = agentManager.SceneBounds.max;
+
+            #if UNITY_EDITOR
+                Debug.Log(positions[0]);
+                Debug.Log(positions[1]);
+            #endif
+            actionFinished(true, positions);
         }
 
         #if UNITY_EDITOR

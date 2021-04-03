@@ -345,7 +345,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+00.00|+00.00|+00.00
+  objectID: 
   Type: 96
   PrimaryProperty: 2
   SecondaryProperties: 1d000000
@@ -374,18 +374,104 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65828022547880460}
+  - {fileID: 65953339991237770}
+  - {fileID: 65061271240662852}
+  - {fileID: 65458831402781070}
+  - {fileID: 65500471840913576}
+  - {fileID: 65387660452065952}
+  - {fileID: 65458596438420012}
+  - {fileID: 65486505220342510}
+  - {fileID: 65428311148399398}
+  - {fileID: 65149158762884162}
+  - {fileID: 65195256202077324}
+  - {fileID: 65565740787044426}
+  - {fileID: 65886419877813190}
+  - {fileID: 65347794017713298}
+  - {fileID: 65063752022821818}
+  - {fileID: 65133981810333552}
+  - {fileID: 65804618617026836}
+  - {fileID: 65813312210708230}
+  - {fileID: 65419818556828060}
+  - {fileID: 65905166045259902}
+  - {fileID: 65811333681955416}
+  - {fileID: 65639461901498710}
+  - {fileID: 65719973958775394}
+  - {fileID: 65319993494959560}
+  - {fileID: 65298536677762782}
+  - {fileID: 65275870071891196}
+  - {fileID: 65393421487155980}
+  - {fileID: 65506786193309406}
+  - {fileID: 65785939827545248}
+  - {fileID: 65396890099201162}
+  - {fileID: 65741229066202178}
+  - {fileID: 65633989310896202}
+  - {fileID: 65103210567764160}
+  - {fileID: 136049061737185162}
+  - {fileID: 65452791697264122}
+  - {fileID: 65892172929952960}
+  - {fileID: 65357094282605176}
+  - {fileID: 65152486844031660}
+  - {fileID: 65512824970713500}
+  - {fileID: 65522221199560808}
+  - {fileID: 65670140899342872}
+  - {fileID: 65178794098461264}
+  - {fileID: 65061906573727380}
+  - {fileID: 65252038494130704}
+  - {fileID: 65315635921797390}
+  - {fileID: 65029464564825452}
+  - {fileID: 65463991795649366}
+  - {fileID: 65582706638187788}
+  - {fileID: 65604619192202762}
+  - {fileID: 65910367342172164}
+  - {fileID: 65520251889075416}
+  - {fileID: 65009336296366736}
+  - {fileID: 65933719556447992}
+  - {fileID: 65523122015668266}
+  - {fileID: 65429829167812348}
+  - {fileID: 65538592524321374}
+  - {fileID: 65448552492957806}
+  - {fileID: 65438672829434338}
+  - {fileID: 65869923701432822}
+  - {fileID: 65786089288845056}
+  - {fileID: 65986156732122562}
+  - {fileID: 65099334411646994}
+  - {fileID: 65411467200093224}
+  - {fileID: 65100582518015594}
+  - {fileID: 65737631182551620}
+  - {fileID: 65503612683602368}
+  - {fileID: 65487941021132042}
+  - {fileID: 65559506317757096}
   HFdynamicfriction: 0.9
   HFstaticfriction: 0.9
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0.8
   salientMaterials: 00000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54525882451473332
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3918,8 +4004,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.5576432, y: 2.1347327, z: 0.57700133}
-  m_Center: {x: 0, y: 1.0370622, z: 0}
+  m_Size: {x: 0.5305183, y: 2.0873349, z: 0.53051823}
+  m_Center: {x: 0.000012785196, y: 1.0386674, z: -0.000000029802322}
 --- !u!1 &1624727056737336
 GameObject:
   m_ObjectHideFlags: 0
@@ -4268,12 +4354,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1650168085153712}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.43
   m_Range: 10
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -4283,6 +4371,24 @@ Light:
     m_Bias: 0.01
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -4290,12 +4396,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!1 &1654431593724608
@@ -5690,6 +5799,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5704,6 +5814,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0

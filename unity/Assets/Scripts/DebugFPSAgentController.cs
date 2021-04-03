@@ -43,7 +43,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Vector3 m_MoveDir = Vector3.zero;
         private CharacterController m_CharacterController;
         private PhysicsRemoteFPSAgentController PhysicsController;
-        private bool scroll2DEnabled = true;
+        private bool scroll2DEnabled = false;
 
         protected bool enableHighlightShader = true;
 
@@ -183,11 +183,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 var eps = 1e-6;
                 if (Mathf.Abs(scrollAmount) > eps) {
                     // webGL action
-                     var action = new Dictionary<string, object>() {
-                            {"action", "MoveHandAhead"},
-                            {"moveMagnitude", scrollAmount}
-                        };
-                    
+                    Dictionary<string, object> action = new Dictionary<string, object>() {
+                        {"action", "MoveHandAhead"},
+                        {"moveMagnitude", scrollAmount}
+                    };
                     this.PhysicsController.ProcessControlCommand(action);
                 }
             }
