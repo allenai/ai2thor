@@ -1338,12 +1338,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action["placeStationary"] = true; 
+                        //action["placeStationary"] = true; 
                         action["x"] = 0.5f;
                         action["y"] = 0.5f;
                         //set this true to ignore Placement Restrictions
-                        action["forceAction"] = true;
+                        //action["forceAction"] = true;
+                        //action["putNearXY"] = true;
 
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "goif":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetObjectInFrame";
+                        action["x"] = 0.5f;
+                        action["y"] = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2197,7 +2208,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							//action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
 						}
 
-                        action.forceAction = true;
+                        //action.forceAction = true;
                         action.x = 0.5f; 
                         action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
