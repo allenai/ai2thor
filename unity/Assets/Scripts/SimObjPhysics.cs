@@ -328,25 +328,27 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.transform.rotation = Quaternion.identity;
 		Physics.SyncTransforms();
 
-		// Get all colliders on the sop, excluding colliders if they are not enabled and disabling the valid ones temporarily
-		List<Collider> cols = new List<Collider>();
+		// Get all colliders on the sop, excluding colliders if they are not enabled 
+		//List<Collider> cols = new List<Collider>();
+		List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
 		foreach (Collider c in this.transform.GetComponentsInChildren<Collider>())
 		{
 			if (c.enabled)
 			{
-				cols.Add(c);
-				c.enabled = false;
+				cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
+				//move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
+				c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
 			}
 		}
 
 		// Initialize the bounds and encapsulate all active colliders in SimObject's array
-		Bounds newBB = cols[0].bounds;
+		Bounds newBB = new Bounds();
 
-		foreach (Collider c in cols)
+		foreach (KeyValuePair<Collider, LayerMask> kvp in cols)
 		{
-			if (c.gameObject != this.BoundingBox)
+			if (kvp.Key.gameObject != this.BoundingBox)
             {
-				newBB.Encapsulate(c.bounds);
+				newBB.Encapsulate(kvp.Key.bounds);
 			}
 		}
 
@@ -360,10 +362,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.transform.rotation = cachedRotation;
 		Physics.SyncTransforms();
 
-		//Re-enable colliders
-		foreach (Collider c in cols)
+		//Re-enable colliders, moving them back to their original layer
+		foreach (KeyValuePair<Collider, LayerMask> kvp in cols)
 		{
-			c.enabled = true;
+			kvp.Key.transform.gameObject.layer = kvp.Value;
+
 		}
 
 		//reparent child simobjects
