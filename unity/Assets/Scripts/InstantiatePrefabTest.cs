@@ -288,7 +288,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         int degreeIncrement,
         bool AlwaysPlaceUpright
     ) {
-        print("trying PlaceObject in InstantiatePrefabTest");
         if(rsp.ParentSimObjPhys == sop)
         {
             #if UNITY_EDITOR
