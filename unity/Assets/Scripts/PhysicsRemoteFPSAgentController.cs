@@ -4718,7 +4718,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
-                print("just finished PlaceObjectReceptacle");
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
