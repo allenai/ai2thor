@@ -216,6 +216,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -227,6 +228,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -674,7 +676,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Pillow|+00.00|+00.00|+00.00
+  objectID: 
   Type: 130
   PrimaryProperty: 3
   SecondaryProperties: 
@@ -694,18 +696,38 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65011296196859976}
+  - {fileID: 65457962497763592}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
   HFrbdrag: 0.8
   HFrbangulardrag: 0.1
   salientMaterials: 06000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54530130717551964
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -764,8 +786,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.42385343, y: 0.14575802, z: 0.3904299}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.41460967, y: 0.13498187, z: 0.38283902}
+  m_Center: {x: 0.00005173683, y: 0.0017448328, z: 0.0001257658}
 --- !u!1 &1970400345366400
 GameObject:
   m_ObjectHideFlags: 0

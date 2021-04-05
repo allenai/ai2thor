@@ -101,14 +101,14 @@ class Build(object):
         makedirs(self.tmp_dir)
 
         with LockEx(os.path.join(self.tmp_dir, self.name)):
-            if not os.path.isfile(self.executable_path):
+            if not os.path.isdir(self.base_dir):
                 z = self.zipfile()
                 # use tmpdir instead or a random number
                 extract_dir = os.path.join(self.tmp_dir, self.name)
                 logger.debug("Extracting zipfile %s" % os.path.basename(self.url))
                 z.extractall(extract_dir)
 
-                os.rename(extract_dir, os.path.join(self.releases_dir, self.name))
+                os.rename(extract_dir, self.base_dir)
                 # This can be removed after migrating OSXIntel64 builds to have the AI2Thor executable
                 if os.path.exists(self.old_executable_path) and not os.path.exists(self.executable_path):
                     os.link(self.old_executable_path, self.executable_path)
@@ -142,34 +142,48 @@ class Build(object):
         if target_arch == 'Linux':
             return self.executable_path
         elif target_arch == 'Darwin':
-            return os.path.join(
-                self.releases_dir,
-                self.name,
+            return os.path.join(self.base_dir,
                 self.name + ".app",
                 "Contents/MacOS",
                 self.name)
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
 
+    def parse_plist(self):
+        import xml.etree.ElementTree as ET
+        plist_path = os.path.join(self.base_dir, self.name + ".app", "Contents/Info.plist")
+
+        with open(plist_path) as f:
+            plist = f.read()
+        root = ET.fromstring(plist)
+
+        keys = [x.text for x in root.findall('dict/key')]
+        values = [x.text for x in root.findall('dict/string')]
+        return dict(zip(keys, values))
+
+    @property
+    def base_dir(self):
+        return os.path.join(self.releases_dir, self.name)
+
     @property
     def executable_path(self):
         target_arch = platform.system()
 
         if target_arch == 'Linux':
-            return os.path.join(self.releases_dir, self.name, self.name)
+            return os.path.join(self.base_dir, self.name)
         elif target_arch == 'Darwin':
+            plist = self.parse_plist()
             return os.path.join(
-                self.releases_dir,
-                self.name,
+                self.base_dir,
                 self.name + ".app",
                 "Contents/MacOS",
-                "AI2-Thor")
+                plist['CFBundleExecutable'])
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
     
     @property
     def metadata_path(self):
-        return os.path.join(self.releases_dir, self.name, "metadata.json")
+        return os.path.join(self.base_dir, "metadata.json")
 
     @property
     def metadata(self):
@@ -210,7 +224,7 @@ class Build(object):
             self._lock = None
 
     def lock_sh(self):
-        self._lock = LockSh(os.path.join(self.releases_dir, self.name))
+        self._lock = LockSh(self.base_dir)
         self._lock.lock()
 
     @property
@@ -226,8 +240,7 @@ class Build(object):
         return os.path.splitext(self.url)[0] + '.sha256'
 
     def exists(self):
-        x = requests.head(self.url, auth=self.auth())
-        return x.status_code == 200
+        return (self.releases_dir and os.path.isdir(self.base_dir)) or (requests.head(self.url, auth=self.auth()).status_code == 200)
 
     def log_exists(self):
         return requests.head(self.log_url, auth=self.auth()).status_code == 200
