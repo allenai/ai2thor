@@ -46,6 +46,12 @@ controller = ai2thor.controller.Controller(
 )
 ```
 
+## Add Third-Party Plugin
+
+AI2-THOR uses [Assembly definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) to declare dependencies between libraries within the project.  To add a third-party package to the project, unpack the package to a newly created directory beneath the `unity/Assets/` directory.  Within the Unity Editor, find the new folder in the Project tab.  Select the folder and right-click in the window that displays the contents of the folder and selecte Create -> Assembly Definition.  This will create a new file in the folder - rename the Assembly definition to match the name of the plugin you are adding (e.g. 'Priority Queue' or 'iTween').  This allows the Assembly definition to be easily found during creation of the reference.  To reference the plugin, a reference must be created in the Assembly Definition file located at `unity/Assets/Scripts/AI2ThorBase`.  Locate the `AI2ThorBase` Assembly Definition file under `unity/Assets/Scripts` within the Project tab.  Click on the file and locate the section titled "Assembly Definition References".  Click the `+` sign to add a new entry, then click on the circle to the right of the newly created entry.  That will bring up a menu with all the Assembly definitions in the project.  Select the name of the new plugin/Assembly Definition that was just created.  Scroll to the bottom and click the "Apply" button.  The plugin should now be available to use.  The AI2ThorBase Assembly definition and the new plugin folder will need to be commited. Additional information about Assembly definitions can be found at:
+* https://learn.unity.com/tutorial/working-with-assembly-definitions?uv=2019.4#
+* https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html
+
 ## Browser Build
 
 For building for browser, please refer to [this page](WEBGL.md).
