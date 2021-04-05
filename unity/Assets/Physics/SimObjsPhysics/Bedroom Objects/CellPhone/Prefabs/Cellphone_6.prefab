@@ -248,6 +248,8 @@ MonoBehaviour:
   salientMaterials: 0000000003000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54163229209770604
 Rigidbody:
@@ -261,7 +263,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -281,6 +283,7 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 1.5
   HighFrictionImpulseOffset: 1.5
+  readytobreak: 1
   broken: 0
   breakType: 1
   MaterialSwapObjects:

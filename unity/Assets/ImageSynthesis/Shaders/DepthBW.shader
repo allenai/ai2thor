@@ -18,6 +18,7 @@
              uniform sampler2D _CameraDepthTexture;
              uniform fixed _DepthLevel;
              uniform half4 _MainTex_TexelSize;
+            //  uniform float4 _ProjectionParams;
 
               struct input
              {
@@ -49,7 +50,8 @@
               fixed4 frag(output o) : COLOR
              {
                  //depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float depth01 = (LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 5);
+                 float depth01 = (Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))));
+                //  (LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)))) / (_ProjectionParams.z - _ProjectionParams.y);
                  return fixed4(depth01, depth01, depth01, depth01);
              }
 

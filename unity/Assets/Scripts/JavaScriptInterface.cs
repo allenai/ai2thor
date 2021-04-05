@@ -7,21 +7,13 @@ using UnityStandardAssets.Characters.FirstPerson;
 public class JavaScriptInterface : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
-    private DebugInputField inputField;
+    //private DebugInputField inputField; //inputField.setControlMode no longer used in SetController
 
     [DllImport("__Internal")]
     private static extern void Init();
 
     [DllImport("__Internal")]
-    private static extern void SendEvent(string str);
-
-    [DllImport("__Internal")]
     private static extern void SendMetadata(string str);
-
-    public void SendAction(ServerAction action)
-    {
-        SendEvent(JsonUtility.ToJson(action));
-    }
 
 /*
     metadata: serialized metadata, commonly an instance of MultiAgentMetadata
@@ -34,7 +26,7 @@ public class JavaScriptInterface : MonoBehaviour {
     void Start()
     {
         PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
-        inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
+        //inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
         //GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
         Init();
 

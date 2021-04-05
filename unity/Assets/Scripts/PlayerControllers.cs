@@ -9,7 +9,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         DEBUG_TEXT_INPUT,
         FPS,
         DISCRETE_POINT_CLICK,
-        DISCRETE_HIDE_N_SEEK
+        DISCRETE_HIDE_N_SEEK,
+        MINIMAL_FPS
     }
 
     class PlayerControllers {
@@ -17,7 +18,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {ControlMode.DEBUG_TEXT_INPUT, typeof(DebugDiscreteAgentController)},
                 {ControlMode.FPS, typeof(DebugFPSAgentController)},
                 {ControlMode.DISCRETE_POINT_CLICK, typeof(DiscretePointClickAgentController)},
-                {ControlMode.DISCRETE_HIDE_N_SEEK, typeof(DiscreteHidenSeekgentController)}
+                {ControlMode.DISCRETE_HIDE_N_SEEK, typeof(DiscreteHidenSeekgentController)},
+                {ControlMode.MINIMAL_FPS, typeof(MinimalFPSController)}
         };
     }
 

@@ -5,6 +5,19 @@ import numpy as np
 import os
 import math
 
+class FakeServer(object):
+
+    def __init__(self):
+        self.request_queue = FakeQueue()
+        self.response_queue = FakeQueue()
+
+    def send(self, action):
+        assert self.request_queue.empty()
+        self.response_queue.put_nowait(action)
+
+    def receive(self):
+        return self.request_queue.get(False, 0)
+
 class FakeQueue(object):
 
     def __init__(self):
@@ -14,7 +27,7 @@ class FakeQueue(object):
         assert self.value is None
         self.value = v
 
-    def get(self, block, timeout):
+    def get(self, block=False, timeout=0):
         v = self.value
         self.value = None
         return v
@@ -23,8 +36,13 @@ class FakeQueue(object):
     def empty(self):
         return True
 
+def controller():
+    c = ai2thor.controller.Controller(download_only=True, local_build=True)
+    c.server = FakeServer()
+    return c
+
 def test_contstruct():
-    c = ai2thor.controller.Controller()
+    c = controller()
     assert True
 
 
@@ -40,88 +58,78 @@ def test_key_for_point():
     assert ai2thor.controller.key_for_point(2.567, -3.43) == "2.6 -3.4"
 
 def test_scene_names():
-    c = ai2thor.controller.Controller()
+    c = controller()
     assert len(c.scene_names()) == 120
-
-def test_local_executable_path():
-    c = ai2thor.controller.Controller()
-    c.local_executable_path = 'FOO'
-    assert c.executable_path() == 'FOO'
 
 def test_invalid_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='InvalidAction', errorMessage='Invalid method: moveaheadbadmethod'))
-    c = ai2thor.controller.Controller()
+    c = controller()
     c.last_event = fake_event
     action1 = dict(action='MoveaheadbadMethod')
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
+    c.server.request_queue.put_nowait(fake_event)
 
     with pytest.raises(ValueError) as excinfo:
         c.step(action1, raise_for_failure=True)
     assert excinfo.value.args == ('Invalid method: moveaheadbadmethod',)
 
 def test_fix_visibility_distance_env():
-    os.environ['AI2THOR_VISIBILITY_DISTANCE'] = '2.0'
-    fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True))
-    c = ai2thor.controller.Controller()
-    c.last_event = fake_event
-    action1 = dict(action='Initialize', gridSize=0.25)
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
-    c.step(action1)
-    filtered_action = c.response_queue.get()
-    print(filtered_action)
-    assert filtered_action == {'action': 'Initialize', 'gridSize': 0.25, 'visibilityDistance':2.0}
-    del(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
+    try:
+        os.environ['AI2THOR_VISIBILITY_DISTANCE'] = '2.0'
+        fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True))
+        c = controller()
+        c.last_event = fake_event
+        action1 = dict(action='Initialize', gridSize=0.25)
+        c.server.request_queue.put_nowait(fake_event)
+        c.step(action1)
+        filtered_action = c.server.response_queue.get()
+        assert filtered_action == {'action': 'Initialize', 'gridSize': 0.25, 'visibilityDistance':2.0}
+    finally:
+        del(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
 
 def test_raise_for_failure():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='NotOpen'))
-    c = ai2thor.controller.Controller()
+    c = controller()
     c.last_event = fake_event
     action1 = dict(action='MoveAhead')
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
+    c.server.request_queue.put_nowait(fake_event)
 
     with pytest.raises(AssertionError):
         c.step(action1, raise_for_failure=True)
 
 def test_failure():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='NotOpen'))
-    c = ai2thor.controller.Controller()
+    c = controller()
     c.last_event = fake_event
     action1 = dict(action='MoveAhead')
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
+    c.server.request_queue.put_nowait(fake_event)
     e = c.step(action1)
     assert c.last_action == action1
     assert not e.metadata['lastActionSuccess']
 
 def test_last_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True))
-    c = ai2thor.controller.Controller()
+    c = controller()
     c.last_event = fake_event
     action1 = dict(action='RotateRight')
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
+    c.server.request_queue.put_nowait(fake_event)
     e = c.step(action1)
     assert c.last_action == action1
     assert e.metadata['lastActionSuccess']
 
-    c = ai2thor.controller.Controller()
+    c = controller()
     c.last_event = fake_event
     action2 = dict(action='RotateLeft')
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
+    c.server.request_queue.put_nowait(fake_event)
     e = c.step(action2)
     assert c.last_action == action2
     assert e.metadata['lastActionSuccess']
 
 
 def test_unity_command():
-    c = ai2thor.controller.Controller()
-    assert c.unity_command(650, 550) == [
-        c.executable_path(),
+    c = controller()
+    assert c.unity_command(650, 550, False) == [
+        c._build.executable_path,
         '-screen-fullscreen', 
         '0',
         '-screen-quality', 
@@ -131,9 +139,9 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low', fullscreen=True)
-    assert c.unity_command(650, 550) == [
-        c.executable_path(),
+    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_build=True)
+    assert c.unity_command(650, 550, False) == [
+        c._build.executable_path,
         '-screen-fullscreen', 
         '1',
         '-screen-quality', 

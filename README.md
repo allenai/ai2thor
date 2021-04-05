@@ -6,19 +6,19 @@ Original documentation:  https://github.com/allenai/ai2thor
 
 ### Editor
 
-The CACI development team has worked on this Unity project with version 2018.X of the Unity Editor on both Linux and Mac.
+The CACI development team has worked on this Unity project with version 2019.4.X of the Unity Editor on both Linux and Mac.
 
-Note for Linux developers: The AI2-THOR v2.2.0 documetation instructs us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.  Note that the Unity Hub download from Unity's Downloads page may not actually work on Linux (see the [Linux Installation Instructions](#linux-installation-instructions) below).
+Note for Linux developers: Our current fork of AI2-THOR has been upgraded to v2.5.0 and is configured to use Unity Editor version `2019.4.20`, but that version was not available for the Linux Unity Editor.  However, version [`2019.4.0f1`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-5964977) does work fine.  Note that the Unity Hub download from Unity's Downloads page may not actually work on Linux (see the [Linux Installation Instructions](#linux-installation-instructions) below).
 
 #### Linux Installation Instructions
 
 Note that while installing and/or launching Unity, you may get an error about `libgconf-2.so.4`.  You should be able to solve this issue by `sudo apt install`-ing the library.
 
-1. Download the `2018.3.0f2` "Official Installer" from the Unity Linux Editor forums [here](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651).  The download is called `UnitySetup-2018.3.0f2`.
+1. Download the `2019.4.0f1` "Official Installer" from the Unity Linux Editor forums [here](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-5964977).  The download is called `UnitySetup-2019.4.0f1`.
 
-2. Run the `UnitySetup-2018.3.0f2` executable (you may need to `chmod` it).  This should install a `Unity-2018.3.0f2` folder.
+2. Run the `UnitySetup-2019.4.0f1` executable (you may need to `chmod` it).  This should install a `Unity-2019.4.0f1` folder.
 
-3. In `Unity-2018.3.0f2/Editor/` run the `Unity` executable to start the Unity Hub.
+3. In `Unity-2019.4.0f1/Editor/` run the `Unity` executable to start the Unity Hub.
 
 4. Enter your MCS Unity License info into the Unity Hub.
 
@@ -92,7 +92,7 @@ Open the Unity Editor and build the project with `File->Build Settings`.  Check 
 Alternatively, if you want to build the Unity project via the command line, run the command below, replacing the path to your Unity executable file, log file name, `<cloned_repository>`, and the `executeMethod` as needed.  Please note that this command will build ALL the AI2-THOR scenes which will take a very long time (my only solution was to delete all the AI2-THOR scenes with `rm <cloned_repository>/unity/Assets/Scenes/FloorPlan*`).
 
 ```
-./Unity-2018.3.0f2/Editor/Unity -quit -batchmode -logfile MCS-Unity-Build.log -projectpath <cloned_repository>/unity/ -executeMethod Build.Linux64
+./Unity-2019.4.0f1/Editor/Unity -quit -batchmode -logfile MCS-Unity-Build.log -projectpath <cloned_repository>/unity/ -executeMethod Build.Linux64
 ```
 
 ## TAR
@@ -244,6 +244,8 @@ For playback:
   - Replaced the call to `checkInitializeAgentLocationAction` in `Initialize` with calls to `snapToGrid` and `actionFinished` so re-initialization doesn't cause the player to move for a few steps
   - Added `lastActionStatus` to `Initialize` to help indicate success or failure
   - Changed `nearestAngleIndex` to return the nearest index based on the minimum difference between the current angle and the angle at the index
+  - Pulled out code for getting capsule parameters for agent from capsuleCastAllForAgent function to GetCapsuleInfoForAgent
+  - Added factoring in scaling scaling to collider radius (now called adjustedRadius) in capsuleCastAllForAgent 
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
   - Added `IsMovementTypeSlide` function

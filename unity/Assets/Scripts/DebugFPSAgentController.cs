@@ -17,20 +17,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
     public class DebugFPSAgentController : MonoBehaviour
 	{
         //for use with mouse/keyboard input
-		[SerializeField] private bool m_IsWalking;
-		[SerializeField] private float m_WalkSpeed;
-		[SerializeField] private float m_RunSpeed;
+		[SerializeField] protected bool m_IsWalking;
+		[SerializeField] protected float m_WalkSpeed;
+		[SerializeField] protected float m_RunSpeed;
 
-		[SerializeField] private float m_GravityMultiplier;
-		[SerializeField] private MouseLook m_MouseLook;
+		[SerializeField] protected float m_GravityMultiplier;
+		[SerializeField] protected MouseLook m_MouseLook;
 
-        [SerializeField] private GameObject Debug_Canvas = null;
+        [SerializeField] protected GameObject Debug_Canvas = null;
 //        [SerializeField] private GameObject Inventory_Text = null;
-		[SerializeField] private GameObject InputMode_Text = null;
-        [SerializeField] private float MaxViewDistance = 5.0f;
+		[SerializeField] protected GameObject InputMode_Text = null;
+        [SerializeField] protected float MaxViewDistance = 5.0f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
         [SerializeField] private float MaxThrowForce = 1000.0f;
-        public bool FlightMode = false;
+        // public bool FlightMode = false;
 
         public bool FPSEnabled = true;
 		public GameObject InputFieldObj = null;
@@ -43,6 +43,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private CharacterController m_CharacterController;
         private PhysicsRemoteFPSAgentController PhysicsController;
         private bool scroll2DEnabled = true;
+
+        protected bool enableHighlightShader = true;
 
         private void Start()
         {
@@ -57,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
-            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, true, MaxThrowForce, MaxChargeThrowSeconds);
+            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, enableHighlightShader, true, MaxThrowForce, MaxChargeThrowSeconds);
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
@@ -67,7 +69,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
           
-            FlightMode = PhysicsController.FlightMode;
+            // FlightMode = PhysicsController.FlightMode;
 
             #if UNITY_WEBGL
                 FPSEnabled = false;
@@ -90,9 +92,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(false);
             }
-            InputFieldObj.SetActive(false);
+            if (InputFieldObj != null) {
+                InputFieldObj.SetActive(false);
+            }
             var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
-            background.SetActive(false);
+            if (background != null) {
+                background.SetActive(false);
+            }
         }
 
         public void SetScroll2DEnabled(bool enabled)
@@ -145,6 +151,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void DebugKeyboardControls()
 		{
+            if (InputFieldObj != null) {
+                InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
+                if (inField != null) {
+                    if (inField.isFocused) {
+                        highlightController.ThrowEnabled = false;
+                        return;
+                    } else {
+                        highlightController.ThrowEnabled = true;
+                    }
+                }
+            }
 			//swap between text input and not
 			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
             {
@@ -311,7 +328,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.x = desiredMove.x * speed;
             m_MoveDir.z = desiredMove.z * speed;    
 
-			if(!FlightMode)
+			// if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
 
             //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that

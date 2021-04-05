@@ -866,8 +866,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Faucet|-02.95|+02.16|+03.43
-  Type: 91
+  objectID: 
+  Type: 146
   PrimaryProperty: 1
   SecondaryProperties: 1d000000
   BoundingBox: {fileID: 2968132815115276067}
@@ -879,7 +879,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 2968132815034044860}
   - {fileID: 2968132815553697266}
@@ -889,6 +889,12 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  MySpawnPoints: []
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &2968132815759609819
 MonoBehaviour:
@@ -914,7 +920,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 1
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!54 &2968132815759609818
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -938,16 +945,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2968132815759609817}
     m_Modifications:
-    - target: {fileID: 1883014114557197774, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
-        type: 3}
-      propertyPath: m_Name
-      value: ShowerWaterParticle
-      objectReference: {fileID: 0}
-    - target: {fileID: 1883014114557197774, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1883014114557197773, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1001,6 +998,16 @@ PrefabInstance:
     - target: {fileID: 1883014114557197773, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883014114557197774, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
+        type: 3}
+      propertyPath: m_Name
+      value: ShowerWaterParticle
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883014114557197774, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
+        type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

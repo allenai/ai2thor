@@ -34,9 +34,8 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 
 		foreach (GameObject rtb in sop.ReceptacleTriggerBoxes)
 		{
-			if(rtb.GetComponent<Contains>().occupied)
+			if(rtb.GetComponent<Contains>().isOccupied())
 			{
-				//print("osr is occupied, return true");
 				full = true;
 				return true;
 			}
@@ -44,19 +43,6 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 
 		full = false;
 		return false;
-		// List<string> containsList = new List<string>(sop)Contains());
-
-		// //print(containsList.Count);
-		// if(containsList.Count > 0)
-		// {
-		// 	full = true;
-		// }
-
-		// else
-		// {
-		// 	full = false;
-		// }
-		// return full;
 	}
 	
 	// Use this for initialization
@@ -70,18 +56,4 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		#endif
 	}
 	
-	// Update is called once per frame
-	void Update () 
-	{
-		// if(Input.GetKeyDown(KeyCode.T))
-		// {
-		// 	isFull();
-		// }
-		//isFull();
-	}
-
-	void LateUpdate()
-	{
-		isFull();
-	}
 }

@@ -51,12 +51,12 @@ public class SimTesting : MonoBehaviour {
 						GUILayout.BeginHorizontal ();
 						horzIndex = 0;
 					}
-					GUILayout.Button (o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth (200f));
+					GUILayout.Button (o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth (200f));
 				}
 				GUILayout.EndHorizontal ();
 			} else {
 				foreach (SimObj o in SimObjsInView) {
-					GUILayout.Button (o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth (100f));
+					GUILayout.Button (o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth (100f));
 				}
 			}
 		}

@@ -9,17 +9,17 @@ using System.Collections.Generic;
 public class SimObj : MonoBehaviour, SimpleSimObj
 {
 
-	public string UniqueID 
+	public string ObjectID 
 	{
 		get 
 		{
-			return uniqueID;
+			return objectID;
 		} 
 
 		set 
 		{
 			//TODO add an ID lock
-			uniqueID = value;
+			objectID = value;
 		}
 	}
 
@@ -68,7 +68,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 			List<string> objectIds = new List<string>();
 			foreach (SimObj o in SimUtil.GetItemsFromReceptacle(this.Receptacle))
 			{
-				objectIds.Add(o.uniqueID);
+				objectIds.Add(o.objectID);
 			}
 			return objectIds;
 		}
@@ -261,7 +261,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj
     string error = string.Empty;
 	#endif
 
-	private string uniqueID = string.Empty;
+	private string objectID = string.Empty;
 	private Receptacle receptacle;
 	private Animator animator;
 	private Rearrangeable rearrangeable;
@@ -653,12 +653,9 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 
 public interface SimpleSimObj {
 	SimObjType ObjType { get; }
-	string UniqueID {get; set; }
+	string ObjectID {get; set; }
 	List<string> ReceptacleObjectIds {get;}
-	bool IsReceptacle {get; }
 	bool IsOpen {get; }
-	bool IsPickupable {get; }
-	bool IsOpenable {get; }
 	bool Open(); 
 	bool Close();
 	GameObject gameObject {get; }

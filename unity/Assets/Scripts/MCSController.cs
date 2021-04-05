@@ -95,7 +95,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 this.actionFinished(false);
                 return previousObjectId;
             } else {
-                return simObjPhysics.UniqueID;
+                return simObjPhysics.ObjectID;
             }
         }
     }
@@ -110,8 +110,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         SimObjPhysics target = null;
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
         }
 
         // Reactivate the object BEFORE trying to drop it so that we can see if it's obstructed.
@@ -136,8 +136,34 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         foreach (Transform child in GameObject.Find("Objects").transform) {
             child.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
+
+        // We may need to add additional validation logic for teleport later.
+        MCSTeleportFull(action);
+
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
         this.actionFinished(false);
+    }
+
+    private void MCSTeleportFull(ServerAction action) {
+        if((!action.teleportPosition.HasValue) && (!action.teleportRotation.HasValue)) {
+            return;
+        }
+
+        if(action.teleportPosition.HasValue) {
+            // X/Z positions are passed in. Y position should always be standing height for now,
+            // but this logic may need to change later if there's potential for the y position
+            // to change (ramps, crawling, etc).
+            targetTeleport = new Vector3(action.teleportPosition.Value.x, STANDING_POSITION_Y, action.teleportPosition.Value.z);
+            transform.position = targetTeleport;
+        }
+
+        if(action.teleportRotation.HasValue) {
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.teleportRotation.Value.y, 0.0f));
+
+            // reset camera as well
+            m_Camera.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+
+        }
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
@@ -149,7 +175,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
-            MCSController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
+            MCSController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.ObjectID).ToList();
 
         ObjectMetadata[] objectMetadata = base.generateObjectMetadata().ToList().Select((metadata) => {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
@@ -207,7 +233,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return previousObjectId;
         } else {
             if (ItemInHand != null) {
-                return ItemInHand.GetComponent<SimObjPhysics>().uniqueID;
+                return ItemInHand.GetComponent<SimObjPhysics>().objectID;
             } else {
                 errorMessage = "No object found in hand.";
                 Debug.Log(errorMessage);
@@ -242,7 +268,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.OpenObject(action);
     }
 
-    protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+    public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
         ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
 
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
@@ -255,9 +281,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (objectMetadata.objectBounds != null) {
             MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
             if (main != null && main.enableVerboseLog) {
-                Debug.Log("MCS: " + objectMetadata.objectId + " CENTER = " +
+                main.LogVerbose(objectMetadata.objectId + " CENTER = " +
                     (recBox != null ? recBox : simObj.BoundingBox.transform).position.ToString("F4"));
-                Debug.Log("MCS: " + objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
+                main.LogVerbose(objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
                     objectMetadata.objectBounds.objectBoundsCorners.Select(point => point.ToString("F4")).ToArray()));
             }
         }
@@ -301,8 +327,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         SimObjPhysics target = null;
         SimObjPhysics containerObject = null;
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             // Update our hand's position so that the object we want to hold doesn't clip our body.
             // TODO MCS-77 We may want to change how this function is used.
@@ -324,7 +350,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 SimObjPhysics firstObject = hits.First().transform.gameObject
                     .GetComponentInParent<SimObjPhysics>();
 
-                if(firstObject != null && firstObject.IsReceptacle && firstObject.ReceptacleObjects.Contains(target)) {
+                if(firstObject != null && firstObject.IsReceptacle && firstObject.SimObjectsContainedByReceptacle.Contains(target)) {
                     containerObject = firstObject;
                 }
             }
@@ -389,8 +415,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
-            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
             Debug.Log("Cannot pull. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
@@ -406,8 +432,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
-            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
             Debug.Log("Cannot push. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
@@ -423,7 +449,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -431,7 +457,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
             errorMessage = "Receptacle Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -439,7 +465,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to place it so that we can see if it's obstructed.
         // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
@@ -456,24 +482,24 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
     }
 
-    public override void ResetAgentHandPosition(ServerAction action) {
+    public override void ResetAgentHandPosition() {
         // Don't reset the player's hand position if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
             this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
             return;
         }
-        base.ResetAgentHandPosition(action);
+        base.ResetAgentHandPosition();
     }
 
-    public override void ResetAgentHandRotation(ServerAction action) {
+    public override void ResetAgentHandRotation() {
         // Don't reset the player's hand rotation if the player is just moving or rotating.
         // Use this.lastAction here because this function's ServerAction argument is sometimes null.
         if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
             this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
             return;
         }
-        base.ResetAgentHandRotation(action);
+        base.ResetAgentHandRotation();
     }
 
     public override void RotateLook(ServerAction response)
@@ -585,7 +611,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
             Debug.Log(errorMessage);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -593,7 +619,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
         // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
@@ -668,12 +694,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
-        if (!this.actionComplete) {
+        if (agentState != AgentState.ActionComplete) {
             action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
-        return !this.actionComplete;
+        return agentState != AgentState.ActionComplete;
     }
 
     private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
@@ -777,7 +803,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }
@@ -821,7 +847,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
-    private float MatchAgentHeightToStructureBelow(bool poseChange) {
+    public float MatchAgentHeightToStructureBelow(bool poseChange) {
         float heightDifference;
         heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y :
             pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
@@ -833,18 +859,57 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         //raycast to traverse structures at anything <= 45 degree angle incline
         if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            (hit.transform.GetComponent<StructureObject>()!=null)) {
+            (hit.transform.GetComponent<StructureObject>() != null)) {
             //for pose changes on structures only
             if (poseChange)
                 return hit.point.y;
-            else
-            {
+            else {
+                float oldHeight = this.transform.position.y;
                 Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
                 this.transform.position = newHeight;
+                if (oldHeight != this.transform.position.y) {
+                    AdjustLocationAfterHeightAdjustment();
+                }
             }
         }
         //method needs a return value
         return 0;
+    }
+
+    private void AdjustLocationAfterHeightAdjustment() {
+        CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
+        float radius;
+        Vector3 point1, point2;
+        //Determine if we are colliding (or within skin width) of another object
+        GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
+        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8);
+
+        //we divide by scale here because we are going to expand the scaled collider by this value
+        float obstructionVsCollisionDifference = m_CharacterController.skinWidth / Mathf.Max(transform.localScale.x, transform.localScale.z);
+
+        //if we are colliding, we need to move a bit
+        if (overlapColliders.Length > 0) {
+            foreach (Collider c in overlapColliders) {
+                Vector3 direction;
+                float distance;
+                //Need to increase the collider radius temporarily to ensure we collide with something just outside but in our "skin"
+                myCollider.radius += obstructionVsCollisionDifference;
+                //This function determines the distance and direct we need to move to no longer be colliding.
+                bool overlap = Physics.ComputePenetration(myCollider, transform.position, transform.rotation, c, c.transform.position,
+                    c.transform.rotation, out direction, out distance);
+                myCollider.radius -= obstructionVsCollisionDifference;
+                Vector3 newPos = transform.position;
+                if (overlap) {
+                    Vector3 shift = direction * (distance);
+                    newPos += shift;
+                    transform.position = newPos;
+                }
+            }
+        }
+    }
+
+    protected override void SubPositionAdjustment() {
+        MatchAgentHeightToStructureBelow(false);
     }
 
     public override void RotateLeft(ServerAction controlCommand) {

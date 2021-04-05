@@ -25,14 +25,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1000011332714790}
-  m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: -0.0813, y: -0.20924176, z: 0}
-  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_LocalRotation: {x: -0, y: 0.7071067, z: -0, w: 0.70710695}
+  m_LocalPosition: {x: -0.0813, y: -0.2042, z: 0}
+  m_LocalScale: {x: 0.59271973, y: 0.59271973, z: 0.59271973}
   m_Children:
   - {fileID: 4000011295537430}
   m_Father: {fileID: 4000012677384008}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!33 &33000013748683042
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -40,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1000011332714790}
-  m_Mesh: {fileID: 4300002, guid: 22c0e7d136556455dbccea630faa81d0, type: 3}
+  m_Mesh: {fileID: 4300000, guid: 58ef11728c0a00b4e98d04db11b70179, type: 3}
 --- !u!23 &23000011772442182
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -104,7 +104,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1000011675049648}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.0011999988, z: 0}
+  m_LocalPosition: {x: 0.1998, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4000013630452950}
@@ -117,7 +117,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1000011675049648}
-  m_Mesh: {fileID: 4300000, guid: 22c0e7d136556455dbccea630faa81d0, type: 3}
+  m_Mesh: {fileID: 4300002, guid: 58ef11728c0a00b4e98d04db11b70179, type: 3}
 --- !u!23 &23000012375953980
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 2193822310235743236}
   - component: {fileID: 3516698180228197871}
   m_Layer: 8
-  m_Name: Faucet
+  m_Name: Faucet1
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -222,7 +222,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 8387724199287068960}
   - {fileID: 48403658586926728}
@@ -236,6 +236,11 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &2193822310235743236
 Rigidbody:
@@ -275,7 +280,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1116740976171960291
 GameObject:
   m_ObjectHideFlags: 0
@@ -1347,7 +1353,7 @@ PrefabInstance:
     - target: {fileID: 6273446638366437122, guid: 5e64843e8b2754c0b8601f194f8183bf,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.0926
+      value: -0.075
       objectReference: {fileID: 0}
     - target: {fileID: 6273446638366437122, guid: 5e64843e8b2754c0b8601f194f8183bf,
         type: 3}

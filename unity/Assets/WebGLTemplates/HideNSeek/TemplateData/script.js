@@ -63,10 +63,6 @@ $(
       lastMetadadta = jsonMeta;
     };
 
-    window.onUnityEvent = function(event) {
-      // Logic for handling unity events
-    };
-
     // Aggregate data
     function gatherFinalState(metadata) {
       let agentMetadata = metadata.agents[0];

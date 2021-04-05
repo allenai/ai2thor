@@ -10,13 +10,14 @@ using UnityEditor;
 public class DroneBasket : MonoBehaviour 
 {
 	public GameObject myParent = null;
+    private PhysicsSceneManager psManager;
 
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
 	// Use this for initialization
 	void Start () 
 	{
-		
+        psManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 	
 	// Update is called once per frame
@@ -51,11 +52,17 @@ public class DroneBasket : MonoBehaviour
 				sop.transform.Find("BoundingBox").gameObject.SetActive(false);
 
 				if(sop.GetComponent<Rigidbody>())
-				Destroy(sop.GetComponent<Rigidbody>());
+                {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+
+                    psManager.RemoveFromRBSInScene(rb);
+				    Destroy(rb);
+
+                }
 
 				sop.enabled = false;
 
-				myParent.GetComponent<FlyingDrone>().caught = true;
+				myParent.GetComponent<DroneFPSAgentController>().caught_object.Add(sop);
 			}
 		}
 	}
