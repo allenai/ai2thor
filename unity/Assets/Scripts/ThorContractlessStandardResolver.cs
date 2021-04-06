@@ -57,20 +57,24 @@ namespace MessagePack.Resolvers
         public static readonly ThorContractlessStandardResolver Instance;
 
         private static readonly IFormatterResolver[] Resolvers = new IFormatterResolver[]{
+            ThorUnityResolver.Instance,
             BuiltinResolver.Instance, // Try Builtin
-            AttributeFormatterResolver.Instance, // Try use [MessagePackFormatter]
-            UnityResolver.Instance,
+            #if ENABLE_IL2CPP && !UNITY_WEBGL 
+            MessagePack.Resolvers.ThorIL2CPPGeneratedResolver.Instance,
+            #endif 
+            #if !ENABLE_IL2CPP 
             DynamicEnumResolver.Instance, // Try Enum
             DynamicGenericResolver.Instance, // Try Array, Tuple, Collection, Enum(Generic Fallback)
             DynamicUnionResolver.Instance, // Try Union(Interface)
             DynamicObjectResolver.Instance, // Try Object
             DynamicContractlessObjectResolver.Instance // Serializes keys as strings
+            #endif
         };
 
         static ThorContractlessStandardResolver()
         {
             Instance = new ThorContractlessStandardResolver();
-            Options = new MessagePackSerializerOptions(Instance);
+            Options = MessagePackSerializerOptions.Standard.WithResolver(Instance);
         }
 
         private ThorContractlessStandardResolver()
@@ -114,11 +118,11 @@ namespace MessagePack.Resolvers
   }
 }
 
- public class UnityResolver : IFormatterResolver
+ public class ThorUnityResolver : IFormatterResolver
     {
-        public static readonly UnityResolver Instance = new UnityResolver();
+        public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
 
-        private UnityResolver()
+        private ThorUnityResolver()
         {
         }
 

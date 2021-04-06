@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -47,11 +48,14 @@ public class AgentManager : MonoBehaviour
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+
+    // it is public to be accessible from the debug input field.
+    public HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
+
 
 	public Bounds sceneBounds = new Bounds(
 		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -124,9 +128,7 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		#if !UNITY_EDITOR
         StartCoroutine (EmitFrame());
-		#endif
 	}
 
 	private void initializePrimaryAgent()
@@ -217,6 +219,9 @@ public class AgentManager : MonoBehaviour
             {
                 //set up physics controller
                 SetUpArmController(true);
+                // the arm should currently be used only with autoSimulation off
+                // as we manually control Physics during its movement
+                action.autoSimulation = false;
 
 				if(action.useMassThreshold)
 				{
@@ -254,6 +259,12 @@ public class AgentManager : MonoBehaviour
 		this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+        // we default Physics.autoSimulation to False in the built Player, but
+        // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
+        // this value False allows the user complete control of all Physics Simulation
+        // if they need deterministic simulations.
+        Physics.autoSimulation = action.autoSimulation;
+        Physics.autoSyncTransforms = Physics.autoSimulation;
 
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
@@ -323,6 +334,7 @@ public class AgentManager : MonoBehaviour
 	{
 		CollisionListener.useMassThreshold = true;
 		CollisionListener.massThreshold = massThreshold;
+        primaryAgent.MakeObjectsStaticKinematicMassThreshold();
 	}
 	
     //return reference to primary agent in case we need a reference to the primary
@@ -356,7 +368,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	public void ResetSceneBounds() {
-		// Recordining initially disabled renderers and scene bounds
+		// Recording initially disabled renderers and scene bounds
 		sceneBounds = new Bounds(
 			new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
 			new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -902,17 +914,17 @@ public class AgentManager : MonoBehaviour
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
-            var jsonResolver = new ShouldSerializeContractResolver();
-            return Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings()
-                            {
-                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                                ContractResolver = jsonResolver
-                            }
-
-            );
+        var jsonResolver = new ShouldSerializeContractResolver();
+        return Newtonsoft.Json.JsonConvert.SerializeObject(
+            multiMeta,
+            Newtonsoft.Json.Formatting.None,
+            new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                ContractResolver = jsonResolver
+            }
+        );
     }
-
 
     private bool canEmit() {
         bool emit = true;
@@ -983,7 +995,14 @@ public class AgentManager : MonoBehaviour
                         this.sock.Connect(hostep);
                     }
                     catch (SocketException e) {
-                        Debug.Log("Socket exception: " + e.ToString());
+                        var msg = e.ToString();
+                        #if UNITY_EDITOR
+                        break;
+                        #endif
+                        // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
+                        #if !UNITY_EDITOR
+                        Debug.Log("Socket exception: " + msg);
+                        #endif
                     }
                 }
 
@@ -1049,7 +1068,9 @@ public class AgentManager : MonoBehaviour
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO){
-                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+
+
+                byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta, 
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
@@ -1209,37 +1230,43 @@ public class MetadataPatch
 	public string errorCode;
 	public bool lastActionSuccess;
     public int agentId;
-    public System.Object actionReturn;
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
 }
 
 //adding AgentMetdata class so there is less confusing
 //overlap between ObjectMetadata and AgentMetadata
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class AgentMetadata
-{
+public class AgentMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
     public float cameraHorizon;
-	public bool isStanding;
+
+    // TODO: this should be removed from base.
+    // some agents cannot stand (e.g., drone, locobot)
+	public bool? isStanding = null;
+
 	public bool inHighFrictionArea;
     public AgentMetadata() {}
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneAgentMetadata : AgentMetadata
-{
-    public float droneCurrentTime;
+public class DroneAgentMetadata : AgentMetadata {
+    // why is the launcher position even attached to the agent's metadata
+    // and not the generic metdata?
     public Vector3 LauncherPosition;
 }
 
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneObjectMetadata : ObjectMetadata
-{
+public class DroneObjectMetadata : ObjectMetadata {
     // Drone Related Metadata
     public int numSimObjHits;
     public int numFloorHits;
@@ -1413,6 +1440,7 @@ public class JointMetadata {
 }
 
 [Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class ArmMetadata {
 
     //public Vector3 handTarget;
@@ -1495,7 +1523,6 @@ public struct MetadataWrapper
 	public ColorBounds[] colorBounds;
 
 	// Extras
-	public Vector3[] reachablePositions;
 	public float[] flatSurfacesOnGrid;
 	public float[] distances;
 	public float[] normals;
@@ -1510,11 +1537,17 @@ public struct MetadataWrapper
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
-    public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
     public int updateCount;
     public int fixedUpdateCount;
+
+    // must remove this when running generate-msgpack-resolver
+    #if ENABLE_IL2CPP
+    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
+    #endif
+    public object actionReturn;
+
 }
 
 /*
@@ -1581,7 +1614,13 @@ public class DynamicServerAction
     }
 
     public DynamicServerAction(Dictionary<string, object> action) {
-        this.jObject = JObject.FromObject(action);
+        var jsonResolver = new ShouldSerializeContractResolver();
+        this.jObject  = JObject.FromObject(action,
+                    new Newtonsoft.Json.JsonSerializer()
+                        {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        });
     }
 
     public DynamicServerAction(JObject action) {
@@ -1849,28 +1888,26 @@ public class TypedVariable {
 
 
 
-public class ShouldSerializeContractResolver : DefaultContractResolver
-{
-   public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+public class ShouldSerializeContractResolver : DefaultContractResolver {
+    public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
 
-   protected override JsonProperty CreateProperty( MemberInfo member,
-                                    MemberSerialization memberSerialization )
-   {
-      JsonProperty property = base.CreateProperty( member, memberSerialization );
+    protected override JsonProperty CreateProperty(
+        MemberInfo member,
+        MemberSerialization memberSerialization
+    ) {
+       JsonProperty property = base.CreateProperty(member, memberSerialization);
 
-      // exclude these properties to make serialization match JsonUtility
-      if( property.DeclaringType == typeof(Vector3) &&
-            (property.PropertyName == "sqrMagnitude" || 
-            property.PropertyName == "magnitude"  ||
-            property.PropertyName == "normalized" 
-            ))
-      {
+       // exclude these properties to make serialization match JsonUtility
+      if (property.DeclaringType == typeof(Vector3) &&
+          (property.PropertyName == "sqrMagnitude" ||
+          property.PropertyName == "magnitude"  ||
+          property.PropertyName == "normalized")
+      ) {
          property.ShouldSerialize = instance => { return false; };
          return property;
       } else {
           return base.CreateProperty(member, memberSerialization);
       }
-
    }
 }
 

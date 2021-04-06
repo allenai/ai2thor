@@ -17,6 +17,12 @@ using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
+    public class OrientedPoint
+    {
+        public Vector3 position = new Vector3();
+        public Quaternion orientation = new Quaternion();
+    }
+
     public class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
         [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
@@ -139,14 +145,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.agentState == AgentState.ActionComplete) {
+            //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
+            if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -154,18 +160,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
         }
 
-        public override ObjectMetadata[] generateObjectMetadata() 
-        {
+        public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
         }
 
-        public override MetadataWrapper generateMetadataWrapper() 
-        {
-            return base.generateMetadataWrapper();
+        public bool isStanding() {
+            return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
         }
 
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible)
-        {
+        public override MetadataWrapper generateMetadataWrapper() {
+            MetadataWrapper metaWrapper = base.generateMetadataWrapper();
+	        metaWrapper.agent.isStanding = isStanding();
+            return metaWrapper;
+        }
+
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
         }
 
@@ -344,7 +353,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //force the degree increment to the nearest tenths place
             //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
             if(!checkForUpDownAngleLimit("down", action.degrees))
             {
@@ -459,136 +468,105 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-                
+
                 base.RotateLeft(action);
             } 
 
             else 
             {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees+ " degrees";
+                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees + " degrees";
                 actionFinished(false);
             }
         }
 
-        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir)
+        private bool checkArcForCollisions(BoxCollider bb, Vector3 origin, float degrees, int dirSign, Vector3 dirAxis)
         {
             bool result = true;
-            
-            //generate arc points in the positive y axis rotation
-            foreach(Vector3 v in corners)
+            float arcIncrementDistance;
+            Vector3 bbWorldCenter = bb.transform.TransformPoint(bb.center);
+            Vector3 bbHalfExtents = bb.size / 2.0f;
+
+            //Generate arc points in the positive y-axis rotation
+            OrientedPoint[] pointsOnArc = GenerateArcPoints(bbWorldCenter, bb.transform.rotation, origin, degrees, dirSign, dirAxis);
+
+            //Save the arc-distance to a value to reduce computation in the for-loop, since it's the same between every OrientedPoint
+            arcIncrementDistance = (pointsOnArc[1].position - pointsOnArc[0].position).magnitude;
+
+            //Raycast from first point in pointsOnArc, stepwise to last point. If any collisions are hit, immediately return 
+            for (int i = 0; i < pointsOnArc.Length - 1; i++)
             {
-                Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
+                RaycastHit hit;
+                //do boxcasts from the first point, sequentially, to the last
 
-                //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                for(int i = 0; i < pointsOnArc.Length; i++)
-                {
-                    //debug draw spheres to show path of arc
-                    // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    // Sphere.transform.position = pointsOnArc[i];
-                    // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                    // Sphere.GetComponent<SphereCollider>().enabled = false;
-                    
-                    RaycastHit hit;
+                //Debug.DrawLine(pointsOnArc[i].position, pointsOnArc[i+1].position, Color.magenta, 500.0f);
 
-                    //do linecasts from the first point, sequentially, to the last
-                    if(i < pointsOnArc.Length - 1)
+                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit,
+                    Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), arcIncrementDistance, 1 << 8 | 1 << 10,
+                    QueryTriggerInteraction.Ignore))
                     {
-                        //Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
-
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        if (hit.transform.GetComponent<SimObjPhysics>())
                         {
-                            if(hit.transform.GetComponent<SimObjPhysics>())
-                            {
-                                //if we hit the item in our hand, skip
-                                if(hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
+                            //if we hit the item in our hand, skip
+                            if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
                                 continue;
-                            }
-
-                            if(hit.transform == this.transform)
-                            {
-                                //don't worry about clipping the object into this agent
-                                continue;
-                            }
-
-                            result = false;
-                            break;
                         }
+
+                        if (hit.transform == this.transform)
+                        {
+                            //don't worry about clipping the object into this agent
+                            continue;
+                        }
+
+                        result = false;
+                        break;
                     }
-                }
+            }
+
+            //OverlapBox check for final rotated state of GameObject, since arc-points are using averaged orientations, and the final state of orientation is high-priority
+            rotPoint.transform.position = bbWorldCenter;
+            rotPoint.transform.rotation = bb.transform.rotation;
+            //Rotate the rotPoint around the origin by the current increment's angle, relative to the correct axis
+            rotPoint.transform.RotateAround(origin, dirAxis, dirSign * degrees);
+
+            if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
+            {
+                
+                result = false;
             }
 
             return result;
         }
 
-        //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
-        //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
-        //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
+        //Returns an array of OrientedPoints along the arc of the rotation for a given starting point about an origin point for a total given angle
+        private OrientedPoint[] GenerateArcPoints(Vector3 startingPoint, Quaternion startingRotation, Vector3 origin, float angle, int dirSign, Vector3 dirAxis)
         {
-            float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
-            Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
+            float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc for positions
+            OrientedPoint[] arcPoints = new OrientedPoint[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
             float currentIncrementAngle;
 
-            if (dir == "left") //Yawing left (Rotating across XZ plane around Y-pivot)
+            //Calculate positions of all 10 OrientedPoints
+            for (int i = 0; i < arcPoints.Length; i++)
             {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    currentIncrementAngle = i * -incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+                currentIncrementAngle = i * dirSign * incrementAngle;
+                //Move and orient the rotPoint to the bb's position and orientation
+                rotPoint.transform.position = startingPoint;
+                rotPoint.transform.rotation = startingRotation;
+                //Rotate the rotPoint around the origin by the current increment's angle, relative to the correct axis
+                rotPoint.transform.RotateAround(origin, dirAxis, currentIncrementAngle);
 
-            if (dir == "right") //Yawing right (Rotating across XZ plane around Y-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    currentIncrementAngle = i * incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
+                arcPoints[i] = new OrientedPoint();
+                //set the current arcPoint's position to the rotated point
+                arcPoints[i].position = rotPoint.transform.position;
+                arcPoints[i].orientation = rotPoint.transform.rotation;
+                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                //arcPoints[(i - 1) / 2].orientation = rotPoint.transform.rotation;
 
-            else if(dir =="up") //Pitching up(Rotating across YZ plane around X-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    //reverse the increment angle because of the right handedness orientation of the local x-axis
-                    currentIncrementAngle = i * -incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
-            }
-
-            else if(dir == "down") //Pitching down (Rotating across YZ plane around X-pivot)
-            {
-                for (int i = 0; i < arcPoints.Length; i++)
-                {
-                    //reverse the increment angle because of the right handedness orientation of the local x-axis
-                    currentIncrementAngle = i * incrementAngle;
-                    //move the rotPoint to the current corner's position
-                    rotPoint.transform.position = startingPoint;
-                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                    //set the current arcPoint's vector3 to the rotated point
-                    arcPoints[i] = rotPoint.transform.position;
-                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-                }
+                ////Visualize box volumes
+                //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                //cube.transform.position = arcPoints[i].position;
+                //cube.transform.rotation = arcPoints[i].orientation;
+                //cube.transform.localScale = new Vector3(size.x, size.y, size.z);
+                //cube.GetComponent<Renderer>().material.color = UnityEngine.Random.ColorHSV();
             }
 
             return arcPoints;
@@ -624,21 +602,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             bool result = true;
 
+            //Get held object's bounding box
             BoxCollider bb = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
 
-            //get world coordinates of object in hand's bounding box corners
-            Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
+            //Establish the directionality of specified rotation
+            int dirSign = -1;
+            Vector3 dirAxis = transform.up;
+            Vector3 origin = m_CharacterController.transform.position;
 
-            //ok now we have each corner, let's rotate them the specified direction
-            if(direction == "right" || direction == "left")
+            //Yawing left (Rotating negatively across XZ plane around CharacterController)
+            if (direction == "left")
             {
-                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
+                dirSign = -1;
+                dirAxis = transform.up;
+                origin = m_CharacterController.transform.position;
             }
 
-            else if(direction == "up" || direction == "down")
+            //Yawing right (Rotating positively across XZ plane around CharacterController)
+            else if (direction == "right")
             {
-                result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
+                dirSign = 1;
+                dirAxis = transform.up;
+                origin = m_CharacterController.transform.position;
             }
+
+            //Pitching up (Rotating negatively across YZ plane around camera)
+            else if (direction == "up")
+            {
+                dirSign = -1;
+                dirAxis = transform.right;
+                origin = m_Camera.transform.position;
+            }
+
+            //Pitching down (Rotating positively across YZ plane around camera)
+            else if (direction == "down")
+            {
+                dirSign = 1;
+                dirAxis = transform.right;
+                origin = m_Camera.transform.position;
+            }
+
+            result = checkArcForCollisions(bb, origin, degrees, dirSign, dirAxis);
+
             //no checks flagged anything, good to go, return true i guess
             return result;
         }
@@ -1602,163 +1607,209 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void TeleportFull(
-            float x,
-            float y,
-            float z,
+        ///////////////////////////////////////////
+        ////////////// TELEPORT FULL //////////////
+        ///////////////////////////////////////////
+
+        // [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        // public void TeleportFull(
+        //     float x, float y, float z,
+        //     float rotation,
+        //     float horizon,
+        //     bool standing,
+        //     bool forceAction = false
+        // ) {
+        //     TeleportFull(
+        //         position: new Vector3(x, y, z),
+        //         rotation: new Vector3(0, rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        public void TeleportFull(
+            float x, float y, float z,
             Vector3 rotation,
             float horizon,
             bool standing,
             bool forceAction = false
         ) {
-            targetTeleport = new Vector3(x, y, z);
-
-            if (forceAction) {
-                DefaultAgentHand();
-                transform.position = targetTeleport;
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-
-                actionFinished(true);
-                return;
-
-            } else {
-                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
-                    errorMessage = "Teleport target out of scene bounds.";
-                    actionFinished(false);
-                    return;
-                }
-
-                if (!isPositionOnGrid(targetTeleport)) {
-                    errorMessage = $"Target teleport position {targetTeleport.ToString("F6")} is not" +
-                        $" on the grid of size {gridSize}.";
-                    actionFinished(false);
-                    return;
-                }
-
-                Vector3 oldPosition = transform.position;
-                Quaternion oldRotation = transform.rotation;
-                Vector3 oldLocalHandPosition = new Vector3();
-                Quaternion oldLocalHandRotation = new Quaternion();
-                if (ItemInHand != null) {
-                    oldLocalHandPosition = ItemInHand.transform.localPosition;
-                    oldLocalHandRotation = ItemInHand.transform.localRotation;
-                }
-                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
-                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
-
-                //default high level hand when teleporting
-                DefaultAgentHand();
-
-                //if in arm mode, set colliders of arm to trigger so upon teleporting, they don't collide and move
-                //anything that the arm might be clipped into
-                //note- this should not affect the isArmColliding check, which uses physics overlap casts based on the dimensions of arm colliders
-                ToggleArmColliders(Arm, true);
-
-                //here we actually teleport 
-                transform.position = targetTeleport;
-
-                // Adjust y position so that the agent is more on the floor
-                m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
-                transform.position = new Vector3(targetTeleport.x, transform.position.y, targetTeleport.z);
-
-                bool tooMuchYMovement = Mathf.Abs(transform.position.y - y) > 0.05f;
-                if (tooMuchYMovement) {
-                    errorMessage = "After teleporting and adjusting agent position to floor, there was too large a change" +
-                     $"({Mathf.Abs(transform.position.y - y)}>0.05) in the y component." +
-                     " Consider using `forceAction=true` if you'd like to teleport anyway.";
-                }
-
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-                if (standing) {
-                    m_Camera.transform.localPosition = standingLocalCameraPosition;
-                } else {
-                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
-                }
-                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0.0f, 0.0f);
-
-                bool agentCollides = isAgentCapsuleColliding(
-                    collidersToIgnore: collidersToIgnoreDuringMovement,
-                    includeErrorMessage: true
-                );
-                
-                bool handObjectCollides = isHandObjectColliding(true);
-                bool armCollides = false;
-                if (handObjectCollides && !agentCollides) {
-                    errorMessage = "Cannot teleport due to hand object collision.";
-                }
-
-                if(Arm != null)
-                {
-                    if(Arm.IsArmColliding())
-                    {
-                        errorMessage = "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull failes in this position.";
-                        armCollides = true;
-                    }
-                }
-
-                if (agentCollides || handObjectCollides || armCollides || tooMuchYMovement) {
-                    if (ItemInHand != null) {
-                        ItemInHand.transform.localPosition = oldLocalHandPosition;
-                        ItemInHand.transform.localRotation = oldLocalHandRotation;
-                    }
-                    transform.position = oldPosition;
-                    transform.rotation = oldRotation;
-                    m_Camera.transform.localPosition = oldCameraLocalPosition;
-                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
-
-                    //reset arm colliders on fail actionFinish
-                    ToggleArmColliders(Arm, false);
-
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-
-                //reset arm colliders on actionFinish
-                ToggleArmColliders(Arm, false);
-                actionFinished(true);
-            }
+            TeleportFull(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
         }
 
-        public void ToggleArmColliders(IK_Robot_Arm_Controller Arm, bool value)
-        {
-            if(Arm != null)
-            {
-                foreach(CapsuleCollider c in Arm.ArmCapsuleColliders)
-                {
-                    c.isTrigger = value;
+        // keep undocumented until float: rotation is added to Stochastic
+        // public void TeleportFull(
+        //     Vector3 position,
+        //     float rotation,
+        //     float horizon,
+        //     bool standing,
+        //     bool forceAction = false
+        // ) {
+        //     TeleportFull(
+        //         position: position,
+        //         rotation: new Vector3(0, rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        // has to consider both the arm and standing
+        public void TeleportFull(
+            Vector3 position,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            // cache old values in case there's a failure
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
+
+            Vector3 oldLocalHandPosition = new Vector3();
+            Quaternion oldLocalHandRotation = new Quaternion();
+            if (ItemInHand != null) {
+                oldLocalHandPosition = ItemInHand.transform.localPosition;
+                oldLocalHandRotation = ItemInHand.transform.localRotation;
+            }
+
+            try {
+                // default high level hand when teleporting
+                DefaultAgentHand();
+                ToggleArmColliders(arm: Arm, value: forceAction);
+                base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+                if (standing) {
+                    stand();
+                } else {
+                    crouch();
                 }
 
-                foreach(BoxCollider b in Arm.ArmBoxColliders)
-                {
+                // add arm value cases
+                if (!forceAction) {
+                    if (isHandObjectColliding(ignoreAgent: true)) {
+                        throw new InvalidOperationException("Cannot teleport due to hand object collision.");
+                    }
+                    if (Arm != null && Arm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    }
+                    base.assertTeleportedNearGround(targetPosition: position);
+
+                    ToggleArmColliders(arm: Arm, value: false);
+                }
+            } catch (InvalidOperationException e) {
+                ToggleArmColliders(arm: Arm, value: false);
+                if (wasStanding) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                if (ItemInHand != null) {
+                    ItemInHand.transform.localPosition = oldLocalHandPosition;
+                    ItemInHand.transform.localRotation = oldLocalHandRotation;
+                }
+
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+
+                throw new InvalidOperationException(e.Message);
+            }
+            actionFinished(success: true);
+        }
+
+        ///////////////////////////////////////////
+        //////////////// TELEPORT /////////////////
+        ///////////////////////////////////////////
+
+        // [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        // public void Teleport(
+        //     float x, float y, float z,
+        //     float? rotation = null,
+        //     float? horizon = null,
+        //     bool? standing = null,
+        //     bool forceAction = false
+        // ) {
+        //     Teleport(
+        //         position: new Vector3(x, y, z),
+        //         rotation: rotation,
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        public void Teleport(
+            float x, float y, float z,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            Teleport(
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        // keep undocumented until float: rotation is added to Stochastic
+        // DO NOT add float: rotation to base.
+        // public void Teleport(
+        //     Vector3? position = null,
+        //     float? rotation = null,
+        //     float? horizon = null,
+        //     bool? standing = null,
+        //     bool forceAction = false
+        // ) {
+        //     Teleport(
+        //         position: position,
+        //         rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
+        //         horizon: horizon,
+        //         standing: standing,
+        //         forceAction: forceAction
+        //     );
+        // }
+
+        public void Teleport(
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            TeleportFull(
+                position: position == null ? transform.position : (Vector3) position,
+                rotation: rotation == null ? transform.eulerAngles : (Vector3) rotation,
+                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float) horizon,
+                standing: standing == null ? isStanding() : (bool) standing,
+                forceAction: forceAction
+            );
+        }
+
+        public void ToggleArmColliders(IK_Robot_Arm_Controller arm, bool value) {
+            if (arm != null) {
+                foreach (CapsuleCollider c in arm.ArmCapsuleColliders) {
+                    c.isTrigger = value;
+                }
+                foreach (BoxCollider b in arm.ArmBoxColliders) {
                     b.isTrigger = value;
                 }
             }
-        }
-
-        public override void Teleport(
-            float x, float y, float z, bool forceAction = false, bool rotateOnTeleport = false
-        ) {
-            if (rotateOnTeleport) {
-                throw new ArgumentException(
-                    "`rotateOnTeleport` is deprecated and must be false. If you'd like to rotate" +
-                    " the agent, use the TeleportFull command instead."
-                );
-            }
-            TeleportFull(
-                x: x,
-                y: y,
-                z: z,
-                rotation: new Vector3(0f, transform.eulerAngles.y, 0f),
-                horizon: m_Camera.transform.localEulerAngles.x,
-                standing: isStanding(),
-                forceAction: forceAction
-            );
         }
 
         protected HashSet<Collider> allAgentColliders() {
@@ -1896,10 +1947,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -1992,10 +2047,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -2083,6 +2142,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }
+        public void PhysicsSyncTransforms()
+        {
+            Physics.SyncTransforms();
+            actionFinished(true);
+        }
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
@@ -2090,6 +2154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //print("ZA WARUDO!");
             Physics.autoSimulation = false;
+            Physics.autoSyncTransforms = false;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
@@ -2156,6 +2221,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void UnpausePhysicsAutoSim()
         {
             Physics.autoSimulation = true;
+            Physics.autoSyncTransforms = true;
             physicsSceneManager.physicsSimulationPaused = false;
             actionFinished(true);
         }
@@ -2581,7 +2647,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     //this should basically only happen if the handDistance value is too big
-                    if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                    if(!isPosInView(targetPosition: hit.point, inMaxVisibleDistance: true, inViewport: true))
                     {
                         errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
                         WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
@@ -2645,7 +2711,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //get ray.origin, multiply handDistance with ray.direction, add to origin to get the final point
                 //if the final point was out of range, return actionFinished false, otherwise return actionFinished true with feedback
                 Vector3 testPosition = ((action.handDistance * ray.direction) + ray.origin);
-                if(!CheckIfTargetPositionIsInViewportRange(testPosition))
+                if(!isPosInView(targetPosition: testPosition, inMaxVisibleDistance: true, inViewport: true))
                 {
                     errorMessage = "the position the hand would have moved to is outside the agent's max interaction range";
                     WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
@@ -3402,10 +3468,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set inside screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -3769,7 +3839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
                 foreach(Vector3 v in targetPoints)
                 {
-                    if(CheckIfTargetPositionIsInViewportRange(v))
+                    if(isPosInView(targetPosition: v, inMaxVisibleDistance: true, inViewport: true))
                     {
                         filteredTargetPoints.Add(v);
                     }
@@ -4133,8 +4203,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 while (numStillGoing > 0) {
                     foreach (SimObjPhysics sop in animating) {
                         if (animatingType.ContainsKey(sop) &&
-                            (animatingType[sop] == "toggleable" || animatingType[sop] == "openable") && 
-                            sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0
+                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0 || animatingType[sop] == "openable") && 
+                            sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0
                         ) {
                             numStillGoing--;
                         }
@@ -4420,10 +4490,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float z = 0.0f){
             SimObjPhysics targetReceptacle = null;
 
-            if(!ScreenToWorldTarget(x, y, ref targetReceptacle, !forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref targetReceptacle, 
+                forceAction: forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
                 return;
             }
 
@@ -4605,10 +4679,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set inside ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set inside screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -4908,11 +4986,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     } else {
                         ItemInHand.transform.parent = null;
                     }
-
-                    // Add some random rotational momentum to the dropped object to make things
-                    // less deterministic.
-                    // TODO: Need a parameter to control how much randomness we introduce.
-                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(
                         target: ItemInHand.GetComponent<SimObjPhysics>(),
@@ -5295,10 +5368,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -5427,10 +5504,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             SimObjPhysics target = null;
             //no target object specified, so instead try and use x/y screen coordinates
-            if(!ScreenToWorldTarget(x, y, ref target, !forceAction))
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))
             {
-                //error message is set insice ScreenToWorldTarget
-                actionFinished(false);
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
                 return;
             }
             
@@ -5681,7 +5762,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            SimObjPhysics target = null;
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction))  {
+                //error message is set insice screenToWorldTarget
+                actionFinished(false, errorMessage);
+                return;
+            }
             openObject(
                 target: target,
                 openness: openness,
@@ -6679,7 +6769,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (float horizon in horizons) {
                     // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
                     if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
-                        throw new ArgumentException($"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]");
+                        throw new ArgumentException(
+                            $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                        );
                     }
                 }
             }
@@ -6910,17 +7002,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void GetSceneBounds() {
-            reachablePositions = new Vector3[2];
-            reachablePositions[0] = agentManager.SceneBounds.min;
-            reachablePositions[1] = agentManager.SceneBounds.max;
-#if UNITY_EDITOR
-            Debug.Log(reachablePositions[0]);
-            Debug.Log(reachablePositions[1]);
-#endif
-            actionFinished(true);
-        }
-
         //to ignore the agent in this collision check, set ignoreAgent to true
         protected bool isHandObjectColliding(bool ignoreAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
@@ -6986,10 +7067,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void RandomlyMoveAgent(int randomSeed = 0) {
-#if UNITY_EDITOR
-            randomSeed = UnityEngine.Random.Range(0, 1000000);
-#endif
-            reachablePositions = getReachablePositions();
+            #if UNITY_EDITOR
+                randomSeed = UnityEngine.Random.Range(0, 1000000);
+            #endif
+            Vector3[] reachablePositions = getReachablePositions();
             var orientations = new float[]{
                 0,
                 90,
@@ -7126,7 +7207,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
             RaycastHit hit;
-            if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
+            if(Physics.Raycast(position, Vector3.down, out hit, 10f, (1<<0 | 1<<8 | 1<<10), QueryTriggerInteraction.Ignore))
             {
                 point = hit.point;
                 return point;
@@ -8578,10 +8659,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8643,10 +8728,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8726,10 +8815,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8798,10 +8891,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8871,10 +8968,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -8969,10 +9070,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9043,10 +9148,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
-                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                if(!screenToWorldTarget(
+                x: action.x, 
+                y: action.y, 
+                target: ref target, 
+                forceAction: action.forceAction))
                 {
-                    //error message is set insice ScreenToWorldTarget
-                    actionFinished(false);
+                    //error message is set insice screenToWorldTarget
+                    actionFinished(false, errorMessage);
                     return;
                 }
             }
@@ -9320,12 +9429,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //perhaps this should fail if no object is picked up?
         //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
-        public void PickUpMidLevelHand(ServerAction action)
+        public void PickUpMidLevelHand(List<string> objectIds = null)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                actionFinished(arm.PickupObject());
+                actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
                 return;
             }
 

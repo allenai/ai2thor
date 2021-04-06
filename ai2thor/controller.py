@@ -572,8 +572,8 @@ class Controller(object):
 
             def key_sort_func(scene_name):
                 m = re.search(
-                    "FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$", scene_name
-                )
+                        r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$",
+                    scene_name)
                 last_val = m.group(3) if m.group(3) is not None else -1
                 return m.group(1), int(m.group(2)), int(last_val)
 
@@ -830,10 +830,12 @@ class Controller(object):
 
         self.last_action = action
 
+        # dangerously converts rotation(float) to rotation(dict(x=0, y=float, z=0))
+        # this should be removed when ServerActions have been removed from Unity
+        # for all relevant actions.
         rotation = action.get("rotation")
-        if rotation is not None and type(rotation) != dict:
-            action["rotation"] = {}
-            action["rotation"]["y"] = rotation
+        if rotation is not None and not isinstance(rotation, dict):
+            action['rotation'] = dict(y=rotation)
 
         # Support for deprecated parameter names (old: new)
         # Note that these parameters used to be applicable to ANY action.
@@ -866,29 +868,25 @@ class Controller(object):
 
 
 
-        if not self.last_event.metadata[
-            "lastActionSuccess"
-        ]:
+        if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
-            "InvalidAction",
-            "MissingArguments",
-            "AmbiguousAction",
-            "InvalidArgument",
+                "InvalidAction",
+                "MissingArguments",
+                "AmbiguousAction",
+                "InvalidArgument",
             ]:
                 raise ValueError(self.last_event.metadata["errorMessage"])
             elif raise_for_failure:
                 raise RuntimeError(
-                    self.last_event.metadata.get("errorMessage", f"{action} failed.")
+                    self.last_event.metadata.get("errorMessage", f"{action} failed")
                 )
-
-        assert (not raise_for_failure) or self.last_event.metadata["lastActionSuccess"]
 
         return self.last_event
 
     def unity_command(self, width, height, headless):
         command = self._build.executable_path
         if headless:
-            command += " -batchmode"
+            command += " -batchmode -nographics"
         else:
             fullscreen = 1 if self.fullscreen else 0
             if QUALITY_SETTINGS[self.quality] == 0:
@@ -955,7 +953,8 @@ class Controller(object):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
 
     def _cache_commit_filename(self, branch):
-        return os.path.join(self.commits_cache_dir, branch + ".json")
+        encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
+        return os.path.join(self.commits_cache_dir, encoded_branch + ".json")
 
     def _cache_commit_history(self, branch, payload):
         makedirs(self.commits_cache_dir)
