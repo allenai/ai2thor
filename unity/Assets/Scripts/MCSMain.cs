@@ -78,6 +78,7 @@ public class MCSMain : MonoBehaviour {
     public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
     public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
     public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
+    public bool isPassiveScene = false;
 
     private MCSConfigScene currentScene;
     private int lastStep = -1;
@@ -198,7 +199,7 @@ public class MCSMain : MonoBehaviour {
             }
             
             // Objects aren't fully added in Start(), so we need to adjust the location here in case we are on a platform.
-            if (this.lastStep==0){
+            if (this.lastStep == 0 && !this.isPassiveScene) {
                 GameObject controller = GameObject.Find("FPSController");
                 controller.GetComponent<MCSController>().MatchAgentHeightToStructureBelow(false);
             }
@@ -235,6 +236,8 @@ public class MCSMain : MonoBehaviour {
             Debug.Log("MCS: No objects to initialize!");
         }
 
+        this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
+                this.currentScene.isometric);
         this.AdjustRoomStructuralObjects();
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {

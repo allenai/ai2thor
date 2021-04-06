@@ -909,7 +909,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     protected override void SubPositionAdjustment() {
-        MatchAgentHeightToStructureBelow(false);
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        if (!main.isPassiveScene) {
+            MatchAgentHeightToStructureBelow(false);
+        }
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
