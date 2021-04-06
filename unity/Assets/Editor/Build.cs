@@ -50,7 +50,7 @@ public class Build
         }
 
         foreach (string f in files) {
-            if (f.EndsWith(".unity")) {
+            if (f.EndsWith("FloorPlan28_physics.unity")) {
                 Debug.Log ("Adding Scene " + f);
 				scenes.Add (f);
             }

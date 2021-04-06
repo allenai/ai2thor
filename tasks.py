@@ -947,12 +947,17 @@ def ci_build(context):
                         "starting build for %s %s %s"
                         % (arch, build["branch"], build["commit_id"])
                     )
-                    if ai2thor.build.Build(
-                        arch, build["commit_id"], include_private_scenes=include_private_scenes
-                    ).exists():
+                    rdir = os.path.normpath(
+                        os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
+
+                    )
+                    commit_build =  ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=include_private_scenes)
+                    if commit_build.exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
+                        # download the build so that we can run the tests
+                        commit_build.download()
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -966,15 +971,15 @@ def ci_build(context):
                         )
                         procs.append(p)
 
-                    # don't run tests for a tag since results should exist
-                    # for the branch commit
-                    if arch == 'OSXIntel64' and build["tag"] is None:
-                        pytest_proc = multiprocessing.Process(
-                            target=ci_pytest,
-                            args=(build,)
-                        )
-                        pytest_proc.start()
-                        procs.append(pytest_proc)
+            # don't run tests for a tag since results should exist
+            # for the branch commit
+            if build["tag"] is None:
+                pytest_proc = multiprocessing.Process(
+                    target=ci_pytest,
+                    args=(build,)
+                )
+                pytest_proc.start()
+                procs.append(pytest_proc)
 
 
             # give the travis poller time to see the result
