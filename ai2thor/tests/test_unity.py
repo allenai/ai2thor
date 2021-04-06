@@ -1281,7 +1281,7 @@ def test_get_coordinate_from_raycast(controller):
     )
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_reachable_positions(controller):
     controller.reset("FloorPlan28")
 
