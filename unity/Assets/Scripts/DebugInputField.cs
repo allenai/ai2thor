@@ -448,7 +448,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 yield return new WaitForEndOfFrame();
                             }
                             Debug.Log($"{++i} Executing: {action}");
-                            CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                            if (AManager.agentManagerActions.Contains((String) action["action"])) {
+                                ActionDispatcher.Dispatch(
+                                    AManager,
+                                    new DynamicServerAction(action)
+                                );
+                            } else {
+                                CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                            }
                         }
                     }
                     StartCoroutine(executeBatch(jActions: actions));
@@ -701,6 +708,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SetAgentRadius";
                         action["agentRadius"] = 0.35f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "light":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "RandomizeLighting",
+                            ["synchronized"] = false,
+                            ["brightness"] = new float[] {0.5f, 1.5f},
+                            ["hue"] = new float[] {0, 1},
+                            ["saturation"] = new float[] {0, 1}
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "resetlight":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "ResetLighting"
+                        };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1671,7 +1700,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "ChangeTimeScale";
                         action.timeScale = float.Parse(splitcommand[1]);
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log(PhysicsController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log(PhysicsController.reachablePositions.Length);
+
                         break;
                     }
 
@@ -1681,7 +1713,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log(PhysicsController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log(PhysicsController.reachablePositions.Length);
+
                         break;
                     }
 
@@ -1691,7 +1726,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
                         CurrentActiveController().ProcessControlCommand(action);
-                        Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
+
+                        // NOTE: reachablePositions has been removed as a public variable
+                        // Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
+
                         break;
                     }
 
@@ -3331,6 +3369,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "gcfr":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetCoordinateFromRaycast";
+                        action["x"] = float.Parse(splitcommand[1]);
+                        action["y"] = float.Parse(splitcommand[2]);
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                     case "telefull":
                     {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3477,8 +3526,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     case "pumlh":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PickUpMidLevelHand";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickUpMidLevelHand";
+                        action["objectIds"] = new List<string> {"Bread|-00.52|+01.17|-00.03", "Apple|-00.54|+01.15|+00.18"};
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

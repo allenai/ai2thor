@@ -274,8 +274,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.5063486, y: 0.45958215, z: 0.45049047}
-  m_Center: {x: 0, y: 0.22979107, z: 0.06342721}
+  m_Size: {x: 0.4671342, y: 0.46089846, z: 0.45057684}
+  m_Center: {x: -0.0012064427, y: 0.22478533, z: 0.0631924}
 --- !u!1 &1306730585342470
 GameObject:
   m_ObjectHideFlags: 0
@@ -452,7 +452,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: CoffeeMachine|+00.00|+00.00|+00.00
+  objectID: 
   Type: 15
   PrimaryProperty: 2
   SecondaryProperties: 1d00000007000000340000000c000000
@@ -473,18 +473,40 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65648065356106206}
+  - {fileID: 65956130370277340}
+  - {fileID: 65517576554171486}
+  - {fileID: 65577401374349592}
   HFdynamicfriction: 0.8
   HFstaticfriction: 0.8
   HFbounciness: 0
   HFrbdrag: 0.1
   HFrbangulardrag: 0.05
   salientMaterials: 02000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  canChangeTempToHot: 0
+  canChangeTempToCold: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54196682364358628
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1057,6 +1079,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1074,6 +1097,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1145,4 +1169,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1440379000877588}
-  occupied: 0
