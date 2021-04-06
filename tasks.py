@@ -974,6 +974,7 @@ def ci_build(context):
             # don't run tests for a tag since results should exist
             # for the branch commit
             if build["tag"] is None:
+                ci_test_utf(context)
                 pytest_proc = multiprocessing.Process(
                     target=ci_pytest,
                     args=(build,)
@@ -3296,13 +3297,18 @@ def ci_test_utf(context):
     for l in [results_path, results_logfile]:
         key = "builds/" + os.path.basename(l)
         with open(l) as f:
-            s3.Object('ai2-prior-erick-test', key).put(
+            s3.Object(PUBLIC_S3_BUCKET, key).put(
                 Body=f.read(), ContentType="text/plain"
-                #ACL=acl, 
+                ACL='public-read'
             )
 
 @task
 def test_utf(context):
+    """
+    Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
+    that include failures (if any) extracted from the xml output
+    of the Unity Test Runner
+    """
     project_path = os.path.join(os.getcwd(), 'unity')
     commit_id = git_commit_id()
     test_results_path = os.path.join(project_path, 'utf_testResults-%s.xml' % commit_id)
