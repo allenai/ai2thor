@@ -1182,7 +1182,7 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_2d_semantic_hulls(controller):
     from shapely.geometry import Polygon
 
