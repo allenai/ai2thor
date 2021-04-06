@@ -961,7 +961,8 @@ def ci_build(context):
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
                         # download the build so that we can run the tests
-                        commit_build.download()
+                        if arch == 'OSXIntel64':
+                            commit_build.download()
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
