@@ -3298,7 +3298,7 @@ def ci_test_utf(context):
         key = "builds/" + os.path.basename(l)
         with open(l) as f:
             s3.Object(PUBLIC_S3_BUCKET, key).put(
-                Body=f.read(), ContentType="text/plain"
+                Body=f.read(), ContentType="text/plain",
                 ACL='public-read'
             )
 
