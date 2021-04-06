@@ -979,6 +979,9 @@ def ci_build(context):
             # don't run tests for a tag since results should exist
             # for the branch commit
             if build["tag"] is None:
+                # its possible that the cache doesn't get linked if the builds 
+                # succeeded during an earlier runh
+                link_build_cache(build["branch"])
                 ci_test_utf(context)
                 pytest_proc = multiprocessing.Process(
                     target=ci_pytest,
