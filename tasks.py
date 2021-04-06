@@ -951,7 +951,11 @@ def ci_build(context):
                         os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
 
                     )
-                    commit_build =  ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=include_private_scenes)
+                    commit_build =  ai2thor.build.Build(
+                        arch,
+                        build["commit_id"],
+                        include_private_scenes=include_private_scenes,
+                        releases_dir=rdir)
                     if commit_build.exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
