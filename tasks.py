@@ -378,7 +378,7 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, "local", False)
+    build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"

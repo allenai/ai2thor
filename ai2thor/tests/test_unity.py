@@ -1184,7 +1184,9 @@ def test_get_interactable_poses(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_2d_semantic_hulls(controller):
-    controller.reset('FloorPlan28')
+    from shapely.geometry import Polygon
+
+    controller.reset("FloorPlan28")
     obj_name_to_obj_id = {o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]}
     # Used to save fixed object locations.
     # with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "w") as f:
@@ -1265,7 +1267,9 @@ def test_2d_semantic_hulls(controller):
 
     def almost_equal(a, b):
         if isinstance(a, list):
-            return np.abs(np.array(a) - np.array(b)).sum() < 1e-2
+            pa = Polygon(a)
+            pb = Polygon(b)
+            return pa.symmetric_difference(pb).area / max([1e-6, pa.area, pb.area]) < 1e-4
         else:
             return all(almost_equal(a[k], b[k]) for k in set(a.keys()) | set(b.keys()))
 
