@@ -1004,6 +1004,9 @@ class Controller(object):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
 
+        if platform.architecture()[0] != '64bit':
+            raise Exception("Only 64bit currently supported")
+
         arch = arch_platform_map[platform.system()]
 
         if branch:
