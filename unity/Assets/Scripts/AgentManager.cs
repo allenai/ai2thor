@@ -1335,8 +1335,9 @@ public struct MetadataWrapper
 
     // MCS Additions
     public string lastActionStatus;
-    public float reachDistance;
+    public float performerReach;
     public string pose;
+	public float performerRadius;
 }
 
 [Serializable]

@@ -198,10 +198,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public override MetadataWrapper generateMetadataWrapper() {
         MetadataWrapper metadata = base.generateMetadataWrapper();
         metadata.lastActionStatus = this.lastActionStatus;
-        metadata.reachDistance = this.maxVisibleDistance;
+        metadata.performerReach = this.maxVisibleDistance;
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.pose = this.pose.ToString();
+        metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
