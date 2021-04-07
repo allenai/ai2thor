@@ -3768,6 +3768,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             return false;
         }
+
+        public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position)
+        {
+            SimObjPhysics target = t;
+            //find the object in the scene, disregard visibility
+            // foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            // {
+            //     if(sop.objectID == t.objectID)
+            //     {
+            //         target = sop;
+            //     }
+            // }
+
+            // if(target == null)
+            // {
+            //     return false;
+            // }
+
+            //make sure point we are moving the object to is valid
+            if(!agentManager.sceneBounds.Contains(position))
+            {
+                return false;
+            }
+
+            //ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint;
+
+            //final position to place on surface
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
+
+
+            //check spawn area, if its clear, then place object at finalPos
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            {
+                target.transform.position = finalPos;
+                return true;
+            }
+
+            return false;
+        }
         //uncomment this to debug draw valid points
         //private List<Vector3> validpointlist = new List<Vector3>();
 
