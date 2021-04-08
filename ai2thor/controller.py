@@ -731,17 +731,20 @@ class Controller(object):
         makedirs(self.tmp_dir)
         makedirs(self.releases_dir)
 
-        # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
-        all_dirs = list(
-            filter(
-                os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))
+        # A lock is necessary since its possible that multiple processes could all
+        # attempt to prune at the same time
+        with LockEx(os.path.join(rdir, 'prune-releases')):
+            all_dirs = list(
+                filter(
+                    os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))
+                )
             )
-        )
-        sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
-        for release in sorted_dirs:
-            if current_exec_path.startswith(release):
-                continue
-            self._prune_release(release)
+            # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
+            sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+            for release in sorted_dirs:
+                if current_exec_path.startswith(release):
+                    continue
+                self._prune_release(release)
 
     def next_interact_command(self):
         # NOTE: Leave this here because it is incompatible with Windows.
