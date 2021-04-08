@@ -897,7 +897,7 @@ def test_get_scenes_in_build(controller):
     # not testing for private scenes
     diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
-    skip_reset(fifo_controller)
+    skip_reset(controller)
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
