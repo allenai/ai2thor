@@ -982,7 +982,7 @@ def ci_build(context):
                 # its possible that the cache doesn't get linked if the builds 
                 # succeeded during an earlier runh
                 link_build_cache(build["branch"])
-                ci_test_utf(build)
+                ci_test_utf(context, build)
                 pytest_proc = multiprocessing.Process(
                     target=ci_pytest,
                     args=(build,)
@@ -3297,7 +3297,8 @@ def generate_pypi_index(context):
 """ % "\n".join(links)
     s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
-def ci_test_utf(build):
+@task
+def ci_test_utf(context, build):
     s3 = boto3.resource("s3")
     results_path, results_logfile = test_utf(context)
     logger.info(
