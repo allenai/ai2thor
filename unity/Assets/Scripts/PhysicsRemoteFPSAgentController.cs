@@ -2011,7 +2011,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
+            if (!action.forceAction && !IsInteractable(target)) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
@@ -2111,8 +2111,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!action.forceAction && target.isInteractable == false) {
-                print(target.isInteractable);
+            if (!action.forceAction && !IsInteractable(target)) {
+                print(IsInteractable(target));
                 errorMessage = "Target:" + target.objectID +  "is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
@@ -4738,7 +4738,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-            if (!action.forceAction && target.isInteractable == false) {
+            if (!action.forceAction && !IsInteractable(target)) {
                 errorMessage = target.objectID + " is not interactable and (perhaps it is occluded by something).";
                 actionFinished(false);
                 return;
@@ -5398,7 +5398,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
+                if (!action.forceAction && !IsInteractable(target)) {
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     return;
@@ -5580,7 +5580,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private bool toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
         {
-            if (!forceAction && target.isInteractable == false)
+            if (!forceAction && IsInteractable(target))
             {
                 errorMessage = "object is visible but occluded by something: " + target.ObjectID;
                 actionFinished(false);
@@ -5703,7 +5703,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!forceAction && !target.isInteractable) {
+            if (!forceAction && !IsInteractable(target)) {
                 errorMessage = "object is visible but occluded by something: " + target.ObjectID;
                 if (markActionFinished) {
                     actionFinished(false);

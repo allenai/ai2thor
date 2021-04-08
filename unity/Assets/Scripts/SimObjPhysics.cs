@@ -46,9 +46,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	[Header("State information Bools here")]
 	#if UNITY_EDITOR
-	public bool isVisible = false;
+	public bool debugIsVisible = false;
 	#endif
-	public bool isInteractable = false;
+	public bool debugIsInteractable = false;
 	public bool isInAgentHand = false;
 
 	//these collider references are used for switching physics materials for all colliders on this object
@@ -1038,7 +1038,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// Update is called once per frame
 	void Update()
 	{
-		isInteractable = false;
+		debugIsInteractable = false;
 
 		if(sceneManager.AllowDecayTemperature)//only do this if the scene is initialized to use Temperature decay over time
 		{
@@ -1224,7 +1224,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
+		if (debugIsVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
@@ -1232,7 +1232,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
+		if (debugIsInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;
