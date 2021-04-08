@@ -3300,10 +3300,12 @@ def generate_pypi_index(context):
 @task
 def ci_test_utf(context, build):
     s3 = boto3.resource("s3")
-    results_path, results_logfile = test_utf(context)
+
     logger.info(
         "running Unity Test framework testRunner for %s %s" % (build["branch"], build["commit_id"])
     )
+
+    results_path, results_logfile = test_utf(context)
     
     for l in [results_path, results_logfile]:
         key = "builds/" + os.path.basename(l)
