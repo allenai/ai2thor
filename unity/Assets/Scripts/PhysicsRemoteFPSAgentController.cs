@@ -2105,7 +2105,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!action.forceAction && !IsInteractable(target)) {
-                print(IsInteractable(target));
                 errorMessage = "Target:" + target.objectID +  "is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
