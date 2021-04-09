@@ -1174,7 +1174,6 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
-
 @pytest.mark.parametrize("controller", fifo_wsgi)
 @pytest.mark.skip(reason="Colliders need to be moved closer to objects.")
 def test_get_object_in_frame(controller):
@@ -1273,3 +1272,31 @@ def test_get_coordinate_from_raycast(controller):
         query.metadata["actionReturn"],
         {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
     )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_get_reachable_positions_with_directions_relative_agent(controller):
+    controller.reset("FloorPlan28")
+
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_aligned < 125
+
+    controller.step(
+        action="TeleportFull",
+        position=dict(x=-1, y=0.900998235, z=-1.25),
+        rotation=dict(x=0, y=49.11111, z=0),
+        horizon=0,
+        standing=True,
+    )
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned_after_teleport = len(event.metadata["actionReturn"])
+    assert num_reachable_aligned == num_reachable_aligned_after_teleport
+
+    event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
+    num_reachable_unaligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_unaligned < 125
+
+    assert (
+        num_reachable_unaligned != num_reachable_aligned
+    ), "Number of reachable positions should differ when using `directionsRelativeAgent`"
