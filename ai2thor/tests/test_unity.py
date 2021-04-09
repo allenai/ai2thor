@@ -1282,7 +1282,7 @@ def test_get_coordinate_from_raycast(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
-def test_get_reachable_positions(controller):
+def test_get_reachable_positions_with_directions_relative_agent(controller):
     controller.reset("FloorPlan28")
 
     event = controller.step("GetReachablePositions")
