@@ -1712,6 +1712,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
+                        if (splitcommand.Length == 2) {
+                            action["directionsRelativeAgent"] = bool.Parse(splitcommand[1]);
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
 
                         // NOTE: reachablePositions has been removed as a public variable

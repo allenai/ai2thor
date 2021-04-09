@@ -43,11 +43,6 @@ def build_controller(**args):
         warnings.simplefilter("ignore")
         c = Controller(**default_args)
 
-    # allow tests to indicate its okay to skip resetting
-    # this makes tests run faster in the event a test has not mutated 
-    # environment
-    c._skip_reset = False
-
     # used for resetting
     c._original_initialization_parameters = c.initialization_parameters
     return c
@@ -57,24 +52,19 @@ _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
 _stochastic_controller = build_controller(agentControllerType="stochastic")
 
-# This custom list is needed because fixtures don't
-# work with pytest.mark.parametrize and we want/need
-#  to used fixtures to reset controllers prior to being used within a test
-# open issue requesting this feature https://github.com/pytest-dev/pytest/issues/349
-class Controllers(list):
-
-    def __iter__(self):
-        for o in super().__iter__():
-            yield reset_controller(o)
+def skip_reset(controller):
+    # setting attribute on the last event so we can tell if the
+    # controller gets used since last event will change after each step
+    controller.last_event._pytest_skip_reset = True
 
 # resetting on each use so that each tests works with
 # the scene in a pristine state
 def reset_controller(controller):
     controller.initialization_parameters = copy.deepcopy(controller._original_initialization_parameters)
-    if not controller._skip_reset:
+    if not hasattr(controller.last_event, '_pytest_skip_reset'):
         controller.reset(TEST_SCENE)
+        skip_reset(controller)
 
-    controller._skip_reset = False
 
     return controller
 
@@ -91,8 +81,8 @@ def fifo_controller():
     return reset_controller(_fifo_controller)
 
 
-fifo_wsgi = Controllers([_fifo_controller, _wsgi_controller])
-fifo_wsgi_stoch = Controllers([_fifo_controller, _wsgi_controller, _stochastic_controller])
+fifo_wsgi = [_fifo_controller, _wsgi_controller]
+fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
 BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
@@ -109,6 +99,9 @@ def teleport_to_base_location(controller: Controller):
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
     assert controller.last_event.metadata["lastActionSuccess"]
 
+def setup_function(function):
+    for c in [_fifo_controller, _wsgi_controller, _stochastic_controller]:
+        reset_controller(c)
 
 def teardown_module(module):
     _wsgi_controller.stop()
@@ -671,7 +664,7 @@ def test_action_dispatch(fifo_controller):
         ]
     )
     assert sorted(event.metadata["actionReturn"]) == known_ambig
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
     event = fifo_controller.step(
@@ -687,7 +680,7 @@ def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
         ]
     )
     assert sorted(event.metadata["actionReturn"]) == known_ambig
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_server_action_ambiguous2(fifo_controller):
@@ -704,7 +697,7 @@ def test_action_dispatch_server_action_ambiguous2(fifo_controller):
         "Ambiguous action: TestActionDispatchSAAmbig2 Signature match found in the same class"
         == exception_message
     )
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_server_action_ambiguous(fifo_controller):
@@ -721,7 +714,7 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
         exception_message
         == "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
     )
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
@@ -733,7 +726,7 @@ def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
         "TestActionDispatchConflict": ["param22"],
     }
     assert event.metadata["actionReturn"] == known_conflicts
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_find_conflicts_physics(fifo_controller):
@@ -746,8 +739,8 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
     }
 
     assert event.metadata._raw_metadata["actionReturn"] == known_conflicts
-    fifo_controller._skip_reset = True
 
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_missing_args(fifo_controller):
@@ -759,7 +752,7 @@ def test_action_dispatch_missing_args(fifo_controller):
         caught_exception = True
     assert caught_exception
     assert fifo_controller.last_event.metadata["errorCode"] == "MissingArguments"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_invalid_action(fifo_controller):
@@ -770,19 +763,19 @@ def test_action_dispatch_invalid_action(fifo_controller):
         caught_exception = True
     assert caught_exception
     assert fifo_controller.last_event.metadata["errorCode"] == "InvalidAction"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_dispatch_empty(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop"))
     assert event.metadata["actionReturn"] == "emptyargs"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_one_param(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop", param1=True))
     assert event.metadata["actionReturn"] == "param1"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_two_param(fifo_controller):
@@ -790,7 +783,7 @@ def test_action_disptatch_two_param(fifo_controller):
         dict(action="TestActionDispatchNoop", param1=True, param2=False)
     )
     assert event.metadata["actionReturn"] == "param1 param2"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_two_param_with_default(fifo_controller):
@@ -798,19 +791,19 @@ def test_action_disptatch_two_param_with_default(fifo_controller):
         dict(action="TestActionDispatchNoop2", param3=True, param4="foobar")
     )
     assert event.metadata["actionReturn"] == "param3 param4/default foobar"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_two_param_with_default_empty(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoop2", param3=True))
     assert event.metadata["actionReturn"] == "param3 param4/default foo"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_serveraction_default(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoopServerAction"))
     assert event.metadata["actionReturn"] == "serveraction"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_serveraction_with_object_id(fifo_controller):
@@ -818,13 +811,13 @@ def test_action_disptatch_serveraction_with_object_id(fifo_controller):
         dict(action="TestActionDispatchNoopServerAction", objectId="candle|1|2|3")
     )
     assert event.metadata["actionReturn"] == "serveraction"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_all_default(fifo_controller):
     event = fifo_controller.step(dict(action="TestActionDispatchNoopAllDefault"))
     assert event.metadata["actionReturn"] == "alldefault"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 def test_action_disptatch_some_default(fifo_controller):
@@ -832,7 +825,7 @@ def test_action_disptatch_some_default(fifo_controller):
         dict(action="TestActionDispatchNoopAllDefault2", param12=9.0)
     )
     assert event.metadata["actionReturn"] == "somedefault"
-    fifo_controller._skip_reset = True
+    skip_reset(fifo_controller)
 
 
 
@@ -890,7 +883,7 @@ def test_jsonschema_metadata(controller):
         schema = json.loads(f.read())
 
     jsonschema.validate(instance=event.metadata, schema=schema)
-    controller._skip_reset = True
+    skip_reset(controller)
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -905,7 +898,7 @@ def test_get_scenes_in_build(controller):
     # not testing for private scenes
     diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
-    controller._skip_reset = True
+    skip_reset(controller)
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -1399,3 +1392,31 @@ def test_get_coordinate_from_raycast(controller):
         query.metadata["actionReturn"],
         {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
     )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_get_reachable_positions_with_directions_relative_agent(controller):
+    controller.reset("FloorPlan28")
+
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_aligned < 125
+
+    controller.step(
+        action="TeleportFull",
+        position=dict(x=-1, y=0.900998235, z=-1.25),
+        rotation=dict(x=0, y=49.11111, z=0),
+        horizon=0,
+        standing=True,
+    )
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned_after_teleport = len(event.metadata["actionReturn"])
+    assert num_reachable_aligned == num_reachable_aligned_after_teleport
+
+    event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
+    num_reachable_unaligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_unaligned < 125
+
+    assert (
+        num_reachable_unaligned != num_reachable_aligned
+    ), "Number of reachable positions should differ when using `directionsRelativeAgent`"

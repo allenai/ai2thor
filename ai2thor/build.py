@@ -1,7 +1,6 @@
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
-import platform
 import json
 from ai2thor.util import makedirs
 import time
@@ -94,9 +93,6 @@ class Build(object):
 
     def download(self):
 
-        if platform.architecture()[0] != '64bit':
-            raise Exception("Only 64bit currently supported")
-
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
 
@@ -138,16 +134,15 @@ class Build(object):
 
     @property
     def old_executable_path(self):
-        target_arch = platform.system()
-        if target_arch == 'Linux':
+        if self.arch == 'Linux64':
             return self.executable_path
-        elif target_arch == 'Darwin':
+        elif self.arch == 'OSXIntel64':
             return os.path.join(self.base_dir,
                 self.name + ".app",
                 "Contents/MacOS",
                 self.name)
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
+            raise Exception('unable to handle target arch %s' % self.arch)
 
     def parse_plist(self):
         import xml.etree.ElementTree as ET
@@ -167,11 +162,9 @@ class Build(object):
 
     @property
     def executable_path(self):
-        target_arch = platform.system()
-
-        if target_arch == 'Linux':
+        if self.arch == 'Linux64':
             return os.path.join(self.base_dir, self.name)
-        elif target_arch == 'Darwin':
+        elif self.arch == 'OSXIntel64':
             plist = self.parse_plist()
             return os.path.join(
                 self.base_dir,
@@ -179,7 +172,7 @@ class Build(object):
                 "Contents/MacOS",
                 plist['CFBundleExecutable'])
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
+            raise Exception('unable to handle target arch %s' % self.arch)
     
     @property
     def metadata_path(self):

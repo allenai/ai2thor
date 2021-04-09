@@ -335,44 +335,70 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 
-        public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
+        public Vector3[] getReachablePositions(
+            float gridMultiplier = 1.0f,
+            int maxStepCount = 10000,
+            bool visualize = false,
+            Color? gridColor = null,
+            bool directionsRelativeAgent = false
+        ) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
-            Queue<Vector3> pointsQueue = new Queue<Vector3>();
-            pointsQueue.Enqueue(transform.position);
+            Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
+            rightForwardQueue.Enqueue((0, 0));
+            Vector3 startPosition = transform.position;
+            
+            Vector3 right;
+            Vector3 forward;
+            if (directionsRelativeAgent) {
+                right = transform.right;
+                forward = transform.forward;
+            } else {
+                right = new Vector3(1.0f, 0.0f, 0.0f);
+                forward = new Vector3(0.0f, 0.0f, 1.0f);
+            }
 
-            //float dirSkinWidthMultiplier = 1.0f + sw;
-            Vector3[] directions = {
-                new Vector3(1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, 1.0f),
-                new Vector3(-1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, -1.0f)
-            };
+            (int, int)[] rightForwardOffsets = {(1, 0), (0, 1), (-1, 0), (0, -1)};
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
-            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
+            HashSet<(int, int)> seenRightForwards = new HashSet<(int, int)>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
-            while (pointsQueue.Count != 0) {
+            while (rightForwardQueue.Count != 0) {
                 stepsTaken += 1;
-                Vector3 p = pointsQueue.Dequeue();
+
+                // Computing the new position based using an offset from the startPosition
+                // guarantees that floating point errors won't result in slight differences
+                // between the same points.
+                (int, int) rightForward = rightForwardQueue.Dequeue();
+                Vector3 p = startPosition + gridSize * gridMultiplier * (
+                    right * rightForward.Item1 + forward * rightForward.Item2
+                );
                 if (!goodPoints.Contains(p)) {
                     goodPoints.Add(p);
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
-                    foreach (Vector3 d in directions) {
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
-                        if (seenPoints.Contains(newPosition)) {
+
+                    foreach ((int, int) rightForwardOffset in rightForwardOffsets) {
+                        (int, int) newRightForward = (
+                            rightForward.Item1 + rightForwardOffset.Item1,
+                            rightForward.Item2 + rightForwardOffset.Item2
+                        );
+                        Vector3 newPosition = startPosition + gridSize * gridMultiplier * (
+                            right * newRightForward.Item1 +
+                            forward * newRightForward.Item2
+                        );
+                        if (seenRightForwards.Contains(newRightForward)) {
                             continue;
                         }
-                        seenPoints.Add(newPosition);
+                        seenRightForwards.Add(newRightForward);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             capsuleCollider: cc,
                             skinWidth: sw,
                             startPosition: p,
-                            dir: d,
-                            moveMagnitude: (gridSize * gridMultiplier),
+                            dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
+                            moveMagnitude: gridSize * gridMultiplier,
                             layerMask: layerMask
                         );
 
@@ -386,6 +412,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (shouldEnqueue && !inBounds) {
                             throw new InvalidOperationException(
@@ -402,7 +433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
                         if (shouldEnqueue) {
-                            pointsQueue.Enqueue(newPosition);
+                            rightForwardQueue.Enqueue(newRightForward);
 
                             if (visualize) {
                                 var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
@@ -443,12 +474,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(int? maxStepCount = null) {
+        public void GetReachablePositions(
+            int? maxStepCount = null,
+            bool directionsRelativeAgent = false
+        ) {
             Vector3[] reachablePositions;
             if (maxStepCount.HasValue) {
-                reachablePositions = getReachablePositions(maxStepCount: maxStepCount.Value);
+                reachablePositions = getReachablePositions(
+                    maxStepCount: maxStepCount.Value,
+                    directionsRelativeAgent: directionsRelativeAgent
+                );
             } else {
-                reachablePositions = getReachablePositions();
+                reachablePositions = getReachablePositions(
+                    directionsRelativeAgent: directionsRelativeAgent
+                );
             }
 
             actionFinishedEmit(
@@ -3859,6 +3898,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
