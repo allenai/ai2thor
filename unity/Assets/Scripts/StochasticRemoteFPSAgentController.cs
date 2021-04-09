@@ -62,8 +62,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void LateUpdate()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-            ServerAction action = new ServerAction();
-            VisibleSimObjPhysics = VisibleSimObjs(action);
+            VisibleSimObjPhysics = VisibleSimObjs();
             #endif
         }
 

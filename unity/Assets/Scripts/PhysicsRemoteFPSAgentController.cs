@@ -153,8 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #if UNITY_EDITOR || UNITY_WEBGL
             //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
             if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
-                ServerAction action = new ServerAction();
-                VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+                VisibleSimObjPhysics = VisibleSimObjs();
             }
 
             #endif
@@ -1968,11 +1967,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
                 
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                //if object is in the scene, assign it to 'target', visibility check is performed below in IsInteractable
+                target = getSimObjectFromId(action.objectId);
             }
 
             // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
@@ -2069,10 +2065,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getSimObjectFromId(action.objectId);
             }
 
             // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
@@ -3490,10 +3483,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             //neither objectId nor coordinates found an object
@@ -4516,11 +4506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             
             //if object is in the scene and visible, assign it to 'target'
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceAction)) 
-            {
-                targetReceptacle = sop;
-            }
-
+            targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
             placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
         }
 
@@ -4701,10 +4687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             //neither objectId nor coordinates found an object
@@ -5390,10 +5373,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
 
@@ -5530,11 +5510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             
             //if object is in the scene and visible, assign it to 'target'
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId, forceVisible)) 
-            {
-                target = sop;
-            }
-
+            target = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceVisible);
             if (!target)
             {
 
@@ -5790,15 +5766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = null;
-
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //check for object in current visible objects, and also check that it's interactable
-                if (action.objectId == sop.ObjectID) {
-                    target = sop;
-                }
-
-            }
+            SimObjPhysics target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
 
             if (target) {
                 List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
@@ -8681,10 +8649,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             //we found it!
@@ -8750,10 +8715,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             //we found it!
@@ -8837,10 +8799,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             if(target)
@@ -8913,10 +8872,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             if(target)
@@ -8990,10 +8946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             if(action.fillLiquid == null)
@@ -9092,10 +9045,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             if(target)
@@ -9170,10 +9120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
                 //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
+                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
             }
 
             if(target)
