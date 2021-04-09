@@ -1265,18 +1265,30 @@ def test_2d_semantic_hulls(controller):
     with open("ai2thor/tests/data/semantic-2d-hulls.json") as f:
         truth = json.load(f)
 
-    def almost_equal(a, b):
+    def assert_almost_equal(a, b):
         if isinstance(a, list):
             pa = Polygon(a)
             pb = Polygon(b)
-            return pa.symmetric_difference(pb).area / max([1e-6, pa.area, pb.area]) < 1e-4
+            pa_area = pa.area
+            pb_area = pb.area
+            sym_diff_area = pa.symmetric_difference(pb).area
+            assert sym_diff_area / max([1e-6, pa_area, pb_area]) < 1e-4, (
+                f"Polygons have to large an area ({sym_diff_area}) in their symmetric difference"
+                f" compared to their sizes ({pa_area}, {pb_area}). Hulls:\n"
+                f"{json.dumps(a)}\n"
+                f"{json.dumps(b)}\n"
+            )
         else:
-            return all(almost_equal(a[k], b[k]) for k in set(a.keys()) | set(b.keys()))
+            for k in set(a.keys()) | set(b.keys()):
+                try:
+                    assert_almost_equal(a[k], b[k])
+                except AssertionError as e:
+                    raise AssertionError(f"For {k}: {e.args[0]}")
 
-    assert almost_equal(truth["all"], hulls_all)
-    assert almost_equal(truth["type_filtered"], hulls_type_filtered)
-    assert almost_equal(truth["id_filtered"], hulls_id_filtered)
-    assert almost_equal(truth["single_object"], hulls_single_object)
+    assert_almost_equal(truth["all"], hulls_all)
+    assert_almost_equal(truth["type_filtered"], hulls_type_filtered)
+    assert_almost_equal(truth["id_filtered"], hulls_id_filtered)
+    assert_almost_equal(truth["single_object"], hulls_single_object)
 
     # Should fail when given types and ids
     assert not controller.step(
