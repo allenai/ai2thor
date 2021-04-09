@@ -951,13 +951,18 @@ def ci_build(context):
                         os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
 
                     )
-                    commit_build =  ai2thor.build.Build(arch, build["commit_id"], include_private_scenes=include_private_scenes)
+                    commit_build =  ai2thor.build.Build(
+                        arch,
+                        build["commit_id"],
+                        include_private_scenes=include_private_scenes,
+                        releases_dir=rdir)
                     if commit_build.exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
                         # download the build so that we can run the tests
-                        commit_build.download()
+                        if arch == 'OSXIntel64':
+                            commit_build.download()
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -974,7 +979,10 @@ def ci_build(context):
             # don't run tests for a tag since results should exist
             # for the branch commit
             if build["tag"] is None:
-                ci_test_utf(context)
+                # its possible that the cache doesn't get linked if the builds 
+                # succeeded during an earlier runh
+                link_build_cache(build["branch"])
+                ci_test_utf(context, build)
                 pytest_proc = multiprocessing.Process(
                     target=ci_pytest,
                     args=(build,)
@@ -3290,8 +3298,13 @@ def generate_pypi_index(context):
     s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
 @task
-def ci_test_utf(context):
+def ci_test_utf(context, build):
     s3 = boto3.resource("s3")
+
+    logger.info(
+        "running Unity Test framework testRunner for %s %s" % (build["branch"], build["commit_id"])
+    )
+
     results_path, results_logfile = test_utf(context)
     
     for l in [results_path, results_logfile]:
@@ -3301,6 +3314,10 @@ def ci_test_utf(context):
                 Body=f.read(), ContentType="text/plain",
                 ACL='public-read'
             )
+
+    logger.info(
+        "finished Unity Test framework runner for %s %s" % (build["branch"], build["commit_id"])
+    )
 
 @task
 def test_utf(context):
