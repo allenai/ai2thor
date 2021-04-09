@@ -1,0 +1,97 @@
+{
+    "name": "template_mechanism_dropping_soccer_ball",
+    "version": 2,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/Carpet4",
+    "wallMaterial": "AI2-THOR/Materials/Walls/DrywallBeige",
+    "performerStart": {
+        "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        },
+        "rotation": {
+            "x": -10,
+            "y": 45,
+            "z": 0
+        }
+    },
+    "objects": [
+        {
+            "id": "dropping_mechanism",
+            "type": "tube_wide",
+            "materials": ["AI2-THOR/Materials/Metals/Metal"],
+            "kinematic": true,
+            "structure": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 4,
+                    "y": 2.85,
+                    "z": 4
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 0.275,
+                    "y": 0.3,
+                    "z": 0.275
+                }
+            }],
+            "states": [
+                ["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"]
+            ]
+        },
+        {
+            "id": "soccer_ball",
+            "type": "soccer_ball",
+            "kinematic": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 4,
+                    "y": 2.85,
+                    "z": 4
+                }
+            }],
+            "togglePhysics": [{
+                "stepBegin": 10
+            }]
+        },
+        {
+            "id": "chest",
+            "type": "chest_2",
+            "opened": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 4,
+                    "y": 0,
+                    "z": 4
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 225,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1.5,
+                    "y": 1.5,
+                    "z": 1.5
+                }
+            }]
+        }
+    ]
+}

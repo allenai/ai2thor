@@ -1,0 +1,110 @@
+{
+  "name": "test_move_stop",
+  "version": "2",
+  "ceilingMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "floorMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "wallMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": -4.5
+    },
+    "rotation": {
+      "y": 0
+    }
+  },
+  "objects": [
+    {
+      "id": "target_cylinder",
+      "type": "cylinder",
+      "mass": 1,
+      "salientMaterials": ["wood"],
+      "moveable": true,
+      "pickupable": true,
+      "shows": [
+        {
+          "position": {
+            "y": 0.25,
+            "x": -5.9,
+            "z": 4.4,
+
+            "x1": -5.84,
+            "z1": 4.4,
+            "x1": -5.42,
+            "z1": 3.7,
+            "x1": -5.00,
+            "z1": 3.0,
+            "x1": -4.58,
+            "z1": 2.3,
+            "x1": -4.16,
+            "z1": 1.6
+          },
+          "rotation": {
+            "x": 90,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 1,
+          "scale": {
+            "x": 0.5,
+            "y": 0.25,
+            "z": 0.5
+          }
+        }
+      ],
+      "hides": [
+        {
+          "stepBegin": 100
+        }
+      ],
+      "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/yellow_1x1"],
+      "forces": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 1,
+          "vector": {
+            "x": 125,
+            "x1": 150,
+            "x1": 175,
+            "x1": 200,
+            "x1": 225,
+            "x1": 250,
+            "x1": 275,
+            "x1": 300,
+            "x1": 325,
+            "x1": 350,
+            "x1": 375,
+            "x1": 400,
+            "x1": 425,
+            "x1": 450,
+            "x1": 475,
+            "x1": 500,
+            "x1": 525,
+            "x1": 550,
+
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    }
+  ],
+  "goal": {
+    "category": "intuitive physics",
+    "description": "",
+    "metadata": {
+      "choose": [
+        "plausible",
+        "implausible"
+      ]
+    }
+  },
+  "answer": {
+    "choice": "plausible"
+  },
+  "evaluationOnly": false,
+  "intuitivePhysics": true,
+  "evaluation": null,
+  "training": false
+}

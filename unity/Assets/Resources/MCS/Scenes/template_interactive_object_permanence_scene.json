@@ -1,0 +1,146 @@
+{
+    "name": "template_interactive_object_permanence_scene",
+    "version": 2,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/Carpet4",
+    "wallMaterial": "AI2-THOR/Materials/Walls/DrywallBeige",
+    "roomDimensions": {
+        "x": 10,
+        "y": 5,
+        "z": 10
+    },
+    "performerStart": {
+        "position": {
+            "x": 0,
+            "y": 2,
+            "z": -4.5 
+        },
+        "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        }
+    },
+    "objects": [
+        {
+            "id": "throwing_mechanism_left",
+            "type": "tube_wide",
+            "materials": ["AI2-THOR/Materials/Metals/Metal"],
+            "kinematic": true,
+            "structure": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": -4.85,
+                    "y": 4.75,
+                    "z": 4.5
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 90
+                },
+                "scale": {
+                    "x": 0.275,
+                    "y": 0.3,
+                    "z": 0.275
+                }
+            }]
+        },
+        {
+            "id": "throwing_mechanism_right",
+            "type": "tube_wide",
+            "materials": ["AI2-THOR/Materials/Metals/Metal"],
+            "kinematic": true,
+            "structure": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 4.85,
+                    "y": 4.75,
+                    "z": 4.5
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 90
+                },
+                "scale": {
+                    "x": 0.275,
+                    "y": 0.3,
+                    "z": 0.275
+                }
+            }],
+            "states": [
+                ["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],
+                ["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"]
+            ]
+        },
+        {
+            "id": "soccer_ball",
+            "type": "soccer_ball",
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 4.85,
+                    "y": 4.85,
+                    "z": 4.5
+                }
+            }],
+            "forces": [{
+                "stepBegin": 5,
+                "stepEnd": 5,
+                "vector": {
+                    "x": -700,
+                    "y": 0,
+                    "z": 0
+                }
+            }]
+        },
+        {
+            "id": "platform_bisecting",
+            "type": "cube",
+            "materials": ["AI2-THOR/Materials/Plastics/WhitePlastic"],
+            "physics": true,
+            "kinematic": true,
+            "structure": true,
+            "shows": [{
+                "stepBegin": 0,
+                "position": {
+                    "x": 0,
+                    "y": 0.4,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 0.8,
+                    "z": 10
+                }
+            }]
+        }
+    ],
+    "goal": {
+        "action_list": [
+            ["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],
+            ["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],
+            ["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],
+            ["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"]
+        ],
+        "category": "retrieval",
+        "description": "Find and pick up the soccer ball.",
+        "metadata": {
+            "target": {
+                "id": "soccer_ball",
+                "image": null
+            }
+        }
+    }
+}

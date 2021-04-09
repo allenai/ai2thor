@@ -1,0 +1,123 @@
+{
+  "name": "test_move_exit",
+  "version": "2",
+  "ceilingMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "floorMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "wallMaterial": "AI2-THOR/Materials/Wood/DarkWoodSmooth2",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": -4.5
+    },
+    "rotation": {
+      "y": 0
+    }
+  },
+  "objects": [
+    {
+      "id": "target_cylinder",
+      "type": "cylinder",
+      "type1": "duck_on_wheels",
+      "mass": 1,
+      "salientMaterials": ["wood"],
+      "moveable": true,
+      "pickupable": true,
+      "shows": [
+        {
+          "position": {
+            "y": 0.25,
+            "x": -5.9,
+            "z": 4.4,
+
+            "x1": -5.84,
+            "z1": 4.4,
+            "x1": -5.42,
+            "z1": 3.7,
+            "x1": -5.00,
+            "z1": 3.0,
+            "x1": -4.58,
+            "z1": 2.3,
+            "x1": -4.16,
+            "z1": 1.6
+          },
+          "rotation": {
+            "x": 90,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 1,
+          "scale": {
+            "x1": 3,
+            "y1": 3,
+            "z1": 3,
+            "x": 0.5,
+            "y": 0.25,
+            "z": 0.5
+          }
+        }
+      ],
+      "hides": [
+        {
+          "stepBegin": 100
+        }
+      ],
+      "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/yellow_1x1"],
+      "forces": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 1,
+          "vector": {
+            "x": 660,
+            "x1": 600,
+            "x1": 610,
+            "x1": 620,
+            "x1": 630,
+            "x1": 640,
+
+            "x1": 580,
+            "x1": 590,
+            "x1": 600,
+            "x1": 610,
+            "x1": 620,
+            "x1": 630,
+
+            "x1": 570,
+            "x1": 580,
+            "x1": 590,
+            "x1": 600,
+            "x1": 610,
+            "x1": 620,
+
+            "x1": 560,
+            "x1": 570,
+            "x1": 580,
+            "x1": 590,
+            "x1": 600,
+            "x1": 610,
+
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    }
+  ],
+  "goal": {
+    "category": "intuitive physics",
+    "description": "",
+    "metadata": {
+      "choose": [
+        "plausible",
+        "implausible"
+      ]
+    }
+  },
+  "answer": {
+    "choice": "plausible"
+  },
+  "evaluationOnly": false,
+  "intuitivePhysics": true,
+  "evaluation": null,
+  "training": false
+}

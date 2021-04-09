@@ -1,0 +1,206 @@
+{
+  "name": "move_slow_02",
+  "version": "2",
+  "intuitivePhysics": true,
+  "ceilingMaterial": "AI2-THOR/Materials/Walls/RedDrywall",
+  "floorMaterial": "AI2-THOR/Materials/Fabrics/RUG7",
+  "wallMaterial": "AI2-THOR/Materials/Walls/RedDrywall",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": -4.5
+    },
+    "rotation": {
+      "y": 0
+    }
+  },
+  "objects": [
+    {
+      "id": "train_1",
+      "type": "train_1",
+      "mass": 0.5,
+      "salientMaterials": ["wood"],
+      "moveable": true,
+      "pickupable": true,
+      "shows": [
+        {
+          "position": {
+            "x": -4.58,
+            "y": 0,
+            "z": 2.3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          },
+          "stepBegin": 30,
+          "scale": {
+            "x": 2.5,
+            "y": 2.5,
+            "z": 2.5
+          }
+        }
+      ],
+      "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 3"],
+      "forces": [
+        {
+          "relative": true,
+          "stepBegin": 30,
+          "stepEnd": 30,
+          "vector": {
+            "x": 0,
+            "y": 0,
+            "z": 225.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "occluder_wall_1",
+      "type": "cube",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Wood/DarkWoodSmooth2"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -0.2,
+            "y": 1.5,
+            "z": 1
+          },
+          "scale": {
+            "x": 3.6,
+            "y": 3.0,
+            "z": 0.1
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 7,
+          "stepEnd": 12,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        }
+      ],
+      "rotates": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 2,
+          "vector": {
+            "x": 0,
+            "y": -45,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 11,
+          "stepEnd": 12,
+          "vector": {
+            "x": 0,
+            "y": 45,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 149,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0,
+            "y": -45,
+            "z": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "occluder_pole_1",
+      "type": "cylinder",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Metals/GenericStainlessSteel"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -0.2,
+            "y": 3.25,
+            "z": 1
+          },
+          "scale": {
+            "x": 0.095,
+            "y": 2,
+            "z": 0.095
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 7,
+          "stepEnd": 12,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        }
+      ]
+    }
+  ],
+  "goal": {
+    "category": "intuitive physics",
+    "last_step": 150,
+    "action_list": [["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"]],
+    "description": "",
+    "metadata": {
+      "choose": [
+        "plausible",
+        "implausible"
+      ]
+    }
+  }
+}
