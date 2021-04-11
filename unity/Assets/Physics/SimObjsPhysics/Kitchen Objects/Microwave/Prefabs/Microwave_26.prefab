@@ -916,6 +916,7 @@ Transform:
   - {fileID: 4130459609921090}
   - {fileID: 4236289296887836}
   - {fileID: 3021196397020752794}
+  - {fileID: 4473537442622968090}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1091,12 +1092,13 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  triggerEnabled: 1
   currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
   isCurrentlyResetting: 1
   movementType: 1
+  OpenBoundingBox: {fileID: 8190723518960062249}
+  ClosedBoundingBox: {fileID: 1020489257406976}
 --- !u!114 &3317756862763776143
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4404,6 +4406,50 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.12124395, y: 0.01984606, z: 0.036968183}
   m_Center: {x: 0.06023419, y: 0.04961515, z: -0.08699238}
+--- !u!1 &8190723518960062249
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4473537442622968090}
+  - component: {fileID: 517361227150228096}
+  m_Layer: 0
+  m_Name: BoundingBox (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4473537442622968090
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8190723518960062249}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4025693862422286}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &517361227150228096
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8190723518960062249}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.6872812, y: 0.4058546, z: 0.7888162}
+  m_Center: {x: 0.03273788, y: 0.2029273, z: 0.21377575}
 --- !u!1 &8414433628121025599
 GameObject:
   m_ObjectHideFlags: 0
