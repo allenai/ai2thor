@@ -9330,19 +9330,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         // arm constrained by the agent's capsule
-        public void MoveArmBase(float y) {
+        public void MoveArmBase(
+            float y,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = false,
+            bool disableRendering = false
+        ) {
             if (y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException($"y={y} value must be [0, 1.0].");
             }
 
             IK_Robot_Arm_Controller arm = getArm();
-            arm.moveArmHeight(
-                this, 
-                action.y, 
-                action.speed, 
-                action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
-                action.returnToStart, 
-                action.disableRendering
+            arm.moveArmBase(
+                controller: this,
+                height: y,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering
             );
         }
 
@@ -9417,7 +9423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 collisionListener: this.GetComponentInParent<CollisionListener>(),
                 moveTransform: this.transform,
-                targetRotation: his.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
                 fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 radiansPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart
@@ -9514,9 +9520,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // debug for static arm collisions from collision listener
             public void DebugMidLevelArmCollisions() {
                 IK_Robot_Arm_Controller arm = getArm();
-                List<StaticCollision> scs = arm.collisionListener.StaticCollisions();
+                List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
                 Debug.Log("Total current active static arm collisions: " + scs.Count);
-                foreach (StaticCollision sc  in scs) {
+                foreach (CollisionListener.StaticCollision sc  in scs) {
                     Debug.Log("Arm static collision: " + sc.name);
                 }
                 actionFinished(true);

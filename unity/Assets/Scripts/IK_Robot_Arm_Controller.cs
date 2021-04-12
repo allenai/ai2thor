@@ -311,7 +311,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
-    public void moveArmHeight(
+    public void moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float height,
         float unitsPerSecond,
