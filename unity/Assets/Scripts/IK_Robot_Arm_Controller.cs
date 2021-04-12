@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class IK_Robot_Arm_Controller : MonoBehaviour
-{
+public class IK_Robot_Arm_Controller : MonoBehaviour {
     private Transform armTarget;
     private Transform handCameraTransform;
     [SerializeField]
@@ -43,46 +42,51 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public CollisionListener collisionListener;
 
-    void Start()
-    {
-        armTarget = this.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+    void Start() {
+        armTarget = this.transform
+            .Find("robot_arm_FK_IK_rig")
+            .Find("IK_rig")
+            .Find("IK_pos_rot_manipulator");
 
-        //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
+        // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
 
-        //calculating based on distance from origin of arm to the 2nd joint, which will always be constant
-        this.originToShoulderLength = Vector3.Distance(this.transform.FirstChildOrDefault(x => x.name == "robot_arm_2_jnt").position, this.transform.position);
+        // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
+        this.originToShoulderLength = Vector3.Distance(
+            this.transform.FirstChildOrDefault(
+                x => x.name == "robot_arm_2_jnt"
+            ).position,
+            this.transform.position
+        );
 
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
         List<CapsuleCollider> armCaps = new List<CapsuleCollider>();
         List<BoxCollider> armBoxes = new List<BoxCollider>();
 
-        //get references to all colliders in arm. Remove trigger colliders so there are no duplicates when using these as reference for
-        //overlap casts since the trigger colliders are themselves duplicates of the nontrigger colliders.
+        // get references to all colliders in arm. Remove trigger colliders so there are no duplicates when using these as reference for
+        // overlap casts since the trigger colliders are themselves duplicates of the nontrigger colliders.
         armCaps.AddRange(gameObject.GetComponentsInChildren<CapsuleCollider>());
         armBoxes.AddRange(gameObject.GetComponentsInChildren<BoxCollider>());
 
-        //clean up arm colliders, removing triggers
+        // clean up arm colliders, removing triggers
         List<CapsuleCollider> cleanedCaps = new List<CapsuleCollider>();
-        foreach (CapsuleCollider c in armCaps)
-        {
-            if (!c.isTrigger)
+        foreach (CapsuleCollider c in armCaps) {
+            if (!c.isTrigger) {
                 cleanedCaps.Add(c);
+            }
         }
 
         ArmCapsuleColliders = cleanedCaps.ToArray();
 
         List<BoxCollider> cleanedBoxes = new List<BoxCollider>();
-        foreach (BoxCollider b in armBoxes)
-        {
-            if (!b.isTrigger)
+        foreach (BoxCollider b in armBoxes) {
+            if (!b.isTrigger) {
                 cleanedBoxes.Add(b);
+            }
         }
 
         ArmBoxColliders = cleanedBoxes.ToArray();
-
-
     }
 
     //NOTE: removing this for now, will add back if functionality is required later
@@ -91,21 +95,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //     StopMotionOnContact = b;
     // }
 
-    //debug for gizmo draw
-#if UNITY_EDITOR
-    public class GizmoDrawCapsule
-    {
-        public Vector3 p0;
-        public Vector3 p1;
-        public float radius;
-    }
-
-    List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
-#endif
-
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         // if(Input.GetKeyDown(KeyCode.Space))
         // {
         //     #if UNITY_EDITOR
@@ -118,44 +109,41 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
-    public HashSet<Collider> currentArmCollisions()
-    {
+    public HashSet<Collider> currentArmCollisions() {
         HashSet<Collider> colliders = new HashSet<Collider>();
 
-        //add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
+        // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
         List<CapsuleCollider> capsules = new List<CapsuleCollider>();
         capsules.AddRange(ArmCapsuleColliders);
         capsules.AddRange(agentCapsuleCollider);
 
-
-        //create overlap box/capsule for each collider and check the result I guess
-        foreach (CapsuleCollider c in capsules)
-        {
+        // create overlap box/capsule for each collider and check the result I guess
+        foreach (CapsuleCollider c in capsules) {
             Vector3 center = c.transform.TransformPoint(c.center);
             float radius = c.radius;
-            //direction of CapsuleCollider's orientation in local space
+
+            // direction of CapsuleCollider's orientation in local space
             Vector3 dir = new Vector3();
-            //x just in case
-            if (c.direction == 0)
-            {
-                //get world space direction of this capsule's local right vector
-                dir = c.transform.right;
-            }
 
-            //y just in case
-            if (c.direction == 1)
-            {
-                //get world space direction of this capsule's local up vector
-                dir = c.transform.up;
-            }
+            switch (c.direction) {
+                // x just in case
+                case 0:
+                    // get world space direction of this capsule's local right vector
+                    dir = c.transform.right;
+                    break;
+                // y just in case
+                case 1:
+                    // get world space direction of this capsule's local up vector
+                    dir = c.transform.up;
+                    break;
+                // z because all arm colliders have direction z by default
+                case 2:
+                    // get world space direction of this capsule's local forward vector
+                    dir = c.transform.forward;
 
-            //z because all arm colliders have direction z by default
-            if (c.direction == 2)
-            {
-                //get world space direction of this capsul's local forward vector
-                dir = c.transform.forward;
-                //this doesn't work because transform.right is in world space already,
-                //how to get transform.localRight?
+                    // this doesn't work because transform.right is in world space already,
+                    // how to get transform.localRight?
+                    break;
             }
 
             //debug draw forward of each joint
@@ -164,12 +152,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
             // #endif
 
-            //center in world space + direction with magnitude (1/2 height - radius)
-            var point0 = center + dir * (c.height / 2 - radius);
+            // center in world space + direction with magnitude (1/2 height - radius)
+            Vector3 point0 = center + dir * (c.height / 2 - radius);
 
-            //point 1
-            //center in world space - direction with magnitude (1/2 height - radius)
-            var point1 = center - dir * (c.height / 2 - radius);
+            // point 1
+            // center in world space - direction with magnitude (1/2 height - radius)
+            Vector3 point1 = center - dir * (c.height / 2 - radius);
 
             //debug draw ends of each capsule of each joint
             // #if UNITY_EDITOR
@@ -180,45 +168,41 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             // debugCapsules.Add(gdc);
             // #endif
 
-            //ok now finally let's make some overlap capsuuuules
-            foreach (var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore))
-            {
+            // ok now finally let's make some overlap capsules
+            foreach (var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore)) {
                 colliders.Add(col);
             }
 
         }
 
-        //also check if the couple of box colliders are colliding
-        foreach (BoxCollider b in ArmBoxColliders)
-        {
-            foreach (var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size / 2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore))
-            {
+        // also check if the couple of box colliders are colliding
+        foreach (BoxCollider b in ArmBoxColliders) {
+            foreach (var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size / 2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore)) {
                 colliders.Add(col);
             }
         }
         return colliders;
     }
 
-    public bool IsArmColliding()
-    {
+    public bool IsArmColliding() {
         // #if UNITY_EDITOR
         // debugCapsules.Clear();
         // #endif
 
         HashSet<Collider> colliders = currentArmCollisions();
-
         return colliders.Count > 0;
     }
 
-    private bool shouldHalt()
-    {
+    private bool shouldHalt() {
         return collisionListener.ShouldHalt();
     }
 
     // Restricts front hemisphere for arm movement
-    private bool validArmTargetPosition(Vector3 targetWorldPosition)
-    {
-        var targetShoulderSpace = this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength);
+    private bool validArmTargetPosition(Vector3 targetWorldPosition) {
+        var targetShoulderSpace = (
+            this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength)
+        );
+
         //check if not behind, check if not hyper extended
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
@@ -309,9 +293,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false,
-        bool disableRendering = false)
-    {
-
+        bool disableRendering = false
+    ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -327,27 +310,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
-        var moveCall = ContinuousMovement
-            .move(
-                controller,
-                collisionListener,
-                this.transform,
-                target,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                unitsPerSecond,
-                returnToStartPositionIfFailed,
-                true
+        var moveCall = ContinuousMovement.move(
+            controller,
+            collisionListener,
+            this.transform,
+            target,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            unitsPerSecond,
+            returnToStartPositionIfFailed,
+            true
         );
 
-        if (disableRendering)
-        {
+        if (disableRendering) {
             controller.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
-        }
-        else
-        {
+        } else {
             StartCoroutine(
                 moveCall
             );
@@ -361,8 +340,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         bool disableRendering = false,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false
-    )
-    {
+    ) {
         collisionListener.Reset();
         var rotate = ContinuousMovement.rotate(
             controller,
@@ -374,31 +352,25 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             returnToStartPositionIfFailed
         );
 
-        if (disableRendering)
-        {
+        if (disableRendering) {
             controller.unrollSimulatePhysics(
                 rotate,
                 fixedDeltaTime
             );
-        }
-        else
-        {
+        } else {
             StartCoroutine(rotate);
         }
     }
 
-    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID()
-    {
+    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {
         return magnetSphereComp.CurrentlyContainedSimObjectsByID();
     }
 
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP()
-    {
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP() {
         return magnetSphereComp.CurrentlyContainedSimObjects();
     }
 
-    public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller)
-    {
+    public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
         foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID())
@@ -409,18 +381,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true, listOfSOP);
     }
 
-    public bool PickupObject(List <string> objectIds, ref string errorMessage)
-    {
+    public bool PickupObject(List <string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
-        //grab all sim objects that are currently colliding with magnet sphere
-        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
-        {
-            if(objectIds != null)
-            {
-                if(!objectIds.Contains(sop.objectID))
-                {
+
+        // grab all sim objects that are currently colliding with magnet sphere
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP()) {
+            if (objectIds != null) {
+                if (!objectIds.Contains(sop.objectID)) {
                     continue;
                 }
             }
@@ -431,20 +400,21 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             if (sop.IsOpenable) {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
+
                 // if an openable object receives OnTriggerEnter events
                 // the RigidBody can be switched to Kinematic false 
                 coj.triggerEnabled = false;
             }
 
-            //ok new plan, clone the "myColliders" of the sop and
-            //then set them all to isTrigger = True
-            //and parent them to the correct joint
+            // ok new plan, clone the "myColliders" of the sop and
+            // then set them all to isTrigger = True
+            // and parent them to the correct joint
             List<Collider> cols = new List<Collider>();
 
-            foreach (Collider c in sop.MyColliders)
-            {
+            foreach (Collider c in sop.MyColliders) {
                 Collider clone = Instantiate(c, c.transform.position, c.transform.rotation, FourthJoint);
                 clone.isTrigger = true;
+
                 // must disable the colliders on the held object so they 
                 // don't interact with anything
                 c.enabled = false;
@@ -455,39 +425,32 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             HeldObjects.Add(sop, cols);
         }
 
-        if(!pickedUp)
-        {
-            if(objectIds != null)
-            {
+        if (!pickedUp) {
+            if (objectIds != null) {
                 errorMessage = "No objects (specified by objectId) were valid to be picked up by the arm";
+            } else {
+                errorMessage = "No objects were valid to be picked up by the arm";
             }
-
-            else
-            errorMessage = "No objects were valid to be picked up by the arm";
         }
 
-        //note: how to handle cases where object breaks if it is shoved into another object?
-        //make them all unbreakable?
+        // note: how to handle cases where object breaks if it is shoved into another object?
+        // make them all unbreakable?
         return pickedUp;
     }
 
-    public void DropObject()
-    {
-        //grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects)
-        {
+    public void DropObject() {
+        // grab all sim objects that are currently colliding with magnet sphere
+        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
 
-            //delete cloned colliders
-            foreach (Collider c in sop.Value)
-            {
+            // delete cloned colliders
+            foreach (Collider c in sop.Value) {
                 Destroy(c.gameObject);
             }
 
-            foreach (Collider c in sop.Key.MyColliders)
-            {
+            foreach (Collider c in sop.Key.MyColliders) {
                 // re-enable colliders since they were disabled during pickup
                 c.enabled = true;
             }
@@ -499,13 +462,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             GameObject topObject = GameObject.Find("Objects");
 
-            if (topObject != null)
-            {
+            if (topObject != null) {
                 sop.Key.transform.parent = topObject.transform;
-            }
-
-            else
-            {
+            } else {
                 sop.Key.transform.parent = null;
             }
 
@@ -516,8 +475,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         HeldObjects.Clear();
     }
 
-    public void SetHandMagnetRadius(float radius)
-    {
+    public void SetHandMagnetRadius(float radius) {
         //Magnet.transform.localScale = new Vector3(radius, radius, radius);
         magnetSphere.radius = radius;
         MagnetRenderer.transform.localScale = new Vector3(2 * radius, 2 * radius, 2 * radius);
@@ -525,8 +483,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
 
-    public ArmMetadata GenerateMetadata()
-    {
+    public ArmMetadata GenerateMetadata() {
         var meta = new ArmMetadata();
         //meta.handTarget = armTarget.position;
         var joint = transform;
@@ -539,85 +496,73 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Quaternion currentRotation;
 
         //Assign joint metadata to remaining joints, which all have identical hierarchies
-        for (var i = 1; i <= 4; i++)
-        {
+        for (int i = 1; i <= 4; i++) {
             joint = joint.Find("robot_arm_" + i + "_jnt");
 
             var jointMeta = new JointMetadata();
 
-            //JOINT NAME
+            // JOINT NAME
             jointMeta.name = joint.name;
 
-            //WORLD RELATIVE POSITION
+            // WORLD RELATIVE POSITION
             jointMeta.position = joint.position;
 
-            //ROOT-JOINT RELATIVE POSITION
-            //Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
+            // ROOT-JOINT RELATIVE POSITION
+            // Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
-            //WORLD RELATIVE ROTATION
-            //GetChild grabs angler since that is what actually changes the geometry angle
+            // WORLD RELATIVE ROTATION
+            // GetChild grabs angler since that is what actually changes the geometry angle
             currentRotation = joint.GetChild(0).rotation;
 
-            //Check that world-relative rotation is angle-axis-notation-compatible
-            if (currentRotation != new Quaternion(0, 0, 0, -1))
-            {
+            // Check that world-relative rotation is angle-axis-notation-compatible
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                //Debug.Log(joint.name + "'s euler-angles of " + joint.GetChild(0).eulerAngles + " resulted in Quaternion " + Quaternion.Euler(joint.GetChild(0).eulerAngles) + " which should either be the same as or a corrected version of " + joint.GetChild(0).rotation);
-                jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            }
 
-            else
-            {
-                //Debug.Log(joint.name + "'s world-rotation of " + currentRotation + " is EVILLLLL!");
+                // Debug.Log(joint.name + "'s euler-angles of " + joint.GetChild(0).eulerAngles + " resulted in Quaternion " + Quaternion.Euler(joint.GetChild(0).eulerAngles) + " which should either be the same as or a corrected version of " + joint.GetChild(0).rotation);
+                jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            } else {
+                // Debug.Log(joint.name + "'s world-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
 
-            //ROOT-JOINT RELATIVE ROTATION
-            //Root-forward and agent-forward are always the same
+            // ROOT-JOINT RELATIVE ROTATION
+            // Root-forward and agent-forward are always the same
 
-            //GetChild grabs angler since that is what actually changes the geometry angle
+            // GetChild grabs angler since that is what actually changes the geometry angle
             currentRotation = Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles));
 
-            //Check that root-relative rotation is angle-axis-notation-compatible
-            if (currentRotation != new Quaternion(0, 0, 0, -1))
-            {
+            // Check that root-relative rotation is angle-axis-notation-compatible
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            }
-
-            else
-            {
-                //Debug.Log(joint.name + "'s root-rotation of " + currentRotation + " is EVILLLLL!");
+            } else {
+                // Debug.Log(joint.name + "'s root-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
 
-            //PARENT-JOINT RELATIVE ROTATION
-            if (i != 1)
-            {
+            // PARENT-JOINT RELATIVE ROTATION
+            if (i != 1) {
                 parentJoint = joint.parent;
 
-                //Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
-                currentRotation = Quaternion.Euler(parentJoint.GetChild(0).InverseTransformDirection(joint.GetChild(0).eulerAngles));
+                // Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
+                currentRotation = Quaternion.Euler(
+                    parentJoint.GetChild(0).InverseTransformDirection(
+                        joint.GetChild(0).eulerAngles
+                    )
+                );
 
-                //Check that parent-relative rotation is angle-axis-notation-compatible
-                if (currentRotation != new Quaternion(0, 0, 0, -1))
-                {
-                    //Convert parent-relative rotation to angle-axis notation
+                // Check that parent-relative rotation is angle-axis-notation-compatible
+                if (currentRotation != new Quaternion(0, 0, 0, -1)) {
+                    // Convert parent-relative rotation to angle-axis notation
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-                }
-
-                else
-                {
-                    //Debug.Log(joint.name + "'s parent-rotation of " + currentRotation + " is EVILLLLL!");
+                } else {
+                    // Debug.Log(joint.name + "'s parent-rotation of " + currentRotation + " is EVILLLLL!");
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
-            }
-
-            //Special case for robot_arm_1_jnt because it has no parent-joint
-            else
-            {
+            } else {
+                // Special case for robot_arm_1_jnt because it has no parent-joint
                 jointMeta.localRotation = jointMeta.rootRelativeRotation;
             }
 
@@ -626,41 +571,39 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         meta.joints = joints.ToArray();
 
-        //metadata for any objects currently held by the hand on the arm
-        //note this is different from objects intersecting the hand's sphere,
-        //there could be a case where an object is inside the sphere but not picked up by the hand
+        // metadata for any objects currently held by the hand on the arm
+        // note this is different from objects intersecting the hand's sphere,
+        // there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> HeldObjectIDs = new List<string>();
-
-        if (HeldObjects != null)
-        {
-            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects)
-            {
+        if (HeldObjects != null) {
+            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
                 HeldObjectIDs.Add(sop.Key.objectID);
             }
         }
 
         meta.HeldObjects = HeldObjectIDs;
-
         meta.HandSphereCenter = transform.TransformPoint(magnetSphere.center);
-
         meta.HandSphereRadius = magnetSphere.radius;
-
-        meta.PickupableObjectsInsideHandSphere = WhatObjectsAreInsideMagnetSphereAsObjectID();
-
+        meta.PickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        if (debugCapsules.Count > 0)
-        {
-            foreach (GizmoDrawCapsule thing in debugCapsules)
-            {
-                Gizmos.DrawWireSphere(thing.p0, thing.radius);
-                Gizmos.DrawWireSphere(thing.p1, thing.radius);
+    #if UNITY_EDITOR
+        public class GizmoDrawCapsule {
+            public Vector3 p0;
+            public Vector3 p1;
+            public float radius;
+        }
+
+        List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
+
+        private void OnDrawGizmos() {
+            if (debugCapsules.Count > 0) {
+                foreach (GizmoDrawCapsule thing in debugCapsules) {
+                    Gizmos.DrawWireSphere(thing.p0, thing.radius);
+                    Gizmos.DrawWireSphere(thing.p1, thing.radius);
+                }
             }
         }
-    }
-#endif
+    #endif
 }

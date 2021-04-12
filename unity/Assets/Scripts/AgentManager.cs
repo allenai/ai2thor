@@ -1451,7 +1451,7 @@ public class ArmMetadata {
 	public List<String> HeldObjects;
 
 	//all sim objects that are both pickupable and inside the hand sphere
-	public List<String> PickupableObjectsInsideHandSphere;
+	public List<String> PickupableObjects;
 
 	//world coordinates of the center of the hand's sphere
 	public Vector3 HandSphereCenter;
