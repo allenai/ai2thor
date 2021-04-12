@@ -315,9 +315,9 @@ public class AgentManager : MonoBehaviour
 
     private void SetUpArmController(bool midLevelArm) {
         this.agents.Clear();
-		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		GameObject baseController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         // TODO set correct component
-		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent = baseController.GetComponent<ArmAgentController>();
 		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
 		//primaryAgent.actionComplete = true;
