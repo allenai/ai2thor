@@ -225,7 +225,6 @@ public class AgentManager : MonoBehaviour
                 // as we manually control Physics during its movement
                 action.autoSimulation = false;
 				physicsSceneManager.MakeAllObjectsMoveable();
-                physicsSceneManager.
 
 				if(action.massThreshold.HasValue)
 				{
