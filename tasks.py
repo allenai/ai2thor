@@ -790,8 +790,7 @@ def clean():
         "git@ai2thor-private-github:allenai/ai2thor-private.git"
     )
     subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d", shell=True)
-    subprocess.check_call("git clean -f -x", shell=True)
+    subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
     shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
     scripts.update_private.checkout_branch()
