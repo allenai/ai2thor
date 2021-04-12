@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,10 +7,13 @@ using UnityStandardAssets.Characters.FirstPerson;
 public class IK_Robot_Arm_Controller : MonoBehaviour {
     private Transform armTarget;
     private Transform handCameraTransform;
+
     [SerializeField]
     private SphereCollider magnetSphere = null;
+
     [SerializeField]
     private WhatIsInsideMagnetSphere magnetSphereComp = null;
+
     [SerializeField]
     private GameObject MagnetRenderer = null;
 
@@ -18,6 +22,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     //references to the joints of the mid level arm
     [SerializeField]
     private Transform FirstJoint = null;
+
     [SerializeField]
     private Transform FourthJoint = null;
 
@@ -31,8 +36,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     [SerializeField]
     public CapsuleCollider[] ArmCapsuleColliders;
+
     [SerializeField]
     public BoxCollider[] ArmBoxColliders;
+
     [SerializeField]
     private CapsuleCollider[] agentCapsuleCollider = null;
 
@@ -169,28 +176,28 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             // #endif
 
             // ok now finally let's make some overlap capsules
-            Collider[] colliders = Physics.OverlapCapsule(
+            Collider[] cols = Physics.OverlapCapsule(
                 point0: point0,
                 point1: point1,
                 radius: radius,
                 layerMask: LayerMask.GetMask("SimObjVisible"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
-            foreach (Collider col in colliers) {
+            foreach (Collider col in cols) {
                 colliders.Add(col);
             }
         }
 
         // also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders) {
-            Collider[] colliders = Physics.OverlapBox(
+            Collider[] cols = Physics.OverlapBox(
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
                 orientation :b.transform.rotation,
-                layerMak: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
-            foreach (Collider col in colliders) {
+            foreach (Collider col in cols) {
                 colliders.Add(col);
             }
         }
@@ -328,25 +335,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
         IEnumerator moveCall = ContinuousMovement.move(
-            controller,
-            collisionListener,
-            this.transform,
-            target,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            unitsPerSecond,
-            returnToStartPositionIfFailed,
-            true
+            controller: controller,
+            collisionListener: collisionListener,
+            moveTransform: this.transform,
+            targetPosition: target,
+            fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            unitsPerSecond: unitsPerSecond,
+            returnToStartPropIfFailed: returnToStartPositionIfFailed,
+            localPosition: true
         );
 
         if (disableRendering) {
             controller.unrollSimulatePhysics(
-                moveCall,
-                fixedDeltaTime
+                enumerator: moveCall,
+                fixedDeltaTime: fixedDeltaTime
             );
         } else {
-            StartCoroutine(
-                moveCall
-            );
+            StartCoroutine(moveCall);
         }
     }
 
@@ -390,8 +395,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID())
-        {
+        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID()) {
             listOfSOP.Add(oid);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
@@ -508,7 +512,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     public ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
         //meta.handTarget = armTarget.position;
-        Vector3 joint = transform;
+        Transform joint = transform;
         List<JointMetadata> joints = new List<JointMetadata>();
 
         //Declare variables used for processing metadata

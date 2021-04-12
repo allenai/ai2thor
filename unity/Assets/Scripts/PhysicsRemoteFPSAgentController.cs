@@ -9366,7 +9366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
                 returnToStart: returnToStart,
                 coordinateSpace: coordinateSpace,
-                restrictMovement: restrictMovement,
+                restrictTargetPosition: restrictMovement,
                 disableRendering: disableRendering
             );
         }
