@@ -3552,7 +3552,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "smlhr": {
                         ServerAction action = new ServerAction();
-                        action.action = "SetMidLevelHandRadius";
+                        action.action = "SetHandSphereRadius";
 
                          if (splitcommand.Length == 2) {
                             action.radius = float.Parse(splitcommand[1]);

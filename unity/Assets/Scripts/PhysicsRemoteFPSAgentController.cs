@@ -9394,7 +9394,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
-        public void SetMidLevelHandRadius(ServerAction action) {
+        public void SetHandSphereRadius(float radius) {
             if (radius < 0.04 || radius > 0.5) {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
@@ -9402,8 +9402,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             IK_Robot_Arm_Controller arm = getArm();
-
-            arm.SetHandMagnetRadius(action.radius);
+            arm.SetHandSphereRadius(radius);
             actionFinished(true);
         }
 

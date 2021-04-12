@@ -501,7 +501,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         HeldObjects.Clear();
     }
 
-    public void SetHandMagnetRadius(float radius) {
+    public void SetHandSphereRadius(float radius) {
         // Magnet.transform.localScale = new Vector3(radius, radius, radius);
         magnetSphere.radius = radius;
         MagnetRenderer.transform.localScale = new Vector3(2 * radius, 2 * radius, 2 * radius);
