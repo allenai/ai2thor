@@ -9352,7 +9352,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
+        // currently not finished action. New logic needs to account for the
+        // hierarchy of rigidbodies of each arm joint and how to detect collision
         // between a given arm joint an other arm joints.
         public void RotateMidLevelHand(ServerAction action) {
             IK_Robot_Arm_Controller arm = getArm();
@@ -9367,7 +9368,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target = Quaternion.AngleAxis(action.degrees, action.rotation);
             }
 
-            arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
+            arm.rotateHand(
+                this,
+                target,
+                action.speed,
+                action.disableRendering,
+                action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                action.returnToStart
+            );
         }
 
         // perhaps this should fail if no object is picked up?
@@ -9378,7 +9386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
         }
 
-        public void DropMidLevelHand(ServerAction action) {
+        public void ReleaseObject() {
             IK_Robot_Arm_Controller arm = getArm();
             arm.DropObject();
 
@@ -9387,7 +9395,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void WhatObjectsCanHandPickUp(ServerAction action) {
+        public void WhatObjectsCanHandPickUp() {
             IK_Robot_Arm_Controller arm = getArm();
             StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
         }
@@ -9395,7 +9403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
         public void SetHandSphereRadius(float radius) {
-            if (radius < 0.04 || radius > 0.5) {
+            if (radius < 0.04f || radius > 0.5f) {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
                 );
@@ -9440,36 +9448,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Signature does not work with debuginput field
         // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
-        public void MoveContinuous(ServerAction action) {
-            Vector3 direction = action.direction;
-            float speed = action.speed; 
-            bool returnToStart = action.returnToStart;
-            bool disableRendering = action.disableRendering;
-            float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        public void MoveContinuous(
+            float ahead = 0,
+            float right = 0,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = false,
+            bool disableRendering = false
+        ) {
+            if (ahead == 0 && right == 0) {
+                throw new ArgumentException("Must specify ahead or right!");
+            }
+            Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
+            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
             CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
 
             Vector3 directionWorld = transform.TransformDirection(direction);
             Vector3 targetPosition = transform.position + directionWorld;
-            IK_Robot_Arm_Controller arm = getArm();
 
             collisionListener.Reset();
 
             IEnumerator move = ContinuousMovement.move(
-                this,
-                collisionListener,
-                this.transform,
-                targetPosition,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                speed,
-                returnToStart,
-                false
+                controller: this,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: targetPosition,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                unitsPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart,
+                localPosition: false
             );
 
             if (disableRendering) {
                 unrollSimulatePhysics(
                     enumerator: move,
-                    fixedDeltaTime: fixedDeltaTime
+                    fixedDeltaTime: fixedDeltaTimeFloat
                 );
             } else {
                 StartCoroutine(move);
