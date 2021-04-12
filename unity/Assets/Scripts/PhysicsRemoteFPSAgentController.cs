@@ -9294,53 +9294,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        #if UNITY_EDITOR
-        //debug for static arm collisions from collision listener
-        public void GetMidLevelArmCollisions() {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
-                if (collisionListener != null) {
-                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
-                    foreach(var sc in collisionListener.StaticCollisions()){
-                        var element = new Dictionary<string, string>();
-                        if (sc.simObjPhysics != null) {
-                            element["objectType"] = "simObjPhysics";
-                            element["name"] = sc.simObjPhysics.objectID;
-                        }
-                        else
-                        {
-                            element["objectType"] = "gameObject";
-                            element["name"] = sc.gameObject.name;
-                        }
-                        collisions.Add(element);
-                    }
-                    actionFinished(true, collisions);
-                }
+        protected IK_Robot_Arm_Controller getArm() {
+            IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm == null) {
+                throw new InvalidOperationException(
+                    "Agent does not have kinematic arm or is not enabled.\n" +
+                    $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
+                );
             }
-            else
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled.";
-                actionFinished(false);
-            }
-
+            return arm;
         }
-        
-        //debug for static arm collisions from collision listener
-        public void DebugMidLevelArmCollisions() {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                var scs = arm.collisionListener.StaticCollisions();
-                Debug.Log("Total current active static arm collisions: " + scs.Count);
-                foreach(var sc  in scs) {
-                    Debug.Log("Arm static collision: " + sc.name);
-                }
-
-            }   
-
-            actionFinished(true);
-        }
-        #endif
 
         public void MoveArm(
             Vector3 position,
@@ -9351,14 +9314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool restrictMovement = false,
             bool disableRendering = false
         ) {
-            IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm == null) {
-                throw new InvalidOperationException(
-                    "Agent does not have kinematic arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
-                );
-            }
-
+            IK_Robot_Arm_Controller arm = getArm();
             arm.moveArmTarget(
                 controller: this,
                 target: position,
@@ -9374,245 +9330,198 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         // arm constrained by the agent's capsule
-        public void MoveArmBase(ServerAction action)
-        {
-            if(action.y < 0 || action.y > 1.0)
-            {
-                errorMessage = "MoveArmBase Y value must be [0, 1.0] inclusive";
-                actionFinished(false, errorMessage);
-                return;
+        public void MoveArmBase(float y) {
+            if (y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException($"y={y} value must be [0, 1.0].");
             }
 
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if(arm != null)
-            {
-                arm.moveArmHeight(
-                    this, 
-                    action.y, 
-                    action.speed, 
-                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
-                    action.returnToStart, 
-                    action.disableRendering
-                );
-            }
-
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.moveArmHeight(
+                this, 
+                action.y, 
+                action.speed, 
+                action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
+                action.returnToStart, 
+                action.disableRendering
+            );
         }
 
-        //currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
-        //between a given arm joint an other arm joints.
-        public void RotateMidLevelHand(ServerAction action)
-        {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
+        // currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
+        // between a given arm joint an other arm joints.
+        public void RotateMidLevelHand(ServerAction action) {
+            IK_Robot_Arm_Controller arm = getArm();
+            Quaternion target = new Quaternion();
 
-                var target = new Quaternion();
-                //rotate around axis aliged x, y, z with magnitude based on vector3
-                if(action.degrees == 0)
-                {
-                    //use euler angles
-                    target = Quaternion.Euler(action.rotation);
-                }
-
-                //rotate action.degrees about axis
-                else {
-                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
-                }
-
-                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
-                    
+            // rotate around axis aliged x, y, z with magnitude based on vector3
+            if (action.degrees == 0) {
+                // use euler angles
+                target = Quaternion.Euler(action.rotation);
+            } else {
+                // rotate action.degrees about axis
+                target = Quaternion.AngleAxis(action.degrees, action.rotation);
             }
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
+
+            arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
         }
 
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
         // enabled because it is a successful "attempt" to pickup something
-        public void PickUpMidLevelHand(List<string> objectIds = null)
-        {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) 
-            {
-                actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
-                return;
-            }
-
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
+        public void PickUpMidLevelHand(List<string> objectIds = null) {
+            IK_Robot_Arm_Controller arm = getArm();
+            actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
         }
 
-        public void DropMidLevelHand(ServerAction action)
-        {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) 
-            {
-                arm.DropObject();
+        public void DropMidLevelHand(ServerAction action) {
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.DropObject();
 
-                //todo- only return after object(s) droped have finished moving
-                //currently this will return the frame the object is released
-
-                actionFinished(true);
-                return;
-            }
-
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
+            // TODO: only return after object(s) dropped have finished moving
+            // currently this will return the frame the object is released
+            actionFinished(true);
         }
 
-        public void WhatObjectsCanHandPickUp(ServerAction action)
-        {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            
-
-            if (arm != null) 
-            {
-                StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
-            }
-
-            else 
-            {
-
-            }
+        public void WhatObjectsCanHandPickUp(ServerAction action) {
+            IK_Robot_Arm_Controller arm = getArm();
+            StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
         }
 
-        //note this does not reposition the center point of the magnet orb
-        //so expanding the radius too much will cause it to clip backward into the wrist joint
+        // note this does not reposition the center point of the magnet orb
+        // so expanding the radius too much will cause it to clip backward into the wrist joint
         public void SetMidLevelHandRadius(ServerAction action) {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            if (arm != null) 
-            {
-                if(action.radius < 0.04 || action.radius > 0.5)
-                {
-                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-
-                else
-                {
-                    arm.SetHandMagnetRadius(action.radius);
-                    actionFinished(true);
-                    return;
-                }
+            if (radius < 0.04 || radius > 0.5) {
+                throw new ArgumentOutOfRangeException(
+                    $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
+                );
             }
 
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);            }
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.SetHandMagnetRadius(action.radius);
+            actionFinished(true);
         }
 
-        public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
-        {
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            var collisionListener = this.GetComponentInParent<CollisionListener>();
-
+        public void RotateContinuous(
+            float degrees,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = false,
+            bool disableRendering = false,
+            float fixedDeltaTime = 0.02f
+        ) {
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
             collisionListener.Reset();
 
-
             // this.transform.Rotate()
-            var rotate = ContinuousMovement.rotate(
-                    this,
-                    this.GetComponentInParent<CollisionListener>(),
-                    this.transform,
-                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
-                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                    speed,
-                    returnToStart
+            IEnumerator rotate = ContinuousMovement.rotate(
+                controller: this,
+                collisionListener: this.GetComponentInParent<CollisionListener>(),
+                moveTransform: this.transform,
+                targetRotation: his.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                radiansPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart
             );
 
             if (disableRendering) {
-                this.unrollSimulatePhysics(
-                    rotate,
-                    fixedDeltaTime
+                unrollSimulatePhysics(
+                    enumerator: rotate,
+                    fixedDeltaTime: fixedDeltaTime
                 );
-            }
-            else {
-                StartCoroutine(
-                    rotate
-                );
+            } else {
+                StartCoroutine(rotate);
             }
         }
 
         // Signature does not work with debuginput field
         // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
-        public void MoveContinuous(ServerAction action)
-        {
-            var direction = action.direction;
+        public void MoveContinuous(ServerAction action) {
+            Vector3 direction = action.direction;
             float speed = action.speed; 
             bool returnToStart = action.returnToStart;
             bool disableRendering = action.disableRendering;
             float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
-            var collisionListener = this.GetComponentInParent<CollisionListener>();
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
 
-            var directionWorld = transform.TransformDirection(direction);
-            var targetPosition = transform.position + directionWorld;
-            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            Vector3 directionWorld = transform.TransformDirection(direction);
+            Vector3 targetPosition = transform.position + directionWorld;
+            IK_Robot_Arm_Controller arm = getArm();
 
             collisionListener.Reset();
 
-            var move = ContinuousMovement.move(
-                    this,
-                    collisionListener,
-                    this.transform,
-                    targetPosition,
-                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                    speed,
-                    returnToStart,
-                    false
+            IEnumerator move = ContinuousMovement.move(
+                this,
+                collisionListener,
+                this.transform,
+                targetPosition,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                speed,
+                returnToStart,
+                false
             );
 
             if (disableRendering) {
-                this.unrollSimulatePhysics(
-                    move,
-                    fixedDeltaTime
+                unrollSimulatePhysics(
+                    enumerator: move,
+                    fixedDeltaTime: fixedDeltaTime
                 );
-            }
-            else {
-                StartCoroutine(
-                    move
-                );
+            } else {
+                StartCoroutine(move);
             }
         }
         
         #if UNITY_EDITOR
-        void OnDrawGizmos()
-        {
-            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
-            //  Gizmos.color = Color.magenta;
-            //     if(validpointlist.Count > 0)
-            //     {
-            //         foreach(Vector3 yes in validpointlist)
-            //         {
-            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-            //         }
-            //     }
+            void OnDrawGizmos() {
+                //  // check for valid spawn points in GetSpawnCoordinatesAboveObject action
+                //  Gizmos.color = Color.magenta;
+                //     if (validpointlist.Count > 0) {
+                //         foreach (Vector3 yes in validpointlist) {
+                //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+                //         }
+                //     }
 
-            //draw axis aligned bounds of objects after actionFinished() calls
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
-        }
+                //draw axis aligned bounds of objects after actionFinished() calls
+                // if (gizmobounds != null) {
+                //     Gizmos.color = Color.yellow;
+                //     foreach(Bounds g in gizmobounds) {
+                //         Gizmos.DrawWireCube(g.center, g.size);
+                //     }
+                // }
+            }
+
+            // debug for static arm collisions from collision listener
+            public void GetMidLevelArmCollisions() {
+                IK_Robot_Arm_Controller arm = getArm();
+                CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
+                if (collisionListener != null) {
+                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                    foreach (var sc in collisionListener.StaticCollisions()){
+                        Dictionary<string, string> element = new Dictionary<string, string>();
+                        if (sc.simObjPhysics != null) {
+                            element["objectType"] = "simObjPhysics";
+                            element["name"] = sc.simObjPhysics.objectID;
+                        } else {
+                            element["objectType"] = "gameObject";
+                            element["name"] = sc.gameObject.name;
+                        }
+                        collisions.Add(element);
+                    }
+                    actionFinished(true, collisions);
+                }
+            }
+            
+            // debug for static arm collisions from collision listener
+            public void DebugMidLevelArmCollisions() {
+                IK_Robot_Arm_Controller arm = getArm();
+                List<StaticCollision> scs = arm.collisionListener.StaticCollisions();
+                Debug.Log("Total current active static arm collisions: " + scs.Count);
+                foreach (StaticCollision sc  in scs) {
+                    Debug.Log("Arm static collision: " + sc.name);
+                }
+                actionFinished(true);
+            }
         #endif
+
     }
 }
