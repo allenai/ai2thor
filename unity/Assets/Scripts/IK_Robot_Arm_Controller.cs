@@ -39,7 +39,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private float originToShoulderLength = 0f;
 
-    private const float extendedArmLenth = 0.6325f;
+    private const float extendedArmLength = 0.6325f;
 
     public CollisionListener collisionListener;
 
@@ -220,7 +220,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     {
         var targetShoulderSpace = this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength);
         //check if not behind, check if not hyper extended
-        return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLenth;
+        return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
     public void moveArmTarget(
@@ -228,14 +228,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Vector3 target,
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
-        bool returnToStartPositionIfFailed = false,
-        string whichSpace = "arm",
+        bool returnToStart = false,
+        string coordinateSpace = "arm",
         bool restrictTargetPosition = false,
         bool disableRendering = false
-    )
-    {
-
-
+    ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -245,64 +242,61 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
         Vector3 targetWorldPos = Vector3.zero;
 
-        //world space, can be used to move directly toward positions returned by sim objects
-        if (whichSpace == "world")
-        {
-            targetWorldPos = target;
+        switch (coordinateSpace) {
+            case "world":
+                // world space, can be used to move directly toward positions
+                // returned by sim objects
+                targetWorldPos = target;
+                break;
+            case "wrist":
+                // space relative to base of the wrist, where the camera is
+                targetWorldPos = handCameraTransform.TransformPoint(target);
+                break;
+            case "armBase":
+                // space relative to the root of the arm, joint 1
+                targetWorldPos = arm.transform.TransformPoint(target);
+                break;
+            default:
+                throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
         }
-
-        //space relative to base of the wrist, where the camera is
-        else if (whichSpace == "wrist")
-        {
-            targetWorldPos = handCameraTransform.TransformPoint(target);
-        }
-
-        //space relative to the root of the arm, joint 1
-        else if (whichSpace == "armBase")
-        {
-            targetWorldPos = arm.transform.TransformPoint(target);
-        }
-
 
         // TODO Remove this after restrict movement is finalized
         var targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
 
-#if UNITY_EDITOR
-        Debug.Log("pos target  " + target + " world " + targetWorldPos + " remaining " + targetShoulderSpace.z + " magnitude " + targetShoulderSpace.magnitude + " extendedArmLength " + extendedArmLenth);
-#endif
+        #if UNITY_EDITOR
+            Debug.Log(
+                $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
+                $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
+            );
+        #endif
 
-        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos))
-        {
+        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             var k = this.transform.position + this.transform.TransformPoint(new Vector3(0, 0, originToShoulderLength));
             targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
-            controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
+            controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder.");
             return;
         }
 
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
 
-        var moveCall = ContinuousMovement
-            .move(
-                controller,
-                collisionListener,
-                armTarget,
-                targetWorldPos,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                unitsPerSecond,
-                returnToStartPositionIfFailed,
-                false
+        var moveCall = ContinuousMovement.move(
+            controller,
+            collisionListener,
+            armTarget,
+            targetWorldPos,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            unitsPerSecond,
+            returnToStart,
+            false
         );
 
-        if (disableRendering)
-        {
+        if (disableRendering) {
             controller.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
-        }
-        else
-        {
+        } else {
             StartCoroutine(
                 moveCall
             );

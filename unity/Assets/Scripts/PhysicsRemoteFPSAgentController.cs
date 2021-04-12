@@ -9342,26 +9342,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         #endif
 
-        public void MoveMidLevelArm(ServerAction action) {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                
-                arm.moveArmTarget(
-                    this,
-                    action.position, 
-                    action.speed, 
-                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
-                    action.returnToStart, 
-                    action.coordinateSpace, 
-                    action.restrictMovement, 
-                    action.disableRendering
+        public void MoveArm(
+            Vector3 position,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = false,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false,
+            bool disableRendering = false
+        ) {
+            IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm == null) {
+                throw new InvalidOperationException(
+                    "Agent does not have kinematic arm or is not enabled.\n" +
+                    $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
                 );
             }
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
 
+            arm.moveArmTarget(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictMovement: restrictMovement,
+                disableRendering: disableRendering
+            );
         }
 
         //constrain arm's y position based on the agent's current capsule collider center and extents
