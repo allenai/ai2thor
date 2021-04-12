@@ -3340,7 +3340,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     case "mmlah":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveMidLevelArmHeight";
+                        action.action = "MoveArmBase";
                         action.disableRendering = false;
 
                         if(splitcommand.Length > 1)

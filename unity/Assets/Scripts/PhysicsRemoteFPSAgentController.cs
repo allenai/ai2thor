@@ -9297,7 +9297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         #if UNITY_EDITOR
         //debug for static arm collisions from collision listener
         public void GetMidLevelArmCollisions() {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
                 var collisionListener = arm.GetComponentInChildren<CollisionListener>();
                 if (collisionListener != null) {
@@ -9328,7 +9328,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
         //debug for static arm collisions from collision listener
         public void DebugMidLevelArmCollisions() {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
                 var scs = arm.collisionListener.StaticCollisions();
                 Debug.Log("Total current active static arm collisions: " + scs.Count);
@@ -9371,19 +9371,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        //constrain arm's y position based on the agent's current capsule collider center and extents
-        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
-        //arm constrained by the agent's capsule
-        public void MoveMidLevelArmHeight(ServerAction action)
+        // constrain arm's y position based on the agent's current capsule collider center and extents
+        // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        // arm constrained by the agent's capsule
+        public void MoveArmBase(ServerAction action)
         {
             if(action.y < 0 || action.y > 1.0)
             {
-                errorMessage = "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive";
+                errorMessage = "MoveArmBase Y value must be [0, 1.0] inclusive";
                 actionFinished(false, errorMessage);
                 return;
             }
 
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
                 arm.moveArmHeight(
@@ -9406,7 +9406,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //between a given arm joint an other arm joints.
         public void RotateMidLevelHand(ServerAction action)
         {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
 
                 var target = new Quaternion();
@@ -9431,11 +9431,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        //perhaps this should fail if no object is picked up?
-        //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
+        // perhaps this should fail if no object is picked up?
+        // currently action success happens as long as the arm is
+        // enabled because it is a successful "attempt" to pickup something
         public void PickUpMidLevelHand(List<string> objectIds = null)
         {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
                 actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
@@ -9451,7 +9452,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void DropMidLevelHand(ServerAction action)
         {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
                 arm.DropObject();
@@ -9472,7 +9473,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void WhatObjectsCanHandPickUp(ServerAction action)
         {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             
 
             if (arm != null) 
@@ -9489,7 +9490,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //note this does not reposition the center point of the magnet orb
         //so expanding the radius too much will cause it to clip backward into the wrist joint
         public void SetMidLevelHandRadius(ServerAction action) {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             if (arm != null) 
             {
@@ -9516,7 +9517,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
         {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             var collisionListener = this.GetComponentInParent<CollisionListener>();
 
@@ -9561,7 +9562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var directionWorld = transform.TransformDirection(direction);
             var targetPosition = transform.position + directionWorld;
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            IK_Robot_Arm_Controller arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             collisionListener.Reset();
 

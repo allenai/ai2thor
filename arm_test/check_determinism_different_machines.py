@@ -159,10 +159,10 @@ def execute_command(controller, command, action_dict_addition):
             base_position["h"] = 0
 
         event = controller.step(
-            action="MoveMidLevelArmHeight", y=base_position["h"], **action_dict_addition
+            action="MoveArmBase", y=base_position["h"], **action_dict_addition
         )
         action_details = dict(
-            action="MoveMidLevelArmHeight", y=base_position["h"], **action_dict_addition
+            action="MoveArmBase", y=base_position["h"], **action_dict_addition
         )
 
         success = event.metadata["lastActionSuccess"]

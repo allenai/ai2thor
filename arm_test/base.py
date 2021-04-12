@@ -114,7 +114,7 @@ def standard_pose():
         handCameraSpace=False,
     )
     controller.step(
-        action="MoveMidLevelArmHeight",
+        action="MoveArmBase",
         disableRendering=False,
         y=0.8,
         speed=2,
