@@ -111,8 +111,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsSliceable;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
-    private Vector3 boundingBoxCachePosition;
-    private Quaternion boundingBoxCacheRotation;
+    private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
@@ -168,108 +167,209 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 
     private void regenerateBoundingBoxes() {
-        Vector3 position = this.gameObject.transform.position;
+		
+		Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
+
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
-        if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
+        if(this.boundingBoxCacheKey != null && 
+            (!this.IsOpenable || (this.IsOpen == this.boundingBoxCacheKey.IsOpen &&
+            Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f)) &&
+            (!this.IsSliceable  || this.IsSliced == this.boundingBoxCacheKey.IsSliced) &&
+            (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken) &&
+            Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f &&
+            Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f) {
             return;
         }
-
-        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
+        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
-            
-
-        boundingBoxCacheRotation = rotation;
-        boundingBoxCachePosition = position;
+        this.boundingBoxCacheKey = new BoundingBoxCacheKey();
+        this.boundingBoxCacheKey.position = position;
+        this.boundingBoxCacheKey.rotation = rotation;
+        if (this.IsOpenable) {
+            this.boundingBoxCacheKey.IsOpen = this.IsOpen;
+            this.boundingBoxCacheKey.openness = this.openness;
+        }
+        if (this.IsBreakable) {
+            this.boundingBoxCacheKey.IsBroken = this.IsBroken;
+        }
+        if (this.IsSliced) {
+            this.boundingBoxCacheKey.IsSliced = this.IsSliced;
+        }
     }
 
-    private AxisAlignedBoundingBox axisAlignedBoundigBox() {
-        AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+    private AxisAlignedBoundingBox axisAlignedBoundingBox() {
 
-        //get all colliders on the sop, excluding colliders if they are not enabled
-        Collider[] cols = this.GetComponentsInChildren<Collider>();
+		AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
-        //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
-        if(cols.Length == 0)
+		//unparent child simobjects during bounding box generation
+		List<Transform> childSimObjects = new List<Transform>();
+		foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>())
         {
-            SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
-            if(sopc.IsBroken || sopc.IsSliced)
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
-                #endif
-                return b;
-            }
+			if (simObject != this)
+			{
+				childSimObjects.Add(simObject.transform);
+				simObject.transform.parent = null;
+			}
+		}
 
-            else
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Something went wrong, no Colliders were found on" + this.name);
-                #endif
-                return b;
-            }
-        }
+		//get all colliders on the sop, excluding colliders if they are not enabled
+		Collider[] cols = this.GetComponentsInChildren<Collider>();
 
-        Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
+		//0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
+		if(cols.Length == 0)
+		{
+			SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
+			if(sopc.IsBroken || sopc.IsSliced)
+			{
+				#if UNITY_EDITOR
+				Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
+				#endif
+				return b;
+			}
 
-        foreach(Collider c in cols)
-        {
-            if(c.enabled)
-            bounding.Encapsulate(c.bounds);
-        }
+			else
+			{
+				#if UNITY_EDITOR
+				Debug.Log("Something went wrong, no Colliders were found on" + this.name);
+				#endif
+				return b;
+			}
+		}
 
-        //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
-        List<float[]> cornerPoints = new List<float[]>();
-        float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
-        };
-        float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
-        };
-        float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
-        };
-        foreach(float x in xs) {
-            foreach (float y in ys) {
-                foreach (float z in zs) {
-                    cornerPoints.Add(new float[]{x, y, z});
-                }
-            }
-        }
-        b.cornerPoints = cornerPoints.ToArray();
+		Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
 
-        b.center = bounding.center;//also return the center of this bounding box in world coordinates
-        b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+		foreach(Collider c in cols)
+		{
+			if(c.enabled)
+			bounding.Encapsulate(c.bounds);
+		}
 
-        return b;
+		//reparent child simobjects
+		foreach (Transform childSimObject in childSimObjects)
+		{
+			childSimObject.SetParent(this.transform);
+		}
+
+		//ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+		List<float[]> cornerPoints = new List<float[]>();
+		float[] xs = new float[]{
+			bounding.center.x + bounding.size.x/2f,
+			bounding.center.x - bounding.size.x/2f
+		};
+		float[] ys = new float[]{
+			bounding.center.y + bounding.size.y/2f,
+			bounding.center.y - bounding.size.y/2f
+		};
+		float[] zs = new float[]{
+			bounding.center.z + bounding.size.z/2f,
+			bounding.center.z - bounding.size.z/2f
+		};
+		foreach(float x in xs) {
+			foreach (float y in ys) {
+				foreach (float z in zs) {
+					cornerPoints.Add(new float[]{x, y, z});
+				}
+			}
+		}
+		b.cornerPoints = cornerPoints.ToArray();
+
+		b.center = bounding.center;//also return the center of this bounding box in world coordinates
+		b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+
+		return b;
+
     }
 
     private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
       if(this.IsPickupable || this.IsMoveable) {
         ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
-        if(this.BoundingBox== null)
+        if(this.BoundingBox == null)
         {
             Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
             return b;
         }
 
-        BoxCollider col = this.BoundingBox.GetComponent<BoxCollider>();
-        
-        List<Vector3> points = new List<Vector3>();
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
+		//unparent child simobjects during bounding box generation
+		List<Transform> childSimObjects = new List<Transform>();
+		foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>())
+        {
+            if (simObject != this)
+			{
+				childSimObjects.Add(simObject.transform);
+				simObject.transform.parent = null;
+			}
+			
+		}
+
+		// Align SimObject to origin and axes
+		Vector3 cachedPosition = this.transform.position;
+		Quaternion cachedRotation = this.transform.rotation;
+
+		this.transform.position = Vector3.zero;
+		this.transform.rotation = Quaternion.identity;
+		Physics.SyncTransforms();
+
+		// Get all colliders on the sop, excluding colliders if they are not enabled 
+		//List<Collider> cols = new List<Collider>();
+		List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
+		foreach (Collider c in this.transform.GetComponentsInChildren<Collider>())
+		{
+			if (c.enabled)
+			{
+				cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
+				//move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
+				c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
+			}
+		}
+
+		// Initialize the bounds and encapsulate all active colliders in SimObject's array
+		Bounds newBB = new Bounds();
+
+		foreach (KeyValuePair<Collider, LayerMask> kvp in cols)
+		{
+			if (kvp.Key.gameObject != this.BoundingBox)
+            {
+				newBB.Encapsulate(kvp.Key.bounds);
+			}
+		}
+
+		// Update SimObject's BoundingBox collider to match new bounds
+		this.BoundingBox.transform.rotation = Quaternion.identity;
+		this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
+		this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
+
+		// Revert SimObject back to its initial transform
+		this.transform.position = cachedPosition;
+		this.transform.rotation = cachedRotation;
+		Physics.SyncTransforms();
+
+		//Re-enable colliders, moving them back to their original layer
+		foreach (KeyValuePair<Collider, LayerMask> kvp in cols)
+		{
+			kvp.Key.transform.gameObject.layer = kvp.Value;
+
+		}
+
+		//reparent child simobjects
+		foreach (Transform childSimObject in childSimObjects)
+		{
+			childSimObject.SetParent(this.transform);
+		}
+
+		// Get corner points of SimObject's new BoundingBox, in its correct transformation
+		List<Vector3> points = new List<Vector3>();
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, -newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, newBB.size.y, newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(-newBB.size.x, +newBB.size.y, -newBB.size.z) * 0.5f));
+        points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, newBB.size.y, -newBB.size.z) * 0.5f));
 
         List<float[]> cornerPoints = new List<float[]>();
         foreach(Vector3 p in points) {
@@ -2314,4 +2414,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     }
 
+
+    class BoundingBoxCacheKey {
+        public Vector3 position;
+        public Quaternion rotation;
+        public bool IsOpen;
+        public bool IsBroken;
+        public bool IsSliced;
+        public float openness;
+    }
 }

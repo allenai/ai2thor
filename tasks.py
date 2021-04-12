@@ -17,7 +17,7 @@ import multiprocessing
 import io
 import platform
 import ai2thor.build
-from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET, PUBLIC_WEBGL_S3_BUCKET, PYPI_S3_BUCKET
 import logging
 
 logger = logging.getLogger()
@@ -79,13 +79,9 @@ def _unity_version():
     return project_version["m_EditorVersion"]
 
 
-def _build(unity_path, arch, build_dir, build_name, env={}):
-    import yaml
-
-    project_path = os.path.join(os.getcwd(), unity_path)
-    standalone_path = None
-
+def _unity_path():
     unity_version = _unity_version()
+    standalone_path = None
 
     if sys.platform.startswith("darwin"):
         unity_hub_path = (
@@ -113,9 +109,17 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
+
+    return unity_path
+
+def _build(unity_path, arch, build_dir, build_name, env={}):
+    import yaml
+
+    project_path = os.path.join(os.getcwd(), unity_path)
+
     command = (
         "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
-        % (unity_path, build_name, project_path, arch)
+        % (_unity_path(), build_name, project_path, arch)
     )
     target_path = os.path.join(build_dir, build_name)
 
@@ -374,7 +378,7 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, "local", False)
+    build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
@@ -447,6 +451,7 @@ def webgl_build(
 
     arch = "WebGL"
     build_name = local_build_name(prefix, arch)
+
     if room_ranges is not None:
         floor_plans = [
             "FloorPlan{}_physics".format(i)
@@ -461,8 +466,8 @@ def webgl_build(
                 ),
             )
         ]
-
         scenes = ",".join(floor_plans)
+
     if verbose:
         print(scenes)
 
@@ -478,6 +483,8 @@ def webgl_build(
     fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
+    # the remainder of this is only used to generate scene metadata, but it
+    # is not part of building webgl player
     rooms = {
         "kitchens": {"name": "Kitchens", "roomRanges": range(1, 31)},
         "livingRooms": {"name": "Living Rooms", "roomRanges": range(201, 231)},
@@ -487,14 +494,21 @@ def webgl_build(
     }
 
     room_type_by_id = {}
-    scene_metadata = {}
     for room_type, room_data in rooms.items():
         for room_num in room_data["roomRanges"]:
             room_id = "FloorPlan{}_physics".format(room_num)
             room_type_by_id[room_id] = {"type": room_type, "name": room_data["name"]}
 
+    scene_metadata = {}
     for scene_name in scenes.split(","):
-        room_type = room_type_by_id[scene_name]
+        if scene_name not in room_type_by_id:
+            # allows for arbitrary scenes to be included dynamically
+            room_type = {
+                "type": "Other", "name": None
+            }
+        else:
+            room_type = room_type_by_id[scene_name]
+
         if room_type["type"] not in scene_metadata:
             scene_metadata[room_type["type"]] = {
                 "scenes": [],
@@ -555,7 +569,7 @@ def generate_quality_settings(ctx):
 
 def git_commit_comment():
     comment = (
-        subprocess.check_output("git log -n 1 --format=%s", shell=True)
+        subprocess.check_output("git log -n 1 --format=%B", shell=True)
         .decode("utf8")
         .strip()
     )
@@ -578,6 +592,46 @@ def deploy_pip(context):
         raise Exception("Twine token not specified in environment")
     subprocess.check_call("twine upload -u __token__ dist/*", shell=True)
 
+
+@task
+def push_pip_commit(context):
+    import glob
+    commit_id = git_commit_id()
+    s3 = boto3.resource("s3")
+    for g in glob.glob('dist/ai2thor-0+%s*' % commit_id):
+        acl = "public-read"
+        pip_name = os.path.basename(g)
+        logger.info("pushing pip file %s" % g)
+        with open(g, "rb") as f:
+            s3.Object(PYPI_S3_BUCKET, os.path.join('ai2thor', pip_name)).put(Body=f, ACL=acl)
+
+
+@task
+def build_pip_commit(context):
+
+    commit_id = git_commit_id()
+
+    if os.path.isdir("dist"):
+        shutil.rmtree("dist")
+
+    generate_quality_settings(context)
+
+    # must use this form to create valid PEP440 version specifier
+    version = "0+" + commit_id
+
+    with open("ai2thor/_builds.py", "w") as fi:
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("COMMIT_ID = '%s'\n" % commit_id)
+
+    with open("ai2thor/_version.py", "w") as fi:
+        fi.write("# Copyright Allen Institute for Artificial Intelligence 2021\n")
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("__version__ = '%s'\n" % (version))
+
+    subprocess.check_call("python setup.py clean --all", shell=True)
+    subprocess.check_call(
+        "python setup.py sdist bdist_wheel --universal", shell=True
+    )
 
 @task
 def build_pip(context, version):
@@ -610,12 +664,12 @@ def build_pip(context, version):
 
     commit_id = git_commit_id()
     res = requests.get(
-        "https://api.github.com/repos/allenai/ai2thor/commits?sha=master"
+        "https://api.github.com/repos/allenai/ai2thor/commits?sha=main"
     )
     res.raise_for_status()
 
     if commit_id not in map(lambda c: c["sha"], res.json()):
-        raise Exception("tag %s is not off the master branch" % version)
+        raise Exception("tag %s is not off the main branch" % version)
 
     if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
@@ -648,7 +702,7 @@ def build_pip(context, version):
             fi.write("COMMIT_ID = '%s'\n" % commit_id)
 
         with open("ai2thor/_version.py", "w") as fi:
-            fi.write("# Copyright Allen Institute for Artificial Intelligence 2017\n")
+            fi.write("# Copyright Allen Institute for Artificial Intelligence 2021\n")
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
             fi.write("__version__ = '%s'\n" % (version))
 
@@ -681,7 +735,7 @@ def fetch_source_textures(context):
 
 def build_log_push(build_info, include_private_scenes):
     with open(build_info["log"]) as f:
-        build_log = f.read() + "\n" + build_info["build_exception"]
+        build_log = f.read() + "\n" + build_info.get("build_exception", "")
 
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
@@ -736,8 +790,7 @@ def clean():
         "git@ai2thor-private-github:allenai/ai2thor-private.git"
     )
     subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d", shell=True)
-    subprocess.check_call("git clean -f -x", shell=True)
+    subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
     shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
     scripts.update_private.checkout_branch()
@@ -755,16 +808,16 @@ def link_build_cache(branch):
     encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
-    master_cache_dir = os.path.join(cache_base_dir, "master")
+    main_cache_dir = os.path.join(cache_base_dir, "main")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
-    # use the master cache as a starting point to avoid
+    # use the main cache as a starting point to avoid
     # having to re-import all assets, which can take up to 1 hour
-    if not os.path.exists(branch_cache_dir) and os.path.exists(master_cache_dir):
-        logger.info("copying master cache for %s" % encoded_branch)
+    if not os.path.exists(branch_cache_dir) and os.path.exists(main_cache_dir):
+        logger.info("copying main cache for %s" % encoded_branch)
         subprocess.check_call(
-            "cp -a %s %s" % (master_cache_dir, branch_cache_dir), shell=True
+            "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
         )
-        logger.info("copying master cache complete for %s" % encoded_branch)
+        logger.info("copying main cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
     os.makedirs(branch_library_cache_dir, exist_ok=True)
@@ -893,12 +946,22 @@ def ci_build(context):
                         "starting build for %s %s %s"
                         % (arch, build["branch"], build["commit_id"])
                     )
-                    if ai2thor.build.Build(
-                        arch, build["commit_id"], include_private_scenes=include_private_scenes
-                    ).exists():
+                    rdir = os.path.normpath(
+                        os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
+
+                    )
+                    commit_build =  ai2thor.build.Build(
+                        arch,
+                        build["commit_id"],
+                        include_private_scenes=include_private_scenes,
+                        releases_dir=rdir)
+                    if commit_build.exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
+                        # download the build so that we can run the tests
+                        if arch == 'OSXIntel64':
+                            commit_build.download()
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -912,15 +975,19 @@ def ci_build(context):
                         )
                         procs.append(p)
 
-                    # don't run tests for a tag since results should exist
-                    # for the branch commit
-                    if arch == 'OSXIntel64' and build["tag"] is None:
-                        pytest_proc = multiprocessing.Process(
-                            target=ci_pytest,
-                            args=(build,)
-                        )
-                        pytest_proc.start()
-                        procs.append(pytest_proc)
+            # don't run tests for a tag since results should exist
+            # for the branch commit
+            if build["tag"] is None:
+                # its possible that the cache doesn't get linked if the builds 
+                # succeeded during an earlier runh
+                link_build_cache(build["branch"])
+                ci_test_utf(context, build)
+                pytest_proc = multiprocessing.Process(
+                    target=ci_pytest,
+                    args=(build,)
+                )
+                pytest_proc.start()
+                procs.append(pytest_proc)
 
 
             # give the travis poller time to see the result
@@ -933,7 +1000,8 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
+
+            if build["branch"] in ["main", "demo-updates"] and '#webgl-deploy' in git_commit_comment():
                 ci_build_webgl(context, build['commit_id'])
 
             for p in procs:
@@ -944,15 +1012,18 @@ def ci_build(context):
                     )
                     p.join()
 
+            build_pip_commit(context)
+            push_pip_commit(context)
+            generate_pypi_index(context)
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
-        elif datetime.datetime.now().hour in [2,3,4]:
-            clean()
-            subprocess.check_call("git checkout master", shell=True)
-            subprocess.check_call("git pull origin master", shell=True)
-            if current_webgl_autodeploy_commit_id() != git_commit_id():
-                ci_build_webgl(context, git_commit_id())
+        #elif datetime.datetime.now().hour == 2:
+        #    clean()
+        #    subprocess.check_call("git checkout main", shell=True)
+        #    subprocess.check_call("git pull origin main", shell=True)
+        #    if current_webgl_autodeploy_commit_id() != git_commit_id():
+        #        ci_build_webgl(context, git_commit_id())
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -963,7 +1034,7 @@ def ci_build(context):
 
 @task
 def ci_build_webgl(context, commit_id):
-    branch = 'master'
+    branch = 'main'
     logger.info(
         "starting auto-build webgl build deploy %s %s"
         % (branch, commit_id)
@@ -989,8 +1060,6 @@ def ci_build_arch(arch, include_private_scenes=False):
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
-
-    build_info["build_exception"] = ""
 
     proc = None
     try:
@@ -1103,7 +1172,6 @@ def build(context, local=False):
             build_path = build_dir + ".zip"
             build_info = builds[platform_map[arch]] = {}
 
-            build_info["build_exception"] = ""
             build_info["log"] = "%s.log" % (build_name,)
 
             _build(unity_path, arch, build_dir, build_name, env=env)
@@ -1551,7 +1619,7 @@ def release(ctx):
 
     tag = "v" + ai2thor._version.__version__
     subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
-    subprocess.check_call("git push origin master --tags", shell=True)
+    subprocess.check_call("git push origin main --tags", shell=True)
     subprocess.check_call(
         "twine upload -u ai2thor dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*".format(
             ver=ai2thor._version.__version__
@@ -1935,9 +2003,23 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         print("Deployed selected scenes to bucket's 'demo' directory")
 
     # Full framework demo
+    kitchens = [f"FloorPlan{i}_physics" for i in range(1, 31)]
+    living_rooms = [f"FloorPlan{200 + i}_physics" for i in range(1, 31)]
+    bedrooms = [f"FloorPlan{300 + i}_physics" for i in range(1, 31)]
+    bathrooms = [f"FloorPlan{400 + i}_physics" for i in range(1, 31)]
+    robothor_train = [
+        f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)
+    ]
+    robothor_val = [
+        f"FloorPlan_Val{i}_{j}" for i in range(1, 4) for j in range(1, 6)
+    ]
+    scenes = (
+        kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
+    )
+
     webgl_build(
         ctx,
-        room_ranges="1-30,201-230,301-330,401-430",
+        scenes=",".join(scenes),
         content_addressable=content_addressable,
     )
     webgl_deploy(ctx, verbose=verbose, force=force, target_dir="full")
@@ -3187,4 +3269,125 @@ def generate_msgpack_resolver(task):
         with open(g, "w") as f:
             f.write(source_code)
 
+@task
+def generate_pypi_index(context):
+    s3 = boto3.resource("s3")
+    root_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    <a href="/ai2thor/index.html">/ai2thor/</a><br>
+  </BODY>
+</HTML>
+"""
+    s3.Object(PYPI_S3_BUCKET, 'index.html').put(Body=root_index, ACL='public-read', ContentType='text/html')
+    objects = list_objects_with_metadata(PYPI_S3_BUCKET)
+    links = []
+    for k,v in objects.items():
+        if k.split('/')[-1] != 'index.html':
+            links.append('<a href="/%s">/%s</a><br>' % (k,k))
+    ai2thor_index = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<HTML>
+  <BODY>
+    %s
+  </BODY>
+</HTML>
+""" % "\n".join(links)
+    s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
+@task
+def ci_test_utf(context, build):
+    s3 = boto3.resource("s3")
+
+    logger.info(
+        "running Unity Test framework testRunner for %s %s" % (build["branch"], build["commit_id"])
+    )
+
+    results_path, results_logfile = test_utf(context)
+    
+    for l in [results_path, results_logfile]:
+        key = "builds/" + os.path.basename(l)
+        with open(l) as f:
+            s3.Object(PUBLIC_S3_BUCKET, key).put(
+                Body=f.read(), ContentType="text/plain",
+                ACL='public-read'
+            )
+
+    logger.info(
+        "finished Unity Test framework runner for %s %s" % (build["branch"], build["commit_id"])
+    )
+
+@task
+def test_utf(context):
+    """
+    Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
+    that include failures (if any) extracted from the xml output
+    of the Unity Test Runner
+    """
+    project_path = os.path.join(os.getcwd(), 'unity')
+    commit_id = git_commit_id()
+    test_results_path = os.path.join(project_path, 'utf_testResults-%s.xml' % commit_id)
+    logfile_path = os.path.join(os.getcwd(), 'thor-testResults-%s.log' % commit_id)
+
+    command = (
+        "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
+        % (_unity_path(), test_results_path, logfile_path, project_path)
+    )
+    subprocess.call(command, shell=True)
+
+    generate_pytest_utf(test_results_path)
+    return test_results_path, logfile_path
+
+def generate_pytest_utf(test_results_path):
+    import xml.etree.ElementTree as ET
+    with open(test_results_path) as f:
+        root = ET.fromstring(f.read())
+
+    from collections import defaultdict
+    class_tests = defaultdict(list)
+    for test_case in root.findall(".//test-case"):
+        #print(test_case.attrib['methodname'])
+        class_tests[test_case.attrib['classname']].append(test_case)
+
+    class_data = []
+    class_data.append(f"""
+# GENERATED BY tasks.generate_pytest_utf - DO NOT EDIT/COMMIT
+import pytest
+import json
+import os
+
+def test_testresults_exist():
+    test_results_path = "{test_results_path}" 
+    assert os.path.isfile("{test_results_path}"), "TestResults at: {test_results_path}  do not exist"
+
+"""
+    )
+    for class_name, test_cases in class_tests.items():
+        test_records = []
+        for test_case in test_cases:
+            methodname = test_case.attrib['methodname']
+            if test_case.attrib['result'] == 'Failed':
+                fail_message = test_case.find('failure/message')
+                stack_trace = test_case.find('failure/stack-trace')
+                message = json.dumps(fail_message.text + " " + stack_trace.text)
+                test_data = f"""
+        def test_{methodname}(self):
+            pytest.fail(json.loads(r'{message}'))
+    """
+            else:
+                test_data = f"""
+        def test_{methodname}(self):
+            pass
+    """
+            test_records.append(test_data)
+        test_record_data = '    pass'
+        if test_records:
+            test_record_data = "\n".join(test_records)
+        encoded_class_name = re.sub(r"[^a-zA-Z0-9_]", "_", re.sub("_", "__", class_name))
+        class_data.append(f"""
+class {encoded_class_name}:
+    {test_record_data}
+""")
+    with open("ai2thor/tests/test_utf.py", "w") as f:
+        f.write("\n".join(class_data))

@@ -705,19 +705,23 @@ class Controller(object):
             # be running with this release
             lock = LockEx(release, blocking=False)
             lock.lock()
-            tmp_prune_dir = os.path.join(
-                self.tmp_dir,
-                "-".join(
-                    [
-                        os.path.basename(release),
-                        str(time.time()),
-                        str(random.random()),
-                        "prune",
-                    ]
-                ),
-            )
-            os.rename(release, tmp_prune_dir)
-            shutil.rmtree(tmp_prune_dir)
+            # its possible that another process could prune
+            # out a release when running multiple procs
+            # that all race to prune the same release
+            if os.path.isdir(release):
+                tmp_prune_dir = os.path.join(
+                    self.tmp_dir,
+                    "-".join(
+                        [
+                            os.path.basename(release),
+                            str(time.time()),
+                            str(random.random()),
+                            "prune",
+                        ]
+                    ),
+                )
+                os.rename(release, tmp_prune_dir)
+                shutil.rmtree(tmp_prune_dir)
 
             lock.unlock()
             lock.unlink()
@@ -737,7 +741,18 @@ class Controller(object):
                 os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))
             )
         )
-        sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        dir_stats = defaultdict(lambda: 0)
+        for d in all_dirs:
+            try:
+                dir_stats[d] = os.stat(d).st_mtime
+            # its possible for multiple procs to race to stat/prune
+            # creating the possibility that between the listdir/stat the directory was
+            # pruned
+            except FileNotFoundError:
+                pass
+
+
+        sorted_dirs = sorted(all_dirs, key=lambda x: dir_stats[x])[:-3]
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
@@ -886,7 +901,7 @@ class Controller(object):
     def unity_command(self, width, height, headless):
         command = self._build.executable_path
         if headless:
-            command += " -batchmode"
+            command += " -batchmode -nographics"
         else:
             fullscreen = 1 if self.fullscreen else 0
             if QUALITY_SETTINGS[self.quality] == 0:
@@ -953,7 +968,8 @@ class Controller(object):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
 
     def _cache_commit_filename(self, branch):
-        return os.path.join(self.commits_cache_dir, branch + ".json")
+        encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
+        return os.path.join(self.commits_cache_dir, encoded_branch + ".json")
 
     def _cache_commit_history(self, branch, payload):
         makedirs(self.commits_cache_dir)
@@ -1002,6 +1018,9 @@ class Controller(object):
     def find_build(self, local_build, commit_id, branch):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
+
+        if platform.architecture()[0] != '64bit':
+            raise Exception("Only 64bit currently supported")
 
         arch = arch_platform_map[platform.system()]
 
