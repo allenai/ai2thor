@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
+using MIConvexHull;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -3229,6 +3230,131 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        /* 
+        Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
+        function for more information.
+
+        Will return null if the input game object has no mesh vertices.
+        */
+        protected List<List<float>> Get2DSemanticHull(GameObject go) {
+            List<MIConvexHull.DefaultVertex2D> vertices = new List<MIConvexHull.DefaultVertex2D>();
+            float maxY = -float.PositiveInfinity;
+
+            foreach (MeshFilter meshFilter in go.GetComponentsInChildren<MeshFilter>()) {
+                foreach (Vector3 localVertex in meshFilter.mesh.vertices) {
+                    Vector3 globalVertex = meshFilter.transform.TransformPoint(localVertex);
+                    vertices.Add(new MIConvexHull.DefaultVertex2D(x: globalVertex.x, y: globalVertex.z));
+                    maxY = Math.Max(maxY, globalVertex.y);
+                }
+            }
+
+            if (vertices.Count == 0) {
+                return null;
+            }
+
+            ConvexHullCreationResult<DefaultVertex2D> miconvexHull = null;
+                
+            miconvexHull = MIConvexHull.ConvexHull.Create2D(
+                data: vertices,
+                tolerance: 1e-10
+            );
+
+            #if UNITY_EDITOR
+            DefaultVertex2D[] pointsOnHullArray = miconvexHull.Result.ToArray();
+            for (int i = 0; i < pointsOnHullArray.Length; i++) {
+                DefaultVertex2D p0 = pointsOnHullArray[i];
+                DefaultVertex2D p1 = pointsOnHullArray[(i + 1) % pointsOnHullArray.Length];
+                Debug.DrawLine(
+                    start: new Vector3((float) p0.X, maxY, (float) p0.Y),
+                    end: new Vector3((float) p1.X, maxY, (float) p1.Y),
+                    color: Color.red,
+                    duration: 100.0f
+                );
+            }
+            #endif
+
+            List<List<float>> toReturn = new List<List<float>>();
+            foreach (DefaultVertex2D v in miconvexHull.Result) {
+                List<float> tuple = new List<float>();
+                tuple.Add((float) v.X);
+                tuple.Add((float) v.Y);
+                toReturn.Add(tuple);
+            }
+            return toReturn;
+        }
+
+        /*
+        For each objectId, create a convex hull of the object from a top-down view.
+        The convex hull will be represented as a list of (x, z) world coordinates
+        such that the boundary formed by these coordinates forms the convex hull
+        of these points (smallest convex region enclosing the object's points).
+
+        If the objectIds (or objectTypes) parameter is non-null, then only objects with
+        those ids (or types) will be returned.
+        
+        ONLY ONE OF objectIds OR objectTypes IS ALLOWED TO BE NON-NULL.
+
+        Returns a dictionary mapping object ids to a list of (x,z) coordinates corresponding
+        to the convex hull of the corresponding object.
+        */
+        public void Get2DSemanticHulls(
+            List<string> objectIds = null,
+            List<string> objectTypes = null
+        ) {
+            if (objectIds != null && objectTypes != null) {
+                throw new ArgumentException(
+                    "Only one of objectIds and objectTypes can have a non-null value."
+                );
+            }
+
+            HashSet<string> allowedObjectTypesSet = null;
+            if (objectTypes != null) {
+                allowedObjectTypesSet = new HashSet<string>(objectTypes);
+            }
+
+            // Only consider sim objects which correspond to objectIds if given.
+            SimObjPhysics[] sopsFilteredByObjectIds = null;
+            if (objectIds != null) {
+                sopsFilteredByObjectIds = objectIds.Select(
+                    key => physicsSceneManager.ObjectIdToSimObjPhysics[key]
+                ).ToArray();
+            } else {
+                sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
+            }
+
+            Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
+            foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
+                // Skip objects that don't have one of the required types (if given)
+                if (
+                    allowedObjectTypesSet != null 
+                    && !allowedObjectTypesSet.Contains(sop.Type.ToString())
+                ) {
+                    continue;
+                }
+
+                #if UNITY_EDITOR
+                Debug.Log(sop.ObjectID);
+                #endif
+
+                List<List<float>> hullPoints = Get2DSemanticHull(sop.gameObject);
+                if (hullPoints != null) {
+                    objectIdToConvexHull[sop.ObjectID] = Get2DSemanticHull(sop.gameObject);
+                }
+            }
+            actionFinishedEmit(true, objectIdToConvexHull);
+        }
+
+        public void Get2DSemanticHull(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"No object with ID {objectId}";
+                actionFinishedEmit(false);
+            } else {
+                actionFinishedEmit(
+                    true,
+                    Get2DSemanticHull(physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject)
+                );
+            }
+        }
 
         public void UpdateDisplayGameObject(GameObject go, bool display) {
             if (go != null) {

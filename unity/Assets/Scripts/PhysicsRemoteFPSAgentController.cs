@@ -263,16 +263,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////////////////////////////////////////////////////////
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
         //matches the passed in objectID
-        public GameObject FindObjectInVisibleSimObjPhysics(string objectID) {
-            GameObject target = null;
-
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (o.objectID == objectID) {
-                    target = o.gameObject;
+        public GameObject FindObjectInVisibleSimObjPhysics(string objectId) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(false)) {
+                if (sop.ObjectID == objectId) {
+                    return sop.gameObject;
                 }
             }
-
-            return target;
+            return null;
         }
 
         protected Collider[] collidersWithinCapsuleCastOfAgent(float maxDistance) {
