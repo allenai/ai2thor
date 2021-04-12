@@ -169,15 +169,28 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             // #endif
 
             // ok now finally let's make some overlap capsules
-            foreach (var col in Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore)) {
+            Collider[] colliders = Physics.OverlapCapsule(
+                point0: point0,
+                point1: point1,
+                radius: radius,
+                layerMask: LayerMask.GetMask("SimObjVisible"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+            foreach (Collider col in colliers) {
                 colliders.Add(col);
             }
-
         }
 
         // also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders) {
-            foreach (var col in Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size / 2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore)) {
+            Collider[] colliders = Physics.OverlapBox(
+                center: b.transform.TransformPoint(b.center),
+                halfExtents: b.size / 2.0f,
+                orientation :b.transform.rotation,
+                layerMak: LayerMask.GetMask("SimObjVisible"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+            foreach (Collider col in colliders) {
                 colliders.Add(col);
             }
         }
@@ -199,8 +212,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
-        var targetShoulderSpace = (
-            this.transform.InverseTransformPoint(targetWorldPosition) - new Vector3(0, 0, originToShoulderLength)
+        Vector3 targetShoulderSpace = (
+            this.transform.InverseTransformPoint(targetWorldPosition)
+            - new Vector3(0, 0, originToShoulderLength)
         );
 
         //check if not behind, check if not hyper extended
@@ -220,7 +234,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
-        var arm = this;
+        IK_Robot_Arm_Controller arm = this;
 
         // Move arm based on hand space or arm origin space
         //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
@@ -245,7 +259,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         // TODO Remove this after restrict movement is finalized
-        var targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
+        Vector3 targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
 
         #if UNITY_EDITOR
             Debug.Log(
@@ -255,16 +269,19 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         #endif
 
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
-            var k = this.transform.position + this.transform.TransformPoint(new Vector3(0, 0, originToShoulderLength));
-            targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
-            controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder.");
-            return;
+            targetShoulderSpace = (
+                this.transform.InverseTransformPoint(targetWorldPos)
+                - new Vector3(0, 0, originToShoulderLength)
+            );
+            throw new InvalidOperationException(
+                $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder."
+            );
         }
 
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
 
-        var moveCall = ContinuousMovement.move(
+        IEnumerator moveCall = ContinuousMovement.move(
             controller,
             collisionListener,
             armTarget,
@@ -310,7 +327,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
-        var moveCall = ContinuousMovement.move(
+        IEnumerator moveCall = ContinuousMovement.move(
             controller,
             collisionListener,
             this.transform,
@@ -342,7 +359,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        var rotate = ContinuousMovement.rotate(
+        IEnumerator rotate = ContinuousMovement.rotate(
             controller,
             collisionListener,
             armTarget.transform,
@@ -412,7 +429,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             List<Collider> cols = new List<Collider>();
 
             foreach (Collider c in sop.MyColliders) {
-                Collider clone = Instantiate(c, c.transform.position, c.transform.rotation, FourthJoint);
+                Collider clone = Instantiate(
+                    c,
+                    c.transform.position,
+                    c.transform.rotation,
+                    FourthJoint
+                );
                 clone.isTrigger = true;
 
                 // must disable the colliders on the held object so they 
@@ -426,11 +448,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         if (!pickedUp) {
-            if (objectIds != null) {
-                errorMessage = "No objects (specified by objectId) were valid to be picked up by the arm";
-            } else {
-                errorMessage = "No objects were valid to be picked up by the arm";
-            }
+            errorMessage = (
+                objectIds != null
+                ? "No objects (specified by objectId) were valid to be picked up by the arm"
+                : "No objects were valid to be picked up by the arm"
+            );
         }
 
         // note: how to handle cases where object breaks if it is shoved into another object?
@@ -471,12 +493,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             rb.WakeUp();
         }
 
-        //clear all now dropped objects
+        // clear all now dropped objects
         HeldObjects.Clear();
     }
 
     public void SetHandMagnetRadius(float radius) {
-        //Magnet.transform.localScale = new Vector3(radius, radius, radius);
+        // Magnet.transform.localScale = new Vector3(radius, radius, radius);
         magnetSphere.radius = radius;
         MagnetRenderer.transform.localScale = new Vector3(2 * radius, 2 * radius, 2 * radius);
         magnetSphere.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
@@ -484,10 +506,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     }
 
     public ArmMetadata GenerateMetadata() {
-        var meta = new ArmMetadata();
+        ArmMetadata meta = new ArmMetadata();
         //meta.handTarget = armTarget.position;
-        var joint = transform;
-        var joints = new List<JointMetadata>();
+        Vector3 joint = transform;
+        List<JointMetadata> joints = new List<JointMetadata>();
 
         //Declare variables used for processing metadata
         Transform parentJoint;
@@ -499,7 +521,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         for (int i = 1; i <= 4; i++) {
             joint = joint.Find("robot_arm_" + i + "_jnt");
 
-            var jointMeta = new JointMetadata();
+            JointMetadata jointMeta = new JointMetadata();
 
             // JOINT NAME
             jointMeta.name = joint.name;
