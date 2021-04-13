@@ -67,51 +67,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
         }
 
-        public void MoveRelative(
-            float x,
-            float z,
-            float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1,
-            bool forceAction = false,
-            float noise = 0
-        ) {
-            if (x == 0 && z == 0) {
-                throw new ArgumentException("Must specify x or z!");
+        public override void MoveRelative(ServerAction action) {
+            if (!allowHorizontalMovement && Math.Abs(action.x) > 0) {
+                throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
-            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
-                throw new InvalidOperationException(
-                    "Controller does not support horizontal movement. Set allowHorizontalMovement to true on the Controller."
-                );
-            }
-            Vector3 moveLocal = new Vector3(x, 0, z);
-            float mag = moveLocal.magnitude;
-            if (mag > 0.00001) {
+            var moveLocal = new Vector3(action.x, 0, action.z);
+            var moveMagnitude = moveLocal.magnitude;
+            if (moveMagnitude > 0.00001) {
                 //random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
                 var random = new System.Random();
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
                 if (this.applyActionNoise) {
-                    float rotateNoise = (float) random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
                 }
-                Vector3 moveLocalNorm = moveLocal / mag;
-                float magnitudeWithNoise = GetMoveMagnitudeWithNoise(
-                    moveMagnitude: mag * moveMagnitude.GetValueOrDefault(gridSize) ,
-                    noise: noise
-                );
+                var moveLocalNorm = moveLocal / moveMagnitude;
+                if (action.moveMagnitude > 0.0) {
+                    action.moveMagnitude = moveMagnitude * action.moveMagnitude;
+                } else {
+                    action.moveMagnitude = moveMagnitude * gridSize;
+                }
+
+                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
 
                 actionFinished(moveInDirection(
-                    direction: this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
-                    objectId: objectId,
-                    maxDistanceToObject: maxAgentsDistance,
-                    forceAction: forceAction
+                    this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
+                    action.objectId,
+                    action.maxAgentsDistance,
+                    action.forceAction
                 ));
             } else {
                 actionFinished(false);
             }
         }
-
 
         // NOOP action to allow evaluation to know that the episode has finished
         public void Stop() 
@@ -290,10 +279,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             MoveRelative(action);
         }
 
-        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
+        protected float GetMoveMagnitudeWithNoise(ServerAction action) {
             System.Random random = new System.Random();
             float internalNoise = applyActionNoise ? (float) random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-            return moveMagnitude + noise + (float) internalNoise;
+            return action.moveMagnitude + action.noise + (float) internalNoise;
         }
 
         protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
