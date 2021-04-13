@@ -90,9 +90,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -197,7 +204,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -214,7 +223,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -974,7 +985,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -985,7 +997,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -993,7 +1006,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1448,7 +1462,7 @@ def test_manipulathor_move(controller):
         point2=event.metadata["agent"]["position"],
     )
 
-    event = controller.step(action="Move", ahead=0.25, right=0.15)
+    event = controller.step(action="MoveAgent", ahead=0.25, right=0.15)
     assert_near(
         point1={"x": -1.649999976158142, "y": 0.9009982347488403, "z": -1.75},
         point2=event.metadata["agent"]["position"],
@@ -1463,7 +1477,7 @@ def test_manipulathor_rotate(controller):
         point2=event.metadata["agent"]["rotation"],
     )
 
-    event = controller.step(action="Rotate", degrees=60)
+    event = controller.step(action="RotateAgent", degrees=60)
     assert_near(
         point1={"x": -0.0, "y": 240.0, "z": 0.0},
         point2=event.metadata["agent"]["rotation"],

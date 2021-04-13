@@ -85,7 +85,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void Move(
+        public void MoveAgent(
             float ahead = 0,
             float right = 0,
             float speed = 1,
@@ -160,7 +160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
           throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=-X).");
         }
 
-        public void Rotate(
+        public void RotateAgent(
             float degrees,
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
