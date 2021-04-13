@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Fill : MonoBehaviour
-{
+public class Fill : MonoBehaviour {
     [SerializeField]
     protected GameObject WaterObject = null;
 
@@ -21,16 +20,13 @@ public class Fill : MonoBehaviour
 
     public Dictionary<string, GameObject> Liquids = new Dictionary<string, GameObject>();
 
-    public bool IsFilled()
-    {
+    public bool IsFilled() {
         return isFilled;
     }
 
-    void Start()
-    {
+    void Start() {
 #if UNITY_EDITOR
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
-        {
+        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
             Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
         }
 #endif
@@ -42,14 +38,11 @@ public class Fill : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         //check if the object is rotated too much, if so it should spill out
-        if (Vector3.Angle(gameObject.transform.up, Vector3.up) > 90)
-        {
+        if (Vector3.Angle(gameObject.transform.up, Vector3.up) > 90) {
             //print("spilling!");
-            if (isFilled)
-            {
+            if (isFilled) {
                 EmptyObject();
             }
         }
@@ -62,41 +55,33 @@ public class Fill : MonoBehaviour
     }
 
     //fill the object with a random liquid
-    public void FillObjectRandomLiquid()
-    {
+    public void FillObjectRandomLiquid() {
         int whichone = Random.Range(1, 3);
-        if (whichone == 1)
-        {
+        if (whichone == 1) {
             FillObject("water");
         }
 
-        if (whichone == 2)
-        {
+        if (whichone == 2) {
             FillObject("wine");
         }
 
-        if (whichone == 3)
-        {
+        if (whichone == 3) {
             FillObject("coffee");
         }
     }
 
-    public bool FillObject(string whichLiquid)
-    {
-        if (Liquids.ContainsKey(whichLiquid))
-        {
+    public bool FillObject(string whichLiquid) {
+        if (Liquids.ContainsKey(whichLiquid)) {
             //check if this object has whichLiquid setup as fillable: If the object has a null reference this object
             //is not setup for that liquid
-            if (Liquids[whichLiquid] == null)
-            {
+            if (Liquids[whichLiquid] == null) {
                 return false;
             }
 
             Liquids[whichLiquid].transform.gameObject.SetActive(true);
 
             //coffee is hot so change the object's temperature if whichLiquid was coffee
-            if (whichLiquid == "coffee")
-            {
+            if (whichLiquid == "coffee") {
                 //coffee is hot!
                 SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
                 sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
@@ -153,15 +138,12 @@ public class Fill : MonoBehaviour
         // }
     }
 
-    public void EmptyObject()
-    {
+    public void EmptyObject() {
         //for each thing in Liquids, if it exists set it to false and then set bools appropriately
 
-        foreach (KeyValuePair<string, GameObject> gogogo in Liquids)
-        {
+        foreach (KeyValuePair<string, GameObject> gogogo in Liquids) {
             //if the value field is not null and has a reference to a liquid object 
-            if (gogogo.Value != null)
-            {
+            if (gogogo.Value != null) {
                 gogogo.Value.SetActive(false);
             }
         }
@@ -184,13 +166,10 @@ public class Fill : MonoBehaviour
         // }
     }
 
-    public void OnTriggerStay(Collider other)
-    {
+    public void OnTriggerStay(Collider other) {
         //if touching running water, automatically fill with water.
-        if (other.tag == "Liquid")
-        {
-            if (!isFilled)
-            {
+        if (other.tag == "Liquid") {
+            if (!isFilled) {
                 FillObject("water");
             }
         }

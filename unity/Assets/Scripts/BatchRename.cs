@@ -7,8 +7,7 @@ using UnityEditor;
 
 using System.Collections;
 
-public class BatchRename : ScriptableWizard
-{
+public class BatchRename : ScriptableWizard {
 
     /// <summary>
     /// Base name
@@ -26,32 +25,28 @@ public class BatchRename : ScriptableWizard
     public int Increment = 1;
 
     [MenuItem("Edit/Batch Rename...")]
-    static void CreateWizard()
-    {
+    static void CreateWizard() {
         ScriptableWizard.DisplayWizard("Batch Rename", typeof(BatchRename), "Rename");
     }
 
     /// <summary>
     /// Called when the window first appears
     /// </summary>
-    void OnEnable()
-    {
+    void OnEnable() {
         UpdateSelectionHelper();
     }
 
     /// <summary>
     /// Function called when selection changes in scene
     /// </summary>
-    void OnSelectionChange()
-    {
+    void OnSelectionChange() {
         UpdateSelectionHelper();
     }
 
     /// <summary>
     /// Update selection counter
     /// </summary>
-    void UpdateSelectionHelper()
-    {
+    void UpdateSelectionHelper() {
 
         helpString = "";
 
@@ -63,8 +58,7 @@ public class BatchRename : ScriptableWizard
     /// <summary>
     /// Rename
     /// </summary>
-    void OnWizardCreate()
-    {
+    void OnWizardCreate() {
 
         // If selection is empty, then exit
         if (Selection.objects == null)
@@ -74,8 +68,7 @@ public class BatchRename : ScriptableWizard
         int PostFix = StartNumber;
 
         // Cycle and rename
-        foreach (Object O in Selection.objects)
-        {
+        foreach (Object O in Selection.objects) {
             O.name = BaseName + PostFix;
             PostFix += Increment;
         }

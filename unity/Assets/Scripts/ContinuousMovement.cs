@@ -5,19 +5,15 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System;
 
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
+namespace UnityStandardAssets.Characters.FirstPerson {
 
-    public class ContinuousMovement
-    {
+    public class ContinuousMovement {
 
-        public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime)
-        {
+        public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             var count = 0;
             var previousAutoSimulate = Physics.autoSimulation;
             Physics.autoSimulation = false;
-            while (enumerator.MoveNext())
-            {
+            while (enumerator.MoveNext()) {
                 // physics simulate happens in  updateTransformPropertyFixedUpdate as long
                 // as autoSimulation is off
                 count++;
@@ -34,8 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float fixedDeltaTime,
             float radiansPerSecond,
             bool returnToStartPropIfFailed = false
-        )
-        {
+        ) {
             var degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
             return updateTransformPropertyFixedUpdate(
                 controller,
@@ -66,8 +61,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float unitsPerSecond,
             bool returnToStartPropIfFailed = false,
             bool localPosition = false
-        )
-        {
+        ) {
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
                     controller,
@@ -83,16 +77,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     returnToStartPropIfFailed
             );
 
-            if (localPosition)
-            {
+            if (localPosition) {
                 return moveClosure(
                     (t) => t.localPosition,
                     (t, pos) => t.localPosition = pos,
                     (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime
                 );
-            }
-            else
-            {
+            } else {
 
                 return moveClosure(
                     (t) => t.position,
@@ -116,8 +107,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
             double epsilon = 1e-3
-        )
-        {
+        ) {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -133,8 +123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             T directionToTarget = getDirection(target, currentProperty);
 
-            while (currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0)
-            {
+            while (currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
 
                 previousProperty = getProp(moveTransform);
 
@@ -146,20 +135,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     // if nextDistance is too large then it will overshoot, in this case we snap to the target
                     // this can happen if the speed it set high
-                    nextDistance > distanceMetric(target, getProp(moveTransform)))
-                {
+                    nextDistance > distanceMetric(target, getProp(moveTransform))) {
                     setProp(moveTransform, target);
-                }
-                else
-                {
+                } else {
                     setProp(moveTransform, next);
                 }
 
                 // this will be a NOOP for Rotate/Move/Height actions
                 ikSolver.ManipulateArm();
 
-                if (!Physics.autoSimulation)
-                {
+                if (!Physics.autoSimulation) {
                     Physics.Simulate(fixedDeltaTime);
                 }
 
@@ -169,8 +154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             T resetProp = previousProperty;
-            if (returnToStartPropIfFailed)
-            {
+            if (returnToStartPropIfFailed) {
                 resetProp = originalProperty;
             }
             continuousMoveFinish(
@@ -184,8 +168,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // we call this one more time in the event that the arm collided and was reset
             ikSolver.ManipulateArm();
-            if (!Physics.autoSimulation)
-            {
+            if (!Physics.autoSimulation) {
                 Physics.Simulate(fixedDeltaTime);
             }
 
@@ -198,30 +181,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
             System.Action<Transform, T> setProp,
             T target,
             T resetProp
-        )
-        {
+        ) {
             var actionSuccess = true;
             var debugMessage = "";
             var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             var staticCollisions = collisionListener.StaticCollisions();
 
-            if (staticCollisions.Count > 0)
-            {
+            if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
 
                 //decide if we want to return to original property or last known property before collision
                 setProp(moveTransform, resetProp);
 
                 //if we hit a sim object
-                if (sc.isSimObj)
-                {
+                if (sc.isSimObj) {
                     debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
                 }
 
                 //if we hit a structural object that isn't a sim object but still has static collision
-                if (!sc.isSimObj)
-                {
+                if (!sc.isSimObj) {
                     debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
                 }
 

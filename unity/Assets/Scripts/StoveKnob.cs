@@ -5,8 +5,7 @@ using UnityEngine;
 
 //[ExecuteInEditMode]
 [RequireComponent(typeof(SimObj))]
-public class StoveKnob : MonoBehaviour
-{
+public class StoveKnob : MonoBehaviour {
     public SimObj StoveRange;
     public bool On = false;
 
@@ -17,24 +16,19 @@ public class StoveKnob : MonoBehaviour
     SimObj simObj;
     bool displayedError = false;
 
-    void Awake()
-    {
+    void Awake() {
         simObj = gameObject.GetComponent<SimObj>();
     }
 
-    void Update()
-    {
-        if (KnobTransform == null || StoveRange == null)
-        {
-            if (!displayedError)
-            {
+    void Update() {
+        if (KnobTransform == null || StoveRange == null) {
+            if (!displayedError) {
                 displayedError = true;
                 Debug.LogError("Knob transform or stove range null in Stove Knob " + name);
             }
             return;
         }
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             KnobTransform.localEulerAngles = On ? OnRotation : OffRotation;
             return;
         }

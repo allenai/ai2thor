@@ -9,23 +9,19 @@ using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-public class THORDocumentationExporter : MonoBehaviour
-{
+public class THORDocumentationExporter : MonoBehaviour {
 
     //export the placement restrictions for each pickupable object
     [MenuItem("SimObjectPhysics/Generate Placement Restrictions to Text File")]
-    private static void ExportPlacementRestrictionsToTextFile()
-    {
+    private static void ExportPlacementRestrictionsToTextFile() {
         var file = "PlacementRestrictions.txt";
 
         var create = File.CreateText("Assets/DebugTextFiles/" + file);
 
-        foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions)
-        {
+        foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions) {
             //create.WriteLine("/////////////////////////////");
             create.WriteLine("Receptacle Restrictions for: " + kvp.Key.ToString());
-            foreach (SimObjType sop in kvp.Value)
-            {
+            foreach (SimObjType sop in kvp.Value) {
                 create.Write(sop.ToString() + ", ");
             }
             create.WriteLine("\n");
@@ -34,16 +30,14 @@ public class THORDocumentationExporter : MonoBehaviour
         create.Close();
     }
 
-    public class TotalSimObjectsInScene
-    {
+    public class TotalSimObjectsInScene {
         //count of total number of sim objects in this scene
         public int TotalSimObjCountInScene;
         //track the count of each object type that exists in this scene
         public Dictionary<SimObjType, int> ObjectType_to_Count = new Dictionary<SimObjType, int>();
     }
 
-    public class UniqueSimObjectsInScene
-    {
+    public class UniqueSimObjectsInScene {
         //name of the asset if it is a prefab- via PrefabUtility.GetCorrsepondingObjectFromOriginalSource()
         public string assetName = "n/a";//default to n/a in the case this isn't a prefab
 
@@ -57,8 +51,7 @@ public class THORDocumentationExporter : MonoBehaviour
     //print("original source: " + PrefabUtility.GetCorrespondingObjectFromOriginalSource(gameObject));
 
     [MenuItem("SimObjectPhysics/Generate Sim Obj Instance Count Text Files")]
-    private static void GetInstanceCount()
-    {
+    private static void GetInstanceCount() {
         //keep track of total number of sim objects across all scenes
         int totalInstanceCount = 0;
 
@@ -77,8 +70,7 @@ public class THORDocumentationExporter : MonoBehaviour
 
         //Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
         //for each scene in the build do these things
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
-        {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var simObjects = FindObjectsOfType<SimObjPhysics>();
 
@@ -90,46 +82,35 @@ public class THORDocumentationExporter : MonoBehaviour
 
 
             string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (!SceneName_to_Counts.ContainsKey(currentSceneName))
-            {
+            if (!SceneName_to_Counts.ContainsKey(currentSceneName)) {
                 TotalSimObjectsInScene tsois = new TotalSimObjectsInScene();
                 tsois.TotalSimObjCountInScene = simObjects.Length;
                 tsois.ObjectType_to_Count = sceneObjectTypeCounts;
                 SceneName_to_Counts.Add(currentSceneName, tsois);
             }
 
-            foreach (SimObjPhysics currentSimObject in simObjects)
-            {
+            foreach (SimObjPhysics currentSimObject in simObjects) {
 
                 //keep track of total object type count
-                if (ObjectTypeInAllScenes_to_Count.ContainsKey(currentSimObject.Type))
-                {
+                if (ObjectTypeInAllScenes_to_Count.ContainsKey(currentSimObject.Type)) {
                     ObjectTypeInAllScenes_to_Count[currentSimObject.Type]++;
-                }
-                else
-                {
+                } else {
                     ObjectTypeInAllScenes_to_Count.Add(currentSimObject.Type, 1);
                 }
 
                 //keep track of object type count for this scene only
-                if (sceneObjectTypeCounts.ContainsKey(currentSimObject.Type))
-                {
+                if (sceneObjectTypeCounts.ContainsKey(currentSimObject.Type)) {
                     sceneObjectTypeCounts[currentSimObject.Type]++;
-                }
-                else
-                {
+                } else {
                     sceneObjectTypeCounts.Add(currentSimObject.Type, 1);
                 }
 
                 //keep track of which scenes contain this object type
                 //key already exists, don't worry about creating new list
-                if (ObjectType_To_Scenes.ContainsKey(currentSimObject.Type))
-                {
+                if (ObjectType_To_Scenes.ContainsKey(currentSimObject.Type)) {
                     if (!ObjectType_To_Scenes[currentSimObject.Type].Contains(currentSceneName))
                         ObjectType_To_Scenes[currentSimObject.Type].Add(currentSceneName);
-                }
-                else
-                {
+                } else {
                     List<String> listOfScenes = new List<String>();
                     listOfScenes.Add(currentSceneName);
                     ObjectType_To_Scenes.Add(currentSimObject.Type, listOfScenes);
@@ -142,21 +123,16 @@ public class THORDocumentationExporter : MonoBehaviour
                 //if this is not a prefab, assume that it is unique to this scene
                 GameObject testObj = PrefabUtility.GetCorrespondingObjectFromOriginalSource(currentSimObject.gameObject);
 
-                if (testObj != null)
-                {
+                if (testObj != null) {
                     //this prefab already exists in our dictionary
-                    if (UniquePrefab_to_Count.ContainsKey(testObj))
-                    {
+                    if (UniquePrefab_to_Count.ContainsKey(testObj)) {
                         //increment how many times this prefab has shown up
                         UniquePrefab_to_Count[testObj].count++;
-                        if (!UniquePrefab_to_Count[testObj].Scenes_To_hName.ContainsKey(currentSceneName))
-                        {
+                        if (!UniquePrefab_to_Count[testObj].Scenes_To_hName.ContainsKey(currentSceneName)) {
                             //add any scenes where this prefab shows up
                             UniquePrefab_to_Count[testObj].Scenes_To_hName.Add(currentSceneName, currentSimObject.gameObject.name);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         UniqueSimObjectsInScene usois = new UniqueSimObjectsInScene();
                         usois.count = 1;
                         usois.Scenes_To_hName = new Dictionary<String, String>();
@@ -167,8 +143,7 @@ public class THORDocumentationExporter : MonoBehaviour
                 }
 
                 //this sim object is not a prefab so assume it is unique to this scene only
-                else
-                {
+                else {
                     UniqueSimObjectsInScene usois = new UniqueSimObjectsInScene();
                     usois.count = 1;
                     usois.Scenes_To_hName = new Dictionary<String, String>();
@@ -187,8 +162,7 @@ public class THORDocumentationExporter : MonoBehaviour
         create.WriteLine("Total number of OBJECT TYPES that apear across ALL Scenes: " + ObjectTypeInAllScenes_to_Count.Count + "\n");
         create.WriteLine("The total number of OBJECT INSTANCES across ALL scenes: " + totalInstanceCount + "\n");
         create.WriteLine("The following is the number of INSTANCES of each OBJECT TYPE that appears across ALL scenes:");
-        foreach (KeyValuePair<SimObjType, int> typeSet in ObjectTypeInAllScenes_to_Count)
-        {
+        foreach (KeyValuePair<SimObjType, int> typeSet in ObjectTypeInAllScenes_to_Count) {
             create.WriteLine(typeSet.Key + ": " + typeSet.Value);
         }
         create.Close();
@@ -197,13 +171,11 @@ public class THORDocumentationExporter : MonoBehaviour
         var file2 = "ObjectTypesPerScene.txt";
         var create2 = File.CreateText("Assets/DebugTextFiles/" + file2);
         create2.WriteLine("The following is the Total count of Sim Objects by Scene");
-        foreach (KeyValuePair<String, TotalSimObjectsInScene> entry in SceneName_to_Counts)
-        {
+        foreach (KeyValuePair<String, TotalSimObjectsInScene> entry in SceneName_to_Counts) {
             create2.WriteLine("\n" + "Scene Name: " + entry.Key);
             //key: scene, value: object with total count of instances in scene, count of each object by type in scene
             create2.WriteLine("Total Number of Sim Objects in " + entry.Key + ": " + entry.Value.TotalSimObjCountInScene);
-            foreach (KeyValuePair<SimObjType, int> pair in entry.Value.ObjectType_to_Count)
-            {
+            foreach (KeyValuePair<SimObjType, int> pair in entry.Value.ObjectType_to_Count) {
                 create2.WriteLine(pair.Key + " | Total Instances In " + entry.Key + ": " + pair.Value);
             }
         }
@@ -214,11 +186,9 @@ public class THORDocumentationExporter : MonoBehaviour
         var file3 = "ScenesThatContainObjectType.txt";
         var create3 = File.CreateText("Assets/DebugTextFiles/" + file3);
         create3.WriteLine("This contains a list of all Object Types and the Scenes which have at least one instance of the Object Type.");
-        foreach (KeyValuePair<SimObjType, List<String>> typeToScene in ObjectType_To_Scenes)
-        {
+        foreach (KeyValuePair<SimObjType, List<String>> typeToScene in ObjectType_To_Scenes) {
             create3.WriteLine("\n" + typeToScene.Key + ":");
-            foreach (string s in typeToScene.Value)
-            {
+            foreach (string s in typeToScene.Value) {
                 create3.WriteLine(s);
             }
         }
@@ -233,13 +203,11 @@ public class THORDocumentationExporter : MonoBehaviour
         create4.WriteLine("NOTE: if prefab name is n/a, it is not a prefab but is instead a game object unique to some scene)");
 
         create4.WriteLine("\nTotal number of UNIQUE Sim Object instances: " + UniquePrefab_to_Count.Count);
-        foreach (KeyValuePair<GameObject, UniqueSimObjectsInScene> p in UniquePrefab_to_Count)
-        {
+        foreach (KeyValuePair<GameObject, UniqueSimObjectsInScene> p in UniquePrefab_to_Count) {
             create4.WriteLine("\nbase prefab name (in assets): " + p.Value.assetName);
             create4.WriteLine("number of times this object shows up across all Scenes: " + p.Value.count);
             create4.WriteLine("list of scenes that this unique object shows up in: ");
-            foreach (KeyValuePair<String, String> s in p.Value.Scenes_To_hName)
-            {
+            foreach (KeyValuePair<String, String> s in p.Value.Scenes_To_hName) {
                 create4.WriteLine(s.Key + " | name of instance of this object in scene: " + s.Value);
             }
         }

@@ -3,18 +3,14 @@ using System.Collections;
 using UnityStandardAssets.Characters.FirstPerson;
 
 [ExecuteInEditMode]
-public class FirstPersonCharacterCull : MonoBehaviour
-{
+public class FirstPersonCharacterCull : MonoBehaviour {
     private bool _stopCullingThingsForASecond = false;
 
-    public bool StopCullingThingsForASecond
-    {
-        get
-        {
+    public bool StopCullingThingsForASecond {
+        get {
             return this._stopCullingThingsForASecond;
         }
-        set
-        {
+        set {
             this._stopCullingThingsForASecond = value;
         }
     }
@@ -29,8 +25,7 @@ public class FirstPersonCharacterCull : MonoBehaviour
     //references to renderers for when agent is in Drone mode
     public MeshRenderer[] DroneRenderers;
 
-    public void SwitchRenderersToHide(string mode)
-    {
+    public void SwitchRenderersToHide(string mode) {
         if (mode == "default" || mode == "arm")
             RenderersToHide = TallRenderers;
 
@@ -43,16 +38,13 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     void OnPreRender() //Just before this camera starts to render...
     {
-        if (!StopCullingThingsForASecond)
-        {
+        if (!StopCullingThingsForASecond) {
             if (
                 FPSController != null
                 && (RenderersToHide != null || RenderersToHide.Length != 0)
                 && FPSController.IsVisible
-            )
-            { //only do this if visibility capsule has been toggled on
-                foreach (MeshRenderer mr in RenderersToHide)
-                {
+            ) { //only do this if visibility capsule has been toggled on
+                foreach (MeshRenderer mr in RenderersToHide) {
                     mr.enabled = false; //Turn off renderer
                 }
             }
@@ -62,17 +54,14 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     void OnPostRender() //Immediately after this camera renders...
     {
-        if (!StopCullingThingsForASecond)
-        {
+        if (!StopCullingThingsForASecond) {
             if (
                 FPSController != null
                 && (RenderersToHide != null || RenderersToHide.Length != 0)
                 && FPSController.IsVisible
-            )
-            { //only do this if visibility capsule is toggled on
+            ) { //only do this if visibility capsule is toggled on
 
-                foreach (MeshRenderer mr in RenderersToHide)
-                {
+                foreach (MeshRenderer mr in RenderersToHide) {
                     mr.enabled = true; //Turn it back on
                 }
             }

@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VisualizationHeatmapCSV : MonoBehaviour
-{
+public class VisualizationHeatmapCSV : MonoBehaviour {
     public TextAsset CSVFile;
 
     public List<float> xvalues;
@@ -15,13 +14,11 @@ public class VisualizationHeatmapCSV : MonoBehaviour
     public GameObject prefabHeavy;
 
     // Use this for initialization
-    void Start()
-    {
+    void Start() {
         string[] data = CSVFile.text.Split(new char[] { '\n' });
         float x, z, r;
 
-        for (int i = 1; i < data.Length - 1; i++)
-        {
+        for (int i = 1; i < data.Length - 1; i++) {
             string[] row = data[i].Split(new char[] { ',' });
 
             float.TryParse(row[0], out x);
@@ -34,8 +31,7 @@ public class VisualizationHeatmapCSV : MonoBehaviour
             rotationvalues.Add(r);
         }
 
-        for (int i = 0; i < xvalues.Count; i++)
-        {
+        for (int i = 0; i < xvalues.Count; i++) {
             Vector3 pos = new Vector3(xvalues[i], 1, zvalues[i]);
             Vector3 rot = new Vector3(0, rotationvalues[i], 0);
 
@@ -45,8 +41,7 @@ public class VisualizationHeatmapCSV : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
 
     }
 }

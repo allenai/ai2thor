@@ -4,8 +4,7 @@ using UnityEngine;
 
 //serialized class so it can show up in Inspector Window
 [System.Serializable]
-public class SwapObjList
-{
+public class SwapObjList {
     //reference to game object that needs to have materials changed
     [Header("Object That Needs Mat Swaps")]
     [SerializeField]
@@ -23,8 +22,7 @@ public class SwapObjList
 
 }
 
-public class CanToggleOnOff : MonoBehaviour
-{
+public class CanToggleOnOff : MonoBehaviour {
     //the array of moving parts and lightsources will correspond with each other based on their 
     //position in the array
 
@@ -84,63 +82,52 @@ public class CanToggleOnOff : MonoBehaviour
     //another sim object, the stove knob.
     //stove knob: returns toggleable, returns istoggled
     //stove burner: only returns istoggled
-    public bool ReturnSelfControlled()
-    {
+    public bool ReturnSelfControlled() {
         return SelfControlled;
     }
 
     //returns references to all sim objects this object toggles the on/off state of. For example all stove knobs can
     //return which burner they control with this
-    public SimObjPhysics[] ReturnControlledSimObjects()
-    {
+    public SimObjPhysics[] ReturnControlledSimObjects() {
         return ControlledSimObjects;
     }
 
-    public List<SimObjType> ReturnMustBeClosedToTurnOn()
-    {
+    public List<SimObjType> ReturnMustBeClosedToTurnOn() {
         return MustBeClosedToTurnOn;
     }
 
-    public bool isTurnedOnOrOff()
-    {
+    public bool isTurnedOnOrOff() {
         return isOn;
     }
     //Helper functions for setting up scenes, only for use in Editor
 #if UNITY_EDITOR
-    public void SetMovementToSlide()
-    {
+    public void SetMovementToSlide() {
         movementType = MovementType.Slide;
     }
 
-    public void SetMovementToRotate()
-    {
+    public void SetMovementToRotate() {
         movementType = MovementType.Rotate;
     }
 
 #endif
 
     // Use this for initialization
-    void Start()
-    {
-        if (MovingParts != null)
-        {
-            foreach (GameObject go in MovingParts)
-            {
+    void Start() {
+        if (MovingParts != null) {
+            foreach (GameObject go in MovingParts) {
                 iTween.Init(go);
             }
         }
 
 #if UNITY_EDITOR
-        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff))
-        {
+        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
             Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
         }
 #endif
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         // //test if it can open without Agent Command - Debug Purposes
         // #if UNITY_EDITOR
         // if (Input.GetKeyDown(KeyCode.Minus))
@@ -150,44 +137,34 @@ public class CanToggleOnOff : MonoBehaviour
         // #endif
     }
 
-    public int GetiTweenCount()
-    {
+    public int GetiTweenCount() {
         //the number of iTween instances running on all doors managed by this fridge
         int count = 0;
 
-        foreach (GameObject go in MovingParts)
-        {
+        foreach (GameObject go in MovingParts) {
             count += iTween.Count(go);
         }
         return count;//iTween.Count(this.transform.gameObject);
     }
 
-    public void Toggle()
-    {
+    public void Toggle() {
         //if this object is controlled by another object, do nothing and report failure?
         if (!SelfControlled)
             return;
 
         //check if there are moving parts
         //check if there are lights/materials etc to swap out
-        if (isOn)
-        {
-            if (MovingParts.Length > 0)
-            {
-                for (int i = 0; i < MovingParts.Length; i++)
-                {
-                    if (movementType == MovementType.Rotate)
-                    {
-                        if (i == MovingParts.Length - 1)
-                        {
+        if (isOn) {
+            if (MovingParts.Length > 0) {
+                for (int i = 0; i < MovingParts.Length; i++) {
+                    if (movementType == MovementType.Rotate) {
+                        if (i == MovingParts.Length - 1) {
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
                             "rotation", OffPositions[i],
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        }
-
-                        else
+                        } else
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
                             "rotation", OffPositions[i],
                             "islocal", true,
@@ -195,18 +172,14 @@ public class CanToggleOnOff : MonoBehaviour
                             "easetype", "linear"));
                     }
 
-                    if (movementType == MovementType.Slide)
-                    {
-                        if (i == MovingParts.Length - 1)
-                        {
+                    if (movementType == MovementType.Slide) {
+                        if (i == MovingParts.Length - 1) {
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
                             "position", OffPositions[i],
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        }
-
-                        else
+                        } else
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
                             "position", OffPositions[i],
                             "islocal", true,
@@ -217,30 +190,20 @@ public class CanToggleOnOff : MonoBehaviour
             }
 
             //if no moving parts, then only materials and lights need to be swapped
-            else
-            {
+            else {
                 setisOn();
             }
-        }
-
-        else
-        {
-            if (MovingParts.Length > 0)
-            {
-                for (int i = 0; i < MovingParts.Length; i++)
-                {
-                    if (movementType == MovementType.Rotate)
-                    {
-                        if (i == MovingParts.Length - 1)
-                        {
+        } else {
+            if (MovingParts.Length > 0) {
+                for (int i = 0; i < MovingParts.Length; i++) {
+                    if (movementType == MovementType.Rotate) {
+                        if (i == MovingParts.Length - 1) {
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
                             "rotation", OnPositions[i],
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        }
-
-                        else
+                        } else
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
                             "rotation", OnPositions[i],
                             "islocal", true,
@@ -248,18 +211,14 @@ public class CanToggleOnOff : MonoBehaviour
                             "easetype", "linear"));
                     }
 
-                    if (movementType == MovementType.Slide)
-                    {
-                        if (i == MovingParts.Length - 1)
-                        {
+                    if (movementType == MovementType.Slide) {
+                        if (i == MovingParts.Length - 1) {
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
                             "position", OnPositions[i],
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        }
-
-                        else
+                        } else
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
                             "position", OnPositions[i],
                             "islocal", true,
@@ -270,41 +229,32 @@ public class CanToggleOnOff : MonoBehaviour
             }
 
             //if no moving parts, then only materials and lights need to be toggled
-            else
-            {
+            else {
                 setisOn();
             }
         }
     }
 
     //toggle isOn variable, swap Materials and enable/disable Light sources
-    private void setisOn()
-    {
+    private void setisOn() {
         //if isOn true, set it to false and also turn off all lights/deactivate materials
-        if (isOn)
-        {
-            if (LightSources.Length > 0)
-            {
-                for (int i = 0; i < LightSources.Length; i++)
-                {
+        if (isOn) {
+            if (LightSources.Length > 0) {
+                for (int i = 0; i < LightSources.Length; i++) {
                     LightSources[i].SetActive(false);
                 }
             }
 
-            if (MaterialSwapObjects.Length > 0)
-            {
-                for (int i = 0; i < MaterialSwapObjects.Length; i++)
-                {
+            if (MaterialSwapObjects.Length > 0) {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
                     MaterialSwapObjects[i].OffMaterials;
                 }
             }
 
             //also set any objects this object controlls to the off state
-            if (ControlledSimObjects.Length > 0)
-            {
-                foreach (SimObjPhysics sop in ControlledSimObjects)
-                {
+            if (ControlledSimObjects.Length > 0) {
+                foreach (SimObjPhysics sop in ControlledSimObjects) {
                     sop.GetComponent<CanToggleOnOff>().isOn = false;
                 }
             }
@@ -313,30 +263,23 @@ public class CanToggleOnOff : MonoBehaviour
         }
 
         //if isOn false, set to true and then turn ON all lights and activate material swaps
-        else
-        {
-            if (LightSources.Length > 0)
-            {
-                for (int i = 0; i < LightSources.Length; i++)
-                {
+        else {
+            if (LightSources.Length > 0) {
+                for (int i = 0; i < LightSources.Length; i++) {
                     LightSources[i].SetActive(true);
                 }
             }
 
-            if (MaterialSwapObjects.Length > 0)
-            {
-                for (int i = 0; i < MaterialSwapObjects.Length; i++)
-                {
+            if (MaterialSwapObjects.Length > 0) {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
                     MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
             //also set any objects this object controlls to the on state
-            if (ControlledSimObjects.Length > 0)
-            {
-                foreach (SimObjPhysics sop in ControlledSimObjects)
-                {
+            if (ControlledSimObjects.Length > 0) {
+                foreach (SimObjPhysics sop in ControlledSimObjects) {
                     sop.GetComponent<CanToggleOnOff>().isOn = true;
                 }
             }

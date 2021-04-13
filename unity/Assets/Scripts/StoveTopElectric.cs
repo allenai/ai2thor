@@ -2,8 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class StoveTopElectric : MonoBehaviour
-{
+public class StoveTopElectric : MonoBehaviour {
 
     public SimObj ParentObj;
     public Material BurnerOnMat;
@@ -13,16 +12,14 @@ public class StoveTopElectric : MonoBehaviour
     Material[] matArrayOn;
     Material[] matArrayOff;
 
-    void Awake()
-    {
+    void Awake() {
         ParentObj = gameObject.GetComponent<SimObj>();
         matArrayOn = BurnerRenderer.sharedMaterials;
         matArrayOff = BurnerRenderer.sharedMaterials;
         matArrayOn[MatIndex] = BurnerOnMat;
     }
 
-    void Update()
-    {
+    void Update() {
         BurnerRenderer.sharedMaterials = ParentObj.Animator.GetBool("AnimState1") ? matArrayOn : matArrayOff;
     }
 }

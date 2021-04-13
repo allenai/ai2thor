@@ -26,18 +26,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public static class ListExtensions
-{
-    public static IList<T> Shuffle<T>(this IList<T> list)
-    {
+public static class ListExtensions {
+    public static IList<T> Shuffle<T>(this IList<T> list) {
         return list.ShallowCopy().Shuffle_();
     }
 
-    public static IList<T> Shuffle_<T>(this IList<T> list)
-    {
+    public static IList<T> Shuffle_<T>(this IList<T> list) {
         int n = list.Count;
-        while (n > 1)
-        {
+        while (n > 1) {
             n--;
             int k = UnityEngine.Random.Range(0, n + 1);
             T value = list[k];
@@ -47,16 +43,13 @@ public static class ListExtensions
         return list;
     }
 
-    public static IList<T> Shuffle_<T>(this IList<T> list, int seed)
-    {
+    public static IList<T> Shuffle_<T>(this IList<T> list, int seed) {
         return list.Shuffle_(new System.Random(seed));
     }
 
-    public static IList<T> Shuffle_<T>(this IList<T> list, System.Random rng)
-    {
+    public static IList<T> Shuffle_<T>(this IList<T> list, System.Random rng) {
         int n = list.Count;
-        while (n > 1)
-        {
+        while (n > 1) {
             n--;
             int k = rng.Next(n + 1);
             T value = list[k];
@@ -66,8 +59,7 @@ public static class ListExtensions
         return list;
     }
 
-    public static IList<T> ShallowCopy<T>(this IList<T> listToCopy)
-    {
+    public static IList<T> ShallowCopy<T>(this IList<T> listToCopy) {
         return listToCopy.Select(item => item).ToList();
     }
 }

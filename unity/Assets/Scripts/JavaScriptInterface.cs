@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 using UnityStandardAssets.Characters.FirstPerson;
 
 
-public class JavaScriptInterface : MonoBehaviour
-{
+public class JavaScriptInterface : MonoBehaviour {
 
     // IL2CPP throws exceptions about SendMetadata and Init not existing
     // so the body is only used for WebGL

@@ -1,31 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ScreenShotFromCamera : MonoBehaviour
-{
+public class ScreenShotFromCamera : MonoBehaviour {
     public int resWidth = 3840;
     public int resHeight = 2160;
 
     private bool takeHiResShot = false;
 
-    public static string ScreenShotName(int width, int height)
-    {
+    public static string ScreenShotName(int width, int height) {
         return string.Format("{0}/screenshots/screen_{1}x{2}_{3}.png",
                              Application.dataPath,
                              width, height,
                              System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
     }
 
-    public void TakeHiResShot()
-    {
+    public void TakeHiResShot() {
         takeHiResShot = true;
     }
 
-    void LateUpdate()
-    {
+    void LateUpdate() {
         takeHiResShot |= Input.GetKeyDown("k");
-        if (takeHiResShot)
-        {
+        if (takeHiResShot) {
             RenderTexture rt = new RenderTexture(resWidth, resHeight, 24);
             GetComponent<Camera>().targetTexture = rt;
             Texture2D screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGB24, false);

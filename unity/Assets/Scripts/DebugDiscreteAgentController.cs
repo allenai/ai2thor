@@ -3,18 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
-    public class DebugDiscreteAgentController : MonoBehaviour
-    {
+namespace UnityStandardAssets.Characters.FirstPerson {
+    public class DebugDiscreteAgentController : MonoBehaviour {
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
-        void Start()
-        {
+        void Start() {
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             inputField = InputFieldObj.GetComponent<InputField>();
@@ -23,8 +20,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
-            if (this.isActiveAndEnabled)
-            {
+            if (this.isActiveAndEnabled) {
                 Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
@@ -32,22 +28,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-        public void OnEnable()
-        {
+        public void OnEnable() {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
-            if (InputMode_Text)
-            {
+            if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "Text Input Mode";
             }
         }
 
-        public void OnDisable()
-        {
+        public void OnDisable() {
 
         }
 
-        void Update()
-        {
+        void Update() {
             //use these for the Breakable Window demo video
             // if(Input.GetKeyDown(KeyCode.P))
             // {
@@ -81,20 +73,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // }
 
             //if we press enter, select the input field
-            if (PhysicsController.ReadyForCommand)
-            {
-                if (Input.GetKeyDown(KeyCode.Return))
-                {
+            if (PhysicsController.ReadyForCommand) {
+                if (Input.GetKeyDown(KeyCode.Return)) {
                     UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
                 }
 
 
-                if (!inputField.isFocused)
-                {
+                if (!inputField.isFocused) {
                     // float FlyMagnitude = 1.0f;
                     float WalkMagnitude = 0.25f;
-                    if (Input.GetKeyDown(KeyCode.W))
-                    {
+                    if (Input.GetKeyDown(KeyCode.W)) {
                         ServerAction action = new ServerAction();
                         // if(PhysicsController.FlightMode)
                         // {
@@ -111,8 +99,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // }
                     }
 
-                    if (Input.GetKeyDown(KeyCode.S))
-                    {
+                    if (Input.GetKeyDown(KeyCode.S)) {
                         ServerAction action = new ServerAction();
                         // if(PhysicsController.FlightMode)
                         // {
@@ -129,8 +116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // }
                     }
 
-                    if (Input.GetKeyDown(KeyCode.A))
-                    {
+                    if (Input.GetKeyDown(KeyCode.A)) {
                         ServerAction action = new ServerAction();
                         // if(PhysicsController.FlightMode)
                         // {
@@ -147,8 +133,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // }
                     }
 
-                    if (Input.GetKeyDown(KeyCode.D))
-                    {
+                    if (Input.GetKeyDown(KeyCode.D)) {
                         ServerAction action = new ServerAction();
                         // if(PhysicsController.FlightMode)
                         // {
@@ -187,15 +172,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //     }
                     // }
 
-                    if (Input.GetKeyDown(KeyCode.UpArrow))
-                    {
+                    if (Input.GetKeyDown(KeyCode.UpArrow)) {
                         ServerAction action = new ServerAction();
                         action.action = "LookUp";
                         PhysicsController.ProcessControlCommand(action);
                     }
 
-                    if (Input.GetKeyDown(KeyCode.DownArrow))
-                    {
+                    if (Input.GetKeyDown(KeyCode.DownArrow)) {
                         ServerAction action = new ServerAction();
                         action.action = "LookDown";
                         PhysicsController.ProcessControlCommand(action);

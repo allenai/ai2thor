@@ -10,16 +10,14 @@ using UnityStandardAssets.Characters.FirstPerson;
 //of the Receptacle Trigger Box, which gets confusing if an Object has multiple ReceptacleTriggerBoxes
 //with multiple Contains.cs scripts
 [System.Serializable]
-public class ReceptacleSpawnPoint
-{
+public class ReceptacleSpawnPoint {
     public BoxCollider ReceptacleBox; //the box the point is in
     public Vector3 Point; //Vector3 coordinate in world space, possible spawn location
 
     public Contains Script;
     public SimObjPhysics ParentSimObjPhys;
 
-    public ReceptacleSpawnPoint(Vector3 p, BoxCollider box, Contains c, SimObjPhysics parentsop)
-    {
+    public ReceptacleSpawnPoint(Vector3 p, BoxCollider box, Contains c, SimObjPhysics parentsop) {
         ReceptacleBox = box;
         Point = p;
         Script = c;
@@ -27,8 +25,7 @@ public class ReceptacleSpawnPoint
     }
 }
 
-public class Contains : MonoBehaviour
-{
+public class Contains : MonoBehaviour {
     [SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
     //this is an object reference to the sim object that is linked to this receptacle box
@@ -45,23 +42,19 @@ public class Contains : MonoBehaviour
 
     // Use this for initialization
 
-    void OnEnable()
-    {
+    void OnEnable() {
         //if the parent of this object has a SimObjPhysics component, grab a reference to it
-        if (myParent == null)
-        {
+        if (myParent == null) {
             if (gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject)
                 myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
         }
 
     }
-    void Start()
-    {
+    void Start() {
         //check that all objects with receptacles components have the correct Receptacle secondary property
 #if UNITY_EDITOR
         SimObjPhysics go = gameObject.GetComponentInParent<SimObjPhysics>();
-        if (!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-        {
+        if (!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
             Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
         }
 #endif
@@ -71,8 +64,7 @@ public class Contains : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         //turn this on for debugging spawnpoints in editor
         //GetValidSpawnPoints(true);
 
@@ -88,18 +80,12 @@ public class Contains : MonoBehaviour
         // }
     }
 
-    protected bool hasAncestor(GameObject child, GameObject potentialAncestor)
-    {
-        if (child == potentialAncestor)
-        {
+    protected bool hasAncestor(GameObject child, GameObject potentialAncestor) {
+        if (child == potentialAncestor) {
             return true;
-        }
-        else if (child.transform.parent != null)
-        {
+        } else if (child.transform.parent != null) {
             return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
@@ -107,8 +93,7 @@ public class Contains : MonoBehaviour
     //public BoxCollider coll;
 
     //return a list of sim objects currently inside this trigger box as GameObjects
-    public List<GameObject> CurrentlyContainedGameObjects()
-    {
+    public List<GameObject> CurrentlyContainedGameObjects() {
         List<GameObject> objs = new List<GameObject>();
 
         BoxCollider b = this.GetComponent<BoxCollider>();
@@ -131,23 +116,19 @@ public class Contains : MonoBehaviour
         ////////////////////////////////////////////////////
 
         //ok now create an overlap box using these values and return all contained objects
-        foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation))
-        {
+        foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation)) {
             //ignore triggers
-            if (col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger)
-            {
+            if (col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger) {
                 //grab reference to game object this collider is part of
                 SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
                 //don't add any colliders from our parent object, so things like a 
                 //shelf or drawer nested inside another shelving unit or dresser sim object
                 //don't contain the object they are nested inside
-                if (!hasAncestor(this.transform.gameObject, sop.transform.gameObject))
-                {
+                if (!hasAncestor(this.transform.gameObject, sop.transform.gameObject)) {
                     //don't add repeat objects in case there were multiple
                     //colliders from the same object
-                    if (!objs.Contains(sop.transform.gameObject))
-                    {
+                    if (!objs.Contains(sop.transform.gameObject)) {
                         objs.Add(sop.transform.gameObject);
                     }
                 }
@@ -159,8 +140,7 @@ public class Contains : MonoBehaviour
 
     //return if this container object is occupied by any object(s) inside the trigger collider
     //used by ObjectSpecificReceptacle, so objects like stove burners, coffee machine, etc.
-    public bool isOccupied()
-    {
+    public bool isOccupied() {
         bool result = false;
         if (CurrentlyContainedGameObjects().Count > 0)
             result = true;
@@ -169,12 +149,10 @@ public class Contains : MonoBehaviour
     }
 
     //report back what is currently inside this receptacle as list of SimObjPhysics
-    public List<SimObjPhysics> CurrentlyContainedObjects()
-    {
+    public List<SimObjPhysics> CurrentlyContainedObjects() {
         List<SimObjPhysics> toSimObjPhysics = new List<SimObjPhysics>();
 
-        foreach (GameObject g in CurrentlyContainedGameObjects())
-        {
+        foreach (GameObject g in CurrentlyContainedGameObjects()) {
             toSimObjPhysics.Add(g.GetComponent<SimObjPhysics>());
         }
 
@@ -182,12 +160,10 @@ public class Contains : MonoBehaviour
     }
 
     //report back a list of object ids of objects currently inside this receptacle
-    public List<string> CurrentlyContainedObjectIDs()
-    {
+    public List<string> CurrentlyContainedObjectIDs() {
         List<string> ids = new List<string>();
 
-        foreach (GameObject g in CurrentlyContainedGameObjects())
-        {
+        foreach (GameObject g in CurrentlyContainedGameObjects()) {
             ids.Add(g.GetComponent<SimObjPhysics>().ObjectID);
         }
 
@@ -195,8 +171,7 @@ public class Contains : MonoBehaviour
     }
 
     //returns a grid of points above the target receptacle
-    public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox()
-    {
+    public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox() {
         Vector3 p1, p2, p4; //in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
@@ -222,16 +197,14 @@ public class Contains : MonoBehaviour
         Vector3 zdir = (p4 - p1).normalized; //direction in the -z direction to finish drawing grid
         float zdist = Vector3.Distance(p4, p1);
 
-        for (int i = 0; i < linepoints; i++)
-        {
+        for (int i = 0; i < linepoints; i++) {
             float x = p1.x + (p2.x - p1.x) * (lineincrement * i);
             float y = p1.y + (p2.y - p1.y) * (lineincrement * i);
             float z = p1.z + (p2.z - p1.z) * (lineincrement * i);
 
             PointsOnLineXdir[i] = new Vector3(x, y, z);
 
-            for (int j = 0; j < linepoints; j++)
-            {
+            for (int j = 0; j < linepoints; j++) {
                 gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j * lineincrement)));
             }
         }
@@ -246,8 +219,7 @@ public class Contains : MonoBehaviour
     //generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     //the list of points should be filtered closest to agent, if false
     //it will return all points on the receptacle regardless of agent proximity
-    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(bool ReturnPointsCloseToAgent)
-    {
+    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(bool ReturnPointsCloseToAgent) {
         List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
         Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; //in case we need all the corners later for something...
@@ -280,22 +252,19 @@ public class Contains : MonoBehaviour
         float zdist = Vector3.Distance(p4, p1);
         float ydist = Vector3.Distance(p1, p5);
 
-        for (int i = 0; i < linepoints; i++)
-        {
+        for (int i = 0; i < linepoints; i++) {
             float x = p1.x + (p2.x - p1.x) * (lineincrement * i);
             float y = p1.y + (p2.y - p1.y) * (lineincrement * i);
             float z = p1.z + (p2.z - p1.z) * (lineincrement * i);
 
             PointsOnLineXdir[i] = new Vector3(x, y, z);
 
-            for (int j = 0; j < linepoints; j++)
-            {
+            for (int j = 0; j < linepoints; j++) {
                 gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j * lineincrement)));
             }
         }
 
-        foreach (Vector3 point in gridpoints)
-        {
+        foreach (Vector3 point in gridpoints) {
             // //quick test to see if this point on the grid is blocked by anything by raycasting down
             // //toward it
 
@@ -311,16 +280,11 @@ public class Contains : MonoBehaviour
 
                 //IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
                 //set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
-                if (hit.transform == myParent.transform)
-                {
+                if (hit.transform == myParent.transform) {
                     //print("raycast hit: " + hit.transform.name);
-                    if (!ReturnPointsCloseToAgent)
-                    {
+                    if (!ReturnPointsCloseToAgent) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
-                    }
-
-                    else if (NarrowDownValidSpawnPoints(hit.point))
-                    {
+                    } else if (NarrowDownValidSpawnPoints(hit.point)) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
                     }
                 }
@@ -328,12 +292,9 @@ public class Contains : MonoBehaviour
 
             Vector3 BottomPoint = point + -(ydir * ydist);
             //didn't hit anything that could obstruct, so this point is good to go
-            if (!ReturnPointsCloseToAgent)
-            {
+            if (!ReturnPointsCloseToAgent) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-            }
-
-            else if (NarrowDownValidSpawnPoints(BottomPoint))
+            } else if (NarrowDownValidSpawnPoints(BottomPoint))
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
         }
 
@@ -352,8 +313,7 @@ public class Contains : MonoBehaviour
     }
 
     //additional checks if the point is valid. Return true if it's valid
-    public bool NarrowDownValidSpawnPoints(Vector3 point)
-    {
+    public bool NarrowDownValidSpawnPoints(Vector3 point) {
         //check if the point is in range of the agent at all
         GameObject agent = GameObject.Find("FPSController");
         PhysicsRemoteFPSAgentController agentController = agent.GetComponent<PhysicsRemoteFPSAgentController>();
@@ -376,16 +336,12 @@ public class Contains : MonoBehaviour
         Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
 
         //no offset if the object is below the camera position - a slight offset to account for objects equal in y distance to the camera
-        if (point.y < agentCam.transform.position.y - 0.05f)
-        {
+        if (point.y < agentCam.transform.position.y - 0.05f) {
             //do this check if the point's y value is below the camera's y value
             //this check will be a raycast vision check from the camera to the point exactly
             if (agentController.CheckIfPointIsInViewport(point))
                 return true;
-        }
-
-        else
-        {
+        } else {
             //do this check if the point's y value is above the agent camera. This means we are
             //trying to place an object on a shelf or something high up that we can't quite reach
             //in this case, modify the point that is checked for visibility by adding a little bit to the y
@@ -402,8 +358,7 @@ public class Contains : MonoBehaviour
 
     //used to check if a given Vector3 is inside this receptacle box in world space
     //use this to check if a SimObjectPhysics's corners are contained within this receptacle, if not then it doesn't fit
-    public bool CheckIfPointIsInsideReceptacleTriggerBox(Vector3 point)
-    {
+    public bool CheckIfPointIsInsideReceptacleTriggerBox(Vector3 point) {
         BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
 
         point = myBox.transform.InverseTransformPoint(point) - myBox.center;
@@ -419,8 +374,7 @@ public class Contains : MonoBehaviour
             return false;
     }
 
-    public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point)
-    {
+    public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point) {
         BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
 
         point = myBox.transform.InverseTransformPoint(point) - myBox.center;
@@ -437,8 +391,7 @@ public class Contains : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    void OnDrawGizmos()
-    {
+    void OnDrawGizmos() {
         BoxCollider b = GetComponent<BoxCollider>();
 
         //these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,

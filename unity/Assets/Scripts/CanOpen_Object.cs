@@ -4,8 +4,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 // Allows for openable objects to be opened.
-public class CanOpen_Object : MonoBehaviour
-{
+public class CanOpen_Object : MonoBehaviour {
     [Header("Moving Parts for this Object")]
     [SerializeField]
     public GameObject[] MovingParts;
@@ -57,19 +56,15 @@ public class CanOpen_Object : MonoBehaviour
     [SerializeField]
     protected GameObject ClosedBoundingBox;
 
-    public List<SimObjType> WhatReceptaclesMustBeOffToOpen()
-    {
+    public List<SimObjType> WhatReceptaclesMustBeOffToOpen() {
         return MustBeOffToOpen;
     }
 
     // Use this for initialization
-    void Start()
-    {
+    void Start() {
         // init Itween in all doors to prep for animation
-        if (MovingParts != null)
-        {
-            foreach (GameObject go in MovingParts)
-            {
+        if (MovingParts != null) {
+            foreach (GameObject go in MovingParts) {
                 iTween.Init(go);
 
                 //check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
@@ -79,8 +74,7 @@ public class CanOpen_Object : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
-        {
+        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
             Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
         }
 #endif
@@ -94,12 +88,10 @@ public class CanOpen_Object : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         //test if it can open without Agent Command - Debug Purposes
 #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Equals))
-        {
+        if (Input.GetKeyDown(KeyCode.Equals)) {
             Interact();
         }
 #endif
@@ -107,54 +99,44 @@ public class CanOpen_Object : MonoBehaviour
 
     // Helper functions for setting up scenes, only for use in Editor
 #if UNITY_EDITOR
-    void OnEnable()
-    {
+    void OnEnable() {
         //debug check for missing CanOpen property
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
-        {
+        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
             Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanOpen!");
         }
     }
 
-    public void SetMovementToSlide()
-    {
+    public void SetMovementToSlide() {
         movementType = MovementType.Slide;
     }
 
-    public void SetMovementToRotate()
-    {
+    public void SetMovementToRotate() {
         movementType = MovementType.Rotate;
     }
 
-    public void SetMovementToScaleX()
-    {
+    public void SetMovementToScaleX() {
         movementType = MovementType.ScaleX;
     }
 
-    public void SetMovementToScaleY()
-    {
+    public void SetMovementToScaleY() {
         movementType = MovementType.ScaleY;
     }
 
-    public void SetMovementToScaleZ()
-    {
+    public void SetMovementToScaleZ() {
         movementType = MovementType.ScaleZ;
     }
 #endif
 
-    public void Interact(float openness = 1.0f)
-    {
+    public void Interact(float openness = 1.0f) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-        if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false)
-        {
+        if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false) {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
         startOpenness = currentOpenness;
-        for (int i = 0; i < MovingParts.Length; i++)
-        {
+        for (int i = 0; i < MovingParts.Length; i++) {
             Hashtable args = new Hashtable() {
                 {"islocal", true},
                 {"time", animationTime},
@@ -162,53 +144,40 @@ public class CanOpen_Object : MonoBehaviour
             };
 
             // we are on the last moving part here
-            if (i == MovingParts.Length - 1)
-            {
+            if (i == MovingParts.Length - 1) {
                 args["onCompleteTarget"] = gameObject;
             }
 
             // let's open the object!
-            if (movementType == MovementType.Rotate)
-            {
+            if (movementType == MovementType.Rotate) {
                 args["rotation"] = openPositions[i] * openness;
                 iTween.RotateTo(MovingParts[i], args);
-            }
-            else if (movementType == MovementType.Slide)
-            {
+            } else if (movementType == MovementType.Slide) {
                 // this is used to determine which components of openPosition need to be scaled
                 // default to open position without percentage open modifiers
                 Vector3 lerpToPosition = openPositions[i];
 
                 // some x, y, z components don't change when sliding open
                 // only apply openness modifier to components of vector3 that actually change
-                if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon)
-                {
+                if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
                     lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openness) + closedPositions[i].x;
                 }
-                if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon)
-                {
+                if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
                     lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openness) + closedPositions[i].y;
                 }
-                if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon)
-                {
+                if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
                     lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openness) + closedPositions[i].z;
                 }
                 args["position"] = lerpToPosition;
                 iTween.MoveTo(MovingParts[i], args);
-            }
-            else if (movementType == MovementType.ScaleY)
-            {
+            } else if (movementType == MovementType.ScaleY) {
                 args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openness, openPositions[i].z);
                 iTween.ScaleTo(MovingParts[i], args);
-            }
-            else if (movementType == MovementType.ScaleX)
-            {
+            } else if (movementType == MovementType.ScaleX) {
                 // we are on the last loop here
                 args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openness, openPositions[i].y, openPositions[i].z);
                 iTween.ScaleTo(MovingParts[i], args);
-            }
-            else if (movementType == MovementType.ScaleZ)
-            {
+            } else if (movementType == MovementType.ScaleZ) {
                 args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openness);
                 iTween.ScaleTo(MovingParts[i], args);
             }
@@ -217,19 +186,16 @@ public class CanOpen_Object : MonoBehaviour
         setIsOpen(openness: openness);
     }
 
-    private void setIsOpen(float openness)
-    {
+    private void setIsOpen(float openness) {
         isOpen = openness != 0;
         currentOpenness = openness;
         SwitchActiveBoundingBox();
     }
 
-    private void SwitchActiveBoundingBox()
-    {
+    private void SwitchActiveBoundingBox() {
         // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
         // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
-        if (OpenBoundingBox == null || ClosedBoundingBox == null)
-        {
+        if (OpenBoundingBox == null || ClosedBoundingBox == null) {
             return;
         }
 
@@ -237,38 +203,29 @@ public class CanOpen_Object : MonoBehaviour
         sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
     }
 
-    public bool GetisOpen()
-    {
+    public bool GetisOpen() {
         return isOpen;
     }
 
     // for use in OnTriggerEnter ignore check
     // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
-    public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol)
-    {
-        for (int i = 0; i < arrayOfCol.Length; i++)
-        {
-            if (other.GetComponentInParent<CanOpen_Object>().transform)
-            {
-                if (other.GetComponentInParent<CanOpen_Object>().transform == arrayOfCol[i].transform)
-                {
+    public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol) {
+        for (int i = 0; i < arrayOfCol.Length; i++) {
+            if (other.GetComponentInParent<CanOpen_Object>().transform) {
+                if (other.GetComponentInParent<CanOpen_Object>().transform == arrayOfCol[i].transform) {
                     return true;
                 }
-            }
-            else
-            {
+            } else {
                 return true;
             }
         }
         return false;
     }
 
-    public int GetiTweenCount()
-    {
+    public int GetiTweenCount() {
         // the number of iTween instances running on all doors managed by this fridge
         int count = 0;
-        foreach (GameObject go in MovingParts)
-        {
+        foreach (GameObject go in MovingParts) {
             count += iTween.Count(go);
         }
         return count; //iTween.Count(this.transform.gameObject);
@@ -276,39 +233,28 @@ public class CanOpen_Object : MonoBehaviour
 
     // note: reset can interrupt the Interact() itween call because
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
-    public void Reset()
-    {
-        if (!isCurrentlyResetting)
-        {
+    public void Reset() {
+        if (!isCurrentlyResetting) {
             Interact(openness: startOpenness);
             StartCoroutine("updateReset");
         }
     }
 
-    private bool hasAncestor(GameObject child, GameObject potentialAncestor)
-    {
-        if (child == potentialAncestor)
-        {
+    private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
+        if (child == potentialAncestor) {
             return true;
-        }
-        else if (child.transform.parent != null)
-        {
+        } else if (child.transform.parent != null) {
             return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
 
-    public void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Receptacle"))
-        {
+    public void OnTriggerEnter(Collider other) {
+        if (other.CompareTag("Receptacle")) {
             return;
         }
-        if (!triggerEnabled)
-        {
+        if (!triggerEnabled) {
             return;
         }
         // note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
@@ -325,23 +271,19 @@ public class CanOpen_Object : MonoBehaviour
         // NOTE: hitting the agent and resetting is now handled by the OpenAnimation coroutine in PhysicsRemote
 
         //// If the thing your colliding with is one of your (grand)-children then don't worry about it
-        if (hasAncestor(other.transform.gameObject, gameObject))
-        {
+        if (hasAncestor(other.transform.gameObject, gameObject)) {
             return;
         }
 
         //if hitting another object that has double doors, do some checks 
-        if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true)
-        {
-            if (IsInIgnoreArray(other, IgnoreTheseObjects))
-            {
+        if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
+            if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
                 //don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
                 return;
             }
 
             // oh it was something else RESET! DO IT!
-            else
-            {
+            else {
                 // check the collider hit's parent for itween instances
                 // if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
                 // object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
@@ -360,16 +302,11 @@ public class CanOpen_Object : MonoBehaviour
     }
 
     // resets the isCurrentlyResetting boolean once the reset tween is done. This checks for iTween instances, once there are none this object can be used again
-    private IEnumerator updateReset()
-    {
-        while (true)
-        {
-            if (GetiTweenCount() != 0)
-            {
+    private IEnumerator updateReset() {
+        while (true) {
+            if (GetiTweenCount() != 0) {
                 yield return new WaitForEndOfFrame();
-            }
-            else
-            {
+            } else {
                 isCurrentlyResetting = true;
                 yield break;
             }

@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum DecalRotationAxis
-{
+enum DecalRotationAxis {
     NONE,
     FORWARD,
     SIDE
 }
 
-public class DecalCollision : Break
-{
+public class DecalCollision : Break {
     // If true Guarantees that other spawn planes under the same parent will have the same stencil value
     [SerializeField]
     private bool sameStencilAsSiblings = false;
@@ -36,30 +34,22 @@ public class DecalCollision : Break
 
 
 
-    void OnEnable()
-    {
+    void OnEnable() {
         breakType = BreakType.Decal;
         prevTime = Time.time;
 
         var mr = this.GetComponent<MeshRenderer>();
-        if (mr && mr.enabled)
-        {
-            if (transparent)
-            {
-                if (!sameStencilAsSiblings)
-                {
+        if (mr && mr.enabled) {
+            if (transparent) {
+                if (!sameStencilAsSiblings) {
                     setStencilWriteValue(mr);
-                }
-                else
-                {
+                } else {
                     var otherPlanes = this.transform.parent.gameObject.GetComponentsInChildren<DecalCollision>();
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
                     //Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
-                    foreach (var spawnPlane in otherPlanes)
-                    {
+                    foreach (var spawnPlane in otherPlanes) {
 
-                        if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings)
-                        {
+                        if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
                             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
@@ -67,14 +57,11 @@ public class DecalCollision : Break
                             break;
                         }
                     }
-                    if (!stencilSet)
-                    {
+                    if (!stencilSet) {
                         setStencilWriteValue(mr);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 this.stencilWriteValue = 1;
                 mr.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
@@ -82,12 +69,10 @@ public class DecalCollision : Break
 
     }
 
-    private void setStencilWriteValue(MeshRenderer mr)
-    {
+    private void setStencilWriteValue(MeshRenderer mr) {
         DecalCollision.currentStencilId = DecalCollision.currentStencilId + 1;
         this.stencilWriteValue = DecalCollision.currentStencilId << 1;
-        if (this.stencilWriteValue > 0xFF)
-        {
+        if (this.stencilWriteValue > 0xFF) {
             this.stencilWriteValue = this.stencilWriteValue % 0xFF;
             //Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
         }
@@ -96,20 +81,15 @@ public class DecalCollision : Break
         this.stencilSet = true;
     }
 
-    protected override void BreakForDecalType(Collision collision)
-    {
-        if (!transparent)
-        {
-            if (collision != null)
-            {
-                foreach (ContactPoint contact in collision.contacts)
-                {
+    protected override void BreakForDecalType(Collision collision) {
+        if (!transparent) {
+            if (collision != null) {
+                foreach (ContactPoint contact in collision.contacts) {
                     float newTime = Time.time;
                     float timeDiff = newTime - prevTime;
                     var scale = contact.otherCollider.bounds.size;
 
-                    if (timeDiff > nextDecalWaitTimeSeconds)
-                    {
+                    if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
 
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
@@ -120,26 +100,19 @@ public class DecalCollision : Break
                         break;
                     }
                 }
-            }
-            else
-            {
+            } else {
                 spawnDecal(transform.position, this.transform.rotation, decalScale * 2);
             }
-        }
-        else
-        {
+        } else {
 
-            if (collision != null)
-            {
-                foreach (ContactPoint contact in collision.contacts)
-                {
+            if (collision != null) {
+                foreach (ContactPoint contact in collision.contacts) {
                     Debug.Log("Decal pre for " + this.stencilWriteValue);
                     float newTime = Time.time;
                     float timeDiff = newTime - prevTime;
                     var scale = contact.otherCollider.bounds.size;
 
-                    if (timeDiff > nextDecalWaitTimeSeconds)
-                    {
+                    if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
 
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
@@ -155,9 +128,7 @@ public class DecalCollision : Break
                         break;
                     }
                 }
-            }
-            else
-            {
+            } else {
                 // Debug.Log("Spawn decal break " + this.transform.rotation + " final " + this.transform.rotation * Quaternion.Euler(-90, 0, 0));
                 // spawnDecal(this.transform.position,  this.transform.rotation * Quaternion.Euler(-90, 0, 0), decalScale * 2);
                 spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale);
@@ -165,29 +136,23 @@ public class DecalCollision : Break
         }
     }
 
-    private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1)
-    {
+    private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1) {
         var minimumScale = this.transform.localScale;
         var decalScale = scale;
-        if (minimumScale.x < scale.x || minimumScale.y < scale.y)
-        {
+        if (minimumScale.x < scale.x || minimumScale.y < scale.y) {
             var minimumDim = Mathf.Min(minimumScale.x, minimumScale.y);
             decalScale = new Vector3(minimumDim, minimumDim, scale.z);
         }
         var selectIndex = index;
-        if (index < 0)
-        {
+        if (index < 0) {
             selectIndex = Random.Range(0, decals.Length);
         }
 
         var randomRotation = Quaternion.identity;
         var randomAngle = Random.Range(-180.0f, 180.0f);
-        if (randomRotationAxis == DecalRotationAxis.FORWARD)
-        {
+        if (randomRotationAxis == DecalRotationAxis.FORWARD) {
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.forward);
-        }
-        else if (randomRotationAxis == DecalRotationAxis.SIDE)
-        {
+        } else if (randomRotationAxis == DecalRotationAxis.SIDE) {
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.right);
         }
 
@@ -195,16 +160,13 @@ public class DecalCollision : Break
         decalCopy.transform.localScale = decalScale;
 
         var mr = decalCopy.GetComponent<MeshRenderer>();
-        if (transparent && mr && mr.enabled)
-        {
+        if (transparent && mr && mr.enabled) {
             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
         }
         // Not needed if deffered decal prefab is correctly set with  _StencilRef to 1 in material
-        else
-        {
+        else {
             var decal = decalCopy.GetComponent<DeferredDecal>();
-            if (decal)
-            {
+            if (decal) {
                 decal.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
         }
