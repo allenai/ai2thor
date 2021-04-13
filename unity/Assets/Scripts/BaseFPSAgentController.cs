@@ -3413,10 +3413,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
            
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-            if (sop == null) {
-                errorMessage = "Object with id '" + objectId+ "' is null";
-                return null;
-            }
 
             return sop;
         }
