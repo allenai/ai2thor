@@ -165,6 +165,30 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
+    public void MakeAllObjectsMoveable()
+    {
+        foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>())
+        {
+            //check if the sopType is something that can be hung
+            if (sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+            {
+                //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                if (sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                {
+                    continue;
+                }
+            }
+
+            if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                sop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+            {
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            }
+        }
+    }
+
     public void GatherSimObjPhysInScene() {
         List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 

@@ -378,7 +378,7 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, "local", False)
+    build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
@@ -790,8 +790,7 @@ def clean():
         "git@ai2thor-private-github:allenai/ai2thor-private.git"
     )
     subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d", shell=True)
-    subprocess.check_call("git clean -f -x", shell=True)
+    subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
     shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
     scripts.update_private.checkout_branch()
@@ -982,7 +981,7 @@ def ci_build(context):
                 # its possible that the cache doesn't get linked if the builds 
                 # succeeded during an earlier runh
                 link_build_cache(build["branch"])
-                ci_test_utf(build)
+                ci_test_utf(context, build)
                 pytest_proc = multiprocessing.Process(
                     target=ci_pytest,
                     args=(build,)
@@ -3297,12 +3296,15 @@ def generate_pypi_index(context):
 """ % "\n".join(links)
     s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
-def ci_test_utf(build):
+@task
+def ci_test_utf(context, build):
     s3 = boto3.resource("s3")
-    results_path, results_logfile = test_utf(context)
+
     logger.info(
         "running Unity Test framework testRunner for %s %s" % (build["branch"], build["commit_id"])
     )
+
+    results_path, results_logfile = test_utf(context)
     
     for l in [results_path, results_logfile]:
         key = "builds/" + os.path.basename(l)

@@ -307,7 +307,7 @@ class InteractiveControllerPrompt(object):
                 lambda x: x,
                 lambda name, x: np.save(
                     name.strip(".png").strip("./")
-                    if image_dir is "."
+                    if image_dir == "."
                     else name.strip(".png"),
                     x.astype(np.float32),
                 ),

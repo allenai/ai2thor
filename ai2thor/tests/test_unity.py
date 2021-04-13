@@ -949,6 +949,7 @@ def test_get_scenes_in_build(controller):
 
     event = controller.step(dict(action="GetScenesInBuild"), raise_for_failure=True)
     return_scenes = set(event.metadata["actionReturn"])
+
     # not testing for private scenes
     diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
@@ -1229,6 +1230,124 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_2d_semantic_hulls(controller):
+    from shapely.geometry import Polygon
+
+    controller.reset("FloorPlan28")
+    obj_name_to_obj_id = {o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]}
+    # Used to save fixed object locations.
+    # with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "w") as f:
+    #     json.dump(
+    #         [
+    #             {k: o[k] for k in ["name", "position", "rotation"]}
+    #             for o in controller.last_event.metadata["objects"]
+    #         ],
+    #         f
+    #     )
+    with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "r") as f:
+        fixed_obj_poses = json.load(f)
+        for o in fixed_obj_poses:
+            teleport_success = controller.step(
+                "TeleportObject",
+                objectId=obj_name_to_obj_id[o["name"]],
+                position=o["position"],
+                rotation=o["rotation"],
+                forceAction=True,
+                forceKinematic=True,
+                makeUnbreakable=True
+            ).metadata["lastActionSuccess"]
+            assert teleport_success
+
+    object_types = ["Tomato", "Drawer", "Fridge"]
+    object_ids = [
+        "Mug|-03.15|+00.82|-03.47",
+        "Faucet|-00.39|+00.93|-03.61",
+        "StoveBurner|-00.22|+00.92|-01.85"
+    ]
+
+    def get_rounded_hulls(**kwargs):
+        if "objectId" in kwargs:
+            md = controller.step("Get2DSemanticHull", **kwargs).metadata
+        else:
+            md = controller.step("Get2DSemanticHulls", **kwargs).metadata
+        assert md["lastActionSuccess"] and md["errorMessage"] == ""
+        hulls = md["actionReturn"]
+        if isinstance(hulls, list):
+            return np.array(hulls, dtype=float).round(4).tolist()
+        else:
+            return {
+                k: np.array(v, dtype=float).round(4).tolist()
+                for k, v in md["actionReturn"].items()
+            }
+
+    # All objects
+    hulls_all = get_rounded_hulls()
+
+    # Filtering by object types
+    hulls_type_filtered = get_rounded_hulls(objectTypes=object_types)
+
+    # Filtering by object ids
+    hulls_id_filtered = get_rounded_hulls(objectIds=object_ids)
+
+    # Single object id
+    hulls_single_object = get_rounded_hulls(objectId=object_ids[0])
+
+    # Used to save the ground truth values:
+    # objects = controller.last_event.metadata["objects"]
+    # objects_poses = [
+    #     {"objectName": o["name"], "position": o["position"], "rotation": o["rotation"]} for o in objects
+    # ]
+    # print(controller.step("SetObjectPoses", objectPoses=objects_poses).metadata)
+    # with open("ai2thor/tests/data/semantic-2d-hulls.json", "w") as f:
+    #     json.dump(
+    #         {
+    #             "all": hulls_all,
+    #             "type_filtered": hulls_type_filtered,
+    #             "id_filtered": hulls_id_filtered,
+    #             "single_object": hulls_single_object,
+    #         },
+    #         f
+    #     )
+
+    with open("ai2thor/tests/data/semantic-2d-hulls.json") as f:
+        truth = json.load(f)
+
+    def assert_almost_equal(a, b):
+        if isinstance(a, list):
+            pa = Polygon(a)
+            pb = Polygon(b)
+            pa_area = pa.area
+            pb_area = pb.area
+            sym_diff_area = pa.symmetric_difference(pb).area
+            # TODO: There seems to be a difference in the geometry reported by Unity when in
+            #   Linux vs Mac. I've had to increase the below check to the relatively generous <0.02
+            #   to get this test to pass.
+            assert sym_diff_area / max([1e-6, pa_area, pb_area]) < 2e-2, (
+                f"Polygons have to large an area ({sym_diff_area}) in their symmetric difference"
+                f" compared to their sizes ({pa_area}, {pb_area}). Hulls:\n"
+                f"{json.dumps(a)}\n"
+                f"{json.dumps(b)}\n"
+            )
+        else:
+            for k in set(a.keys()) | set(b.keys()):
+                try:
+                    assert_almost_equal(a[k], b[k])
+                except AssertionError as e:
+                    raise AssertionError(f"For {k}: {e.args[0]}")
+
+    assert_almost_equal(truth["all"], hulls_all)
+    assert_almost_equal(truth["type_filtered"], hulls_type_filtered)
+    assert_almost_equal(truth["id_filtered"], hulls_id_filtered)
+    assert_almost_equal(truth["single_object"], hulls_single_object)
+
+    # Should fail when given types and ids
+    assert not controller.step(
+        "Get2DSemanticHulls",
+        objectTypes=object_types,
+        objectIds=object_ids
+    ).metadata["lastActionSuccess"]
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 @pytest.mark.skip(reason="Colliders need to be moved closer to objects.")
@@ -1328,3 +1447,31 @@ def test_get_coordinate_from_raycast(controller):
         query.metadata["actionReturn"],
         {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
     )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_get_reachable_positions_with_directions_relative_agent(controller):
+    controller.reset("FloorPlan28")
+
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_aligned < 125
+
+    controller.step(
+        action="TeleportFull",
+        position=dict(x=-1, y=0.900998235, z=-1.25),
+        rotation=dict(x=0, y=49.11111, z=0),
+        horizon=0,
+        standing=True,
+    )
+    event = controller.step("GetReachablePositions")
+    num_reachable_aligned_after_teleport = len(event.metadata["actionReturn"])
+    assert num_reachable_aligned == num_reachable_aligned_after_teleport
+
+    event = controller.step("GetReachablePositions", directionsRelativeAgent=True)
+    num_reachable_unaligned = len(event.metadata["actionReturn"])
+    assert 100 < num_reachable_unaligned < 125
+
+    assert (
+        num_reachable_unaligned != num_reachable_aligned
+    ), "Number of reachable positions should differ when using `directionsRelativeAgent`"

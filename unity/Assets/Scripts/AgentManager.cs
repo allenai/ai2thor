@@ -203,11 +203,13 @@ public class AgentManager : MonoBehaviour
 
         else if(action.agentMode.ToLower() == "arm") {
 
-            if (action.agentControllerType == "") {
+            if (action.agentControllerType == "")
+            {
+	            action.agentControllerType = "mid-level";
                 Debug.Log("Defaulting to mid-level.");
-                SetUpArmController(true);
             }
-            else if(action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level")
+            
+            if(action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level")
             {
                 var error = "'arm' mode must use either low-level or mid-level controller.";
                 Debug.Log(error);
@@ -222,15 +224,17 @@ public class AgentManager : MonoBehaviour
                 // the arm should currently be used only with autoSimulation off
                 // as we manually control Physics during its movement
                 action.autoSimulation = false;
+				physicsSceneManager.MakeAllObjectsMoveable();
 
-				if(action.useMassThreshold)
+				if(action.massThreshold.HasValue)
 				{
-					if(action.massThreshold > 0.0)
-					SetUpMassThreshold(action.massThreshold);
-
+					if (action.massThreshold.Value > 0.0)
+					{
+						SetUpMassThreshold(action.massThreshold.Value);
+					}
 					else
 					{
-						var error = "massThreshold must have nonzero value if useMassThreshold = True";
+						var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
 						Debug.Log(error);
 						primaryAgent.actionFinished(false, error);
 						return;
@@ -1787,11 +1791,9 @@ public class ServerAction
 	//for when the arm hits heavy objects. If threshold is used, the arm will
 	//collide and stop moving when hitting a heavy enough sim object rather than
 	//move through it (this is for when colliding with pickupable and moveable sim objs)
-	public bool useMassThreshold;
-
 	//the mass threshold for how massive a pickupable/moveable sim object needs to be
 	//for the arm to detect collisions and stop moving
-	public float massThreshold;
+	public float? massThreshold;
 	
 
     public SimObjType ReceptableSimObjType()

@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
+using MIConvexHull;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -334,44 +335,70 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 
-        public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
+        public Vector3[] getReachablePositions(
+            float gridMultiplier = 1.0f,
+            int maxStepCount = 10000,
+            bool visualize = false,
+            Color? gridColor = null,
+            bool directionsRelativeAgent = false
+        ) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
-            Queue<Vector3> pointsQueue = new Queue<Vector3>();
-            pointsQueue.Enqueue(transform.position);
+            Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
+            rightForwardQueue.Enqueue((0, 0));
+            Vector3 startPosition = transform.position;
+            
+            Vector3 right;
+            Vector3 forward;
+            if (directionsRelativeAgent) {
+                right = transform.right;
+                forward = transform.forward;
+            } else {
+                right = new Vector3(1.0f, 0.0f, 0.0f);
+                forward = new Vector3(0.0f, 0.0f, 1.0f);
+            }
 
-            //float dirSkinWidthMultiplier = 1.0f + sw;
-            Vector3[] directions = {
-                new Vector3(1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, 1.0f),
-                new Vector3(-1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, -1.0f)
-            };
+            (int, int)[] rightForwardOffsets = {(1, 0), (0, 1), (-1, 0), (0, -1)};
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
-            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
+            HashSet<(int, int)> seenRightForwards = new HashSet<(int, int)>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
-            while (pointsQueue.Count != 0) {
+            while (rightForwardQueue.Count != 0) {
                 stepsTaken += 1;
-                Vector3 p = pointsQueue.Dequeue();
+
+                // Computing the new position based using an offset from the startPosition
+                // guarantees that floating point errors won't result in slight differences
+                // between the same points.
+                (int, int) rightForward = rightForwardQueue.Dequeue();
+                Vector3 p = startPosition + gridSize * gridMultiplier * (
+                    right * rightForward.Item1 + forward * rightForward.Item2
+                );
                 if (!goodPoints.Contains(p)) {
                     goodPoints.Add(p);
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
-                    foreach (Vector3 d in directions) {
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
-                        if (seenPoints.Contains(newPosition)) {
+
+                    foreach ((int, int) rightForwardOffset in rightForwardOffsets) {
+                        (int, int) newRightForward = (
+                            rightForward.Item1 + rightForwardOffset.Item1,
+                            rightForward.Item2 + rightForwardOffset.Item2
+                        );
+                        Vector3 newPosition = startPosition + gridSize * gridMultiplier * (
+                            right * newRightForward.Item1 +
+                            forward * newRightForward.Item2
+                        );
+                        if (seenRightForwards.Contains(newRightForward)) {
                             continue;
                         }
-                        seenPoints.Add(newPosition);
+                        seenRightForwards.Add(newRightForward);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             capsuleCollider: cc,
                             skinWidth: sw,
                             startPosition: p,
-                            dir: d,
-                            moveMagnitude: (gridSize * gridMultiplier),
+                            dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
+                            moveMagnitude: gridSize * gridMultiplier,
                             layerMask: layerMask
                         );
 
@@ -385,6 +412,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (shouldEnqueue && !inBounds) {
                             throw new InvalidOperationException(
@@ -401,7 +433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
                         if (shouldEnqueue) {
-                            pointsQueue.Enqueue(newPosition);
+                            rightForwardQueue.Enqueue(newRightForward);
 
                             if (visualize) {
                                 var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
@@ -442,12 +474,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return reachablePos;
         }
 
-        public void GetReachablePositions(int? maxStepCount = null) {
+        public void GetReachablePositions(
+            int? maxStepCount = null,
+            bool directionsRelativeAgent = false
+        ) {
             Vector3[] reachablePositions;
             if (maxStepCount.HasValue) {
-                reachablePositions = getReachablePositions(maxStepCount: maxStepCount.Value);
+                reachablePositions = getReachablePositions(
+                    maxStepCount: maxStepCount.Value,
+                    directionsRelativeAgent: directionsRelativeAgent
+                );
             } else {
-                reachablePositions = getReachablePositions();
+                reachablePositions = getReachablePositions(
+                    directionsRelativeAgent: directionsRelativeAgent
+                );
             }
 
             actionFinishedEmit(
@@ -1242,25 +1282,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //this means that the isSceneAtRest bool will always be false
         public void MakeAllObjectsMoveable()
         {
-            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
-            {
-                //check if the sopType is something that can be hung
-                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
-                {
-                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
-                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
-                    {
-                        continue;
-                    }
-                }
-
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
-                {
-                    Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                }
-            }
+            physicsSceneManager.MakeAllObjectsMoveable();
             actionFinished(true);
         }
 
@@ -3160,6 +3182,131 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        /* 
+        Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
+        function for more information.
+
+        Will return null if the input game object has no mesh vertices.
+        */
+        protected List<List<float>> Get2DSemanticHull(GameObject go) {
+            List<MIConvexHull.DefaultVertex2D> vertices = new List<MIConvexHull.DefaultVertex2D>();
+            float maxY = -float.PositiveInfinity;
+
+            foreach (MeshFilter meshFilter in go.GetComponentsInChildren<MeshFilter>()) {
+                foreach (Vector3 localVertex in meshFilter.mesh.vertices) {
+                    Vector3 globalVertex = meshFilter.transform.TransformPoint(localVertex);
+                    vertices.Add(new MIConvexHull.DefaultVertex2D(x: globalVertex.x, y: globalVertex.z));
+                    maxY = Math.Max(maxY, globalVertex.y);
+                }
+            }
+
+            if (vertices.Count == 0) {
+                return null;
+            }
+
+            ConvexHullCreationResult<DefaultVertex2D> miconvexHull = null;
+                
+            miconvexHull = MIConvexHull.ConvexHull.Create2D(
+                data: vertices,
+                tolerance: 1e-10
+            );
+
+            #if UNITY_EDITOR
+            DefaultVertex2D[] pointsOnHullArray = miconvexHull.Result.ToArray();
+            for (int i = 0; i < pointsOnHullArray.Length; i++) {
+                DefaultVertex2D p0 = pointsOnHullArray[i];
+                DefaultVertex2D p1 = pointsOnHullArray[(i + 1) % pointsOnHullArray.Length];
+                Debug.DrawLine(
+                    start: new Vector3((float) p0.X, maxY, (float) p0.Y),
+                    end: new Vector3((float) p1.X, maxY, (float) p1.Y),
+                    color: Color.red,
+                    duration: 100.0f
+                );
+            }
+            #endif
+
+            List<List<float>> toReturn = new List<List<float>>();
+            foreach (DefaultVertex2D v in miconvexHull.Result) {
+                List<float> tuple = new List<float>();
+                tuple.Add((float) v.X);
+                tuple.Add((float) v.Y);
+                toReturn.Add(tuple);
+            }
+            return toReturn;
+        }
+
+        /*
+        For each objectId, create a convex hull of the object from a top-down view.
+        The convex hull will be represented as a list of (x, z) world coordinates
+        such that the boundary formed by these coordinates forms the convex hull
+        of these points (smallest convex region enclosing the object's points).
+
+        If the objectIds (or objectTypes) parameter is non-null, then only objects with
+        those ids (or types) will be returned.
+        
+        ONLY ONE OF objectIds OR objectTypes IS ALLOWED TO BE NON-NULL.
+
+        Returns a dictionary mapping object ids to a list of (x,z) coordinates corresponding
+        to the convex hull of the corresponding object.
+        */
+        public void Get2DSemanticHulls(
+            List<string> objectIds = null,
+            List<string> objectTypes = null
+        ) {
+            if (objectIds != null && objectTypes != null) {
+                throw new ArgumentException(
+                    "Only one of objectIds and objectTypes can have a non-null value."
+                );
+            }
+
+            HashSet<string> allowedObjectTypesSet = null;
+            if (objectTypes != null) {
+                allowedObjectTypesSet = new HashSet<string>(objectTypes);
+            }
+
+            // Only consider sim objects which correspond to objectIds if given.
+            SimObjPhysics[] sopsFilteredByObjectIds = null;
+            if (objectIds != null) {
+                sopsFilteredByObjectIds = objectIds.Select(
+                    key => physicsSceneManager.ObjectIdToSimObjPhysics[key]
+                ).ToArray();
+            } else {
+                sopsFilteredByObjectIds = GameObject.FindObjectsOfType<SimObjPhysics>();
+            }
+
+            Dictionary<string, List<List<float>>> objectIdToConvexHull = new Dictionary<string, List<List<float>>>();
+            foreach (SimObjPhysics sop in sopsFilteredByObjectIds) {
+                // Skip objects that don't have one of the required types (if given)
+                if (
+                    allowedObjectTypesSet != null 
+                    && !allowedObjectTypesSet.Contains(sop.Type.ToString())
+                ) {
+                    continue;
+                }
+
+                #if UNITY_EDITOR
+                Debug.Log(sop.ObjectID);
+                #endif
+
+                List<List<float>> hullPoints = Get2DSemanticHull(sop.gameObject);
+                if (hullPoints != null) {
+                    objectIdToConvexHull[sop.ObjectID] = Get2DSemanticHull(sop.gameObject);
+                }
+            }
+            actionFinishedEmit(true, objectIdToConvexHull);
+        }
+
+        public void Get2DSemanticHull(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"No object with ID {objectId}";
+                actionFinishedEmit(false);
+            } else {
+                actionFinishedEmit(
+                    true,
+                    Get2DSemanticHull(physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject)
+                );
+            }
+        }
 
         public void UpdateDisplayGameObject(GameObject go, bool display) {
             if (go != null) {
@@ -3725,6 +3872,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+
+                        if (!shouldEnqueue) {
+                            continue;
+                        }
+
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
