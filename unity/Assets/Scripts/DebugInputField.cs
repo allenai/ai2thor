@@ -3567,13 +3567,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                    case "wopu":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "WhatObjectsCanHandPickUp";
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
                     case "smlhr": {
                         ServerAction action = new ServerAction();
                         action.action = "SetHandSphereRadius";
