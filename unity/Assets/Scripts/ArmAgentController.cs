@@ -24,7 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 position,
             float speed = 1,
             float? fixedDeltaTime = null,
-            bool returnToStart = false,
+            bool returnToStart = true,
             string coordinateSpace = "armBase",
             bool restrictMovement = false,
             bool disableRendering = true
@@ -90,7 +90,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float right = 0,
             float speed = 1,
             float? fixedDeltaTime = null,
-            bool returnToStart = false,
+            bool returnToStart = true,
             bool disableRendering = true
         ) {
             if (ahead == 0 && right == 0) {
@@ -164,7 +164,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float degrees,
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
-            bool returnToStart = false,
+            bool returnToStart = true,
             bool disableRendering = true,
             float fixedDeltaTime = 0.02f
         ) {
@@ -225,7 +225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float y,
             float speed = 1,
             float? fixedDeltaTime = null,
-            bool returnToStart = false,
+            bool returnToStart = true,
             bool disableRendering = true
         ) {
             if (y < 0 || y > 1) {
