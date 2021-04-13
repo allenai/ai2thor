@@ -1920,6 +1920,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return target;
         }
 
+        // Helper method that parses (x and y) parameters to return the
+        // sim object that they target.
+        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
+            }
+
+            // reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+            y = 1.0f - y;
+
+            // cast ray from screen coordinate into world space. If it hits an object
+            Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0));
+            RaycastHit hit;
+
+            bool hitObject = Physics.Raycast(
+                ray: ray,
+                hitInfo: out hit,
+                maxDistance: Mathf.Infinity,
+                layerMask: LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+
+            if (!hitObject || hit.transform.GetComponent<SimObjPhysics>() == null) {
+                throw new InvalidOperationException($"No SimObject found at (x: {x}, y: {y})");
+            }
+
+            SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
+
+            if (!forceAction && !isPosInView(targetPosition: hit.point)) {
+                throw new InvalidOperationException(
+                    $"Target sim object: ({target.ObjectID}) at screen coordinate: ({x}, {y}) is beyond your visibilityDistance: {maxVisibleDistance}!\n" +
+                    "Hint: Ignore this check by passing in forceAction=True or update visibility distance, call controller.reset(visibilityDistance=<new visibility distance>)."
+                );
+            }
+            return target;
+        }
+
         // checks if the target position in space is within the agent's current viewport
         // and/or within the max visible distance
         protected bool isPosInView(Vector3 targetPosition, bool inViewport = true, bool inMaxVisibleDistance = true)

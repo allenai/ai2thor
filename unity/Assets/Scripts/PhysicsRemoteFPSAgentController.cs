@@ -4666,141 +4666,67 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
         }
 
-        public void PickupObject(ServerAction action) //use serveraction objectid
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!screenToWorldTarget(
-                x: action.x, 
-                y: action.y, 
-                target: ref target, 
-                forceAction: action.forceAction))
-                {
-                    //error message is set inside screenToWorldTarget
-                    actionFinished(false, errorMessage);
-                    return;
-                }
+        protected void pickupObject(
+            SimObjPhysics target,
+            bool forceAction,
+            bool manualInteract,
+            bool markActionFinished
+        ) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
-                {
-                    target = sop;
-                }
-            }
-
-            //neither objectId nor coordinates found an object
-            if(target == null)
-            {
-                errorMessage = "No target found";
-                actionFinished(false);
-                return;
-            }
-            
-            //we have a valid target
+            // found non-pickupable object
             if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                errorMessage = target.objectID + " must have the property CanPickup to be picked up.";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException(target.objectID + " must have the property CanPickup to be picked up.");
             }
-            
+
+            // agent is holding something
             if (ItemInHand != null) {
-                Debug.Log("Agent hand has something in it already! Can't pick up anything else");
-                actionFinished(false);
-                return;
-            } 
-            if (IsHandDefault == false) {
-                errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Agent hand has something in it already! Can't pick up anything else");
+            }
+            if (!IsHandDefault) {
+                throw new InvalidOperationException("Must reset Hand to default position before attempting to Pick Up objects");
             }
 
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = target.objectID + " is not visible and can't be picked up.";
-                actionFinished(false);
-                return;
-            }
-            if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = target.objectID + " is not interactable and (perhaps it is occluded by something).";
-                actionFinished(false);
-                return;
-            }
-
-            //if pickup action is being abstracted, don't teleport target to hand
-            //instead move hand to target and allow for immediate manipulation from
-            //where the object was
-            if(tryPickupTarget(target, action, action.manualInteract))
-            {
-                //we have succesfully picked up something! 
-                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-                actionFinished(true, target.ObjectID);
-                return;
-            }
-
-            else
-            {
-                errorMessage = "Picking up object would cause it to collide and clip into something!";
-                actionFinished(false);
-                return;
-            }
-        }
-
-        public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)
-        {
-            //save all initial values in case we need to reset on action fail
+            // save all initial values in case we need to reset on action fail
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
             Transform savedParent = target.transform.parent;
 
-            //oh also save kinematic values in case we need to reset
+            // oh also save kinematic values in case we need to reset
             Rigidbody rb = target.GetComponent<Rigidbody>();
             bool wasKinematic = rb.isKinematic;
 
-            //in preparation for object being held, force collision detection to discrete and make sure kinematic = true
+            // in preparation for object being held, force collision detection to discrete and make sure kinematic = true
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
 
-            //run this to pickup any contained objects if object is a receptacle
-            //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
+            // run this to pickup any contained objects if object is a receptacle
+            // if the target is rotated too much, don't try to pick up any contained objects since they would fall out
             if (Vector3.Angle(target.transform.up, Vector3.up) < 60) {
                 PickupContainedObjects(target);
             }
 
             if (!manualInteract) {
-                //by default, abstract agent hand pickup so that object teleports to hand and changes orientation to match agent
+                // by default, abstract agent hand pickup so that object teleports to hand and changes orientation to match agent
 
-                //agent's hand is in default position in front of camera, teleport object into agent's hand
+                // agent's hand is in default position in front of camera, teleport object into agent's hand
                 target.transform.position = AgentHand.transform.position;
                 // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
                 target.transform.rotation = transform.rotation;
             } else {
-                //in manualInteract mode, move the hand to the object, and require agent hand manipulation to move object around
-                //or move closer to agent
+                // in manualInteract mode, move the hand to the object, and require agent hand manipulation to move object around
+                // or move closer to agent
 
                 AgentHand.transform.position = target.transform.position;
-                //don't rotate target at all as we are moving the hand to the object in manualInteract = True mode
+                // don't rotate target at all as we are moving the hand to the object in manualInteract = True mode
             }
 
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
-            if (!action.forceAction && isHandObjectColliding(true) && !manualInteract) 
-            {
+            if (!forceAction && isHandObjectColliding(true) && !manualInteract) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 target.transform.position = savedPos;
@@ -4812,13 +4738,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     reparentContainedObjects: true,
                     forceKinematic: false
                 );
-                return false;
+                throw new InvalidOperationException("Picking up object would cause it to collide and clip into something!");
             }
 
-            else
-            {
-                return true;
+            // we have successfully picked up something!
+            target.isInAgentHand = true;
+            if (markActionFinished) {
+                actionFinished(success: true, actionReturn: target.ObjectID);
             }
+        }
+
+        public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
+        }
+
+        public virtual void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
@@ -7292,19 +7229,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                actionFinished(false);
-                return;
-            } else {
-                //put new object created in dictionary and assign its objectID to the action
-                action.objectId = so.objectID;
-
-                //also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
+                throw new InvalidOperationException(
+                    "Failed to create object, are you sure it can be spawned?"
+                );
             }
 
-            action.forceAction = true;
-            PickupObject(action);
+            // update the Physics Scene Manager with this new object
+            physicsSceneManager.AddToObjectsInScene(so);
+
+            PickupObject(
+                objectId: so.objectID,
+                forceAction: true
+            );
         }
 
         public void CreateObjectAtLocation(ServerAction action) {

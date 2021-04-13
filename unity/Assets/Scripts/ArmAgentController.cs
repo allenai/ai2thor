@@ -50,6 +50,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
         }
 
+        public override void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
+            throw new InvalidOperationException(
+                "You are passing in iTHOR PickupObject parameters (x, y) to the arm agent!"
+            );
+        }
+
+        public override void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
+            throw new InvalidOperationException(
+                "You are passing in iTHOR PickupObject parameters (objectId) to the arm agent!"
+            );
+        }
+
         public void ReleaseObject() {
             IK_Robot_Arm_Controller arm = getArm();
             arm.DropObject();
