@@ -128,36 +128,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void MoveAhead(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=X, right=0).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
         }
 
         public override void MoveRight(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=0, right=X).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
         }
 
         public override void MoveLeft(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=0, right=-X).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
         }
 
         public override void MoveBack(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=-X, right=0).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
         }
 
         public override void MoveRelative(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=-X, right=0).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
         }
 
         public override void RotateRight(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=X).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
         }
 
         public override void RotateLeft(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=-X).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
         }
 
         // this is supported in base
         public override void Rotate(Vector3 rotation) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=-X).");
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
         }
 
         public void RotateAgent(
