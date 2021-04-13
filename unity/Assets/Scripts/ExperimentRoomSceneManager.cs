@@ -48,12 +48,12 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     List<Vector3> debugCoords = new List<Vector3>();
-    #endif
+#endif
 
     //returns grid points where there is an experiment receptacle (screens too) on the table
     //this only returns areas where the ReceptacleTriggerBox of the object is, not the geometry of the object itself
@@ -66,7 +66,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //start from origin which will be agent's hand
         List<Vector3> pointsOnGrid = new List<Vector3>();
 
-        for(int i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
         {
             //from origin, go gridIncrement a number of times equal to gridDimension
             //in the agent's forward direction
@@ -74,13 +74,13 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             pointsOnGrid.Add(thisPoint);
 
             //then, from this point, go gridDimension times in both left and right direction
-            for(int j = 1; j < count + 1; j++)
+            for (int j = 1; j < count + 1; j++)
             {
                 pointsOnGrid.Add(thisPoint + agent.transform.right * gridIncrement * j);
                 pointsOnGrid.Add(thisPoint + -agent.transform.right * gridIncrement * j);
             }
         }
-        
+
         // #if UNITY_EDITOR
         // debugCoords = pointsOnGrid;
         // #endif
@@ -90,10 +90,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         foreach (Vector3 point in pointsOnGrid)
         {
-            hits = Physics.RaycastAll(point + new Vector3(0, 5, 0), Vector3.down, 20.0f, 1<<9, QueryTriggerInteraction.Collide);
+            hits = Physics.RaycastAll(point + new Vector3(0, 5, 0), Vector3.down, 20.0f, 1 << 9, QueryTriggerInteraction.Collide);
             float[] hitDistances = new float[hits.Length];
 
-            for(int i = 0; i < hitDistances.Length; i++)
+            for (int i = 0; i < hitDistances.Length; i++)
             {
                 hitDistances[i] = hits[i].distance;
             }
@@ -102,10 +102,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
             foreach (RaycastHit h in hits)
             {
-                if(h.transform.GetComponent<SimObjPhysics>())
+                if (h.transform.GetComponent<SimObjPhysics>())
                 {
                     var o = h.transform.GetComponent<SimObjPhysics>();
-                    if(o.Type != SimObjType.DiningTable && o.Type != SimObjType.Floor)
+                    if (o.Type != SimObjType.DiningTable && o.Type != SimObjType.Floor)
                     {
                         actualPoints.Add(point);
                     }
@@ -125,10 +125,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b)
     {
         List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(MeshRenderer sr in renderers)
+        foreach (MeshRenderer sr in renderers)
         {
             //set first element, the primary mat, of the mat array's color
-            sr.material.color = new Color(r/255f, g/255f, b/255f);
+            sr.material.color = new Color(r / 255f, g / 255f, b / 255f);
         }
     }
 
@@ -136,7 +136,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeScreenMaterial(SimObjPhysics screen, int variation)
     {
         List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(MeshRenderer sr in renderers)
+        foreach (MeshRenderer sr in renderers)
         {
             sr.material = screenMaterials[variation];
         }
@@ -153,7 +153,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     {
         foreach (GameObject light in allOfTheLights)
         {
-            light.GetComponent<Light>().color = new Color(r/255f, g/255f, b/255f);
+            light.GetComponent<Light>().color = new Color(r / 255f, g / 255f, b / 255f);
         }
     }
 
@@ -176,7 +176,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeTableTopColor(float r, float g, float b)
     {
         Material[] mats = table.materials;
-        mats[0].color = new Color(r/255f, g/255f, b/255f);
+        mats[0].color = new Color(r / 255f, g / 255f, b / 255f);
         table.materials = mats;
     }
 
@@ -190,7 +190,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeTableLegColor(float r, float g, float b)
     {
         Material[] mats = table.materials;
-        mats[1].color = new Color(r/255f, g/255f, b/255f);
+        mats[1].color = new Color(r / 255f, g / 255f, b / 255f);
         table.materials = mats;
     }
 
@@ -210,7 +210,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeWallColor(float r, float g, float b)
     {
         //Color() takes 0-1.0, so yeah convert
-        var color = new Color(r/255f, g/255f, b/255f);
+        var color = new Color(r / 255f, g / 255f, b / 255f);
         wall.material.color = color;
     }
 
@@ -224,7 +224,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public void ChangeFloorColor(float r, float g, float b)
     {
         //Color() takes 0-1.0, so yeah convert
-        var color = new Color(r/255f, g/255f, b/255f);
+        var color = new Color(r / 255f, g / 255f, b / 255f);
         floor.material.color = color;
     }
 
@@ -234,16 +234,16 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     {
         toSpawn = null;
 
-        if(objType == "screen")
+        if (objType == "screen")
         {
             toSpawn = screensToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
-        if(objType == "receptacle")
+        if (objType == "receptacle")
         {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
-        
+
         SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
 
@@ -259,7 +259,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         List<Vector3> returnCoordinates = new List<Vector3>();
 
         //try and place object at every spawn coordinate and if it works, add it to the valid coords to return
-        for(int i = 0; i < spawnCoordinates.Count; i++)
+        for (int i = 0; i < spawnCoordinates.Count; i++)
         {
             //place object at the given point, then check if the corners are ok
             fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]);
@@ -268,9 +268,9 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
             Contains con = targetReceptacle.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
             bool cornerCheck = true;
-            foreach(Vector3 p in corners)
+            foreach (Vector3 p in corners)
             {
-                if(!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
+                if (!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
                 {
                     cornerCheck = false;
                     //this position would cause object to fall off table
@@ -280,7 +280,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
                 }
             }
 
-            if(cornerCheck)
+            if (cornerCheck)
             {
                 returnCoordinates.Add(spawnCoordinates[i]);
                 //all corners were ok, so add it to the points that are valid
@@ -289,10 +289,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             spawned.transform.position = initialSpawnPosition;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         //debug draw
         debugCoords = returnCoordinates;
-        #endif
+#endif
 
         Destroy(spawned.transform.gameObject);
         return returnCoordinates;
@@ -307,17 +307,17 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         bool success = false;
 
-        if(objType == "screen")
+        if (objType == "screen")
         {
             toSpawn = screensToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
-        if(objType == "receptacle")
+        if (objType == "receptacle")
         {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
-        if(objType == "replacement")
+        if (objType == "replacement")
         {
             toSpawn = replacementObjectsToSpawn[variation].GetComponent<SimObjPhysics>();
         }
@@ -332,7 +332,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
 
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        if(fpsAgent.placeObjectAtPoint(toSpawn, point))
+        if (fpsAgent.placeObjectAtPoint(toSpawn, point))
         {
             //we set success to true, if one of the corners doesn't fit on the table
             //this will be switched to false and will be returned at the end
@@ -346,9 +346,9 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             List<Vector3> corners = GetCorners(spawned);
 
             Contains con = targetReceptacle.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
-            foreach(Vector3 p in corners)
+            foreach (Vector3 p in corners)
             {
-                if(!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
+                if (!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
                 {
                     success = false;
                     //this position would cause object to fall off table
@@ -359,17 +359,17 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             }
         }
 
-        if(success)
+        if (success)
         {
             rb.isKinematic = false;
             //run scene setup to grab reference to object and give it objectId
             sceneManager.SetupScene();
             sceneManager.ResetObjectIdToSimObjPhysics();
         }
-        
+
         //no objects could be spawned at any of the spawn points
         //destroy the thing we tried to place on target receptacle
-        if(!success)
+        if (!success)
         {
             Destroy(spawned.transform.gameObject);
         }
@@ -387,12 +387,12 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //init random state
         UnityEngine.Random.InitState(seed);
 
-        if(objType == "screen")
+        if (objType == "screen")
         {
             toSpawn = screensToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
-        if(objType == "receptacle")
+        if (objType == "receptacle")
         {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
@@ -411,11 +411,11 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //apply rotation to object, default quaternion.identity
         spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
 
-        for(int i = 0; i < spawnCoordinates.Count; i++)
+        for (int i = 0; i < spawnCoordinates.Count; i++)
         {
             //place object at the given point, this also checks the spawn area to see if its clear
             //if not clear, it will return false
-            if(fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]))
+            if (fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]))
             {
                 //we set success to true, if one of the corners doesn't fit on the table
                 //this will be switched to false and will be returned at the end
@@ -430,9 +430,9 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
                 Contains con = targetReceptacle.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
                 bool cornerCheck = true;
-                foreach(Vector3 p in corners)
+                foreach (Vector3 p in corners)
                 {
-                    if(!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
+                    if (!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
                     {
                         cornerCheck = false;
                         //this position would cause object to fall off table
@@ -442,7 +442,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
                     }
                 }
 
-                if(!cornerCheck)
+                if (!cornerCheck)
                 {
                     success = false;
                     continue;
@@ -450,7 +450,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             }
 
             //if all corners were succesful, break out of this loop, don't keep trying
-            if(success)
+            if (success)
             {
                 rb.isKinematic = false;
                 //run scene setup to grab reference to object and give it objectId
@@ -462,7 +462,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         //no objects could be spawned at any of the spawn points
         //destroy the thing we tried to place on target receptacle
-        if(!success)
+        if (!success)
         {
             Destroy(spawned.transform.gameObject);
         }
@@ -496,19 +496,19 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //top back left
         corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
         //top back right
-        corners.Add(bb.transform.TransformPoint(bbCenter+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
 
         return corners;
     }
 
-    #if UNITY_EDITOR
-	void OnDrawGizmos()
-	{
-        foreach(Vector3 v in debugCoords)
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        foreach (Vector3 v in debugCoords)
         {
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(v, 0.05f);
         }
     }
-    #endif
+#endif
 }

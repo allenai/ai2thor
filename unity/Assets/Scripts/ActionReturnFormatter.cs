@@ -44,58 +44,72 @@ namespace MessagePack.Formatters
                 writer.WriteNil();
                 return;
             }
-                Type type = value.GetType();
-                TypeInfo ti = type.GetTypeInfo();
-                if (type == typeof(Vector3[])) 
-                {
-                    var values = (Vector3[])value;
-                    writer.WriteArrayHeader(values.Length);
-                    var formatter = options.Resolver.GetFormatterWithVerify<Vector3>();
-                    
-                    foreach(var f in values) {
-                        formatter.Serialize(ref writer, f, options);
-                    }
+            Type type = value.GetType();
+            TypeInfo ti = type.GetTypeInfo();
+            if (type == typeof(Vector3[]))
+            {
+                var values = (Vector3[])value;
+                writer.WriteArrayHeader(values.Length);
+                var formatter = options.Resolver.GetFormatterWithVerify<Vector3>();
 
-                } 
-                else if (value is System.Collections.IDictionary)
+                foreach (var f in values)
                 {
-                    var d = value as System.Collections.IDictionary;
-                    writer.WriteMapHeader(d.Count);
-                    foreach (System.Collections.DictionaryEntry item in d)
-                    {
-                        this.Serialize(ref writer, item.Key, options);
-                        this.Serialize(ref writer, item.Value, options);
-                    }
-
-                    return;
+                    formatter.Serialize(ref writer, f, options);
                 }
-                else if (value is System.Collections.ICollection)
-                {
-                    var c = value as System.Collections.ICollection;
-                    writer.WriteArrayHeader(c.Count);
-                    foreach (var item in c)
-                    {
-                        this.Serialize(ref writer, item, options);
-                    }
 
-                    return;
-                } else {
-                    // all custom types that could appear in actionReturn
-                    // must appear here
-                    if (type == typeof(Vector3)) {
-                        options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, (Vector3)value, options);
-                    } else if(type == typeof(InitializeReturn)) {
-                        options.Resolver.GetFormatterWithVerify<InitializeReturn>().Serialize(ref writer, (InitializeReturn)value, options);
-                    } else if(type == typeof(PhysicsRemoteFPSAgentController.WhatDidITouch)) {
-                        options.Resolver.GetFormatterWithVerify<PhysicsRemoteFPSAgentController.WhatDidITouch>().Serialize(ref writer, (PhysicsRemoteFPSAgentController.WhatDidITouch)value, options);
-                    } else if(type == typeof(UnityEngine.AI.NavMeshPath)) {
-                        options.Resolver.GetFormatterWithVerify<UnityEngine.AI.NavMeshPath>().Serialize(ref writer, (UnityEngine.AI.NavMeshPath)value, options);
-                    } else if (PrimitiveObjectFormatter.IsSupportedType(type, ti, value)) {
-                        PrimitiveObjectFormatter.Instance.Serialize(ref writer, value, options);
-                    } else {
-                        throw new MessagePackSerializationException("Not supported type: " + type.Name);
-                    }
+            }
+            else if (value is System.Collections.IDictionary)
+            {
+                var d = value as System.Collections.IDictionary;
+                writer.WriteMapHeader(d.Count);
+                foreach (System.Collections.DictionaryEntry item in d)
+                {
+                    this.Serialize(ref writer, item.Key, options);
+                    this.Serialize(ref writer, item.Value, options);
                 }
+
+                return;
+            }
+            else if (value is System.Collections.ICollection)
+            {
+                var c = value as System.Collections.ICollection;
+                writer.WriteArrayHeader(c.Count);
+                foreach (var item in c)
+                {
+                    this.Serialize(ref writer, item, options);
+                }
+
+                return;
+            }
+            else
+            {
+                // all custom types that could appear in actionReturn
+                // must appear here
+                if (type == typeof(Vector3))
+                {
+                    options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, (Vector3)value, options);
+                }
+                else if (type == typeof(InitializeReturn))
+                {
+                    options.Resolver.GetFormatterWithVerify<InitializeReturn>().Serialize(ref writer, (InitializeReturn)value, options);
+                }
+                else if (type == typeof(PhysicsRemoteFPSAgentController.WhatDidITouch))
+                {
+                    options.Resolver.GetFormatterWithVerify<PhysicsRemoteFPSAgentController.WhatDidITouch>().Serialize(ref writer, (PhysicsRemoteFPSAgentController.WhatDidITouch)value, options);
+                }
+                else if (type == typeof(UnityEngine.AI.NavMeshPath))
+                {
+                    options.Resolver.GetFormatterWithVerify<UnityEngine.AI.NavMeshPath>().Serialize(ref writer, (UnityEngine.AI.NavMeshPath)value, options);
+                }
+                else if (PrimitiveObjectFormatter.IsSupportedType(type, ti, value))
+                {
+                    PrimitiveObjectFormatter.Instance.Serialize(ref writer, value, options);
+                }
+                else
+                {
+                    throw new MessagePackSerializationException("Not supported type: " + type.Name);
+                }
+            }
         }
         public global::System.Object Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {

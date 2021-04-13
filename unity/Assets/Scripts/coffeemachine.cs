@@ -10,8 +10,8 @@ public class coffeemachine : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-		osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
-		onOff = gameObject.GetComponent<CanToggleOnOff>();
+        osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+        onOff = gameObject.GetComponent<CanToggleOnOff>();
     }
 
     // Update is called once per frame
@@ -22,18 +22,18 @@ public class coffeemachine : MonoBehaviour
 
     public void Serve()
     {
-		SimObjPhysics target;
+        SimObjPhysics target;
 
-		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
-		{
-			target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
-			Fill f = target.GetComponent<Fill>();
+        if (osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
+        {
+            target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
+            Fill f = target.GetComponent<Fill>();
 
-			//if not already toasted, toast it!
-			if(!f.IsFilled())
-			{
-				f.FillObject("coffee");
-			}
-		}
+            //if not already toasted, toast it!
+            if (!f.IsFilled())
+            {
+                f.FillObject("coffee");
+            }
+        }
     }
 }

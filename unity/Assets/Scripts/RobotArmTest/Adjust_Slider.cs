@@ -8,12 +8,12 @@ public class Adjust_Slider : MonoBehaviour
     Vector3 localStartingPoint;
     float minThreshold = -0.32f;
     float maxThreshold = 0.15f;
-    
+
     void Start()
     {
         localStartingPoint = this.transform.localPosition;
     }
-    
+
     void Update()
     {
         if (robotArmRoot.localPosition.y < minThreshold)

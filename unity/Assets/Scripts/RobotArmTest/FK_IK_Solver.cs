@@ -23,14 +23,14 @@ public class FK_IK_Solver : MonoBehaviour
         bone3Length = (armWrist.position - armElbow.position).magnitude;
         IKHint = IKPole.GetChild(0);
     }
-    
-    #if UNITY_EDITOR
+
+#if UNITY_EDITOR
     //Uncomment this when testing in Unity
     void Update()
     {
-      ManipulateArm();
+        ManipulateArm();
     }
-    #endif
+#endif
 
     public void ManipulateArm()
     {

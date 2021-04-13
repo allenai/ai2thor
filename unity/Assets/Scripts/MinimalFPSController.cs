@@ -14,15 +14,17 @@ using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
-	[RequireComponent(typeof (CharacterController))]
+    [RequireComponent(typeof(CharacterController))]
     public class MinimalFPSController : DebugFPSAgentController
-	{
+    {
         private GameObject BackgroundUI;
         private GameObject Crosshair;
-         private GameObject   TargetText;
-        private GameObject    ThrowForceBar;
-        MinimalFPSController() {
-            this.m_MouseLook = new MouseLook {
+        private GameObject TargetText;
+        private GameObject ThrowForceBar;
+        MinimalFPSController()
+        {
+            this.m_MouseLook = new MouseLook
+            {
                 XSensitivity = 2,
                 YSensitivity = 2,
                 clampVerticalRotation = true,
@@ -41,7 +43,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public new void HideHUD()
         {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
-            if (InputMode_Text != null) {
+            if (InputMode_Text != null)
+            {
                 InputMode_Text.SetActive(false);
             }
             // InputFieldObj.SetActive(false);
@@ -53,7 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             BackgroundUI = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
             BackgroundUI.SetActive(false);
 
-            Crosshair =  GameObject.Find("DebugCanvasPhysics/Crosshair");
+            Crosshair = GameObject.Find("DebugCanvasPhysics/Crosshair");
             TargetText = GameObject.Find("DebugCanvasPhysics/TargetText");
             ThrowForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
             Crosshair.GetComponent<Text>().enabled = false;
@@ -63,13 +66,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ShowHUD()
         {
-            if (InputMode_Text != null) {
+            if (InputMode_Text != null)
+            {
                 InputMode_Text.SetActive(true);
             }
-            if (InputFieldObj != null) {
+            if (InputFieldObj != null)
+            {
                 InputFieldObj.SetActive(true);
             }
-            if (BackgroundUI != null) {
+            if (BackgroundUI != null)
+            {
                 BackgroundUI.SetActive(true);
             }
 
@@ -84,22 +90,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public new void OnEnable()
         {
-                FPSEnabled = true;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-                
-                InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
-                InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-                if (InputMode_Text) {
-                    InputMode_Text.GetComponent<Text>().text = "FPS Mode";
-                }
+            FPSEnabled = true;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+
+            InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            if (InputMode_Text)
+            {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode";
+            }
 
 
-                Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-  
-                Debug_Canvas.GetComponent<Canvas>().enabled = true;
-                HideHUD();
-              
+            Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
+
+            Debug_Canvas.GetComponent<Canvas>().enabled = true;
+            HideHUD();
+
         }
 
         public new void OnDisable()
@@ -122,6 +129,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
-	}
+    }
 }
 

@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using UnityEngine;
- 
-public class ColorChanger : MonoBehaviour {
+
+public class ColorChanger : MonoBehaviour
+{
     // Define all material types
     public Material[] alarmClockMaterials;
     public Material[] appleMaterials;
@@ -51,7 +52,8 @@ public class ColorChanger : MonoBehaviour {
     Material[] allMaterials;
     Color[] origColors;
 
-    public void Start() {
+    public void Start()
+    {
         targetMaterials = alarmClockMaterials.Concat(appleMaterials).Concat(basketballMaterials).Concat(bowlMaterials).Concat(garbageBinMaterials).Concat(houseplantMaterials).Concat(pillowMaterials).Concat(sprayBottleMaterials).ToArray();
         backgroundMaterials = bedMaterials.Concat(boxMaterials).Concat(cellphoneMaterials).Concat(cupMaterials).Concat(floorLampMaterials).Concat(penPencilMaterials).Concat(plateMaterials).Concat(potMaterials).Concat(statueMaterials).Concat(watchMaterials).ToArray();
         furnitureMaterials = armchairMaterials.Concat(bedMaterials).Concat(chairMaterials).Concat(coffeeTableMaterials).Concat(deskMaterials).Concat(diningTableMaterials).Concat(dresserMaterials).Concat(officeChairMaterials).Concat(shelvingUnitMaterials).Concat(sideTableMaterials).Concat(sofaMaterials).ToArray();
@@ -60,24 +62,32 @@ public class ColorChanger : MonoBehaviour {
         allMaterials = targetMaterials.Concat(backgroundMaterials).Concat(furnitureMaterials).Concat(quickMaterials).ToArray();
 
         origColors = new Color[allMaterials.Length];
-        for (int i = 0; i < allMaterials.Length; i++) {
-            if (allMaterials[i].HasProperty("_Color")) {
+        for (int i = 0; i < allMaterials.Length; i++)
+        {
+            if (allMaterials[i].HasProperty("_Color"))
+            {
                 origColors[i] = allMaterials[i].color;
             }
         }
     }
 
-    public void RandomizeColor() {
-        for (int i = 0; i < allMaterials.Length; i++) {
-            if (allMaterials[i].HasProperty("_Color")) {
+    public void RandomizeColor()
+    {
+        for (int i = 0; i < allMaterials.Length; i++)
+        {
+            if (allMaterials[i].HasProperty("_Color"))
+            {
                 allMaterials[i].color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
             }
         }
     }
 
-    public void ResetColors() {
-        for (int i = 0; i < allMaterials.Length; i++) {
-            if (allMaterials[i].HasProperty("_Color")) {
+    public void ResetColors()
+    {
+        for (int i = 0; i < allMaterials.Length; i++)
+        {
+            if (allMaterials[i].HasProperty("_Color"))
+            {
                 allMaterials[i].color = origColors[i];
             }
         }

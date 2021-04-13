@@ -5,18 +5,18 @@ using UnityEngine;
 public class ChangeLighting : MonoBehaviour
 {
     //9 elements right now
-    public GameObject [] Lights;
+    public GameObject[] Lights;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void SetLights(int lightset)

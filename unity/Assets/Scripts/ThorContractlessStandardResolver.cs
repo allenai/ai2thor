@@ -14,7 +14,7 @@ using MessagePack.Internal;
 */
 namespace MessagePack.Resolvers
 {
- public class NavMeshPathFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath>
+    public class NavMeshPathFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath>
     {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.AI.NavMeshPath value, global::MessagePack.MessagePackSerializerOptions options)
         {
@@ -22,18 +22,20 @@ namespace MessagePack.Resolvers
             writer.Write("corners");
             writer.WriteArrayHeader(value.corners.Length);
             Vector3Formatter f = new Vector3Formatter();
-            foreach(Vector3 c in value.corners) {
+            foreach (Vector3 c in value.corners)
+            {
                 f.Serialize(ref writer, c, options);
             }
             writer.Write("status");
             writer.Write(value.status.ToString());
         }
-         public global::UnityEngine.AI.NavMeshPath Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options){
-             throw new System.NotImplementedException();
-         }
+        public global::UnityEngine.AI.NavMeshPath Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            throw new System.NotImplementedException();
+        }
 
     }
- public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3>
+    public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3>
     {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options)
         {
@@ -45,12 +47,13 @@ namespace MessagePack.Resolvers
             writer.Write("z");
             writer.Write(value.z);
         }
-         public global::UnityEngine.Vector3 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options){
-             throw new System.NotImplementedException();
-         }
+        public global::UnityEngine.Vector3 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            throw new System.NotImplementedException();
+        }
 
     }
-    
+
     public class ThorContractlessStandardResolver : IFormatterResolver
     {
         public static readonly MessagePackSerializerOptions Options;
@@ -115,26 +118,26 @@ namespace MessagePack.Resolvers
                 }
             }
         }
-  }
+    }
 }
 
- public class ThorUnityResolver : IFormatterResolver
+public class ThorUnityResolver : IFormatterResolver
+{
+    public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
+
+    private ThorUnityResolver()
     {
-        public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
+    }
 
-        private ThorUnityResolver()
-        {
-        }
+    public IMessagePackFormatter<T> GetFormatter<T>()
+    {
+        return FormatterCache<T>.Formatter;
+    }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
-        {
-            return FormatterCache<T>.Formatter;
-        }
-
-        private static class FormatterCache<T>
-        {
-            public static readonly IMessagePackFormatter<T> Formatter;
-            private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>()
+    private static class FormatterCache<T>
+    {
+        public static readonly IMessagePackFormatter<T> Formatter;
+        private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>()
             {
                 // standard
                 { typeof(Vector3), new Vector3Formatter() },
@@ -142,20 +145,20 @@ namespace MessagePack.Resolvers
 
             };
 
-            static FormatterCache()
-            {
-                Formatter = (IMessagePackFormatter<T>)GetFormatter(typeof(T));
-            }
+        static FormatterCache()
+        {
+            Formatter = (IMessagePackFormatter<T>)GetFormatter(typeof(T));
+        }
 
-            static object GetFormatter(Type t)
+        static object GetFormatter(Type t)
+        {
+            object formatter;
+            if (FormatterMap.TryGetValue(t, out formatter))
             {
-                object formatter;
-                if (FormatterMap.TryGetValue(t, out formatter))
-                {
-                    return formatter;
-                }
+                return formatter;
+            }
 
             return null;
-            }
         }
     }
+}

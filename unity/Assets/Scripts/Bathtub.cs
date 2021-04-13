@@ -3,39 +3,47 @@ using UnityEngine;
 using System.Collections;
 
 [ExecuteInEditMode]
-public class Bathtub : MonoBehaviour {
+public class Bathtub : MonoBehaviour
+{
 
-	public SimObj ParentObj;
-	public bool EditorFilled = false;
-	public GameObject FilledObject;
+    public SimObj ParentObj;
+    public bool EditorFilled = false;
+    public GameObject FilledObject;
 
-	void OnEnable () {
-		ParentObj = gameObject.GetComponent <SimObj> ();
-		if (ParentObj == null) {
-			ParentObj = gameObject.AddComponent <SimObj> ();
-		}
-		ParentObj.Type = SimObjType.Bathtub;
+    void OnEnable()
+    {
+        ParentObj = gameObject.GetComponent<SimObj>();
+        if (ParentObj == null)
+        {
+            ParentObj = gameObject.AddComponent<SimObj>();
+        }
+        ParentObj.Type = SimObjType.Bathtub;
 
-		if (!Application.isPlaying) {
-			Animator a = ParentObj.gameObject.GetComponent<Animator> ();
-			if (a == null) {
-				a = ParentObj.gameObject.AddComponent<Animator> ();
-				a.runtimeAnimatorController = Resources.Load ("ToggleableAnimController") as RuntimeAnimatorController;
-			}
-		}
-	}
-		
-	void Update () {
-		bool filled = EditorFilled;
-		if (Application.isPlaying) {
-			filled = ParentObj.Animator.GetBool ("AnimState1");
-		}
+        if (!Application.isPlaying)
+        {
+            Animator a = ParentObj.gameObject.GetComponent<Animator>();
+            if (a == null)
+            {
+                a = ParentObj.gameObject.AddComponent<Animator>();
+                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+            }
+        }
+    }
 
-		if (FilledObject == null) {
-			Debug.LogError ("Filled object is null in bathtub");
-			return;
-		}
+    void Update()
+    {
+        bool filled = EditorFilled;
+        if (Application.isPlaying)
+        {
+            filled = ParentObj.Animator.GetBool("AnimState1");
+        }
 
-		FilledObject.SetActive (filled);
-	}
+        if (FilledObject == null)
+        {
+            Debug.LogError("Filled object is null in bathtub");
+            return;
+        }
+
+        FilledObject.SetActive(filled);
+    }
 }

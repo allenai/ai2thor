@@ -2,18 +2,22 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraControls : MonoBehaviour {
+public class CameraControls : MonoBehaviour
+{
 
-	Camera cam;
+    Camera cam;
 
-	void Start () {
-		cam = GetComponent <Camera> ();
-		cam.enabled = false;
-	}
+    void Start()
+    {
+        cam = GetComponent<Camera>();
+        cam.enabled = false;
+    }
 
-	void Update () {
-		if (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) {
-			cam.enabled = !cam.enabled;
-		}
-	}
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            cam.enabled = !cam.enabled;
+        }
+    }
 }

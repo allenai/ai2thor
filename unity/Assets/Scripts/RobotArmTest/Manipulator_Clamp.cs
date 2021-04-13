@@ -19,7 +19,8 @@ public class Manipulator_Clamp : MonoBehaviour
         currentCoordinates[1] = transform.eulerAngles;
         prevCoordinates = currentCoordinates;
 
-        foreach (Transform transform in transform.parent.parent.parent) {
+        foreach (Transform transform in transform.parent.parent.parent)
+        {
             if (transform.name == "robot_arm_1_jnt")
             {
                 rootJoint = transform;
@@ -33,9 +34,9 @@ public class Manipulator_Clamp : MonoBehaviour
                 shoulderJoint = transform;
             }
         }
-        
+
     }
-    
+
     void Update()
     {
         //Debug.Log("Checking for hemisphere change!");

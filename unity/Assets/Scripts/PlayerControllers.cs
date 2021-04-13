@@ -4,8 +4,10 @@ using System;
 // using PlayerControllers;
 // using UnityStandardAssets.Characters.FirstPerson;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public enum ControlMode {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public enum ControlMode
+    {
         DEBUG_TEXT_INPUT,
         FPS,
         DISCRETE_POINT_CLICK,
@@ -13,7 +15,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         MINIMAL_FPS
     }
 
-    class PlayerControllers {
+    class PlayerControllers
+    {
         public static Dictionary<ControlMode, Type> controlModeToComponent = new Dictionary<ControlMode, Type>{
                 {ControlMode.DEBUG_TEXT_INPUT, typeof(DebugDiscreteAgentController)},
                 {ControlMode.FPS, typeof(DebugFPSAgentController)},

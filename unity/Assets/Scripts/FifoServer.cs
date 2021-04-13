@@ -5,9 +5,11 @@ using System.Net;
 using System.IO;
 using System.Text;
 
-namespace FifoServer {
+namespace FifoServer
+{
 
-    public class Client {
+    public class Client
+    {
         private static Client singletonClient;
         private int headerLength = 5;
         private FileStream serverPipe;
@@ -16,7 +18,7 @@ namespace FifoServer {
         private string clientPipePath;
         private byte[] eomHeader;
 
-        
+
         public static Dictionary<string, FieldType> FormMap = new Dictionary<string, FieldType>{
             {"image", FieldType.RGBImage},
             {"image_depth", FieldType.DepthImage},
@@ -33,45 +35,55 @@ namespace FifoServer {
 
         };
 
-        static public int UnpackNetworkBytes(byte[] data, int offset=0) {
+        static public int UnpackNetworkBytes(byte[] data, int offset = 0)
+        {
             int networkInt = System.BitConverter.ToInt32(data, offset);
             return IPAddress.NetworkToHostOrder(networkInt);
         }
 
-        static public byte[] PackNetworkBytes(int val) {
+        static public byte[] PackNetworkBytes(int val)
+        {
             int networkInt = IPAddress.HostToNetworkOrder(val);
             return System.BitConverter.GetBytes(networkInt);
         }
 
-        public string ReceiveMessage() {
-            if (clientPipe == null) {
+        public string ReceiveMessage()
+        {
+            if (clientPipe == null)
+            {
                 this.clientPipe = new FileStream(this.clientPipePath, FileMode.Open, FileAccess.Read);
             }
             string action = null;
-            while (true) {
+            while (true)
+            {
                 byte[] header = new byte[headerLength];
                 int bytesRead = clientPipe.Read(header, 0, header.Length);
-                if (bytesRead == 0) {
+                if (bytesRead == 0)
+                {
                     throw new EndOfStreamException("zero bytes read trying to read header; assuming disconnect");
                 }
                 FieldType fieldType = (FieldType)header[0];
-                if (fieldType == FieldType.EndOfMessage) {
-                        //Console.WriteLine("Got eom");
+                if (fieldType == FieldType.EndOfMessage)
+                {
+                    //Console.WriteLine("Got eom");
                     break;
                 }
                 int fieldLength = UnpackNetworkBytes(header, 1);
                 byte[] body = new byte[fieldLength];
                 int totalBytesRead = 0;
-                while(totalBytesRead < body.Length) {
+                while (totalBytesRead < body.Length)
+                {
                     bytesRead = clientPipe.Read(body, totalBytesRead, body.Length - totalBytesRead);
                     // didn't read anything new, assume that we have a disconnect
-                    if (bytesRead == 0) {
+                    if (bytesRead == 0)
+                    {
                         throw new EndOfStreamException("number of bytes read did not change during body read; assuming disconnect");
                     }
                     totalBytesRead += bytesRead;
                 }
 
-                switch (fieldType) {
+                switch (fieldType)
+                {
                     case FieldType.Action:
                         //Console.WriteLine("Got action");
                         action = Encoding.Default.GetString(body);
@@ -83,13 +95,16 @@ namespace FifoServer {
             return action;
         }
 
-        public void SendEOM() {
+        public void SendEOM()
+        {
             serverPipe.Write(this.eomHeader, 0, this.headerLength);
             serverPipe.Flush();
         }
 
-        public void SendMessage(FieldType t, byte[] body) {
-            if (this.serverPipe == null) {
+        public void SendMessage(FieldType t, byte[] body)
+        {
+            if (this.serverPipe == null)
+            {
                 this.serverPipe = new FileStream(this.serverPipePath, FileMode.Open, FileAccess.Write);
             }
             //Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
@@ -102,7 +117,8 @@ namespace FifoServer {
 
 
 
-        private Client (string serverPipePath, string clientPipePath) {
+        private Client(string serverPipePath, string clientPipePath)
+        {
             this.serverPipePath = serverPipePath;
             this.clientPipePath = clientPipePath;
             this.eomHeader = new byte[headerLength];
@@ -110,8 +126,10 @@ namespace FifoServer {
         }
 
 
-        public static Client GetInstance(string serverPipePath, string clientPipePath) {
-            if (singletonClient == null) {
+        public static Client GetInstance(string serverPipePath, string clientPipePath)
+        {
+            if (singletonClient == null)
+            {
                 singletonClient = new Client(serverPipePath, clientPipePath);
             }
             return singletonClient;
@@ -120,7 +138,8 @@ namespace FifoServer {
 
     }
 
-    public enum FieldType:byte {
+    public enum FieldType : byte
+    {
         Metadata = 0x01,
         Action = 0x02,
         ActionResult = 0x03,

@@ -5,10 +5,12 @@ public static class TransformExtension
 {
     public static Transform FirstChildOrDefault(this Transform parent, Func<Transform, bool> query)
     {
-        if (query(parent)) {
+        if (query(parent))
+        {
             return parent;
         }
-        else {
+        else
+        {
             Transform result = null;
             for (int i = 0; i < parent.childCount; i++)
             {
@@ -18,6 +20,6 @@ public static class TransformExtension
             }
             return result;
         }
-        
+
     }
 }

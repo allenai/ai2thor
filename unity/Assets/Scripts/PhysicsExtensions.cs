@@ -30,7 +30,7 @@ public static class PhysicsExtensions
     //
     // Box
     //
-    
+
     public static bool BoxCast(BoxCollider box, Vector3 direction, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 center, halfExtents;
@@ -72,7 +72,7 @@ public static class PhysicsExtensions
     }
 
     public static Collider[] OverlapBox(
-        BoxCollider box, 
+        BoxCollider box,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f)
@@ -80,7 +80,8 @@ public static class PhysicsExtensions
         Vector3 center, halfExtents;
         Quaternion orientation;
         box.ToWorldSpaceBox(out center, out halfExtents, out orientation);
-        if (expandBy != 0.0f) {
+        if (expandBy != 0.0f)
+        {
             halfExtents = new Vector3(expandBy + halfExtents.x, expandBy + halfExtents.y, expandBy + halfExtents.z);
         }
         return Physics.OverlapBox(center, halfExtents, orientation, layerMask, queryTriggerInteraction);
@@ -106,7 +107,7 @@ public static class PhysicsExtensions
     //
     // Sphere
     //
-    
+
     public static bool SphereCast(SphereCollider sphere, Vector3 direction, out RaycastHit hitInfo, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 center;
@@ -160,7 +161,7 @@ public static class PhysicsExtensions
         return Physics.OverlapSphereNonAlloc(center, radius, results, layerMask, queryTriggerInteraction);
     }
 
-    public static void ToWorldSpaceSphere(this SphereCollider sphere, out Vector3 center, out float radius) 
+    public static void ToWorldSpaceSphere(this SphereCollider sphere, out Vector3 center, out float radius)
     {
         center = sphere.transform.TransformPoint(sphere.center);
         radius = sphere.radius * MaxVec3(AbsVec3(sphere.transform.lossyScale));
@@ -169,7 +170,7 @@ public static class PhysicsExtensions
     //
     // Capsule
     //
-    
+
     public static bool CapsuleCast(CapsuleCollider capsule, Vector3 direction, out RaycastHit hitInfo, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
     {
         Vector3 point0, point1;
@@ -203,8 +204,8 @@ public static class PhysicsExtensions
     }
 
     public static Collider[] OverlapCapsule(
-        CapsuleCollider capsule, 
-        int layerMask = Physics.DefaultRaycastLayers, 
+        CapsuleCollider capsule,
+        int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f)
     {
@@ -230,25 +231,27 @@ public static class PhysicsExtensions
         Vector3 lossyScale = AbsVec3(capsule.transform.lossyScale);
         Vector3 dir = Vector3.zero;
 
-        switch (capsule.direction) {
-        case 0: // x
-            radius = Mathf.Max(lossyScale.y, lossyScale.z) * capsule.radius;
-            height = lossyScale.x * capsule.height;
-            dir = capsule.transform.TransformDirection(Vector3.right);
-            break;
-        case 1: // y
-            radius = Mathf.Max(lossyScale.x, lossyScale.z) * capsule.radius;
-            height = lossyScale.y * capsule.height;
-            dir = capsule.transform.TransformDirection(Vector3.up);
-            break;
-        case 2: // z
-            radius = Mathf.Max(lossyScale.x, lossyScale.y) * capsule.radius;
-            height = lossyScale.z * capsule.height;
-            dir = capsule.transform.TransformDirection(Vector3.forward);
-            break;
+        switch (capsule.direction)
+        {
+            case 0: // x
+                radius = Mathf.Max(lossyScale.y, lossyScale.z) * capsule.radius;
+                height = lossyScale.x * capsule.height;
+                dir = capsule.transform.TransformDirection(Vector3.right);
+                break;
+            case 1: // y
+                radius = Mathf.Max(lossyScale.x, lossyScale.z) * capsule.radius;
+                height = lossyScale.y * capsule.height;
+                dir = capsule.transform.TransformDirection(Vector3.up);
+                break;
+            case 2: // z
+                radius = Mathf.Max(lossyScale.x, lossyScale.y) * capsule.radius;
+                height = lossyScale.z * capsule.height;
+                dir = capsule.transform.TransformDirection(Vector3.forward);
+                break;
         }
 
-        if (height < radius*2f) {
+        if (height < radius * 2f)
+        {
             dir = Vector3.zero;
         }
 
@@ -262,11 +265,13 @@ public static class PhysicsExtensions
 
     public static void SortClosestToFurthest(RaycastHit[] hits, int hitCount = -1)
     {
-        if (hitCount == 0) {
+        if (hitCount == 0)
+        {
             return;
         }
 
-        if (hitCount < 0) {
+        if (hitCount < 0)
+        {
             hitCount = hits.Length;
         }
 
@@ -276,7 +281,7 @@ public static class PhysicsExtensions
     //
     // Private 
     //
-    
+
     private class AscendingDistanceComparer : IComparer<RaycastHit>
     {
         public int Compare(RaycastHit h1, RaycastHit h2)

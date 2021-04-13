@@ -415,7 +415,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true, listOfSOP);
     }
 
-    public bool PickupObject(List <string> objectIds, ref string errorMessage)
+    public bool PickupObject(List<string> objectIds, ref string errorMessage)
     {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
@@ -423,9 +423,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //grab all sim objects that are currently colliding with magnet sphere
         foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
         {
-            if(objectIds != null)
+            if (objectIds != null)
             {
-                if(!objectIds.Contains(sop.objectID))
+                if (!objectIds.Contains(sop.objectID))
                 {
                     continue;
                 }
@@ -435,7 +435,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-            if (sop.IsOpenable) {
+            if (sop.IsOpenable)
+            {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
                 // if an openable object receives OnTriggerEnter events
                 // the RigidBody can be switched to Kinematic false 
@@ -461,15 +462,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             HeldObjects.Add(sop, cols);
         }
 
-        if(!pickedUp)
+        if (!pickedUp)
         {
-            if(objectIds != null)
+            if (objectIds != null)
             {
                 errorMessage = "No objects (specified by objectId) were valid to be picked up by the arm";
             }
 
             else
-            errorMessage = "No objects were valid to be picked up by the arm";
+                errorMessage = "No objects were valid to be picked up by the arm";
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
@@ -498,7 +499,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 c.enabled = true;
             }
 
-            if (sop.Key.IsOpenable) {
+            if (sop.Key.IsOpenable)
+            {
                 CanOpen_Object coj = sop.Key.gameObject.GetComponent<CanOpen_Object>();
                 coj.triggerEnabled = true;
             }

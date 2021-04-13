@@ -49,11 +49,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.rotateGaussianSigma = action.rotateGaussianSigma;
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Debug.Log("MoveNoise: " + movementGaussianMu + " mu, " + movementGaussianSigma + " sigma");
             Debug.Log("RotateNoise: " + rotateGaussianMu + " mu, " + rotateGaussianSigma + " sigma");
             Debug.Log("applynoise:" + applyActionNoise);
-            #endif
+#endif
 
             base.Initialize(action);
         }
@@ -61,10 +61,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //reset visible objects while in editor, for debug purposes only
         private void LateUpdate()
         {
-            #if UNITY_EDITOR || UNITY_WEBGL
+#if UNITY_EDITOR || UNITY_WEBGL
             ServerAction action = new ServerAction();
             VisibleSimObjPhysics = VisibleSimObjs(action);
-            #endif
+#endif
         }
 
         public override void MoveRelative(ServerAction action)
@@ -79,10 +79,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 //random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
                 var random = new System.Random();
-                
+
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
-                if (this.applyActionNoise) 
+                if (this.applyActionNoise)
                 {
                     var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
@@ -114,19 +114,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         // NOOP action to allow evaluation to know that the episode has finished
-        public void Stop() 
+        public void Stop()
         {
             //i don't know why, but we have two no-op actions so here we go
             base.Pass();
         }
 
-        public override void LookDown(ServerAction action) 
+        public override void LookDown(ServerAction action)
         {
             //default degree increment to 30
-            if(action.degrees == 0)
+            if (action.degrees == 0)
             {
                 action.degrees = 30f;
-            } else {
+            }
+            else
+            {
                 errorMessage = "Must have degrees == 0 for now.";
                 actionFinished(false);
                 return;
@@ -134,13 +136,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //force the degree increment to the nearest tenths place
             //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if(!checkForUpDownAngleLimit("down", action.degrees))
+            if (!checkForUpDownAngleLimit("down", action.degrees))
             {
                 errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
+                errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+                actionFinished(false);
                 return;
             }
 
@@ -148,14 +150,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return;
         }
 
-        public override void LookUp(ServerAction action) 
+        public override void LookUp(ServerAction action)
         {
 
             //default degree increment to 30
-            if(action.degrees == 0)
+            if (action.degrees == 0)
             {
                 action.degrees = 30f;
-            } else {
+            }
+            else
+            {
                 errorMessage = "Must have degrees == 0 for now.";
                 actionFinished(false);
                 return;
@@ -163,13 +167,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //force the degree increment to the nearest tenths place
             //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if(!checkForUpDownAngleLimit("up", action.degrees))
+            if (!checkForUpDownAngleLimit("up", action.degrees))
             {
                 errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
+                errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+                actionFinished(false);
                 return;
             }
 
@@ -179,8 +183,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public override void Rotate(ServerAction action)
         {
             //only default hand if not manually Interacting with things
-            if(!action.manualInteract)
-            DefaultAgentHand();
+            if (!action.manualInteract)
+                DefaultAgentHand();
 
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
@@ -193,7 +197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             float rotationAmount = this.rotateStepDegrees;
 
-            if(action.degrees != 0.0f)
+            if (action.degrees != 0.0f)
             {
                 rotationAmount = action.degrees;
             }
@@ -205,7 +209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             float rotationAmount = this.rotateStepDegrees;
 
-            if(action.degrees != 0.0f)
+            if (action.degrees != 0.0f)
             {
                 rotationAmount = action.degrees;
             }
@@ -217,11 +221,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
         public void Teleport(
             float x, float y, float z,
             Vector3? rotation = null, float? horizon = null, bool forceAction = false
-        ) {
+        )
+        {
             Teleport(
                 position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
             );
@@ -229,7 +234,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Teleport(
             Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
-        ) {
+        )
+        {
             base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             base.assertTeleportedNearGround(targetPosition: position);
             actionFinished(success: true);
@@ -239,8 +245,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////////////// TELEPORT FULL //////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
-        public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false) {
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
+        public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false)
+        {
             TeleportFull(
                 position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
             );
@@ -248,7 +255,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TeleportFull(
             Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
-        ) {
+        )
+        {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             base.assertTeleportedNearGround(targetPosition: position);
             actionFinished(success: true);

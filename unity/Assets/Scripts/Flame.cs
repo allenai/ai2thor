@@ -16,30 +16,30 @@ public class Flame : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     //if this touches water and it's on, it is put out. Fire safety is important!
     public void OnTriggerStay(Collider MagiciansRed)
     {
         //check if the fire zone is touching Liquid(running water effects) or StandingLiquid(filled water effects)
-        if(MagiciansRed.CompareTag("Liquid") || MagiciansRed.CompareTag("StandingLiquid"))
+        if (MagiciansRed.CompareTag("Liquid") || MagiciansRed.CompareTag("StandingLiquid"))
         {
-            if(MyObject.GetComponent<CanToggleOnOff>().isOn)
+            if (MyObject.GetComponent<CanToggleOnOff>().isOn)
             {
                 MyObject.GetComponent<CanToggleOnOff>().Toggle();
             }
         }
 
-        if(MagiciansRed.CompareTag("Fire"))
+        if (MagiciansRed.CompareTag("Fire"))
         {
-            if(!MyObject.GetComponent<CanToggleOnOff>().isOn)
+            if (!MyObject.GetComponent<CanToggleOnOff>().isOn)
             {
                 MyObject.GetComponent<CanToggleOnOff>().Toggle();
             }

@@ -12,10 +12,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
 
     [Serializable]
-    public class HighlightConfig {
+    public class HighlightConfig
+    {
         public Color TextStrongColor;
         public Color TextFaintColor;
         public Color SoftOutlineColor;
@@ -25,14 +27,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     }
 
     public class ObjectHighlightController
-	{
+    {
         [SerializeField] private Text TargetText = null;
         [SerializeField] private Slider ThrowForceBarSlider = null;
         [SerializeField] private float MinHighlightDistance = 5f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
         [SerializeField] private float MaxThrowForce = 1000.0f;
         [SerializeField] private bool DisplayTargetText = true;
-        [SerializeField] private HighlightConfig HighlightParams = new HighlightConfig {
+        [SerializeField]
+        private HighlightConfig HighlightParams = new HighlightConfig
+        {
             TextStrongColor = new Color(1.0f, 1.0f, 1.0f, 1.0f),
             TextFaintColor = new Color(197.0f / 255, 197.0f / 255, 197.0f / 255, 228.0f / 255),
             SoftOutlineColor = new Color(0.66f, 0.66f, 0.66f, 0.1f),
@@ -75,7 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxChargeThrowSeconds = 1.4f,
             bool highlightWhileHolding = false,
             HighlightConfig highlightConfig = null
-        )   
+        )
         {
             this.PhysicsController = physicsController;
             this.MinHighlightDistance = minHighlightDistance;
@@ -83,32 +87,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.withHighlightShader = highlightEnabled;
             this.MaxChargeThrowSeconds = maxChargeThrowSeconds;
             this.highlightWhileHolding = highlightWhileHolding;
-            if (highlightConfig != null) {
+            if (highlightConfig != null)
+            {
                 this.HighlightParams = highlightConfig;
             }
             m_Camera = Camera.main;
             TargetText = GameObject.Find("DebugCanvasPhysics/TargetText").GetComponent<Text>();
             CrosshairText = GameObject.Find("DebugCanvasPhysics/Crosshair").GetComponent<Text>();
             var throwForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
-            if (throwForceBar) {
+            if (throwForceBar)
+            {
                 ThrowForceBarSlider = throwForceBar.GetComponent<Slider>();
             }
             this.ThrowEnabled = ThrowEnabled;
             this.highlightShader = Shader.Find("Custom/TransparentOutline");
         }
-        
+
         public void SetDisplayTargetText(bool display)
         {
             this.DisplayTargetText = display;
         }
 
-        public void SetOnlyPickableId(string objectId, bool disableHighlightShaderForObject = false) {
+        public void SetOnlyPickableId(string objectId, bool disableHighlightShaderForObject = false)
+        {
             this.onlyPickableObjectId = objectId;
             this.disableHighlightShaderForObject = disableHighlightShaderForObject;
         }
 
         public void MouseControls()
-		{
+        {
             // Interact action for mouse left-click when nothing is picked up
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
@@ -147,8 +154,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this.timerAtPress = Time.time;
                 }
 
-                if (highlightWhileHolding && this.highlightedObject != null && this.PhysicsController.WhatAmIHolding() != this.highlightedObject.gameObject && this.PhysicsController.ReadyForCommand) {
-                     var closestObj = this.highlightedObject;
+                if (highlightWhileHolding && this.highlightedObject != null && this.PhysicsController.WhatAmIHolding() != this.highlightedObject.gameObject && this.PhysicsController.ReadyForCommand)
+                {
+                    var closestObj = this.highlightedObject;
                     if (closestObj != null)
                     {
                         var actionName = "";
@@ -173,8 +181,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //simulate TouchThenApply for in-editor debugging stuff
-            #if UNITY_EDITOR
-            if (Input.GetKeyDown(KeyCode.Mouse1)&& !Input.GetKey(KeyCode.LeftShift))
+#if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftShift))
             {
                 Dictionary<string, object> dothis = new Dictionary<string, object>();
 
@@ -205,10 +213,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 PhysicsController.ProcessControlCommand(dothis);
             }
-            #endif
+#endif
 
             // Sets throw bar value
-            if (ThrowEnabled && ThrowForceBarSlider != null) {
+            if (ThrowEnabled && ThrowForceBarSlider != null)
+            {
                 if (this.mouseDownThrow)
                 {
                     var diff = Time.time - this.timerAtPress;
@@ -222,13 +231,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         0.0f;
                 }
             }
-            
+
             // Throw action on left click release
             if (Input.GetKeyUp(KeyCode.Mouse0))
             {
                 if (!pickupState)
                 {
-                  
+
                     if (this.PhysicsController.WhatAmIHolding() != null)
                     {
                         var diff = Time.time - this.timerAtPress;
@@ -240,11 +249,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             Dictionary<string, object> action = new Dictionary<string, object>();
                             action["forceAction"] = true;
 
-                            if (ThrowEnabled) {
+                            if (ThrowEnabled)
+                            {
                                 action["action"] = "ThrowObject";
                                 action["moveMagnitude"] = force;
                             }
-                            else {
+                            else
+                            {
                                 action["action"] = "DropHandObject";
                             }
                             this.PhysicsController.ProcessControlCommand(action);
@@ -257,26 +268,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     pickupState = false;
                 }
             }
-		}
+        }
 
-        public void UpdateHighlightedObject(Vector3 screenPosition) {
+        public void UpdateHighlightedObject(Vector3 screenPosition)
+        {
             RaycastHit hit = new RaycastHit();
             var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(screenPosition);
-            int layerMask = LayerMask.GetMask("SimObjVisible"); 
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             Physics.Raycast(ray, out hit, this.MinHighlightDistance, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 
             SimObjPhysics newHighlightedObject = null;
             Shader newPreviousShader = null;
 
-            if (hit.transform != null 
+            if (hit.transform != null
                 && hit.transform.tag == "SimObjPhysics"
                 && (this.PhysicsController.WhatAmIHolding() == null || this.highlightWhileHolding)
                )
             {
                 softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
-                Func<bool> validObjectLazy = () => { 
+                Func<bool> validObjectLazy = () =>
+                {
                     return (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (this.onlyPickableObjectId == null || this.onlyPickableObjectId == simObj.objectID)) ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
@@ -289,15 +302,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     var useHighlightShader = !(disableHighlightShaderForObject && simObj.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
-                    
+
                     if (mRenderer != null && useHighlightShader)
                     {
-                        if (this.highlightedObject != newHighlightedObject) {
+                        if (this.highlightedObject != newHighlightedObject)
+                        {
                             newPreviousShader = mRenderer.material.shader;
                             this.previousRenderQueueValue = mRenderer.material.renderQueue;
                             mRenderer.material.renderQueue = -1;
                             mRenderer.material.shader = this.highlightShader;
-                        }  
+                        }
 
                         if (withinReach)
                         {
@@ -316,28 +330,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             else
             {
-                    newHighlightedObject = null;
+                newHighlightedObject = null;
             }
 
-            if (this.highlightedObject != newHighlightedObject && this.highlightedObject != null) {
-                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+            if (this.highlightedObject != newHighlightedObject && this.highlightedObject != null)
+            {
+                var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
-                    setTargetText("");
-                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
+                setTargetText("");
+                var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
 
-                    if (mRenderer != null && useHighlightShader)
-                    {
-                        mRenderer.material.shader = this.previousShader;
-                        // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
-                        mRenderer.material.renderQueue = this.previousRenderQueueValue;
-                    }
+                if (mRenderer != null && useHighlightShader)
+                {
+                    mRenderer.material.shader = this.previousShader;
+                    // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
+                    mRenderer.material.renderQueue = this.previousRenderQueueValue;
+                }
             }
-            
-            if (newPreviousShader != null) {
+
+            if (newPreviousShader != null)
+            {
                 this.previousShader = newPreviousShader;
             }
-           
-           
+
+
             this.highlightedObject = newHighlightedObject;
         }
 
@@ -362,7 +378,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
         }
-  
-	}
+
+    }
 
 }

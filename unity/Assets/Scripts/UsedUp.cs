@@ -18,19 +18,19 @@ public class UsedUp : MonoBehaviour
 
     [SerializeField]
     protected Collider[] alwaysActiveTriggerColliders;
-    
+
     public bool isUsedUp = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void UseUp()
@@ -44,7 +44,7 @@ public class UsedUp : MonoBehaviour
         }
 
         //disable all trigger colliders that are used up
-        foreach(Collider col in usedUpTriggerColliders)
+        foreach (Collider col in usedUpTriggerColliders)
         {
             col.enabled = false;
         }

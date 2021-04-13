@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SyncTransform : MonoBehaviour
 {
-    protected enum WhatToTrack {Rotation, Position};
+    protected enum WhatToTrack { Rotation, Position };
 
     [SerializeField]
     protected WhatToTrack WhichTransformPropertyAmITracking;
@@ -25,14 +25,14 @@ public class SyncTransform : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(!StopSyncingForASecond)
+        if (!StopSyncingForASecond)
         {
-            if(WhichTransformPropertyAmITracking == WhatToTrack.Rotation)
+            if (WhichTransformPropertyAmITracking == WhatToTrack.Rotation)
             {
                 gameObject.transform.rotation = ThingIamTracking.transform.rotation;
             }
 
-            else if(WhichTransformPropertyAmITracking == WhatToTrack.Position)
+            else if (WhichTransformPropertyAmITracking == WhatToTrack.Position)
             {
                 gameObject.transform.localPosition = ThingIamTracking.transform.localPosition;
             }
