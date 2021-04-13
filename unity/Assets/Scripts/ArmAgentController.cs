@@ -78,8 +78,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // Signature does not work with debuginput field(?)
-        public void MoveContinuous(
+        public void Move(
             float ahead = 0,
             float right = 0,
             float speed = 1,
@@ -121,7 +120,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateContinuous(
+        public override void MoveAhead(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=X, right=0).");
+        }
+
+        public override void MoveRight(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=0, right=X).");
+        }
+
+        public override void MoveLeft(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=0, right=-X).");
+        }
+
+        public override void MoveBack(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=-X, right=0).");
+        }
+
+        public override void MoveRelative(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Move\", ahead=-X, right=0).");
+        }
+
+        public override void RotateRight(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=X).");
+        }
+
+        public override void RotateLeft(ServerAction action) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=-X).");
+        }
+
+        // this is supported in base
+        public override void Rotate(Vector3 rotation) {
+          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"Rotate\", degrees=-X).");
+        }
+
+        public void Rotate(
             float degrees,
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
@@ -170,12 +202,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             arm.rotateHand(
-                this,
-                target,
-                action.speed,
-                action.disableRendering,
-                action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                action.returnToStart
+                controller: this,
+                targetQuat: target,
+                degreesPerSecond: action.speed,
+                disableRendering: action.disableRendering,
+                fixedDeltaTime: action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: action.returnToStart
             );
         }
 

@@ -2172,7 +2172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter(action, 180);
 		}
 
-        //overriden by stochastic
+        // overwritten by stochastic
         public virtual void MoveRelative(ServerAction action) {
             var moveLocal = new Vector3(action.x, 0, action.z);
             Vector3 moveWorldSpace = transform.rotation * moveLocal;
@@ -2181,11 +2181,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
         }
 
-		//free rotate, change forward facing of Agent
-        //this is currently overrided by Rotate in Stochastic Controller
-		public virtual void Rotate(ServerAction response)
-		{
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+		// free rotate, change forward facing of Agent
+        // this is currently overwritten by Rotate in Stochastic Controller
+		public virtual void Rotate(Vector3 rotation) {
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
 			actionFinished(true);
 		}
 
