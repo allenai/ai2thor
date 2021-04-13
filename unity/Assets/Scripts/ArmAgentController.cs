@@ -27,7 +27,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = false,
             string coordinateSpace = "armBase",
             bool restrictMovement = false,
-            bool disableRendering = false
+            bool disableRendering = true
         ) {
             IK_Robot_Arm_Controller arm = getArm();
             arm.moveArmTarget(
@@ -91,7 +91,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = false,
-            bool disableRendering = false
+            bool disableRendering = true
         ) {
             if (ahead == 0 && right == 0) {
                 throw new ArgumentException("Must specify ahead or right!");
@@ -165,7 +165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
             bool returnToStart = false,
-            bool disableRendering = false,
+            bool disableRendering = true,
             float fixedDeltaTime = 0.02f
         ) {
             CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
@@ -226,7 +226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = false,
-            bool disableRendering = false
+            bool disableRendering = true
         ) {
             if (y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException($"y={y} value must be [0, 1.0].");
