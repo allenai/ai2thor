@@ -16,6 +16,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public StochasticRemoteFPSAgentController StochasticController = null;
         public DroneFPSAgentController DroneController = null;
+        public ArmAgentController ArmController = null;
         public AgentManager AManager = null;
 
         private ControlMode controlMode;
@@ -161,6 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
             StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             DroneController = fpsController.GetComponent<DroneFPSAgentController>();
+            ArmController = fpsController.GetComponent<ArmAgentController>();
             Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
@@ -180,6 +182,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return StochasticController;
             } else if (DroneController.enabled) {
                 return DroneController;
+            } else if (ArmController.enabled) {
+                return ArmController;
             }
             throw new InvalidOperationException("No controller is active!");
         }
@@ -1848,6 +1852,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["x"] = float.Parse(splitcommand[1]);
                         action["z"] = float.Parse(splitcommand[2]);
 
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "move":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "Move",
+                            ["ahead"] = 0.25f
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "rotate":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "Rotate",
+                            ["degrees"] = 90
+                        };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
