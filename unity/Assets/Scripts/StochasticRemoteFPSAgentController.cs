@@ -165,7 +165,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.LookUp(action);
         }
 
-        public void Rotate(Vector3 rotation, float noise = 0, bool manualInteract = false) {
+        // NOTE: This is necessary to avoid an ambiguous action between base and stochastic.
+        public override void Rotate(Vector3 rotation) {
+            Rotate(rotation: rotation, noise: 0);
+        }
+
+        public void Rotate(Vector3 rotation, float noise, bool manualInteract = false) {
             // only default hand if not manually Interacting with things
             if (!manualInteract) {
                 DefaultAgentHand();
