@@ -16,7 +16,7 @@ from PIL import ImageChops, ImageFilter, Image
 import glob
 import re
 
-TEST_SCENE = 'FloorPlan28'
+TEST_SCENE = "FloorPlan28"
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -52,29 +52,35 @@ _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
 _stochastic_controller = build_controller(agentControllerType="stochastic")
 
+
 def skip_reset(controller):
     # setting attribute on the last event so we can tell if the
     # controller gets used since last event will change after each step
     controller.last_event._pytest_skip_reset = True
 
+
 # resetting on each use so that each tests works with
 # the scene in a pristine state
 def reset_controller(controller):
-    controller.initialization_parameters = copy.deepcopy(controller._original_initialization_parameters)
-    if not hasattr(controller.last_event, '_pytest_skip_reset'):
+    controller.initialization_parameters = copy.deepcopy(
+        controller._original_initialization_parameters
+    )
+    if not hasattr(controller.last_event, "_pytest_skip_reset"):
         controller.reset(TEST_SCENE)
         skip_reset(controller)
 
-
     return controller
+
 
 @pytest.fixture
 def wsgi_controller():
     return reset_controller(_wsgi_controller)
 
+
 @pytest.fixture
 def stochastic_controller():
     return reset_controller(_stochastic_controller)
+
 
 @pytest.fixture
 def fifo_controller():
@@ -84,9 +90,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -99,9 +112,11 @@ def teleport_to_base_location(controller: Controller):
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
     assert controller.last_event.metadata["lastActionSuccess"]
 
+
 def setup_function(function):
     for c in [_fifo_controller, _wsgi_controller, _stochastic_controller]:
         reset_controller(c)
+
 
 def teardown_module(module):
     _wsgi_controller.stop()
@@ -127,7 +142,8 @@ def test_stochastic_controller(stochastic_controller):
 def test_multi_agent_with_third_party_camera(fifo_controller):
     fifo_controller.reset(TEST_SCENE, agentCount=2)
     assert not np.all(
-        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame
+        == fifo_controller.last_event.events[0].frame
     )
     event = fifo_controller.step(
         dict(
@@ -137,13 +153,15 @@ def test_multi_agent_with_third_party_camera(fifo_controller):
         )
     )
     assert not np.all(
-        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame
+        == fifo_controller.last_event.events[0].frame
     )
 
 
 # Issue #526 thirdPartyCamera hanging without correct keys in FifoServer FormMap
 def test_third_party_camera_with_image_synthesis(fifo_controller):
-    fifo_controller.reset(TEST_SCENE,
+    fifo_controller.reset(
+        TEST_SCENE,
         renderInstanceSegmentation=True,
         renderDepthImage=True,
         renderSemanticSegmentation=True,
@@ -175,7 +193,7 @@ def test_small_aspect(fifo_controller):
 
 
 def test_bot_deprecation(fifo_controller):
-    fifo_controller.reset(TEST_SCENE, agentMode='bot')
+    fifo_controller.reset(TEST_SCENE, agentMode="bot")
     assert (
         fifo_controller.initialization_parameters["agentMode"].lower() == "locobot"
     ), "bot should alias to locobot!"
@@ -185,7 +203,8 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
 
-    fifo_controller.reset(TEST_SCENE,
+    fifo_controller.reset(
+        TEST_SCENE,
         renderObjectImage=True,
         renderClassImage=True,
     )
@@ -203,7 +222,8 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderObjectImage has been renamed to renderInstanceSegmentation
     # renderClassImage has been renamed to renderSemanticSegmentation
 
-    fifo_controller.reset(TEST_SCENE,
+    fifo_controller.reset(
+        TEST_SCENE,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
     )
@@ -263,7 +283,9 @@ def test_fifo_large_input(fifo_controller):
     random_string = "".join(
         random.choice(string.ascii_letters) for i in range(1024 * 16)
     )
-    event = fifo_controller.step(dict(action="TestActionReflectParam", rvalue=random_string))
+    event = fifo_controller.step(
+        dict(action="TestActionReflectParam", rvalue=random_string)
+    )
     assert event.metadata["actionReturn"] == random_string
 
 
@@ -311,9 +333,7 @@ def test_target_invocation_exception(controller):
     ], "errorMessage should not be empty when OpenObject(x > 1)."
 
 
-@pytest.mark.parametrize(
-    "controller", fifo_wsgi_stoch
-)
+@pytest.mark.parametrize("controller", fifo_wsgi_stoch)
 def test_lookup(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -438,7 +458,8 @@ def test_update_third_party_camera(fifo_controller):
         )
     )
     assert (
-        len(fifo_controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1
+        len(fifo_controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras])
+        == 1
     ), "there should be 1 camera"
 
     # update camera pose fully
@@ -550,11 +571,12 @@ def test_rotate_right(controller):
     assert e.metadata["agent"]["rotation"]["x"] == 0.0
     assert e.metadata["agent"]["rotation"]["z"] == 0.0
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_aabb_cache(controller):
     objects = controller.last_event.metadata["objects"]
     obj = next(obj for obj in objects if obj["objectType"] == "Fridge")
-    start_aabb = obj['axisAlignedBoundingBox']
+    start_aabb = obj["axisAlignedBoundingBox"]
 
     open_event = controller.step(
         action="OpenObject",
@@ -562,9 +584,11 @@ def test_open_aabb_cache(controller):
         forceAction=True,
         raise_for_failure=True,
     )
-    obj = next(obj for obj in open_event.metadata['objects'] if obj["objectType"] == "Fridge")
-    open_aabb = obj['axisAlignedBoundingBox']
-    assert start_aabb['size'] != open_aabb['size']
+    obj = next(
+        obj for obj in open_event.metadata["objects"] if obj["objectType"] == "Fridge"
+    )
+    open_aabb = obj["axisAlignedBoundingBox"]
+    assert start_aabb["size"] != open_aabb["size"]
 
     close_event = controller.step(
         action="CloseObject",
@@ -572,9 +596,11 @@ def test_open_aabb_cache(controller):
         forceAction=True,
         raise_for_failure=True,
     )
-    obj = next(obj for obj in close_event.metadata['objects'] if obj["objectType"] == "Fridge")
-    close_aabb = obj['axisAlignedBoundingBox']
-    assert start_aabb['size'] == close_aabb['size']
+    obj = next(
+        obj for obj in close_event.metadata["objects"] if obj["objectType"] == "Fridge"
+    )
+    close_aabb = obj["axisAlignedBoundingBox"]
+    assert start_aabb["size"] == close_aabb["size"]
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -666,6 +692,7 @@ def test_action_dispatch(fifo_controller):
     assert sorted(event.metadata["actionReturn"]) == known_ambig
     skip_reset(fifo_controller)
 
+
 def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
     event = fifo_controller.step(
         dict(action="TestActionDispatchFindAmbiguous"),
@@ -746,7 +773,9 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
 def test_action_dispatch_missing_args(fifo_controller):
     caught_exception = False
     try:
-        event = fifo_controller.step(dict(action="TestActionDispatchNoop", param6="foo"))
+        event = fifo_controller.step(
+            dict(action="TestActionDispatchNoop", param6="foo")
+        )
         print(event.metadata["actionReturn"])
     except ValueError as e:
         caught_exception = True
@@ -826,7 +855,6 @@ def test_action_disptatch_some_default(fifo_controller):
     )
     assert event.metadata["actionReturn"] == "somedefault"
     skip_reset(fifo_controller)
-
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -936,6 +964,7 @@ def test_change_resolution(controller):
         dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True
     )
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_teleport(controller):
     # Checking y coordinate adjustment works
@@ -956,7 +985,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -967,7 +997,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -975,7 +1006,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1180,7 +1212,9 @@ def test_2d_semantic_hulls(controller):
     from shapely.geometry import Polygon
 
     controller.reset("FloorPlan28")
-    obj_name_to_obj_id = {o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]}
+    obj_name_to_obj_id = {
+        o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]
+    }
     # Used to save fixed object locations.
     # with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "w") as f:
     #     json.dump(
@@ -1200,7 +1234,7 @@ def test_2d_semantic_hulls(controller):
                 rotation=o["rotation"],
                 forceAction=True,
                 forceKinematic=True,
-                makeUnbreakable=True
+                makeUnbreakable=True,
             ).metadata["lastActionSuccess"]
             assert teleport_success
 
@@ -1208,7 +1242,7 @@ def test_2d_semantic_hulls(controller):
     object_ids = [
         "Mug|-03.15|+00.82|-03.47",
         "Faucet|-00.39|+00.93|-03.61",
-        "StoveBurner|-00.22|+00.92|-01.85"
+        "StoveBurner|-00.22|+00.92|-01.85",
     ]
 
     def get_rounded_hulls(**kwargs):
@@ -1288,9 +1322,7 @@ def test_2d_semantic_hulls(controller):
 
     # Should fail when given types and ids
     assert not controller.step(
-        "Get2DSemanticHulls",
-        objectTypes=object_types,
-        objectIds=object_ids
+        "Get2DSemanticHulls", objectTypes=object_types, objectIds=object_ids
     ).metadata["lastActionSuccess"]
 
 
@@ -1390,7 +1422,7 @@ def test_get_coordinate_from_raycast(controller):
     query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {'x': -0.5968407392501831, 'y': 1.5759981870651245, 'z': -1.0484200716018677}
+        {"x": -0.5968407392501831, "y": 1.5759981870651245, "z": -1.0484200716018677},
     )
 
 
@@ -1420,3 +1452,59 @@ def test_get_reachable_positions_with_directions_relative_agent(controller):
     assert (
         num_reachable_unaligned != num_reachable_aligned
     ), "Number of reachable positions should differ when using `directionsRelativeAgent`"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_manipulathor_move(controller):
+    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    assert_near(
+        point1={"x": -1.5, "y": 0.9009982347488403, "z": -1.5},
+        point2=event.metadata["agent"]["position"],
+    )
+
+    event = controller.step(action="MoveAgent", ahead=0.25, right=0.15)
+    assert_near(
+        point1={"x": -1.649999976158142, "y": 0.9009982347488403, "z": -1.75},
+        point2=event.metadata["agent"]["position"],
+    )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_manipulathor_rotate(controller):
+    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    assert_near(
+        point1={"x": -0.0, "y": 180.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
+    event = controller.step(action="RotateAgent", degrees=60)
+    assert_near(
+        point1={"x": -0.0, "y": 240.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_unsupported_manipulathor(controller):
+    controller.reset(agentMode="arm")
+    unsupported_actions = [
+        "MoveAhead",
+        "MoveBack",
+        "MoveLeft",
+        "MoveRight",
+        "RotateRight",
+        "RotateLeft",
+    ]
+
+    for action in unsupported_actions:
+        event = controller.step(action)
+        assert not event, action + " should have failed with agentMode=arm"
+
+    event = controller.step(action="PickupObject", x=0.5, y=0.5)
+    assert not event, "PickupObject(x, y) should have failed with agentMode=arm"
+
+    objectId = next(
+        obj["objectId"] for obj in event.metadata["objects"] if obj["pickupable"]
+    )
+    event = controller.step(action="PickupObject", objectId=objectId, forceAction=True)
+    assert not event, "PickupObject(objectId) should have failed with agentMode=arm"
