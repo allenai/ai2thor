@@ -319,9 +319,10 @@ public class AgentManager : MonoBehaviour
 
     private void SetUpArmController(bool midLevelArm) {
         this.agents.Clear();
-		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        primaryAgent.enabled = false;
+		GameObject baseController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         // TODO set correct component
-		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent = baseController.GetComponent<ArmAgentController>();
 		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
 		//primaryAgent.actionComplete = true;
@@ -1455,7 +1456,7 @@ public class ArmMetadata {
 	public List<String> HeldObjects;
 
 	//all sim objects that are both pickupable and inside the hand sphere
-	public List<String> PickupableObjectsInsideHandSphere;
+	public List<String> PickupableObjects;
 
 	//world coordinates of the center of the hand's sphere
 	public Vector3 HandSphereCenter;

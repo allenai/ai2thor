@@ -4651,138 +4651,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
         }
 
-        public void PickupObject(ServerAction action) //use serveraction objectid
-        {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                if(!screenToWorldTarget(
-                x: action.x, 
-                y: action.y, 
-                target: ref target, 
-                forceAction: action.forceAction))
-                {
-                    //error message is set inside screenToWorldTarget
-                    actionFinished(false, errorMessage);
-                    return;
-                }
+
+        protected void pickupObject(
+            SimObjPhysics target,
+            bool forceAction,
+            bool manualInteract,
+            bool markActionFinished
+        ) {
+            if (target == null) {
+                throw new ArgumentNullException();
             }
 
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                //if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
-            }
-
-            //neither objectId nor coordinates found an object
-            if(target == null)
-            {
-                errorMessage = "No target found";
-                actionFinished(false);
-                return;
-            }
-            
-            //we have a valid target
+            // found non-pickupable object
             if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                errorMessage = target.objectID + " must have the property CanPickup to be picked up.";
-                actionFinished(false);
-                return;
+
+                throw new InvalidOperationException(target.objectID + " must have the property CanPickup to be picked up.");
             }
-            
+
+            // agent is holding something
             if (ItemInHand != null) {
-                Debug.Log("Agent hand has something in it already! Can't pick up anything else");
-                actionFinished(false);
-                return;
-            } 
-            if (IsHandDefault == false) {
-                errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Agent hand has something in it already! Can't pick up anything else");
+            }
+            if (!IsHandDefault) {
+                throw new InvalidOperationException("Must reset Hand to default position before attempting to Pick Up objects");
             }
 
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = target.objectID + " is not visible and can't be picked up.";
-                actionFinished(false);
-                return;
-            }
-            if (!action.forceAction && !IsInteractable(target)) {
-                errorMessage = target.objectID + " is not interactable and (perhaps it is occluded by something).";
-                actionFinished(false);
-                return;
-            }
-
-            //if pickup action is being abstracted, don't teleport target to hand
-            //instead move hand to target and allow for immediate manipulation from
-            //where the object was
-            if(tryPickupTarget(target, action, action.manualInteract))
-            {
-                //we have succesfully picked up something! 
-                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-                actionFinished(true, target.ObjectID);
-                return;
-            }
-
-            else
-            {
-                errorMessage = "Picking up object would cause it to collide and clip into something!";
-                actionFinished(false);
-                return;
-            }
-        }
-
-        public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)
-        {
-            //save all initial values in case we need to reset on action fail
+            // save all initial values in case we need to reset on action fail
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
             Transform savedParent = target.transform.parent;
 
-            //oh also save kinematic values in case we need to reset
+            // oh also save kinematic values in case we need to reset
             Rigidbody rb = target.GetComponent<Rigidbody>();
             bool wasKinematic = rb.isKinematic;
 
-            //in preparation for object being held, force collision detection to discrete and make sure kinematic = true
+            // in preparation for object being held, force collision detection to discrete and make sure kinematic = true
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
 
-            //run this to pickup any contained objects if object is a receptacle
-            //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
+            // run this to pickup any contained objects if object is a receptacle
+            // if the target is rotated too much, don't try to pick up any contained objects since they would fall out
             if (Vector3.Angle(target.transform.up, Vector3.up) < 60) {
                 PickupContainedObjects(target);
             }
 
             if (!manualInteract) {
-                //by default, abstract agent hand pickup so that object teleports to hand and changes orientation to match agent
+                // by default, abstract agent hand pickup so that object teleports to hand and changes orientation to match agent
 
-                //agent's hand is in default position in front of camera, teleport object into agent's hand
+                // agent's hand is in default position in front of camera, teleport object into agent's hand
                 target.transform.position = AgentHand.transform.position;
                 // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
                 target.transform.rotation = transform.rotation;
             } else {
-                //in manualInteract mode, move the hand to the object, and require agent hand manipulation to move object around
-                //or move closer to agent
+                // in manualInteract mode, move the hand to the object, and require agent hand manipulation to move object around
+                // or move closer to agent
 
                 AgentHand.transform.position = target.transform.position;
-                //don't rotate target at all as we are moving the hand to the object in manualInteract = True mode
+                // don't rotate target at all as we are moving the hand to the object in manualInteract = True mode
             }
 
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
-            if (!action.forceAction && isHandObjectColliding(true) && !manualInteract) 
-            {
+            if (!forceAction && isHandObjectColliding(true) && !manualInteract) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 target.transform.position = savedPos;
@@ -4794,13 +4725,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     reparentContainedObjects: true,
                     forceKinematic: false
                 );
-                return false;
+                throw new InvalidOperationException("Picking up object would cause it to collide and clip into something!");
             }
 
-            else
-            {
-                return true;
+            // we have successfully picked up something!
+            target.isInAgentHand = true;
+            if (markActionFinished) {
+                actionFinished(success: true, actionReturn: target.ObjectID);
             }
+        }
+
+        public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
+            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
+        }
+
+        public virtual void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
@@ -7259,19 +7201,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                actionFinished(false);
-                return;
-            } else {
-                //put new object created in dictionary and assign its objectID to the action
-                action.objectId = so.objectID;
-
-                //also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
+                throw new InvalidOperationException(
+                    "Failed to create object, are you sure it can be spawned?"
+                );
             }
 
-            action.forceAction = true;
-            PickupObject(action);
+            // update the Physics Scene Manager with this new object
+            physicsSceneManager.AddToObjectsInScene(so);
+
+            PickupObject(
+                objectId: so.objectID,
+                forceAction: true
+            );
         }
 
         public void CreateObjectAtLocation(ServerAction action) {
@@ -9239,318 +9180,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
-
-        #if UNITY_EDITOR
-        //debug for static arm collisions from collision listener
-        public void GetMidLevelArmCollisions() {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                var collisionListener = arm.GetComponentInChildren<CollisionListener>();
-                if (collisionListener != null) {
-                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
-                    foreach(var sc in collisionListener.StaticCollisions()){
-                        var element = new Dictionary<string, string>();
-                        if (sc.simObjPhysics != null) {
-                            element["objectType"] = "simObjPhysics";
-                            element["name"] = sc.simObjPhysics.objectID;
-                        }
-                        else
-                        {
-                            element["objectType"] = "gameObject";
-                            element["name"] = sc.gameObject.name;
-                        }
-                        collisions.Add(element);
-                    }
-                    actionFinished(true, collisions);
-                }
-            }
-            else
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled.";
-                actionFinished(false);
-            }
-
-        }
-        
-        //debug for static arm collisions from collision listener
-        public void DebugMidLevelArmCollisions() {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                var scs = arm.collisionListener.StaticCollisions();
-                Debug.Log("Total current active static arm collisions: " + scs.Count);
-                foreach(var sc  in scs) {
-                    Debug.Log("Arm static collision: " + sc.name);
-                }
-
-            }   
-
-            actionFinished(true);
-        }
-        #endif
-
-        public void MoveMidLevelArm(ServerAction action) {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-                
-                arm.moveArmTarget(
-                    this,
-                    action.position, 
-                    action.speed, 
-                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
-                    action.returnToStart, 
-                    action.coordinateSpace, 
-                    action.restrictMovement, 
-                    action.disableRendering
-                );
-            }
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
-
-        }
-
-        //constrain arm's y position based on the agent's current capsule collider center and extents
-        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
-        //arm constrained by the agent's capsule
-        public void MoveMidLevelArmHeight(ServerAction action)
-        {
-            if(action.y < 0 || action.y > 1.0)
-            {
-                errorMessage = "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive";
-                actionFinished(false, errorMessage);
-                return;
-            }
-
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if(arm != null)
-            {
-                arm.moveArmHeight(
-                    this, 
-                    action.y, 
-                    action.speed, 
-                    action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), 
-                    action.returnToStart, 
-                    action.disableRendering
-                );
-            }
-
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
-        }
-
-        //currently not finished action. New logic needs to account for the heirarchy of rigidbodies of each arm joint and how to detect collision
-        //between a given arm joint an other arm joints.
-        public void RotateMidLevelHand(ServerAction action)
-        {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) {
-
-                var target = new Quaternion();
-                //rotate around axis aliged x, y, z with magnitude based on vector3
-                if(action.degrees == 0)
-                {
-                    //use euler angles
-                    target = Quaternion.Euler(action.rotation);
-                }
-
-                //rotate action.degrees about axis
-                else {
-                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
-                }
-
-                arm.rotateHand(this, target, action.speed, action.disableRendering, action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime), action.returnToStart);
-                    
-            }
-            else {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
-        }
-
-        //perhaps this should fail if no object is picked up?
-        //currently action success happens as long as the arm is enabled because it is a succcesful "attempt" to pickup something
-        public void PickUpMidLevelHand(List<string> objectIds = null)
-        {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) 
-            {
-                actionFinished(arm.PickupObject(objectIds, ref errorMessage), errorMessage);
-                return;
-            }
-
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
-        }
-
-        public void DropMidLevelHand(ServerAction action)
-        {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm != null) 
-            {
-                arm.DropObject();
-
-                //todo- only return after object(s) droped have finished moving
-                //currently this will return the frame the object is released
-
-                actionFinished(true);
-                return;
-            }
-
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);
-            }
-        }
-
-        public void WhatObjectsCanHandPickUp(ServerAction action)
-        {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            
-
-            if (arm != null) 
-            {
-                StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
-            }
-
-            else 
-            {
-
-            }
-        }
-
-        //note this does not reposition the center point of the magnet orb
-        //so expanding the radius too much will cause it to clip backward into the wrist joint
-        public void SetMidLevelHandRadius(ServerAction action) {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            if (arm != null) 
-            {
-                if(action.radius < 0.04 || action.radius > 0.5)
-                {
-                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-
-                else
-                {
-                    arm.SetHandMagnetRadius(action.radius);
-                    actionFinished(true);
-                    return;
-                }
-            }
-
-            else 
-            {
-                errorMessage = "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.";
-                actionFinished(false, errorMessage);            }
-        }
-
-        public void RotateContinuous(float degrees, float speed=1.0f, bool waitForFixedUpdate = false, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
-        {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            var collisionListener = this.GetComponentInParent<CollisionListener>();
-
-            collisionListener.Reset();
-
-
-            // this.transform.Rotate()
-            var rotate = ContinuousMovement.rotate(
-                    this,
-                    this.GetComponentInParent<CollisionListener>(),
-                    this.transform,
-                    this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
-                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                    speed,
-                    returnToStart
-            );
-
-            if (disableRendering) {
-                this.unrollSimulatePhysics(
-                    rotate,
-                    fixedDeltaTime
-                );
-            }
-            else {
-                StartCoroutine(
-                    rotate
-                );
-            }
-        }
-
-        // Signature does not work with debuginput field
-        // public void MoveContinuous(Vector3 direction, float speed, bool returnToStart = false, bool disableRendering = false, float fixedDeltaTime = 0.02f)
-        public void MoveContinuous(ServerAction action)
-        {
-            var direction = action.direction;
-            float speed = action.speed; 
-            bool returnToStart = action.returnToStart;
-            bool disableRendering = action.disableRendering;
-            float fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-
-            var collisionListener = this.GetComponentInParent<CollisionListener>();
-
-            var directionWorld = transform.TransformDirection(direction);
-            var targetPosition = transform.position + directionWorld;
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            collisionListener.Reset();
-
-            var move = ContinuousMovement.move(
-                    this,
-                    collisionListener,
-                    this.transform,
-                    targetPosition,
-                    disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                    speed,
-                    returnToStart,
-                    false
-            );
-
-            if (disableRendering) {
-                this.unrollSimulatePhysics(
-                    move,
-                    fixedDeltaTime
-                );
-            }
-            else {
-                StartCoroutine(
-                    move
-                );
-            }
-        }
-        
-        #if UNITY_EDITOR
-        void OnDrawGizmos()
-        {
-            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
-            //  Gizmos.color = Color.magenta;
-            //     if(validpointlist.Count > 0)
-            //     {
-            //         foreach(Vector3 yes in validpointlist)
-            //         {
-            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-            //         }
-            //     }
-
-            //draw axis aligned bounds of objects after actionFinished() calls
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
-        }
-        #endif
     }
 }
