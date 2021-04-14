@@ -220,6 +220,9 @@ public class MCSMain : MonoBehaviour {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                 Destroy(gameOrParentObject);
             });
+            //The way we use materials creates a bunch of instances.  This should clear them out after 
+            //we clean up the objects.
+            Resources.UnloadUnusedAssets();
         }
 
         if (scene != null) {
