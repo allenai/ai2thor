@@ -1358,6 +1358,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return collisionsInAction.Count > 0;
 		}
 
+        public bool IsInteractable(SimObjPhysics sop) {
+            if (sop == null)
+            {
+                throw new NullReferenceException("null SimObjPhysics passed to IsInteractable");
+            }
+
+            return GetAllVisibleSimObjPhysics(agentCamera: this.m_Camera, maxDistance: this.maxVisibleDistance, filterSimObjs: new List<SimObjPhysics>{sop}).Length == 1;
+        }
+
         public virtual SimpleSimObj[] allSceneObjects() {
 			return GameObject.FindObjectsOfType<SimObj>();
         }
@@ -1399,7 +1408,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>(GetAllVisibleSimObjPhysics(
                 this.m_Camera,
-                this.maxVisibleDistance));
+                this.maxVisibleDistance,
+                this.simObjFilter));
 
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
@@ -1537,7 +1547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; //simObj.isVisible;
 
-            objMeta.obstructed = !simObj.isInteractable;//if object is not interactable, it means it is obstructed
+            objMeta.obstructed = !isVisible;//if object is not interactable, it means it is obstructed
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
@@ -1689,9 +1699,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return metaMessage;
 		}
 
-		// public virtual SimpleSimObj[] VisibleSimObjs() {
-		// 	return new SimObj[]{} as SimpleSimObj[];
-		// }
 
 		public void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
@@ -1889,10 +1896,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(objectId: objectId, forceVisible: forceAction)) {
-                target = sop;
-            }
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
 
             // target not found!
             if (target == null) {
@@ -2033,7 +2037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         return false;
 
                     //now check if the object is flagged as Visible by the visibility point logic
-                    if(checkVisible && !VisibleSimObjs(forceAction).Contains(target))
+                    if(checkVisible && !forceAction && !IsInteractable(target))
                     {
                         //the potential target sim object hit by the ray is not currently visible to the agent
                         errorMessage = $"target hit ({target.objectID}) at ({x}, {y}) is not currently Visible to Agent";
@@ -2564,7 +2568,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (visPointCount > 0) 
                 {
                     #if UNITY_EDITOR
-                    sop.isVisible = true;
+                    sop.debugIsVisible = true;
                     #endif
                     visible = true;
                 }
@@ -2641,7 +2645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (visPointCount > 0)
                 {
                     #if UNITY_EDITOR
-                    sop.isVisible = true;
+                    sop.debugIsVisible = true;
                     #endif
                     visible = true;
                 }
@@ -2654,40 +2658,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return visible;
         }
 
-        public SimObjPhysics[] VisibleSimObjs(string objectId, bool forceVisible = false) {
-            ServerAction action = new ServerAction();
-            action.objectId = objectId;
-            action.forceVisible = forceVisible;
-            return VisibleSimObjs(action);
-        }
-
-
-        public SimObjPhysics[] VisibleSimObjs(ServerAction action) {
-            List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
-
-            //go through array of sim objects visible to the camera
-            foreach (SimObjPhysics so in VisibleSimObjs(action.forceVisible))
-            {
-
-                if (!string.IsNullOrEmpty(action.objectId) && action.objectId != so.ObjectID)
-                {
-                    continue;
-                }
-
-                if (!string.IsNullOrEmpty(action.objectType) && action.GetSimObjType() != so.Type)
-                {
-                    continue;
-                }
-
-                simObjs.Add(so);
-            }
-
-            return simObjs.ToArray();
-        }
-
         //pass in forceVisible bool to force grab all objects of type sim obj
         //if not, gather all visible sim objects maxVisibleDistance away from camera view
-        public SimObjPhysics[] VisibleSimObjs(bool forceVisible)
+        public SimObjPhysics[] VisibleSimObjs(bool forceVisible = false)
         {
             if (forceVisible)
             {
@@ -2699,12 +2672,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
         }
-        protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
+        protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs = null)
         {
+            
             if (this.visibilityScheme == VisibilityScheme.Collider) {
-                return GetAllVisibleSimObjPhysicsCollider(agentCamera, maxDistance);
+                return GetAllVisibleSimObjPhysicsCollider(agentCamera, maxDistance, filterSimObjs);
             } else {
-                return GetAllVisibleSimObjPhysicsDistance(agentCamera, maxDistance);
+                return GetAllVisibleSimObjPhysicsDistance(agentCamera, maxDistance, filterSimObjs);
             }
         }
 
@@ -2713,19 +2687,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // is within range of the maxVisibleDistance, but obscurred only within this
         // range and is visibile outside of the range, it will get reported as invisible
         // by the new scheme, but visible in the current scheme.
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance)
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs)
         {
-            List<SimObjPhysics> visible = new List<SimObjPhysics>();
-            IEnumerable<SimObjPhysics> simObjs = null;
-            if (this.simObjFilter != null) {
-                simObjs = this.simObjFilter;
-            } else {
-                // this is faster than doing GameObject.FindObjectsOfType and is kept consistent when new objects are added
-                simObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
+            if (filterSimObjs == null) {
+                filterSimObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
             }
 
+            List<SimObjPhysics> visible = new List<SimObjPhysics>();
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(agentCamera);
-            foreach(var sop in simObjs)
+            foreach(var sop in filterSimObjs)
             {
                 if(isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes))
                 {
@@ -2735,7 +2705,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return visible.ToArray();
         }
 
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance)
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs)
         {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
@@ -2743,13 +2713,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics)
             {
                 // Set all objects to not be visible
-                pair.Value.isVisible = false;
+                pair.Value.debugIsVisible = false;
             }
             #endif
 
             HashSet<SimObjPhysics> filter = null;
-            if (this.simObjFilter != null) {
-                filter = new HashSet<SimObjPhysics>(this.simObjFilter);
+            if (filterSimObjs != null) {
+                filter = new HashSet<SimObjPhysics>(filterSimObjs);
                 if (filter.Count == 0) {
                     return currentlyVisibleItems.ToArray();
                 }
@@ -2813,7 +2783,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if (visPointCount > 0)
                             {
                                 #if UNITY_EDITOR
-                                sop.isVisible = true;
+                                sop.debugIsVisible = true;
                                 #endif
                                 if (!currentlyVisibleItems.Contains(sop))
                                 {
@@ -2867,7 +2837,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 if (visPointCount > 0)
                                 {
                                     #if UNITY_EDITOR
-                                    sop.isVisible = true;
+                                    sop.debugIsVisible = true;
                                     #endif
                                     if (!currentlyVisibleItems.Contains(sop))
                                     {
@@ -2932,7 +2902,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         result = true;
-                        sop.isInteractable = true;
+                        sop.debugIsInteractable = true;
 
                         #if UNITY_EDITOR
                         Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
@@ -2997,7 +2967,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //if this line is drawn, then this visibility point is in camera frame and not occluded
                         //might want to use this for a targeting check as well at some point....
                         result = true;
-                        sop.isInteractable = true;
+                        sop.debugIsInteractable = true;
                     }
                 }
             }
@@ -3456,7 +3426,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
         }
+        
+        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceVisible = false) {
+            SimObjPhysics sop = getSimObjectFromId(objectId);
+            if (sop == null) {
+                errorMessage = "Object with id '" + objectId+ "' is null";
+                return null;
+            }
 
+            if (forceVisible || IsInteractable(sop))
+            {
+                return sop;
+            } 
+
+            return null;
+        }
+
+        protected SimObjPhysics getSimObjectFromId(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find sim object with id '" + objectId + "'";
+                return null;
+            }
+           
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            return sop;
+        }
         private SimObjPhysics getSimObjectFromTypeOrId(string objectType, string objectId) {
             if (!String.IsNullOrEmpty(objectType) && String.IsNullOrEmpty(objectId)) {
                 var ids = objectTypeToObjectIds(objectType);
@@ -3692,12 +3687,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             //bool success = false;
             var PhysicsController = this;
+            var targetSOP = getSimObjectFromId(targetSimObjectId);
             foreach (var pos in sortedPositions) {
                 agentTransform.position = pos;
                 agentTransform.LookAt(targetPosition);
 
-                var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
-                if (visibleSimObjects.Any(sop => sop.objectID == targetSimObjectId)) {
+                if (IsInteractable(targetSOP)){
                     fixedPosition = pos;
                     //success = true;
                     break;
@@ -3873,14 +3868,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //make sure to rotate just the Camera, not the whole agent
                     m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
-                    bool isVisible = false;
-                    if (this.visibilityScheme == VisibilityScheme.Distance) {
-                        Plane[] planes = GeometryUtility.CalculateFrustumPlanes(this.m_Camera);
-                        isVisible = isSimObjVisible(this.m_Camera, targetSOP, this.maxVisibleDistance, planes);
-                    } else {
-                        var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
-                        isVisible = visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID);
-                    }
+                    bool isVisible = IsInteractable(targetSOP);
 
                     transform.rotation = rot;
 
