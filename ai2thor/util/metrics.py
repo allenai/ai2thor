@@ -5,15 +5,16 @@ import copy
 
 
 def vector_distance(v0, v1):
-    dx = v0['x'] - v1['x']
-    dy = v0['y'] - v1['y']
-    dz = v0['z'] - v1['z']
+    dx = v0["x"] - v1["x"]
+    dy = v0["y"] - v1["y"]
+    dz = v0["z"] - v1["z"]
     return math.sqrt(dx * dx + dy * dy + dz * dz)
+
 
 def path_distance(path):
     distance = 0
     for i in range(0, len(path) - 1):
-        distance += vector_distance(path[i], path[i+1])
+        distance += vector_distance(path[i], path[i + 1])
     return distance
 
 
@@ -33,10 +34,11 @@ def compute_spl(episodes_with_golden):
     N = len(episodes_with_golden)
     eval_sum = 0.0
     for i, episode in enumerate(episodes_with_golden):
-        path = episode['path']
-        shortest_path = episode['shortest_path']
-        eval_sum += compute_single_spl(path, shortest_path, episode['success'])
+        path = episode["path"]
+        shortest_path = episode["shortest_path"]
+        eval_sum += compute_single_spl(path, shortest_path, episode["success"])
     return eval_sum / N
+
 
 def compute_single_spl(path, shortest_path, successful_path):
     """
@@ -58,11 +60,8 @@ def compute_single_spl(path, shortest_path, successful_path):
 
 
 def get_shortest_path_to_object(
-        controller,
-        object_id,
-        initial_position,
-        initial_rotation=None
-    ):
+    controller, object_id, initial_position, initial_rotation=None
+):
     """
     Computes the shortest path to an object from an initial position using a controller
     :param controller: agent controller
@@ -72,29 +71,23 @@ def get_shortest_path_to_object(
     :return:
     """
     args = dict(
-            action='GetShortestPath',
-            objectId=object_id,
-            position=initial_position,
-        )
+        action="GetShortestPath",
+        objectId=object_id,
+        position=initial_position,
+    )
     if initial_rotation is not None:
-        args['rotation'] = initial_rotation
+        args["rotation"] = initial_rotation
     event = controller.step(args)
-    if event.metadata['lastActionSuccess']:
-        return event.metadata['actionReturn']['corners']
+    if event.metadata["lastActionSuccess"]:
+        return event.metadata["actionReturn"]["corners"]
     else:
         raise ValueError(
-            "Unable to find shortest path for objectId '{}'".format(
-                object_id
-            )
+            "Unable to find shortest path for objectId '{}'".format(object_id)
         )
 
 
 def get_shortest_path_to_object_type(
-        controller,
-        object_type,
-        initial_position,
-        initial_rotation=None,
-        allowed_error=None
+    controller, object_type, initial_position, initial_rotation=None, allowed_error=None
 ):
     """
     Computes the shortest path to an object from an initial position using a controller
@@ -111,33 +104,29 @@ def get_shortest_path_to_object_type(
 
     """
     kwargs = dict(
-        action='GetShortestPath',
+        action="GetShortestPath",
         objectType=object_type,
         position=initial_position,
     )
     if initial_rotation is not None:
-        kwargs['rotation'] = initial_rotation
+        kwargs["rotation"] = initial_rotation
     if allowed_error is not None:
-        kwargs['allowedError'] = allowed_error
+        kwargs["allowedError"] = allowed_error
 
     event = controller.step(kwargs)
-    if event.metadata['lastActionSuccess']:
-        return event.metadata['actionReturn']['corners']
+    if event.metadata["lastActionSuccess"]:
+        return event.metadata["actionReturn"]["corners"]
     else:
         raise ValueError(
             "Unable to find shortest path for object type '{}' due to error '{}'.".format(
-                object_type,
-                event.metadata['errorMessage']
+                object_type, event.metadata["errorMessage"]
             )
         )
 
 
 def get_shortest_path_to_point(
-        controller,
-        initial_position,
-        target_position,
-        allowed_error=None
-    ):
+    controller, initial_position, target_position, allowed_error=None
+):
     """
     Computes the shortest path to a point from an initial position using an agent controller
     :param controller: agent controller
@@ -147,26 +136,24 @@ def get_shortest_path_to_point(
     :return:
     """
     kwargs = dict(
-        action='GetShortestPathToPoint',
+        action="GetShortestPathToPoint",
         position=initial_position,
-        x=target_position['x'],
-        y=target_position['y'],
-        z=target_position['z'],
+        x=target_position["x"],
+        y=target_position["y"],
+        z=target_position["z"],
     )
     if allowed_error is not None:
-        kwargs['allowedError'] = allowed_error
+        kwargs["allowedError"] = allowed_error
 
     event = controller.step(kwargs)
-    if event.metadata['lastActionSuccess']:
-        return event.metadata['actionReturn']['corners']
+    if event.metadata["lastActionSuccess"]:
+        return event.metadata["actionReturn"]["corners"]
     else:
         raise ValueError(
             "Unable to find shortest path to point '{}'  due to error '{}'.".format(
-                target_position,
-                event.metadata['errorMessage']
+                target_position, event.metadata["errorMessage"]
             )
         )
-
 
 
 def get_episodes_with_shortest_paths(controller, episodes):
@@ -182,43 +169,44 @@ def get_episodes_with_shortest_paths(controller, episodes):
     """
     episodes_with_golden = copy.deepcopy(episodes)
     for _, episode in enumerate(episodes_with_golden):
-        controller.reset(episode['scene'])
+        controller.reset(episode["scene"])
 
         try:
-            if 'target_object_id' in episode:
-                episode['shortest_path'] = get_shortest_path_to_object(
+            if "target_object_id" in episode:
+                episode["shortest_path"] = get_shortest_path_to_object(
                     controller,
-                    episode['target_object_id'],
+                    episode["target_object_id"],
                     {
-                        'x': episode['initial_position']['x'],
-                        'y': episode['initial_position']['y'],
-                        'z': episode['initial_position']['z']
+                        "x": episode["initial_position"]["x"],
+                        "y": episode["initial_position"]["y"],
+                        "z": episode["initial_position"]["z"],
                     },
                     {
-                        'x': episode['initial_rotation']['x'],
-                        'y': episode['initial_rotation']['y'],
-                        'z': episode['initial_rotation']['z']
-                    }
+                        "x": episode["initial_rotation"]["x"],
+                        "y": episode["initial_rotation"]["y"],
+                        "z": episode["initial_rotation"]["z"],
+                    },
                 )
             else:
-                episode['shortest_path'] = get_shortest_path_to_object_type(
+                episode["shortest_path"] = get_shortest_path_to_object_type(
                     controller,
-                    episode['target_object_type'],
+                    episode["target_object_type"],
                     {
-                        'x': episode['initial_position']['x'],
-                        'y': episode['initial_position']['y'],
-                        'z': episode['initial_position']['z']
+                        "x": episode["initial_position"]["x"],
+                        "y": episode["initial_position"]["y"],
+                        "z": episode["initial_position"]["z"],
                     },
                     {
-                        'x': episode['initial_rotation']['x'],
-                        'y': episode['initial_rotation']['y'],
-                        'z': episode['initial_rotation']['z']
-                    }
+                        "x": episode["initial_rotation"]["x"],
+                        "y": episode["initial_rotation"]["y"],
+                        "z": episode["initial_rotation"]["z"],
+                    },
                 )
         except ValueError:
             raise ValueError(
                 "Unable to find shortest path for objectId '{}' in episode '{}'".format(
-                    episode['target_object_id'], json.dumps(episode, sort_keys=True, indent=4)
+                    episode["target_object_id"],
+                    json.dumps(episode, sort_keys=True, indent=4),
                 )
             )
     return episodes_with_golden
