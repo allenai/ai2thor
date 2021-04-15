@@ -16,6 +16,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public StochasticRemoteFPSAgentController StochasticController = null;
         public DroneFPSAgentController DroneController = null;
+        public ArmAgentController ArmController = null;
         public AgentManager AManager = null;
 
         private ControlMode controlMode;
@@ -161,6 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
             StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             DroneController = fpsController.GetComponent<DroneFPSAgentController>();
+            ArmController = fpsController.GetComponent<ArmAgentController>();
             Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
@@ -180,6 +182,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return StochasticController;
             } else if (DroneController.enabled) {
                 return DroneController;
+            } else if (ArmController.enabled) {
+                return ArmController;
             }
             throw new InvalidOperationException("No controller is active!");
         }
@@ -1723,6 +1727,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetReachablePositions";
                         //action.maxStepCount = 10;
+                        if (splitcommand.Length == 2) {
+                            action["directionsRelativeAgent"] = bool.Parse(splitcommand[1]);
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
 
                         // NOTE: reachablePositions has been removed as a public variable
@@ -1856,6 +1863,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action["x"] = float.Parse(splitcommand[1]);
                         action["z"] = float.Parse(splitcommand[2]);
 
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "move":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "Move",
+                            ["ahead"] = 0.25f
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "rotate":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "Rotate",
+                            ["degrees"] = 90
+                        };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -3348,7 +3375,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     case "mmlah":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveMidLevelArmHeight";
+                        action.action = "MoveArmBase";
                         action.disableRendering = false;
 
                         if(splitcommand.Length > 1)
@@ -3492,17 +3519,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				default:
                     {   
-                        ServerAction action = new ServerAction();
-                        action.action = splitcommand[0];
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        
+                        action["action"] = splitcommand[0];
                         if (splitcommand.Length == 2) {
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
                         } else if (splitcommand.Length == 3) {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.z = float.Parse(splitcommand[2]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["z"] = float.Parse(splitcommand[2]);
                         } else if (splitcommand.Length == 4) {
-                            action.x = float.Parse(splitcommand[1]);
-                            action.y = float.Parse(splitcommand[2]);
-                            action.z = float.Parse(splitcommand[3]);
+                            action["x"] = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[2]);
+                            action["z"] = float.Parse(splitcommand[3]);
                         }
                         CurrentActiveController().ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
@@ -3550,16 +3578,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                    case "wopu":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "WhatObjectsCanHandPickUp";
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
                     case "smlhr": {
                         ServerAction action = new ServerAction();
-                        action.action = "SetMidLevelHandRadius";
+                        action.action = "SetHandSphereRadius";
 
                          if (splitcommand.Length == 2) {
                             action.radius = float.Parse(splitcommand[1]);

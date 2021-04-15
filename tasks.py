@@ -79,13 +79,9 @@ def _unity_version():
     return project_version["m_EditorVersion"]
 
 
-def _build(unity_path, arch, build_dir, build_name, env={}):
-    import yaml
-
-    project_path = os.path.join(os.getcwd(), unity_path)
-    standalone_path = None
-
+def _unity_path():
     unity_version = _unity_version()
+    standalone_path = None
 
     if sys.platform.startswith("darwin"):
         unity_hub_path = (
@@ -113,9 +109,17 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
+
+    return unity_path
+
+def _build(unity_path, arch, build_dir, build_name, env={}):
+    import yaml
+
+    project_path = os.path.join(os.getcwd(), unity_path)
+
     command = (
         "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
-        % (unity_path, build_name, project_path, arch)
+        % (_unity_path(), build_name, project_path, arch)
     )
     target_path = os.path.join(build_dir, build_name)
 
@@ -374,7 +378,7 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch, "local", False)
+    build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
@@ -731,7 +735,7 @@ def fetch_source_textures(context):
 
 def build_log_push(build_info, include_private_scenes):
     with open(build_info["log"]) as f:
-        build_log = f.read() + "\n" + build_info["build_exception"]
+        build_log = f.read() + "\n" + build_info.get("build_exception", "")
 
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
@@ -786,8 +790,7 @@ def clean():
         "git@ai2thor-private-github:allenai/ai2thor-private.git"
     )
     subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d", shell=True)
-    subprocess.check_call("git clean -f -x", shell=True)
+    subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
     shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
     scripts.update_private.checkout_branch()
@@ -943,12 +946,22 @@ def ci_build(context):
                         "starting build for %s %s %s"
                         % (arch, build["branch"], build["commit_id"])
                     )
-                    if ai2thor.build.Build(
-                        arch, build["commit_id"], include_private_scenes=include_private_scenes
-                    ).exists():
+                    rdir = os.path.normpath(
+                        os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
+
+                    )
+                    commit_build =  ai2thor.build.Build(
+                        arch,
+                        build["commit_id"],
+                        include_private_scenes=include_private_scenes,
+                        releases_dir=rdir)
+                    if commit_build.exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
                         )
+                        # download the build so that we can run the tests
+                        if arch == 'OSXIntel64':
+                            commit_build.download()
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -962,15 +975,19 @@ def ci_build(context):
                         )
                         procs.append(p)
 
-                    # don't run tests for a tag since results should exist
-                    # for the branch commit
-                    if arch == 'OSXIntel64' and build["tag"] is None:
-                        pytest_proc = multiprocessing.Process(
-                            target=ci_pytest,
-                            args=(build,)
-                        )
-                        pytest_proc.start()
-                        procs.append(pytest_proc)
+            # don't run tests for a tag since results should exist
+            # for the branch commit
+            if build["tag"] is None:
+                # its possible that the cache doesn't get linked if the builds 
+                # succeeded during an earlier runh
+                link_build_cache(build["branch"])
+                ci_test_utf(context, build)
+                pytest_proc = multiprocessing.Process(
+                    target=ci_pytest,
+                    args=(build,)
+                )
+                pytest_proc.start()
+                procs.append(pytest_proc)
 
 
             # give the travis poller time to see the result
@@ -1043,8 +1060,6 @@ def ci_build_arch(arch, include_private_scenes=False):
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
-
-    build_info["build_exception"] = ""
 
     proc = None
     try:
@@ -1157,7 +1172,6 @@ def build(context, local=False):
             build_path = build_dir + ".zip"
             build_info = builds[platform_map[arch]] = {}
 
-            build_info["build_exception"] = ""
             build_info["log"] = "%s.log" % (build_name,)
 
             _build(unity_path, arch, build_dir, build_name, env=env)
@@ -3282,3 +3296,98 @@ def generate_pypi_index(context):
 """ % "\n".join(links)
     s3.Object(PYPI_S3_BUCKET, 'ai2thor/index.html').put(Body=ai2thor_index, ACL='public-read', ContentType='text/html')
 
+@task
+def ci_test_utf(context, build):
+    s3 = boto3.resource("s3")
+
+    logger.info(
+        "running Unity Test framework testRunner for %s %s" % (build["branch"], build["commit_id"])
+    )
+
+    results_path, results_logfile = test_utf(context)
+    
+    for l in [results_path, results_logfile]:
+        key = "builds/" + os.path.basename(l)
+        with open(l) as f:
+            s3.Object(PUBLIC_S3_BUCKET, key).put(
+                Body=f.read(), ContentType="text/plain",
+                ACL='public-read'
+            )
+
+    logger.info(
+        "finished Unity Test framework runner for %s %s" % (build["branch"], build["commit_id"])
+    )
+
+@task
+def test_utf(context):
+    """
+    Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
+    that include failures (if any) extracted from the xml output
+    of the Unity Test Runner
+    """
+    project_path = os.path.join(os.getcwd(), 'unity')
+    commit_id = git_commit_id()
+    test_results_path = os.path.join(project_path, 'utf_testResults-%s.xml' % commit_id)
+    logfile_path = os.path.join(os.getcwd(), 'thor-testResults-%s.log' % commit_id)
+
+    command = (
+        "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
+        % (_unity_path(), test_results_path, logfile_path, project_path)
+    )
+    subprocess.call(command, shell=True)
+
+    generate_pytest_utf(test_results_path)
+    return test_results_path, logfile_path
+
+def generate_pytest_utf(test_results_path):
+    import xml.etree.ElementTree as ET
+    with open(test_results_path) as f:
+        root = ET.fromstring(f.read())
+
+    from collections import defaultdict
+    class_tests = defaultdict(list)
+    for test_case in root.findall(".//test-case"):
+        #print(test_case.attrib['methodname'])
+        class_tests[test_case.attrib['classname']].append(test_case)
+
+    class_data = []
+    class_data.append(f"""
+# GENERATED BY tasks.generate_pytest_utf - DO NOT EDIT/COMMIT
+import pytest
+import json
+import os
+
+def test_testresults_exist():
+    test_results_path = "{test_results_path}" 
+    assert os.path.isfile("{test_results_path}"), "TestResults at: {test_results_path}  do not exist"
+
+"""
+    )
+    for class_name, test_cases in class_tests.items():
+        test_records = []
+        for test_case in test_cases:
+            methodname = test_case.attrib['methodname']
+            if test_case.attrib['result'] == 'Failed':
+                fail_message = test_case.find('failure/message')
+                stack_trace = test_case.find('failure/stack-trace')
+                message = json.dumps(fail_message.text + " " + stack_trace.text)
+                test_data = f"""
+        def test_{methodname}(self):
+            pytest.fail(json.loads(r'{message}'))
+    """
+            else:
+                test_data = f"""
+        def test_{methodname}(self):
+            pass
+    """
+            test_records.append(test_data)
+        test_record_data = '    pass'
+        if test_records:
+            test_record_data = "\n".join(test_records)
+        encoded_class_name = re.sub(r"[^a-zA-Z0-9_]", "_", re.sub("_", "__", class_name))
+        class_data.append(f"""
+class {encoded_class_name}:
+    {test_record_data}
+""")
+    with open("ai2thor/tests/test_utf.py", "w") as f:
+        f.write("\n".join(class_data))
