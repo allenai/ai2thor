@@ -1018,7 +1018,7 @@ def test_get_reachable_positions(controller):
         pass
 
 
-# Test for Issue: 477
+#  Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
     fifo_controller.reset(
         TEST_SCENE,
@@ -1029,6 +1029,7 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderSemanticSegmentation=True,
     )
     fifo_controller.step("RotateRight")
+    first_event = fifo_controller.last_event
     first_depth_frame = fifo_controller.last_event.depth_frame
     first_instance_frame = fifo_controller.last_event.instance_segmentation_frame
     first_sem_frame = fifo_controller.last_event.semantic_segmentation_frame
@@ -1043,6 +1044,8 @@ def test_change_resolution_image_synthesis(fifo_controller):
     assert np.allclose(event.depth_frame, first_depth_frame, atol=0.001)
     assert np.array_equal(event.instance_segmentation_frame, first_instance_frame)
     assert np.array_equal(event.semantic_segmentation_frame, first_sem_frame)
+    assert first_event.color_to_object_id == event.color_to_object_id
+    assert first_event.object_id_to_color == event.object_id_to_color
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)

@@ -798,11 +798,9 @@ public class AgentManager : MonoBehaviour
 		this.primaryAgent.actionFinished(true);
 	}
 
-	public void ChangeResolution(float x, float y) {
-		int height = Convert.ToInt32(y);
-		int width = Convert.ToInt32(x);
-		Screen.SetResolution(width, height, false);
-		StartCoroutine(WaitOnResolutionChange(width, height));
+	public void ChangeResolution(int x, int y) {
+		Screen.SetResolution(width:x, height:y, false);
+		StartCoroutine(WaitOnResolutionChange(width:x, height:y));
 	}
 
 	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
