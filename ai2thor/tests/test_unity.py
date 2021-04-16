@@ -166,6 +166,7 @@ def test_third_party_camera_with_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
+
     event = fifo_controller.step(
         dict(
             action="AddThirdPartyCamera",
@@ -1014,6 +1015,7 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
+    fifo_controller.step('RotateRight')
     first_depth_frame = fifo_controller.last_event.depth_frame
     first_instance_frame = fifo_controller.last_event.instance_segmentation_frame
     first_sem_frame = fifo_controller.last_event.semantic_segmentation_frame
@@ -1025,7 +1027,7 @@ def test_change_resolution_image_synthesis(fifo_controller):
     assert event.depth_frame.shape == (300, 300)
     assert event.instance_segmentation_frame.shape == (300, 300, 3)
     assert event.semantic_segmentation_frame.shape == (300, 300, 3)
-    assert np.array_equal(event.depth_frame, first_depth_frame)
+    assert np.allclose(event.depth_frame, first_depth_frame, atol=0.001)
     assert np.array_equal(event.instance_segmentation_frame, first_instance_frame)
     assert np.array_equal(event.semantic_segmentation_frame, first_sem_frame)
 
