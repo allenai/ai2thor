@@ -1017,6 +1017,7 @@ def test_get_reachable_positions(controller):
     except:
         pass
 
+
 # Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
     fifo_controller.reset(
@@ -1027,7 +1028,7 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
-    fifo_controller.step('RotateRight')
+    fifo_controller.step("RotateRight")
     first_depth_frame = fifo_controller.last_event.depth_frame
     first_instance_frame = fifo_controller.last_event.instance_segmentation_frame
     first_sem_frame = fifo_controller.last_event.semantic_segmentation_frame
