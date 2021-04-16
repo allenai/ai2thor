@@ -4482,8 +4482,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
-        //only checks if the object can be placed on top of the target receptacle
-        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float maxDistance = 0.0f, bool putNearXY = false){
+        //only checks if the object can be placed on top of the target receptacle via the receptacle trigger box 
+        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float? maxDistance = null, bool putNearXY = false){
             SimObjPhysics targetReceptacle = null;
 
             RaycastHit hit = new RaycastHit();
@@ -4510,7 +4510,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 hit: hit);
         }
 
-        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float maxDistance = 0.0f) 
+        //overload of PlaceHeldObject that takes a target receptacle by objectId instead of screenspace coordinate raycast
+        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float? maxDistance = null) 
         {
             //get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
@@ -4535,9 +4536,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private void placeHeldObject(            
             SimObjPhysics targetReceptacle, 
-            bool forceAction, bool placeStationary, 
+            bool forceAction, 
+            bool placeStationary, 
             int randomSeed, 
-            float maxDistance) {
+            float? maxDistance) {
 
             RaycastHit hit = new RaycastHit();
 
@@ -4553,9 +4555,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private void placeHeldObject(
             SimObjPhysics targetReceptacle, 
-            bool forceAction, bool placeStationary, 
+            bool forceAction, 
+            bool placeStationary, 
             int randomSeed, 
-            float maxDistance,
+            float? maxDistance,
             bool putNearXY,
             RaycastHit hit) {
             // #if UNITY_EDITOR
@@ -4673,15 +4676,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
             if (randomSeed != 0 || putNearXY) {
                 List<KeyValuePair<ReceptacleSpawnPoint, float>> distSpawnPoints = new List<KeyValuePair<ReceptacleSpawnPoint, float>>();
-                if (Mathf.Approximately(maxDistance, 0.0f)) {
+                if (maxDistance == null) {
                     maxDistance = maxVisibleDistance;
                 }
+
                 foreach (ReceptacleSpawnPoint sp in spawnPoints) {
+                    //calculate distance from potential spawn point to the agent's current x/z coordinate. Compare using the spawn point's y value so
+                    //we compare distance as a flat plane parallel to the agent's x/z plane. This keeps things consistent regardless of agent camera
+                    //position if the agent is crouching or standing
                     Vector3 tmp = new Vector3(transform.position.x, sp.Point.y, transform.position.z);
                     if (Vector3.Distance(sp.Point, tmp) < maxDistance) {
                         float dist = 0; 
                         if (putNearXY) {
-                            dist = -Vector3.Distance(sp.Point, hit.point);  // Will be used to sort from greatest negative distance (closest) to least (farthest) from Raycast Hit
+                            dist = Vector3.Distance(sp.Point, hit.point);
                         }
                         distSpawnPoints.Add(new KeyValuePair<ReceptacleSpawnPoint, float>(sp, dist));
                     }
@@ -4689,10 +4696,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //actually sort by distance closest to raycast hit if needed here, otherwise leave random
                 if(putNearXY) {
-                    distSpawnPoints.Sort((x, y) => (y.Value.CompareTo(x.Value)));
-                }
-
-                if(!putNearXY) {
+                    distSpawnPoints.Sort((x, y) => (x.Value.CompareTo(y.Value)));
+                } else {
                     distSpawnPoints.Shuffle_(randomSeed);
                 }
 
@@ -4701,6 +4706,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     spawnPoints.Add(pair.Key);
                 }
             }
+
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
