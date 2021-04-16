@@ -6,6 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
+    public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
     public static float STANDING_POSITION_Y = 0.762f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
@@ -576,9 +577,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
+        float stepSeconds = PHYSICS_SIMULATION_STEP_SECONDS;     
         for (int i = 0; i < MCSController.PHYSICS_SIMULATION_STEPS; ++i) {
-            Physics.Simulate(0.01f);
+            Physics.Simulate(stepSeconds);
         }
+        physicsFramesPerSecond = 1.0f / (stepSeconds * MCSController.PHYSICS_SIMULATION_STEPS);
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
