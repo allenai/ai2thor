@@ -603,24 +603,27 @@ def test_open_aabb_cache(controller):
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
-    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -0.5}
+    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
-    action['rotation'] = dict(y=90)
-    action['horizon'] = 0
-    action['standing'] = True 
-    action['action'] = 'TeleportFull'
-    controller.step(
-        action, raise_for_failure=True
-    )
+    action["rotation"] = dict(y=90)
+    action["horizon"] = 0
+    action["standing"] = True
+    action["action"] = "TeleportFull"
+    controller.step(action, raise_for_failure=True)
 
-    fridge = next(obj for obj in controller.last_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    fridge = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "Fridge"
+    )
     assert fridge["visible"], "Object is not interactable!"
-    assert_near(controller.last_event.metadata['agent']['position'], position)
+    assert_near(controller.last_event.metadata["agent"]["position"], position)
 
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
-    assert controller.last_event.metadata['objects'] == []
+    assert controller.last_event.metadata["objects"] == []
     controller.step(
         action="OpenObject",
         objectId=fridge["objectId"],
@@ -629,34 +632,43 @@ def test_open_interactable_with_filter(controller):
 
     controller.step(dict(action="ResetObjectFilter", objectIds=[]))
 
-    fridge = next(obj for obj in controller.last_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    fridge = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "Fridge"
+    )
 
-    assert fridge['isOpen']
+    assert fridge["isOpen"]
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable(controller):
-    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -0.5}
+    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
-    action['rotation'] = dict(y=90)
-    action['horizon'] = 0
-    action['standing'] = True 
-    action['action'] = 'TeleportFull'
-    controller.step(
-        action, raise_for_failure=True
-    )
+    action["rotation"] = dict(y=90)
+    action["horizon"] = 0
+    action["standing"] = True
+    action["action"] = "TeleportFull"
+    controller.step(action, raise_for_failure=True)
 
-    fridge = next(obj for obj in controller.last_event.metadata['objects'] if obj["objectType"] == "Fridge")
+    fridge = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "Fridge"
+    )
     assert fridge["visible"], "Object is not interactable!"
-    assert_near(controller.last_event.metadata['agent']['position'], position)
+    assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
         action="OpenObject",
         objectId=fridge["objectId"],
         raise_for_failure=True,
     )
-    fridge = next(obj for obj in controller.last_event.metadata['objects'] if obj["objectType"] == "Fridge")
-    assert fridge['isOpen']
-
+    fridge = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "Fridge"
+    )
+    assert fridge["isOpen"]
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
