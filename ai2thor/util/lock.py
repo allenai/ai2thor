@@ -1,8 +1,8 @@
-
 import os
 from platform import system
 
 if system() == "Windows":
+
     class fcntl:
         LOCK_UN = 0
         LOCK_SH = 0
@@ -12,21 +12,22 @@ if system() == "Windows":
         @staticmethod
         def fcntl(fd, op, arg=0):
             return 0
-        
+
         def ioctl(fd, op, arg=0, mutable_flag=True):
             return 0 if mutable_flag else ""
-        
+
         def flock(fd, op):
             return
-        
+
         def lockf(fd, operation, length=0, start=0, whence=0):
             return
+
+
 else:
     import fcntl
 
 
 class Lock:
-
     def __init__(self, target, mode):
         self._lock_file_path = target + ".lock"
         self._lock_file = os.open(self._lock_file_path, os.O_RDWR | os.O_CREAT)
@@ -34,7 +35,7 @@ class Lock:
 
     def lock(self):
         fcntl.lockf(self._lock_file, self.mode)
-    
+
     def unlock(self):
         fcntl.lockf(self._lock_file, fcntl.LOCK_UN)
         os.close(self._lock_file)
@@ -50,7 +51,6 @@ class Lock:
 
 
 class LockEx(Lock):
-
     def __init__(self, target, blocking=True):
         mode = fcntl.LOCK_EX
         if not blocking:
