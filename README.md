@@ -238,6 +238,7 @@ For playback:
   - Changed `readyToEmit = true;` to `this.setReadyToEmit(true);` in `addAgents`, `ProcessControlCommand`, `Start`
   - Added Object Types: `Hollow`
   - Added property `consistentColors`
+  - Added property `physicsFramesPerSecond`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
@@ -256,6 +257,7 @@ For playback:
   - In `CheckIfPointIsInsideReceptacleTriggerBox`, fixed how the receptacle trigger box center and size are calculated so that its transform, its parent's transform(s), and its collider are all used.
   - Added the `FindReceptacleTriggerBoxSize` method to implemented the behavior in the previous bullet.
   - Removed the `CheckIfPointIsAboveReceptacleTriggerBox` method because it is no longer used (due to corresponding changes in `InstantiatePrefabTest`) and is also redundant with `CheckIfPointIsInsideReceptacleTriggerBox`.
+  - Added `physicsFramesPerSecond` property
 - `Scripts/DebugDiscreteAgentController`:
   - Calls `ProcessControlCommand` on the controller object with an "Initialize" action in its `Start` function (so the Unity Editor Workflow mimics the Python API Workflow)
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
