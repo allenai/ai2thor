@@ -2106,12 +2106,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //look up
                 case "lu":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "LookUp";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "LookUp";
 
 						if(splitcommand.Length > 1)
 						{
-							action.degrees = float.Parse(splitcommand[1]);
+							action["degrees"] = float.Parse(splitcommand[1]);
 						}
 
                         //action.manualInteract = true;
