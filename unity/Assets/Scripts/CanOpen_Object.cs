@@ -47,14 +47,14 @@ public class CanOpen_Object : MonoBehaviour {
 	private List<SimObjType> MustBeOffToOpen = new List<SimObjType>()
 	{SimObjType.Microwave};
 
-    [Header("References for the Open or Closed bounding box for openable and pickupable objects")]
-    // the bounding box to use when this object is in the open state
-    [SerializeField]
-    protected GameObject OpenBoundingBox;
-
-    // the bounding box to use when this object is in the closed state
-    [SerializeField]
-    protected GameObject ClosedBoundingBox;
+    //[Header("References for the Open or Closed bounding box for openable and pickupable objects")]
+    //// the bounding box to use when this object is in the open state
+    //[SerializeField]
+    //protected GameObject OpenBoundingBox;
+    //
+    //// the bounding box to use when this object is in the closed state
+    //[SerializeField]
+    //protected GameObject ClosedBoundingBox;
 
     public List<SimObjType> WhatReceptaclesMustBeOffToOpen() {
         return MustBeOffToOpen;
@@ -82,9 +82,9 @@ public class CanOpen_Object : MonoBehaviour {
         if(!isOpen)
         currentOpenness = 0.0f;
 
-        //make sure correct bounding box is referenced depending on if initial state at scene start is open or closed
-        //set initial state by toggling the isOpen bool on this component, and also adjusting the rotation/position of any openable parts accordingly
-        SwitchActiveBoundingBox();
+        ////make sure correct bounding box is referenced depending on if initial state at scene start is open or closed
+        ////set initial state by toggling the isOpen bool on this component, and also adjusting the rotation/position of any openable parts accordingly
+        //SwitchActiveBoundingBox();
 	}
 
 	// Update is called once per frame
@@ -189,19 +189,19 @@ public class CanOpen_Object : MonoBehaviour {
     private void setIsOpen(float openness) {
         isOpen = openness != 0;
         currentOpenness = openness;
-        SwitchActiveBoundingBox();
+        //SwitchActiveBoundingBox();
     }
 
-    private void SwitchActiveBoundingBox() {
-        // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
-        // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
-        if (OpenBoundingBox == null || ClosedBoundingBox == null) {
-            return;
-        }
+    ////private void SwitchActiveBoundingBox() {
+    //    // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
+    //    // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
+    //    if (OpenBoundingBox == null || ClosedBoundingBox == null) {
+    //        return;
+    //    }
 
-        SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-        sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
-    }
+    //    SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+    //    sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
+    //}
 
     public bool GetisOpen() {
         return isOpen;
