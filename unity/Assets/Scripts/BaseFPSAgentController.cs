@@ -3015,18 +3015,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ResetAgentHandPosition() {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.localPosition = Vector3.zero;
-            }
         }
 
         public void ResetAgentHandRotation() {
-            AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.rotation = transform.rotation;
-            }
+            AgentHand.transform.rotation = this.transform.rotation;    
         }
 
         //randomly repositions sim objects in the current scene
