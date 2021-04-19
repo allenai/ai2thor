@@ -255,6 +255,7 @@ public class MCSMain : MonoBehaviour {
         } else {
             controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
         }
+        controller.GetComponent<MCSController>().OnSceneChange();
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
             // Only permit rotating left or right (along the Y axis).
