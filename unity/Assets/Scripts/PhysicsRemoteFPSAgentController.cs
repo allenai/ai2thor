@@ -361,12 +361,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
+                base.LookDown(action);
 
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.LookDown(action);
                 return;
             } 
 
@@ -415,11 +415,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
+                base.LookUp(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.LookUp(action);
+                return;
             }
 
             else
@@ -437,13 +439,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
+
+                base.RotateRight(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 {
                     DefaultAgentHand();
                 }
 
-                base.RotateRight(action);
+                return;
             } 
 
             else 
@@ -461,11 +466,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
+
+                base.RotateLeft(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.RotateLeft(action);
+                return;
             } 
 
             else 
