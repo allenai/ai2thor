@@ -134,13 +134,13 @@ def execute_actions(actions, **kwargs):
         print("success: %s" % controller.last_event.metadata["lastActionSuccess"])
         print("return: %s" % controller.last_event.metadata["actionReturn"])
         print(
-            "position: %s" % (controller.last_event.metadata["arm"]["HandSphereCenter"])
+            "position: %s" % (controller.last_event.metadata["arm"]["handSphereCenter"])
         )
         for j in controller.last_event.metadata["arm"]["joints"]:
             rot = " ".join(map(lambda x: str(j["rotation"][x]), ["x", "y", "z", "w"]))
             print("%s %s" % (j["name"], rot))
             # print("%s %s" % (j['name'], j['position']))
-        print(controller.last_event.metadata["arm"]["PickupableObjects"])
+        print(controller.last_event.metadata["arm"]["pickupableObjects"])
         # frames.append(controller.last_event.cv2img)
 
 
