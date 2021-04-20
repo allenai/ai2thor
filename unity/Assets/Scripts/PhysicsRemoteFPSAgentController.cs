@@ -147,7 +147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
-            //using VisibleSimObjs(action), so be aware of that
+            //using VisibleSimObjs(action), so be aware of that.
 
             #if UNITY_WEBGL
                 // For object highlight shader to properly work, all visible objects should be populated not conditioned
