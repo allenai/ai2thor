@@ -361,12 +361,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
+                base.LookDown(action);
 
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.LookDown(action);
                 return;
             } 
 
@@ -415,11 +415,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
+                base.LookUp(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.LookUp(action);
+                return;
             }
 
             else
@@ -437,13 +439,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
+
+                base.RotateRight(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 {
                     DefaultAgentHand();
                 }
 
-                base.RotateRight(action);
+                return;
             } 
 
             else 
@@ -461,11 +466,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
+
+                base.RotateLeft(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
 
-                base.RotateLeft(action);
+                return;
             } 
 
             else 
@@ -500,11 +508,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), arcIncrementDistance, 1 << 8 | 1 << 10,
                     QueryTriggerInteraction.Ignore))
                     {
-                        if (hit.transform.GetComponent<SimObjPhysics>())
+                        //did we hit a sim obj?
+                        if (hit.transform.GetComponentInParent<SimObjPhysics>())
                         {
-                            //if we hit the item in our hand, skip
-                            if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
+                            //if the sim obj we hit is what we are holding, skip
+                            if (hit.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform) 
+                            {
                                 continue;
+                            }
                         }
 
                         if (hit.transform == this.transform)
@@ -523,12 +534,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             rotPoint.transform.rotation = bb.transform.rotation;
             //Rotate the rotPoint around the origin by the current increment's angle, relative to the correct axis
             rotPoint.transform.RotateAround(origin, dirAxis, dirSign * degrees);
+            Collider [] WhatDidWeHit = Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
 
-            if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
+            foreach(Collider col in WhatDidWeHit)
             {
-                
+                if(col.transform.GetComponentInParent<SimObjPhysics>())
+                {
+                    if(col.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform)
+                    {
+                        continue;
+                    }
+                }
+
+                if(col.transform == this.transform)
+                {
+                    continue;
+                }
+
                 result = false;
+                break;
             }
+
+            // if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
+            // {
+                
+            //     result = false;
+            // }
 
             return result;
         }
@@ -2141,10 +2172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
         public void PausePhysicsAutoSim()
         {
-            //print("ZA WARUDO!");
-            Physics.autoSimulation = false;
-            Physics.autoSyncTransforms = false;
-            physicsSceneManager.physicsSimulationPaused = true;
+            physicsSceneManager.PausePhysicsAutoSim();
             actionFinished(true);
         }
 
@@ -2180,38 +2208,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            bool oldPhysicsAutoSim = Physics.autoSimulation;
-            Physics.autoSimulation = false;
-
-            while (simSeconds.Value > 0.0f) {
-                simSeconds = simSeconds.Value - timeStep;
-                if (simSeconds.Value <= 0) {
-                    // This is necessary to keep lastVelocity up-to-date for all sim objects and is
-                    // called just before the last physics simulation step.
-                    Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-                    foreach (Rigidbody rb in rbs) {
-                        if (rb.GetComponentInParent<SimObjPhysics>()) {
-                            SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                            sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                        }
-                    }
-                }
-
-                // pass in the timeStep to advance the physics simulation
-                Physics.Simulate(timeStep);
-                this.AdvancePhysicsStepCount++;
-            }
-
-            Physics.autoSimulation = oldPhysicsAutoSim;
+            physicsSceneManager.AdvancePhysicsStep(timeStep, simSeconds, allowAutoSimulation);
             actionFinished(true);
         }
 
         //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
         public void UnpausePhysicsAutoSim()
         {
-            Physics.autoSimulation = true;
-            Physics.autoSyncTransforms = true;
-            physicsSceneManager.physicsSimulationPaused = false;
+            physicsSceneManager.UnpausePhysicsAutoSim();
             actionFinished(true);
         }
 
