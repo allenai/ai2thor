@@ -4492,7 +4492,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 forceAction: forceAction, 
                 placeStationary: placeStationary,
                 randomSeed: randomSeed,
-                putNearXY: putNearXY);
+                putNearXY: putNearXY,
+                maxDistance: maxVisibleDistance);
         }
 
         public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed=0){
@@ -4500,13 +4501,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectId: objectId,
                 forceAction: forceAction,
                 placeStationary: placeStationary,
-                randomSeed: randomSeed);
+                randomSeed: randomSeed,
+                maxDistance: maxVisibleDistance);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle via the receptacle trigger box 
-        public void PlaceHeldObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float? maxDistance = null, bool putNearXY = false){
+        public void PlaceHeldObject(float x, float y, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0 , bool putNearXY = false){
             SimObjPhysics targetReceptacle = null;
 
             RaycastHit hit = new RaycastHit();
@@ -4534,7 +4536,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //overload of PlaceHeldObject that takes a target receptacle by objectId instead of screenspace coordinate raycast
-        public void PlaceHeldObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed = 0, float? maxDistance = null) 
+        public void PlaceHeldObject(string objectId, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0) 
         {
             //get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
@@ -4562,7 +4564,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction, 
             bool placeStationary, 
             int randomSeed, 
-            float? maxDistance) {
+            float maxDistance) {
 
             RaycastHit hit = new RaycastHit();
 
@@ -4581,7 +4583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction, 
             bool placeStationary, 
             int randomSeed, 
-            float? maxDistance,
+            float maxDistance,
             bool putNearXY,
             RaycastHit hit) {
             // #if UNITY_EDITOR
@@ -4699,9 +4701,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
             if (randomSeed != 0 || putNearXY) {
                 List<KeyValuePair<ReceptacleSpawnPoint, float>> distSpawnPoints = new List<KeyValuePair<ReceptacleSpawnPoint, float>>();
-                if (maxDistance == null) {
-                    maxDistance = maxVisibleDistance;
-                }
 
                 foreach (ReceptacleSpawnPoint sp in spawnPoints) {
                     //calculate distance from potential spawn point to the agent's current x/z coordinate. Compare using the spawn point's y value so

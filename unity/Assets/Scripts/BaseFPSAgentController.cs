@@ -153,7 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 lastPosition;
 
         protected string lastAction;
-        protected bool lastActionSuccess;
+        public bool lastActionSuccess;
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
