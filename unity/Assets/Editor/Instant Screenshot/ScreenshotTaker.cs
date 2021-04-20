@@ -181,10 +181,11 @@ public class Screenshot : EditorWindow {
 
         string strPath = "";
 
-        strPath = string.Format("{0}/screen_{1}x{2}_{3}.png",
-                             path,
-                             width, height,
-                                       System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
+        strPath = string.Format(
+            "{0}/screen_{1}x{2}_{3}.png",
+            path,
+            width, height,
+            System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
         lastScreenshot = strPath;
 
         return strPath;
