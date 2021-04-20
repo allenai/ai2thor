@@ -580,12 +580,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
-        // "Using step values greater than 0.03 is likely to produce inaccurate results."
-        float stepSeconds = PHYSICS_SIMULATION_STEP_SECONDS;     
+        // "Using step values greater than 0.03 is likely to produce inaccurate results."   
         for (int i = 0; i < MCSController.PHYSICS_SIMULATION_STEPS; ++i) {
-            Physics.Simulate(stepSeconds);
+            Physics.Simulate(PHYSICS_SIMULATION_STEP_SECONDS);
         }
-        physicsFramesPerSecond = 1.0f / (stepSeconds * MCSController.PHYSICS_SIMULATION_STEPS);
+        physicsFramesPerSecond = 1.0f / (PHYSICS_SIMULATION_STEP_SECONDS * MCSController.PHYSICS_SIMULATION_STEPS);
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
