@@ -120,14 +120,16 @@ public class AgentManager : MonoBehaviour
         //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
 
-        //auto set agentMode to default for the web demo
-        #if UNITY_WEBGL
-        primaryAgent.SetAgentMode("default");
-        #endif
-
         primaryAgent.actionDuration = this.actionDuration;
 		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        //auto set agentMode to default for the web demo
+        #if UNITY_WEBGL
+        physicsSceneManager.UnpausePhysicsAutoSim();
+        primaryAgent.SetAgentMode("default");
+        #endif
+
         StartCoroutine (EmitFrame());
 	}
 
@@ -1679,7 +1681,7 @@ public class DynamicServerAction
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
-
+    
 }
 
 [Serializable]
