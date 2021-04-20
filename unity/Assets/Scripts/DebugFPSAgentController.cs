@@ -187,7 +187,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             {"action", "MoveHandAhead"},
                             {"moveMagnitude", scrollAmount}
                         };
-                    
                     this.PhysicsController.ProcessControlCommand(action);
                 }
             }
