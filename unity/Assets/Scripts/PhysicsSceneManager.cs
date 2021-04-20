@@ -818,8 +818,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
-    //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
+
+    // Immediately disable physics autosimulation
     public void PausePhysicsAutoSim()
     {
         Physics.autoSimulation = false;
@@ -827,7 +827,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         physicsSimulationPaused = true;
     }
 
-    //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
+    // manually advance the physics timestep 
     public void AdvancePhysicsStep(
             float timeStep = 0.02f,
             float? simSeconds = null,
@@ -859,7 +859,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         Physics.autoSimulation = oldPhysicsAutoSim;
     }
 
-    //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+    // Immediately enable physics autosimulation
     public void UnpausePhysicsAutoSim()
     {
         Physics.autoSimulation = true;

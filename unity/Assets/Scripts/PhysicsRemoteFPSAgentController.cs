@@ -2175,6 +2175,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
         public void AdvancePhysicsStep(
             float timeStep = 0.02f,
             float? simSeconds = null,
