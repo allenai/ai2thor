@@ -149,20 +149,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
             //using VisibleSimObjs(action), so be aware of that
 
-            #if UNITY_EDITOR || UNITY_WEBGL
             #if UNITY_WEBGL
                 // For object highlight shader to properly work, all visible objects should be populated not conditioned
                 // on the objectid of a completed action
                 VisibleSimObjPhysics = VisibleSimObjs(false);
             #endif
+            
+            // editor
+            #if UNITY_EDITOR
             if (this.agentState == AgentState.ActionComplete) {
-                ServerAction action = new ServerAction();
-                #if UNITY_EDITOR
-                    VisibleSimObjPhysics = VisibleSimObjs(action);
-                #endif
+                    VisibleSimObjPhysics = VisibleSimObjs(false);
                 
             }
-
             #endif
         }
 
