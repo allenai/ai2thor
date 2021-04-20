@@ -6345,19 +6345,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-        public IEnumerator WaitOnResolutionChange(int width, int height) {
-            while (Screen.width != width || Screen.height != height) {
-                yield return null;
-            }
-            actionFinished(true);
-        }
-
-        public void ChangeResolution(ServerAction action) {
-            int height = Convert.ToInt32(action.y);
-            int width = Convert.ToInt32(action.x);
-            Screen.SetResolution(width, height, false);
-            StartCoroutine(WaitOnResolutionChange(width, height));
-        }
 
         public void ChangeQuality(ServerAction action) {
             string[] names = QualitySettings.names;
