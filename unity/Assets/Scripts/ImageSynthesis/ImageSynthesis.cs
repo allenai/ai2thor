@@ -197,6 +197,11 @@ public class ImageSynthesis : MonoBehaviour {
 	//do, so maybe it's fine for now I dunno
 	public void OnCameraChange()
 	{
+		if (tex != null)
+		{
+			Destroy(tex);
+			tex = null;
+		}
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
