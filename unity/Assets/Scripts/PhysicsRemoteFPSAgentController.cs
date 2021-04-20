@@ -1,4 +1,4 @@
-﻿// Copyright Allen Institute for Artificial Intelligence 2017
+// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -30,7 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
-        public int AdvancePhysicsStepCount;
         public GameObject[] TargetCircles = null;
 
         //change visibility check to use this distance when looking down
@@ -148,14 +147,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
-            //using VisibleSimObjs(action), so be aware of that
+            //using VisibleSimObjs(action), so be aware of that.
 
-            #if UNITY_EDITOR || UNITY_WEBGL
-            //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
-            if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
-                VisibleSimObjPhysics = VisibleSimObjs();
+            #if UNITY_WEBGL
+                // For object highlight shader to properly work, all visible objects should be populated not conditioned
+                // on the objectid of a completed action
+                VisibleSimObjPhysics = VisibleSimObjs(false);
+            #endif
+            
+            // editor
+            #if UNITY_EDITOR
+            if (this.agentState == AgentState.ActionComplete) {
+                    VisibleSimObjPhysics = VisibleSimObjs(false);
+                
             }
-
             #endif
         }
 
@@ -2164,13 +2169,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
         public void PausePhysicsAutoSim()
         {
-            //print("ZA WARUDO!");
-            Physics.autoSimulation = false;
-            Physics.autoSyncTransforms = false;
-            physicsSceneManager.physicsSimulationPaused = true;
+            physicsSceneManager.PausePhysicsAutoSim();
             actionFinished(true);
         }
 
+        //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
         public void AdvancePhysicsStep(
             float timeStep = 0.02f,
             float? simSeconds = null,
@@ -2203,38 +2206,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            bool oldPhysicsAutoSim = Physics.autoSimulation;
-            Physics.autoSimulation = false;
-
-            while (simSeconds.Value > 0.0f) {
-                simSeconds = simSeconds.Value - timeStep;
-                if (simSeconds.Value <= 0) {
-                    // This is necessary to keep lastVelocity up-to-date for all sim objects and is
-                    // called just before the last physics simulation step.
-                    Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-                    foreach (Rigidbody rb in rbs) {
-                        if (rb.GetComponentInParent<SimObjPhysics>()) {
-                            SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                            sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                        }
-                    }
-                }
-
-                // pass in the timeStep to advance the physics simulation
-                Physics.Simulate(timeStep);
-                this.AdvancePhysicsStepCount++;
-            }
-
-            Physics.autoSimulation = oldPhysicsAutoSim;
+            physicsSceneManager.AdvancePhysicsStep(timeStep, simSeconds, allowAutoSimulation);
             actionFinished(true);
         }
 
         //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
         public void UnpausePhysicsAutoSim()
         {
-            Physics.autoSimulation = true;
-            Physics.autoSyncTransforms = true;
-            physicsSceneManager.physicsSimulationPaused = false;
+            physicsSceneManager.UnpausePhysicsAutoSim();
             actionFinished(true);
         }
 
@@ -5023,9 +5002,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
-                    else
-                    actionFinished(true);
-
+                    else {
+                        actionFinished(true);
+                    }
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return;
@@ -5050,10 +5029,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject go = ItemInHand;
             DropHandObject(action);
-            if (this.lastActionSuccess) {
+            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
+            // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
+            //if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-            }
+            //}
 
         }
 

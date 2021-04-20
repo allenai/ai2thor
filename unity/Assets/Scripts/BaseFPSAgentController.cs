@@ -130,7 +130,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public bool ReadyForCommand {
             get {
-                return this.agentState == AgentState.Emit;
+                return this.agentState == AgentState.Emit || this.agentState == AgentState.ActionComplete;
             }
 
         }
@@ -2455,7 +2455,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //for all objects that might be currently picked up by the arm
                             if(Arm != null)
                             {
-                                foreach(SimObjPhysics inArmHand in Arm.HeldObjects.Keys)
+                                foreach(SimObjPhysics inArmHand in Arm.heldObjects.Keys)
                                 {
                                     //print("here");
                                     if(!hasAncestor(c.transform.gameObject, inArmHand.transform.gameObject))

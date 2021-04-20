@@ -40,6 +40,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     // physics simulation was paused
     public bool isSceneAtRest; // if any object in the scene has a non zero velocity, set to false
     public List<Rigidbody> rbsInScene = null; // list of all active rigidbodies in the scene
+    public int AdvancePhysicsStepCount;
 
     private void OnEnable() {
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
@@ -815,6 +816,55 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
         }
+    }
+
+
+    // Immediately disable physics autosimulation
+    public void PausePhysicsAutoSim()
+    {
+        Physics.autoSimulation = false;
+        Physics.autoSyncTransforms = false;
+        physicsSimulationPaused = true;
+    }
+
+    // manually advance the physics timestep 
+    public void AdvancePhysicsStep(
+            float timeStep = 0.02f,
+            float? simSeconds = null,
+            bool allowAutoSimulation = false
+        ) {
+
+        bool oldPhysicsAutoSim = Physics.autoSimulation;
+        Physics.autoSimulation = false;
+
+        while (simSeconds.Value > 0.0f) {
+            simSeconds = simSeconds.Value - timeStep;
+            if (simSeconds.Value <= 0) {
+                // This is necessary to keep lastVelocity up-to-date for all sim objects and is
+                // called just before the last physics simulation step.
+                Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+                foreach (Rigidbody rb in rbs) {
+                    if (rb.GetComponentInParent<SimObjPhysics>()) {
+                        SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                        sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                    }
+                }
+            }
+
+            // pass in the timeStep to advance the physics simulation
+            Physics.Simulate(timeStep);
+            this.AdvancePhysicsStepCount++;
+        }
+
+        Physics.autoSimulation = oldPhysicsAutoSim;
+    }
+
+    // Immediately enable physics autosimulation
+    public void UnpausePhysicsAutoSim()
+    {
+        Physics.autoSimulation = true;
+        Physics.autoSyncTransforms = true;
+        physicsSimulationPaused = false;
     }
 
     #if UNITY_EDITOR
