@@ -30,7 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
-        public int AdvancePhysicsStepCount;
         public GameObject[] TargetCircles = null;
 
         //change visibility check to use this distance when looking down
