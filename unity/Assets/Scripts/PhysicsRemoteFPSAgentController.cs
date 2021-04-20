@@ -366,8 +366,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                return;
             } 
 
             else
@@ -420,8 +418,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                return;
             }
 
             else
@@ -447,8 +443,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     DefaultAgentHand();
                 }
-
-                return;
             } 
 
             else 
@@ -472,8 +466,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                return;
             } 
 
             else 
