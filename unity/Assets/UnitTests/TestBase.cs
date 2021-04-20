@@ -17,6 +17,14 @@ namespace Tests
             yield return debugInputField.ExecuteBatch(new List<string>{action});
         }
 
+        public IEnumerator ExecuteAction(Dictionary<string, object> action) {
+            var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
+            while(debugInputField.PhysicsController.IsProcessing) {
+                yield return new WaitForEndOfFrame();
+            }
+            debugInputField.PhysicsController.ProcessControlCommand(action);
+        }
+        
         [SetUp]
         public virtual void Setup(){
             UnityEngine.SceneManagement.SceneManager.LoadScene ("FloorPlan1_physics");
