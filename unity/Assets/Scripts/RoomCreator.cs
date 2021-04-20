@@ -650,12 +650,28 @@ public static class ProceduralTools {
             (w0, w1) => (w0, w1)
         ).ToArray();
 
+
         
-        foreach ((Wall w0, Wall w1) in zip) {
+        var zip3 = room.walls.Zip(
+            room.walls.Skip(1).Concat(new Wall[]{ room.walls.FirstOrDefault() }),
+            (w0, w1) => (w0, w1)
+        ).Zip(
+            new Wall[]{ room.walls.LastOrDefault() }.Concat(room.walls.Take(room.walls.Length - 1)),
+            (wallPair, w2) => (wallPair.w0, w2, wallPair.w1)
+        ).ToArray();
+
+
+        foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
             // TODO query material
-            var wallGO = createWall(w0, w1);
+            var wallGO = createAndJoinWall(w0, w1, w2);
             wallGO.transform.parent = structure.transform;
         }
+        
+        // foreach ((Wall w0, Wall w1) in zip) {
+        //     // TODO query material
+        //     var wallGO = createWall(w0, w1);
+        //     wallGO.transform.parent = structure.transform;
+        // }
 
         // createWall(structure, wallHeight, mesh.vertices[0], mesh.vertices[1]);
 
@@ -663,6 +679,206 @@ public static class ProceduralTools {
         // createWall(structure, wallHeight, mesh.vertices[2], mesh.vertices[3]);
         // createWall(structure, wallHeight, mesh.vertices[3], mesh.vertices[0]);
         return structure;
+     }
+
+     private static Vector3? vectorsIntersectionXZ(Vector3 line1P0, Vector3 line1Dir, Vector3 line2P0, Vector3 line2Dir) {
+        var denominator = (line2Dir.z + line1Dir.z * line2Dir.x);
+
+        // denominator = (line1P0.x - line1Dir.x) * (line2.p1.x)
+                // Lines do not intersect
+        if ( Mathf.Abs(denominator) < 1E-4) {
+              Debug.Log( " !!! den 0" );
+            return null;
+        }
+        var u = (line1P0.z + line1Dir.z * (line2P0.x - line1P0.x) ) / denominator;
+        return line2P0 + u * line2Dir;
+     }
+
+     private static Vector3? wallsIntersectionXZ(Wall wall1, Wall wall2) {
+        var denominator = -(wall1.p1.x - wall2.p1.x) * (wall2.p1.z - wall2.p0.z) + wall1.p1.z - wall1.p0.z;
+
+        // denominator = (line1P0.x - line1Dir.x) * (line2.p1.x)
+                // Lines do not intersect
+        if ( Mathf.Abs(denominator) < 1E-4) {
+              Debug.Log( " !!! den 0" );
+            return null;
+        }
+        var t = ((wall1.p0.x - wall2.p0.x)*(wall2.p1.z - wall2.p0.z) + wall2.p1.z - wall1.p0.z) / denominator;
+        return wall1.p0 + t * (wall1.p1 - wall1.p0);
+     }
+
+     private static Vector3? vectorIntersect(Wall wall1, Wall wall2) {
+         Vector3 a = wall1.p1 - wall1.p0;
+         Vector3 b = wall2.p0 - wall2.p1;
+         var c = wall2.p1 - wall1.p0;
+        var denominator = Vector3.Dot(a, b);
+
+
+        // denominator = (line1P0.x - line1Dir.x) * (line2.p1.x)
+                // Lines do not intersect
+        if ( Mathf.Abs(denominator) < 1E-4) {
+              Debug.Log( " !!! den 0" );
+            return null;
+        }
+        var t =  Vector3.Dot(c, b) / denominator;
+        return wall1.p0 + t * (wall1.p1 - wall1.p0);
+     }
+
+
+     private static Vector3? wallVectorIntersection(Wall wall1, Wall wall2) {
+        var wall2p0p1 = wall2.p1 - wall2.p0;
+        var wall1p0p1norm = (wall1.p1 - wall1.p0);
+        
+        // var normal2 = Vector3.Cross(wall1p0p1norm, wall2p0p1);
+        var normal2 = Vector3.Cross(wall2p0p1, Vector3.up);
+        var denominator = Vector3.Dot(wall1.p1 - wall1.p0, normal2);
+         Debug.Log( " den " + denominator);
+        if ( Mathf.Abs(denominator) < 1E-4) {
+
+
+            var p0p1 =  (wall1.p1 - wall1.p0).normalized;
+    
+            var normal = Vector3.Cross(p0p1, Vector3.up);
+            var nextp0p1 =  (wall2.p1 - wall2.p0).normalized;
+
+        
+            var nextNormal = Vector3.Cross(nextp0p1, Vector3.up);
+
+            var sign = Mathf.Sign(nextNormal.x * normal.z - nextNormal.z * normal.x);
+
+            // var sinAngle = nextNormal.x * normal.z - nextNormal.z * normal.x;
+            
+            Debug.Log( "!!!! 0 den ");
+            return wall1.p1 + sign * wall2.thickness * nextp0p1;
+        }
+         var t = Vector3.Dot(wall2.p0 - wall1.p0, normal2) / denominator;
+         
+         return wall1.p0 +  (wall1.p1 - wall1.p0) * t;
+     }
+
+     public static GameObject createAndJoinWall(Wall toCreate, Wall previous = null, Wall next = null) { 
+          var wallGO = new GameObject("Wall");
+
+        var meshF = wallGO.AddComponent<MeshFilter>();
+        var meshC = wallGO.AddComponent<MeshCollider>();
+
+        var mesh = meshF.mesh;
+
+        var p0p1 =  (toCreate.p1 - toCreate.p0).normalized;
+    
+        var normal = Vector3.Cross(p0p1, Vector3.up);
+        
+
+        var vertices = new List<Vector3>() { 
+            toCreate.p0, toCreate.p0 + new Vector3(0.0f, toCreate.height, 0.0f), toCreate.p1 +  new Vector3(0.0f, toCreate.height, 0.0f), toCreate.p1
+        };
+
+        var triangles = new List<int>() {1, 2, 0, 2, 3, 0,  0, 2, 1, 0, 3, 2};
+        var uv = new List<Vector2>() {
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)
+        };
+        var normals = new List<Vector3>() { -normal, -normal, -normal, -normal };
+
+        // if it is a double wall
+        if (toCreate.thickness > 0.0001f) {
+
+            var prevThickness = 0.0f;
+            Debug.Log(" prev != null "+ (previous != null));
+            if (previous != null) {
+                var prevp0p1 = (previous.p1 - previous.p0).normalized;
+                var prevNormal = Vector3.Cross(prevp0p1, Vector3.up);
+
+                // var p1p0 = -p0p1;
+
+                // //var thicknessExtensionToPrevious = toCreate.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
+                // var denominator = (p1p0.z + prevp0p1.z * p1p0.x);
+                // // Lines do not intersect
+                // if ( Mathf.Abs(denominator) < 1E-4) {
+
+                // }
+                // var t = (previous.p0.x + prevp0p1.z * (toCreate.p0.x - previous.p0.x) ) / (p1p0.z + prevp0p1.z * p1p0.x) / denominator;
+                // var intersect = vectorsIntersectionXZ(previous.p0 + prevNormal * previous.thickness,
+                
+                //  prevp0p1,
+                //  toCreate.p0 + normal * toCreate.thickness,
+                //  -p0p1);
+                var intersect = vectorIntersect(previous, toCreate);
+                if (intersect != null) {
+                    prevThickness = Vector3.Magnitude(intersect.GetValueOrDefault() - toCreate.p0);
+                }
+                //prevThickness = previous.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
+            }
+
+            var nextThickness = 0.0f;
+            if (next != null) {
+                var nextp0p1 = (next.p1 - next.p0).normalized;
+                var nextNormal = Vector3.Cross(nextp0p1, Vector3.up);
+
+                // var p1p0 = -p0p1;
+
+                // //var thicknessExtensionToPrevious = toCreate.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
+                // var denominator = (p1p0.z + prevp0p1.z * p1p0.x);
+                // // Lines do not intersect
+                // if ( Mathf.Abs(denominator) < 1E-4) {
+
+                // }
+                // var t = (previous.p0.x + prevp0p1.z * (toCreate.p0.x - previous.p0.x) ) / (p1p0.z + prevp0p1.z * p1p0.x) / denominator;
+                // var intersect = vectorsIntersectionXZ(
+                //     next.p0 + nextNormal * next.thickness,
+                //     nextp0p1,
+                //     toCreate.p1 + normal * toCreate.thickness,
+                //     p0p1
+                // );
+                var intersect = vectorIntersect(toCreate, next);
+                if (intersect != null) {
+                    nextThickness = Vector3.Magnitude(intersect.GetValueOrDefault() - toCreate.p1);
+                }
+
+                //nextThickness = next.thickness * Mathf.Tan(Mathf.Asin(nextNormal.x * normal.z - nextNormal.z * normal.x) / 2.0f);
+            }
+
+
+            // var nextp0p1 =  (next.p1 - next.p0).normalized;
+        
+            // var nextNormal = Vector3.Cross(nextp0p1, Vector3.up);
+
+            // Debug.Log("tan " + 
+            //     Mathf.Tan(Mathf.Asin( Vector3.Cross(normal, nextNormal).magnitude ) / 2.0f) +
+            //      " norm " + normal + " nextNorm " + nextNormal + " 2d cross " + (nextNormal.x * normal.z - nextNormal.z * normal.x) + " revers 2d cross " + (normal.x * nextNormal.z - normal.z * nextNormal.x));
+            
+            // var thicknessAngleindependent = toCreate.thickness * Mathf.Tan(Mathf.Asin(nextNormal.x * normal.z - nextNormal.z * normal.x) / 2.0f);
+
+
+            var p0Thickness = toCreate.p0 + normal * toCreate.thickness - p0p1 * prevThickness;
+            var p1Thickness = toCreate.p1 + normal * toCreate.thickness + p0p1 * nextThickness;
+            // var p0Thickness0 = wall.p0 + normal * thicknessAngleindependent - p0p1 * thicknessAngleindependent;
+            // var p1Thickness1 = wall.p1 + normal * thicknessAngleindependent + p0p1 * thicknessAngleindependent;
+           vertices.AddRange(
+                new Vector3[] { 
+                    p0Thickness, p0Thickness + new Vector3(0.0f, toCreate.height, 0.0f), p1Thickness +  new Vector3(0.0f, toCreate.height, 0.0f), p1Thickness
+                }
+            );
+
+            uv.AddRange(new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) });
+            // mesh.uv = mesh.uv.Concat(new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) }).ToArray();
+            normals.AddRange(new Vector3[] {normal, normal, normal, normal});
+            triangles.AddRange(new int[] { 4, 6, 5, 4, 7, 6, 5, 6, 4, 6, 7, 4});
+        }
+
+        mesh.vertices = vertices.ToArray();
+        mesh.uv = uv.ToArray();
+        mesh.normals = normals.ToArray();
+        mesh.triangles = triangles.ToArray();
+                var meshRenderer = wallGO.AddComponent<MeshRenderer>();
+        // TODO use a material loader that has this dictionary
+        //var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
+        var mats =  ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
+        //if (mats.ContainsKey(wall.materialId)) {
+            //Debug.Log("MAT query " +  wall.materialId+ " " + string.Join(",", mats.Select(m => m.Value.name).ToArray()) + " len " + mats.Count);
+            meshRenderer.material = mats[toCreate.materialId];
+        //}
+    
+        return wallGO;
      }
 
      public static GameObject createWall(Wall wall, Wall next = null) {
