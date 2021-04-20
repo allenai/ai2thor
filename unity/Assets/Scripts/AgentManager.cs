@@ -50,7 +50,7 @@ public class AgentManager : MonoBehaviour
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
+    public HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution"};
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -766,6 +766,42 @@ public class AgentManager : MonoBehaviour
             payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
 		}
 	}
+	
+	private void resetImageSynthesis(Camera camera)
+	{
+		ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
+		if (imageSynthesis != null && imageSynthesis.enabled)
+		{
+			imageSynthesis.OnCameraChange();
+			imageSynthesis.OnSceneChange();
+		}
+	}
+
+	private void resetAllImageSynthesis()
+	{
+		foreach (var agent in this.agents)
+		{
+			resetImageSynthesis(agent.m_Camera);
+		}
+
+		foreach (var camera in this.thirdPartyCameras)
+		{
+			resetImageSynthesis(camera);
+		}
+	}
+	
+	public IEnumerator WaitOnResolutionChange(int width, int height) {
+		while (Screen.width != width || Screen.height != height) {
+			yield return null;
+		}
+		this.resetAllImageSynthesis();
+		this.primaryAgent.actionFinished(true);
+	}
+
+	public void ChangeResolution(int x, int y) {
+		Screen.SetResolution(width:x, height:y, false);
+		StartCoroutine(WaitOnResolutionChange(width:x, height:y));
+	}
 
 	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderInstanceSegmentation) {
@@ -777,9 +813,9 @@ public class AgentManager : MonoBehaviour
 
 			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
-			for (int yy = 0; yy < tex.height; yy++) {
+			for (int yy = 0; yy < UnityEngine.Screen.height; yy++) {
 				for (int xx = 0; xx < tex.width; xx++) {
-					Color colorOn = id_image [yy * tex.width + xx];
+					Color colorOn = id_image [yy * UnityEngine.Screen.width + xx];
 					if (!colorBounds.ContainsKey (colorOn)) {
 						colorBounds [colorOn] = new int[]{xx, yy, xx, yy};
 					} else {

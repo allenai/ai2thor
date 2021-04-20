@@ -361,13 +361,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
+                base.LookDown(action);
 
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                base.LookDown(action);
-                return;
             } 
 
             else
@@ -415,11 +413,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
+                base.LookUp(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                base.LookUp(action);
             }
 
             else
@@ -437,13 +435,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
+
+                base.RotateRight(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 {
                     DefaultAgentHand();
                 }
-
-                base.RotateRight(action);
             } 
 
             else 
@@ -461,11 +460,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
+
+                base.RotateLeft(action);
+
                 //only default hand if not manually Interacting with things
                 if(!action.manualInteract)
                 DefaultAgentHand();
-
-                base.RotateLeft(action);
             } 
 
             else 
@@ -500,11 +500,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), arcIncrementDistance, 1 << 8 | 1 << 10,
                     QueryTriggerInteraction.Ignore))
                     {
-                        if (hit.transform.GetComponent<SimObjPhysics>())
+                        //did we hit a sim obj?
+                        if (hit.transform.GetComponentInParent<SimObjPhysics>())
                         {
-                            //if we hit the item in our hand, skip
-                            if (hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
+                            //if the sim obj we hit is what we are holding, skip
+                            if (hit.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform) 
+                            {
                                 continue;
+                            }
                         }
 
                         if (hit.transform == this.transform)
@@ -523,12 +526,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             rotPoint.transform.rotation = bb.transform.rotation;
             //Rotate the rotPoint around the origin by the current increment's angle, relative to the correct axis
             rotPoint.transform.RotateAround(origin, dirAxis, dirSign * degrees);
+            Collider [] WhatDidWeHit = Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
 
-            if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
+            foreach(Collider col in WhatDidWeHit)
             {
-                
+                if(col.transform.GetComponentInParent<SimObjPhysics>())
+                {
+                    if(col.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform)
+                    {
+                        continue;
+                    }
+                }
+
+                if(col.transform == this.transform)
+                {
+                    continue;
+                }
+
                 result = false;
+                break;
             }
+
+            // if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
+            // {
+                
+            //     result = false;
+            // }
 
             return result;
         }
@@ -6394,19 +6417,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-        public IEnumerator WaitOnResolutionChange(int width, int height) {
-            while (Screen.width != width || Screen.height != height) {
-                yield return null;
-            }
-            actionFinished(true);
-        }
-
-        public void ChangeResolution(ServerAction action) {
-            int height = Convert.ToInt32(action.y);
-            int width = Convert.ToInt32(action.x);
-            Screen.SetResolution(width, height, false);
-            StartCoroutine(WaitOnResolutionChange(width, height));
-        }
 
         public void ChangeQuality(ServerAction action) {
             string[] names = QualitySettings.names;
