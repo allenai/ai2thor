@@ -572,7 +572,7 @@ def generate_quality_settings(ctx):
 
 def git_commit_comment():
     comment = (
-        subprocess.check_output("git log -n 1 --format=%B", shell=True)
+        subprocess.check_output("git log -n 1 --format=%s", shell=True)
         .decode("utf8")
         .strip()
     )

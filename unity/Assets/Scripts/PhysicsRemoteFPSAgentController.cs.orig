@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -150,6 +150,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
+<<<<<<< HEAD
+            //for debug in-editor, update VisibleSimObjs after each action so debug draw can happen
+            if (this.agentState == AgentState.ActionComplete || this.agentState == AgentState.Emit) {
+                VisibleSimObjPhysics = VisibleSimObjs();
+=======
             #if UNITY_WEBGL
                 // For object highlight shader to properly work, all visible objects should be populated not conditioned
                 // on the objectid of a completed action
@@ -161,6 +166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     VisibleSimObjPhysics = VisibleSimObjs(action);
                 #endif
                 
+>>>>>>> webgl-demo-fixes
             }
 
             #endif
@@ -4933,8 +4939,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (action.autoSimulation) 
                         {
                             StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } 
-
+                        }
                         else 
                         {
                             StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
