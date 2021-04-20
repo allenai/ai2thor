@@ -2209,24 +2209,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     } 
 
-                    //pickup object, if no specific object passed in, it will pick up the closest interactable simobj in the agent's viewport
+                    //pickup object
 				case "pu":
                     {
-                        ServerAction action = new ServerAction();
-                        action.action = "PickupObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickupObject";
 						if(splitcommand.Length > 1)
 						{
-							action.objectId = splitcommand[1];
+							action["objectId"] = splitcommand[1];
 						}
-
-						else
-						{
-							//action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
-						}
-
-                        action.forceAction = true;
-                        action.x = 0.5f; 
-                        action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

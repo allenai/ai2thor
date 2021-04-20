@@ -198,7 +198,8 @@ class Event:
     @property
     def class_segmentation_frame(self):
         warnings.warn(
-            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.", DeprecationWarning
+            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.",
+            DeprecationWarning,
         )
         return self.semantic_segmentation_frame
 

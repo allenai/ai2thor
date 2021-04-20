@@ -23,7 +23,7 @@
 * OS: Mac OS X 10.9+, Ubuntu 14.04+
 * Graphics Card: DX9 (shader model 3.0) or DX11 with feature level 9.3 capabilities.
 * CPU: SSE2 instruction set support.
-* Python 2.7 or Python 3.5+
+* Python 3.5+
 * Linux: X server with GLX module enabled
 
 ## Documentation
