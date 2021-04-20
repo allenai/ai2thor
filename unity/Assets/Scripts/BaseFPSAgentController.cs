@@ -57,7 +57,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected static float gridSize = 0.25f;
         //time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
+        //frames per second that the physics engine advanced during this frame
+        protected float physicsFramesPerSecond = 0;
         //determins default move distance for move actions
+        
 		protected float moveMagnitude;
         //determines rotation increment of rotate functions
         protected float rotateStepDegrees = 90.0f;
@@ -1544,6 +1547,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //test time
             metaMessage.currentTime = TimeSinceStart();
+
+            metaMessage.physicsFramesPerSecond =  physicsFramesPerSecond;
 
             // Resetting things
             reachablePositions = new Vector3[0];
