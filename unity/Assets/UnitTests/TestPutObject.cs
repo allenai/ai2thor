@@ -13,14 +13,43 @@ namespace Tests
         [UnityTest]
         public IEnumerator TestPutObject_PutNearXY_True()
         {
-            yield return ExecuteDebugAction("init");
-            yield return ExecuteDebugAction("rr");
-            yield return ExecuteDebugAction("rr");
-            yield return ExecuteDebugAction("ld");
-            yield return ExecuteDebugAction("mr");
+            Dictionary<string, object> action = new Dictionary<string, object>();
 
-            yield return ExecuteDebugAction("pu CreditCard|-00.46|+01.10|+00.87");
-            yield return ExecuteDebugAction("putxy true");
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return ExecuteAction(action);
+            
+            action.Clear();
+
+            action["action"] = "RotateRight";
+            yield return ExecuteAction(action);
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "LookDown";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "MoveRight";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "PickupObject";
+            action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "PutObject";
+            action["x"] = 0.5f;
+            action["y"] = 0.5f;
+            action["putNearXY"] = true;
+            yield return ExecuteAction(action);
+
             GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
 
             bool result = false;
@@ -37,14 +66,43 @@ namespace Tests
         [UnityTest]
         public IEnumerator TestPutObject_PutNearXY_False()
         {
-            yield return ExecuteDebugAction("init");
-            yield return ExecuteDebugAction("rr");
-            yield return ExecuteDebugAction("rr");
-            yield return ExecuteDebugAction("ld");
-            yield return ExecuteDebugAction("mr");
+            Dictionary<string, object> action = new Dictionary<string, object>();
 
-            yield return ExecuteDebugAction("pu CreditCard|-00.46|+01.10|+00.87");
-            yield return ExecuteDebugAction("putxy false");
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "RotateRight";
+            yield return ExecuteAction(action);
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "LookDown";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "MoveRight";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "PickupObject";
+            action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
+            yield return ExecuteAction(action);
+
+            action.Clear();
+
+            action["action"] = "PutObject";
+            action["x"] = 0.5f;
+            action["y"] = 0.5f;
+            action["putNearXY"] = false;
+            yield return ExecuteAction(action);
+
             GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
 
             bool result = false;
