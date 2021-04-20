@@ -193,7 +193,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             Collider[] cols = Physics.OverlapBox(
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
-                orientation :b.transform.rotation,
+                orientation: b.transform.rotation,
                 layerMask: LayerMask.GetMask("SimObjVisible"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
@@ -268,12 +268,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // TODO Remove this after restrict movement is finalized
         Vector3 targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
 
-        #if UNITY_EDITOR
-            Debug.Log(
-                $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
-                $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
-            );
-        #endif
+#if UNITY_EDITOR
+        Debug.Log(
+            $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
+            $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
+        );
+#endif
 
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             targetShoulderSpace = (
@@ -402,7 +402,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         controller.actionFinished(true, listOfSOP);
     }
 
-    public bool PickupObject(List <string> objectIds, ref string errorMessage) {
+    public bool PickupObject(List<string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
@@ -614,22 +614,22 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         return meta;
     }
 
-    #if UNITY_EDITOR
-        public class GizmoDrawCapsule {
-            public Vector3 p0;
-            public Vector3 p1;
-            public float radius;
-        }
+#if UNITY_EDITOR
+    public class GizmoDrawCapsule {
+        public Vector3 p0;
+        public Vector3 p1;
+        public float radius;
+    }
 
-        List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
+    List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
 
-        private void OnDrawGizmos() {
-            if (debugCapsules.Count > 0) {
-                foreach (GizmoDrawCapsule thing in debugCapsules) {
-                    Gizmos.DrawWireSphere(thing.p0, thing.radius);
-                    Gizmos.DrawWireSphere(thing.p1, thing.radius);
-                }
+    private void OnDrawGizmos() {
+        if (debugCapsules.Count > 0) {
+            foreach (GizmoDrawCapsule thing in debugCapsules) {
+                Gizmos.DrawWireSphere(thing.p0, thing.radius);
+                Gizmos.DrawWireSphere(thing.p1, thing.radius);
             }
         }
-    #endif
+    }
+#endif
 }

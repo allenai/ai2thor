@@ -2,13 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RandomExtensions
-{
+namespace RandomExtensions {
     /// <summary>
     /// Some extension methods for <see cref="Random"/> for creating a few more kinds of random stuff.
     /// </summary>
-    public static class RandomExtensions
-    {
+    public static class RandomExtensions {
         /// <summary>
         ///   Generates normally distributed numbers. Each operation makes two Gaussians for the price of one, and apparently they can be cached or something for better performance, but who cares.
         /// </summary>
@@ -16,8 +14,7 @@ namespace RandomExtensions
         /// <param name = "mu">Mean of the distribution</param>
         /// <param name = "sigma">Standard deviation</param>
         /// <returns></returns>
-        public static double NextGaussian(this Random r, double mu = 0, double sigma = 1)
-        {
+        public static double NextGaussian(this Random r, double mu = 0, double sigma = 1) {
             var u1 = r.NextDouble();
             var u2 = r.NextDouble();
 
@@ -40,8 +37,7 @@ namespace RandomExtensions
         /// <param name = "b">Maximum</param>
         /// <param name = "c">Mode (most frequent value)</param>
         /// <returns></returns>
-        public static double NextTriangular(this Random r, double a, double b, double c)
-        {
+        public static double NextTriangular(this Random r, double a, double b, double c) {
             var u = r.NextDouble();
 
             return u < (c - a) / (b - a)
@@ -53,8 +49,7 @@ namespace RandomExtensions
         ///   Equally likely to return true or false. Uses <see cref="Random.Next()"/>.
         /// </summary>
         /// <returns></returns>
-        public static bool NextBoolean(this Random r)
-        {
+        public static bool NextBoolean(this Random r) {
             return r.Next(2) > 0;
         }
 
@@ -63,10 +58,8 @@ namespace RandomExtensions
         /// </summary>
         /// <param name="r"></param>
         /// <param name = "list"></param>
-        public static void Shuffle(this Random r, IList list)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
+        public static void Shuffle(this Random r, IList list) {
+            for (var i = 0; i < list.Count; i++) {
                 var j = r.Next(0, i + 1);
 
                 var temp = list[j];

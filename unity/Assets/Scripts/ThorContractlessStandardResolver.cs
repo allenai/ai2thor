@@ -12,31 +12,26 @@ using MessagePack.Internal;
   the UnityResolver and we want our output to match the json output for Vector3.
 
 */
-namespace MessagePack.Resolvers
-{
- public class NavMeshPathFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath>
-    {
-        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.AI.NavMeshPath value, global::MessagePack.MessagePackSerializerOptions options)
-        {
+namespace MessagePack.Resolvers {
+    public class NavMeshPathFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath> {
+        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.AI.NavMeshPath value, global::MessagePack.MessagePackSerializerOptions options) {
             writer.WriteMapHeader(2);
             writer.Write("corners");
             writer.WriteArrayHeader(value.corners.Length);
             Vector3Formatter f = new Vector3Formatter();
-            foreach(Vector3 c in value.corners) {
+            foreach (Vector3 c in value.corners) {
                 f.Serialize(ref writer, c, options);
             }
             writer.Write("status");
             writer.Write(value.status.ToString());
         }
-         public global::UnityEngine.AI.NavMeshPath Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options){
-             throw new System.NotImplementedException();
-         }
+        public global::UnityEngine.AI.NavMeshPath Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
+            throw new System.NotImplementedException();
+        }
 
     }
- public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3>
-    {
-        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options)
-        {
+    public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3> {
+        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options) {
             writer.WriteMapHeader(3);
             writer.Write("x");
             writer.Write(value.x);
@@ -45,14 +40,13 @@ namespace MessagePack.Resolvers
             writer.Write("z");
             writer.Write(value.z);
         }
-         public global::UnityEngine.Vector3 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options){
-             throw new System.NotImplementedException();
-         }
+        public global::UnityEngine.Vector3 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
+            throw new System.NotImplementedException();
+        }
 
     }
-    
-    public class ThorContractlessStandardResolver : IFormatterResolver
-    {
+
+    public class ThorContractlessStandardResolver : IFormatterResolver {
         public static readonly MessagePackSerializerOptions Options;
         public static readonly ThorContractlessStandardResolver Instance;
 
@@ -71,43 +65,33 @@ namespace MessagePack.Resolvers
             #endif
         };
 
-        static ThorContractlessStandardResolver()
-        {
+        static ThorContractlessStandardResolver() {
             Instance = new ThorContractlessStandardResolver();
             Options = MessagePackSerializerOptions.Standard.WithResolver(Instance);
         }
 
-        private ThorContractlessStandardResolver()
-        {
+        private ThorContractlessStandardResolver() {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
-        {
+        public IMessagePackFormatter<T> GetFormatter<T>() {
             return FormatterCache<T>.Formatter;
         }
 
-        private static class FormatterCache<T>
-        {
+        private static class FormatterCache<T> {
             public static readonly IMessagePackFormatter<T> Formatter;
 
-            static FormatterCache()
-            {
-                if (typeof(T) == typeof(object))
-                {
+            static FormatterCache() {
+                if (typeof(T) == typeof(object)) {
                     // final fallback
 #if !ENABLE_IL2CPP
                     Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
-                }
-                else
-                {
-                    foreach (IFormatterResolver item in Resolvers)
-                    {
+                } else {
+                    foreach (IFormatterResolver item in Resolvers) {
                         IMessagePackFormatter<T> f = item.GetFormatter<T>();
-                        if (f != null)
-                        {
+                        if (f != null) {
                             Formatter = f;
                             return;
                         }
@@ -115,47 +99,40 @@ namespace MessagePack.Resolvers
                 }
             }
         }
-  }
+    }
 }
 
- public class ThorUnityResolver : IFormatterResolver
-    {
-        public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
+public class ThorUnityResolver : IFormatterResolver {
+    public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
 
-        private ThorUnityResolver()
-        {
-        }
+    private ThorUnityResolver() {
+    }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
-        {
-            return FormatterCache<T>.Formatter;
-        }
+    public IMessagePackFormatter<T> GetFormatter<T>() {
+        return FormatterCache<T>.Formatter;
+    }
 
-        private static class FormatterCache<T>
+    private static class FormatterCache<T> {
+        public static readonly IMessagePackFormatter<T> Formatter;
+        private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>()
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
-            private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>()
-            {
                 // standard
                 { typeof(Vector3), new Vector3Formatter() },
                 { typeof(NavMeshPath), new NavMeshPathFormatter() }
 
             };
 
-            static FormatterCache()
-            {
-                Formatter = (IMessagePackFormatter<T>)GetFormatter(typeof(T));
-            }
+        static FormatterCache() {
+            Formatter = (IMessagePackFormatter<T>)GetFormatter(typeof(T));
+        }
 
-            static object GetFormatter(Type t)
-            {
-                object formatter;
-                if (FormatterMap.TryGetValue(t, out formatter))
-                {
-                    return formatter;
-                }
+        static object GetFormatter(Type t) {
+            object formatter;
+            if (FormatterMap.TryGetValue(t, out formatter)) {
+                return formatter;
+            }
 
             return null;
-            }
         }
     }
+}
