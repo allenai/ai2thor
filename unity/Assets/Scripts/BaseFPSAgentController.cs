@@ -2452,7 +2452,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //for all objects that might be currently picked up by the arm
                             if(Arm != null)
                             {
-                                foreach(SimObjPhysics inArmHand in Arm.HeldObjects.Keys)
+                                foreach(SimObjPhysics inArmHand in Arm.heldObjects.Keys)
                                 {
                                     //print("here");
                                     if(!hasAncestor(c.transform.gameObject, inArmHand.transform.gameObject))

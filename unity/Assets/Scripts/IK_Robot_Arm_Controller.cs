@@ -29,7 +29,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public Dictionary<SimObjPhysics, List<Collider>> HeldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
+    public Dictionary<SimObjPhysics, List<Collider>> heldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
 
     //private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -448,7 +448,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             }
 
             pickedUp = true;
-            HeldObjects.Add(sop, cols);
+            heldObjects.Add(sop, cols);
         }
 
         if (!pickedUp) {
@@ -466,7 +466,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public void DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
+        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
@@ -498,7 +498,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         // clear all now dropped objects
-        HeldObjects.Clear();
+        heldObjects.Clear();
     }
 
     public void SetHandSphereRadius(float radius) {
@@ -600,17 +600,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // metadata for any objects currently held by the hand on the arm
         // note this is different from objects intersecting the hand's sphere,
         // there could be a case where an object is inside the sphere but not picked up by the hand
-        List<string> HeldObjectIDs = new List<string>();
-        if (HeldObjects != null) {
-            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
-                HeldObjectIDs.Add(sop.Key.objectID);
+        List<string> heldObjectIDs = new List<string>();
+        if (heldObjects != null) {
+            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
+                heldObjectIDs.Add(sop.Key.objectID);
             }
         }
 
-        meta.HeldObjects = HeldObjectIDs;
-        meta.HandSphereCenter = transform.TransformPoint(magnetSphere.center);
-        meta.HandSphereRadius = magnetSphere.radius;
-        meta.PickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
+        meta.heldObjects = heldObjectIDs;
+        meta.handSphereCenter = transform.TransformPoint(magnetSphere.center);
+        meta.handSphereRadius = magnetSphere.radius;
+        meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;
     }
 

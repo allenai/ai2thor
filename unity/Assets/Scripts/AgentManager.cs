@@ -1443,21 +1443,21 @@ public class JointMetadata {
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class ArmMetadata {
-
-    //public Vector3 handTarget;
-	//joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
+    // public Vector3 handTarget;
+	// joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
     public JointMetadata[] joints;
 
-	//all objects currently held by the hand sphere
-	public List<String> HeldObjects;
+	// all objects currently held by the hand sphere
+	public List<String> heldObjects;
 
-	//all sim objects that are both pickupable and inside the hand sphere
-	public List<String> PickupableObjects;
+	// all sim objects that are both pickupable and inside the hand sphere
+	public List<String> pickupableObjects;
 
-	//world coordinates of the center of the hand's sphere
-	public Vector3 HandSphereCenter;
-	//current radius of the hand sphere
-	public float HandSphereRadius;
+	// world coordinates of the center of the hand's sphere
+	public Vector3 handSphereCenter;
+
+	// current radius of the hand sphere
+	public float handSphereRadius;
 }
 
 [Serializable]
