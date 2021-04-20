@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 
@@ -306,6 +307,16 @@ public static class ActionDispatcher {
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
         }  else {
+            var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
+            var invalidArgs = dynamicServerAction
+                .Keys()
+                .Where(argName => !paramDict.ContainsKey(argName))
+                .ToList();
+            if (invalidArgs.Count > 0) {
+                throw new InvalidArgumentsException(
+                    invalidArgs
+                );
+            }
             for(int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
                 if (dynamicServerAction.ContainsKey(pi.Name)) {
@@ -399,6 +410,14 @@ public class ToObjectArgumentActionException : Exception {
 public class MissingArgumentsActionException : Exception {
     public List<string> ArgumentNames;
     public MissingArgumentsActionException(List<string> argumentNames) {
+        this.ArgumentNames = argumentNames;
+    }
+}
+
+[Serializable]
+public class InvalidArgumentsException : Exception {
+    public List<string> ArgumentNames;
+    public InvalidArgumentsException(List<string> argumentNames) {
         this.ArgumentNames = argumentNames;
     }
 }

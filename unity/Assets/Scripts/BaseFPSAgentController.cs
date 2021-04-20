@@ -1771,6 +1771,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             }
+            catch (InvalidArgumentsException e) {
+                errorMessage = $"action: ${controlCommand.action} called with invalid arguments:" + string.Join(",", e.ArgumentNames.ToArray());
+                errorCode = ServerActionErrorCode.InvalidArgument;
+                actionFinished(false);
+            }
             catch (ToObjectArgumentActionException e)
             {
                 Dictionary<string, string> typeMap = new Dictionary<string, string>{

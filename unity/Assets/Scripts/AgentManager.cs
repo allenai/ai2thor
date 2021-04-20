@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
+using System.Linq;
 
 public class AgentManager : MonoBehaviour
 {
@@ -1680,6 +1681,14 @@ public class DynamicServerAction
 
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
+    }
+
+    public IEnumerable<string> Keys() {
+        return this.jObject.Properties().Select(p => p.Name).ToList();
+    }
+
+    public int Count() {
+        return this.jObject.Count;
     }
     
 }
