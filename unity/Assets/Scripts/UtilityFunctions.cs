@@ -51,7 +51,7 @@ public static class UtilityFunctions {
         GameObject go,
         List<GameObject> ignoreGameObjects = null,
         float expandBy = 0.0f,
-        bool useBoundingBoxInChecks=false
+        bool useBoundingBoxInChecks = false
      ) {
         return null != firstColliderObjectCollidingWith(
             go: go,
@@ -65,7 +65,7 @@ public static class UtilityFunctions {
         GameObject go,
         List<GameObject> ignoreGameObjects = null,
         float expandBy = 0.0f,
-        bool useBoundingBoxInChecks=false
+        bool useBoundingBoxInChecks = false
      ) {
         if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
@@ -184,8 +184,7 @@ public static class UtilityFunctions {
 
     //get a copy of a specific component and apply it to another object at runtime
     //usage: var copy = myComp.GetCopyOf(someOtherComponent);
-    public static T GetCopyOf<T>(this Component comp, T other) where T : Component
-    {
+    public static T GetCopyOf<T>(this Component comp, T other) where T : Component {
         Type type = comp.GetType();
         if (type != other.GetType()) return null; // type mis-match
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
@@ -194,8 +193,7 @@ public static class UtilityFunctions {
             if (pinfo.CanWrite) {
                 try {
                     pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
-                }
-                catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
+                } catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
             }
         }
         FieldInfo[] finfos = type.GetFields(flags);
@@ -206,28 +204,24 @@ public static class UtilityFunctions {
     }
 
     //usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
-    public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component
-    {
+    public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component {
         return go.AddComponent<T>().GetCopyOf(toAdd) as T;
     }
 
 
     // Taken from https://answers.unity.com/questions/589983/using-mathfround-for-a-vector3.html
-    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2)
-    {
-         float multiplier = 1;
-         for (int i = 0; i < decimalPlaces; i++)
-         {
-             multiplier *= 10f;
-         }
-         return new Vector3(
-             Mathf.Round(vector3.x * multiplier) / multiplier,
-             Mathf.Round(vector3.y * multiplier) / multiplier,
-             Mathf.Round(vector3.z * multiplier) / multiplier);
+    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2) {
+        float multiplier = 1;
+        for (int i = 0; i < decimalPlaces; i++) {
+            multiplier *= 10f;
+        }
+        return new Vector3(
+            Mathf.Round(vector3.x * multiplier) / multiplier,
+            Mathf.Round(vector3.y * multiplier) / multiplier,
+            Mathf.Round(vector3.z * multiplier) / multiplier);
     }
 
-    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
-    {
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b) {
         Vector3[] corners = new Vector3[8];
 
         corners[0] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);

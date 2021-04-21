@@ -128,36 +128,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void MoveAhead(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
         }
 
         public override void MoveRight(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
         }
 
         public override void MoveLeft(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
         }
 
         public override void MoveBack(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
         }
 
         public override void MoveRelative(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
         }
 
         public override void RotateRight(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
         }
 
         public override void RotateLeft(ServerAction action) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
         }
 
         // this is supported in base
         public override void Rotate(Vector3 rotation) {
-          throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
+            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
         }
 
         public void RotateAgent(
@@ -243,38 +243,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        #if UNITY_EDITOR
-            // debug for static arm collisions from collision listener
-            public void GetMidLevelArmCollisions() {
-                IK_Robot_Arm_Controller arm = getArm();
-                CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
-                if (collisionListener != null) {
-                    List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
-                    foreach (var sc in collisionListener.StaticCollisions()){
-                        Dictionary<string, string> element = new Dictionary<string, string>();
-                        if (sc.simObjPhysics != null) {
-                            element["objectType"] = "simObjPhysics";
-                            element["name"] = sc.simObjPhysics.objectID;
-                        } else {
-                            element["objectType"] = "gameObject";
-                            element["name"] = sc.gameObject.name;
-                        }
-                        collisions.Add(element);
+#if UNITY_EDITOR
+        // debug for static arm collisions from collision listener
+        public void GetMidLevelArmCollisions() {
+            IK_Robot_Arm_Controller arm = getArm();
+            CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
+            if (collisionListener != null) {
+                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                foreach (var sc in collisionListener.StaticCollisions()) {
+                    Dictionary<string, string> element = new Dictionary<string, string>();
+                    if (sc.simObjPhysics != null) {
+                        element["objectType"] = "simObjPhysics";
+                        element["name"] = sc.simObjPhysics.objectID;
+                    } else {
+                        element["objectType"] = "gameObject";
+                        element["name"] = sc.gameObject.name;
                     }
-                    actionFinished(true, collisions);
+                    collisions.Add(element);
                 }
+                actionFinished(true, collisions);
             }
+        }
 
-            // debug for static arm collisions from collision listener
-            public void DebugMidLevelArmCollisions() {
-                IK_Robot_Arm_Controller arm = getArm();
-                List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
-                Debug.Log("Total current active static arm collisions: " + scs.Count);
-                foreach (CollisionListener.StaticCollision sc  in scs) {
-                    Debug.Log("Arm static collision: " + sc.name);
-                }
-                actionFinished(true);
+        // debug for static arm collisions from collision listener
+        public void DebugMidLevelArmCollisions() {
+            IK_Robot_Arm_Controller arm = getArm();
+            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
+            Debug.Log("Total current active static arm collisions: " + scs.Count);
+            foreach (CollisionListener.StaticCollision sc in scs) {
+                Debug.Log("Arm static collision: " + sc.name);
             }
-        #endif
+            actionFinished(true);
+        }
+#endif
     }
 }

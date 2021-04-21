@@ -13,11 +13,9 @@ using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
+namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class StochasticRemoteFPSAgentController : BaseFPSAgentController
-    {
+    public class StochasticRemoteFPSAgentController : BaseFPSAgentController {
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
         protected float movementGaussianSigma = 0.005f;
@@ -25,45 +23,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
 
-        public new void Initialize(ServerAction action)
-        {
+        public new void Initialize(ServerAction action) {
             this.applyActionNoise = action.applyActionNoise;
 
-            if (action.movementGaussianMu > 0.0f)
-            {
+            if (action.movementGaussianMu > 0.0f) {
                 this.movementGaussianMu = action.movementGaussianMu;
             }
 
-            if (action.movementGaussianSigma > 0.0f)
-            {
+            if (action.movementGaussianSigma > 0.0f) {
                 this.movementGaussianSigma = action.movementGaussianSigma;
             }
 
-            if (action.rotateGaussianMu > 0.0f)
-            {
+            if (action.rotateGaussianMu > 0.0f) {
                 this.rotateGaussianMu = action.rotateGaussianMu;
             }
 
-            if (action.rotateGaussianSigma > 0.0f)
-            {
+            if (action.rotateGaussianSigma > 0.0f) {
                 this.rotateGaussianSigma = action.rotateGaussianSigma;
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Debug.Log("MoveNoise: " + movementGaussianMu + " mu, " + movementGaussianSigma + " sigma");
             Debug.Log("RotateNoise: " + rotateGaussianMu + " mu, " + rotateGaussianSigma + " sigma");
             Debug.Log("applynoise:" + applyActionNoise);
-            #endif
+#endif
 
             base.Initialize(action);
         }
 
         //reset visible objects while in editor, for debug purposes only
-        private void LateUpdate()
-        {
-            #if UNITY_EDITOR || UNITY_WEBGL
+        private void LateUpdate() {
+#if UNITY_EDITOR || UNITY_WEBGL
             VisibleSimObjPhysics = VisibleSimObjs();
-            #endif
+#endif
         }
 
         public override void MoveRelative(ServerAction action) {
@@ -102,17 +94,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         // NOOP action to allow evaluation to know that the episode has finished
-        public void Stop() 
-        {
+        public void Stop() {
             //i don't know why, but we have two no-op actions so here we go
             base.Pass();
         }
 
-        public override void LookDown(ServerAction action) 
-        {
+        public override void LookDown(ServerAction action) {
             //default degree increment to 30
-            if(action.degrees == 0)
-            {
+            if (action.degrees == 0) {
                 action.degrees = 30f;
             } else {
                 errorMessage = "Must have degrees == 0 for now.";
@@ -122,13 +111,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //force the degree increment to the nearest tenths place
             //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if(!checkForUpDownAngleLimit("down", action.degrees))
-            {
+            if (!checkForUpDownAngleLimit("down", action.degrees)) {
                 errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
+                errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+                actionFinished(false);
                 return;
             }
 
@@ -136,12 +124,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return;
         }
 
-        public override void LookUp(ServerAction action) 
-        {
+        public override void LookUp(ServerAction action) {
 
             //default degree increment to 30
-            if(action.degrees == 0)
-            {
+            if (action.degrees == 0) {
                 action.degrees = 30f;
             } else {
                 errorMessage = "Must have degrees == 0 for now.";
@@ -151,13 +137,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //force the degree increment to the nearest tenths place
             //this is to prevent too small of a degree increment change that could cause float imprecision
-            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+            action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if(!checkForUpDownAngleLimit("up", action.degrees))
-            {
+            if (!checkForUpDownAngleLimit("up", action.degrees)) {
                 errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
+                errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+                actionFinished(false);
                 return;
             }
 
@@ -209,7 +194,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
         public void Teleport(
             float x, float y, float z,
             Vector3? rotation = null, float? horizon = null, bool forceAction = false
@@ -231,7 +216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////////////// TELEPORT FULL //////////////
         ///////////////////////////////////////////
 
-        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)] 
+        [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
         public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false) {
             TeleportFull(
                 position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
@@ -261,8 +246,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public override void MoveRight(ServerAction action) {
-            if (!allowHorizontalMovement)
-            {
+            if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
             action.x = 1.0f;
@@ -271,10 +255,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             MoveRelative(action);
         }
 
-        public override void MoveLeft(ServerAction action)
-        {
-            if (!allowHorizontalMovement)
-            {
+        public override void MoveLeft(ServerAction action) {
+            if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
             action.x = -1.0f;
@@ -285,14 +267,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected float GetMoveMagnitudeWithNoise(ServerAction action) {
             System.Random random = new System.Random();
-            float internalNoise = applyActionNoise ? (float) random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-            return action.moveMagnitude + action.noise + (float) internalNoise;
+            float internalNoise = applyActionNoise ? (float)random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
+            return action.moveMagnitude + action.noise + (float)internalNoise;
         }
 
         protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
             System.Random random = new System.Random();
-            float internalNoise = applyActionNoise ? (float) random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
-            return rotation.y + noise + (float) internalNoise;
+            float internalNoise = applyActionNoise ? (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
+            return rotation.y + noise + (float)internalNoise;
         }
     }
 }
