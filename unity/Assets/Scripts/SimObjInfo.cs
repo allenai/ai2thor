@@ -63,7 +63,7 @@ public enum SimObjProperty : int //Properties of a SimObjPhysics that determine 
     CanBeMountedMedium,
     CanBeMountedLarge,
     CanBeLitOnFire,
-    CanLightOnFire   
+    CanLightOnFire
 }
 
 

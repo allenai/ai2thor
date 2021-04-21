@@ -2,11 +2,9 @@
 using UnityEngine;
 
 #if UNITY_EDITOR
-public static class GroupCommand
-{
+public static class GroupCommand {
     [MenuItem("GameObject/Group Selected %g")]
-    private static void GroupSelected()
-    {
+    private static void GroupSelected() {
         if (!Selection.activeTransform) return;
         var go = new GameObject(Selection.activeTransform.name + " Group");
         Undo.RegisterCreatedObjectUndo(go, "Group Selected");

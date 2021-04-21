@@ -342,7 +342,6 @@ RECEPTACLE_OBJECTS = {
 }
 
 
-
 def process_alive(pid):
     """
     Use kill(0) to determine if pid is alive
@@ -391,7 +390,7 @@ class Controller(object):
         download_only=False,
         include_private_scenes=False,
         server_class=ai2thor.fifo_server.FifoServer,
-        **unity_initialization_parameters
+        **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
@@ -486,8 +485,9 @@ class Controller(object):
 
                 # check for bot as well, for backwards compatibility support
                 if (
-                    unity_initialization_parameters.get("agentMode", "default").lower() in {"locobot", "bot"} and
-                    robothor_scenes_in_build
+                    unity_initialization_parameters.get("agentMode", "default").lower()
+                    in {"locobot", "bot"}
+                    and robothor_scenes_in_build
                 ):
                     # get the first robothor scene
                     scene = sorted(list(robothor_scenes_in_build))[0]
@@ -504,7 +504,7 @@ class Controller(object):
             event = self.reset(scene)
 
             # older builds don't send actionReturn on Initialize
-            init_return = event.metadata['actionReturn']
+            init_return = event.metadata["actionReturn"]
             if init_return:
                 self.server.set_init_params(init_return)
                 logging.info("Initialize return: {}".format(init_return))
@@ -563,7 +563,7 @@ class Controller(object):
         if scene is None:
             scene = self.scene
 
-        if re.match(r'^FloorPlan[0-9]+$', scene):
+        if re.match(r"^FloorPlan[0-9]+$", scene):
             scene = scene + "_physics"
 
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
@@ -572,8 +572,8 @@ class Controller(object):
 
             def key_sort_func(scene_name):
                 m = re.search(
-                        r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$",
-                    scene_name)
+                    r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$", scene_name
+                )
                 last_val = m.group(3) if m.group(3) is not None else -1
                 return m.group(1), int(m.group(2)), int(last_val)
 
@@ -605,7 +605,7 @@ class Controller(object):
                 action="ChangeResolution",
                 x=self.width,
                 y=self.height,
-                raise_for_failure=True
+                raise_for_failure=True,
             )
 
         # updates the initialization parameters
@@ -615,19 +615,24 @@ class Controller(object):
         agent_mode = self.initialization_parameters.get("agentMode", "default")
         if agent_mode.lower() == "bot":
             self.initialization_parameters["agentMode"] = "locobot"
-            warnings.warn("On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'.")
+            warnings.warn(
+                "On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'."
+            )
 
         if (
-            scene in self.robothor_scenes() and
-            self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
+            scene in self.robothor_scenes()
+            and self.initialization_parameters.get("agentMode", "default").lower()
+            != "locobot"
         ):
-            warnings.warn("You are using a RoboTHOR scene without using the standard LoCoBot.\n" +
-             "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?")
+            warnings.warn(
+                "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
+                + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
+            )
 
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
-            **self.initialization_parameters
+            **self.initialization_parameters,
         )
 
         self.scene = scene
@@ -653,7 +658,7 @@ class Controller(object):
         include_kitchens=True,
         include_living_rooms=True,
         include_bedrooms=True,
-        include_bathrooms=True
+        include_bathrooms=True,
     ):
         types = []
         if include_kitchens:
@@ -688,10 +693,12 @@ class Controller(object):
         for stage, wall_configs in stages.items():
             for wall_config_i in wall_configs:
                 for object_config_i in range(1, 6):
-                    scenes.append('FloorPlan_{stage}{wall_config}_{object_config}'.format(
-                        stage=stage,
-                        wall_config=wall_config_i,
-                        object_config=object_config_i)
+                    scenes.append(
+                        "FloorPlan_{stage}{wall_config}_{object_config}".format(
+                            stage=stage,
+                            wall_config=wall_config_i,
+                            object_config=object_config_i,
+                        )
                     )
         return scenes
 
@@ -705,19 +712,23 @@ class Controller(object):
             # be running with this release
             lock = LockEx(release, blocking=False)
             lock.lock()
-            tmp_prune_dir = os.path.join(
-                self.tmp_dir,
-                "-".join(
-                    [
-                        os.path.basename(release),
-                        str(time.time()),
-                        str(random.random()),
-                        "prune",
-                    ]
-                ),
-            )
-            os.rename(release, tmp_prune_dir)
-            shutil.rmtree(tmp_prune_dir)
+            # its possible that another process could prune
+            # out a release when running multiple procs
+            # that all race to prune the same release
+            if os.path.isdir(release):
+                tmp_prune_dir = os.path.join(
+                    self.tmp_dir,
+                    "-".join(
+                        [
+                            os.path.basename(release),
+                            str(time.time()),
+                            str(random.random()),
+                            "prune",
+                        ]
+                    ),
+                )
+                os.rename(release, tmp_prune_dir)
+                shutil.rmtree(tmp_prune_dir)
 
             lock.unlock()
             lock.unlink()
@@ -737,7 +748,17 @@ class Controller(object):
                 os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))
             )
         )
-        sorted_dirs = sorted(all_dirs, key=lambda x: os.stat(x).st_mtime)[:-3]
+        dir_stats = defaultdict(lambda: 0)
+        for d in all_dirs:
+            try:
+                dir_stats[d] = os.stat(d).st_mtime
+            # its possible for multiple procs to race to stat/prune
+            # creating the possibility that between the listdir/stat the directory was
+            # pruned
+            except FileNotFoundError:
+                pass
+
+        sorted_dirs = sorted(all_dirs, key=lambda x: dir_stats[x])[:-3]
         for release in sorted_dirs:
             if current_exec_path.startswith(release):
                 continue
@@ -746,6 +767,7 @@ class Controller(object):
     def next_interact_command(self):
         # NOTE: Leave this here because it is incompatible with Windows.
         from ai2thor.interact import get_term_character
+
         current_buffer = ""
         while True:
             commands = self._interact_commands
@@ -835,7 +857,7 @@ class Controller(object):
         # for all relevant actions.
         rotation = action.get("rotation")
         if rotation is not None and not isinstance(rotation, dict):
-            action['rotation'] = dict(y=rotation)
+            action["rotation"] = dict(y=rotation)
 
         # Support for deprecated parameter names (old: new)
         # Note that these parameters used to be applicable to ANY action.
@@ -865,8 +887,6 @@ class Controller(object):
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
             raise RestartError(message)
-
-
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
@@ -1003,6 +1023,9 @@ class Controller(object):
     def find_build(self, local_build, commit_id, branch):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
+
+        if platform.architecture()[0] != "64bit":
+            raise Exception("Only 64bit currently supported")
 
         arch = arch_platform_map[platform.system()]
 
