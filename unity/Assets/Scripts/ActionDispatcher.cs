@@ -86,7 +86,7 @@ using Newtonsoft.Json.Linq;
 */
 public static class ActionDispatcher {
     private static Dictionary<Type, Dictionary<string, List<MethodInfo>>> allMethodDispatchTable = new Dictionary<Type, Dictionary<string, List<MethodInfo>>>();
-    private static Dictionary<Type,MethodInfo[]> methodCache = new Dictionary<Type, MethodInfo[]>();
+    private static Dictionary<Type, MethodInfo[]> methodCache = new Dictionary<Type, MethodInfo[]>();
 
     // look through all methods on a target type and attempt to get the MethodInfo
     // any ambiguous method will throw an exception.  This is used during testing.
@@ -94,16 +94,16 @@ public static class ActionDispatcher {
         List<string> actions = new List<string>();
         System.Reflection.MethodInfo[] allMethods = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
         HashSet<string> methodNames = new HashSet<string>();
-        foreach(var method in allMethods) {
+        foreach (var method in allMethods) {
             methodNames.Add(method.Name);
         }
-        foreach(var methodName in methodNames) {
+        foreach (var methodName in methodNames) {
             try {
                 Dictionary<string, object> act = new Dictionary<string, object>();
                 act["action"] = methodName;
                 DynamicServerAction dynamicServerAction = new DynamicServerAction(act);
                 MethodInfo m = getDispatchMethod(targetType, dynamicServerAction);
-            } catch(AmbiguousActionException) {
+            } catch (AmbiguousActionException) {
                 actions.Add(methodName);
             }
         }
@@ -124,20 +124,20 @@ public static class ActionDispatcher {
         MethodInfo[] allMethods = getMethods(targetType);
         Dictionary<string, List<string>> methodConflicts = new Dictionary<string, List<string>>();
 
-        for(int i = 0; i < allMethods.Length - 1; i++) {
+        for (int i = 0; i < allMethods.Length - 1; i++) {
             MethodInfo methodOut = allMethods[i];
             HashSet<string> paramSet = new HashSet<string>();
             ParameterInfo[] methodOutParams = methodOut.GetParameters();
             foreach (var p in methodOutParams) {
                 paramSet.Add(p.Name);
             }
-            for(int j = i + 1; j < allMethods.Length; j++) {
+            for (int j = i + 1; j < allMethods.Length; j++) {
                 MethodInfo methodIn = allMethods[j];
                 ParameterInfo[] methodInParams = allMethods[j].GetParameters();
                 if (methodIn.Name == methodOut.Name && methodOutParams.Length == methodInParams.Length) {
                     bool allVariableNamesMatch = true;
                     bool allParamsMatch = true;
-                    for (int k = 0; k < methodInParams.Length; k++ ){
+                    for (int k = 0; k < methodInParams.Length; k++) {
                         var mpIn = methodInParams[k];
                         var mpOut = methodOutParams[k];
                         // we assume the method is overriding if everything matches
@@ -246,7 +246,7 @@ public static class ActionDispatcher {
 
     public static MethodInfo getDispatchMethod(Type targetType, DynamicServerAction dynamicServerAction) {
 
-        List<MethodInfo> actionMethods = getCandidateMethods(targetType,  dynamicServerAction.action);
+        List<MethodInfo> actionMethods = getCandidateMethods(targetType, dynamicServerAction.action);
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
@@ -273,7 +273,7 @@ public static class ActionDispatcher {
             if (matchedMethod == null && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
                 matchedMethod = method;
             } else {
-                foreach(var p in method.GetParameters()) {
+                foreach (var p in method.GetParameters()) {
                     if (dynamicServerAction.ContainsKey(p.Name)) {
                         matchCount++;
                     }
@@ -299,7 +299,7 @@ public static class ActionDispatcher {
             throw new InvalidActionException();
         }
 
-        List<string> missingArguments = null; 
+        List<string> missingArguments = null;
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         object[] arguments = new object[methodParams.Length];
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
@@ -331,7 +331,7 @@ public static class ActionDispatcher {
                         );
                     }
                 } else {
-                    if (!pi.HasDefaultValue)  {
+                    if (!pi.HasDefaultValue) {
                         if (missingArguments == null) {
                             missingArguments = new List<string>();
                         }
@@ -348,7 +348,7 @@ public static class ActionDispatcher {
     }
 }
 
-public class MethodParamComparer: IComparer<MethodInfo> {
+public class MethodParamComparer : IComparer<MethodInfo> {
 
     public int Compare(MethodInfo a, MethodInfo b) {
         int requiredParamCountA = requiredParamCount(a);
@@ -366,7 +366,7 @@ public class MethodParamComparer: IComparer<MethodInfo> {
 
     private static int requiredParamCount(MethodInfo method) {
         int count = 0;
-        foreach(var p  in method.GetParameters()) {
+        foreach (var p in method.GetParameters()) {
             if (!p.HasDefaultValue) {
                 count++;
             }
@@ -382,8 +382,8 @@ public class MethodParamComparer: IComparer<MethodInfo> {
 public class InvalidActionException : Exception { }
 
 [Serializable]
-public class AmbiguousActionException : Exception { 
-    public AmbiguousActionException(string message) : base(message) {}
+public class AmbiguousActionException : Exception {
+    public AmbiguousActionException(string message) : base(message) { }
 }
 
 [Serializable]
@@ -393,7 +393,7 @@ public class ToObjectArgumentActionException : Exception {
     public Type parameterType;
     public string parameterValueAsStr;
 
-    public ToObjectArgumentActionException (
+    public ToObjectArgumentActionException(
         string parameterName,
         Type parameterType,
         string parameterValueAsStr,

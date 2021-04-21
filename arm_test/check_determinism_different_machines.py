@@ -73,7 +73,7 @@ def execute_command(controller, command, action_dict_addition):
         base_position["h"] -= change_height
     elif command == "/":
         action_details = dict("")
-        pickupable = controller.last_event.metadata["arm"]["PickupableObjects"]
+        pickupable = controller.last_event.metadata["arm"]["pickupableObjects"]
         print(pickupable)
     elif command == "d":
         event = controller.step(action="DropMidLevelHand", **action_dict_addition)
@@ -225,7 +225,7 @@ def get_current_full_state(controller):
         "agent_position": controller.last_event.metadata["agent"]["position"],
         "agent_rotation": controller.last_event.metadata["agent"]["rotation"],
         "arm_state": controller.last_event.metadata["arm"]["joints"],
-        "held_object": controller.last_event.metadata["arm"]["HeldObjects"],
+        "held_object": controller.last_event.metadata["arm"]["heldObjects"],
     }
 
 
@@ -265,8 +265,8 @@ def random_tests():
             all_commands.append(command)
             last_event_success = controller.last_event.metadata["lastActionSuccess"]
 
-            pickupable = controller.last_event.metadata["arm"]["PickupableObjects"]
-            picked_up_before = controller.last_event.metadata["arm"]["HeldObjects"]
+            pickupable = controller.last_event.metadata["arm"]["pickupableObjects"]
+            picked_up_before = controller.last_event.metadata["arm"]["heldObjects"]
             if len(pickupable) > 0 and len(picked_up_before) == 0:
                 cmd = "p"
                 execute_command(controller, cmd, ADITIONAL_ARM_ARGS)

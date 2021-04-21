@@ -60,7 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStartPropIfFailed = false,
             bool localPosition = false
         ) {
-            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>,IEnumerator> moveClosure = 
+            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
                     controller,
                     collisionListener,
@@ -159,9 +159,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             continuousMoveFinish(
                 controller,
                 collisionListener,
-                moveTransform, 
-                setProp, 
-                target, 
+                moveTransform,
+                setProp,
+                target,
                 resetProp
             );
 
@@ -186,7 +186,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var staticCollisions = collisionListener.StaticCollisions();
 
-            if (staticCollisions.Count > 0){
+            if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
 
                 // decide if we want to return to original property or last known property before collision

@@ -29,7 +29,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public Dictionary<SimObjPhysics, List<Collider>> HeldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
+    public Dictionary<SimObjPhysics, List<Collider>> heldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
 
     //private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -193,7 +193,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             Collider[] cols = Physics.OverlapBox(
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
-                orientation :b.transform.rotation,
+                orientation: b.transform.rotation,
                 layerMask: LayerMask.GetMask("SimObjVisible"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
@@ -268,12 +268,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // TODO Remove this after restrict movement is finalized
         Vector3 targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
 
-        #if UNITY_EDITOR
-            Debug.Log(
-                $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
-                $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
-            );
-        #endif
+#if UNITY_EDITOR
+        Debug.Log(
+            $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
+            $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
+        );
+#endif
 
         if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             targetShoulderSpace = (
@@ -402,7 +402,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         controller.actionFinished(true, listOfSOP);
     }
 
-    public bool PickupObject(List <string> objectIds, ref string errorMessage) {
+    public bool PickupObject(List<string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
@@ -448,7 +448,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             }
 
             pickedUp = true;
-            HeldObjects.Add(sop, cols);
+            heldObjects.Add(sop, cols);
         }
 
         if (!pickedUp) {
@@ -466,7 +466,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public void DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
+        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
@@ -498,7 +498,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         // clear all now dropped objects
-        HeldObjects.Clear();
+        heldObjects.Clear();
     }
 
     public void SetHandSphereRadius(float radius) {
@@ -600,36 +600,36 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // metadata for any objects currently held by the hand on the arm
         // note this is different from objects intersecting the hand's sphere,
         // there could be a case where an object is inside the sphere but not picked up by the hand
-        List<string> HeldObjectIDs = new List<string>();
-        if (HeldObjects != null) {
-            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in HeldObjects) {
-                HeldObjectIDs.Add(sop.Key.objectID);
+        List<string> heldObjectIDs = new List<string>();
+        if (heldObjects != null) {
+            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
+                heldObjectIDs.Add(sop.Key.objectID);
             }
         }
 
-        meta.HeldObjects = HeldObjectIDs;
-        meta.HandSphereCenter = transform.TransformPoint(magnetSphere.center);
-        meta.HandSphereRadius = magnetSphere.radius;
-        meta.PickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
+        meta.heldObjects = heldObjectIDs;
+        meta.handSphereCenter = transform.TransformPoint(magnetSphere.center);
+        meta.handSphereRadius = magnetSphere.radius;
+        meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;
     }
 
-    #if UNITY_EDITOR
-        public class GizmoDrawCapsule {
-            public Vector3 p0;
-            public Vector3 p1;
-            public float radius;
-        }
+#if UNITY_EDITOR
+    public class GizmoDrawCapsule {
+        public Vector3 p0;
+        public Vector3 p1;
+        public float radius;
+    }
 
-        List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
+    List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
 
-        private void OnDrawGizmos() {
-            if (debugCapsules.Count > 0) {
-                foreach (GizmoDrawCapsule thing in debugCapsules) {
-                    Gizmos.DrawWireSphere(thing.p0, thing.radius);
-                    Gizmos.DrawWireSphere(thing.p1, thing.radius);
-                }
+    private void OnDrawGizmos() {
+        if (debugCapsules.Count > 0) {
+            foreach (GizmoDrawCapsule thing in debugCapsules) {
+                Gizmos.DrawWireSphere(thing.p0, thing.radius);
+                Gizmos.DrawWireSphere(thing.p1, thing.radius);
             }
         }
-    #endif
+    }
+#endif
 }

@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UsedUp : MonoBehaviour
-{
+public class UsedUp : MonoBehaviour {
     [SerializeField]
     protected MeshRenderer usedUpRenderer;
 
@@ -18,34 +17,29 @@ public class UsedUp : MonoBehaviour
 
     [SerializeField]
     protected Collider[] alwaysActiveTriggerColliders;
-    
+
     public bool isUsedUp = false;
 
     // Start is called before the first frame update
-    void Start()
-    {
-        
+    void Start() {
+
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
+    void Update() {
+
     }
 
-    public void UseUp()
-    {
+    public void UseUp() {
         usedUpRenderer.enabled = false;
 
         //disable all colliders that are used up
-        foreach (Collider col in usedUpColliders)
-        {
+        foreach (Collider col in usedUpColliders) {
             col.enabled = false;
         }
 
         //disable all trigger colliders that are used up
-        foreach(Collider col in usedUpTriggerColliders)
-        {
+        foreach (Collider col in usedUpTriggerColliders) {
             col.enabled = false;
         }
 
