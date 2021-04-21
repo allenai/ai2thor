@@ -38,6 +38,7 @@ def get_term_character():
     # NOTE: Leave these imports here! They are incompatible with Windows.
     import tty
     import termios
+
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -216,7 +217,7 @@ class InteractiveControllerPrompt(object):
                 print(" ".join(command_info))
 
     def next_interact_command(self):
-        
+
         current_buffer = ""
         while True:
             commands = self._interact_commands
@@ -307,7 +308,7 @@ class InteractiveControllerPrompt(object):
                 lambda x: x,
                 lambda name, x: np.save(
                     name.strip(".png").strip("./")
-                    if image_dir is "."
+                    if image_dir == "."
                     else name.strip(".png"),
                     x.astype(np.float32),
                 ),
