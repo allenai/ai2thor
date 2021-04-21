@@ -59,29 +59,33 @@ For building for browser, please refer to [this page](WEBGL.md).
 ## Citation
 If you use iTHOR, please cite the original AI2-THOR paper:
 
-    @article{ai2thor,
-        Author = {Eric Kolve and Roozbeh Mottaghi 
-                  and Winson Han and Eli VanderBilt 
-                  and Luca Weihs and Alvaro Herrasti 
-                  and Daniel Gordon and Yuke Zhu 
-                  and Abhinav Gupta and Ali Farhadi},
-        Title = {{AI2-THOR: An Interactive 3D Environment for Visual AI}},
-        Journal = {arXiv},
-        Year = {2017}
-    }
+```bibtex
+@article{ai2thor,
+  author={Eric Kolve and Roozbeh Mottaghi and
+          Winson Han and Eli VanderBilt and
+          Luca Weihs and Alvaro Herrasti and
+          Daniel Gordon and Yuke Zhu and
+          Abhinav Gupta and Ali Farhadi},
+  title={{AI2-THOR: An Interactive 3D Environment for Visual AI}},
+  journal={arXiv},
+  year={2017}
+}
+```
   
 If you use RoboTHOR, please cite the following paper:
 
-    @inproceedings{robothor,
-        Author = {Matt Deitke and Winson Han and Alvaro Herrasti and
-                  Aniruddha Kembhavi and Eric Kolve and Roozbeh Mottaghi and
-                  Jordi Salvador and Dustin Schwenk and Eli VanderBilt and
-                  Matthew Wallingford and Luca Weihs and Mark Yatskar and
-                  Ali Farhadi},
-        Title = {{RoboTHOR: An Open Simulation-to-Real Embodied AI Platform}},
-        Booktitle = {CVPR},
-        Year = {2020}
-    }
+```bibtex
+@inproceedings{robothor,
+  author={Matt Deitke and Winson Han and Alvaro Herrasti and
+          Aniruddha Kembhavi and Eric Kolve and Roozbeh Mottaghi and
+          Jordi Salvador and Dustin Schwenk and Eli VanderBilt and
+          Matthew Wallingford and Luca Weihs and Mark Yatskar and
+          Ali Farhadi},
+  title={{RoboTHOR: An Open Simulation-to-Real Embodied AI Platform}},
+  booktitle={CVPR},
+  year={2020}
+}
+```
 
 
 ## Support
