@@ -1216,19 +1216,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length == 2) {
                             action["objectId"] = splitcommand[1];
-                        } 
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                case "putxy":
-                    {
+                case "putxy": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PutObject";
-                    
-                        if(splitcommand.Length == 2)
-                        {
+
+                        if (splitcommand.Length == 2) {
                             action["putNearXY"] = bool.Parse(splitcommand[1]);
                         }
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
@@ -1242,8 +1240,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                    case "goif":
-                    {
+                case "goif": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetObjectInFrame";
                         action["x"] = 0.5f;
@@ -1886,16 +1883,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                    //look up
-                case "lu":
-                    {
+                //look up
+                case "lu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "LookUp";
 
-						if(splitcommand.Length > 1)
-						{
-							action["degrees"] = float.Parse(splitcommand[1]);
-						}
+                        if (splitcommand.Length > 1) {
+                            action["degrees"] = float.Parse(splitcommand[1]);
+                        }
 
                         //action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2008,12 +2003,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 //pickup using screen coordinates
-				case "puxy":
-                    {
+                case "puxy": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PickupObject";
                         //action.forceAction = true;
-                        action["x"] = 0.5f; 
+                        action["x"] = 0.5f;
                         action["y"] = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

@@ -1888,19 +1888,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected bool screenToWorldTarget(
-            float x, 
-            float y, 
-            ref SimObjPhysics target, 
+            float x,
+            float y,
+            ref SimObjPhysics target,
             bool forceAction = false,
             bool checkVisible = true) {
-            
+
             //this version doesn't use a RaycastHit, so pass just a defualt one
             RaycastHit hit = new RaycastHit();
 
             return screenToWorldTarget(
-                x: x, 
-                y: y, 
-                target: ref target, 
+                x: x,
+                y: y,
+                target: ref target,
                 forceAction: forceAction,
                 hit: out hit);
         }
@@ -1909,9 +1909,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // instead of objectId, use screen coordinates to raycast toward potential targets
         // will set the target object by reference if raycast is successful
         protected bool screenToWorldTarget(
-            float x, 
-            float y, 
-            ref SimObjPhysics target, 
+            float x,
+            float y,
+            ref SimObjPhysics target,
             out RaycastHit hit,
             bool forceAction = false,
             bool checkVisible = true) {

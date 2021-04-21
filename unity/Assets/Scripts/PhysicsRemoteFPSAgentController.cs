@@ -4162,19 +4162,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed=0, bool putNearXY=false){
+        public void PutObject(float x, float y, bool forceAction = false, bool placeStationary = true, int randomSeed = 0, bool putNearXY = false) {
             PlaceHeldObject(
-                x: x, 
+                x: x,
                 y: y,
-                forceAction: forceAction, 
+                forceAction: forceAction,
                 placeStationary: placeStationary,
                 randomSeed: randomSeed,
                 putNearXY: putNearXY,
                 maxDistance: maxVisibleDistance);
         }
 
-        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed=0){
-            PlaceHeldObject(                
+        public void PutObject(string objectId, bool forceAction = false, bool placeStationary = true, int randomSeed = 0) {
+            PlaceHeldObject(
                 objectId: objectId,
                 forceAction: forceAction,
                 placeStationary: placeStationary,
@@ -4185,28 +4185,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle via the receptacle trigger box 
-        public void PlaceHeldObject(float x, float y, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0 , bool putNearXY = false){
+        public void PlaceHeldObject(float x, float y, float maxDistance, bool forceAction = false, bool placeStationary = true, int randomSeed = 0, bool putNearXY = false) {
             SimObjPhysics targetReceptacle = null;
 
             RaycastHit hit = new RaycastHit();
 
-            if(!screenToWorldTarget(
-                x: x, 
-                y: y, 
-                target: ref targetReceptacle, 
+            if (!screenToWorldTarget(
+                x: x,
+                y: y,
+                target: ref targetReceptacle,
                 forceAction: forceAction,
-                hit: out hit))
-            {
+                hit: out hit)) {
                 //error message is set insice screenToWorldTarget
                 actionFinished(false, errorMessage);
                 return;
             }
 
             placeHeldObject(
-                targetReceptacle: targetReceptacle, 
-                forceAction: forceAction, 
-                placeStationary: placeStationary, 
-                randomSeed: randomSeed, 
+                targetReceptacle: targetReceptacle,
+                forceAction: forceAction,
+                placeStationary: placeStationary,
+                randomSeed: randomSeed,
                 maxDistance: maxDistance,
                 putNearXY: putNearXY,
                 hit: hit);
@@ -4214,8 +4213,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         //overload of PlaceHeldObject that takes a target receptacle by objectId instead of screenspace coordinate raycast
-        public void PlaceHeldObject(string objectId, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0) 
-        {
+        public void PlaceHeldObject(string objectId, float maxDistance, bool forceAction = false, bool placeStationary = true, int randomSeed = 0) {
             //get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
 
@@ -4229,38 +4227,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
 
             placeHeldObject(
-                targetReceptacle: targetReceptacle, 
-                forceAction: forceAction, 
-                placeStationary: placeStationary, 
-                randomSeed: randomSeed, 
+                targetReceptacle: targetReceptacle,
+                forceAction: forceAction,
+                placeStationary: placeStationary,
+                randomSeed: randomSeed,
                 maxDistance: maxDistance);
 
         }
 
-        private void placeHeldObject(            
-            SimObjPhysics targetReceptacle, 
-            bool forceAction, 
-            bool placeStationary, 
-            int randomSeed, 
+        private void placeHeldObject(
+            SimObjPhysics targetReceptacle,
+            bool forceAction,
+            bool placeStationary,
+            int randomSeed,
             float maxDistance) {
 
             RaycastHit hit = new RaycastHit();
 
             placeHeldObject(
-                targetReceptacle: targetReceptacle, 
-                forceAction: forceAction, 
-                placeStationary: placeStationary, 
-                randomSeed: randomSeed, 
+                targetReceptacle: targetReceptacle,
+                forceAction: forceAction,
+                placeStationary: placeStationary,
+                randomSeed: randomSeed,
                 maxDistance: maxDistance,
                 putNearXY: false,
                 hit: hit);
-            }
+        }
 
         private void placeHeldObject(
-            SimObjPhysics targetReceptacle, 
-            bool forceAction, 
-            bool placeStationary, 
-            int randomSeed, 
+            SimObjPhysics targetReceptacle,
+            bool forceAction,
+            bool placeStationary,
+            int randomSeed,
             float maxDistance,
             bool putNearXY,
             RaycastHit hit) {
@@ -4386,7 +4384,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //position if the agent is crouching or standing
                     Vector3 tmp = new Vector3(transform.position.x, sp.Point.y, transform.position.z);
                     if (Vector3.Distance(sp.Point, tmp) < maxDistance) {
-                        float dist = 0; 
+                        float dist = 0;
                         if (putNearXY) {
                             dist = Vector3.Distance(sp.Point, hit.point);
                         }
@@ -4395,14 +4393,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //actually sort by distance closest to raycast hit if needed here, otherwise leave random
-                if(putNearXY) {
+                if (putNearXY) {
                     distSpawnPoints.Sort((x, y) => (x.Value.CompareTo(y.Value)));
                 } else {
                     distSpawnPoints.Shuffle_(randomSeed);
                 }
 
                 spawnPoints = new List<ReceptacleSpawnPoint>();  // populate a new spawnPoints list with sorted keys
-                foreach(KeyValuePair<ReceptacleSpawnPoint, float> pair in distSpawnPoints) {
+                foreach (KeyValuePair<ReceptacleSpawnPoint, float> pair in distSpawnPoints) {
                     spawnPoints.Add(pair.Key);
                 }
             }
