@@ -24,7 +24,7 @@ public class coffeemachine : MonoBehaviour {
             target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
             Fill f = target.GetComponent<Fill>();
 
-            //if not already toasted, toast it!
+            // if not already toasted, toast it!
             if (!f.IsFilled()) {
                 f.FillObject("coffee");
             }

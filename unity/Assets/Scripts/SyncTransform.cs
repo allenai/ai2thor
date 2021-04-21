@@ -11,7 +11,7 @@ public class SyncTransform : MonoBehaviour {
     [SerializeField]
     GameObject ThingIamTracking = null;
 
-    //used to stop syncing the upper body when the ToggleMapView function is called
+    // used to stop syncing the upper body when the ToggleMapView function is called
     public bool StopSyncingForASecond = false;
 
 

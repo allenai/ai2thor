@@ -6,7 +6,7 @@ using System.Collections;
 public class Bed : MonoBehaviour {
 
     public SimObj ParentObj;
-    //public GameObject FittedSheet;
+    // public GameObject FittedSheet;
     public GameObject TidyBlanket;
     public GameObject MessyBlanket;
     [Range(0, 2)]
@@ -35,28 +35,28 @@ public class Bed : MonoBehaviour {
             state = ParentObj.Animator.GetInteger("AnimState1");
         }
 
-        //0 - messy, no sheet
-        //1 - clean, no sheet
-        //2 - clean, sheet
+        // 0 - messy, no sheet
+        // 1 - clean, no sheet
+        // 2 - clean, sheet
 
         switch (state) {
             case 0:
             default:
                 MessyBlanket.SetActive(true);
                 TidyBlanket.SetActive(false);
-                //FittedSheet.SetActive (false);
+                // FittedSheet.SetActive (false);
                 break;
 
             case 1:
                 MessyBlanket.SetActive(false);
                 TidyBlanket.SetActive(true);
-                //FittedSheet.SetActive (false);
+                // FittedSheet.SetActive (false);
                 break;
 
             case 2:
                 MessyBlanket.SetActive(false);
                 TidyBlanket.SetActive(true);
-                //FittedSheet.SetActive (true);
+                // FittedSheet.SetActive (true);
                 break;
         }
     }

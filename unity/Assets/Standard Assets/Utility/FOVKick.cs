@@ -66,7 +66,7 @@ namespace UnityStandardAssets.Utility
                 t -= Time.deltaTime;
                 yield return new WaitForEndOfFrame();
             }
-            //make sure that fov returns to the original size
+            // make sure that fov returns to the original size
             Camera.fieldOfView = originalFov;
         }
     }

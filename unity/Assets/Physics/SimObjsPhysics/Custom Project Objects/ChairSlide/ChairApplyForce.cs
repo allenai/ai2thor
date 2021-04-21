@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//DO NOT USE THIS FOR REAL: This script made for demo reel purposes
+// DO NOT USE THIS FOR REAL: This script made for demo reel purposes
 public class ChairApplyForce : MonoBehaviour 
 {
 	public float Force = 10f;

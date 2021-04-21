@@ -16,7 +16,7 @@
 //     {
 //         int totalInstanceCount = 0;
 
-//         //keep track of which types appear in which room category, and a count of each
+//         // keep track of which types appear in which room category, and a count of each
 //         Dictionary<SimObjType, int> kitchenCount = new Dictionary<SimObjType, int>();
 //         Dictionary<SimObjType, int> livingRoomCount = new Dictionary<SimObjType, int>();
 //         Dictionary<SimObjType, int> bedroomCount = new Dictionary<SimObjType, int>();
@@ -25,18 +25,18 @@
 
 //         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
 //         {
-//             //Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
+//             // Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
 //             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
 
-//             //We'll need to expand this if objects ever have children objects of their own (ex: fork inside drawer)
+//             // We'll need to expand this if objects ever have children objects of their own (ex: fork inside drawer)
 //             var simObjects = FindObjectsOfType<SimObjPhysics>();
 
-//             //for every child object in "Objects" - simObjects
+//             // for every child object in "Objects" - simObjects
 //             totalInstanceCount = totalInstanceCount + simObjects.Length;
 
 //             Dictionary<SimObjType, int> whichOne = new Dictionary<SimObjType, int>();
 
-//             //check which scene category we are in since they are listed in the Build settings in order...
+//             // check which scene category we are in since they are listed in the Build settings in order...
 //             if(i <= 29)
 //             {
 //                 whichOne = kitchenCount;
@@ -60,8 +60,8 @@
 //             foreach (SimObjPhysics currentSimObject in simObjects)
 //             {
 
-//                 //if the child object's type is not in the dictionary, add to the ditionary and give count of 1
-//                 //if it is in the dictionary, increment the count
+//                 // if the child object's type is not in the dictionary, add to the ditionary and give count of 1
+//                 // if it is in the dictionary, increment the count
 //                 if (whichOne.ContainsKey(currentSimObject.Type))
 //                 {
 //                     whichOne[currentSimObject.Type]++;
@@ -78,12 +78,12 @@
 
 //         // if(File.Exists("Assets/DebugTextFiles/" + file))
 //         // {
-//         //     //return;
+//         //     // return;
 //         //     File.Open("Assets/DebugTextFiles/" + file, FileMode.Create);
 //         // }
 
 //         var create = File.CreateText("Assets/DebugTextFiles/" + file);
-//         //write stuff
+//         // write stuff
 //         create.WriteLine("Kitchens-----------------------------------" + "\n");
 //         foreach (KeyValuePair<SimObjType, int> typeSet in kitchenCount)
 //         {
@@ -124,7 +124,7 @@
 
 //         foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions)
 //         {
-//             //create.WriteLine("/////////////////////////////");
+//             // create.WriteLine("/////////////////////////////");
 //             create.WriteLine("Receptacle Restrictions for: " + kvp.Key.ToString());
 //             foreach(SimObjType sop in kvp.Value)
 //             {

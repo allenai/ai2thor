@@ -6,7 +6,7 @@ Properties { }
 
 SubShader {
 Pass {
-	//ZTest LEqual
+	// ZTest LEqual
 	ZTest Always // lame depth test
 	ZWrite Off // lame depth test
 

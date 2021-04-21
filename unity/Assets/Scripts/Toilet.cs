@@ -35,9 +35,9 @@ public class Toilet : MonoBehaviour {
             state = ParentSimObj.Animator.GetInteger("AnimState1");
         }
 
-        //0 - closed
-        //1 - open, dirty
-        //2 - open, clean
+        // 0 - closed
+        // 1 - open, dirty
+        // 2 - open, clean
 
         switch (state) {
             case 0:

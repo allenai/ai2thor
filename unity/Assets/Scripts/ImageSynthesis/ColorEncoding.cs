@@ -26,13 +26,13 @@ public class ColorEncoding {
             (SparsifyBits((byte)(uid >> 16), 3) << 2) |
             (SparsifyBits((byte)(uid >> 8), 3) << 1) |
              SparsifyBits((byte)(uid), 3);
-        //Debug.Log(uid + " >>> " + System.Convert.ToString(sid, 2).PadLeft(24, '0'));
+        // Debug.Log(uid + " >>> " + System.Convert.ToString(sid, 2).PadLeft(24, '0'));
 
         var r = (byte)(sid >> 8);
         var g = (byte)(sid >> 16);
         var b = (byte)(sid);
 
-        //Debug.Log(r + " " + g + " " + b);
+        // Debug.Log(r + " " + g + " " + b);
         return new Color32(r, g, b, 255);
     }
 

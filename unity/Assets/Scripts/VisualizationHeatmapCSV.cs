@@ -35,7 +35,7 @@ public class VisualizationHeatmapCSV : MonoBehaviour {
             Vector3 pos = new Vector3(xvalues[i], 1, zvalues[i]);
             Vector3 rot = new Vector3(0, rotationvalues[i], 0);
 
-            //just spawn the Heavy prefab for now since it is the most visible
+            // just spawn the Heavy prefab for now since it is the most visible
             Instantiate(prefabHeavy, pos, Quaternion.Euler(rot));
         }
     }

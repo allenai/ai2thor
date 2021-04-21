@@ -66,7 +66,7 @@ Shader "Hidden/EdgeDetect" {
 		half3 diff = p1 * 2 - p2 - p3;
 		half len = dot(diff, diff);
 		len = step(len, _Threshold);
-		//if(len >= _Threshold)
+		// if(len >= _Threshold)
 		//	original.rgb = 0;
 
 		return len * lerp(original, _BgColor, _BgFade);			

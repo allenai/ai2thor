@@ -16,11 +16,11 @@ public class CrackedCameraManager : MonoBehaviour {
 
         RectTransform crackRect = whichCrack.GetComponent<RectTransform>();
 
-        //random position within the bounds of the canvas's current width and height
+        // random position within the bounds of the canvas's current width and height
         crackRect.anchoredPosition = new Vector2(xPos, yPos);
-        //random scale from 2 to 3
+        // random scale from 2 to 3
         crackRect.localScale = new Vector3(Random.Range(2f, 4f), Random.Range(2f, 4f), 0);
-        //random rotation
+        // random rotation
         crackRect.localRotation = Quaternion.Euler(0, 0, Random.Range(0, 360f));
 
         whichCrack.SetActive(true);

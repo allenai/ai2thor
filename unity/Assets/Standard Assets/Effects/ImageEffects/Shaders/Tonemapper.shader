@@ -125,17 +125,17 @@ Shader "Hidden/Tonemapper" {
 		float avgLum = tex2D(_SmallTex, i.uv).x;
 		float4 color = tex2D (_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv, _MainTex_ST));
 		
-		float cieLum = max(0.000001, Luminance(color.rgb)); //ToCIE(color.rgb);
+		float cieLum = max(0.000001, Luminance(color.rgb)); // ToCIE(color.rgb);
 		
 		float lumScaled = cieLum * _HdrParams.z / (0.001 + avgLum.x);
 		
 		lumScaled = (lumScaled * (1.0f + lumScaled / (_HdrParams.w)))/(1.0f + lumScaled);
 		
-		//cie.r = lumScaled; 
+		// cie.r = lumScaled; 
 		
 		color.rgb = color.rgb * (lumScaled / cieLum);
 		
-		//color.rgb = FromCIE(cie);		
+		// color.rgb = FromCIE(cie);		
 		return color;
 	}
 	
@@ -144,17 +144,17 @@ Shader "Hidden/Tonemapper" {
 		float2 avgLum = tex2D(_SmallTex, i.uv).xy;
 		float4 color = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv, _MainTex_ST));
 		
-		float cieLum = max(0.000001, Luminance(color.rgb)); //ToCIE(color.rgb);
+		float cieLum = max(0.000001, Luminance(color.rgb)); // ToCIE(color.rgb);
 		
 		float lumScaled = cieLum * _HdrParams.z / (0.001 + avgLum.x);
 		
 		lumScaled = (lumScaled * (1.0f + lumScaled / (avgLum.y*avgLum.y)))/(1.0f + lumScaled);
 		
-		//cie.r = lumScaled; 
+		// cie.r = lumScaled; 
 		
 		color.rgb = color.rgb * (lumScaled / cieLum);
 		
-		//color.rgb = FromCIE(cie);
+		// color.rgb = FromCIE(cie);
 		return color;
 	}
 	

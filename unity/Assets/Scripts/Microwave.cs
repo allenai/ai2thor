@@ -36,9 +36,9 @@ public class Microwave : MonoBehaviour {
             }
 
             int animState = SimObjParent.Animator.GetInteger("AnimState1");
-            //1 - Closed, Off
-            //2 - Open, Off
-            //3 - Closed, On
+            // 1 - Closed, Off
+            // 2 - Open, Off
+            // 3 - Closed, On
             Material[] sharedMats = GlassRenderer.sharedMaterials;
             bool waitForDoorToClose = false;
             switch (animState) {

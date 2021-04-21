@@ -1,5 +1,5 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-//Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
+// Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
 using UnityEngine;
 using Random = UnityEngine.Random;
 using System;
@@ -15,7 +15,7 @@ using Newtonsoft.Json.Linq;
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class DebugFPSAgentController : MonoBehaviour {
-        //for use with mouse/keyboard input
+        // for use with mouse/keyboard input
         [SerializeField] protected bool m_IsWalking;
         [SerializeField] protected float m_WalkSpeed;
         [SerializeField] protected float m_RunSpeed;
@@ -50,7 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera = Camera.main;
             m_MouseLook.Init(transform, m_Camera.transform);
 
-            //find debug canvas related objects 
+            // find debug canvas related objects 
             Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
@@ -59,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, enableHighlightShader, true, MaxThrowForce, MaxChargeThrowSeconds);
 
-            //if this component is enabled, turn on the targeting reticle and target text
+            // if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled) {
                 Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 Cursor.visible = false;
@@ -78,7 +78,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Vector3 ScreenPointMoveHand(float yOffset) {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            //shoot a ray out based on mouse position
+            // shoot a ray out based on mouse position
             Physics.Raycast(ray, out hit);
             return hit.point + new Vector3(0, yOffset, 0);
         }
@@ -154,13 +154,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            //swap between text input and not
+            // swap between text input and not
 #if !UNITY_WEBGL
             if (
                 Input.GetKeyDown(KeyCode.BackQuote)
                 || Input.GetKeyDown(KeyCode.Escape)
             ) {
-                //Switch to Text Mode
+                // Switch to Text Mode
                 if (FPSEnabled) {
                     DisableMouseControl();
                     return;
@@ -194,11 +194,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             DebugKeyboardControls();
 
             ///////////////////////////////////////////////////////////////////////////
-            //we are not in focus mode, so use WASD and mouse to move around
+            // we are not in focus mode, so use WASD and mouse to move around
             if (FPSEnabled) {
                 FPSInput();
                 if (Cursor.visible == false) {
-                    //accept input to update view based on mouse input
+                    // accept input to update view based on mouse input
                     MouseRotateView();
                 }
             }
@@ -229,7 +229,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
 
-            //bool waswalking = m_IsWalking;
+            // bool waswalking = m_IsWalking;
 
 #if !MOBILE_INPUT
             // On standalone builds, walk/run speed is modified by a key press.
@@ -256,7 +256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private void FPSInput() {
-            //take WASD input and do magic, turning it into movement!
+            // take WASD input and do magic, turning it into movement!
             float speed;
             GetInput(out speed);
             // always move along the camera forward as it is the direction that it being aimed at
@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.deltaTime;
 
-            //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
+            // added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
             if (m_CharacterController.enabled == true)
                 m_CharacterController.Move(m_MoveDir * Time.deltaTime);
         }

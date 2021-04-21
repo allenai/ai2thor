@@ -13,7 +13,7 @@ public class NavMeshSetup : MonoBehaviour {
     public Transform goal;
     private UnityEngine.AI.NavMeshAgent navMeshAgent;
     private Transform hitPos;
-    //private PhysicsRemoteFPSAgentController PhysicsController = null;
+    // private PhysicsRemoteFPSAgentController PhysicsController = null;
 
     void Start() {
 
@@ -40,7 +40,7 @@ public class NavMeshSetup : MonoBehaviour {
                 // create new object then destroy it
                 GameObject copyObj = Instantiate(obj) as GameObject;
                 copyObj.transform.parent = sceneParent.transform;
-                //stroyImmediate(copyObj);
+                // stroyImmediate(copyObj);
                 copyObj.name = copyObj.name.Replace("(Clone)", "");
             }
         }
@@ -102,14 +102,14 @@ public class NavMeshSetup : MonoBehaviour {
         // GetSceneNames(1, 30) + GetSceneNames(201, 230) + GetSceneNames(301, 330) + GetSceneNames(401, 430) + GetSceneNames(501, 530)
 
         var selection = new List<string>();
-        //selection.AddRange(testSceneNames);
+        // selection.AddRange(testSceneNames);
         selection.AddRange(GetSceneNames(1, 30));
         selection.AddRange(GetSceneNames(201, 230));
         selection.AddRange(GetSceneNames(301, 330));
         selection.AddRange(GetSceneNames(401, 430));
         selection.AddRange(GetSceneNames(501, 530));
 
-        //selection.Add("Assets/Scenes/FloorPlan227_physics.unity");
+        // selection.Add("Assets/Scenes/FloorPlan227_physics.unity");
 
         // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
         var exclude = new List<string>() {
@@ -164,11 +164,11 @@ public class NavMeshSetup : MonoBehaviour {
         // }
 
         var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
-        //var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
+        // var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
         var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
         navmeshAgent.enabled = true;
         // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
-        //var buildSettings = 
+        // var buildSettings = 
         new NavMeshBuildSettings() {
             agentTypeID = navmeshAgent.agentTypeID,
             agentRadius = 0.2f,

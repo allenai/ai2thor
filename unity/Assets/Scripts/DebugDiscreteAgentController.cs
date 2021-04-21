@@ -40,7 +40,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         void Update() {
-            //use these for the Breakable Window demo video
+            // use these for the Breakable Window demo video
             // if(Input.GetKeyDown(KeyCode.P))
             // {
             //    // print("pickup");
@@ -72,7 +72,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     PhysicsController.ProcessControlCommand(action);
             // }
 
-            //if we press enter, select the input field
+            // if we press enter, select the input field
             if (PhysicsController.ReadyForCommand) {
                 if (Input.GetKeyDown(KeyCode.Return)) {
                     UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
@@ -205,7 +205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //         ServerAction action = new ServerAction();
                     //         action.action = "LaunchDroneObject";
                     //         action.moveMagnitude = 200f;
-                    //         //action. = new Vector3(0, 1, -1);
+                    //         // action. = new Vector3(0, 1, -1);
                     //         action.x = 0;
                     //         action.y = 1;
                     //         action.z = -1;

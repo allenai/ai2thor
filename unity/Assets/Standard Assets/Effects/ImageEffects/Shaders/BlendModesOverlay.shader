@@ -61,8 +61,8 @@ Shader "Hidden/BlendModesOverlay" {
 		half4 color = (tex2D(_MainTex, i.uv[1]));//* 255.0;
 
 		// overlay blend mode
-		//color.rgb = (color.rgb/255.0) * (color.rgb + ((2*m.rgb)/( 255.0 )) * (255.0-color.rgb));
-		//color.rgb /= 255.0; 
+		// color.rgb = (color.rgb/255.0) * (color.rgb + ((2*m.rgb)/( 255.0 )) * (255.0-color.rgb));
+		// color.rgb /= 255.0; 
 		 
 		/*
 if (Target > ½) R = 1 - (1-2x(Target-½)) x (1-Blend)

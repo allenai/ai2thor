@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-//NOTE: This fails to compile because it is calling some Setup scripts that are currently EDITOR define only
-//for now, i'm also wrapping this script so it can only be used in editor until we have more time to investigate
+// NOTE: This fails to compile because it is calling some Setup scripts that are currently EDITOR define only
+// for now, i'm also wrapping this script so it can only be used in editor until we have more time to investigate
 #if UNITY_EDITOR
 
 [ExecuteInEditMode]
@@ -41,7 +41,7 @@ public class Screen_Adjust_Script : MonoBehaviour
     {   
         if (spacing != spacingPrev || topShift != topShiftPrev || bottomShift != bottomShiftPrev || widthShift != widthShiftPrev)
         {
-            //Zero out rotation for entirety of operation, for simplicity
+            // Zero out rotation for entirety of operation, for simplicity
             Quaternion rotationSaver = transform.rotation;
             transform.rotation = Quaternion.identity;
 
@@ -61,11 +61,11 @@ public class Screen_Adjust_Script : MonoBehaviour
             {
                 if (topShift != topShiftPrev)
                 {
-                    //Adjust joints
+                    // Adjust joints
                     leftTopJoint.position += leftTopJoint.forward * (topShift - topShiftPrev);
                     rightTopJoint.position += rightTopJoint.forward * (topShift - topShiftPrev);
 
-                    //Adjust colliders
+                    // Adjust colliders
                     float colHeight = Vector3.Distance(leftBaseJoint.position, leftTopJoint.position);
                     BoxCollider colL = screenObject.Find("Colliders").Find("Col_l2").GetComponent<BoxCollider>();
                     BoxCollider colR = screenObject.Find("Colliders").Find("Col_r2").GetComponent<BoxCollider>();
@@ -81,12 +81,12 @@ public class Screen_Adjust_Script : MonoBehaviour
 
                 if (bottomShift != bottomShiftPrev)
                 {
-                    //Adjust joints
+                    // Adjust joints
                     leftBottomJoint.position += leftBottomJoint.forward * (bottomShift - bottomShiftPrev);
                     rightBottomJoint.position += rightBottomJoint.forward * (bottomShift - bottomShiftPrev);
                 }
 
-                //Adjust sheet collider
+                // Adjust sheet collider
                 BoxCollider colSheet = sheetObject.Find("Colliders").Find("Col_s").transform.GetComponent<BoxCollider>();
 
                 Bounds newBounds = newSheetBounds(colSheet, leftTopJoint, rightBottomJoint);
@@ -98,11 +98,11 @@ public class Screen_Adjust_Script : MonoBehaviour
 
             if (widthShift != widthShiftPrev)
             {
-                //Adjust joints
+                // Adjust joints
                 leftBaseJoint.position += leftBaseJoint.right * (widthShift - widthShiftPrev);
                 rightBaseJoint.position += -rightBaseJoint.right * (widthShift - widthShiftPrev);
 
-                //Adjust left pillar collider
+                // Adjust left pillar collider
                 Transform[] colLeft = new Transform[2];
                 colLeft[0] = screenObject.Find("Colliders").Find("Col_l1").transform;
                 colLeft[1] = screenObject.Find("Colliders").Find("Col_l2").transform;
@@ -112,7 +112,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                     transform.position += transform.right * (widthShift - widthShiftPrev);
                 }
 
-                //Adjust right pillar collider
+                // Adjust right pillar collider
                 Transform[] colRight = new Transform[2];
                 colRight[0] = screenObject.Find("Colliders").Find("Col_r1").transform;
                 colRight[1] = screenObject.Find("Colliders").Find("Col_r2").transform;
@@ -122,11 +122,11 @@ public class Screen_Adjust_Script : MonoBehaviour
                     transform.position -= transform.right * (widthShift - widthShiftPrev);
                 }
 
-                //Adjust sheet collider
+                // Adjust sheet collider
                 Transform colCenter = sheetObject.Find("Colliders").Find("Col_s").transform;
                 colCenter.GetComponent<BoxCollider>().size += transform.right * 2 * (widthShift - widthShiftPrev);
 
-                //Adjust left pillar base-vispoints
+                // Adjust left pillar base-vispoints
                 Transform[] visPointsLeft = new Transform[2];
                 visPointsLeft[0] = screenObject.Find("VisibilityPoints").Find("vPoint_stable_1").transform;
                 visPointsLeft[1] = screenObject.Find("VisibilityPoints").Find("vPoint_stable_2").transform;
@@ -136,7 +136,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                     transform.position += transform.right * (widthShift - widthShiftPrev);
                 }
 
-                //Adjust right pillar base-vispoints
+                // Adjust right pillar base-vispoints
                 Transform[] visPointsRight = new Transform[2];
                 visPointsRight[0] = screenObject.Find("VisibilityPoints").Find("vPoint_stable_3").transform;
                 visPointsRight[1] = screenObject.Find("VisibilityPoints").Find("vPoint_stable_4").transform;
@@ -147,7 +147,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                 }
             }
 
-            //Define vispoint adjustment inputs
+            // Define vispoint adjustment inputs
             float pillarHeight = Vector3.Distance(rightBaseJoint.position, rightTopJoint.position);
             float sheetWidth = Vector3.Distance(rightBottomJoint.position, leftBottomJoint.position) - pillarToSheetVisPointBuffer * 2;
             float sheetHeight = Vector3.Distance(rightBottomJoint.position, rightTopJoint.position);
@@ -155,17 +155,17 @@ public class Screen_Adjust_Script : MonoBehaviour
             int sheetWidthVisCount = (int)Mathf.Floor(2 + (sheetWidth * 3));
             int sheetHeightVisCount = (int)Mathf.Floor(2 + (sheetHeight * 3));
 
-            //Use first existing vispoint as reference
+            // Use first existing vispoint as reference
             GameObject visPointObject = screenObject.Find("VisibilityPoints").GetChild(0).gameObject;
 
-            //Delete previous dynamic pillar vispoints
+            // Delete previous dynamic pillar vispoints
             int prevVisPoints = screenObject.Find("VisibilityPoints").childCount;
             for (int i = stableVisPoints; i < prevVisPoints; i++)
             {
                 DestroyImmediate(screenObject.Find("VisibilityPoints").GetChild(stableVisPoints).gameObject);
             }
 
-            //Define pillar vispoints array
+            // Define pillar vispoints array
             Vector3[] pillarVisPoints = new Vector3[2 * (sheetHeightVisCount - 1)];
             for (int i = 0; i < sheetHeightVisCount - 1; i++)
             {
@@ -173,7 +173,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                 pillarVisPoints[i + sheetHeightVisCount - 1] = leftBaseJoint.TransformPoint(leftBottomJoint.TransformDirection(0, 0, (i + 1) * pillarHeight / (sheetHeightVisCount - 1)));
             }
 
-            //Generate pillar vispoints
+            // Generate pillar vispoints
             for (int i = 0; i < pillarVisPoints.Length; i++)
             {
                 GameObject newVisPoint = Instantiate(visPointObject, screenObject.Find("VisibilityPoints"));
@@ -181,18 +181,18 @@ public class Screen_Adjust_Script : MonoBehaviour
                 newVisPoint.transform.position = pillarVisPoints[i];
             }
 
-            //Define sheet vispoints array
+            // Define sheet vispoints array
             Vector3[] sheetVisPoints = new Vector3[sheetWidthVisCount * sheetHeightVisCount];
             for (int i = 0; i < sheetHeightVisCount; i++)
             {
                 for (int j = 0; j < sheetWidthVisCount; j++)
                 {
                     sheetVisPoints[i * sheetWidthVisCount + j] = rightBottomJoint.TransformPoint(new Vector3(pillarToSheetVisPointBuffer + (sheetWidth / (sheetWidthVisCount - 1)) * j, 0, 0.05f * sheetHeight + (0.9f * sheetHeight / (sheetHeightVisCount - 1)) * i));
-                    //Debug.Log("Vispoint " + (i * sheetWidthVisCount + j + 1) + " has coordinates " + sheetVisPoints[i * sheetWidthVisCount + j]);
+                    // Debug.Log("Vispoint " + (i * sheetWidthVisCount + j + 1) + " has coordinates " + sheetVisPoints[i * sheetWidthVisCount + j]);
                 }
             }
            
-            //Delete any excess vispoints for sheet
+            // Delete any excess vispoints for sheet
             int prevSheetVisPoints = sheetObject.Find("VisibilityPoints").childCount;
             if (sheetVisPoints.Length < prevSheetVisPoints)
             {
@@ -202,10 +202,10 @@ public class Screen_Adjust_Script : MonoBehaviour
                 }
             }
 
-            //Set up new vispoint array for sheet
+            // Set up new vispoint array for sheet
             for (int i = 0; i < sheetVisPoints.Length; i++)
             {
-                //Repurpose existing vispoints
+                // Repurpose existing vispoints
                 if (i < sheetObject.Find("VisibilityPoints").childCount)
                 {
 
@@ -213,7 +213,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                     sheetObject.Find("VisibilityPoints").transform.GetChild(i).transform.position = sheetVisPoints[i];
                 }
 
-                //Generate more vispoints if needed
+                // Generate more vispoints if needed
                 else
                 {
                     GameObject newVisPoint = Instantiate(visPointObject, sheetObject.Find("VisibilityPoints"));
@@ -222,7 +222,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                 }
             }
 
-            //Send snapshot of skinned screen to rendered versions
+            // Send snapshot of skinned screen to rendered versions
             Mesh screenSnapshot = new Mesh();
             screenObject.Find("mesh").GetComponent<SkinnedMeshRenderer>().BakeMesh(screenSnapshot);
             for (int i = 0; i < transform.Find("mesh").childCount; i++)
@@ -231,25 +231,25 @@ public class Screen_Adjust_Script : MonoBehaviour
                 transform.Find("mesh").GetChild(i).GetComponent<MeshFilter>().mesh = screenSnapshot;
             }
 
-            //Create list of childGameObjects
+            // Create list of childGameObjects
             List<Transform> childGameObjects = new List<Transform>();
 
-            //Send snapshot of skinned sheet to rendered versions
+            // Send snapshot of skinned sheet to rendered versions
             Mesh sheetSnapshot = new Mesh();
             sheetObject.Find("mesh").GetComponent<SkinnedMeshRenderer>().BakeMesh(sheetSnapshot);
             for (int i = 0; i < transform.childCount; i++)
             {
-                //If it's a sub-gameobject...
+                // If it's a sub-gameobject...
                 if (transform.GetChild(i).GetComponent<SimObjPhysics>() != null)
                 {
                     transform.GetChild(i).Find("mesh").GetComponent<MeshFilter>().mesh = sheetSnapshot;
 
-                    //Add to the list in the meantime
+                    // Add to the list in the meantime
                     childGameObjects.Add(transform.GetChild(i));
                 }
             }
 
-            //Set up duplicate colliders, vispoints, and sheet gameobjects
+            // Set up duplicate colliders, vispoints, and sheet gameobjects
 
             deleteCollidersAndVisPoints(transform);
 
@@ -287,7 +287,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                         DestroyImmediate(currentMetadataGroup.gameObject);
                     }
 
-                    //For sub-SimObjects (move VisPoints and Colliders part of metadata from the first to the second...)
+                    // For sub-SimObjects (move VisPoints and Colliders part of metadata from the first to the second...)
                     else
                     {
                         deleteCollidersAndVisPoints(childGameObjects[currentchildGameObject]);
@@ -297,9 +297,9 @@ public class Screen_Adjust_Script : MonoBehaviour
                         {
 
                             currentSubObjectMetadataGroup = currentMetadataGroup.GetChild(0);
-                            //If it's a collider group...
+                            // If it's a collider group...
 
-                            //Debug.Log(currentMetadataGroup.GetChild(0).name);
+                            // Debug.Log(currentMetadataGroup.GetChild(0).name);
                             if (currentSubObjectMetadataGroup.name == "Colliders")
                             {
 
@@ -307,45 +307,45 @@ public class Screen_Adjust_Script : MonoBehaviour
                                 while (currentSubObjectMetadataGroup.childCount != 0)
                                 {
                                     Debug.Log("Moving " + currentSubObjectMetadataGroup.GetChild(0) + " to proper spot, which is " + childGameObjects[currentchildGameObject].Find("Colliders"));
-                                    //DestroyImmediate(currentSubObjectMetadataGroup.GetChild(0).gameObject);
+                                    // DestroyImmediate(currentSubObjectMetadataGroup.GetChild(0).gameObject);
                                     currentSubObjectMetadataGroup.GetChild(0).SetParent(childGameObjects[currentchildGameObject].Find("Colliders"));
 
                                 }
                             }
 
-                            //If it's a visiblity point group...
+                            // If it's a visiblity point group...
                             else if (currentSubObjectMetadataGroup.name == "VisibilityPoints")
                             {
                                 while (currentSubObjectMetadataGroup.childCount != 0)
                                 {
-                                    //Debug.Log("Moving " + currentSubObjectMetadataGroup.GetChild(0) + " to proper spot.");
-                                    //DestroyImmediate(currentSubObjectMetadataGroup.GetChild(0).gameObject);
+                                    // Debug.Log("Moving " + currentSubObjectMetadataGroup.GetChild(0) + " to proper spot.");
+                                    // DestroyImmediate(currentSubObjectMetadataGroup.GetChild(0).gameObject);
                                     currentSubObjectMetadataGroup.GetChild(0).SetParent(childGameObjects[currentchildGameObject].Find("VisibilityPoints"));
                                 }
                             }
 
-                            //Debug.Log("Now deleting " + currentMetadataGroup.GetChild(0));
+                            // Debug.Log("Now deleting " + currentMetadataGroup.GetChild(0));
                             DestroyImmediate(currentSubObjectMetadataGroup.gameObject);
                         }
 
-                        //Regardless, destroy it at the end
-                        //Debug.Log("Now deleting " + currentMetadataGroup);
+                        // Regardless, destroy it at the end
+                        // Debug.Log("Now deleting " + currentMetadataGroup);
                         DestroyImmediate(currentMetadataGroup.gameObject);
                         currentchildGameObject++;
                     }
                 }
             }
 
-            //Move subobjects to their correct places
+            // Move subobjects to their correct places
             for (int i = 0; i < childGameObjects.Count; i++)
             {
                 childGameObjects[i].localPosition = new Vector3(0, 0, spacing * (i / (transform.Find("mesh").childCount - 1) - 0.5f));
             }
 
 
-            ///Run SimObjPhysics Setup
-            //screenObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
-            //sheetObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
+            /// Run SimObjPhysics Setup
+            // screenObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
+            // sheetObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
             transform.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
 
             foreach (Transform childGameObject in childGameObjects)
@@ -353,7 +353,7 @@ public class Screen_Adjust_Script : MonoBehaviour
                 childGameObject.GetComponent<SimObjPhysics>().ContextSetUpSimObjPhysics();
             }
             
-            //Restore initial rotation
+            // Restore initial rotation
             transform.rotation = rotationSaver;
 
             spacingPrev = spacing;
@@ -376,13 +376,13 @@ public class Screen_Adjust_Script : MonoBehaviour
 
     void deleteCollidersAndVisPoints(Transform gameObject)
     {
-        //Delete existing colliders
+        // Delete existing colliders
         while (gameObject.Find("Colliders").childCount != 0)
         {
             GameObject.DestroyImmediate(gameObject.Find("Colliders").GetChild(0).gameObject);
         }
 
-        //Delete existing visibility points
+        // Delete existing visibility points
         while (gameObject.Find("VisibilityPoints").childCount != 0)
         {
             GameObject.DestroyImmediate(gameObject.Find("VisibilityPoints").GetChild(0).gameObject);
@@ -391,9 +391,9 @@ public class Screen_Adjust_Script : MonoBehaviour
         return;
     }
 
-    //p1 is left-top
-    //p2 is left-base
-    //Bounds newLeftBounds(BoxCollider collider, Transform p1, Transform p2)
+    // p1 is left-top
+    // p2 is left-base
+    // Bounds newLeftBounds(BoxCollider collider, Transform p1, Transform p2)
     //{
     //    Bounds newBounds = new Bounds();
 
@@ -404,9 +404,9 @@ public class Screen_Adjust_Script : MonoBehaviour
     //    return newBounds;
     //}
 
-    ////p1 is right-top
-    ////p2 is right-base
-    //Bounds newRightBounds(BoxCollider collider, Transform p1, Transform p2)
+    //// p1 is right-top
+    //// p2 is right-base
+    // Bounds newRightBounds(BoxCollider collider, Transform p1, Transform p2)
     //{
     //    Bounds newBounds = new Bounds();
 

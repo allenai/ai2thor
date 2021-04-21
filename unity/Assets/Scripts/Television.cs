@@ -14,9 +14,9 @@ public class Television : MonoBehaviour {
     public bool EditorOn = false;
     public bool EditorConnected = false;
 
-    //1 - Off
-    //2 - On, Unsynced
-    //3 - On, Synced
+    // 1 - Off
+    // 2 - On, Unsynced
+    // 3 - On, Synced
 
     public void Update() {
         if (ParentSimObj == null)

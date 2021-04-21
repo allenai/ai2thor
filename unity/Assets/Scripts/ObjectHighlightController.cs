@@ -1,5 +1,5 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-//Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
+// Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
 using UnityEngine;
 using Random = UnityEngine.Random;
 using System;
@@ -52,8 +52,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private PhysicsRemoteFPSAgentController PhysicsController;
         public bool ThrowEnabled;
 
-        //this was assigned but never used so uhhhhhh comment out for now Alvaro heeeelp
-        //private float throwSliderValue = 0.0f;
+        // this was assigned but never used so uhhhhhh comment out for now Alvaro heeeelp
+        // private float throwSliderValue = 0.0f;
         // Optimization
         private bool softHighlight = true;
 
@@ -155,7 +155,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            //simulate TouchThenApply for in-editor debugging stuff
+            // simulate TouchThenApply for in-editor debugging stuff
 #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftShift)) {
                 Dictionary<string, object> dothis = new Dictionary<string, object>();
@@ -313,7 +313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (DisplayTargetText && TargetText != null) {
-                //concatenate the name so just the object type is displayed, not the ugly list of letters/numbers (the unique string) after
+                // concatenate the name so just the object type is displayed, not the ugly list of letters/numbers (the unique string) after
                 this.TargetText.text = text.Split('_')[0];
             }
 

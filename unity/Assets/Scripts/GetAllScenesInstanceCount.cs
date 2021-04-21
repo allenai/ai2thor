@@ -11,9 +11,9 @@ using UnityEditor.SceneManagement;
 // [Serializable]
 // public class TotalSimObjectsInScene
 // {
-//     //count of total number of sim objects in this scene
+//     // count of total number of sim objects in this scene
 //     public int TotalSimObjCountInScene;
-//     //track the count of each object type that exists in this scene
+//     // track the count of each object type that exists in this scene
 //     public Dictionary<SimObjType, int> objectTypeCountInScene = new Dictionary<SimObjType, int>();
 // }
 
@@ -36,31 +36,31 @@ public class GetAllScenesInstanceCount : MonoBehaviour {
     // [MenuItem("SimObjectPhysics/Get All Scene Instances %j")]
     // private static void GetInstanceCount()
     // {
-    //     //keep track of total number of sim objects across all scenes
+    //     // keep track of total number of sim objects across all scenes
     //     int totalInstanceCount = 0;
-    //     //keep track of the count of each object type across all scenes
+    //     // keep track of the count of each object type across all scenes
     //     Dictionary<SimObjType, int> objectTypeCounts = new Dictionary<SimObjType, int>();
 
-    //     //Keep track of the total instance count and objectTypecount in individual scenes
+    //     // Keep track of the total instance count and objectTypecount in individual scenes
     //     Dictionary<String, TotalSimObjectsInScene> objectTypeCountsByScene = new Dictionary<String, TotalSimObjectsInScene>();
 
-    //     //Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
-    //     //for each scene in the build do these things
+    //     // Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
+    //     // for each scene in the build do these things
     //     for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
     //     {
     //         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
     //         var simObjects = FindObjectsOfType<SimObjPhysics>();
 
-    //         //for every child object in "Objects" - simObjects
+    //         // for every child object in "Objects" - simObjects
     //         totalInstanceCount = totalInstanceCount + simObjects.Length;
 
-    //         //keep track of the count of each object type in this specific
+    //         // keep track of the count of each object type in this specific
     //         Dictionary<SimObjType, int> sceneObjectTypeCounts = new Dictionary<SimObjType, int>();
 
     //         foreach (SimObjPhysics currentSimObject in simObjects)
     //         {
 
-    //             //keep track of total object type count
+    //             // keep track of total object type count
     //             if (objectTypeCounts.ContainsKey(currentSimObject.Type))
     //             {
     //                 objectTypeCounts[currentSimObject.Type]++;
@@ -71,7 +71,7 @@ public class GetAllScenesInstanceCount : MonoBehaviour {
     //                 objectTypeCounts.Add(currentSimObject.Type, 1);
     //             }
 
-    //             //keep track of object type count for this scene only
+    //             // keep track of object type count for this scene only
     //             if (sceneObjectTypeCounts.ContainsKey(currentSimObject.Type))
     //             {
     //                 sceneObjectTypeCounts[currentSimObject.Type]++;
@@ -95,13 +95,13 @@ public class GetAllScenesInstanceCount : MonoBehaviour {
 
     //     }
 
-    //     //this is how many types of objects appear across all scenes. This does not track the number of instances of each object type, only if the type itself exists.
+    //     // this is how many types of objects appear across all scenes. This does not track the number of instances of each object type, only if the type itself exists.
     //     print("Total number of OBJECT TYPES that appear across ALL scenes: " + objectTypeCounts.Count);
-    //     //this is the total number of sim objects across all scenes. this includes duplicate appearances of the same prefab instance.
+    //     // this is the total number of sim objects across all scenes. this includes duplicate appearances of the same prefab instance.
     //     print("The total number of OBJECT INSTANCES across ALL scenes: " + totalInstanceCount);
 
     //     print("The following is the number of INSTANCES of each OBJECT TYPE that appears in ALL scenes:");
-    //     //this tracks the total number of instances of each object type across all scenes
+    //     // this tracks the total number of instances of each object type across all scenes
     //     foreach (KeyValuePair<SimObjType, int> typeSet in objectTypeCounts)
     //     {
     //         print(typeSet.Key + " | Total Count of Instances Across ALL Scenes: " + typeSet.Value);
@@ -109,7 +109,7 @@ public class GetAllScenesInstanceCount : MonoBehaviour {
 
     //     print("/////////////////////////////////////////////////////////////////");
 
-    //     //output per scene
+    //     // output per scene
     //     foreach(KeyValuePair<String, TotalSimObjectsInScene> entry in objectTypeCountsByScene)
     //     {
     //         print("/////////////////////////////////////////////////////////////////");

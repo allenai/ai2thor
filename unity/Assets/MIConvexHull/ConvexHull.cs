@@ -261,7 +261,7 @@ namespace MIConvexHull
             ErrorMessage = errorMessage;
         }
 
-        //this could be null
+        // this could be null
         /// <summary>
         /// Gets the result.
         /// </summary>
@@ -299,7 +299,7 @@ namespace MIConvexHull
             ErrorMessage = errorMessage;
         }
 
-        //this could be null
+        // this could be null
         /// <summary>
         /// Gets the result.
         /// </summary>

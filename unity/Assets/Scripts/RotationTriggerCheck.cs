@@ -22,24 +22,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void OnTriggerStay(Collider other) {
-            //this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
-            //print(other.name);
+            // this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
+            // print(other.name);
             //(other.GetComponentInParent<SimObjPhysics>().name);
             if (ItemInHand != null) {
-                //if the item is a sim object....
+                // if the item is a sim object....
                 if (other.GetComponentInParent<SimObjPhysics>()) {
                     if (other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name) {
                         if (other.GetComponent<Collider>()) {
                             if (!other.GetComponent<Collider>().isTrigger)
                                 isColliding = true;
                         }
-                        //print(other.GetComponentInParent<SimObjPhysics>().name);
+                        // print(other.GetComponentInParent<SimObjPhysics>().name);
                     }
                 }
 
-                //ok so the collider we hit was not a sim obj
+                // ok so the collider we hit was not a sim obj
                 else {
-                    //print(this.name + " is hitting non sim "+ other.name);
+                    // print(this.name + " is hitting non sim "+ other.name);
                     isColliding = true;
                 }
 

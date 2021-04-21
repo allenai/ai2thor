@@ -13,7 +13,7 @@
       SubShader {
           Tags { "Queue"="Transparent" "Render"="Transparent" "IgnoreProjector"="True"}
 
-          //ZWrite Off
+          // ZWrite Off
           Blend SrcAlpha OneMinusSrcAlpha
   
           Pass{
@@ -45,9 +45,9 @@
          
          fixed4 frag (v2f i) : COLOR
          {
-         	 //i.wpos.x = (i.wpos.x - _Shift.x) * _Scale.x;
-         	 //i.wpos.y = (i.wpos.y - _Shift.y);
-         	 //i.wpos.z = (i.wpos.z - _Shift.z);
+         	 // i.wpos.x = (i.wpos.x - _Shift.x) * _Scale.x;
+         	 // i.wpos.y = (i.wpos.y - _Shift.y);
+         	 // i.wpos.z = (i.wpos.z - _Shift.z);
 
          	 i.wpos = (i.wpos + 10) / 26.0f;
          	 i.wpos.x = max(0, min(1, i.wpos.x));

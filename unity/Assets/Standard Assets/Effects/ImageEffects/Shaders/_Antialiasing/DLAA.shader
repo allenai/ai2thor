@@ -134,7 +134,7 @@ CGINCLUDE
         LD( bottom, 0,  1 )
 
     if ( long_edge_mask_h > 0 || long_edge_mask_v > 0 ) // faster but less resistant to noise (TFU2 X360)
-    //if ( abs( long_edge_mask_h - long_edge_mask_v ) > 0.2f ) // resistant to noise (TFU2 SPUs)
+    // if ( abs( long_edge_mask_h - long_edge_mask_v ) > 0.2f ) // resistant to noise (TFU2 SPUs)
     {
         float4 long_blurred_h = ( h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7 ) / 8.0f;
         float4 long_blurred_v = ( v0 + v1 + v2 + v3 + v4 + v5 + v6 + v7 ) / 8.0f;
@@ -158,7 +158,7 @@ CGINCLUDE
         float vy = center_lum == right_lum ? 0.0 : saturate( 1 + ( lb_v_lum - center_lum ) / ( center_lum - right_lum  ) );
 
         float4 vhxy = float4( vx, vy, hx, hy );
-        //vhxy = vhxy == float4( 0, 0, 0, 0 ) ? float4( 1, 1, 1, 1 ) : vhxy;
+        // vhxy = vhxy == float4( 0, 0, 0, 0 ) ? float4( 1, 1, 1, 1 ) : vhxy;
 
         clr_v = lerp( left  , clr_v, vhxy.x );
         clr_v = lerp( right , clr_v, vhxy.y );
@@ -237,7 +237,7 @@ CGINCLUDE
     long_edge_mask_h = saturate( long_edge_mask_h * 2.0f - 1.0f );
     long_edge_mask_v = saturate( long_edge_mask_v * 2.0f - 1.0f );
 
-    //if ( long_edge_mask_h > 0 || long_edge_mask_v > 0 ) // faster but less resistant to noise (TFU2 X360)
+    // if ( long_edge_mask_h > 0 || long_edge_mask_v > 0 ) // faster but less resistant to noise (TFU2 X360)
     if ( abs( long_edge_mask_h - long_edge_mask_v ) > 0.2f ) // resistant to noise (TFU2 SPUs)
     {
         float4 long_blurred_h = ( h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7 ) / 8.0f;
@@ -262,7 +262,7 @@ CGINCLUDE
         float vy = center_lum == right_lum ? 0.0 : saturate( 1 + ( lb_v_lum - center_lum ) / ( center_lum - right_lum  ) );
 
         float4 vhxy = float4( vx, vy, hx, hy );
-        //vhxy = vhxy == float4( 0, 0, 0, 0 ) ? float4( 1, 1, 1, 1 ) : vhxy;
+        // vhxy = vhxy == float4( 0, 0, 0, 0 ) ? float4( 1, 1, 1, 1 ) : vhxy;
 
         clr_v = lerp( left  , clr_v, vhxy.x );
         clr_v = lerp( right , clr_v, vhxy.y );

@@ -47,14 +47,14 @@ class PhysicsSettler {
             Rigidbody[] arrayOfAllRB = Object.FindObjectsOfType<Rigidbody>();
 
             foreach (Rigidbody rb in arrayOfAllRB) {
-                //first make sure it' a sim object
+                // first make sure it' a sim object
                 if (rb.GetComponentInParent<SimObjPhysics>()) {
-                    //ok now make sure that the sim object is moveable or pickupable
+                    // ok now make sure that the sim object is moveable or pickupable
                     SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
 
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                         if (!rb.GetComponent<DecalCollision>()) {
-                            //don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
+                            // don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
                             if (sop.transform.parent.name != "AttachPoint")
                                 filter.Add(rb);
                         }
@@ -68,7 +68,7 @@ class PhysicsSettler {
             }
 
             // Normally avoid Find functions, but this is editor time and only happens once
-            workList = filter.ToArray();//Object.FindObjectsOfType<Rigidbody>();
+            workList = filter.ToArray();// Object.FindObjectsOfType<Rigidbody>();
 
             // we will need to ensure autoSimulation is off to manually tick physics
             cachedAutoSimulation = Physics.autoSimulation;

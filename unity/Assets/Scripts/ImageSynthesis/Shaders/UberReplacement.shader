@@ -50,7 +50,7 @@ float4 Output(float depth01, float3 normal)
 	}
 	else if (_OutputMode == 2) // DepthCompressed
 	{
-		float linearZFromNear = depth01; //Linear01FromEyeToLinear01FromNear(depth01); 
+		float linearZFromNear = depth01; // Linear01FromEyeToLinear01FromNear(depth01); 
 		float k = 0.25; // compression factor
 		return pow(linearZFromNear, k);
 	}
@@ -62,9 +62,9 @@ float4 Output(float depth01, float3 normal)
 		float highBits = 256 * 256 * (depth01 - lowBits - medBits / 256);
 		highBits = floor(256 * highBits) / 256;
 
-		//float highBits = frac(depth01 * 256 * 256);
-		//float medBits = frac(depth01 * 256) - highBits / 256;
-		//float lowBits = depth01 - medBits / 256;
+		// float highBits = frac(depth01 * 256 * 256);
+		// float medBits = frac(depth01 * 256) - highBits / 256;
+		// float lowBits = depth01 - medBits / 256;
 
 		return float4(lowBits, medBits, highBits, 1);
 	}
