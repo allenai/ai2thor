@@ -1,7 +1,6 @@
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
-import platform
 import json
 from ai2thor.util import makedirs
 import time
@@ -38,7 +37,9 @@ def build_name(arch, commit_id, include_private_scenes=False):
 
 
 def boto_auth():
-    return BotoAWSRequestsAuth(aws_host='s3-us-west-2.amazonaws.com', aws_region='us-west-2', aws_service='s3')
+    return BotoAWSRequestsAuth(
+        aws_host="s3-us-west-2.amazonaws.com", aws_region="us-west-2", aws_service="s3"
+    )
 
 
 base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PUBLIC_S3_BUCKET
@@ -49,7 +50,7 @@ private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 class EditorBuild(object):
     def __init__(self):
         # assuming that an external build supports both server types
-        self.server_types = ['FIFO', 'WSGI']
+        self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
 
@@ -62,12 +63,13 @@ class EditorBuild(object):
     def lock_sh(self):
         pass
 
+
 class ExternalBuild(object):
     def __init__(self, executable_path):
         self.executable_path = executable_path
 
         # assuming that an external build supports both server types
-        self.server_types = ['FIFO', 'WSGI']
+        self.server_types = ["FIFO", "WSGI"]
 
     def download(self):
         pass
@@ -80,7 +82,6 @@ class ExternalBuild(object):
 
 
 class Build(object):
-
     def __init__(self, arch, commit_id, include_private_scenes, releases_dir=None):
 
         self.arch = arch
@@ -93,9 +94,6 @@ class Build(object):
             self.tmp_dir = os.path.normpath(self.releases_dir + "/../tmp")
 
     def download(self):
-
-        if platform.architecture()[0] != '64bit':
-            raise Exception("Only 64bit currently supported")
 
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
@@ -110,9 +108,11 @@ class Build(object):
 
                 os.rename(extract_dir, self.base_dir)
                 # This can be removed after migrating OSXIntel64 builds to have the AI2Thor executable
-                if os.path.exists(self.old_executable_path) and not os.path.exists(self.executable_path):
+                if os.path.exists(self.old_executable_path) and not os.path.exists(
+                    self.executable_path
+                ):
                     os.link(self.old_executable_path, self.executable_path)
-                
+
                 # we can lose the executable permission when unzipping a build
                 os.chmod(self.executable_path, 0o755)
 
@@ -121,44 +121,44 @@ class Build(object):
 
     def zipfile(self):
         zip_data = ai2thor.downloader.download(
-            self.url,
-            self.sha256(),
-            self.include_private_scenes)
+            self.url, self.sha256(), self.include_private_scenes
+        )
 
         return zipfile.ZipFile(io.BytesIO(zip_data))
 
     def download_metadata(self):
-        # this can happen if someone has an existing release without the metadata 
+        # this can happen if someone has an existing release without the metadata
         # built prior to the backfill
         # can add check to see if metadata has expired/we update metadata
         # if we want to add more info to metadata
         if not self.metadata:
             z = self.zipfile()
-            atomic_write(self.metadata_path, z.read('metadata.json'))
+            atomic_write(self.metadata_path, z.read("metadata.json"))
 
     @property
     def old_executable_path(self):
-        target_arch = platform.system()
-        if target_arch == 'Linux':
+        if self.arch == "Linux64":
             return self.executable_path
-        elif target_arch == 'Darwin':
-            return os.path.join(self.base_dir,
-                self.name + ".app",
-                "Contents/MacOS",
-                self.name)
+        elif self.arch == "OSXIntel64":
+            return os.path.join(
+                self.base_dir, self.name + ".app", "Contents/MacOS", self.name
+            )
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
+            raise Exception("unable to handle target arch %s" % self.arch)
 
     def parse_plist(self):
         import xml.etree.ElementTree as ET
-        plist_path = os.path.join(self.base_dir, self.name + ".app", "Contents/Info.plist")
+
+        plist_path = os.path.join(
+            self.base_dir, self.name + ".app", "Contents/Info.plist"
+        )
 
         with open(plist_path) as f:
             plist = f.read()
         root = ET.fromstring(plist)
 
-        keys = [x.text for x in root.findall('dict/key')]
-        values = [x.text for x in root.findall('dict/string')]
+        keys = [x.text for x in root.findall("dict/key")]
+        values = [x.text for x in root.findall("dict/string")]
         return dict(zip(keys, values))
 
     @property
@@ -167,20 +167,19 @@ class Build(object):
 
     @property
     def executable_path(self):
-        target_arch = platform.system()
-
-        if target_arch == 'Linux':
+        if self.arch == "Linux64":
             return os.path.join(self.base_dir, self.name)
-        elif target_arch == 'Darwin':
+        elif self.arch == "OSXIntel64":
             plist = self.parse_plist()
             return os.path.join(
                 self.base_dir,
                 self.name + ".app",
                 "Contents/MacOS",
-                plist['CFBundleExecutable'])
+                plist["CFBundleExecutable"],
+            )
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
-    
+            raise Exception("unable to handle target arch %s" % self.arch)
+
     @property
     def metadata_path(self):
         return os.path.join(self.base_dir, "metadata.json")
@@ -196,7 +195,7 @@ class Build(object):
     @property
     def server_types(self):
         self.download_metadata()
-        return self.metadata.get('server_types', [])
+        return self.metadata.get("server_types", [])
 
     def auth(self):
         if self.include_private_scenes:
@@ -212,7 +211,7 @@ class Build(object):
 
     @property
     def url(self):
-        return self._base_url() + os.path.join('builds', self.name + ".zip")
+        return self._base_url() + os.path.join("builds", self.name + ".zip")
 
     @property
     def name(self):
@@ -229,18 +228,20 @@ class Build(object):
 
     @property
     def log_url(self):
-        return os.path.splitext(self.url)[0] + '.log'
+        return os.path.splitext(self.url)[0] + ".log"
 
     @property
     def metadata_url(self):
-        return os.path.splitext(self.url)[0] + '.json'
+        return os.path.splitext(self.url)[0] + ".json"
 
     @property
     def sha256_url(self):
-        return os.path.splitext(self.url)[0] + '.sha256'
+        return os.path.splitext(self.url)[0] + ".sha256"
 
     def exists(self):
-        return (self.releases_dir and os.path.isdir(self.base_dir)) or (requests.head(self.url, auth=self.auth()).status_code == 200)
+        return (self.releases_dir and os.path.isdir(self.base_dir)) or (
+            requests.head(self.url, auth=self.auth()).status_code == 200
+        )
 
     def log_exists(self):
         return requests.head(self.log_url, auth=self.auth()).status_code == 200
@@ -248,4 +249,4 @@ class Build(object):
     def sha256(self):
         res = requests.get(self.sha256_url, auth=self.auth())
         res.raise_for_status()
-        return res.content.decode('ascii')
+        return res.content.decode("ascii")

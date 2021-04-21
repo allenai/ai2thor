@@ -9,6 +9,7 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
 logger = logging.getLogger(__name__)
 
+
 def download(url, sha256_digest, include_private_scenes=False):
 
     auth = None
@@ -18,12 +19,18 @@ def download(url, sha256_digest, include_private_scenes=False):
     logger.debug("Downloading file from %s" % url)
     r = requests.get(url, stream=True, auth=auth)
     r.raise_for_status()
-    size = int(r.headers['Content-Length'].strip())
+    size = int(r.headers["Content-Length"].strip())
     total_bytes = 0
 
     widgets = [
-        url.split('/')[-1], ": ", Bar(marker="|", left="[", right=" "),
-        Percentage(), " ", FileTransferSpeed(), "]  of {0}MB".format(str(round(size / 1024 / 1024, 2))[:4])]
+        url.split("/")[-1],
+        ": ",
+        Bar(marker="|", left="[", right=" "),
+        Percentage(),
+        " ",
+        FileTransferSpeed(),
+        "]  of {0}MB".format(str(round(size / 1024 / 1024, 2))[:4]),
+    ]
 
     pbar = ProgressBar(widgets=widgets, maxval=size).start()
     m = hashlib.sha256()
@@ -38,4 +45,4 @@ def download(url, sha256_digest, include_private_scenes=False):
     if m.hexdigest() != sha256_digest:
         raise Exception("Digest mismatch for url %s" % url)
 
-    return b''.join(file_data)
+    return b"".join(file_data)
