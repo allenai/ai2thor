@@ -72,7 +72,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         public int fixedUpdateCount { get; protected set; }
+        public int simulateCount; 
         public int updateCount { get; protected set; }
+        private bool forceActionEmit;
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
@@ -288,6 +290,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
             if (!this.IsProcessing) {
                 Debug.LogError("ActionFinished called with agentState not in processing ");
+            }
+            
+            if (this.forceActionEmit && newState == AgentState.ActionComplete) {
+                newState = AgentState.Emit;
             }
 
             lastActionSuccess = success;
@@ -1688,6 +1694,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             this.agentState = AgentState.Processing;
+            this.forceActionEmit = controlCommand.forceActionEmit;
 
             try {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
@@ -3961,6 +3968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ResetUpdateCounters() {
             this.fixedUpdateCount = 0;
             this.updateCount = 0;
+            this.simulateCount = 0;
         }
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {

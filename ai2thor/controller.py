@@ -24,6 +24,7 @@ import os
 import platform
 import uuid
 import sys
+from contextlib import contextmanager
 from functools import lru_cache
 
 
@@ -827,6 +828,35 @@ class Controller(object):
                 break
 
         return events
+
+    def _batch_step(self, action=None, **action_args):
+        action_args['forceActionEmit'] = True
+        event = self._inner_batch_step(action, **action_args)
+        # should we remove potentially stale data: agent, objects, etc.
+        # e.g. del(event.metadata['agent'])
+        return event
+
+    @contextmanager
+    def batch(self):
+        if (self.server_class != ai2thor.fifo_server.FifoServer):
+            raise ValueError("batch can only be used with the FifoServer")
+
+        # we default fastActionEmit to true since it gets enabled by default within 
+        # the AgentManager
+        if not self.initialization_parameters.get('fastActionEmit', True):
+            raise ValueError("fastActionEmit must be enabled for batch actions")
+
+        # prevent nesting 
+        if hasattr(self, '_inner_batch_step'):
+            raise RuntimeError("nested batch blocks are not permitted")
+        else:
+            self._inner_batch_step = self.step
+            self.step = self._batch_step
+        try:
+            yield
+        finally:
+            self.step = self._inner_batch_step
+            delattr(self, '_inner_batch_step')
 
     def step(self, action=None, **action_args):
 

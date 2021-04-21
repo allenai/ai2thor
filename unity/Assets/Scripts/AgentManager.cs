@@ -234,6 +234,7 @@ public class AgentManager : MonoBehaviour {
         // this value False allows the user complete control of all Physics Simulation
         // if they need deterministic simulations.
         Physics.autoSimulation = action.autoSimulation;
+
         Physics.autoSyncTransforms = Physics.autoSimulation;
 
         if (action.alwaysReturnVisibleRange) {
@@ -1575,6 +1576,12 @@ public class DynamicServerAction {
     public bool renderInstanceSegmentation {
         get {
             return this.GetValue("renderInstanceSegmentation", false);
+        }
+    }
+
+    public bool forceActionEmit {
+        get {
+            return this.GetValue("forceActionEmit", false);
         }
     }
 
