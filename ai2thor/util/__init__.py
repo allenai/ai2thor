@@ -3,18 +3,16 @@ import random
 import time
 
 
-# python2.7 compatible makedirs
 def makedirs(directory):
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
 
 def atomic_write(path, data):
-    tmp_path = '-'.join([path, str(time.time()), str(random.random())])
-    mode = 'w'
+    tmp_path = "-".join([path, str(time.time()), str(random.random())])
+    mode = "w"
 
     if type(data) is bytes:
-        mode = 'wb'
+        mode = "wb"
 
     with open(tmp_path, mode) as f:
         f.write(data)

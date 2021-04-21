@@ -3,6 +3,7 @@ import numpy as np
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+
 def generate_noise_indices(img_size):
     img_size = int(img_size)
     default_size = 300
@@ -46,9 +47,10 @@ def generate_noise_indices(img_size):
             y = np.array(range(offset, offset + c))
             width_indices = np.concatenate((width_indices, y))
 
-            indices.append((
+            indices.append(
+                (
                     np.array(height_indices, dtype=np.int32),
-                    np.array(width_indices, dtype=np.int32)
+                    np.array(width_indices, dtype=np.int32),
                 )
             )
 
