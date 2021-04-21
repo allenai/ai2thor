@@ -90,9 +90,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -198,7 +205,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -215,7 +224,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -249,54 +260,57 @@ def test_reset(fifo_controller):
     assert event.depth_frame is None, "depth frame shouldn't have rendered!"
     assert event.frame.shape == (height, width, 3), "RGB frame dimensions are wrong!"
 
+
 def test_batch_disable_fast_action_emit():
-    fast_action_disabled_controller = build_controller(server_class=FifoServer, fastActionEmit=False)
+    fast_action_disabled_controller = build_controller(
+        server_class=FifoServer, fastActionEmit=False
+    )
     exception_message = None
     try:
         with fast_action_disabled_controller.batch():
-            batch_event_1 = controller.step('RotateRight')
+            batch_event_1 = controller.step("RotateRight")
     except ValueError as e:
         exception_message = str(e)
-    
-    assert exception_message == 'fastActionEmit must be enabled for batch actions'
 
-@pytest.mark.parametrize("controller", [wsgi_controller])
-def test_batch_wsgi(controller):
+    assert exception_message == "fastActionEmit must be enabled for batch actions"
+
+
+def test_batch_wsgi(wsgi_controller):
     exception_message = None
     try:
-        with controller.batch():
-            batch_event_1 = controller.step('RotateRight')
+        with wsgi_controller.batch():
+            batch_event_1 = wsgi_controller.step("RotateRight")
     except ValueError as e:
         exception_message = str(e)
-    
-    assert exception_message == 'batch can only be used with the FifoServer'
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_batch_nested(controller):
+    assert exception_message == "batch can only be used with the FifoServer"
+
+
+def test_batch_nested(fifo_controller):
     exception_message = None
     try:
-        with controller.batch():
-            batch_event_1 = controller.step('RotateRight')
-            with controller.batch():
-                batch_event_2 = controller.step('RotateRight')
+        with fifo_controller.batch():
+            batch_event_1 = fifo_controller.step("RotateRight")
+            with fifo_controller.batch():
+                batch_event_2 = fifo_controller.step("RotateRight")
     except RuntimeError as e:
         exception_message = str(e)
-    
-    assert exception_message == 'nested batch blocks are not permitted'
+
+    assert exception_message == "nested batch blocks are not permitted"
 
 
-@pytest.mark.parametrize("controller", [fifo_controller])
-def test_batch(controller):
-    event = controller.step('RotateRight')
-    with controller.batch():
-        batch_event_1 = controller.step('RotateRight')
-        batch_event_2 = controller.step('RotateRight')
+def test_batch(fifo_controller):
+    event = fifo_controller.step("RotateRight")
+    with fifo_controller.batch():
+        batch_event_1 = fifo_controller.step("RotateRight")
+        batch_event_2 = fifo_controller.step("RotateRight")
 
-    non_batch_event = controller.step('RotateRight')
+    non_batch_event = fifo_controller.step("RotateRight")
 
     assert id(event.metadata["objects"]) == id(batch_event_1.metadata["objects"])
     assert id(event.metadata["objects"]) == id(batch_event_2.metadata["objects"])
     assert id(event.metadata["objects"]) != id(non_batch_event.metadata["objects"])
+
 
 def test_fast_emit(fifo_controller):
     event = fifo_controller.step(dict(action="RotateRight"))
@@ -662,7 +676,9 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter", objectIds=[]))
@@ -694,7 +710,9 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1126,7 +1144,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1137,7 +1156,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1145,7 +1165,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
