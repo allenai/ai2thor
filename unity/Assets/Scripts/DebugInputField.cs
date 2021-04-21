@@ -1216,18 +1216,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length == 2) {
                             action["objectId"] = splitcommand[1];
-                        } else
-                            //action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                        } 
 
-                            //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
-                            //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                            action["placeStationary"] = true;
+                case "putxy":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PutObject";
+                    
+                        if(splitcommand.Length == 2)
+                        {
+                            action["putNearXY"] = bool.Parse(splitcommand[1]);
+                        }
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        //action["placeStationary"] = true; 
                         action["x"] = 0.5f;
                         action["y"] = 0.5f;
                         //set this true to ignore Placement Restrictions
-                        action["forceAction"] = true;
+                        //action["forceAction"] = true;
 
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "goif":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetObjectInFrame";
+                        action["x"] = 0.5f;
+                        action["y"] = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1866,14 +1886,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //look up
-                case "lu": {
-                        ServerAction action = new ServerAction();
-                        action.action = "LookUp";
+                    //look up
+                case "lu":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "LookUp";
 
-                        if (splitcommand.Length > 1) {
-                            action.degrees = float.Parse(splitcommand[1]);
-                        }
+						if(splitcommand.Length > 1)
+						{
+							action["degrees"] = float.Parse(splitcommand[1]);
+						}
 
                         //action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -1981,6 +2003,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                //pickup using screen coordinates
+				case "puxy":
+                    {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickupObject";
+                        //action.forceAction = true;
+                        action["x"] = 0.5f; 
+                        action["y"] = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

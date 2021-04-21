@@ -147,7 +147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Vector3 lastPosition;
 
         protected string lastAction;
-        protected bool lastActionSuccess;
+        public bool lastActionSuccess;
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
@@ -297,6 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
+            Debug.Log($"lastAction: '{this.lastAction}'");
             Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
@@ -1886,15 +1887,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
+        protected bool screenToWorldTarget(
+            float x, 
+            float y, 
+            ref SimObjPhysics target, 
+            bool forceAction = false,
+            bool checkVisible = true) {
+            
+            //this version doesn't use a RaycastHit, so pass just a defualt one
+            RaycastHit hit = new RaycastHit();
+
+            return screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref target, 
+                forceAction: forceAction,
+                hit: out hit);
+        }
+
         // used for all actions that need a sim object target
         // instead of objectId, use screen coordinates to raycast toward potential targets
         // will set the target object by reference if raycast is successful
         protected bool screenToWorldTarget(
-            float x,
-            float y,
-            ref SimObjPhysics target,
-            // bool inViewport = true, 
-            // bool inMaxVisibleDistance = false, 
+            float x, 
+            float y, 
+            ref SimObjPhysics target, 
+            out RaycastHit hit,
             bool forceAction = false,
             bool checkVisible = true) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
@@ -1906,12 +1924,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // cast ray from screen coordinate into world space. If it hits an object
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
-            RaycastHit hit;
 
             // check if something was hit by raycast
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11, QueryTriggerInteraction.Ignore)) {
 
-                //DEBUG STUFF PLEASE DELETE LATER//////
+                //DEBUG STUFF PLEASE COMMENT OUT UNLESS USING//////
                 // GameObject empty = new GameObject("empty");
                 // Instantiate(empty, hit.point, Quaternion.identity);
                 // GameObject.Destroy(empty);

@@ -4161,34 +4161,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void PutObject(float x, float y, bool forceAction = false, bool placeStationary = true) {
-            PlaceHeldObject(x, y, forceAction, placeStationary);
+
+        public void PutObject(float x, float y, bool forceAction=false, bool placeStationary=true, int randomSeed=0, bool putNearXY=false){
+            PlaceHeldObject(
+                x: x, 
+                y: y,
+                forceAction: forceAction, 
+                placeStationary: placeStationary,
+                randomSeed: randomSeed,
+                putNearXY: putNearXY,
+                maxDistance: maxVisibleDistance);
         }
 
-        public void PutObject(string objectId, bool forceAction = false, bool placeStationary = true) {
-            PlaceHeldObject(objectId, forceAction, placeStationary);
+        public void PutObject(string objectId, bool forceAction=false, bool placeStationary=true, int randomSeed=0){
+            PlaceHeldObject(                
+                objectId: objectId,
+                forceAction: forceAction,
+                placeStationary: placeStationary,
+                randomSeed: randomSeed,
+                maxDistance: maxVisibleDistance);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
-        //only checks if the object can be placed on top of the target receptacle
-        public void PlaceHeldObject(float x, float y, bool forceAction = false, bool placeStationary = true, int randomSeed = 0, float z = 0.0f) {
+        //only checks if the object can be placed on top of the target receptacle via the receptacle trigger box 
+        public void PlaceHeldObject(float x, float y, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0 , bool putNearXY = false){
             SimObjPhysics targetReceptacle = null;
 
-            if (!screenToWorldTarget(
-                x: x,
-                y: y,
-                target: ref targetReceptacle,
-                forceAction: forceAction)) {
+            RaycastHit hit = new RaycastHit();
+
+            if(!screenToWorldTarget(
+                x: x, 
+                y: y, 
+                target: ref targetReceptacle, 
+                forceAction: forceAction,
+                hit: out hit))
+            {
                 //error message is set insice screenToWorldTarget
                 actionFinished(false, errorMessage);
                 return;
             }
 
-            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+            placeHeldObject(
+                targetReceptacle: targetReceptacle, 
+                forceAction: forceAction, 
+                placeStationary: placeStationary, 
+                randomSeed: randomSeed, 
+                maxDistance: maxDistance,
+                putNearXY: putNearXY,
+                hit: hit);
         }
 
-        public void PlaceHeldObject(string objectId, bool forceAction = false, bool placeStationary = true, int randomSeed = 0, float z = 0.0f) {
+
+        //overload of PlaceHeldObject that takes a target receptacle by objectId instead of screenspace coordinate raycast
+        public void PlaceHeldObject(string objectId, float maxDistance, bool forceAction=false, bool placeStationary=true, int randomSeed = 0) 
+        {
             //get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
 
@@ -4200,10 +4227,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //if object is in the scene and visible, assign it to 'target'
             targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
-            placeHeldObject(targetReceptacle, forceAction, placeStationary, randomSeed, z);
+
+            placeHeldObject(
+                targetReceptacle: targetReceptacle, 
+                forceAction: forceAction, 
+                placeStationary: placeStationary, 
+                randomSeed: randomSeed, 
+                maxDistance: maxDistance);
+
         }
 
-        private void placeHeldObject(SimObjPhysics targetReceptacle, bool forceAction, bool placeStationary, int randomSeed, float z) {
+        private void placeHeldObject(            
+            SimObjPhysics targetReceptacle, 
+            bool forceAction, 
+            bool placeStationary, 
+            int randomSeed, 
+            float maxDistance) {
+
+            RaycastHit hit = new RaycastHit();
+
+            placeHeldObject(
+                targetReceptacle: targetReceptacle, 
+                forceAction: forceAction, 
+                placeStationary: placeStationary, 
+                randomSeed: randomSeed, 
+                maxDistance: maxDistance,
+                putNearXY: false,
+                hit: hit);
+            }
+
+        private void placeHeldObject(
+            SimObjPhysics targetReceptacle, 
+            bool forceAction, 
+            bool placeStationary, 
+            int randomSeed, 
+            float maxDistance,
+            bool putNearXY,
+            RaycastHit hit) {
             // #if UNITY_EDITOR
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             // #endif
@@ -4317,21 +4377,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
-            if (randomSeed != 0) {
-                List<ReceptacleSpawnPoint> randomizedSpawnPoints = new List<ReceptacleSpawnPoint>();
-                float maxDistance = z;
-                if (maxDistance == 0.0f) {
-                    maxDistance = maxVisibleDistance;
-                }
+            if (randomSeed != 0 || putNearXY) {
+                List<KeyValuePair<ReceptacleSpawnPoint, float>> distSpawnPoints = new List<KeyValuePair<ReceptacleSpawnPoint, float>>();
+
                 foreach (ReceptacleSpawnPoint sp in spawnPoints) {
+                    //calculate distance from potential spawn point to the agent's current x/z coordinate. Compare using the spawn point's y value so
+                    //we compare distance as a flat plane parallel to the agent's x/z plane. This keeps things consistent regardless of agent camera
+                    //position if the agent is crouching or standing
                     Vector3 tmp = new Vector3(transform.position.x, sp.Point.y, transform.position.z);
                     if (Vector3.Distance(sp.Point, tmp) < maxDistance) {
-                        randomizedSpawnPoints.Add(sp);
+                        float dist = 0; 
+                        if (putNearXY) {
+                            dist = Vector3.Distance(sp.Point, hit.point);
+                        }
+                        distSpawnPoints.Add(new KeyValuePair<ReceptacleSpawnPoint, float>(sp, dist));
                     }
                 }
-                randomizedSpawnPoints.Shuffle_(randomSeed);
-                spawnPoints = randomizedSpawnPoints;
+
+                //actually sort by distance closest to raycast hit if needed here, otherwise leave random
+                if(putNearXY) {
+                    distSpawnPoints.Sort((x, y) => (x.Value.CompareTo(y.Value)));
+                } else {
+                    distSpawnPoints.Shuffle_(randomSeed);
+                }
+
+                spawnPoints = new List<ReceptacleSpawnPoint>();  // populate a new spawnPoints list with sorted keys
+                foreach(KeyValuePair<ReceptacleSpawnPoint, float> pair in distSpawnPoints) {
+                    spawnPoints.Add(pair.Key);
+                }
             }
+
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), placeStationary, -1, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
