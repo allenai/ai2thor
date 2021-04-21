@@ -45,6 +45,9 @@ The following actions have been updated as follows:
 - **SetObjectPoses** - Adds a `placeStationary` flag to this action that allows objects to be repositioned with kinematics set to true, preventing additional physics resolution after repositioning.
 - **GetObjectInFrame** - Adds a new `checkVisible` param that when true will cause this action to perform an additional check if an object hit is not only within the frame, but also `visible` to the agent. Note that not all objects in frame are `visible` to the agent as they could be occluded or out of `maxVisibleDistance` range.
 
+## Updated Metadata
+- **objectOrientedBoundingBox** - All `pickupable` and `moveable` objects now have object oriented bounding boxes. Additionally, these object oriented bounds are now dynamically generated to account for state changes of some objects, like a `book` that can be closed or open.
+
 ## Updated Documentation
 [Documentation on the AI2-THOR website](https://ai2thor.allenai.org/ithor/documentation/) has been expanded to detail all functionality of this update.
 
