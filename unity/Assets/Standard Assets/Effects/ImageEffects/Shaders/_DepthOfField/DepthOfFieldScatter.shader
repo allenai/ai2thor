@@ -295,7 +295,7 @@
 		float4 centerTap = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv1.xy, _MainTex_ST));
 
 		// TODO: important ? breaks when HR blur is being used
-		//centerTap.a = max(centerTap.a, 0.1f);
+		// centerTap.a = max(centerTap.a, 0.1f);
 
 		float sampleCount =  centerTap.a;
 		float4 sum = centerTap * sampleCount;
@@ -321,8 +321,8 @@
 		
 		float4 returnValue = sum / (1e-5f + sampleCount);
 
-		//returnValue.a = centerTap.a;
-		//return centerTap.a;
+		// returnValue.a = centerTap.a;
+		// return centerTap.a;
 
 		return returnValue;
 	}		
@@ -338,7 +338,7 @@
 
 	float4 fragBoxDownsample (v2f i) : SV_Target 
 	{		
-		//float4 returnValue = tex2D(_MainTex, i.uv1.xy);			
+		// float4 returnValue = tex2D(_MainTex, i.uv1.xy);			
 		float4 returnValue = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv1.xy + 0.75*_MainTex_TexelSize.xy, _MainTex_ST));
 		returnValue += tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv1.xy - 0.75*_MainTex_TexelSize.xy, _MainTex_ST));
 		returnValue += tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv1.xy + 0.75*_MainTex_TexelSize.xy * float2(1,-1), _MainTex_ST));
@@ -495,7 +495,7 @@
 	
 	float4 fragCaptureCoc (v2f i) : SV_Target 
 	{	
-		float4 color = float4(0,0,0,0); //tex2D (_MainTex, i.uv1.xy);
+		float4 color = float4(0,0,0,0); // tex2D (_MainTex, i.uv1.xy);
 		float d = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, UnityStereoScreenSpaceUVAdjust(i.uv1.xy, _CameraDepthTexture_ST));
 		d = Linear01Depth (d);
 		color.a = _CurveParams.z * abs(d - _CurveParams.w) / (d + 1e-5f); 
@@ -532,7 +532,7 @@
 	
 	float4 fragCaptureForegroundCoc (v2f i) : SV_Target 
 	{	
-		float4 color = float4(0,0,0,0); //tex2D (_MainTex, i.uv1.xy);
+		float4 color = float4(0,0,0,0); // tex2D (_MainTex, i.uv1.xy);
 		float d = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, UnityStereoScreenSpaceUVAdjust(i.uv1.xy, _CameraDepthTexture_ST));
 		d = Linear01Depth (d);
 		color.a = _CurveParams.z * (_CurveParams.w-d) / (d + 1e-5f);

@@ -11,7 +11,7 @@ namespace MessagePack.Resolvers
 {
     // MEMO: Not completely implemented.
 
-    ////public static class ContractlessReflectionObjectResolver
+    //// public static class ContractlessReflectionObjectResolver
     ////{
     ////    // TODO:CamelCase Option? AllowPrivate?
     ////    public static readonly IFormatterResolver Default = new DefaultResolver();
@@ -98,7 +98,7 @@ namespace MessagePack.Resolvers
 
     ////}
 
-    ////public class ReflectionObjectFormatter<T> : IMessagePackFormatter<T>
+    //// public class ReflectionObjectFormatter<T> : IMessagePackFormatter<T>
     ////{
     ////    readonly ObjectSerializationInfo metaInfo;
 
@@ -167,7 +167,7 @@ namespace MessagePack.Resolvers
     ////    }
     ////}
 
-    ////internal static class ReflectionObjectFormatterHelper
+    //// internal static class ReflectionObjectFormatterHelper
     ////{
     ////    internal static int WriteArraySerialize(ObjectSerializationInfo metaInfo, ObjectSerializationInfo.EmittableMember[] writeMembers, ref byte[] bytes, int offset, object value, IFormatterResolver formatterResolver)
     ////    {

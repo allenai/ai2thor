@@ -53,7 +53,7 @@ public class Build {
             }
         }
 
-        //uncomment for faster builds for testing
+        // uncomment for faster builds for testing
         return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
     }
 

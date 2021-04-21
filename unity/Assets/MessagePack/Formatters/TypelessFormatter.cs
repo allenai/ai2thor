@@ -59,7 +59,7 @@ namespace MessagePack.Formatters
         private static readonly HashSet<Type> UseBuiltinTypes = new HashSet<Type>
         {
             typeof(Boolean),
-            ////typeof(Char),
+            //// typeof(Char),
             typeof(SByte),
             typeof(Byte),
             typeof(Int16),
@@ -74,21 +74,21 @@ namespace MessagePack.Formatters
             typeof(byte[]),
 
             // array should save their types.
-            ////typeof(Boolean[]),
-            ////typeof(Char[]),
-            ////typeof(SByte[]),
-            ////typeof(Int16[]),
-            ////typeof(UInt16[]),
-            ////typeof(Int32[]),
-            ////typeof(UInt32[]),
-            ////typeof(Int64[]),
-            ////typeof(UInt64[]),
-            ////typeof(Single[]),
-            ////typeof(Double[]),
-            ////typeof(string[]),
+            //// typeof(Boolean[]),
+            //// typeof(Char[]),
+            //// typeof(SByte[]),
+            //// typeof(Int16[]),
+            //// typeof(UInt16[]),
+            //// typeof(Int32[]),
+            //// typeof(UInt32[]),
+            //// typeof(Int64[]),
+            //// typeof(UInt64[]),
+            //// typeof(Single[]),
+            //// typeof(Double[]),
+            //// typeof(string[]),
 
             typeof(Boolean?),
-            ////typeof(Char?),
+            //// typeof(Char?),
             typeof(SByte?),
             typeof(Byte?),
             typeof(Int16?),
@@ -101,8 +101,8 @@ namespace MessagePack.Formatters
             typeof(Double?),
         };
 
-        //ForceSizePrimitiveObjectResolver.Instance,
-        //ContractlessStandardResolverAllowPrivate.Instance);
+        // ForceSizePrimitiveObjectResolver.Instance,
+        // ContractlessStandardResolverAllowPrivate.Instance);
 
         // mscorlib or System.Private.CoreLib
         private static readonly bool IsMscorlib = typeof(int).AssemblyQualifiedName.Contains("mscorlib");

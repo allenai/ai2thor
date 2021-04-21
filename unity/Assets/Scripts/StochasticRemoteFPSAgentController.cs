@@ -51,7 +51,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             base.Initialize(action);
         }
 
-        //reset visible objects while in editor, for debug purposes only
+        // reset visible objects while in editor, for debug purposes only
         private void LateUpdate() {
 #if UNITY_EDITOR || UNITY_WEBGL
             VisibleSimObjPhysics = VisibleSimObjs();
@@ -65,7 +65,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var moveLocal = new Vector3(action.x, 0, action.z);
             var moveMagnitude = moveLocal.magnitude;
             if (moveMagnitude > 0.00001) {
-                //random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
+                // random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
                 var random = new System.Random();
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
@@ -95,12 +95,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // NOOP action to allow evaluation to know that the episode has finished
         public void Stop() {
-            //i don't know why, but we have two no-op actions so here we go
+            // i don't know why, but we have two no-op actions so here we go
             base.Pass();
         }
 
         public override void LookDown(ServerAction action) {
-            //default degree increment to 30
+            // default degree increment to 30
             if (action.degrees == 0) {
                 action.degrees = 30f;
             } else {
@@ -109,8 +109,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
+            // force the degree increment to the nearest tenths place
+            // this is to prevent too small of a degree increment change that could cause float imprecision
             action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
             if (!checkForUpDownAngleLimit("down", action.degrees)) {
@@ -126,7 +126,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void LookUp(ServerAction action) {
 
-            //default degree increment to 30
+            // default degree increment to 30
             if (action.degrees == 0) {
                 action.degrees = 30f;
             } else {
@@ -135,8 +135,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            //force the degree increment to the nearest tenths place
-            //this is to prevent too small of a degree increment change that could cause float imprecision
+            // force the degree increment to the nearest tenths place
+            // this is to prevent too small of a degree increment change that could cause float imprecision
             action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
             if (!checkForUpDownAngleLimit("up", action.degrees)) {

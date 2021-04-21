@@ -1,5 +1,5 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-//Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
+// Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
 using UnityEngine;
 using Random = UnityEngine.Random;
 using System;

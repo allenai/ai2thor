@@ -23,14 +23,14 @@ public class PlacementManager : MonoBehaviour {
     public static bool GetPlacementPoint(Vector3 origin, Vector3 direction, Camera agentCamera, float reach, float maxDistance, ref Vector3 point) {
         UnityEngine.AI.NavMeshHit hit;
         if (UnityEngine.AI.NavMesh.SamplePosition(origin + (direction.normalized * reach), out hit, maxDistance, 1 << NavmeshShelfArea)) {
-            //check whether we can see this point
+            // check whether we can see this point
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(hit.position);
             Vector3 pointDirection = Vector3.zero;
             Vector3 agentCameraPos = agentCamera.transform.position;
-            if (viewPoint.z > 0//in front of camera
-                && viewPoint.x < SimUtil.ViewPointRangeHigh && viewPoint.x > SimUtil.ViewPointRangeLow//within x bounds
-                && viewPoint.y < SimUtil.ViewPointRangeHigh && viewPoint.y > SimUtil.ViewPointRangeLow) { //within y bounds
-                                                                                                          //do a raycast in the direction of the item
+            if (viewPoint.z > 0// in front of camera
+                && viewPoint.x < SimUtil.ViewPointRangeHigh && viewPoint.x > SimUtil.ViewPointRangeLow// within x bounds
+                && viewPoint.y < SimUtil.ViewPointRangeHigh && viewPoint.y > SimUtil.ViewPointRangeLow) { // within y bounds
+                                                                                                          // do a raycast in the direction of the item
                 pointDirection = (hit.position - agentCameraPos).normalized;
                 RaycastHit pointHit;
                 if (Physics.Raycast(
@@ -40,7 +40,7 @@ public class PlacementManager : MonoBehaviour {
                         maxDistance * 2,
                         SimUtil.RaycastVisibleLayerMask,
                         QueryTriggerInteraction.Ignore)) {
-                    //if it's within reasonable distance of the original point, we'll know we're fine
+                    // if it's within reasonable distance of the original point, we'll know we're fine
                     if (Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance) {
                         point = hit.position;
                         return true;
@@ -58,12 +58,12 @@ public class PlacementManager : MonoBehaviour {
     }
 
     public IEnumerator EnableSimObjPhysics(SimObj simObj) {
-        //always wait for 1 frame to allow sim object to wake itself up
+        // always wait for 1 frame to allow sim object to wake itself up
         yield return null;
-        //move the simObj to the object root to ensure it's not parented under another rigidbody
+        // move the simObj to the object root to ensure it's not parented under another rigidbody
         simObj.transform.parent = SceneManager.Current.ObjectsParent;
-        //make the object non-kinematic
+        // make the object non-kinematic
         simObj.GetComponent<Rigidbody>().isKinematic = false;
-        //pray it doesn't explode
+        // pray it doesn't explode
     }
 }

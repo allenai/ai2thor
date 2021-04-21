@@ -47,9 +47,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
             Vector3 cc_center = cc.center;
             Vector3 cc_maxY = cc.center + new Vector3(0, cc.height / 2f, 0);
-            Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); //this is halved to prevent arm clipping into floor
+            Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); // this is halved to prevent arm clipping into floor
 
-            //linear function that take height and adjusts targetY relative to min/max extents
+            // linear function that take height and adjusts targetY relative to min/max extents
             float targetY = ((cc_maxY.y - cc_minY.y) * (height)) + cc_minY.y;
             Vector3 target = new Vector3(0, targetY, 0);
             float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
@@ -81,10 +81,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public IEnumerator moveArmDebug(Vector3 targetArmBase) {
 
             var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            //var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
-            //var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
-            //var animator = arm.gameObject.GetComponent<Animator>();
-            //animator.enabled = false;
+            // var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
+            // var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
+            // var animator = arm.gameObject.GetComponent<Animator>();
+            // animator.enabled = false;
             Debug.Log("My name is " + arm.name);
             var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
             var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
@@ -103,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!Physics.autoSimulation) {
                     Physics.Simulate(Time.fixedDeltaTime);
                 }
-                //animator.Update(Time.fixedDeltaTime);
+                // animator.Update(Time.fixedDeltaTime);
 
                 yield return new WaitForEndOfFrame();
 
@@ -235,16 +235,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
-            //pass in multiple parameters separated by spaces
+            // pass in multiple parameters separated by spaces
             string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
 
             switch (splitcommand[0]) {
                 case "init": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
-                        //by default the gridsize is 0.25, so only moving in increments of .25 will work
-                        //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
-                        //grid size!
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
                         if (splitcommand.Length == 2) {
                             action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3) {
@@ -261,12 +261,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
                         // action.rotateStepDegrees = 30;
-                        //action.ssao = "default";
-                        //action.snapToGrid = true;
-                        //action.makeAgentsVisible = false;
-                        //action.agentMode = "locobot";
+                        // action.ssao = "default";
+                        // action.snapToGrid = true;
+                        // action.makeAgentsVisible = false;
+                        // action.agentMode = "locobot";
                         action["fieldOfView"] = 90f;
-                        //action.cameraY = 2.0f;
+                        // action.cameraY = 2.0f;
                         action["snapToGrid"] = true;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
@@ -281,10 +281,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 case "initb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
-                        //by default the gridsize is 0.25, so only moving in increments of .25 will work
-                        //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
-                        //grid size!
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
                         if (splitcommand.Length == 2) {
                             action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3) {
@@ -320,10 +320,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 case "inita": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
-                        //by default the gridsize is 0.25, so only moving in increments of .25 will work
-                        //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
-                        //grid size!
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
                         if (splitcommand.Length == 2) {
                             action["gridSize"] = float.Parse(splitcommand[1]);
                         } else if (splitcommand.Length == 3) {
@@ -339,23 +339,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-                        //PhysicsController.actionComplete = false;
+                        // PhysicsController.actionComplete = false;
                         // action.rotateStepDegrees = 30;
-                        //action.ssao = "default";
-                        //action.snapToGrid = true;
-                        //action.makeAgentsVisible = false;
-                        //action.agentMode = "bot";
-                        //action.fieldOfView = 90f;
-                        //action.cameraY = 2.0f;
-                        //action.snapToGrid = true;
+                        // action.ssao = "default";
+                        // action.snapToGrid = true;
+                        // action.makeAgentsVisible = false;
+                        // action.agentMode = "bot";
+                        // action.fieldOfView = 90f;
+                        // action.cameraY = 2.0f;
+                        // action.snapToGrid = true;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
 
                         action["agentMode"] = "arm";
                         action["agentControllerType"] = "mid-level";
 
-                        //action.useMassThreshold = true;
-                        //action.massThreshold = 10f;
+                        // action.useMassThreshold = true;
+                        // action.massThreshold = 10f;
 
 
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -383,7 +383,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "ReturnValidSpawnsExpRoom";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -443,10 +443,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action.action = "SpawnExperimentObjAtRandom";
                         action.objectType = "receptacle";
-                        action.randomSeed = 50;//UnityEngine.Random.Range(0, 1000);
+                        action.randomSeed = 50;// UnityEngine.Random.Range(0, 1000);
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -464,7 +464,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else
                             action.objectVariation = 0;
 
-                        action.y = 0f;//UnityEngine.Random.Range(0, 360);
+                        action.y = 0f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -477,7 +477,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -609,7 +609,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //initialize drone mode
+                // initialize drone mode
                 case "initd": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         // action.renderNormalsImage = true;
@@ -626,12 +626,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //activate cracked camera effect with random seed
+                // activate cracked camera effect with random seed
                 case "cc": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "CameraCrack";
 
-                        //give me a seed
+                        // give me a seed
                         if (splitcommand.Length == 2) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
                         } else {
@@ -643,7 +643,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move ahead stochastic
+                // move ahead stochastic
                 case "mas": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
@@ -729,10 +729,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        action.anywhere = false;//false, only recepatcle objects in viewport used
-                        //action.minDistance = 1.8f;
-                        //action.maxDistance = 2.5f;
-                        //action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        action.anywhere = false;// false, only recepatcle objects in viewport used
+                        // action.minDistance = 1.8f;
+                        // action.maxDistance = 2.5f;
+                        // action.objectId = "Floor|+00.00|+00.00|+00.00";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1001,7 +1001,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "ap": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "AdvancePhysicsStep";
-                        action["timeStep"] = 0.02f; //max 0.05, min 0.01
+                        action["timeStep"] = 0.02f; // max 0.05, min 0.01
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1062,7 +1062,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //random toggle state of all objects
+                // random toggle state of all objects
                 case "rts": {
                         ServerAction action = new ServerAction();
 
@@ -1093,7 +1093,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //set state of all objects that have a state
+                // set state of all objects that have a state
                 case "ssa": {
                         ServerAction action = new ServerAction();
 
@@ -1124,7 +1124,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["renderInstanceSegmentation"] = true;
                         action["renderFlowImage"] = true;
 
-                        //action.ssao = "default";
+                        // action.ssao = "default";
 
                         action["action"] = "Initialize";
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -1199,12 +1199,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
                         action["randomSeed"] = int.Parse(splitcommand[1]);
 
-                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+                        // set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
-                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        // set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
                         action["placeStationary"] = false;
 
-                        //set this true to ignore Placement Restrictions
+                        // set this true to ignore Placement Restrictions
                         action["forceAction"] = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -1229,12 +1229,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length == 2) {
                             action["putNearXY"] = bool.Parse(splitcommand[1]);
                         }
-                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        //action["placeStationary"] = true; 
+                        // set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        // action["placeStationary"] = true; 
                         action["x"] = 0.5f;
                         action["y"] = 0.5f;
-                        //set this true to ignore Placement Restrictions
-                        //action["forceAction"] = true;
+                        // set this true to ignore Placement Restrictions
+                        // action["forceAction"] = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -1249,7 +1249,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //put an object down with stationary false
+                // put an object down with stationary false
                 case "putf": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PutObject";
@@ -1259,20 +1259,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else
                             action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
 
-                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+                        // set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
-                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        // set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
                         action["placeStationary"] = false;
 
-                        //set this true to ignore Placement Restrictions
+                        // set this true to ignore Placement Restrictions
                         action["forceAction"] = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
-                //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
+                // make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
+                // if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
                 case "maom": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MakeAllObjectsMoveable";
@@ -1295,7 +1295,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //tests the Reset function on AgentManager.cs, adding a path to it from the PhysicsController
+                // tests the Reset function on AgentManager.cs, adding a path to it from the PhysicsController
                 case "reset": {
                         ServerAction action = new ServerAction();
                         action.action = "Reset";
@@ -1332,7 +1332,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 SimObjPhysics[] allSops = GameObject.FindObjectsOfType<SimObjPhysics>();
                                 sop = allSops[UnityEngine.Random.Range(0, allSops.Length)];
                             }
-                            //adding y offset to position so that the downward raycast used in PlaceObjectAtPoint correctly collides with surface below point
+                            // adding y offset to position so that the downward raycast used in PlaceObjectAtPoint correctly collides with surface below point
                             action["position"] = hit.point + new Vector3(0, 0.5f, 0);
                             action["objectId"] = sop.ObjectID;
 
@@ -1345,8 +1345,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
-                //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
+                // set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
+                // set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "InitialRandomSpawn";
@@ -1357,14 +1357,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // }
                         // action["excludedObjectIds"] = excludedObjectIds.ToArray();
 
-                        //give me a seed
+                        // give me a seed
                         if (splitcommand.Length == 2) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
                             action["forceVisible"] = false;
                             action["numPlacementAttempts"] = 5;
                         }
 
-                        //should objects be spawned only in immediately visible areas?
+                        // should objects be spawned only in immediately visible areas?
                         else if (splitcommand.Length == 3) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
 
@@ -1385,7 +1385,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["numPlacementAttempts"] = int.Parse(splitcommand[3]);
                         } else {
                             action["randomSeed"] = 0;
-                            action["forceVisible"] = false;//true;
+                            action["forceVisible"] = false;// true;
                             action["numPlacementAttempts"] = 20;
                         }
 
@@ -1400,14 +1400,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         excludeThese[0] = "CounterTop";
                         action["excludedReceptacles"] = excludeThese;
 
-                        action["placeStationary"] = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action["placeStationary"] = true;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         CurrentActiveController().ProcessControlCommand(action);
 
                         break;
                     }
                 case "spawn": {
                         ServerAction action = new ServerAction();
-                        //Debug.Log(action.objectVariation);
+                        // Debug.Log(action.objectVariation);
                         int objectVariation = 0;
                         if (splitcommand.Length == 2) {
                             action.objectType = splitcommand[1];
@@ -1415,12 +1415,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                             objectVariation = int.Parse(splitcommand[2]);
                         } else {
-                            action.objectType = "Tomato";//default to spawn debug tomato
+                            action.objectType = "Tomato";// default to spawn debug tomato
 
                         }
                         action.action = "CreateObject";
-                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
-                        action.objectVariation = objectVariation;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.randomizeObjectAppearance = false;// pick randomly from available or not?
+                        action.objectVariation = objectVariation;// if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         CurrentActiveController().ProcessControlCommand(action);
 
@@ -1481,19 +1481,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                             action.position = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
                             action.rotation = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
-                            //action.rotation?
+                            // action.rotation?
                         }
 
-                        //default to zeroed out rotation tomato
+                        // default to zeroed out rotation tomato
                         else {
-                            action.objectType = "Tomato";//default to spawn debug tomato
+                            action.objectType = "Tomato";// default to spawn debug tomato
                             action.position = Vector3.zero;
                             action.rotation = Vector3.zero;
                         }
                         action.action = "CreateObjectAtLocation";
 
-                        action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
-                        action.objectVariation = 1; //if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.randomizeObjectAppearance = false;// pick randomly from available or not?                  
+                        action.objectVariation = 1; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -1567,7 +1567,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "grp": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetReachablePositions";
-                        //action.maxStepCount = 10;
+                        // action.maxStepCount = 10;
                         if (splitcommand.Length == 2) {
                             action["directionsRelativeAgent"] = bool.Parse(splitcommand[1]);
                         }
@@ -1582,7 +1582,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "grpb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetReachablePositions";
-                        //action.maxStepCount = 10;
+                        // action.maxStepCount = 10;
                         CurrentActiveController().ProcessControlCommand(action);
 
                         // NOTE: reachablePositions has been removed as a public variable
@@ -1603,7 +1603,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                             action.objectVariation = int.Parse(splitcommand[2]);
                         } else {
-                            action.objectType = "Tomato"; //default to spawn debug tomato
+                            action.objectType = "Tomato"; // default to spawn debug tomato
 
                         }
                         action.x = 0.3f;
@@ -1681,7 +1681,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move ahead
+                // move ahead
                 case "mg": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveGlobal";
@@ -1710,7 +1710,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move ahead
+                // move ahead
                 case "ma": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
@@ -1720,14 +1720,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else
                             action.moveMagnitude = 0.25f;
 
-                        //action.manualInteract = true;
+                        // action.manualInteract = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
-                        //PhysicsController.CheckIfAgentCanMove(5.0f, 0);
+                        // PhysicsController.CheckIfAgentCanMove(5.0f, 0);
                         break;
                     }
 
-                //move backward
+                // move backward
                 case "mb": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveBack";
@@ -1741,7 +1741,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move left
+                // move left
                 case "ml": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
@@ -1755,7 +1755,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move right
+                // move right
                 case "mr": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
@@ -1770,7 +1770,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move ahead, force action true
+                // move ahead, force action true
                 case "maf": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
@@ -1787,7 +1787,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move backward, force action true
+                // move backward, force action true
                 case "mbf": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveBack";
@@ -1803,7 +1803,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move left, force action true
+                // move left, force action true
                 case "mlf": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
@@ -1819,7 +1819,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move right, force action true
+                // move right, force action true
                 case "mrf": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
@@ -1883,7 +1883,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //look up
+                // look up
                 case "lu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "LookUp";
@@ -1892,12 +1892,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["degrees"] = float.Parse(splitcommand[1]);
                         }
 
-                        //action.manualInteract = true;
+                        // action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //stochastic look up
+                // stochastic look up
                 case "lus": {
                         ServerAction action = new ServerAction();
                         action.action = "LookUp";
@@ -1910,7 +1910,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //look down
+                // look down
                 case "ld": {
                         ServerAction action = new ServerAction();
                         action.action = "LookDown";
@@ -1919,12 +1919,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.degrees = float.Parse(splitcommand[1]);
                         }
 
-                        //action.manualInteract = true;
+                        // action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //stochastic look down
+                // stochastic look down
                 case "lds": {
                         ServerAction action = new ServerAction();
                         action.action = "LookDown";
@@ -1937,7 +1937,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //rotate left
+                // rotate left
                 case "rl": {
                         ServerAction action = new ServerAction();
                         action.action = "RotateLeft";
@@ -1946,12 +1946,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.degrees = float.Parse(splitcommand[1]);
                         }
 
-                        //action.manualInteract = true;
+                        // action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //rotate left stochastic
+                // rotate left stochastic
                 case "rls": {
                         ServerAction action = new ServerAction();
                         action.action = "RotateLeft";
@@ -1964,7 +1964,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //rotate right
+                // rotate right
                 case "rr": {
                         ServerAction action = new ServerAction();
                         action.action = "RotateRight";
@@ -1973,12 +1973,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.degrees = float.Parse(splitcommand[1]);
                         }
 
-                        //action.manualInteract = true;
+                        // action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //rotate right stochastic
+                // rotate right stochastic
                 case "rrs": {
                         ServerAction action = new ServerAction();
                         action.action = "RotateRight";
@@ -1991,7 +1991,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //pickup object
+                // pickup object
                 case "pu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PickupObject";
@@ -2002,18 +2002,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //pickup using screen coordinates
+                // pickup using screen coordinates
                 case "puxy": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PickupObject";
-                        //action.forceAction = true;
+                        // action.forceAction = true;
                         action["x"] = 0.5f;
                         action["y"] = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //manual pickup object- test hand                
+                // manual pickup object- test hand                
                 case "pum": {
                         ServerAction action = new ServerAction();
                         action.action = "PickupObject";
@@ -2034,7 +2034,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2048,7 +2048,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2063,7 +2063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2144,7 +2144,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         action.x = 0.5f;
@@ -2153,7 +2153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //drop object
+                // drop object
                 case "dr": {
                         ServerAction action = new ServerAction();
                         action.action = "DropHandObject";
@@ -2170,7 +2170,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //rotate object in hand, pass in desired x/y/z rotation
+                // rotate object in hand, pass in desired x/y/z rotation
                 case "ro": {
                         ServerAction action = new ServerAction();
                         action.action = "RotateHand";
@@ -2197,7 +2197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //default the Hand's position and rotation to the starting position and rotation
+                // default the Hand's position and rotation to the starting position and rotation
                 case "dh": {
                         ServerAction action = new ServerAction();
                         action.action = "DefaultAgentHand";
@@ -2221,8 +2221,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand ahead, forward relative to agent's facing
-                //pass in move magnitude or default is 0.25 units
+                // move hand ahead, forward relative to agent's facing
+                // pass in move magnitude or default is 0.25 units
                 case "mha": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandAhead";
@@ -2240,8 +2240,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand backward. relative to agent's facing
-                //pass in move magnitude or default is 0.25 units               
+                // move hand backward. relative to agent's facing
+                // pass in move magnitude or default is 0.25 units               
                 case "mhb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandBack";
@@ -2259,8 +2259,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand left, relative to agent's facing
-                //pass in move magnitude or default is 0.25 units
+                // move hand left, relative to agent's facing
+                // pass in move magnitude or default is 0.25 units
                 case "mhl": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandLeft";
@@ -2277,8 +2277,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand right, relative to agent's facing
-                //pass in move magnitude or default is 0.25 units
+                // move hand right, relative to agent's facing
+                // pass in move magnitude or default is 0.25 units
                 case "mhr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandRight";
@@ -2315,8 +2315,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand up, relative to agent's facing
-                //pass in move magnitude or default is 0.25 units
+                // move hand up, relative to agent's facing
+                // pass in move magnitude or default is 0.25 units
                 case "mhu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandUp";
@@ -2333,8 +2333,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //move hand down, relative to agent's facing
-                //pass in move magnitude or default is 0.25 units
+                // move hand down, relative to agent's facing
+                // pass in move magnitude or default is 0.25 units
                 case "mhd": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandDown";
@@ -2351,7 +2351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //changes the time spent to decay to room temperature for all objects in this scene of given type
+                // changes the time spent to decay to room temperature for all objects in this scene of given type
                 case "DecayTimeForType": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SetRoomTempDecayTimeForType";
@@ -2363,7 +2363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //changes the time spent to decay to room temperature for all objects globally in the scene
+                // changes the time spent to decay to room temperature for all objects globally in the scene
                 case "DecayTimeGlobal": {
                         ServerAction action = new ServerAction();
                         action.action = "SetGlobalRoomTempDecayTime";
@@ -2383,8 +2383,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //throw object by dropping it and applying force.
-                //default is with strength of 120, can pass in custom magnitude of throw force
+                // throw object by dropping it and applying force.
+                // default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw": {
                         ServerAction action = new ServerAction();
                         action.action = "ThrowObject";
@@ -2406,13 +2406,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 200f;//4000f;
+                            action.moveMagnitude = 200f;// 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
-                            //action.moveMagnitude = 200f;//4000f;
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
+                            // action.moveMagnitude = 200f;// 4000f;
                         }
 
                         action.x = 0.5f;
@@ -2431,16 +2431,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 200f;//4000f;
+                            action.moveMagnitude = 200f;// 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         } else {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
-                            //action.moveMagnitude = 200f;//4000f;
+                            // action.moveMagnitude = 200f;// 4000f;
                         }
 
-                        //action.moveMagnitude = 200f;//4000f;
+                        // action.moveMagnitude = 200f;// 4000f;
                         action.z = -1;
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2454,7 +2454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 10f;//4000f;
+                            action.moveMagnitude = 10f;// 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
@@ -2474,7 +2474,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
                         }
@@ -2490,12 +2490,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
                         }
 
-                        //action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
+                        // action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
                         action["forceVisible"] = true;
                         action["forceAction"] = true;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2568,7 +2568,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["objectId"] = splitcommand[1];
                             action["openness"] = float.Parse(splitcommand[2]);
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
                         }
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2582,7 +2582,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         } else {
-                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                            // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
                             action["x"] = 0.5f;
                             action["y"] = 0.5f;
                         }
@@ -2608,10 +2608,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
                 //*****************************************************************************
-                //MASS SCALE ACTIONS HERE
+                // MASS SCALE ACTIONS HERE
                 //*****************************************************************************
 
-                //get total mass in right scale of MassScale sim obj
+                // get total mass in right scale of MassScale sim obj
                 case "rscalemass": {
                         ServerAction action = new ServerAction();
                         action.action = "MassInRightScale";
@@ -2624,7 +2624,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //get total mass in left scale of MassScale sim obj
+                // get total mass in left scale of MassScale sim obj
                 case "lscalemass": {
                         ServerAction action = new ServerAction();
                         action.action = "MassInLeftScale";
@@ -2637,7 +2637,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //get total count of objects in right scale of MassScale sim obj
+                // get total count of objects in right scale of MassScale sim obj
                 case "rscalecount": {
                         ServerAction action = new ServerAction();
                         action.action = "CountInRightScale";
@@ -2650,7 +2650,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //get total count of objects in the left scale of MassScale sim obj
+                // get total count of objects in the left scale of MassScale sim obj
                 case "lscalecount": {
                         ServerAction action = new ServerAction();
                         action.action = "CountInLeftScale";
@@ -2663,7 +2663,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //get list of all sim objects in the right scale of MassScale sim obj
+                // get list of all sim objects in the right scale of MassScale sim obj
                 case "rscaleobjs": {
                         ServerAction action = new ServerAction();
                         action.action = "ObjectsInRightScale";
@@ -2676,7 +2676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                //get list of all sim objects in the Left scale of MassScale sim obj
+                // get list of all sim objects in the Left scale of MassScale sim obj
                 case "lscaleobjs": {
                         ServerAction action = new ServerAction();
                         action.action = "ObjectsInLeftScale";
@@ -2694,9 +2694,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
                         action.action = "ObjectNavExpertAction";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action.objectType = splitcommand[1];
                         }
 
@@ -2709,9 +2709,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action["objectId"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
@@ -2730,9 +2730,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action["objectType"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
@@ -2751,10 +2751,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPathToPoint";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
-                            //action.objectId = splitcommand[1];
+                            // ID of spawner
+                            // action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 4) {
                                 action["x"] = float.Parse(splitcommand[1]);
@@ -2790,9 +2790,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "VisualizePath";
                         action.objectId = "0";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
@@ -2817,9 +2817,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
                         action.action = "VisualizeShortestPaths";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action.objectType = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
@@ -2859,9 +2859,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
                         action.action = "VisualizeShortestPaths";
 
-                        //pass in a min range, max range, delay
+                        // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
-                            //ID of spawner
+                            // ID of spawner
                             action.objectType = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
@@ -2899,7 +2899,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
                         action.disableRendering = false;
-                        //action.returnToStart = true;
+                        // action.returnToStart = true;
                         if (splitcommand.Length > 4) {
                             action.position = new Vector3(
                                     float.Parse(splitcommand[1]),
@@ -2930,17 +2930,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             Debug.LogError("Target x y z args needed for command");
                         }
-                        //action.stopArmMovementOnContact = true;
+                        // action.stopArmMovementOnContact = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
-                //move mid level arm stop motion
+                // move mid level arm stop motion
                 case "mmlas": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
-                        //action.returnToStart = true;
+                        // action.returnToStart = true;
                         if (splitcommand.Length > 4) {
                             action.position = new Vector3(
                                     float.Parse(splitcommand[1]),
@@ -2963,7 +2963,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             Debug.LogError("Target x y z args needed for command");
                         }
                         action.stopArmMovementOnContact = true;
-                        //action.stopArmMovementOnContact = true;
+                        // action.stopArmMovementOnContact = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -3116,11 +3116,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["z"] = float.Parse(splitcommand[3]);
                         }
                         CurrentActiveController().ProcessControlCommand(action);
-                        //Debug.Log("Invalid Command");
+                        // Debug.Log("Invalid Command");
                         break;
                     }
 
-                //rotate kinematic hand on arm
+                // rotate kinematic hand on arm
                 case "rmlh": {
                         ServerAction action = new ServerAction();
 
@@ -3170,7 +3170,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
             }
 
-            //StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
+            // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
 #endif
@@ -3185,7 +3185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             te.Copy();
         }
 
-        //used to show what's currently visible on the top left of the screen
+        // used to show what's currently visible on the top left of the screen
         void OnGUI() {
             if (PhysicsController.VisibleSimObjPhysics != null && this.controlMode != ControlMode.MINIMAL_FPS) {
                 if (PhysicsController.VisibleSimObjPhysics.Length > 10) {
@@ -3203,21 +3203,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     GUILayout.EndHorizontal();
                 } else {
-                    //Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
+                    // Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
-                    //int position_number = 0;
+                    // int position_number = 0;
                     foreach (SimObjPhysics o in PhysicsController.VisibleSimObjPhysics) {
                         string suffix = "";
                         // Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
                         // if (GeometryUtility.TestPlanesAABB(planes, bounds)) {
-                        //     //position_number += 1;
+                        //     // position_number += 1;
 
-                        //     //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
+                        //     // if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
                         //     //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 
-                        //     //else
-                        //     //suffix += " VISIBLE";
-                        //     //if(!IgnoreInteractableFlag)
+                        //     // else
+                        //     // suffix += " VISIBLE";
+                        //     // if(!IgnoreInteractableFlag)
                         //     //{
                         //     // if (o.isInteractable == true)
                         //     // {

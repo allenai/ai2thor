@@ -233,7 +233,7 @@ namespace MessagePack.LZ4
             {
                 // apparently (tested) this is an overkill
                 // it seems to be faster without this 8-byte loop
-                ////while (len >= 8)
+                //// while (len >= 8)
                 ////{
                 ////	dst[dst_0] = src[src_0];
                 ////	dst[dst_0 + 1] = src[src_0 + 1];
@@ -296,7 +296,7 @@ namespace MessagePack.LZ4
 
             // apparently (tested) this is an overkill
             // it seems to be faster without this 8-byte loop
-            ////while (len >= 8)
+            //// while (len >= 8)
             ////{
             ////	buffer[dst] = buffer[src];
             ////	buffer[dst + 1] = buffer[src + 1];

@@ -56,7 +56,7 @@ namespace FifoServer {
                 }
                 FieldType fieldType = (FieldType)header[0];
                 if (fieldType == FieldType.EndOfMessage) {
-                    //Console.WriteLine("Got eom");
+                    // Console.WriteLine("Got eom");
                     break;
                 }
                 int fieldLength = UnpackNetworkBytes(header, 1);
@@ -73,7 +73,7 @@ namespace FifoServer {
 
                 switch (fieldType) {
                     case FieldType.Action:
-                        //Console.WriteLine("Got action");
+                        // Console.WriteLine("Got action");
                         action = Encoding.Default.GetString(body);
                         break;
                     default:
@@ -92,7 +92,7 @@ namespace FifoServer {
             if (this.serverPipe == null) {
                 this.serverPipe = new FileStream(this.serverPipePath, FileMode.Open, FileAccess.Write);
             }
-            //Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
+            // Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
             byte[] header = new byte[headerLength];
             header[0] = (byte)t;
             PackNetworkBytes(body.Length).CopyTo(header, 1);

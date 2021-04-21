@@ -117,10 +117,10 @@ namespace Tests
 
         }
 
-        //this should fail if user calls PlaceHeldObject directly and tries to pass in a z value
-        //PlaceHeldObject is undocumented and the normal call is PutObject, which is a wrapper around PlaceHeldObject
-        //note: if a user passes in both 'z' and 'maxDistance' then they may get a silent, unintended behavior.
-        //we should decide how to handle extraneous parameters in the future
+        // this should fail if user calls PlaceHeldObject directly and tries to pass in a z value
+        // PlaceHeldObject is undocumented and the normal call is PutObject, which is a wrapper around PlaceHeldObject
+        // note: if a user passes in both 'z' and 'maxDistance' then they may get a silent, unintended behavior.
+        // we should decide how to handle extraneous parameters in the future
         [UnityTest]
         public IEnumerator PlaceHeldObject_Deprecated_Z_objectId()
         {
@@ -158,7 +158,7 @@ namespace Tests
             action["action"] = "PlaceHeldObject";
             action["objectId"] = "CounterTop|-00.08|+01.15|00.00";
 
-            //this should cause the exception
+            // this should cause the exception
             action["z"] = 5.0f;
             yield return ExecuteAction(action);
 
@@ -204,7 +204,7 @@ namespace Tests
             action["x"] = 0.5f;
             action["y"] = 0.5f;
 
-            //this should cause the exception
+            // this should cause the exception
             action["z"] = 5.0f;
             yield return ExecuteAction(action);
 
@@ -251,7 +251,7 @@ namespace Tests
             action["y"] = 0.5f;
             action["putNearXY"] = true;
 
-            //this should cause the exception
+            // this should cause the exception
             action["z"] = 5.0f;
             yield return ExecuteAction(action);
 

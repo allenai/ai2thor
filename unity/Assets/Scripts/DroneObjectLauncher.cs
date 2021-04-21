@@ -6,7 +6,7 @@ using System;
 public class DroneObjectLauncher : MonoBehaviour {
     [SerializeField] public GameObject[] prefabsToLaunch;
 
-    //keep track of what objects were launched already
+    // keep track of what objects were launched already
     public List<SimObjPhysics> launch_object = new List<SimObjPhysics>();
 
     // Use this for initialization
@@ -36,10 +36,10 @@ public class DroneObjectLauncher : MonoBehaviour {
         List<GameObject> candidates = new List<GameObject>();
 
         SimObjType target = (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
-        //Debug.Log(target);
+        // Debug.Log(target);
         foreach (GameObject go in prefabsToLaunch) {
-            //Debug.Log(go.GetComponent<SimObjPhysics>().Type);
-            //does a prefab of objectType exist in the current array of prefabs to spawn?
+            // Debug.Log(go.GetComponent<SimObjPhysics>().Type);
+            // does a prefab of objectType exist in the current array of prefabs to spawn?
             if (go.GetComponent<SimObjPhysics>().Type == target) {
                 candidates.Add(go);
             }

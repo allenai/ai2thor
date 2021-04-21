@@ -5,14 +5,14 @@ using UnityEngine.EventSystems;
 
 public class EventSystemChecker : MonoBehaviour
 {
-    //public GameObject eventSystem;
+    // public GameObject eventSystem;
 
 	// Use this for initialization
 	void Awake ()
 	{
 	    if(!FindObjectOfType<EventSystem>())
         {
-           //Instantiate(eventSystem);
+           // Instantiate(eventSystem);
             GameObject obj = new GameObject("EventSystem");
             obj.AddComponent<EventSystem>();
             obj.AddComponent<StandaloneInputModule>().forceModuleActive = true;

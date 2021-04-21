@@ -13,8 +13,8 @@ public class SimObjectEditor : Editor {
         }
         if (SimUtil.ShowBasePivots) {
             Handles.color = Color.white;
-            //this was originally Handles.CircleCap, which is obsolete, had to add the EventType.Repaint parameter in upgrading to new CircleHandleCap implementation
-            //not sure if the event type should be EventType.Repaint or EventType.Layout, but if Repaint isn't working change it to Layout
+            // this was originally Handles.CircleCap, which is obsolete, had to add the EventType.Repaint parameter in upgrading to new CircleHandleCap implementation
+            // not sure if the event type should be EventType.Repaint or EventType.Layout, but if Repaint isn't working change it to Layout
             Handles.CircleHandleCap(0, simObj.transform.position, Quaternion.Euler(-90f, 0f, 0f), 1f, EventType.Repaint);
         }
     }
@@ -98,7 +98,7 @@ public class SimObjectEditor : Editor {
                         newBaseObject.AddComponent<BoxCollider>();
                     }
 
-                    //create a base object and parent everything under it
+                    // create a base object and parent everything under it
                     List<Transform> children = new List<Transform>();
                     foreach (Transform t in simObj.transform) {
                         children.Add(t);
@@ -107,7 +107,7 @@ public class SimObjectEditor : Editor {
                         t.parent = newBaseObject.transform;
                     }
 
-                    //reset the scale and rotation of the main object
+                    // reset the scale and rotation of the main object
                     simObj.transform.localScale = Vector3.one;
                     simObj.transform.localRotation = Quaternion.identity;
 
@@ -119,7 +119,7 @@ public class SimObjectEditor : Editor {
 
                     simObj.RefreshColliders();
                 } else {
-                    //create a base object and parent everything under it
+                    // create a base object and parent everything under it
                     List<Transform> children = new List<Transform>();
                     foreach (Transform t in simObj.transform) {
                         children.Add(t);
@@ -157,7 +157,7 @@ public class SimObjectEditor : Editor {
                 SimUtil.ShowIDs = showIDs;
                 SimUtil.ShowCustomBounds = showCustomBounds;
                 SimUtil.ShowObjectVisibility = showObjectVisibility;
-                //force an editor repaint
+                // force an editor repaint
                 Repaint();
                 SceneView.RepaintAll();
             }

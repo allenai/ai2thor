@@ -68,9 +68,9 @@ public class SceneManager : MonoBehaviour {
 
     }
 
-    //generates a object ID for a sim object
+    // generates a object ID for a sim object
     public void AssignObjectID(SimObj obj) {
-        //object ID is a string consisting of:
+        // object ID is a string consisting of:
         //[SimObjType]_[X0.00]:[Y0.00]:[Z0.00]
         Vector3 pos = obj.transform.position;
         string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
@@ -89,7 +89,7 @@ public class SceneManager : MonoBehaviour {
     }
 
 #if UNITY_EDITOR
-    //returns an array of required types NOT found in scene
+    // returns an array of required types NOT found in scene
     public SimObjType[] CheckSceneForRequiredTypes() {
 
         List<SimObjType> typesToCheck = null;
@@ -127,16 +127,16 @@ public class SceneManager : MonoBehaviour {
 
     public void AutoStructureNavigation() {
         Transform[] transforms = StructureParent.GetComponentsInChildren<Transform>();
-        //take a wild guess that floor will be floor and ceiling will be ceiling
+        // take a wild guess that floor will be floor and ceiling will be ceiling
         foreach (Transform t in transforms) {
             if (t.name.Contains("Ceiling")) {
-                //set it to not walkable
+                // set it to not walkable
                 GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavemeshNoneArea);
             } else if (t.name.Contains("Floor")) {
-                //set it to floor
+                // set it to floor
                 GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavmeshFloorArea);
             } else {
-                //if it's not already set to none (ie sittable objects) set it to 'shelves'
+                // if it's not already set to none (ie sittable objects) set it to 'shelves'
                 if (GameObjectUtility.GetNavMeshArea(t.gameObject) != PlacementManager.NavemeshNoneArea) {
                     GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavmeshShelfArea);
                 }
@@ -148,8 +148,8 @@ public class SceneManager : MonoBehaviour {
     public void GatherObjectsUnderParents() {
         SetUpParents();
 
-        //move everything under structure by default
-        //then move things to other folders based on their tags or type
+        // move everything under structure by default
+        // then move things to other folders based on their tags or type
         SimObj[] simObjs = GameObject.FindObjectsOfType<SimObj>();
         foreach (SimObj o in simObjs) {
             Receptacle r = o.transform.GetComponentInParent<Receptacle>();
@@ -160,7 +160,7 @@ public class SceneManager : MonoBehaviour {
 
         GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (GameObject rootObject in rootObjects) {
-            //make sure it's not a parent
+            // make sure it's not a parent
             if (rootObject != gameObject
                 && rootObject.transform != LightingParent
                 && rootObject.transform != ObjectsParent
@@ -179,20 +179,20 @@ public class SceneManager : MonoBehaviour {
         }
         Light[] lights = GameObject.FindObjectsOfType<Light>();
         foreach (Light l in lights) {
-            //TODO specify whether to gather prefab lights
+            // TODO specify whether to gather prefab lights
 
-            //if it's NOT in a prefab, move it
+            // if it's NOT in a prefab, move it
             if (PrefabUtility.GetCorrespondingObjectFromSource(l.gameObject) == null) {
                 l.transform.parent = LightingParent;
             }
         }
-        //tag all the structure colliders
+        // tag all the structure colliders
         Collider[] cols = StructureParent.GetComponentsInChildren<Collider>();
         foreach (Collider c in cols) {
             c.tag = "Structure";
             c.gameObject.layer = SimUtil.RaycastVisibleLayer;
         }
-        //set all structure transforms to static
+        // set all structure transforms to static
         Transform[] transforms = StructureParent.GetComponentsInChildren<Transform>();
         foreach (Transform tr in transforms) {
             tr.gameObject.isStatic = true;
@@ -205,17 +205,17 @@ public class SceneManager : MonoBehaviour {
         foreach (SimObj generic in simObjs) {
             foreach (SimObj platonic in PlatonicPrefabs) {
                 if (generic.Type == platonic.Type) {
-                    //make sure one isn't a prefab of the other
+                    // make sure one isn't a prefab of the other
                     GameObject prefab = PrefabUtility.GetCorrespondingObjectFromSource(generic.gameObject) as GameObject;
                     if (prefab == null || prefab != platonic.gameObject) {
                         Debug.Log("Replacing " + generic.name + " with " + platonic.name);
-                        //as long as it's not a prefab, swap it out with the prefab
+                        // as long as it's not a prefab, swap it out with the prefab
                         GameObject newSimObj = PrefabUtility.InstantiatePrefab(platonic.gameObject) as GameObject;
                         newSimObj.transform.position = generic.transform.position;
                         newSimObj.transform.rotation = generic.transform.rotation;
                         newSimObj.transform.parent = generic.transform.parent;
                         newSimObj.name = newSimObj.name.Replace("(Clone)", "");
-                        //destroy the old sim obj
+                        // destroy the old sim obj
                         GameObject.DestroyImmediate(generic.gameObject);
                         break;
                     }
@@ -225,8 +225,8 @@ public class SceneManager : MonoBehaviour {
     }
 
     public void SetUpLighting() {
-        //thanks for not exposing these props, Unity :P
-        //this may break in later versions
+        // thanks for not exposing these props, Unity :P
+        // this may break in later versions
         var getLightmapSettingsMethod = typeof(LightmapEditorSettings).GetMethod("GetLightmapSettings", BindingFlags.Static | BindingFlags.NonPublic);
         var lightmapSettings = getLightmapSettingsMethod.Invoke(null, null) as Object;
         SerializedObject settingsObject = new SerializedObject(lightmapSettings);
@@ -245,8 +245,8 @@ public class SceneManager : MonoBehaviour {
     }
 
     public void SetUpNavigation() {
-        //thanks for not exposing these props, Unity :P
-        //this may break in later versions
+        // thanks for not exposing these props, Unity :P
+        // this may break in later versions
         SerializedObject settingsObject = new SerializedObject(UnityEditor.AI.NavMeshBuilder.navMeshSettingsObject);
 
         /*var iter = settingsObject.GetIterator();
@@ -278,10 +278,10 @@ public class SceneManager : MonoBehaviour {
             fpsObj = PrefabUtility.InstantiatePrefab(FPSControllerPrefab) as GameObject;
             fpsObj.name = FPSControllerPrefab.name;
         } else {
-            //re-attach to prefab
+            // re-attach to prefab
             GameObject prefabParent = PrefabUtility.GetCorrespondingObjectFromSource(fpsObj) as GameObject;
             if (prefabParent == null) {
-                //if it's not attached to a prefab, delete and start over
+                // if it's not attached to a prefab, delete and start over
                 Vector3 pos = fpsObj.transform.position;
                 GameObject.DestroyImmediate(fpsObj);
                 fpsObj = PrefabUtility.InstantiatePrefab(FPSControllerPrefab) as GameObject;
@@ -293,12 +293,12 @@ public class SceneManager : MonoBehaviour {
         fpsObj.transform.parent = null;
         fpsObj.transform.SetAsLastSibling();
 
-        //FirstPersonController fps = fpsObj.GetComponent <FirstPersonController> ();
+        // FirstPersonController fps = fpsObj.GetComponent <FirstPersonController> ();
         Rigidbody rb = fpsObj.GetComponent<Rigidbody>();
         CharacterController cc = fpsObj.GetComponent<CharacterController>();
         Camera cam = fpsObj.GetComponentInChildren<Camera>();
 
-        //values copied from scene doc
+        // values copied from scene doc
         cc.slopeLimit = 0f;
         cc.stepOffset = 0f;
         cc.skinWidth = 0.08f;
@@ -316,9 +316,9 @@ public class SceneManager : MonoBehaviour {
         cam.farClipPlane = 1000f;
         cam.nearClipPlane = 0.1f;
 
-        //remove all other cameras in the scene
-        //Camera[] cams = GameObject.FindObjectsOfType<Camera>();
-        //foreach (Camera c in cams) {
+        // remove all other cameras in the scene
+        // Camera[] cams = GameObject.FindObjectsOfType<Camera>();
+        // foreach (Camera c in cams) {
         //	if (c != cam) {
         //		CameraControls controls = c.GetComponent <CameraControls> ();
         //		if (controls == null) {
@@ -333,7 +333,7 @@ public class SceneManager : MonoBehaviour {
         if (parentGo == null) {
             parentGo = new GameObject(parentName);
         }
-        //set to root just in case
+        // set to root just in case
         parentGo.transform.parent = null;
         parentTransform = parentGo.transform;
         parentTransform.SetAsLastSibling();

@@ -35,10 +35,10 @@ public class ConvertableEditor : Editor {
             c.States[0].Type = c.GetComponent<SimObj>().Type;
         }
 
-        //name all state objects for their state
+        // name all state objects for their state
         foreach (SimObjState state in c.States) {
             if (state.Obj != null) {
-                //state.Obj.name = state.Type.ToString ();
+                // state.Obj.name = state.Type.ToString ();
             }
         }
 

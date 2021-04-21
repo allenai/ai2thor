@@ -213,13 +213,13 @@ Shader "Hidden/ScreenSpaceAmbientObscurance"
 		// View space point being shaded
 		float3 C = GetPosition(ssC);
 
-		//return abs(float4(C.xyz,0));
-		//if(abs(C.z)<0.31)
+		// return abs(float4(C.xyz,0));
+		// if(abs(C.z)<0.31)
 		//	return 1;
-		//return abs(C.z);
+		// return abs(C.z);
 
 		packKey(CSZToKey(C.z), fragment.gb);
-		//packKey(CSZToKey(C.z), bilateralKey);
+		// packKey(CSZToKey(C.z), bilateralKey);
 
 		float randomPatternRotationAngle = 1.0;
 	#if defined(SHADER_API_D3D11) || defined(SHADER_API_GLCORE)
@@ -235,7 +235,7 @@ Shader "Hidden/ScreenSpaceAmbientObscurance"
 		// in the final image.
 		float3 n_C = ReconstructCSFaceNormal(C);
 
-		//return float4((n_C),0);
+		// return float4((n_C),0);
 
 		// Choose the screen-space sample _Radius
 		// proportional to the projected area of the sphere

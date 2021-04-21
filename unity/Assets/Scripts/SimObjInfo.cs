@@ -2,21 +2,21 @@
 using System;
 
 [Serializable]
-public enum SimObjProperty : int //Properties of a SimObjPhysics that determine how they can be interacted with
+public enum SimObjProperty : int // Properties of a SimObjPhysics that determine how they can be interacted with
 {
-    Undefined, //NEVER LEAVE ON UNDEFINED
+    Undefined, // NEVER LEAVE ON UNDEFINED
 
-    //PRIMARY PROPERTIES - EACH SimObjPhysics must have ONE Primary Property
+    // PRIMARY PROPERTIES - EACH SimObjPhysics must have ONE Primary Property
     Static,
     Moveable,
     CanPickup,
 
-    //CLEANABLE PROPERATIES - this property defines what objects can clean certain objects
+    // CLEANABLE PROPERATIES - this property defines what objects can clean certain objects
     CanBeCleanedFloor,
     CanBeCleanedDishware,
     CanBeCleanedGlass,
 
-    //SECONDARY PROPERTIES - EACH SimObjPhysics can have any number of Secondary Properties
+    // SECONDARY PROPERTIES - EACH SimObjPhysics can have any number of Secondary Properties
     CanCleanFloor,
     CanCleanDishware,
     CanCleanGlass,

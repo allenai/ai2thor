@@ -129,13 +129,13 @@ namespace Priority_Queue
             CascadeUp(node);
         }
 
-        //Performance appears to be slightly better when this is NOT inlined o_O
+        // Performance appears to be slightly better when this is NOT inlined o_O
 #if NET_VERSION_4_5
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         private void CascadeUp(T node)
         {
-            //aka Heapify-up
+            // aka Heapify-up
             int parent;
             if(node.QueueIndex > 1)
             {
@@ -144,7 +144,7 @@ namespace Priority_Queue
                 if(HasHigherPriority(parentNode, node))
                     return;
 
-                //Node has lower priority value, so move parent down the heap to make room
+                // Node has lower priority value, so move parent down the heap to make room
                 _nodes[node.QueueIndex] = parentNode;
                 parentNode.QueueIndex = node.QueueIndex;
 
@@ -161,7 +161,7 @@ namespace Priority_Queue
                 if(HasHigherPriority(parentNode, node))
                     break;
 
-                //Node has lower priority value, so move parent down the heap to make room
+                // Node has lower priority value, so move parent down the heap to make room
                 _nodes[node.QueueIndex] = parentNode;
                 parentNode.QueueIndex = node.QueueIndex;
 
@@ -175,7 +175,7 @@ namespace Priority_Queue
 #endif
         private void CascadeDown(T node)
         {
-            //aka Heapify-down
+            // aka Heapify-down
             int finalQueueIndex = node.QueueIndex;
             int childLeftIndex = 2 * finalQueueIndex;
 
@@ -346,7 +346,7 @@ namespace Priority_Queue
             #endif
 
             T returnMe = _nodes[1];
-            //If the node is already the last node, we can remove it immediately
+            // If the node is already the last node, we can remove it immediately
             if(_numNodes == 1)
             {
                 _nodes[1] = null;
@@ -354,14 +354,14 @@ namespace Priority_Queue
                 return returnMe;
             }
 
-            //Swap the node with the last node
+            // Swap the node with the last node
             T formerLastNode = _nodes[_numNodes];
             _nodes[1] = formerLastNode;
             formerLastNode.QueueIndex = 1;
             _nodes[_numNodes] = null;
             _numNodes--;
 
-            //Now bubble formerLastNode (which is no longer the last node) down
+            // Now bubble formerLastNode (which is no longer the last node) down
             CascadeDown(formerLastNode);
             return returnMe;
         }
@@ -442,7 +442,7 @@ namespace Priority_Queue
 #endif
         private void OnNodeUpdated(T node)
         {
-            //Bubble the updated node up or down as appropriate
+            // Bubble the updated node up or down as appropriate
             int parentIndex = node.QueueIndex >> 1;
 
             if(parentIndex > 0 && HasHigherPriority(node, _nodes[parentIndex]))
@@ -451,7 +451,7 @@ namespace Priority_Queue
             }
             else
             {
-                //Note that CascadeDown will be called if parentNode == node (that is, node is the root)
+                // Note that CascadeDown will be called if parentNode == node (that is, node is the root)
                 CascadeDown(node);
             }
         }
@@ -477,7 +477,7 @@ namespace Priority_Queue
             }
 #endif
 
-            //If the node is already the last node, we can remove it immediately
+            // If the node is already the last node, we can remove it immediately
             if(node.QueueIndex == _numNodes)
             {
                 _nodes[_numNodes] = null;
@@ -485,14 +485,14 @@ namespace Priority_Queue
                 return;
             }
 
-            //Swap the node with the last node
+            // Swap the node with the last node
             T formerLastNode = _nodes[_numNodes];
             _nodes[node.QueueIndex] = formerLastNode;
             formerLastNode.QueueIndex = node.QueueIndex;
             _nodes[_numNodes] = null;
             _numNodes--;
 
-            //Now bubble formerLastNode (which is no longer the last node) up or down as appropriate
+            // Now bubble formerLastNode (which is no longer the last node) up or down as appropriate
             OnNodeUpdated(formerLastNode);
         }
 

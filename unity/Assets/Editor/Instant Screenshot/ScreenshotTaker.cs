@@ -1,4 +1,4 @@
-﻿//C# Example
+﻿// C# Example
 using UnityEditor;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ public class Screenshot : EditorWindow {
     // Add menu item named "My Window" to the Window menu
     [MenuItem("Tools/Saad Khawaja/Instant High-Res Screenshot")]
     public static void ShowWindow() {
-        //Show existing window instance. If one doesn't exist, make one.
+        // Show existing window instance. If one doesn't exist, make one.
         EditorWindow editorWindow = EditorWindow.GetWindow(typeof(Screenshot));
         editorWindow.autoRepaintOnSceneChange = true;
         editorWindow.Show();
@@ -62,7 +62,7 @@ public class Screenshot : EditorWindow {
 
 
 
-        //isTransparent = EditorGUILayout.Toggle(isTransparent,"Transparent Background");
+        // isTransparent = EditorGUILayout.Toggle(isTransparent,"Transparent Background");
 
 
 

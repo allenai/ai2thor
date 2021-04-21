@@ -94,7 +94,7 @@ namespace MessagePack.LZ4
         private const int HASHHC_LOG = MAXD_LOG - 1;
         private const int HASHHC_TABLESIZE = 1 << HASHHC_LOG;
         private const int HASHHC_ADJUST = (MINMATCH * 8) - HASHHC_LOG;
-        ////private const int HASHHC_MASK = HASHHC_TABLESIZE - 1;
+        //// private const int HASHHC_MASK = HASHHC_TABLESIZE - 1;
 
         private const int MAX_NB_ATTEMPTS = 256;
         private const int OPTIMAL_ML = ML_MASK - 1 + MINMATCH;

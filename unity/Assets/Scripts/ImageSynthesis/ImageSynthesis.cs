@@ -30,7 +30,7 @@ public class ImageSynthesis : MonoBehaviour {
         new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
 
-		//new CapturePass() { name = "_position" },
+		// new CapturePass() { name = "_position" },
 
 	};
 
@@ -57,7 +57,7 @@ public class ImageSynthesis : MonoBehaviour {
     private Shader uberReplacementShader;
     private Shader opticalFlowShader;
     private Shader depthShader;
-    //public Shader positionShader;
+    // public Shader positionShader;
 
 
     public Dictionary<Color, string> colorIds;
@@ -76,9 +76,9 @@ public class ImageSynthesis : MonoBehaviour {
     public Texture2D tex;
 
     void Start() {
-        //XXXXXXXXXXX************
-        //Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
-        //otherwise the standlone will build without the shaders and you will be sad
+        // XXXXXXXXXXX************
+        // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
+        // otherwise the standlone will build without the shaders and you will be sad
 
 
         // default fallbacks, if shaders are unspecified
@@ -98,7 +98,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 #endif
 
-        //if (!positionShader)
+        // if (!positionShader)
         //	positionShader = Shader.Find("Hidden/World");
 
         opticalFlowSensitivity = 50.0f;
@@ -123,7 +123,7 @@ public class ImageSynthesis : MonoBehaviour {
 #endif // UNITY_EDITOR
 
         // @TODO: detect if camera properties actually changed
-        //OnCameraChange();
+        // OnCameraChange();
     }
 
     private Camera CreateHiddenCamera(string name) {
@@ -133,15 +133,15 @@ public class ImageSynthesis : MonoBehaviour {
 #endif
         go.transform.parent = transform;
 
-        //this is a check for if the image synth is being added to a ThirdPartyCamera, which doesn't have a FirstPersonCharacterCull component
-        //Note: Check that all image synthesis works with third party cameras, as the image synth assumes that it is taking default settings
-        //from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
+        // this is a check for if the image synth is being added to a ThirdPartyCamera, which doesn't have a FirstPersonCharacterCull component
+        // Note: Check that all image synthesis works with third party cameras, as the image synth assumes that it is taking default settings
+        // from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
         if (go.transform.parent.GetComponent<FirstPersonCharacterCull>())
-            //add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
+            // add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
             go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
 
         var newCamera = go.GetComponent<Camera>();
-        newCamera.cullingMask = 1;//render everything, including PlaceableSurfaces
+        newCamera.cullingMask = 1;// render everything, including PlaceableSurfaces
         return newCamera;
     }
 
@@ -186,8 +186,8 @@ public class ImageSynthesis : MonoBehaviour {
         Flow = 5,
     };
 
-    //Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
-    //do, so maybe it's fine for now I dunno
+    // Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
+    // do, so maybe it's fine for now I dunno
     public void OnCameraChange() {
         if (tex != null) {
             Destroy(tex);
@@ -206,15 +206,15 @@ public class ImageSynthesis : MonoBehaviour {
             // copy all "main" camera parameters into capturing camera
             pass.camera.CopyFrom(mainCamera);
 
-            //make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+            // make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
             pass.camera.renderingPath = RenderingPath.Forward;
-            //make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
+            // make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
             pass.camera.cullingMask = -1;
 
             pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
         }
 
-        //set the display corresponding to which capturePass this is
+        // set the display corresponding to which capturePass this is
         for (int i = 0; i < capturePasses.Length; i++) {
             capturePasses[i].camera.targetDisplay = i;
         }
@@ -228,8 +228,8 @@ public class ImageSynthesis : MonoBehaviour {
         if (!depthMaterial || depthMaterial.shader != depthShader) {
             depthMaterial = new Material(depthShader);
         }
-        //capturePasses [1].camera.farClipPlane = 100;
-        //SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
+        // capturePasses [1].camera.farClipPlane = 100;
+        // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
         SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
 
 
@@ -304,7 +304,7 @@ public class ImageSynthesis : MonoBehaviour {
 
             if (so != null) {
                 classTag = "" + so.WhatIsMyStructureObjectTag;
-                //objTag = so.gameObject.name;
+                // objTag = so.gameObject.name;
             }
             if (sop != null) {
                 classTag = "" + sop.Type;
@@ -456,7 +456,7 @@ public class ImageSynthesis : MonoBehaviour {
         if (jpg)
             bytes = tex.EncodeToJPG();
         else
-            //bytes = tex.EncodeToPNG();
+            // bytes = tex.EncodeToPNG();
             bytes = tex.GetRawTextureData();
         Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
 
@@ -467,7 +467,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 
 
-        //UnityEngine.Object.Destroy(tex);
+        // UnityEngine.Object.Destroy(tex);
         RenderTexture.ReleaseTemporary(finalRT);
         return bytes;
     }

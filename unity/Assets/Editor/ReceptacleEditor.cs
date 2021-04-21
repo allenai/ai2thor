@@ -24,7 +24,7 @@ public class ReceptacleEditor : Editor {
         }
         EditorGUILayout.EndVertical();
 
-        //if the visibility collider is null, don't do anything else
+        // if the visibility collider is null, don't do anything else
         if (r.VisibilityCollider == null)
             return;
 
@@ -40,7 +40,7 @@ public class ReceptacleEditor : Editor {
             EditorGUILayout.LabelField("Receptacle has no pivots!");
         } else {
             int deletedPivotIndex = -1;
-            //check for null objects in the pivot list
+            // check for null objects in the pivot list
             for (int i = 0; i < r.Pivots.Length; i++) {
                 if (r.Pivots[i] == null) {
                     deletedPivotIndex = i;
@@ -84,7 +84,7 @@ public class ReceptacleEditor : Editor {
             }
 
             if (deletedPivotIndex >= 0) {
-                //remove the pivot from the array
+                // remove the pivot from the array
                 List<Transform> newPivotList = new List<Transform>(r.Pivots);
                 newPivotList.RemoveAt(deletedPivotIndex);
                 r.Pivots = newPivotList.ToArray();
@@ -252,7 +252,7 @@ public class ReceptacleEditor : Editor {
         }
 
         if (EditorUtility.IsPersistent(itemGo)) {
-            //instantiate the object
+            // instantiate the object
             Debug.Log("Instantiating " + itemGo.name + " and placing in the scene");
             itemGo = GameObject.Instantiate(itemGo) as GameObject;
             return;
@@ -275,10 +275,10 @@ public class ReceptacleEditor : Editor {
             }
         }
 
-        //if we've made it this far the item is OK
-        //parent it under the receptacle
+        // if we've made it this far the item is OK
+        // parent it under the receptacle
         SimUtil.AddItemToReceptacle(o, r);
-        //don't scale the item
+        // don't scale the item
     }
 
     void CheckForDragDropPivots(Receptacle r) {
@@ -311,7 +311,7 @@ public class ReceptacleEditor : Editor {
         try {
             pivot = (GameObject)potentialPivot;
         } catch (Exception e) {
-            //if we can't cast, forget it
+            // if we can't cast, forget it
             Debug.Log(e);
             return;
         }
@@ -333,7 +333,7 @@ public class ReceptacleEditor : Editor {
             }
         }
 
-        //we made it this far, the pivot must be legit
+        // we made it this far, the pivot must be legit
         Array.Resize(ref r.Pivots, r.Pivots.Length + 1);
         r.Pivots[r.Pivots.Length - 1] = pivot.transform;
     }

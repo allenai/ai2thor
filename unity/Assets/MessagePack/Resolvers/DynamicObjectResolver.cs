@@ -736,11 +736,11 @@ namespace MessagePack.Internal
 
                 argWriter.EmitLoad();
                 il.EmitLdc_I4(writeCount);
-                ////if (writeCount <= MessagePackRange.MaxFixMapCount)
+                //// if (writeCount <= MessagePackRange.MaxFixMapCount)
                 ////{
                 ////    il.EmitCall(MessagePackWriterTypeInfo.WriteFixedMapHeaderUnsafe);
                 ////}
-                ////else
+                //// else
                 {
                     il.EmitCall(MessagePackWriterTypeInfo.WriteMapHeader);
                 }
@@ -2099,7 +2099,7 @@ namespace MessagePack.Internal
                 }
             }
 
-            ////public object ReflectionLoadValue(object value)
+            //// public object ReflectionLoadValue(object value)
             ////{
             ////    if (IsProperty)
             ////    {
@@ -2111,7 +2111,7 @@ namespace MessagePack.Internal
             ////    }
             ////}
 
-            ////public void ReflectionStoreValue(object obj, object value)
+            //// public void ReflectionStoreValue(object obj, object value)
             ////{
             ////    if (IsProperty)
             ////    {

@@ -76,7 +76,7 @@ namespace UnityStandardAssets.ImageEffects
                 return;
             }
 
-            //CreateRandomTable (26, 0.2f);
+            // CreateRandomTable (26, 0.2f);
 
             m_Supported = true;
         }

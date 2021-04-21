@@ -22,7 +22,7 @@ public class MirrorCameraScript : MonoBehaviour
     {
         mirrorScript = GetComponentInParent<MirrorScript>();
         cameraObject = GetComponent<Camera>();
-        //cameraObject.enabled = true;
+        // cameraObject.enabled = true;
 
         if (mirrorScript.AddFlareLayer)
         {

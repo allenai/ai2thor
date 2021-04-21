@@ -197,7 +197,7 @@ namespace MIConvexHull
         /// </summary>
         public double Offset;
 
-        //public int UnprocessedIndex;
+        // public int UnprocessedIndex;
 
         /// <summary>
         /// Prev node in the list.

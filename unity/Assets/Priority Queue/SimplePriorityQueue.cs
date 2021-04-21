@@ -491,7 +491,7 @@ namespace Priority_Queue
             List<TItem> queueData = new List<TItem>();
             lock (_queue)
             {
-                //Copy to a separate list because we don't want to 'yield return' inside a lock
+                // Copy to a separate list because we don't want to 'yield return' inside a lock
                 foreach(var node in _queue)
                 {
                     queueData.Add(node.Data);

@@ -142,7 +142,7 @@ namespace UnityStandardAssets.ImageEffects
             // Repeatedly reduce this image in size, computing min/max luminance values
             // In the end we'll have 1x1 image with min/max luminances found.
             const int FINAL_SIZE = 1;
-            //const int FINAL_SIZE = 1;
+            // const int FINAL_SIZE = 1;
             while( rtTempSrc.width > FINAL_SIZE || rtTempSrc.height > FINAL_SIZE )
             {
                 const int REDUCE_RATIO = 2; // our shader does 2x2 reduction

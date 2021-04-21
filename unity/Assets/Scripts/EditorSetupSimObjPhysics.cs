@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//THIS IS WINSON EXPERIMENTING WITH SETUP FUNCTIONS< DO NOT USE RIGHT NOW
+// THIS IS WINSON EXPERIMENTING WITH SETUP FUNCTIONS< DO NOT USE RIGHT NOW
 public class EditorSetupSimObjPhysics : MonoBehaviour {
     public SimObjType Type;
     public SimObjPrimaryProperty Primary;
@@ -20,8 +20,8 @@ public class EditorSetupSimObjPhysics : MonoBehaviour {
     }
 
     public void Mirror() {
-        //SimObjSecondaryProperty[] MirrorSecondary = new SimObjSecondaryProperty[]{SimObjSecondaryProperty.CanBeCleanedGlass};
-        //Setup(SimObjType.Mirror, SimObjPrimaryProperty.Static, MirrorSecondary);
+        // SimObjSecondaryProperty[] MirrorSecondary = new SimObjSecondaryProperty[]{SimObjSecondaryProperty.CanBeCleanedGlass};
+        // Setup(SimObjType.Mirror, SimObjPrimaryProperty.Static, MirrorSecondary);
     }
 
     public void Setup(SimObjType type, SimObjPrimaryProperty primaryProperty, SimObjSecondaryProperty[] secondaryProperties, string tag, int layer) {
@@ -31,6 +31,6 @@ public class EditorSetupSimObjPhysics : MonoBehaviour {
         // sop.PrimaryProperty = primaryProperty;
         // sop.SecondaryProperties = secondaryProperties;
         // sop.gameObject.tag = tag;
-        //sop.layer = layer;
+        // sop.layer = layer;
     }
 }

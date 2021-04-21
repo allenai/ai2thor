@@ -46,14 +46,14 @@ public class CabinetEditor : Editor {
 
             case CabinetOpenStyle.SingleDoorLeft:
                 c.LeftDoor = (Transform)EditorGUILayout.ObjectField("Left door", c.LeftDoor, typeof(Transform), true);
-                //c.RightDoor = null;
+                // c.RightDoor = null;
                 c.OpenAngleLeft = EditorGUILayout.Vector3Field("Open Angle", c.OpenAngleLeft);
                 c.ClosedAngleLeft = EditorGUILayout.Vector3Field("Closed Angle", c.ClosedAngleLeft);
                 break;
 
             case CabinetOpenStyle.SingleDoorRight:
                 c.RightDoor = (Transform)EditorGUILayout.ObjectField("Right door", c.RightDoor, typeof(Transform), true);
-                //c.LeftDoor = null;
+                // c.LeftDoor = null;
                 c.OpenAngleRight = EditorGUILayout.Vector3Field("Open Angle", c.OpenAngleRight);
                 c.ClosedAngleRight = EditorGUILayout.Vector3Field("Closed Angle", c.ClosedAngleRight);
                 break;
@@ -63,13 +63,13 @@ public class CabinetEditor : Editor {
                 c.OpenLocalPosition = EditorGUILayout.Vector3Field("Open Position (local)", c.OpenLocalPosition);
                 c.ClosedLocalPosition = EditorGUILayout.Vector3Field("Closed Position (local)", c.ClosedLocalPosition);
 
-                //visibility collider needs to change scale and position if drawer is open or closed
+                // visibility collider needs to change scale and position if drawer is open or closed
                 c.VisCollider = (Transform)EditorGUILayout.ObjectField("Visibility Collider", c.VisCollider, typeof(Transform), true);
 
-                //open position and scale for the visibility collider, set this manually in editor
+                // open position and scale for the visibility collider, set this manually in editor
                 c.OpenVisColPosition = EditorGUILayout.Vector3Field("Visibility Collider Open Position (local)", c.OpenVisColPosition);
                 c.OpenVisColScale = EditorGUILayout.Vector3Field("Visibility Collider Open Scale (local)", c.OpenVisColScale);
-                //closed position and scale for visibility collider, set this manually in editor
+                // closed position and scale for visibility collider, set this manually in editor
                 c.ClosedVisColPosition = EditorGUILayout.Vector3Field("Visibility Collider Closed Position (local)", c.ClosedVisColPosition);
                 c.ClosedVisColScale = EditorGUILayout.Vector3Field("Visibility Collider Closed Scale (local)", c.ClosedVisColScale);
                 break;
@@ -149,7 +149,7 @@ public class CabinetEditor : Editor {
     public void SetAllPivotsBottomCenter() {
         Cabinet[] cabinets = GameObject.FindObjectsOfType<Cabinet>();
         foreach (Cabinet cabinet in cabinets) {
-            //if (cabinet.OpenStyle != CabinetOpenStyle.Drawer) {
+            // if (cabinet.OpenStyle != CabinetOpenStyle.Drawer) {
             try {
                 if (cabinet.ParentObj != null) {
                     Receptacle r = cabinet.ParentObj.GetComponent<Receptacle>();
@@ -203,7 +203,7 @@ public class CabinetEditor : Editor {
         GameObject cabineObj = null;
         BoxCollider doorBc = null;
 
-        //drawers and cabinets are very different so handle drawers here
+        // drawers and cabinets are very different so handle drawers here
         if (c.OpenStyle == CabinetOpenStyle.Drawer) {
             Transform drawerObj = null;
             if (c.DrawerDoor == null) {
@@ -213,37 +213,37 @@ public class CabinetEditor : Editor {
             cabineObj = drawerObj.gameObject;
             doorBc = drawerObj.GetComponent<BoxCollider>();
 
-            //set up the new cabinet script, then destroy the old one
+            // set up the new cabinet script, then destroy the old one
             Cabinet newC = cabineObj.AddComponent<Cabinet>();
             newC.OpenStyle = CabinetOpenStyle.Drawer;
             newC.OpenLocalPosition = c.OpenLocalPosition;
             newC.ClosedLocalPosition = c.ClosedLocalPosition;
             newC.DrawerDoor = drawerObj;
 
-            //create a new pivot and visibility obj under the DRAWER object
+            // create a new pivot and visibility obj under the DRAWER object
             GameObject visibilityObj = new GameObject("VisibilityCollider");
             visibilityObj.transform.parent = drawerObj.transform;
             visibilityObj.transform.localPosition = Vector3.zero;
             visibilityObj.transform.localRotation = Quaternion.identity;
             BoxCollider visBc = visibilityObj.AddComponent<BoxCollider>();
-            //copy box collider props from door
+            // copy box collider props from door
             visBc.center = doorBc.center;
             visBc.size = doorBc.size;
-            //scale visBc to pull it back from front
+            // scale visBc to pull it back from front
             visBc.transform.localScale = new Vector3(0.95f, 0.95f, 15f);
 
             GameObject pivotObj = new GameObject("Pivot");
             pivotObj.transform.parent = drawerObj.transform;
             pivotObj.transform.position = visBc.bounds.center;
             pivotObj.transform.localRotation = Quaternion.identity;
-            //add pivot to receptacle
+            // add pivot to receptacle
             Receptacle r = c.GetComponent<Receptacle>();
             if (r == null) {
                 r = c.gameObject.AddComponent<Receptacle>();
             }
             r.Pivots = new Transform[] { pivotObj.transform };
             r.VisibilityCollider = visBc;
-            //destroy the old script
+            // destroy the old script
             UnityEditor.Selection.activeGameObject = newC.gameObject;
             c.name = "Drawer";
             newC.ParentObj = c.GetComponent<SimObj>();
@@ -257,7 +257,7 @@ public class CabinetEditor : Editor {
             a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
 
         } else {
-            //create a door object under the base that's a copy of the top-level object
+            // create a door object under the base that's a copy of the top-level object
             Transform leftDoorObj = null;
             Transform rightDoorObj = null;
 
@@ -281,16 +281,16 @@ public class CabinetEditor : Editor {
                     break;
 
                 case CabinetOpenStyle.DoubleDoors:
-                    //one of these objects is going to be a copy, the other will be the real thing
+                    // one of these objects is going to be a copy, the other will be the real thing
                     if (c.LeftDoor == c.transform) {
-                        //copy the left door, parent the right door
+                        // copy the left door, parent the right door
                         leftDoorObj = CopyDoor(c.LeftDoor, baseObj.transform);
                         doorBc = leftDoorObj.GetComponent<BoxCollider>();
                         rightDoorObj = c.RightDoor;
                         rightDoorObj.transform.parent = baseObj.transform;
                         cabineObj = leftDoorObj.gameObject;
                     } else {
-                        //copy the right door, parent the left door
+                        // copy the right door, parent the left door
                         rightDoorObj = CopyDoor(c.RightDoor, baseObj.transform);
                         doorBc = rightDoorObj.GetComponent<BoxCollider>();
                         leftDoorObj = c.LeftDoor;
@@ -299,7 +299,7 @@ public class CabinetEditor : Editor {
                     }
                     break;
             }
-            //set up the new cabinet script, then destroy the old one
+            // set up the new cabinet script, then destroy the old one
             Cabinet newC = cabineObj.AddComponent<Cabinet>();
             newC.OpenStyle = c.OpenStyle;
             newC.OpenAngleLeft = c.OpenAngleLeft;
@@ -308,13 +308,13 @@ public class CabinetEditor : Editor {
             newC.ClosedAngleRight = c.ClosedAngleRight;
             newC.LeftDoor = leftDoorObj;
             newC.RightDoor = rightDoorObj;
-            //create a new pivot and visibility obj under the base object
+            // create a new pivot and visibility obj under the base object
             GameObject visibilityObj = new GameObject("VisibilityCollider");
             visibilityObj.transform.parent = baseObj.transform;
             visibilityObj.transform.localPosition = Vector3.zero;
             visibilityObj.transform.localRotation = Quaternion.identity;
             BoxCollider visBc = visibilityObj.AddComponent<BoxCollider>();
-            //copy box collider props from door
+            // copy box collider props from door
             visBc.center = doorBc.center;
             visBc.size = doorBc.size;
 
@@ -322,14 +322,14 @@ public class CabinetEditor : Editor {
             pivotObj.transform.parent = baseObj.transform;
             pivotObj.transform.position = visBc.bounds.center;
             pivotObj.transform.localRotation = Quaternion.identity;
-            //add pivot to receptacle
+            // add pivot to receptacle
             Receptacle r = c.GetComponent<Receptacle>();
             if (r == null) {
                 r = c.gameObject.AddComponent<Receptacle>();
             }
             r.Pivots = new Transform[] { pivotObj.transform };
             r.VisibilityCollider = visBc;
-            //destroy the old script
+            // destroy the old script
             UnityEditor.Selection.activeGameObject = newC.gameObject;
             c.name = "Cabinet";
             newC.ParentObj = c.GetComponent<SimObj>();
@@ -364,7 +364,7 @@ public class CabinetEditor : Editor {
         }
         doorCopy.AddComponent<BoxCollider>();
 
-        //copy all child transforms (handles)
+        // copy all child transforms (handles)
         List<Transform> childTransforms = new List<Transform>();
         foreach (Transform child in doorTransform) {
             childTransforms.Add(child);

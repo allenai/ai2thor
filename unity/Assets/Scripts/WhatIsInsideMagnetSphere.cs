@@ -9,10 +9,10 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
     SphereCollider sphereCol = null;
 
     private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-        SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Static}); //should we ignore SimObjPrimaryProperty.Static?
+        SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Static}); // should we ignore SimObjPrimaryProperty.Static?
 
-    //check if the sphere is actively colliding with anything
-    //public bool isColliding;
+    // check if the sphere is actively colliding with anything
+    // public bool isColliding;
     // Start is called before the first frame update
     void Start() {
         if (sphereCol == null) {
@@ -26,11 +26,11 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
     }
 
     public void GenerateCurrentlyContained() {
-        //clear lists of contained objects
+        // clear lists of contained objects
         CurrentlyContainedObjectIds.Clear();
         CurrentlyContainedSOP.Clear();
 
-        //create overlap sphere same location and dimensions as sphere collider
+        // create overlap sphere same location and dimensions as sphere collider
         var center = transform.TransformPoint(sphereCol.center);
         var radius = sphereCol.radius;
 
@@ -39,18 +39,18 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
             if (col.GetComponentInParent<SimObjPhysics>()) {
                 SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
-                //ignore any sim objects that shouldn't be added to the CurrentlyContains list
+                // ignore any sim objects that shouldn't be added to the CurrentlyContains list
                 if (PropertiesToIgnore.Contains(sop.PrimaryProperty)) {
                     return;
                 }
 
-                //populate list of sim objects inside sphere by objectID
+                // populate list of sim objects inside sphere by objectID
                 if (!CurrentlyContainedObjectIds.Contains(sop.objectID)) {
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                         CurrentlyContainedObjectIds.Add(sop.objectID);
                 }
 
-                //populate list of sim objects inside sphere by object reference
+                // populate list of sim objects inside sphere by object reference
                 if (!CurrentlyContainedSOP.Contains(sop)) {
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                         CurrentlyContainedSOP.Add(sop);
@@ -59,13 +59,13 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
         }
     }
 
-    //report back what is currently inside this receptacle as a list of sim object references
+    // report back what is currently inside this receptacle as a list of sim object references
     public List<SimObjPhysics> CurrentlyContainedSimObjects() {
         GenerateCurrentlyContained();
         return CurrentlyContainedSOP;
     }
 
-    //report back what is currently inside this receptacle as a list of object ids of sim objects
+    // report back what is currently inside this receptacle as a list of object ids of sim objects
     public List<string> CurrentlyContainedSimObjectsByID() {
         GenerateCurrentlyContained();
         return CurrentlyContainedObjectIds;

@@ -19,19 +19,19 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
 
-    //references to the joints of the mid level arm
+    // references to the joints of the mid level arm
     [SerializeField]
     private Transform FirstJoint = null;
 
     [SerializeField]
     private Transform FourthJoint = null;
 
-    //dict to track which picked up object has which set of trigger colliders
-    //which we have to parent and reparent in order for arm collision to detect
+    // dict to track which picked up object has which set of trigger colliders
+    // which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
     public Dictionary<SimObjPhysics, List<Collider>> heldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
 
-    //private bool StopMotionOnContact = false;
+    // private bool StopMotionOnContact = false;
     // Start is called before the first frame update
 
     [SerializeField]
@@ -96,7 +96,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         ArmBoxColliders = cleanedBoxes.ToArray();
     }
 
-    //NOTE: removing this for now, will add back if functionality is required later
+    // NOTE: removing this for now, will add back if functionality is required later
     // public void SetStopMotionOnContact(bool b)
     // {
     //     StopMotionOnContact = b;
@@ -153,9 +153,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                     break;
             }
 
-            //debug draw forward of each joint
+            // debug draw forward of each joint
             // #if UNITY_EDITOR
-            // //debug draw
+            // // debug draw
             // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
             // #endif
 
@@ -166,7 +166,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             // center in world space - direction with magnitude (1/2 height - radius)
             Vector3 point1 = center - dir * (c.height / 2 - radius);
 
-            //debug draw ends of each capsule of each joint
+            // debug draw ends of each capsule of each joint
             // #if UNITY_EDITOR
             // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
             // gdc.p0 = point0;
@@ -224,7 +224,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             - new Vector3(0, 0, originToShoulderLength)
         );
 
-        //check if not behind, check if not hyper extended
+        // check if not behind, check if not hyper extended
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
@@ -244,7 +244,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         IK_Robot_Arm_Controller arm = this;
 
         // Move arm based on hand space or arm origin space
-        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+        // Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
         Vector3 targetWorldPos = Vector3.zero;
 
         switch (coordinateSpace) {
@@ -322,14 +322,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
-        //first check if the target position is within bounds of the agent's capsule center/height extents
-        //if not, actionFinished false with error message listing valid range defined by extents
+        // first check if the target position is within bounds of the agent's capsule center/height extents
+        // if not, actionFinished false with error message listing valid range defined by extents
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 cc_center = cc.center;
         Vector3 cc_maxY = cc.center + new Vector3(0, cc.height / 2f, 0);
-        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); //this is halved to prevent arm clipping into floor
+        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); // this is halved to prevent arm clipping into floor
 
-        //linear function that take height and adjusts targetY relative to min/max extents
+        // linear function that take height and adjusts targetY relative to min/max extents
         float targetY = ((cc_maxY.y - cc_minY.y) * (height)) + cc_minY.y;
 
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
@@ -511,17 +511,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
-        //meta.handTarget = armTarget.position;
+        // meta.handTarget = armTarget.position;
         Transform joint = transform;
         List<JointMetadata> joints = new List<JointMetadata>();
 
-        //Declare variables used for processing metadata
+        // Declare variables used for processing metadata
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
         Quaternion currentRotation;
 
-        //Assign joint metadata to remaining joints, which all have identical hierarchies
+        // Assign joint metadata to remaining joints, which all have identical hierarchies
         for (int i = 1; i <= 4; i++) {
             joint = joint.Find("robot_arm_" + i + "_jnt");
 
