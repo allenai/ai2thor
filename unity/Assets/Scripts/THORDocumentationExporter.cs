@@ -108,8 +108,9 @@ public class THORDocumentationExporter : MonoBehaviour {
                 // keep track of which scenes contain this object type
                 // key already exists, don't worry about creating new list
                 if (ObjectType_To_Scenes.ContainsKey(currentSimObject.Type)) {
-                    if (!ObjectType_To_Scenes[currentSimObject.Type].Contains(currentSceneName))
+                    if (!ObjectType_To_Scenes[currentSimObject.Type].Contains(currentSceneName)) {
                         ObjectType_To_Scenes[currentSimObject.Type].Add(currentSceneName);
+                    }
                 } else {
                     List<String> listOfScenes = new List<String>();
                     listOfScenes.Add(currentSceneName);

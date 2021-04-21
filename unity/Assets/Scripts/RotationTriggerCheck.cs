@@ -30,8 +30,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (other.GetComponentInParent<SimObjPhysics>()) {
                     if (other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name) {
                         if (other.GetComponent<Collider>()) {
-                            if (!other.GetComponent<Collider>().isTrigger)
+                            if (!other.GetComponent<Collider>().isTrigger) {
                                 isColliding = true;
+                            }
                         }
                         // print(other.GetComponentInParent<SimObjPhysics>().name);
                     }

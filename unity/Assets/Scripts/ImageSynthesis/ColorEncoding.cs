@@ -19,8 +19,9 @@ public class ColorEncoding {
 
     public static Color EncodeIDAsColor(int instanceId) {
         var uid = instanceId * 2;
-        if (uid < 0)
+        if (uid < 0) {
             uid = -uid + 1;
+        }
 
         var sid =
             (SparsifyBits((byte)(uid >> 16), 3) << 2) |

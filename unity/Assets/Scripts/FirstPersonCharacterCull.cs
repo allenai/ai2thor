@@ -26,14 +26,13 @@ public class FirstPersonCharacterCull : MonoBehaviour {
     public MeshRenderer[] DroneRenderers;
 
     public void SwitchRenderersToHide(string mode) {
-        if (mode == "default" || mode == "arm")
+        if (mode == "default" || mode == "arm") {
             RenderersToHide = TallRenderers;
-
-        else if (mode == "locobot")
+        } else if (mode == "locobot") {
             RenderersToHide = BotRenderers;
-
-        else if (mode == "drone")
+        } else if (mode == "drone") {
             RenderersToHide = DroneRenderers;
+        }
     }
 
     void OnPreRender() // Just before this camera starts to render...

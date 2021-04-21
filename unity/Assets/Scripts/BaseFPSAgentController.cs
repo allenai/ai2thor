@@ -301,8 +301,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
-            } else if (actionReturn != null)
+            } else if (actionReturn != null) {
                 Debug.Log($"actionReturn: '{actionReturn}'");
+            }
 #endif
         }
 
@@ -1759,8 +1760,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (hit.gameObject.GetComponent<StructureObject>()) {
-                if (hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
+                if (hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor) {
                     return;
+                }
             }
 
 
@@ -1945,8 +1947,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         inViewport: true,
                         x: x,
                         y: y,
-                        target: ref target))
+                        target: ref target)) {
                         return false;
+                    }
 
                     // now check if the object is flagged as Visible by the visibility point logic
                     if (checkVisible && !forceAction && !IsInteractable(target)) {
@@ -1987,11 +1990,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this does not account for objects behind transparent objects like shower glass, as the raycast check
             // will hit the transparent object FIRST
 
-            if (target != null)
+            if (target != null) {
                 actionFinishedEmit(success: true, actionReturn: target.ObjectID);
+            }
 
-            if (target == null)
+            if (target == null) {
                 actionFinishedEmit(success: false, actionReturn: errorMessage);
+            }
         }
 
         public void GetCoordinateFromRaycast(float x, float y) {
@@ -2708,8 +2713,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
-            if (sop.Type == SimObjType.Floor)
+            if (sop.Type == SimObjType.Floor) {
                 mask = (1 << 8) | (1 << 10);
+            }
 
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally

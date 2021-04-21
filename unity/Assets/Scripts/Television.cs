@@ -19,11 +19,13 @@ public class Television : MonoBehaviour {
     // 3 - On, Synced
 
     public void Update() {
-        if (ParentSimObj == null)
+        if (ParentSimObj == null) {
             return;
+        }
 
-        if (OffScreenMat == null || OnScreenMat == null)
+        if (OffScreenMat == null || OnScreenMat == null) {
             return;
+        }
 
         Material mat = OffScreenMat;
 

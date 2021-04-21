@@ -623,8 +623,9 @@ public class InstantiatePrefabTest : MonoBehaviour {
         if (SpawnCorners != null) {
             int count = 0;
             foreach (Vector3 point in SpawnCorners) {
-                if (count > 3)
+                if (count > 3) {
                     Gizmos.color = Color.cyan;
+                }
 
                 Gizmos.DrawSphere(point, 0.005f);
                 count++;
