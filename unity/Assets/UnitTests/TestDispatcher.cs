@@ -36,7 +36,7 @@ namespace Tests
                 {"action", "PutObject"},
                 {"x", 0.3f},
                 {"y", 0.3f},
-                {"f", 0.3f},
+                {"z", 0.3f},
                 {"forceAction", false},
                 {"placeStationary", true}
             }; 
@@ -44,7 +44,7 @@ namespace Tests
             yield return step(args);
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.IsFalse(lastActionSuccess);
-            Assert.IsTrue(error.Contains("invalid argument: f"));
+            Assert.IsTrue(error.Contains("invalid argument: z"));
         }
     }
 }

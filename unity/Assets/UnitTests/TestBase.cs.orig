@@ -25,7 +25,18 @@ namespace Tests
             yield return debugInputField.ExecuteBatch(new List<string>{action});
         }
 
+<<<<<<< HEAD
+        public IEnumerator ExecuteAction(Dictionary<string, object> action) {
+            var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
+            while(debugInputField.PhysicsController.IsProcessing) {
+                yield return new WaitForEndOfFrame();
+            }
+            debugInputField.PhysicsController.ProcessControlCommand(action);
+        }
+        
+=======
         public IEnumerator step(Dictionary<string, object> action) {
+            //action["sequenceId"] = sequenceId;
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
             agentManager.ProcessControlCommand(new DynamicServerAction(action));
             yield return new WaitForEndOfFrame();
@@ -46,6 +57,7 @@ namespace Tests
             yield return step(action);
         }
 
+>>>>>>> dispatcher-fix
         [SetUp]
         public virtual void Setup(){
             UnityEngine.SceneManagement.SceneManager.LoadScene ("FloorPlan1_physics");
