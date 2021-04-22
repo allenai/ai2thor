@@ -13,12 +13,15 @@ if system() == "Windows":
         def fcntl(fd, op, arg=0):
             return 0
 
+        @staticmethod
         def ioctl(fd, op, arg=0, mutable_flag=True):
             return 0 if mutable_flag else ""
 
+        @staticmethod
         def flock(fd, op):
             return
 
+        @staticmethod
         def lockf(fd, operation, length=0, start=0, whence=0):
             return
 

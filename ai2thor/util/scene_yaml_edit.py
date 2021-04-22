@@ -1,4 +1,3 @@
-import yaml
 from pprint import pprint
 from unityparser import UnityDocument
 
@@ -44,10 +43,10 @@ def GetSceneNames(
 
 
 def main():
-    testSceneNames = GetRoboSceneNames(3, 5, "Val")
-    valSceneNames = GetRoboSceneNames(2, 2, "test-dev", "unity/Assets/Private/Scenes")
-    trainSceneNames = GetRoboSceneNames(12, 5, "Train")
 
+    # testSceneNames = GetRoboSceneNames(3, 5, "Val")
+    # valSceneNames = GetRoboSceneNames(2, 2, "test-dev", "unity/Assets/Private/Scenes")
+    # trainSceneNames = GetRoboSceneNames(12, 5, "Train")
     # allScenes = testSceneNames  + trainSceneNames
     # allScenes = valSceneNames
 

@@ -497,8 +497,8 @@ class Server(object):
             events.append(e)
 
         if len(events) > 1:
-            self.last_event = event = MultiAgentEvent(metadata["activeAgentId"], events)
+            self.last_event = MultiAgentEvent(metadata["activeAgentId"], events)
         else:
-            self.last_event = event = events[0]
+            self.last_event = events[0]
 
         return self.last_event

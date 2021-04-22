@@ -17,15 +17,11 @@ except ImportError:
     from Queue import Queue, Empty
 
 import time
-import warnings
 
 from flask import Flask, request, make_response, abort
 import werkzeug
 import werkzeug.serving
 import werkzeug.http
-from enum import Enum
-
-from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 

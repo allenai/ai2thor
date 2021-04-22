@@ -3,8 +3,6 @@ import os
 import requests
 import json
 from ai2thor.util import makedirs
-import time
-import random
 import ai2thor.downloader
 import zipfile
 import logging
