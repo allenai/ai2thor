@@ -6,7 +6,7 @@ Note that AI2-THOR 3.0.0 is not fully backwards compatible with previous version
 ## ManipulaTHOR
 ManipulaTHOR is a new environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm.
 
-<p align = "center"><img width = "70%" src = "PickUpObject.png" /></p>
+<p align = "center"><img width = "70%" src = "MoveBaseArm.png" /></p>
 
 Included with ManipulaTHOR is a range of new actions specific to arm manipulation:
 - **MoveArm** - Uses inverse kinematics to manipulate the position of the robot arm's grasper.
