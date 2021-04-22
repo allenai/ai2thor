@@ -6,12 +6,12 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class JavaScriptInterface : MonoBehaviour {
 
-// IL2CPP throws exceptions about SendMetadata and Init not existing
-// so the body is only used for WebGL
+    // IL2CPP throws exceptions about SendMetadata and Init not existing
+    // so the body is only used for WebGL
 #if UNITY_WEBGL
 
     private PhysicsRemoteFPSAgentController PhysicsController;
-    //private DebugInputField inputField; //inputField.setControlMode no longer used in SetController
+    // private DebugInputField inputField; // inputField.setControlMode no longer used in SetController
 
     [DllImport("__Internal")]
     private static extern void Init();
@@ -30,8 +30,8 @@ public class JavaScriptInterface : MonoBehaviour {
     void Start()
     {
         PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
-        //inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
-        //GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
+        // inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();// FindObjectOfType<DebugInputField>();
+        // GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
         Init();
 
         Debug.Log("Calling store data");
@@ -45,7 +45,7 @@ public class JavaScriptInterface : MonoBehaviour {
     public void SetController(string controlModeEnumString) 
     {
         ControlMode controlMode = (ControlMode) Enum.Parse(typeof(ControlMode), controlModeEnumString, true);
-        //inputField.setControlMode(controlMode);
+        // inputField.setControlMode(controlMode);
 
         Type componentType;
         var success = PlayerControllers.controlModeToComponent.TryGetValue(controlMode, out componentType);

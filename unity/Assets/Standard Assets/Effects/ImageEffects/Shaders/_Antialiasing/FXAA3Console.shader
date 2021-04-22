@@ -78,7 +78,7 @@ Shader "Hidden/FXAA III (Console)" {
 			rcpSize.xy = -_MainTex_TexelSize.xy * 0.5f;
 			rcpSize.zw = _MainTex_TexelSize.xy * 0.5f;			
 #if defined (SHADER_API_PSP2)
-			//cg compiler linker bug workaround
+			// cg compiler linker bug workaround
 			float almostzero = v.texcoord.x*0.000001f;
 			rcpSize.x += almostzero;
 #endif

@@ -287,7 +287,7 @@
 		#endif
 
 			float t = lerp(-1.0, 1.0, (l + j) / (-1 + _Jitter + (float)NUM_SAMPLES));
-			//float t = lerp(-1.0, 1.0, l / (float)(NUM_SAMPLES - 1)); 
+			// float t = lerp(-1.0, 1.0, l / (float)(NUM_SAMPLES - 1)); 
 
 			float2 y = x + vn * t;
 
@@ -337,7 +337,7 @@
 
 		noise *= _MainTex_TexelSize.xyxy * _Jitter;
 
-		//return abs(blurDir.xyxy)*10 + centerTap;
+		// return abs(blurDir.xyxy)*10 + centerTap;
 
 		float weight = 1.0; // <- maybe tweak this: bluriness amount ...
 		float4 sum = cx * weight;

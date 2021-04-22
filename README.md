@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=master)](https://travis-ci.org/allenai/ai2thor)
+[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=main)](https://travis-ci.org/allenai/ai2thor)
 <p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
 
 --------------------------------------------------------------------------------
@@ -23,7 +23,7 @@
 * OS: Mac OS X 10.9+, Ubuntu 14.04+
 * Graphics Card: DX9 (shader model 3.0) or DX11 with feature level 9.3 capabilities.
 * CPU: SSE2 instruction set support.
-* Python 2.7 or Python 3.5+
+* Python 3.5+
 * Linux: X server with GLX module enabled
 
 ## Documentation
@@ -42,9 +42,15 @@ This will create a build beneath the directory 'unity/builds/thor-local-OSXIntel
 
 ```python
 controller = ai2thor.controller.Controller(
-    local_executable_path="<BASE_DIR>/unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-Thor"
+    local_executable_path="<BASE_DIR>/unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR"
 )
 ```
+
+## Add Third-Party Plugin
+
+AI2-THOR uses [Assembly definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) to declare dependencies between libraries within the project.  To add a third-party package to the project, unpack the package to a newly created directory beneath the `unity/Assets/` directory.  Within the Unity Editor, find the new folder in the Project tab.  Select the folder and right-click in the window that displays the contents of the folder and select Create -> Assembly Definition.  This will create a new file in the folder - rename the Assembly definition to match the name of the plugin you are adding (e.g. 'Priority Queue' or 'iTween'). This allows the Assembly definition to be easily found during creation of the reference.  One thing to be aware of is that if you don't rename the newly created file immediately the name in the Inspector within the Editor will not match the filename and you will have to manually update the definition name after renaming the file.  To reference the plugin, a reference must be created in the Assembly Definition file located at `unity/Assets/Scripts/AI2-THOR-Base`.  Locate the `AI2-THOR-Base` Assembly Definition file under `unity/Assets/Scripts` within the Project tab.  Click on the file and locate the section titled "Assembly Definition References".  Click the `+` sign to add a new entry, then click on the circle to the right of the newly created entry.  That will bring up a menu with all the Assembly definitions in the project.  Select the name of the new plugin/Assembly Definition that was just created.  Scroll to the bottom and click the "Apply" button.  The plugin should now be available to use.  The AI2-THOR-Base Assembly definition and the new plugin folder will need to be commited. Additional information about Assembly definitions can be found at:
+* https://learn.unity.com/tutorial/working-with-assembly-definitions?uv=2019.4#
+* https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html
 
 ## Browser Build
 
@@ -53,29 +59,33 @@ For building for browser, please refer to [this page](WEBGL.md).
 ## Citation
 If you use iTHOR, please cite the original AI2-THOR paper:
 
-    @article{ai2thor,
-        Author = {Eric Kolve and Roozbeh Mottaghi 
-                  and Winson Han and Eli VanderBilt 
-                  and Luca Weihs and Alvaro Herrasti 
-                  and Daniel Gordon and Yuke Zhu 
-                  and Abhinav Gupta and Ali Farhadi},
-        Title = {{AI2-THOR: An Interactive 3D Environment for Visual AI}},
-        Journal = {arXiv},
-        Year = {2017}
-    }
+```bibtex
+@article{ai2thor,
+  author={Eric Kolve and Roozbeh Mottaghi and
+          Winson Han and Eli VanderBilt and
+          Luca Weihs and Alvaro Herrasti and
+          Daniel Gordon and Yuke Zhu and
+          Abhinav Gupta and Ali Farhadi},
+  title={{AI2-THOR: An Interactive 3D Environment for Visual AI}},
+  journal={arXiv},
+  year={2017}
+}
+```
   
 If you use RoboTHOR, please cite the following paper:
 
-    @inproceedings{robothor,
-        Author = {Matt Deitke and Winson Han and Alvaro Herrasti and
-                  Aniruddha Kembhavi and Eric Kolve and Roozbeh Mottaghi and
-                  Jordi Salvador and Dustin Schwenk and Eli VanderBilt and
-                  Matthew Wallingford and Luca Weihs and Mark Yatskar and
-                  Ali Farhadi},
-        Title = {{RoboTHOR: An Open Simulation-to-Real Embodied AI Platform}},
-        Booktitle = {CVPR},
-        Year = {2020}
-    }
+```bibtex
+@inproceedings{robothor,
+  author={Matt Deitke and Winson Han and Alvaro Herrasti and
+          Aniruddha Kembhavi and Eric Kolve and Roozbeh Mottaghi and
+          Jordi Salvador and Dustin Schwenk and Eli VanderBilt and
+          Matthew Wallingford and Luca Weihs and Mark Yatskar and
+          Ali Farhadi},
+  title={{RoboTHOR: An Open Simulation-to-Real Embodied AI Platform}},
+  booktitle={CVPR},
+  year={2020}
+}
+```
 
 
 ## Support
@@ -87,4 +97,3 @@ We have done our best to fix all bugs and issues. However, you might still encou
 
 AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
-

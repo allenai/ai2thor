@@ -45,7 +45,7 @@ void rayIterations(inout float2 P, inout float stepDirection, inout float end, i
         // The depth range that the ray covers within this loop iteration. 
 		// Assume that the ray is moving in increasing z and swap if backwards.
         rayZMin = prevZMaxEstimate;
-        //rayZMin = (dQ.z * -0.5 + Q.z) / (dk * -0.5 + k);
+        // rayZMin = (dQ.z * -0.5 + Q.z) / (dk * -0.5 + k);
 		// Compute the value at 1/2 pixel into the future
         rayZMax = (dQ.z * 0.5 + Q.z) / (dk * 0.5 + k);
 		prevZMaxEstimate = rayZMax;
@@ -206,7 +206,7 @@ bool castDenseScreenSpaceRay
     // We only advance the z field of Q in the inner loop, since
     // Q.xy is never used until after the loop terminates
    
-	//int rayIterations = min(maxSteps, stepsToGetOffscreen);
+	// int rayIterations = min(maxSteps, stepsToGetOffscreen);
 	
 
 	float2 P = P0;
@@ -243,7 +243,7 @@ bool castDenseScreenSpaceRay
 		 	rayZMin,  rayZMax,  prevZMaxEstimate, permute, hitPixel, 
 		 	invSize,  layerThickness);
 		stepCount += refinementStepCount * refinementConstant - 1.0;
-		//stepCount = refinementStepCount;
+		// stepCount = refinementStepCount;
 		intersecting = true;
  	}
     

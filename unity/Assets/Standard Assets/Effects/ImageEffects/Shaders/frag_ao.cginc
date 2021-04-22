@@ -38,8 +38,8 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[INPUT_SAMPLE_COUNT])
         if (zd > _Params.y) {
         	// This sample occludes, contribute to occlusion
 	        occ += pow(1-zd,_Params.z); // sc2
-	        //occ += 1.0-saturate(pow(1.0 - zd, 11.0) + zd); // nullsq
-        	//occ += 1.0/(1.0+zd*zd*10); // iq
+	        // occ += 1.0-saturate(pow(1.0 - zd, 11.0) + zd); // nullsq
+        	// occ += 1.0/(1.0+zd*zd*10); // iq
         }        
     }
     occ /= sampleCount;

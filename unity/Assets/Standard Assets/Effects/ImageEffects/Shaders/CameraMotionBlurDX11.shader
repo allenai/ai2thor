@@ -147,7 +147,7 @@
 			// but jitter the whole filter to prevent ghosting			
 
 			float t = lerp(-1.0, 1.0, (l + j) / (-1 + _Jitter + (float)NUM_SAMPLES));
-			//float t = lerp(-1.0, 1.0, l / (float)(NUM_SAMPLES - 1));
+			// float t = lerp(-1.0, 1.0, l / (float)(NUM_SAMPLES - 1));
 
 			float2 velInterlaved = lerp(vn, min(vx, normalize(vx) * _MainTex_TexelSize.xy * _MaxRadiusOrKInPaper), l%2==0);
 			float2 y = x + velInterlaved * t;			

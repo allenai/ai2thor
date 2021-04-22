@@ -4,8 +4,7 @@ using UnityEditor;
 using System.Reflection;
 
 // Latest version at https://bitbucket.org/snippets/pschraut/LeykeL
-static class CopyLightingSettings
-{
+static class CopyLightingSettings {
     //
     // Written by Peter Schraut
     //     http://www.console-dev.de
@@ -32,30 +31,32 @@ static class CopyLightingSettings
 #endif
 
     [MenuItem(k_CopySettingsMenuPath, priority = 200)]
-    static void CopySettings()
-    {
+    static void CopySettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings))
+        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
             return;
+        }
 
         UnityEngine.Object renderSettings;
-        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings))
+        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings)) {
             return;
+        }
 
         s_SourceLightmapSettings = new SerializedObject(lightmapSettings);
         s_SourceRenderSettings = new SerializedObject(renderSettings);
     }
 
     [MenuItem(k_PasteSettingsMenuPath, priority = 201)]
-    static void PasteSettings()
-    {
+    static void PasteSettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings))
+        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
             return;
+        }
 
         UnityEngine.Object renderSettings;
-        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings))
+        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings)) {
             return;
+        }
 
         CopyInternal(s_SourceLightmapSettings, new SerializedObject(lightmapSettings));
         CopyInternal(s_SourceRenderSettings, new SerializedObject(renderSettings));
@@ -64,47 +65,40 @@ static class CopyLightingSettings
     }
 
     [MenuItem(k_PasteSettingsMenuPath, validate = true)]
-    static bool PasteValidate()
-    {
+    static bool PasteValidate() {
         return s_SourceLightmapSettings != null && s_SourceRenderSettings != null;
     }
 
-    static void CopyInternal(SerializedObject source, SerializedObject dest)
-    {
+    static void CopyInternal(SerializedObject source, SerializedObject dest) {
         var prop = source.GetIterator();
-        while (prop.Next(true))
-        {
+        while (prop.Next(true)) {
             var copyProperty = true;
-            foreach (var propertyName in new[] { "m_Sun", "m_FileID", "m_PathID", "m_ObjectHideFlags" })
-            {
-                if (string.Equals(prop.name, propertyName, System.StringComparison.Ordinal))
-                {
+            foreach (var propertyName in new[] { "m_Sun", "m_FileID", "m_PathID", "m_ObjectHideFlags" }) {
+                if (string.Equals(prop.name, propertyName, System.StringComparison.Ordinal)) {
                     copyProperty = false;
                     break;
                 }
             }
 
-            if (copyProperty)
+            if (copyProperty) {
                 dest.CopyFromSerializedProperty(prop);
+            }
         }
 
         dest.ApplyModifiedProperties();
     }
 
-    static bool TryGetSettings(System.Type type, string methodName, out UnityEngine.Object settings)
-    {
+    static bool TryGetSettings(System.Type type, string methodName, out UnityEngine.Object settings) {
         settings = null;
 
         var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
-        if (method == null)
-        {
+        if (method == null) {
             Debug.LogErrorFormat("CopyLightingSettings: Could not find {0}.{1}", type.Name, methodName);
             return false;
         }
 
         var value = method.Invoke(null, null) as UnityEngine.Object;
-        if (value == null)
-        {
+        if (value == null) {
             Debug.LogErrorFormat("CopyLightingSettings: Could get data from {0}.{1}", type.Name, methodName);
             return false;
         }

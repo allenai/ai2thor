@@ -85,7 +85,45 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique
 
 
-class Event(object):
+class MetadataWrapper(dict):
+    def __init__(self, raw_metadata: dict):
+        super().__init__(raw_metadata)
+        self._raw_metadata = raw_metadata
+
+    def __getitem__(self, x):
+        # alias deprecated functionality
+        if (
+            x == "reachablePositions"
+            and self._raw_metadata["lastAction"] == "GetReachablePositions"
+        ):
+            warnings.warn(
+                'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
+            )
+            x = "actionReturn"
+        elif (
+            x == "reachablePositions"
+            and self._raw_metadata["lastAction"] == "GetSceneBounds"
+        ):
+            # Undocumented GetSceneBounds used to only populate reachablePositions,
+            # and not actionReturn. This now maintains both sideways and
+            # backwards compatibility in such a case.
+            if "reachablePositions" in self._raw_metadata.keys():
+                return super().__getitem__(x)
+            else:
+                warnings.warn(
+                    'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
+                )
+                x = "actionReturn"
+        elif x == "reachablePositions":
+            raise IndexError(
+                "You are trying to access event.metadata['reachablePositions'] without first "
+                + "calling controller.step(action='GetReachablePositions'). Also, "
+                + "the key 'reachablePositions' is deprecated in favor of event.metadata['actionReturn']."
+            )
+        return super().__getitem__(x)
+
+
+class Event:
     """
     Object that is returned from a call to controller.step().
     This class wraps the screenshot that Unity captures as well
@@ -93,7 +131,7 @@ class Event(object):
     """
 
     def __init__(self, metadata):
-        self.metadata = metadata
+        self.metadata = MetadataWrapper(raw_metadata=metadata)
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 
@@ -160,7 +198,8 @@ class Event(object):
     @property
     def class_segmentation_frame(self):
         warnings.warn(
-            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.", DeprecationWarning
+            "event.class_segmentation_frame has been renamed to event.semantic_segmentation_frame.",
+            DeprecationWarning,
         )
         return self.semantic_segmentation_frame
 
@@ -435,7 +474,7 @@ class Server(object):
 
             third_party_image_mapping = {
                 # if we want to convert this param to underscores in Unity, we will need to
-                # keep the mapping with the dash for bacwkwards compatibility with older
+                # keep the mapping with the dash for backwards compatibility with older
                 # Unity builds
                 "image-thirdParty-camera": e.add_third_party_camera_image,
                 "image_thirdParty_depth": lambda x: e.add_third_party_image_depth(

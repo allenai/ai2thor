@@ -16,7 +16,7 @@ namespace FifoServer {
         private string clientPipePath;
         private byte[] eomHeader;
 
-        
+
         public static Dictionary<string, FieldType> FormMap = new Dictionary<string, FieldType>{
             {"image", FieldType.RGBImage},
             {"image_depth", FieldType.DepthImage},
@@ -33,7 +33,7 @@ namespace FifoServer {
 
         };
 
-        static public int UnpackNetworkBytes(byte[] data, int offset=0) {
+        static public int UnpackNetworkBytes(byte[] data, int offset = 0) {
             int networkInt = System.BitConverter.ToInt32(data, offset);
             return IPAddress.NetworkToHostOrder(networkInt);
         }
@@ -56,13 +56,13 @@ namespace FifoServer {
                 }
                 FieldType fieldType = (FieldType)header[0];
                 if (fieldType == FieldType.EndOfMessage) {
-                        //Console.WriteLine("Got eom");
+                    // Console.WriteLine("Got eom");
                     break;
                 }
                 int fieldLength = UnpackNetworkBytes(header, 1);
                 byte[] body = new byte[fieldLength];
                 int totalBytesRead = 0;
-                while(totalBytesRead < body.Length) {
+                while (totalBytesRead < body.Length) {
                     bytesRead = clientPipe.Read(body, totalBytesRead, body.Length - totalBytesRead);
                     // didn't read anything new, assume that we have a disconnect
                     if (bytesRead == 0) {
@@ -73,7 +73,7 @@ namespace FifoServer {
 
                 switch (fieldType) {
                     case FieldType.Action:
-                        //Console.WriteLine("Got action");
+                        // Console.WriteLine("Got action");
                         action = Encoding.Default.GetString(body);
                         break;
                     default:
@@ -92,7 +92,7 @@ namespace FifoServer {
             if (this.serverPipe == null) {
                 this.serverPipe = new FileStream(this.serverPipePath, FileMode.Open, FileAccess.Write);
             }
-            //Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
+            // Console.WriteLine("server pipe + connected " + this.serverPipe.IsConnected );
             byte[] header = new byte[headerLength];
             header[0] = (byte)t;
             PackNetworkBytes(body.Length).CopyTo(header, 1);
@@ -102,7 +102,7 @@ namespace FifoServer {
 
 
 
-        private Client (string serverPipePath, string clientPipePath) {
+        private Client(string serverPipePath, string clientPipePath) {
             this.serverPipePath = serverPipePath;
             this.clientPipePath = clientPipePath;
             this.eomHeader = new byte[headerLength];
@@ -120,7 +120,7 @@ namespace FifoServer {
 
     }
 
-    public enum FieldType:byte {
+    public enum FieldType : byte {
         Metadata = 0x01,
         Action = 0x02,
         ActionResult = 0x03,

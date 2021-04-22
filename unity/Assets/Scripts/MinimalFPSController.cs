@@ -1,5 +1,5 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-//Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
+// Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
 using UnityEngine;
 using Random = UnityEngine.Random;
 using System;
@@ -12,15 +12,13 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
-	[RequireComponent(typeof (CharacterController))]
-    public class MinimalFPSController : DebugFPSAgentController
-	{
+namespace UnityStandardAssets.Characters.FirstPerson {
+    [RequireComponent(typeof(CharacterController))]
+    public class MinimalFPSController : DebugFPSAgentController {
         private GameObject BackgroundUI;
         private GameObject Crosshair;
-         private GameObject   TargetText;
-        private GameObject    ThrowForceBar;
+        private GameObject TargetText;
+        private GameObject ThrowForceBar;
         MinimalFPSController() {
             this.m_MouseLook = new MouseLook {
                 XSensitivity = 2,
@@ -38,8 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.enableHighlightShader = false;
         }
 
-        public new void HideHUD()
-        {
+        public new void HideHUD() {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(false);
@@ -53,7 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             BackgroundUI = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
             BackgroundUI.SetActive(false);
 
-            Crosshair =  GameObject.Find("DebugCanvasPhysics/Crosshair");
+            Crosshair = GameObject.Find("DebugCanvasPhysics/Crosshair");
             TargetText = GameObject.Find("DebugCanvasPhysics/TargetText");
             ThrowForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
             Crosshair.GetComponent<Text>().enabled = false;
@@ -61,8 +58,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             TargetText.GetComponent<Text>().enabled = false;
         }
 
-        public void ShowHUD()
-        {
+        public void ShowHUD() {
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(true);
             }
@@ -82,46 +78,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
             TargetText.GetComponent<Text>().enabled = true;
         }
 
-        public new void OnEnable()
-        {
-                FPSEnabled = true;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-                
-                InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
-                InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-                if (InputMode_Text) {
-                    InputMode_Text.GetComponent<Text>().text = "FPS Mode";
-                }
+        public new void OnEnable() {
+            FPSEnabled = true;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+
+            InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            if (InputMode_Text) {
+                InputMode_Text.GetComponent<Text>().text = "FPS Mode";
+            }
 
 
-                Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-  
-                Debug_Canvas.GetComponent<Canvas>().enabled = true;
-                HideHUD();
-              
+            Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
+
+            Debug_Canvas.GetComponent<Canvas>().enabled = true;
+            HideHUD();
+
         }
 
-        public new void OnDisable()
-        {
+        public new void OnDisable() {
             DisableMouseControl();
             ShowHUD();
         }
 
-        public new void EnableMouseControl()
-        {
+        public new void EnableMouseControl() {
             FPSEnabled = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        public new void DisableMouseControl()
-        {
+        public new void DisableMouseControl() {
             Debug.Log("Disabled mouse");
             FPSEnabled = false;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
-	}
+    }
 }
 

@@ -24,7 +24,7 @@ namespace UnityStandardAssets.Utility
             get { return waypointList.items; }
         }
 
-        //this being here will save GC allocs
+        // this being here will save GC allocs
         private int p0n;
         private int p1n;
         private int p2n;

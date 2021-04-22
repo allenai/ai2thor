@@ -83,7 +83,7 @@
             
             // float edgeness = dot(IN.worldNormal, IN.viewDir);
             float threshold = 0.4f;
-            //float q = dot(float3(1.0f, 0.0f, 0.0f), IN.viewDir);
+            // float q = dot(float3(1.0f, 0.0f, 0.0f), IN.viewDir);
             float edgeness = dot (IN.viewDir, IN.worldNormal);
             
             o.Albedo = c.rgb;
