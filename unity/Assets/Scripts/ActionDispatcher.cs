@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 
@@ -290,8 +291,25 @@ public static class ActionDispatcher {
         return matchedMethod;
     }
 
-    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+    public static IEnumerable<MethodInfo> getMatchingMethodOverwrites(Type targetType, DynamicServerAction dynamicServerAction) {
+        return getCandidateMethods(targetType,  dynamicServerAction.action)
+            .Select(
+                method => (
+                    method,
+                    count: method
+                        .GetParameters().Count(param => dynamicServerAction.ContainsKey(param.Name))
+                )
+            )
+            .OrderByDescending(tuple => tuple.count)
+            .Select((tuple) => tuple.method);
+    }
 
+
+    // public static System.Reflection.ParameterInfo[] GetParameters()
+
+    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+        Debug.Log(" methods: " + string.Join(", ", target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Select(m => m.Name)));
+        Debug.Log("cnad " + string.Join(", ", getMatchingMethodOverwrites(target.GetType(), dynamicServerAction)));
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -305,8 +323,34 @@ public static class ActionDispatcher {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
-        } else {
-            for (int i = 0; i < methodParams.Length; i++) {
+        }  else {
+            var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
+            var invalidArgs = dynamicServerAction
+                .Keys()
+                .Where(argName => !paramDict.ContainsKey(argName) && argName != "action")
+                .ToList();
+            if (invalidArgs.Count > 0) {
+                Func<ParameterInfo, string> paramToString = 
+                    (ParameterInfo param) => 
+                        $"{param.ParameterType.Name} {param.Name}{(param.HasDefaultValue? " = "+param.DefaultValue: "")}";
+                var matchingMethodOverWrites = getMatchingMethodOverwrites(target.GetType(), dynamicServerAction).Select(
+                    m => 
+                        $"{m.ReturnType.Name} {m.Name}("+ 
+                            string.Join(", ",
+                                m.GetParameters()
+                                .Select(paramToString)
+                            )
+                            + ")"
+                );
+               
+                throw new InvalidArgumentsException(
+                    dynamicServerAction.Keys().Where(argName => argName != "action"),
+                    invalidArgs,
+                    methodParams.Select(paramToString),
+                    matchingMethodOverWrites
+                );
+            }
+            for(int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
                 if (dynamicServerAction.ContainsKey(pi.Name)) {
                     try {
@@ -400,5 +444,24 @@ public class MissingArgumentsActionException : Exception {
     public List<string> ArgumentNames;
     public MissingArgumentsActionException(List<string> argumentNames) {
         this.ArgumentNames = argumentNames;
+    }
+}
+
+[Serializable]
+public class InvalidArgumentsException : Exception {
+    public IEnumerable<string> ArgumentNames;
+    public IEnumerable<string> InvalidArgumentNames;
+    public IEnumerable<string> ParameterNames;
+    public IEnumerable<string> PossibleOverwrites;
+    public InvalidArgumentsException(
+            IEnumerable<string> argumentNames,
+            IEnumerable<string> invalidArgumentNames,
+            IEnumerable<string> parameterNames = null,
+            IEnumerable<string> possibleOverwrites = null
+        ) {
+        this.ArgumentNames = argumentNames;
+        this.InvalidArgumentNames = invalidArgumentNames;
+        this.ParameterNames = parameterNames ?? new List<string>();
+        this.PossibleOverwrites = possibleOverwrites ?? new List<string>();
     }
 }

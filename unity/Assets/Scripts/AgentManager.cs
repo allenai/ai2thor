@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 
 using System.Collections.Generic;
@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
+using System.Linq;
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -1092,7 +1093,7 @@ public class AgentManager : MonoBehaviour {
             //    }
             //}
 
-#endif
+            #endif
 
 
 
@@ -1102,29 +1103,12 @@ public class AgentManager : MonoBehaviour {
 
     }
 
-    private int parseContentLength(string header) {
-        // Debug.Log("got header: " + header);
-        string[] fields = header.Split(new char[] { '\r', '\n' });
-        foreach (string field in fields) {
-            string[] elements = field.Split(new char[] { ':' });
-            if (elements[0].ToLower() == "content-length") {
-                return Int32.Parse(elements[1].Trim());
-            }
-        }
-
-        return 0;
-    }
-
-    private BaseFPSAgentController activeAgent() {
-        return this.agents[activeAgentId];
-    }
-
-    private void ProcessControlCommand(string msg) {
+    // Uniform entry point for both the test runner and the python server for step dispatch calls
+    // requires sequenceId in the json control command object
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
-        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
-
-        this.currentSequenceId = controlCommand.sequenceId;
+		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
@@ -1151,34 +1135,64 @@ public class AgentManager : MonoBehaviour {
             }
 
             // let's look in the agent's set of actions for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
-        }
+			this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
+		}
     }
 
-    // Extra helper functions
-    protected string LoadStringVariable(string variable, string name) {
-        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-        return envVarValue == null ? variable : envVarValue;
-    }
+    public BaseFPSAgentController GetActiveAgent() {
+		return this.agents[activeAgentId];
+	}
 
-    protected int LoadIntVariable(int variable, string name) {
-        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-        return envVarValue == null ? variable : int.Parse(envVarValue);
-    }
+	private int parseContentLength(string header) {
+		// Debug.Log("got header: " + header);
+		string[] fields = header.Split(new char[]{'\r','\n'});
+		foreach(string field in fields) {
+			string[] elements = field.Split(new char[]{':'});
+			if (elements[0].ToLower() == "content-length") {
+				return Int32.Parse(elements[1].Trim());
+			}
+		}
 
-    protected float LoadFloatVariable(float variable, string name) {
-        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-        return envVarValue == null ? variable : float.Parse(envVarValue);
-    }
+		return 0;
+	}
 
-    protected bool LoadBoolVariable(bool variable, string name) {
-        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-        return envVarValue == null ? variable : bool.Parse(envVarValue);
-    }
+	private BaseFPSAgentController activeAgent() {
+		return this.agents[activeAgentId];
+	}
+
+	private void ProcessControlCommand(string msg) {
+        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
+        this.ProcessControlCommand(controlCommand);
+	}
+
+	// Extra helper functions
+	protected string LoadStringVariable(string variable, string name)
+	{
+		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+		return envVarValue == null ? variable : envVarValue;
+	}
+
+	protected int LoadIntVariable(int variable, string name)
+	{
+		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+		return envVarValue == null ? variable : int.Parse(envVarValue);
+	}
+
+	protected float LoadFloatVariable(float variable, string name)
+	{
+		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+		return envVarValue == null ? variable : float.Parse(envVarValue);
+	}
+
+	protected bool LoadBoolVariable(bool variable, string name)
+	{
+		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+		return envVarValue == null ? variable : bool.Parse(envVarValue);
+	}
 
 }
 
@@ -1538,7 +1552,7 @@ public class DynamicServerAction {
 
     public int sequenceId {
         get {
-            return (int)this.jObject["sequenceId"];
+            return this.GetValue("sequenceId", 0);
         }
     }
 
@@ -1609,6 +1623,14 @@ public class DynamicServerAction {
         return this.jObject.ToObject<T>();
     }
 
+    public IEnumerable<string> Keys() {
+        return this.jObject.Properties().Select(p => p.Name).ToList();
+    }
+
+    public int Count() {
+        return this.jObject.Count;
+    }
+    
 }
 
 [Serializable]

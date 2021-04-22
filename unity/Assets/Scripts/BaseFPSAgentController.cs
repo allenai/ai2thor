@@ -147,7 +147,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Vector3 lastPosition;
 
         protected string lastAction;
-        public bool lastActionSuccess;
+        public bool lastActionSuccess {
+            get;
+            protected set;
+        }
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
@@ -1681,6 +1684,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+            Debug.Log("Agent Process control ");
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1692,7 +1696,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             try {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
-            } catch (ToObjectArgumentActionException e) {
+            }
+            catch (InvalidArgumentsException e) {
+                errorMessage =
+                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1? "s": "")}: {string.Join(", ", e.InvalidArgumentNames.ToArray())}" +
+                $"\n\tExpected arguments: {string.Join(", ", e.ParameterNames)}" +
+                $"\n\tYour arguments: {string.Join(", ", e.ArgumentNames)}" +
+                $"\n\tValid ways to call \"{controlCommand.action}\" action:\n\t\t{string.Join("\n\t\t", e.PossibleOverwrites)}";
+                errorCode = ServerActionErrorCode.InvalidArgument;
+
+                var possibleOverwrites = ActionDispatcher.getMatchingMethodOverwrites(target.GetType(), controlCommand);
+
+                actionFinished(false);
+            }
+            catch (ToObjectArgumentActionException e)
+            {
                 Dictionary<string, string> typeMap = new Dictionary<string, string>{
                     {"Single", "float"},
                     {"Double", "float"},
