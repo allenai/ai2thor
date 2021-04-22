@@ -3,6 +3,9 @@
     <a href="//github.com/allenai/ai2thor/releases">
         <img alt="GitHub release" src="https://img.shields.io/github/release/allenai/ai2thor.svg">
     </a>
+    <a href="//github.com/allenai/ai2thor/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/allenai/ai2thor.svg?color=blue">
+    </a>
     <a href="//ai2thor.allenai.org/" target="_blank">
         <img alt="Documentation" src="https://img.shields.io/website/https/ai2thor.allenai.org?down_color=red&down_message=offline&up_message=online">
     </a>
