@@ -1434,7 +1434,7 @@ class BFSController(Controller):
         self.seen_points = []
         self.visited_seen_points = []
         self.grid_points = []
-        event = self.reset(scene_name)
+        self.reset(scene_name)
         event = self.step(dict(action="Initialize", gridSize=self.grid_size))
         self.enqueue_points(event.metadata["agent"]["position"])
         while self.queue:

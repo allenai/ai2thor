@@ -221,7 +221,7 @@ def dump_scene_controller(base_dir, controller):
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
     event = controller.step(action="GetReachablePositions")
-    for p in event.metadata["reachablePositions"]:
+    for p in event.metadata["actionReturn"]:
         action = copy.deepcopy(p)
         action["action"] = "TeleportFull"
         action["horizon"] = 0.0
@@ -232,7 +232,7 @@ def dump_scene_controller(base_dir, controller):
         if event.metadata["lastActionSuccess"]:
             look_up_down_write(controller, base_dir, fc, scene_name)
             for i in range(3):
-                event = controller.step(action="RotateRight")
+                controller.step(action="RotateRight")
                 look_up_down_write(controller, base_dir, fc, scene_name)
 
     index_metadata(base_dir, scene_name)

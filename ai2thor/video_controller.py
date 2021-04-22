@@ -41,9 +41,9 @@ class VideoController(Controller):
         self.initial_cam_pos = cam_pos.copy()
         self.initial_cam_fov = cam_fov
 
-    def reset(self, scene):
+    def reset(self, scene=None, **init_params):
         """Changes the scene and adds a new third party camera to the initial position."""
-        super().reset(scene)
+        super().reset(scene, **init_params)
         self.step(
             action="AddThirdPartyCamera",
             rotation=self.initial_cam_rot,
