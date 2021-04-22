@@ -17,7 +17,7 @@ Included with ManipulaTHOR is a range of new actions specific to arm manipulatio
 - **MoveContinuous** - A new continuous movement that allows the arm to detect collisions while moving through a scene.
 - **RotateContinuous** - A new continuous rotation that allows the arm to detect collisions while rotating within a scene.
 
-The full details can be found in the [ManipulaTHOR Documentation here.](https://ai2thor.allenai.org/manipulathor/documentation/)
+The full details can be found in the [ManipulaTHOR Documentation here.](https://ai2thor.allenai.org/manipulathor/)
 
 ## Environmental Lighting Randomization
 <img src="https://user-images.githubusercontent.com/28768645/111756723-c5620600-8857-11eb-90d0-c8810b276716.png" width="49%"> <img src="https://user-images.githubusercontent.com/28768645/111756731-c6933300-8857-11eb-8be9-5ede098841ea.png" width="49%">
