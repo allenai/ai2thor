@@ -135,7 +135,7 @@ def execute_command(controller, command, action_dict_addition):
 
     if command in ["w", "z", "s", "a", "3", "4"]:
 
-        event = controller.step(
+        controller.step(
             action="MoveMidLevelArm",
             position=dict(
                 x=base_position["x"], y=base_position["y"], z=base_position["z"]
@@ -158,7 +158,7 @@ def execute_command(controller, command, action_dict_addition):
         elif base_position["h"] < 0:
             base_position["h"] = 0
 
-        event = controller.step(
+        controller.step(
             action="MoveArmBase", y=base_position["h"], **action_dict_addition
         )
         action_details = dict(

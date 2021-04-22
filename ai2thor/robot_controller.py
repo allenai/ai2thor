@@ -1,5 +1,4 @@
 import os
-import time
 import msgpack
 import numpy as np
 import requests
