@@ -23,7 +23,6 @@ import re
 import os
 import platform
 import uuid
-import sys
 from functools import lru_cache
 
 
@@ -1026,13 +1025,11 @@ class Controller(object):
         return [c["sha"] for c in payload]
 
     def find_build(self, local_build, commit_id, branch):
-        from ai2thor.build import arch_platform_map
-        import ai2thor.build
 
         if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
 
-        arch = arch_platform_map[platform.system()]
+        arch = ai2thor.build.arch_platform_map[platform.system()]
 
         if branch:
             commits = self._branch_commits(branch)
@@ -1103,7 +1100,6 @@ class Controller(object):
         self._build_server(host, port, width, height)
 
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
-            import warnings
 
             warnings.warn(
                 "AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
@@ -1128,7 +1124,6 @@ class Controller(object):
             raise Exception("Screen resolution must be > 0x0")
 
         if self.server.started:
-            import warnings
 
             warnings.warn(
                 "start method depreciated. The server started when the Controller was initialized."

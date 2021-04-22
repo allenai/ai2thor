@@ -1,5 +1,4 @@
 import sys
-from PIL import Image
 import numpy as np
 import os
 
@@ -209,10 +208,10 @@ class InteractiveControllerPrompt(object):
                 if "objectId" in v:
                     command_info.append(v["objectId"])
 
-                for a, av in v.items():
-                    if a in skip_keys:
+                for ak, av in v.items():
+                    if ak in skip_keys:
                         continue
-                    command_info.append("%s: %s" % (a, av))
+                    command_info.append("%s: %s" % (ak, av))
 
                 print(" ".join(command_info))
 

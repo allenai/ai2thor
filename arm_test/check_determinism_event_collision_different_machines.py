@@ -151,7 +151,6 @@ def execute_command(controller, command, action_dict_addition):
             handCameraSpace=False,
             **action_dict_addition
         )
-        success = event.metadata["lastActionSuccess"]
 
     elif command in ["u", "j"]:
         if base_position["h"] > 1:
@@ -166,7 +165,6 @@ def execute_command(controller, command, action_dict_addition):
             action="MoveArmBase", y=base_position["h"], **action_dict_addition
         )
 
-        success = event.metadata["lastActionSuccess"]
 
     return action_details
 
@@ -248,7 +246,7 @@ def random_tests():
 
         initial_location = random.choice(reachable_positions)
         initial_rotation = random.choice([i for i in range(0, 360, 45)])
-        event1 = controller.step(
+        controller.step(
             action="TeleportFull",
             x=initial_location["x"],
             y=initial_location["y"],
@@ -271,7 +269,6 @@ def random_tests():
             command = random.choice(set_of_actions)
             execute_command(controller, command, ADITIONAL_ARM_ARGS)
             all_commands.append(command)
-            last_event_success = controller.last_event.metadata["lastActionSuccess"]
 
             pickupable = controller.last_event.metadata["arm"]["pickupableObjects"]
             picked_up_before = controller.last_event.metadata["arm"]["heldObjects"]
@@ -322,7 +319,7 @@ def determinism_test(all_tests):
         scene_name = test_point["scene_name"]
 
         controller.reset(scene_name)
-        event1 = controller.step(
+        controller.step(
             action="TeleportFull",
             x=initial_location["x"],
             y=initial_location["y"],
@@ -333,7 +330,6 @@ def determinism_test(all_tests):
         controller.step("PausePhysicsAutoSim")
         for cmd in all_commands:
             execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
-            last_event_success = controller.last_event.metadata["lastActionSuccess"]
         current_state = get_current_full_state(controller)
         if not two_dict_equal(final_state, current_state):
             print("not deterministic")

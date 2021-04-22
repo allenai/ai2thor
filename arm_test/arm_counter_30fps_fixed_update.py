@@ -4,8 +4,6 @@ import sys
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
 
-import time
-import random
 import ai2thor.controller
 
 c = ai2thor.controller.Controller(

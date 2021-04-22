@@ -3,8 +3,6 @@ import sys
 
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
-import ai2thor.controller
-
 import time
 import random
 

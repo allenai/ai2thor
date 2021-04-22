@@ -8,7 +8,6 @@ import getpass
 import ai2thor.controller
 import ai2thor.fifo_server
 import uuid
-import uuid
 import cv2
 from tasks import _local_build_path
 
@@ -18,7 +17,6 @@ parser = argparse.ArgumentParser(description="Thor Arm Tester")
 parser.add_argument("--record-video", action="store_true")
 args = parser.parse_args()
 
-from pprint import pprint
 
 controller = ai2thor.controller.Controller(
     #        port=8200, start_unity=False,
@@ -123,7 +121,7 @@ def standard_pose():
 
 
 def execute_actions(actions, **kwargs):
-    frames = []
+
     for a in actions:
         if a == {} or a == {"action": ""}:
             continue
