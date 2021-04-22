@@ -147,10 +147,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Vector3 lastPosition;
 
         protected string lastAction;
+<<<<<<< HEAD
+        public bool lastActionSuccess;
+=======
         public bool lastActionSuccess {
             get;
             protected set;
         }
+>>>>>>> dispatcher-fix
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
@@ -1684,6 +1688,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+            Debug.Log("Agent Process control ");
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1695,6 +1700,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             try {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
+<<<<<<< HEAD
+            } catch (ToObjectArgumentActionException e) {
+=======
             }
             catch (InvalidArgumentsException e) {
                 errorMessage =
@@ -1710,6 +1718,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             catch (ToObjectArgumentActionException e)
             {
+>>>>>>> dispatcher-fix
                 Dictionary<string, string> typeMap = new Dictionary<string, string>{
                     {"Single", "float"},
                     {"Double", "float"},

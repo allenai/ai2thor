@@ -308,6 +308,8 @@ public static class ActionDispatcher {
     // public static System.Reflection.ParameterInfo[] GetParameters()
 
     public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+        Debug.Log(" methods: " + string.Join(", ", target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Select(m => m.Name)));
+        Debug.Log("cnad " + string.Join(", ", getMatchingMethodOverwrites(target.GetType(), dynamicServerAction)));
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -321,6 +323,10 @@ public static class ActionDispatcher {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
+<<<<<<< HEAD
+        } else {
+            for (int i = 0; i < methodParams.Length; i++) {
+=======
         }  else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var invalidArgs = dynamicServerAction
@@ -349,6 +355,7 @@ public static class ActionDispatcher {
                 );
             }
             for(int i = 0; i < methodParams.Length; i++) {
+>>>>>>> dispatcher-fix
                 System.Reflection.ParameterInfo pi = methodParams[i];
                 if (dynamicServerAction.ContainsKey(pi.Name)) {
                     try {
