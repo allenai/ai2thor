@@ -933,7 +933,8 @@ class Controller(object):
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env)
+        makedirs(self.log_dir)
+        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -971,6 +972,10 @@ class Controller(object):
     @property
     def base_dir(self):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
+
+    @property
+    def log_dir(self):
+        return os.path.join(self.base_dir, "log")
 
     def _cache_commit_filename(self, branch):
         encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
