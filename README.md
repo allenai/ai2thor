@@ -1,13 +1,36 @@
-[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=main)](https://travis-ci.org/allenai/ai2thor)
 <p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
-
---------------------------------------------------------------------------------
+<p align="center">
+    <a href="//github.com/allenai/ai2thor/releases">
+        <img alt="GitHub release" src="https://img.shields.io/github/release/allenai/ai2thor.svg">
+    </a>
+    <a href="//github.com/allenai/ai2thor/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/allenai/ai2thor.svg?color=blue">
+    </a>
+    <a href="//ai2thor.allenai.org/" target="_blank">
+        <img alt="Documentation" src="https://img.shields.io/website/https/ai2thor.allenai.org?down_color=red&down_message=offline&up_message=online">
+    </a>
+    <a href="//arxiv.org/abs/1712.05474" target="_blank">
+        <img src="https://img.shields.io/badge/arXiv-1712.05474-<COLOR>">
+    </a>
+    <a href="//www.youtube.com/watch?v=KcELPpdN770" target="_blank">
+        <img src="https://img.shields.io/badge/video-YouTube-red">
+    </a>
+    <a href="//travis-ci.org/allenai/ai2thor" target="_blank">
+        <img src="https://travis-ci.org/allenai/ai2thor.svg?branch=main">
+    </a>
+</p>
 
 [AI2-THOR (The House Of inteRactions)](https://ai2thor.allenai.org/) is a near photo-realistic interactable framework for AI agents.
 
 ## News
 
-* (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [https://github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
+* (4/2021) We are excited to release [ManipulaTHOR](https://ai2thor.allenai.org/manipulathor/), an environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm.
+
+* (2/2021) We are excited to host the [AI2-THOR Rearrangement Challenge](https://ai2thor.allenai.org/rearrangement/), [RoboTHOR ObjectNav Challenge](https://ai2thor.allenai.org/robothor/cvpr-2021-challenge/), and [ALFRED Challenge](https://askforalfred.com/EAI21/), held in conjunction with the [Embodied AI Workshop](https://embodied-ai.org/) at CVPR 2021.
+
+* (2/2021) AI2-THOR v2.7.0 announces several massive speedups to AI2-THOR! Read more about it [here](https://medium.com/ai2-blog/speed-up-your-training-with-ai2-thor-2-7-0-12a650b6ab5e).
+
+* (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
 
 * (4/2020) Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.4.md)
 
@@ -61,14 +84,26 @@ If you use iTHOR, please cite the original AI2-THOR paper:
 
 ```bibtex
 @article{ai2thor,
-  author={Eric Kolve and Roozbeh Mottaghi and
-          Winson Han and Eli VanderBilt and
-          Luca Weihs and Alvaro Herrasti and
-          Daniel Gordon and Yuke Zhu and
-          Abhinav Gupta and Ali Farhadi},
+  author={Eric Kolve and Roozbeh Mottaghi and Winson Han and
+          Eli VanderBilt and Luca Weihs and Alvaro Herrasti and
+          Daniel Gordon and Yuke Zhu and Abhinav Gupta and
+          Ali Farhadi},
   title={{AI2-THOR: An Interactive 3D Environment for Visual AI}},
   journal={arXiv},
   year={2017}
+}
+```
+
+If you use ManipulaTHOR, please cite the following paper:
+
+```bibtex
+@inproceedings{manipulathor,
+  title={{ManipulaTHOR: A Framework for Visual Object Manipulation}},
+  author={Kiana Ehsani and Winson Han and Alvaro Herrasti and
+          Eli VanderBilt and Luca Weihs and Eric Kolve and
+          Aniruddha Kembhavi and Roozbeh Mottaghi},
+  booktitle={CVPR},
+  year={2021}
 }
 ```
   
