@@ -85,8 +85,10 @@ public class Fill : MonoBehaviour {
                 // coffee is hot!
                 SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
                 sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
-                if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
+                if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue()) {
                     sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+                }
+
                 sop.SetStartRoomTempTimer(false);
             }
 
@@ -96,8 +98,9 @@ public class Fill : MonoBehaviour {
         }
 
         // whichLiquid is not in the dictionary
-        else
+        else {
             return false;
+        }
 
 
         // if the dict doesn't contain this key pair uuuuuh

@@ -46,14 +46,16 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
 
                 // populate list of sim objects inside sphere by objectID
                 if (!CurrentlyContainedObjectIds.Contains(sop.objectID)) {
-                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                         CurrentlyContainedObjectIds.Add(sop.objectID);
+                    }
                 }
 
                 // populate list of sim objects inside sphere by object reference
                 if (!CurrentlyContainedSOP.Contains(sop)) {
-                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                         CurrentlyContainedSOP.Add(sop);
+                    }
                 }
             }
         }

@@ -93,8 +93,9 @@ public class Cabinet : MonoBehaviour {
             open = ParentObj.Animator.GetBool("AnimState1");
         }
 
-        if (!Application.isPlaying && !Animate)
+        if (!Application.isPlaying && !Animate) {
             return;
+        }
 
         switch (SceneManager.Current.AnimationMode) {
             case SceneAnimationMode.Instant:
@@ -163,8 +164,9 @@ public class Cabinet : MonoBehaviour {
                 break;
         }
 
-        if (animatingDistance >= 360f)
+        if (animatingDistance >= 360f) {
             animatingDistance -= 360f;
+        }
 
         ParentObj.IsAnimating = (animatingDistance > 0.0025f);
     }

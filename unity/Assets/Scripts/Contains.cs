@@ -45,8 +45,9 @@ public class Contains : MonoBehaviour {
     void OnEnable() {
         // if the parent of this object has a SimObjPhysics component, grab a reference to it
         if (myParent == null) {
-            if (gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject)
+            if (gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject) {
                 myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
+            }
         }
 
     }
@@ -142,8 +143,9 @@ public class Contains : MonoBehaviour {
     // used by ObjectSpecificReceptacle, so objects like stove burners, coffee machine, etc.
     public bool isOccupied() {
         bool result = false;
-        if (CurrentlyContainedGameObjects().Count > 0)
+        if (CurrentlyContainedGameObjects().Count > 0) {
             result = true;
+        }
 
         return result;
     }
@@ -294,8 +296,9 @@ public class Contains : MonoBehaviour {
             // didn't hit anything that could obstruct, so this point is good to go
             if (!ReturnPointsCloseToAgent) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-            } else if (NarrowDownValidSpawnPoints(BottomPoint))
+            } else if (NarrowDownValidSpawnPoints(BottomPoint)) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+            }
         }
 
         //****** */debug draw the spawn points as well
@@ -327,8 +330,9 @@ public class Contains : MonoBehaviour {
         tmpForCamera.y = point.y;
 
         // automatically rule out a point if it's beyond our max distance of visibility
-        if (Vector3.Distance(point, tmpForCamera) >= maxvisdist)
+        if (Vector3.Distance(point, tmpForCamera) >= maxvisdist) {
             return false;
+        }
 
         // ok cool, it's within distance to the agent, now let's check 
         // if the point is within the viewport of the agent as well
@@ -339,8 +343,9 @@ public class Contains : MonoBehaviour {
         if (point.y < agentCam.transform.position.y - 0.05f) {
             // do this check if the point's y value is below the camera's y value
             // this check will be a raycast vision check from the camera to the point exactly
-            if (agentController.CheckIfPointIsInViewport(point))
+            if (agentController.CheckIfPointIsInViewport(point)) {
                 return true;
+            }
         } else {
             // do this check if the point's y value is above the agent camera. This means we are
             // trying to place an object on a shelf or something high up that we can't quite reach
@@ -348,8 +353,9 @@ public class Contains : MonoBehaviour {
 
             // might want to adjust this offset amount, or even move this check to ensure object visibility after the
             // checkspawnarea corners are generated?
-            if (agentController.CheckIfPointIsInViewport(point + new Vector3(0, 0.05f, 0)))
+            if (agentController.CheckIfPointIsInViewport(point + new Vector3(0, 0.05f, 0))) {
                 return true;
+            }
         }
 
         return false;
@@ -368,10 +374,11 @@ public class Contains : MonoBehaviour {
         float halfZ = (myBox.size.z * 0.5f);
         if (point.x < halfX && point.x > -halfX &&
             point.y < halfY && point.y > -halfY &&
-            point.z < halfZ && point.z > -halfZ)
+            point.z < halfZ && point.z > -halfZ) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point) {
@@ -384,10 +391,11 @@ public class Contains : MonoBehaviour {
         float halfZ = (myBox.size.z * 0.5f);
         if (point.x < halfX && point.x > -halfX &&
             point.y < BIGY && point.y > -BIGY &&
-            point.z < halfZ && point.z > -halfZ)
+            point.z < halfZ && point.z > -halfZ) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
 #if UNITY_EDITOR

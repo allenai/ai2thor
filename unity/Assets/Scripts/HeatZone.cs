@@ -23,8 +23,9 @@ public class HeatZone : MonoBehaviour {
             SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
             sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
 
-            if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
+            if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue()) {
                 sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+            }
 
             sop.SetStartRoomTempTimer(false);
             //

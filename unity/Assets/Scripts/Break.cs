@@ -54,8 +54,9 @@ public class Break : MonoBehaviour {
         }
 
         if (gameObject.GetComponent<Dirty>()) {
-            if (DirtyPrefabToSwapTo == null)
+            if (DirtyPrefabToSwapTo == null) {
                 Debug.LogError(gameObject.name + " is missing a DirtyPrefabToSpawnTo!");
+            }
         }
 #endif
 
@@ -143,8 +144,9 @@ public class Break : MonoBehaviour {
 
         BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
         if (primaryAgent.imageSynthesis) {
-            if (primaryAgent.imageSynthesis.enabled)
+            if (primaryAgent.imageSynthesis.enabled) {
                 primaryAgent.imageSynthesis.OnSceneChange();
+            }
         }
     }
 

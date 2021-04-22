@@ -319,8 +319,9 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     }
 
     protected virtual void OnEnable() {
-        if (SceneManager.Current == null)
+        if (SceneManager.Current == null) {
             return;
+        }
 
         // reset this in case one of our scripts was interrupted
         isAnimating = false;
@@ -488,8 +489,9 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     void OnDrawGizmos() {
         Gizmos.color = Color.white;
 
-        if (!SimUtil.ShowObjectVisibility)
+        if (!SimUtil.ShowObjectVisibility) {
             VisibleNow = false;
+        }
 
         if (!string.IsNullOrEmpty(error)) {
             Gizmos.color = Color.Lerp(Color.red, Color.clear, 0.5f);

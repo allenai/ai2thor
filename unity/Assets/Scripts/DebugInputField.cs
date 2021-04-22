@@ -371,11 +371,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
 
                         if (splitcommand.Length == 2) {
-                            if (splitcommand[1] == "s")
+                            if (splitcommand[1] == "s") {
                                 action.objectType = "screen";
+                            }
 
-                            if (splitcommand[1] == "r")
+                            if (splitcommand[1] == "r") {
                                 action.objectType = "receptacle";
+                            }
                         } else {
                             action.objectType = "receptacle";
                         }
@@ -461,8 +463,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length == 2) {
                             action.objectVariation = int.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.objectVariation = 0;
+                        }
 
                         action.y = 0f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
@@ -1256,8 +1259,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length == 2) {
                             action["objectId"] = splitcommand[1];
-                        } else
+                        } else {
                             action["objectId"] = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                        }
 
                         // set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
@@ -1368,19 +1372,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         else if (splitcommand.Length == 3) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
 
-                            if (splitcommand[2] == "t")
+                            if (splitcommand[2] == "t") {
                                 action["forceVisible"] = true;
+                            }
 
-                            if (splitcommand[2] == "f")
+                            if (splitcommand[2] == "f") {
                                 action["forceVisible"] = false;
+                            }
                         } else if (splitcommand.Length == 4) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
 
-                            if (splitcommand[2] == "t")
+                            if (splitcommand[2] == "t") {
                                 action["forceVisible"] = true;
+                            }
 
-                            if (splitcommand[2] == "f")
+                            if (splitcommand[2] == "f") {
                                 action["forceVisible"] = false;
+                            }
 
                             action["numPlacementAttempts"] = int.Parse(splitcommand[3]);
                         } else {
@@ -1461,11 +1469,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "ToggleHideAndSeekObjects";
 
                         if (splitcommand.Length == 2) {
-                            if (splitcommand[1] == "t")
+                            if (splitcommand[1] == "t") {
                                 action["forceVisible"] = true;
+                            }
 
-                            if (splitcommand[1] == "f")
+                            if (splitcommand[1] == "f") {
                                 action["forceVisible"] = false;
+                            }
                         } else {
                             action["forceVisible"] = false;
                         }
@@ -1717,8 +1727,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         // action.manualInteract = true;
 
@@ -1734,8 +1745,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -1748,8 +1760,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -1777,8 +1790,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         action.forceAction = true;
 
@@ -1794,8 +1808,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         action.forceAction = true;
 
@@ -1810,8 +1825,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         action.forceAction = true;
 
@@ -1826,8 +1842,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 0.25f;
+                        }
 
                         action.forceAction = true;
 
@@ -2229,8 +2246,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = 0f;
                         // action.y = 0f;
@@ -2249,8 +2267,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = 0f;
                         // action.y = 0f;
@@ -2267,8 +2286,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = -1f;
                         // action.y = 0f;
@@ -2285,8 +2305,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = 1f;
                         // action.y = 0f;
@@ -2323,8 +2344,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = 0f;
                         // action.y = 1f;
@@ -2341,8 +2363,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action["moveMagnitude"] = 0.1f;
+                        }
 
                         // action.x = 0f;
                         // action.y = -1f;
@@ -2391,8 +2414,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else
+                        } else {
                             action.moveMagnitude = 120f;
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -2984,15 +3008,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             if (splitcommand.Length > 2) {
                                 action.speed = float.Parse(splitcommand[2]);
                             }
-                            if (splitcommand.Length > 3)
+                            if (splitcommand.Length > 3) {
                                 action.returnToStart = bool.Parse(splitcommand[3]);
+                            }
 
-                            if (splitcommand.Length > 4)
+                            if (splitcommand.Length > 4) {
                                 action.disableRendering = bool.Parse(splitcommand[4]);
+                            }
 
-                            if (splitcommand.Length > 5)
+                            if (splitcommand.Length > 5) {
                                 action.restrictMovement = bool.Parse(splitcommand[5]);
-
+                            }
                         } else {
                             action.y = 0.9f;
                             action.speed = 1.0f;

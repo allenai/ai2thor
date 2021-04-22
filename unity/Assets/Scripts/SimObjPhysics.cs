@@ -227,8 +227,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         Bounds bounding = cols[0].bounds;// initialize the bounds to return with our first collider
 
         foreach (Collider c in cols) {
-            if (c.enabled)
+            if (c.enabled) {
                 bounding.Encapsulate(c.bounds);
+            }
         }
 
         // reparent child simobjects
@@ -434,15 +435,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         get {
             if (this.GetComponent<CanToggleOnOff>()) {
                 // if this object is self controlled, it is toggleable
-                if (this.GetComponent<CanToggleOnOff>().ReturnSelfControlled())
+                if (this.GetComponent<CanToggleOnOff>().ReturnSelfControlled()) {
                     return true;
+                }
 
                 // if it is not self controlled (meaning controlled by another sim object) return not toggleable
                 // although if this object is not toggleable, it may still return isToggled as a state (see IsToggled below)
-                else
+                else {
                     return false;
-            } else
+                }
+            } else {
                 return false;
+            }
             // return this.GetComponent<CanToggleOnOff>(); 
         }
     }
@@ -912,7 +916,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
         if (sceneManager.physicsSimulationPaused == false)
             // record this object's current velocity
+        {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
+        }
     }
     private void FixedUpdate() {
         // isInteractable = false;
@@ -923,8 +929,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         Vector3 dir = new Vector3(action.x, action.y, action.z);
         Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 
-        if (myrb.IsSleeping())
+        if (myrb.IsSleeping()) {
             myrb.WakeUp();
+        }
 
         myrb.isKinematic = false;
         myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -936,8 +943,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 
-        if (myrb.IsSleeping())
+        if (myrb.IsSleeping()) {
             myrb.WakeUp();
+        }
 
         myrb.isKinematic = false;
         myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -1093,8 +1101,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         gameObject.transform.tag = "SimObjPhysics";
         gameObject.layer = 8;
 
-        if (!gameObject.GetComponent<Rigidbody>())
+        if (!gameObject.GetComponent<Rigidbody>()) {
             gameObject.AddComponent<Rigidbody>();
+        }
 
         this.GetComponent<Rigidbody>().isKinematic = true;
 
@@ -1162,24 +1171,28 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         foreach (Transform child in gameObject.transform) {
             if (child.name == "StaticVisPoints") {
                 foreach (Transform svp in child) {
-                    if (!vpoints.Contains(svp))
+                    if (!vpoints.Contains(svp)) {
                         vpoints.Add(svp);
+                    }
                 }
             }
 
             if (child.name == "ReceptacleTriggerBox") {
                 // print("check");
-                if (!recepboxes.Contains(child.gameObject))
+                if (!recepboxes.Contains(child.gameObject)) {
                     recepboxes.Add(child.gameObject);
+                }
             }
 
             // found the cabinet door, go into it and populate triggerboxes, colliders, t colliders, and vis points
             if (child.name == "CabinetDoor") {
-                if (child.GetComponent<Rigidbody>())
+                if (child.GetComponent<Rigidbody>()) {
                     DestroyImmediate(child.GetComponent<Rigidbody>(), true);
+                }
 
-                if (child.GetComponent<SimObjPhysics>())
+                if (child.GetComponent<SimObjPhysics>()) {
                     DestroyImmediate(child.GetComponent<SimObjPhysics>(), true);
+                }
 
                 if (!movparts.Contains(child.gameObject)) {
                     movparts.Add(child.gameObject);
@@ -1188,8 +1201,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 foreach (Transform c in child) {
                     if (c.name == "Colliders") {
                         foreach (Transform col in c) {
-                            if (!cols.Contains(col.gameObject))
+                            if (!cols.Contains(col.gameObject)) {
                                 cols.Add(col.gameObject);
+                            }
 
                             if (col.childCount == 0) {
                                 GameObject prefabRoot = col.gameObject;
@@ -1221,8 +1235,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
                     if (c.name == "VisibilityPoints") {
                         foreach (Transform col in c) {
-                            if (!vpoints.Contains(col.transform))
+                            if (!vpoints.Contains(col.transform)) {
                                 vpoints.Add(col.transform);
+                            }
                         }
                     }
                 }
@@ -1238,8 +1253,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         gameObject.GetComponent<CanOpen_Object>().openPositions = new Vector3[movparts.Count];
         gameObject.GetComponent<CanOpen_Object>().closedPositions = new Vector3[movparts.Count];
 
-        if (openPositions.Count != 0)
+        if (openPositions.Count != 0) {
             gameObject.GetComponent<CanOpen_Object>().openPositions = openPositions.ToArray();
+        }
 
         // this.GetComponent<CanOpen>().SetMovementToRotate();
     }
@@ -1284,8 +1300,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         this.SecondaryProperties = new SimObjSecondaryProperty[]
         {SimObjSecondaryProperty.Receptacle};
 
-        if (!gameObject.GetComponent<Rigidbody>())
+        if (!gameObject.GetComponent<Rigidbody>()) {
             gameObject.AddComponent<Rigidbody>();
+        }
 
         this.GetComponent<Rigidbody>().isKinematic = true;
 
@@ -1488,8 +1505,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         gameObject.tag = "SimObjPhysics";
         gameObject.layer = 8;
 
-        if (!gameObject.GetComponent<Rigidbody>())
+        if (!gameObject.GetComponent<Rigidbody>()) {
             gameObject.AddComponent<Rigidbody>();
+        }
 
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
         if (!gameObject.transform.Find("VisibilityPoints")) {
@@ -1561,8 +1579,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         c.tag = "SimObjPhysics";
         c.layer = 8;
 
-        if (!c.GetComponent<Rigidbody>())
+        if (!c.GetComponent<Rigidbody>()) {
             c.AddComponent<Rigidbody>();
+        }
 
         if (!c.transform.Find("Colliders")) {
             GameObject col = new GameObject("Colliders");
@@ -1709,8 +1728,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         c.tag = "SimObjPhysics";
         c.layer = 8;
 
-        if (!c.GetComponent<Rigidbody>())
+        if (!c.GetComponent<Rigidbody>()) {
             c.AddComponent<Rigidbody>();
+        }
 
         if (!c.transform.Find("Colliders")) {
             GameObject col = new GameObject("Colliders");
@@ -1784,8 +1804,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         gameObject.tag = "SimObjPhysics";
         gameObject.layer = 8;
 
-        if (!gameObject.GetComponent<Rigidbody>())
+        if (!gameObject.GetComponent<Rigidbody>()) {
             gameObject.AddComponent<Rigidbody>();
+        }
 
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
 
@@ -2045,16 +2066,25 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // if (meshFilter.gameObject.name != "screen_1" && meshFilter.gameObject.name != "screen_2")
             //{
             foreach (Vector3 vertex in meshFilter.sharedMesh.vertices) {
-                if (minMeshXZ.x > meshFilter.gameObject.transform.TransformPoint(vertex).x)
+                if (minMeshXZ.x > meshFilter.gameObject.transform.TransformPoint(vertex).x) {
                     minMeshXZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
-                if (minMeshXZ.z > meshFilter.gameObject.transform.TransformPoint(vertex).z)
+                }
+
+                if (minMeshXZ.z > meshFilter.gameObject.transform.TransformPoint(vertex).z) {
                     minMeshXZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
-                if (maxMeshXYZ.x < meshFilter.gameObject.transform.TransformPoint(vertex).x)
+                }
+
+                if (maxMeshXYZ.x < meshFilter.gameObject.transform.TransformPoint(vertex).x) {
                     maxMeshXYZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
-                if (maxMeshXYZ.y < meshFilter.gameObject.transform.TransformPoint(vertex).y)
+                }
+
+                if (maxMeshXYZ.y < meshFilter.gameObject.transform.TransformPoint(vertex).y) {
                     maxMeshXYZ.y = meshFilter.gameObject.transform.TransformPoint(vertex).y;
-                if (maxMeshXYZ.z < meshFilter.gameObject.transform.TransformPoint(vertex).z)
+                }
+
+                if (maxMeshXYZ.z < meshFilter.gameObject.transform.TransformPoint(vertex).z) {
                     maxMeshXYZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
+                }
 
                 newBoundingBox.Encapsulate(minMeshXZ);
                 newBoundingBox.Encapsulate(maxMeshXYZ);

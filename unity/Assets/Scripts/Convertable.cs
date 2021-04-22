@@ -32,8 +32,9 @@ public class Convertable : MonoBehaviour {
     }
 
     void Update() {
-        if (parentObj == null)
+        if (parentObj == null) {
             parentObj = gameObject.GetComponent<SimObj>();
+        }
 
         // anim state is 1-4
         int animState = -1;

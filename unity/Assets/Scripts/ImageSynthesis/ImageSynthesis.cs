@@ -82,16 +82,19 @@ public class ImageSynthesis : MonoBehaviour {
 
 
         // default fallbacks, if shaders are unspecified
-        if (!uberReplacementShader)
+        if (!uberReplacementShader) {
             uberReplacementShader = Shader.Find("Hidden/UberReplacement");
+        }
 
-        if (!opticalFlowShader)
+        if (!opticalFlowShader) {
             opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
+        }
 
 #if UNITY_EDITOR
 
-        if (!depthShader)
+        if (!depthShader) {
             depthShader = Shader.Find("Hidden/DepthBW");
+        }
 #else
             if (!depthShader)
                 depthShader = Shader.Find("Hidden/Depth");
@@ -117,8 +120,9 @@ public class ImageSynthesis : MonoBehaviour {
 
     void LateUpdate() {
 #if UNITY_EDITOR
-        if (DetectPotentialSceneChangeInEditor())
+        if (DetectPotentialSceneChangeInEditor()) {
             OnSceneChange();
+        }
 
 #endif // UNITY_EDITOR
 
@@ -138,7 +142,9 @@ public class ImageSynthesis : MonoBehaviour {
         // from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
         if (go.transform.parent.GetComponent<FirstPersonCharacterCull>())
             // add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
+        {
             go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
+        }
 
         var newCamera = go.GetComponent<Camera>();
         newCamera.cullingMask = 1;// render everything, including PlaceableSurfaces
@@ -197,8 +203,9 @@ public class ImageSynthesis : MonoBehaviour {
         mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
-            if (pass.camera == mainCamera)
+            if (pass.camera == mainCamera) {
                 continue;
+            }
 
             // cleanup capturing camera
             pass.camera.RemoveAllCommandBuffers();
@@ -368,9 +375,11 @@ public class ImageSynthesis : MonoBehaviour {
             height = Screen.height;
         }
 
-        foreach (var pass in capturePasses)
-            if (pass.name == passName)
+        foreach (var pass in capturePasses) {
+            if (pass.name == passName) {
                 return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg, format, textureReadMode);
+            }
+        }
 
         return (new byte[0]);
     }
@@ -382,8 +391,10 @@ public class ImageSynthesis : MonoBehaviour {
         }
 
         var filenameExtension = System.IO.Path.GetExtension(filename);
-        if (filenameExtension == "")
+        if (filenameExtension == "") {
             filenameExtension = ".png";
+        }
+
         var filenameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
 
         var pathWithoutExtension = Path.Combine(path, filenameWithoutExtension);
@@ -399,8 +410,9 @@ public class ImageSynthesis : MonoBehaviour {
     }
 
     private void Save(string filenameWithoutExtension, string filenameExtension, int width, int height) {
-        foreach (var pass in capturePasses)
+        foreach (var pass in capturePasses) {
             Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale);
+        }
     }
 
     private byte[] Encode(
@@ -453,11 +465,12 @@ public class ImageSynthesis : MonoBehaviour {
 
         // encode texture into PNG/JPG
         byte[] bytes;
-        if (jpg)
+        if (jpg) {
             bytes = tex.EncodeToJPG();
-        else
-            // bytes = tex.EncodeToPNG();
+        } else {
             bytes = tex.GetRawTextureData();
+        }
+
         Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
 
 
@@ -495,8 +508,9 @@ public class ImageSynthesis : MonoBehaviour {
             var go = UnityEditor.Selection.activeGameObject;
             // check if layer or tag of a selected object have changed since the last frame
             var potentialChangeHappened = lastSelectedGOLayer != go.layer || lastSelectedGOTag != go.tag;
-            if (go == lastSelectedGO && potentialChangeHappened)
+            if (go == lastSelectedGO && potentialChangeHappened) {
                 change = true;
+            }
 
             lastSelectedGO = go;
             lastSelectedGOLayer = go.layer;

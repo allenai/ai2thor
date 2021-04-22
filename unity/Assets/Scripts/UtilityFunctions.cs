@@ -22,7 +22,10 @@ public static class UtilityFunctions {
             while (value < n) {
                 result[index++] = value++;
                 stack.Push(value);
-                if (index != m) continue;
+                if (index != m) {
+                    continue;
+                }
+
                 yield return (int[])result.Clone(); // thanks to @xanatos
                 // yield return result;
                 break;
@@ -186,7 +189,10 @@ public static class UtilityFunctions {
     // usage: var copy = myComp.GetCopyOf(someOtherComponent);
     public static T GetCopyOf<T>(this Component comp, T other) where T : Component {
         Type type = comp.GetType();
-        if (type != other.GetType()) return null; // type mis-match
+        if (type != other.GetType()) {
+            return null; // type mis-match
+        }
+
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
         PropertyInfo[] pinfos = type.GetProperties(flags);
         foreach (var pinfo in pinfos) {

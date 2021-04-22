@@ -149,8 +149,9 @@ public class CanToggleOnOff : MonoBehaviour {
 
     public void Toggle() {
         // if this object is controlled by another object, do nothing and report failure?
-        if (!SelfControlled)
+        if (!SelfControlled) {
             return;
+        }
 
         // check if there are moving parts
         // check if there are lights/materials etc to swap out
@@ -164,12 +165,13 @@ public class CanToggleOnOff : MonoBehaviour {
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else
+                        } else {
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
-                            "rotation", OffPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear"));
+                                "rotation", OffPositions[i],
+                                "islocal", true,
+                                "time", animationTime,
+                                "easetype", "linear"));
+                        }
                     }
 
                     if (movementType == MovementType.Slide) {
@@ -179,12 +181,13 @@ public class CanToggleOnOff : MonoBehaviour {
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else
+                        } else {
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
-                            "position", OffPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear"));
+                                "position", OffPositions[i],
+                                "islocal", true,
+                                "time", animationTime,
+                                "easetype", "linear"));
+                        }
                     }
                 }
             }
@@ -203,12 +206,13 @@ public class CanToggleOnOff : MonoBehaviour {
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else
+                        } else {
                             iTween.RotateTo(MovingParts[i], iTween.Hash(
-                            "rotation", OnPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear"));
+                                "rotation", OnPositions[i],
+                                "islocal", true,
+                                "time", animationTime,
+                                "easetype", "linear"));
+                        }
                     }
 
                     if (movementType == MovementType.Slide) {
@@ -218,12 +222,13 @@ public class CanToggleOnOff : MonoBehaviour {
                             "islocal", true,
                             "time", animationTime,
                             "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else
+                        } else {
                             iTween.MoveTo(MovingParts[i], iTween.Hash(
-                            "position", OnPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear"));
+                                "position", OnPositions[i],
+                                "islocal", true,
+                                "time", animationTime,
+                                "easetype", "linear"));
+                        }
                     }
                 }
             }

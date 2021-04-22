@@ -33,8 +33,10 @@ public class StoveKnob : MonoBehaviour {
             return;
         }
 
-        if (!simObj.IsAnimated)
+        if (!simObj.IsAnimated) {
             return;
+        }
+
         // set stove range anim state to knob's anim state
         On = simObj.Animator.GetBool("AnimState1");
         StoveRange.Animator.SetBool("AnimState1", On);

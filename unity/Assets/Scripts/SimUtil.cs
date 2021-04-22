@@ -98,8 +98,9 @@ public static class SimUtil {
                         maxDistance,
                         out hit);
                     // if we can see it no need for more checks!
-                    if (canSeeItem)
+                    if (canSeeItem) {
                         break;
+                    }
                 }
             }
 
@@ -116,8 +117,9 @@ public static class SimUtil {
                         out hit);
 
                     // if we can see it no need for more checks!
-                    if (canSeeItem)
+                    if (canSeeItem) {
                         break;
+                    }
                 }
             }
 
@@ -247,8 +249,9 @@ public static class SimUtil {
     // checks whether the item
     public static bool CheckItemBounds(SimObj item, Vector3 agentPosition) {
         // if the item doesn't use custom bounds this is an automatic pass
-        if (!item.UseCustomBounds)
+        if (!item.UseCustomBounds) {
             return true;
+        }
 
         // use the item's bounds transform as a bounding box
         // this is NOT axis-aligned so objects rotated strangely may return unexpected results
