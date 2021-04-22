@@ -1159,27 +1159,10 @@ public class AgentManager : MonoBehaviour
 
     }
 
-	private int parseContentLength(string header) {
-		// Debug.Log("got header: " + header);
-		string[] fields = header.Split(new char[]{'\r','\n'});
-		foreach(string field in fields) {
-			string[] elements = field.Split(new char[]{':'});
-			if (elements[0].ToLower() == "content-length") {
-				return Int32.Parse(elements[1].Trim());
-			}
-		}
-
-		return 0;
-	}
-
-	private BaseFPSAgentController activeAgent() {
-		return this.agents[activeAgentId];
-	}
-
-	private void ProcessControlCommand(string msg) {
+    // Uniform entry point for both the test runner and the python server for step dispatch calls
+    // requires sequenceId in the json control command object
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
-
-        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
@@ -1210,6 +1193,32 @@ public class AgentManager : MonoBehaviour
             // let's look in the agent's set of actions for the action
 			this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
 		}
+    }
+
+    public BaseFPSAgentController GetActiveAgent() {
+		return this.agents[activeAgentId];
+	}
+
+	private int parseContentLength(string header) {
+		// Debug.Log("got header: " + header);
+		string[] fields = header.Split(new char[]{'\r','\n'});
+		foreach(string field in fields) {
+			string[] elements = field.Split(new char[]{':'});
+			if (elements[0].ToLower() == "content-length") {
+				return Int32.Parse(elements[1].Trim());
+			}
+		}
+
+		return 0;
+	}
+
+	private BaseFPSAgentController activeAgent() {
+		return this.agents[activeAgentId];
+	}
+
+	private void ProcessControlCommand(string msg) {
+        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
+        this.ProcessControlCommand(controlCommand);
 	}
 
 	// Extra helper functions
@@ -1611,7 +1620,7 @@ public class DynamicServerAction
 
     public int sequenceId {
         get {
-            return (int)this.jObject["sequenceId"];
+            return this.GetValue("sequenceId", 0);
         }
     }
 

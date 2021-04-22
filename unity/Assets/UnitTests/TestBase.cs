@@ -6,15 +6,45 @@ using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Tests
 {
     public class TestBase
     {
+        protected int sequenceId = 0;
+        protected bool lastActionSuccess;
+        protected string error;
 
+        // WARNING do not use this for testing as it adds the DebugInputField 
+        // and it's definitions as a dependency
         public IEnumerator ExecuteDebugAction(string action) {
             var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
             yield return debugInputField.ExecuteBatch(new List<string>{action});
+        }
+
+        public IEnumerator step(Dictionary<string, object> action) {
+            //action["sequenceId"] = sequenceId;
+            var agentManager = GameObject.FindObjectOfType<AgentManager>();
+            agentManager.ProcessControlCommand(new DynamicServerAction(action));
+            yield return new WaitForEndOfFrame();
+            var agent = agentManager.GetActiveAgent();
+            lastActionSuccess = agent.lastActionSuccess;
+            error = agent.errorMessage;
+            sequenceId++;
+        }
+
+        public IEnumerator initalizeDefaultDiscrete() {
+            Dictionary<string, object> action = new Dictionary<string, object>() {
+                { "gridSize", 0.25f},
+                { "agentCount", 1},
+                { "fieldOfView", 90f},
+                { "snapToGrid", true},
+                { "action", "Initialize"}
+            };
+            yield return step(action);
         }
 
         [SetUp]

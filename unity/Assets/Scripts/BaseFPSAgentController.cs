@@ -153,7 +153,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 lastPosition;
 
         protected string lastAction;
-        protected bool lastActionSuccess;
+        public bool lastActionSuccess {
+            get;
+            protected set;
+        }
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
 
@@ -1758,6 +1761,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+            Debug.Log("Agent Process control ");
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1772,8 +1776,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             }
             catch (InvalidArgumentsException e) {
-                errorMessage = $"action: ${controlCommand.action} called with invalid arguments:" + string.Join(",", e.ArgumentNames.ToArray());
+                errorMessage =
+                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1? "s": "")}: {string.Join(", ", e.InvalidArgumentNames.ToArray())}" +
+                $"\n\tExpected arguments: {string.Join(", ", e.ParameterNames)}" +
+                $"\n\tYour arguments: {string.Join(", ", e.ArgumentNames)}" +
+                $"\n\tValid ways to call \"{controlCommand.action}\" action:\n\t\t{string.Join("\n\t\t", e.PossibleOverwrites)}";
                 errorCode = ServerActionErrorCode.InvalidArgument;
+
+                var possibleOverwrites = ActionDispatcher.getMatchingMethodOverwrites(target.GetType(), controlCommand);
+
                 actionFinished(false);
             }
             catch (ToObjectArgumentActionException e)

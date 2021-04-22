@@ -291,8 +291,25 @@ public static class ActionDispatcher {
         return matchedMethod;
     }
 
-    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+    public static IEnumerable<MethodInfo> getMatchingMethodOverwrites(Type targetType, DynamicServerAction dynamicServerAction) {
+        return getCandidateMethods(targetType,  dynamicServerAction.action)
+            .Select(
+                method => (
+                    method,
+                    count: method
+                        .GetParameters().Count(param => dynamicServerAction.ContainsKey(param.Name))
+                )
+            )
+            .OrderByDescending(tuple => tuple.count)
+            .Select((tuple) => tuple.method);
+    }
 
+
+    // public static System.Reflection.ParameterInfo[] GetParameters()
+
+    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+        Debug.Log(" methods: " + string.Join(", ", target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Select(m => m.Name)));
+        Debug.Log("cnad " + string.Join(", ", getMatchingMethodOverwrites(target.GetType(), dynamicServerAction)));
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -310,11 +327,27 @@ public static class ActionDispatcher {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var invalidArgs = dynamicServerAction
                 .Keys()
-                .Where(argName => !paramDict.ContainsKey(argName))
+                .Where(argName => !paramDict.ContainsKey(argName) && argName != "action")
                 .ToList();
             if (invalidArgs.Count > 0) {
+                Func<ParameterInfo, string> paramToString = 
+                    (ParameterInfo param) => 
+                        $"{param.ParameterType.Name} {param.Name}{(param.HasDefaultValue? " = "+param.DefaultValue: "")}";
+                var matchingMethodOverWrites = getMatchingMethodOverwrites(target.GetType(), dynamicServerAction).Select(
+                    m => 
+                        $"{m.ReturnType.Name} {m.Name}("+ 
+                            string.Join(", ",
+                                m.GetParameters()
+                                .Select(paramToString)
+                            )
+                            + ")"
+                );
+               
                 throw new InvalidArgumentsException(
-                    invalidArgs
+                    dynamicServerAction.Keys().Where(argName => argName != "action"),
+                    invalidArgs,
+                    methodParams.Select(paramToString),
+                    matchingMethodOverWrites
                 );
             }
             for(int i = 0; i < methodParams.Length; i++) {
@@ -416,8 +449,19 @@ public class MissingArgumentsActionException : Exception {
 
 [Serializable]
 public class InvalidArgumentsException : Exception {
-    public List<string> ArgumentNames;
-    public InvalidArgumentsException(List<string> argumentNames) {
+    public IEnumerable<string> ArgumentNames;
+    public IEnumerable<string> InvalidArgumentNames;
+    public IEnumerable<string> ParameterNames;
+    public IEnumerable<string> PossibleOverwrites;
+    public InvalidArgumentsException(
+            IEnumerable<string> argumentNames,
+            IEnumerable<string> invalidArgumentNames,
+            IEnumerable<string> parameterNames = null,
+            IEnumerable<string> possibleOverwrites = null
+        ) {
         this.ArgumentNames = argumentNames;
+        this.InvalidArgumentNames = invalidArgumentNames;
+        this.ParameterNames = parameterNames ?? new List<string>();
+        this.PossibleOverwrites = possibleOverwrites ?? new List<string>();
     }
 }
