@@ -1067,7 +1067,7 @@ class Controller(object):
             )
 
             try:
-                if os.path.isfile(commit_build.executable_path) or (
+                if os.path.isdir(commit_build.base_dir) or (
                     not local_build and commit_build.exists()
                 ):
                     found_build = commit_build
