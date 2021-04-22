@@ -304,9 +304,6 @@ public static class ActionDispatcher {
             .Select((tuple) => tuple.method);
     }
 
-
-    // public static System.Reflection.ParameterInfo[] GetParameters()
-
     public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
