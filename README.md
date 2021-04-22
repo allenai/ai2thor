@@ -1,11 +1,27 @@
-[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=main)](https://travis-ci.org/allenai/ai2thor)
-<p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
+<p align="center"><img width="50%" src="doc/static/logo.svg" /></p><br />
 
---------------------------------------------------------------------------------
+<p align="center">
+
+[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=main)](https://travis-ci.org/allenai/ai2thor)
+<a href="//github.com/allenai/ai2thor/releases">
+    <img alt="GitHub release" src="https://img.shields.io/github/release/allenai/ai2thor.svg">
+</a>
+<a href="//ai2thor.allenai.org/" target="_blank">
+    <img alt="Documentation" src="https://img.shields.io/website/https/ai2thor.allenai.org?down_color=red&down_message=offline&up_message=online">
+</a>
+<a href="//arxiv.org/abs/1712.05474" target="_blank">
+    <img src="https://img.shields.io/badge/arXiv-1712.05474-<COLOR>">
+</a>
+<a href="//www.youtube.com/watch?v=KcELPpdN770" target="_blank">
+    <img src="https://img.shields.io/badge/video-YouTube-red">
+</a>
+</p>
 
 [AI2-THOR (The House Of inteRactions)](https://ai2thor.allenai.org/) is a near photo-realistic interactable framework for AI agents.
 
 ## News
+
+* (4/2021) We are 
 
 * (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [https://github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
 
