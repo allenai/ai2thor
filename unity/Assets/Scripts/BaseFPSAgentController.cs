@@ -1698,14 +1698,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             catch (InvalidArgumentsException e) {
                 errorMessage =
-                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1? "s": "")}: {string.Join(", ", e.InvalidArgumentNames.ToArray())}" +
+                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1? "s": "")}: {string.Join(", ", e.InvalidArgumentNames.Select(name => $"'{name}'").ToArray())}" +
                 $"\n\tExpected arguments: {string.Join(", ", e.ParameterNames)}" +
-                $"\n\tYour arguments: {string.Join(", ", e.ArgumentNames)}" +
+                $"\n\tYour arguments: {string.Join(", ", e.ArgumentNames.Select(name => $"'{name}'"))}" +
                 $"\n\tValid ways to call \"{controlCommand.action}\" action:\n\t\t{string.Join("\n\t\t", e.PossibleOverwrites)}";
                 errorCode = ServerActionErrorCode.InvalidArgument;
 
                 var possibleOverwrites = ActionDispatcher.getMatchingMethodOverwrites(target.GetType(), controlCommand);
-
                 actionFinished(false);
             }
             catch (ToObjectArgumentActionException e)
