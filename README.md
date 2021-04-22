@@ -24,9 +24,9 @@
 
 ## News
 
-* (4/2021) We are 
+* (4/2021) We are excited to release [ManipulaTHOR](https://ai2thor.allenai.org/manipulathor/), an environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm.
 
-* (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [https://github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
+* (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
 
 * (4/2020) Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.4.md)
 
@@ -80,14 +80,26 @@ If you use iTHOR, please cite the original AI2-THOR paper:
 
 ```bibtex
 @article{ai2thor,
-  author={Eric Kolve and Roozbeh Mottaghi and
-          Winson Han and Eli VanderBilt and
-          Luca Weihs and Alvaro Herrasti and
-          Daniel Gordon and Yuke Zhu and
-          Abhinav Gupta and Ali Farhadi},
+  author={Eric Kolve and Roozbeh Mottaghi and Winson Han and
+          Eli VanderBilt and Luca Weihs and Alvaro Herrasti and
+          Daniel Gordon and Yuke Zhu and Abhinav Gupta and
+          Ali Farhadi},
   title={{AI2-THOR: An Interactive 3D Environment for Visual AI}},
   journal={arXiv},
   year={2017}
+}
+```
+
+If you use ManipulaTHOR, please cite the following paper:
+
+```bibtex
+@inproceedings{manipulathor,
+  title={{ManipulaTHOR: A Framework for Visual Object Manipulation}},
+  author={Kiana Ehsani and Winson Han and Alvaro Herrasti and
+          Eli VanderBilt and Luca Weihs and Eric Kolve and
+          Aniruddha Kembhavi and Roozbeh Mottaghi},
+  booktitle={CVPR},
+  year={2021}
 }
 ```
   
