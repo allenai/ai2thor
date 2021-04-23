@@ -60,35 +60,34 @@ conda install -c conda-forge ai2thor
 | Python | Versions 3.5+ |
 | Linux | X server with GLX module enabled |
 
-## Documentation
+## Learn more
 
-Please refer to the [Documentation Page on the AI2-THOR website](hhttps://ai2thor.allenai.org/ithor/documentation/) for information on Installation, API, Metadata, actions, object properties and other important framework information.
-## Unity Development
+| Section | Description |
+| :-- | :-- |
+| [Demo](https://ai2thor.allenai.org/demo/) | Interact and play with AI2-THOR live in the browser. |
+| [iTHOR Documentation](https://ai2thor.allenai.org/ithor/documentation/) | Documentation for the iTHOR environment. |
+| [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
+| [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
+| [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
+| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
+| [AI2-THOR WEB-GL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
-If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 2019.4.20 LTS for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
+## Support
 
-```python
-pip install invoke
-invoke local-build
-```
+Questions.
 
-This will create a build beneath the directory 'unity/builds/thor-local-OSXIntel64.app'. To use this build in your code, make the following change:
+Issues.
 
-```python
-controller = ai2thor.controller.Controller(
-    local_executable_path="<BASE_DIR>/unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR"
-)
-```
+Ask us.
 
-## Add Third-Party Plugin
+We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
-AI2-THOR uses [Assembly definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) to declare dependencies between libraries within the project.  To add a third-party package to the project, unpack the package to a newly created directory beneath the `unity/Assets/` directory.  Within the Unity Editor, find the new folder in the Project tab.  Select the folder and right-click in the window that displays the contents of the folder and select Create -> Assembly Definition.  This will create a new file in the folder - rename the Assembly definition to match the name of the plugin you are adding (e.g. 'Priority Queue' or 'iTween'). This allows the Assembly definition to be easily found during creation of the reference.  One thing to be aware of is that if you don't rename the newly created file immediately the name in the Inspector within the Editor will not match the filename and you will have to manually update the definition name after renaming the file.  To reference the plugin, a reference must be created in the Assembly Definition file located at `unity/Assets/Scripts/AI2-THOR-Base`.  Locate the `AI2-THOR-Base` Assembly Definition file under `unity/Assets/Scripts` within the Project tab.  Click on the file and locate the section titled "Assembly Definition References".  Click the `+` sign to add a new entry, then click on the circle to the right of the newly created entry.  That will bring up a menu with all the Assembly definitions in the project.  Select the name of the new plugin/Assembly Definition that was just created.  Scroll to the bottom and click the "Apply" button.  The plugin should now be available to use.  The AI2-THOR-Base Assembly definition and the new plugin folder will need to be commited. Additional information about Assembly definitions can be found at:
-* https://learn.unity.com/tutorial/working-with-assembly-definitions?uv=2019.4#
-* https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html
 
-## Browser Build
+## Team
 
-For building for browser, please refer to [this page](WEBGL.md).
+AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
+AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+
 
 ## Citation
 If you use iTHOR, please cite the original AI2-THOR paper:
@@ -132,30 +131,3 @@ If you use RoboTHOR, please cite the following paper:
   year={2020}
 }
 ```
-
-## Learn more
-
-| Section | Description |
-| :-- | :-- |
-| [Demo](https://ai2thor.allenai.org/demo/) | Interact and play with AI2-THOR live in the browser. |
-| [iTHOR Documentation](https://ai2thor.allenai.org/ithor/documentation/) | Documentation for the iTHOR environment. |
-| [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
-| [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
-| [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
-| [AI2-THOR Unity Development]() | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
-
-## Support
-
-Questions.
-
-Issues.
-
-Ask us.
-
-We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
-
-
-## Team
-
-AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
-AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
