@@ -1104,10 +1104,10 @@ public class AgentManager : MonoBehaviour {
     }
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
-    public void ProcessControlCommand(DynamicServerAction controlCommand) {
+    public void ProcessControlCommand(DynamicServerAction controlCommand, int? sequenceId = null) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
-		this.currentSequenceId = controlCommand.sequenceId;
+		this.currentSequenceId = sequenceId == null? controlCommand.sequenceId: sequenceId.GetValueOrDefault();
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
@@ -1551,7 +1551,7 @@ public class DynamicServerAction {
 
     public int sequenceId {
         get {
-            return this.GetValue("sequenceId", 0);
+            return (int)this.jObject["sequenceId"];
         }
     }
 
