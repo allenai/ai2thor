@@ -30,10 +30,11 @@
 | <img src="https://user-images.githubusercontent.com/28768645/115915430-2cab4100-a428-11eb-8dc8-66e5227086eb.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915819-b8bd6880-a428-11eb-99c2-5e5304e1645a.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915758-9cb9c700-a428-11eb-805a-741fd7a0759c.png" width="100%" /> |
 | :--: | :--: | :--: |
 | `iTHOR` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ManipulaTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`RoboTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
-| <ul><li>here 1</li></ul> |
-
+| A high-level interaction framework that facilitates research in embodied common sense reasoning. | A mid-level interaction framework that facilitates visual manipulation of objects using a robotic arm. | A framework that facilitates Sim2Real research with a collection of simlated scene counterparts in the physical world. |
 
 ## 🪑 Scenes and Objects
+
+ Includes a set of interactive objects and scenes and provides accurate modeling of the physics of the world.
 
 
 
@@ -104,7 +105,7 @@ print(event)
 | [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
 | [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
 | [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
-| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
+| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if editing on the AI2-THOR backend. |
 | [AI2-THOR WebGL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
 ## 📒 Citation
