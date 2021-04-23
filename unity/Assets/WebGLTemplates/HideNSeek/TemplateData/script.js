@@ -4,7 +4,7 @@ $(
     let getParams = parseGet();
     window.game_build = 'build' in getParams ? getParams['build'] : window.game_build;
     window.game_url = 'build' in getParams ? `${window.game_build}/Build/thor-local-WebGL.json` : window.game_url;
-    let scene = getParams['scene'];
+    // let scene = getParams['scene'];
     console.log("GAME URL: ", window.game_url);
     let hider = getParams['role'] !== 'seeker';
     let gameInitialized  = false;
@@ -151,7 +151,7 @@ $(
     }
 
     function OpenObject(metadata) {
-      let agentMetadata = metadata.agents[0];
+      // let agentMetadata = metadata.agents[0];
     }
 
     function RegisterAgentPosition(metadata) {
@@ -342,13 +342,14 @@ $(
 
         console.log("Status: ", textStatus);
 
-        $('#role-str').html(('role' in getParams ? getParams['role'] : 'hider').toUpperCase());
         $("#mturk_form").attr("action", isTurkSanbox ? turkSandboxUrl : turkUrl);
 
         // Instruction Rendering
         if (hider) {
-            let objectHtml = `<strong class="important-text">${getParams['object']}</strong>`;
-            $("#instruction-text").html(`You have to hide a ${objectHtml}`);
+            let objectHTML = $('<strong class="important-text"></strong>');
+            objectHTML.text(getParams['object']);
+            $("#instruction-text").append("You have to find a ");
+            $("#instruction-text").append(objectHTML);
             $("#instruction-2").html(`Move around in the room, open drawers and cabinets to look for a good hiding spot.`);
             $("#instruction-3").html('When you are ready, move the object (see Shift controls) to place it more precisely, click on it to drop it.');
             $("#instruction-4").html(`If you're happy with your hiding spot click the <strong class="green-text">Finish</strong> button above. Or <strong class="red-text">Reset</strong> to start over.`);
