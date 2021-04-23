@@ -50,6 +50,10 @@ pip install ai2thor
 conda install -c conda-forge ai2thor
 ```
 
+### With Docker
+
+We recommend using [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker), which adds configuration for running a X server to be used by Unity3d to render scenes.
+
 ### Requirements
 
 | Component | Requirement |
