@@ -4,7 +4,7 @@ $(
     let getParams = parseGet();
     window.game_build = 'build' in getParams ? getParams['build'] : window.game_build;
     window.game_url = 'build' in getParams ? `${window.game_build}/Build/thor-local-WebGL.json` : window.game_url;
-    let scene = getParams['scene'];
+    // let scene = getParams['scene'];
     console.log("GAME URL: ", window.game_url);
     let hider = getParams['role'] !== 'seeker';
     let gameInitialized  = false;
@@ -151,7 +151,7 @@ $(
     }
 
     function OpenObject(metadata) {
-      let agentMetadata = metadata.agents[0];
+      // let agentMetadata = metadata.agents[0];
     }
 
     function RegisterAgentPosition(metadata) {

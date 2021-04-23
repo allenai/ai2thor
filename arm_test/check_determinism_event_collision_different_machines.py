@@ -10,7 +10,6 @@ import ai2thor.controller
 import ai2thor
 import random
 import copy
-import time
 
 MAX_TESTS = 20
 MAX_EP_LEN = 100
