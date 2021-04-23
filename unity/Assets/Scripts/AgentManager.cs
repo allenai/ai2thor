@@ -1103,18 +1103,33 @@ public class AgentManager : MonoBehaviour {
 
     }
 
+    // To distinguish between args for reflection function call and global control arguments
+    private HashSet<string> injectedArguments = new HashSet<string>(){
+        "sequenceId",
+        "renderImage",
+        "agentId",
+        "renderInstanceSegmentation",
+        "renderObjectImage"
+    };
+
     // Uniform entry point for both the test runner and the python server for step dispatch calls
-    public void ProcessControlCommand(DynamicServerAction controlCommand, int? sequenceId = null) {
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
-		this.currentSequenceId = sequenceId == null? controlCommand.sequenceId: sequenceId.GetValueOrDefault();
+		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
 
+        var args = new DynamicServerAction(
+            new JObject(
+                controlCommand.jObject.Properties().Where(p => !injectedArguments.Contains(p.Name))
+            )
+        );
+
         if (agentManagerActions.Contains(controlCommand.action)) {
             // let's look in this class for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
+            this.activeAgent().ProcessControlCommand(controlCommand: args, target: this);
         } else {
             // we only allow renderInstanceSegmentation to be flipped on
             // on a per step() basis, since by default the param is null
@@ -1134,7 +1149,7 @@ public class AgentManager : MonoBehaviour {
             }
 
             // let's look in the agent's set of actions for the action
-			this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
+			this.activeAgent().ProcessControlCommand(controlCommand: args);
 		}
     }
 
@@ -1541,7 +1556,10 @@ to dispatch to the appropriate action based on the passed in params.
 The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
 public class DynamicServerAction {
-    private JObject jObject;
+    public JObject jObject {
+        get;
+        private set;
+    }
 
     public int agentId {
         get {
