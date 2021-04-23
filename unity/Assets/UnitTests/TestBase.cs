@@ -27,6 +27,7 @@ namespace Tests
 
         public IEnumerator step(Dictionary<string, object> action) {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
+            action["sequenceId"] = sequenceId;
             agentManager.ProcessControlCommand(new DynamicServerAction(action));
             yield return new WaitForEndOfFrame();
             var agent = agentManager.GetActiveAgent();

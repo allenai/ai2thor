@@ -44,7 +44,7 @@ namespace Tests
             yield return step(args);
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.IsFalse(lastActionSuccess);
-            Assert.IsTrue(error.Contains("invalid argument: z"));
+            Assert.IsTrue(error.Contains("invalid argument: 'z'"));
         }
     }
 }
