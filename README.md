@@ -29,7 +29,7 @@
 
 | <img src="https://user-images.githubusercontent.com/28768645/115915430-2cab4100-a428-11eb-8dc8-66e5227086eb.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915819-b8bd6880-a428-11eb-99c2-5e5304e1645a.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915758-9cb9c700-a428-11eb-805a-741fd7a0759c.png" width="100%" /> |
 | :--: | :--: | :--: |
-| `iTHOR` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ManipulaTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`RoboTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+| `iTHOR` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ManipulaTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`RoboTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 | A high-level interaction framework that facilitates research in embodied common sense reasoning. | A mid-level interaction framework that facilitates visual manipulation of objects using a robotic arm. | A framework that facilitates Sim2Real research with a collection of simlated scene counterparts in the physical world. |
 
 ## 🌍 Features
