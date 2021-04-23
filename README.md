@@ -23,6 +23,19 @@
 
 <h3 align="center">A Near Photo-Realistic Interactable framework for Embodied AI agents.</h3>
 
+## Environments
+
+| <img src="https://user-images.githubusercontent.com/28768645/115915430-2cab4100-a428-11eb-8dc8-66e5227086eb.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915819-b8bd6880-a428-11eb-99c2-5e5304e1645a.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915758-9cb9c700-a428-11eb-805a-741fd7a0759c.png" width="100%" /> |
+| :--: | :--: | :--: |
+| `iTHOR` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ManipulaTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`RoboTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+| <ul><li>here 1</li></ul> |
+
+
+## Scenes and Objects
+
+
+
+
 ## Latest Announcements
 
 | Date | Announcement |
@@ -30,7 +43,7 @@
 | 4/2021 | We are excited to release [ManipulaTHOR](https://ai2thor.allenai.org/manipulathor/), an environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm. Please see the [full 3.0.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_3.0.md) |
 | 2/2021 | We are excited to host the [AI2-THOR Rearrangement Challenge](https://ai2thor.allenai.org/rearrangement/), [RoboTHOR ObjectNav Challenge](https://ai2thor.allenai.org/robothor/cvpr-2021-challenge/), and [ALFRED Challenge](https://askforalfred.com/EAI21/), held in conjunction with the [Embodied AI Workshop](https://embodied-ai.org/) at CVPR 2021. |
 | 2/2021 | AI2-THOR v2.7.0 announces several massive speedups to AI2-THOR! Read more about it [here](https://medium.com/ai2-blog/speed-up-your-training-with-ai2-thor-2-7-0-12a650b6ab5e). |
-| 6/2020 | We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker). |
+| 6/2020 | We've released [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) a mini-framework to simplify running AI2-THOR in Docker. |
 | 4/2020 | Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.4.md) |
 | 2/2020 | AI2-THOR now includes two frameworks: [iTHOR](https://ai2thor.allenai.org/ithor/) and [RoboTHOR](https://ai2thor.allenai.org/robothor/). iTHOR includes interactive objects and scenes and RoboTHOR consists of simulated scenes and their corresponding real world counterparts. |
 | 9/2019 | Version 2.1.0 update of the framework has been added. New object types have been added. New Initialization actions have been added. Segmentation image generation has been improved in all scenes. |
@@ -52,7 +65,7 @@ conda install -c conda-forge ai2thor
 
 ### With Docker
 
-We recommend using [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker), which adds configuration for running a X server to be used by Unity3d to render scenes.
+[🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) can be used, which adds the configuration for running a X server to be used by Unity 3D to render scenes.
 
 ### Requirements
 
@@ -63,18 +76,6 @@ We recommend using [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-doc
 | CPU | SSE2 instruction set support. |
 | Python | Versions 3.5+ |
 | Linux | X server with GLX module enabled |
-
-## Learn more
-
-| Section | Description |
-| :-- | :-- |
-| [Demo](https://ai2thor.allenai.org/demo/) | Interact and play with AI2-THOR live in the browser. |
-| [iTHOR Documentation](https://ai2thor.allenai.org/ithor/documentation/) | Documentation for the iTHOR environment. |
-| [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
-| [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
-| [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
-| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
-| [AI2-THOR WEB-GL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
 ## Support
 
@@ -87,11 +88,17 @@ Ask us.
 We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
 
-## Team
+## Learn more
 
-AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
-AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
-
+| Section | Description |
+| :-- | :-- |
+| [Demo](https://ai2thor.allenai.org/demo/) | Interact and play with AI2-THOR live in the browser. |
+| [iTHOR Documentation](https://ai2thor.allenai.org/ithor/documentation/) | Documentation for the iTHOR environment. |
+| [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
+| [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
+| [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
+| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
+| [AI2-THOR WEB-GL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
 ## Citation
 If you use iTHOR, please cite the original AI2-THOR paper:
@@ -135,3 +142,11 @@ If you use RoboTHOR, please cite the following paper:
   year={2020}
 }
 ```
+
+## Team
+
+AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at [the Allen Institute for AI (AI2)](//allenai.org).
+AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+
+
+
