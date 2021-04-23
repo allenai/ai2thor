@@ -1,4 +1,4 @@
-<p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
+<p align="center"><img width="50%" src="https://raw.githubusercontent.com/allenai/ai2thor/readme-updates/doc/static/logo.svg" /></p>
 <h3 align="center"><i>A Near Photo-Realistic Interactable framework for Embodied AI agents.</i></h3>
 
 <p align="center">
@@ -81,14 +81,14 @@
 
 | Date | Announcement |
 | :-- | :-- |
-| 4/2021 | We are excited to release [ManipulaTHOR](https://ai2thor.allenai.org/manipulathor/), an environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm. Please see the [full 3.0.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_3.0.md) |
+| 4/2021 | We are excited to release [ManipulaTHOR](https://ai2thor.allenai.org/manipulathor/), an environment within the AI2-THOR framework that facilitates visual manipulation of objects using a robotic arm. Please see the [full 3.0.0 release notes here](https://github.com/allenai/ai2thor/blob/main/doc/static/ReleaseNotes/ReleaseNotes_3.0.md) |
 | 2/2021 | We are excited to host the [AI2-THOR Rearrangement Challenge](https://ai2thor.allenai.org/rearrangement/), [RoboTHOR ObjectNav Challenge](https://ai2thor.allenai.org/robothor/cvpr-2021-challenge/), and [ALFRED Challenge](https://askforalfred.com/EAI21/), held in conjunction with the [Embodied AI Workshop](https://embodied-ai.org/) at CVPR 2021. |
 | 2/2021 | AI2-THOR v2.7.0 announces several massive speedups to AI2-THOR! Read more about it [here](https://medium.com/ai2-blog/speed-up-your-training-with-ai2-thor-2-7-0-12a650b6ab5e). |
 | 6/2020 | We've released [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) a mini-framework to simplify running AI2-THOR in Docker. |
-| 4/2020 | Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.4.md) |
+| 4/2020 | Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](https://github.com/allenai/ai2thor/blob/main/doc/static/ReleaseNotes/ReleaseNotes_2.4.md) |
 | 2/2020 | AI2-THOR now includes two frameworks: [iTHOR](https://ai2thor.allenai.org/ithor/) and [RoboTHOR](https://ai2thor.allenai.org/robothor/). iTHOR includes interactive objects and scenes and RoboTHOR consists of simulated scenes and their corresponding real world counterparts. |
 | 9/2019 | Version 2.1.0 update of the framework has been added. New object types have been added. New Initialization actions have been added. Segmentation image generation has been improved in all scenes. |
-| 6/2019 | Version 2.0 update of the AI2-THOR framework is now live! We have over quadrupled our action and object states, adding new actions that allow visually distinct state changes such as broken screens on electronics, shattered windows, breakable dishware, liquid fillable containers, cleanable dishware, messy and made beds and more! Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensitive interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature. Please see the [full 2.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.0.md) to view details on all the changes and new features. |
+| 6/2019 | Version 2.0 update of the AI2-THOR framework is now live! We have over quadrupled our action and object states, adding new actions that allow visually distinct state changes such as broken screens on electronics, shattered windows, breakable dishware, liquid fillable containers, cleanable dishware, messy and made beds and more! Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensitive interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature. Please see the [full 2.0 release notes here](https://github.com/allenai/ai2thor/blob/main/doc/static/ReleaseNotes/ReleaseNotes_2.0.md) to view details on all the changes and new features. |
 
 ## 💻 Installation
 
@@ -200,6 +200,6 @@ AI2 is a non-profit institute with the mission to contribute to humanity through
 <br />
 
 <a href="//prior.allenai.org">
-<p align="center"><img width="100%" src="doc/static/ai2-prior.svg" /></p>
+<p align="center"><img width="100%" src="https://raw.githubusercontent.com/allenai/ai2thor/readme-updates/doc/static/ai2-prior.svg" /></p>
 </a>
 
