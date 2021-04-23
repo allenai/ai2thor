@@ -32,11 +32,19 @@
 | `iTHOR` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ManipulaTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`RoboTHOR`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 | A high-level interaction framework that facilitates research in embodied common sense reasoning. | A mid-level interaction framework that facilitates visual manipulation of objects using a robotic arm. | A framework that facilitates Sim2Real research with a collection of simlated scene counterparts in the physical world. |
 
-## 🪑 Scenes and Objects
+## 🌍 Features
 
- Includes a set of interactive objects and scenes and provides accurate modeling of the physics of the world.
+**🏡 Scenes.** AI2-THOR contains 200+ custom high-quality scenes. The scenes can be explored on our [demo](//ai2thor.allenai.org/demo) page. We are working on rapidly expanding the number of available scenes and domain randomization within each scene.
 
+**🪑 Objects.** AI2-THOR contains 1500+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
 
+**🤖 Agent Types.** Multi-agent support, a custom built LoCoBot agent, a Kinova 3 inspired robotic manipulation agent, and a drone agent.
+
+**🦾 Actions.** There are 200+ actions that facilitate research in a wide range of interaction and navigation based embodied AI tasks.
+
+**🖼 Images.** First-class support for many image modalities and camera adjustments. Some modalities include ego-centric RGB images, instance segmentation, semantic segmentation, depth frames, normals frames, top-down frames, orthographic projections, and third-person camera frames. User's can also easily change camera properties, such as the size of the images and field of view.
+
+**🗺 Metadata.** After each step in the environment, there is a large amount of sensory data available about the state of the environment. This information can be used to build highly complex custom reward functions.
 
 ## 📰 Latest Announcements
 
@@ -77,7 +85,8 @@ Once you've installed AI2-THOR, you can verify that everything is working correc
 from ai2thor.controller import Controller
 controller = Controller(scene="FloorPlan10")
 event = controller.step(action="RotateRight")
-print(event)
+metadata = event.metadata
+print(event, event.metadata.keys())
 ```
 
 #### Requirements
