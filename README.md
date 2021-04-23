@@ -65,9 +65,9 @@
 
 ## 🌍 Features
 
-**🏡 Scenes.** AI2-THOR contains 200+ custom high-quality scenes. The scenes can be explored on our [demo](//ai2thor.allenai.org/demo) page. We are working on rapidly expanding the number of available scenes and domain randomization within each scene.
+**🏡 Scenes.** 200+ custom built high-quality scenes. The scenes can be explored on our [demo](//ai2thor.allenai.org/demo) page. We are working on rapidly expanding the number of available scenes and domain randomization within each scene.
 
-**🪑 Objects.** AI2-THOR contains 1500+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
+**🪑 Objects.** 1500+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
 
 **🤖 Agent Types.** Multi-agent support, a custom built LoCoBot agent, a Kinova 3 inspired robotic manipulation agent, and a drone agent.
 
@@ -194,7 +194,7 @@ If you use RoboTHOR, please cite the following paper:
 
 ## 👋 Our Team
 
-AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at the [Allen Institute for AI (AI2)](//allenai.org).
+AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at the [Allen Institute for AI](//allenai.org) (AI2).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
 
 <br />
