@@ -25,7 +25,7 @@
     </a>
 </p>
 
-## Environments
+## 🏡 Environments
 
 | <img src="https://user-images.githubusercontent.com/28768645/115915430-2cab4100-a428-11eb-8dc8-66e5227086eb.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915819-b8bd6880-a428-11eb-99c2-5e5304e1645a.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915758-9cb9c700-a428-11eb-805a-741fd7a0759c.png" width="100%" /> |
 | :--: | :--: | :--: |
@@ -33,11 +33,11 @@
 | <ul><li>here 1</li></ul> |
 
 
-## Scenes and Objects
+## 🪑 Scenes and Objects
 
 
 
-## Latest Announcements
+## 📰 Latest Announcements
 
 | Date | Announcement |
 | :-- | :-- |
@@ -50,25 +50,25 @@
 | 9/2019 | Version 2.1.0 update of the framework has been added. New object types have been added. New Initialization actions have been added. Segmentation image generation has been improved in all scenes. |
 | 6/2019 | Version 2.0 update of the AI2-THOR framework is now live! We have over quadrupled our action and object states, adding new actions that allow visually distinct state changes such as broken screens on electronics, shattered windows, breakable dishware, liquid fillable containers, cleanable dishware, messy and made beds and more! Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensitive interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature. Please see the [full 2.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.0.md) to view details on all the changes and new features. |
 
-## Installation
+## 💻 Installation
 
-### With pip
+#### With pip
 
 ```bash
 pip install ai2thor
 ```
 
-### With conda
+#### With conda
 
 ```bash
 conda install -c conda-forge ai2thor
 ```
 
-### With Docker
+#### With Docker
 
 [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) can be used, which adds the configuration for running a X server to be used by Unity 3D to render scenes.
 
-### Minimal Example
+#### Minimal Example
 
 Once you've installed AI2-THOR, you can verify that everything is working correctly by running the following minimal example:
 
@@ -79,7 +79,7 @@ event = controller.step(action="RotateRight")
 print(event)
 ```
 
-### Requirements
+#### Requirements
 
 | Component | Requirement |
 | :-- | :-- |
@@ -89,13 +89,13 @@ print(event)
 | Python | Versions 3.5+ |
 | Linux | X server with GLX module enabled |
 
-## Support
+## ❓ Support
 
 **Questions.** If you have any questions on AI2-THOR, please ask them on our [GitHub Discussions Page](https://github.com/allenai/ai2thor/discussions).
 
 **Issues.** If you encounter any issues while using AI2-THOR, please open an [Issue on GitHub](https://github.com/allenai/ai2thor/issues).
 
-## Learn more
+## 😄 Learn more
 
 | Section | Description |
 | :-- | :-- |
@@ -107,7 +107,8 @@ print(event)
 | [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
 | [AI2-THOR WebGL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
-## Citation
+## 📒 Citation
+
 If you use iTHOR, please cite the original AI2-THOR paper:
 
 ```bibtex
@@ -150,7 +151,7 @@ If you use RoboTHOR, please cite the following paper:
 }
 ```
 
-## Team
+## 👋 Team
 
 AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at [the Allen Institute for AI (AI2)](//allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
