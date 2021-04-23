@@ -1,5 +1,7 @@
 <p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
 
+<h3 align="center"><it>A Near Photo-Realistic Interactable framework for Embodied AI agents.</it></h3>
+
 <p align="center">
     <a href="//github.com/allenai/ai2thor/releases">
         <img alt="GitHub release" src="https://img.shields.io/github/release/allenai/ai2thor.svg">
@@ -21,7 +23,6 @@
     </a>
 </p>
 
-<h3 align="center">A Near Photo-Realistic Interactable framework for Embodied AI agents.</h3>
 
 ## Environments
 
