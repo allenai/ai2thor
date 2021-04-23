@@ -1,6 +1,6 @@
 <p align="center"><img width="50%" src="doc/static/logo.svg" /></p>
 
-<h3 align="center"><it>A Near Photo-Realistic Interactable framework for Embodied AI agents.</it></h3>
+<h3 align="center"><i>A Near Photo-Realistic Interactable framework for Embodied AI agents.</i></h3>
 
 <p align="center">
     <a href="//github.com/allenai/ai2thor/releases">
@@ -23,7 +23,6 @@
     </a>
 </p>
 
-
 ## Environments
 
 | <img src="https://user-images.githubusercontent.com/28768645/115915430-2cab4100-a428-11eb-8dc8-66e5227086eb.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915819-b8bd6880-a428-11eb-99c2-5e5304e1645a.png" width="100%" /> | <img src="https://user-images.githubusercontent.com/28768645/115915758-9cb9c700-a428-11eb-805a-741fd7a0759c.png" width="100%" /> |
@@ -33,7 +32,6 @@
 
 
 ## Scenes and Objects
-
 
 
 
@@ -68,6 +66,17 @@ conda install -c conda-forge ai2thor
 
 [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) can be used, which adds the configuration for running a X server to be used by Unity 3D to render scenes.
 
+### Minimal Example
+
+Once you've installed AI2-THOR, you can verify that everything is working correctly by running the following minimal example:
+
+```python
+from ai2thor.controller import Controller
+controller = Controller(scene="FloorPlan10")
+event = controller.step(action="RotateRight")
+print(event)
+```
+
 ### Requirements
 
 | Component | Requirement |
@@ -80,14 +89,9 @@ conda install -c conda-forge ai2thor
 
 ## Support
 
-Questions.
+**Questions.** If you have any questions on AI2-THOR, please ask them on our [GitHub Discussions Page](https://github.com/allenai/ai2thor/discussions).
 
-Issues.
-
-Ask us.
-
-We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
-
+**Issues.** If you encounter any issues while using AI2-THOR, please open an [Issue on GitHub](https://github.com/allenai/ai2thor/issues).
 
 ## Learn more
 
@@ -99,7 +103,7 @@ We have done our best to fix all bugs and issues. However, you might still encou
 | [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
 | [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
 | [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
-| [AI2-THOR WEB-GL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
+| [AI2-THOR WebGL Development](WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
 ## Citation
 If you use iTHOR, please cite the original AI2-THOR paper:
@@ -149,7 +153,9 @@ If you use RoboTHOR, please cite the following paper:
 AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at [the Allen Institute for AI (AI2)](//allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
 
+<br />
+
 <a href="//prior.allenai.org">
-<p align="center"><img width="70%" src="doc/static/ai2-prior.svg" /></p>
+<p align="center"><img width="100%" src="doc/static/ai2-prior.svg" /></p>
 </a>
 
