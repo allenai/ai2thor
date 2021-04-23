@@ -71,7 +71,7 @@
 
 **🤖 Agent Types.** Multi-agent support, a custom built LoCoBot agent, a Kinova 3 inspired robotic manipulation agent, and a drone agent.
 
-**🦾 Actions.** There are 200+ actions that facilitate research in a wide range of interaction and navigation based embodied AI tasks.
+**🦾 Actions.** 200+ actions that facilitate research in a wide range of interaction and navigation based embodied AI tasks.
 
 **🖼 Images.** First-class support for many image modalities and camera adjustments. Some modalities include ego-centric RGB images, instance segmentation, semantic segmentation, depth frames, normals frames, top-down frames, orthographic projections, and third-person camera frames. User's can also easily change camera properties, such as the size of the images and field of view.
 
