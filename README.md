@@ -37,20 +37,19 @@
 
 ## Installation
 
-#### With pip
+### With pip
 
 ```bash
 pip install ai2thor
 ```
 
-#### With conda
+### With conda
 
 ```bash
 conda install -c conda-forge ai2thor
 ```
 
-
-#### Requirements
+### Requirements
 
 | Component | Requirement |
 | :-- | :-- |
@@ -133,8 +132,24 @@ If you use RoboTHOR, please cite the following paper:
 }
 ```
 
+## Learn more
+
+| Section | Description |
+| :-- | :-- |
+| [Demo](https://ai2thor.allenai.org/demo/) | Interact and play with AI2-THOR live in the browser. |
+| [iTHOR Documentation](https://ai2thor.allenai.org/ithor/documentation/) | Documentation for the iTHOR environment. |
+| [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
+| [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
+| [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
+| [AI2-THOR Unity Development]() | A (sparse) collection of notes that may be useful if developing ontop of AI2-THOR. |
 
 ## Support
+
+Questions.
+
+Issues.
+
+Ask us.
 
 We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
