@@ -1,6 +1,7 @@
 import datetime
 import json
 import pdb
+import math
 import os
 import sys
 
@@ -15,9 +16,6 @@ MAX_TESTS = 20
 MAX_EP_LEN = 100
 scene_names = ["FloorPlan{}_physics".format(i + 1) for i in range(30)]
 set_of_actions = ["mm", "rr", "ll", "w", "z", "a", "s", "u", "j", "3", "4", "p"]
-
-nan = float("nan")
-inf = float("inf")
 
 controller = ai2thor.controller.Controller(
     local_build=True,
@@ -196,23 +194,21 @@ def two_list_equal(l1, l2):
 
 def two_dict_equal(dict1, dict2):
     # https://lgtm.com/rules/7860092/
-    len_dict1 = len(dict1)
-    len_dict2 = len(dict2)
-    assert len_dict1 == len_dict2, print("different len", dict1, dict2)
+    dict_equal = len(dict1) == len(dict2)
+    assert dict_equal, ("different len", dict1, dict2)
     equal = True
     for k in dict1:
         val1 = dict1[k]
         val2 = dict2[k]
         # https://lgtm.com/rules/7860092/
-        type_val1 = type(val1)
-        type_val2 = type(val2)
-        assert type_val1 == type_val2, print("different type", dict1, dict2)
+        type_equal = type(val1) == type(val2)
+        assert type_equal, ("different type", dict1, dict2)
         if type(val1) == dict:
             equal = two_dict_equal(val1, val2)
         elif type(val1) == list:
             equal = two_list_equal(val1, val2)
-        elif val1 != val1:  # Either nan or -inf
-            equal = val2 != val2
+        elif math.isnan(val1):
+            equal = math.isnan(val2)
         elif type(val1) == float:
             equal = abs(val1 - val2) < 0.001
         else:
