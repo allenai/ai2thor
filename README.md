@@ -148,5 +148,7 @@ If you use RoboTHOR, please cite the following paper:
 AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at [the Allen Institute for AI (AI2)](//allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
 
-
+<a href="//prior.allenai.org">
+<p align="center"><img width="70%" src="doc/static/ai2-prior.svg" /></p>
+</a>
 
