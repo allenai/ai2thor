@@ -99,13 +99,13 @@ print(event, event.metadata.keys())
 | Python | Versions 3.5+ |
 | Linux | X server with GLX module enabled |
 
-## ❓ Support
+## 💬 Support
 
 **Questions.** If you have any questions on AI2-THOR, please ask them on our [GitHub Discussions Page](https://github.com/allenai/ai2thor/discussions).
 
 **Issues.** If you encounter any issues while using AI2-THOR, please open an [Issue on GitHub](https://github.com/allenai/ai2thor/issues).
 
-## 😄 Learn more
+## 🏫 Learn more
 
 | Section | Description |
 | :-- | :-- |
@@ -161,9 +161,9 @@ If you use RoboTHOR, please cite the following paper:
 }
 ```
 
-## 👋 Team
+## 👋 Our Team
 
-AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at [the Allen Institute for AI (AI2)](//allenai.org).
+AI2-THOR is an open-source project built by the [PRIOR team](//prior.allenai.org) at the [Allen Institute for AI (AI2)](//allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
 
 <br />
