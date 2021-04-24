@@ -145,7 +145,7 @@ print(event, event.metadata.keys())
 | [ManipulaTHOR Documentation](https://ai2thor.allenai.org/manipulathor/documentation/) | Documentation for the ManipulaTHOR environment. |
 | [RoboTHOR Documentation](https://ai2thor.allenai.org/robothor/documentation/) | Documentation for the RoboTHOR environment. |
 | [AllenAct](https://allenact.org/) | An Embodied AI Framework build at AI2 that provides first-class support for AI2-THOR. | 
-| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity) | A (sparse) collection of notes that may be useful if editing on the AI2-THOR backend. |
+| [AI2-THOR Unity Development](https://github.com/allenai/ai2thor/tree/main/unity#readme) | A (sparse) collection of notes that may be useful if editing on the AI2-THOR backend. |
 | [AI2-THOR WebGL Development](https://github.com/allenai/ai2thor/blob/main/WEBGL.md) | Documentation on packaging AI2-THOR for the web, which might be useful for annotation based tasks. |
 
 ## 📒 Citation
