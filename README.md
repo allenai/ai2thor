@@ -11,7 +11,7 @@
     <a href="//ai2thor.allenai.org/" target="_blank">
         <img alt="Documentation" src="https://img.shields.io/website/https/ai2thor.allenai.org?down_color=red&down_message=offline&up_message=online">
     </a>
-    <a href="//arxiv.org/abs/1712.05474" target="_blank">
+    <a href="//pypi.org/project/ai2thor/" target="_blank">
         <img src="https://img.shields.io/badge/python-3.5+-blue">
     </a>
     <a href="//arxiv.org/abs/1712.05474" target="_blank">
