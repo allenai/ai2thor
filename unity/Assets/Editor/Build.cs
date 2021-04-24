@@ -4,15 +4,11 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Build.Reporting;
 
 public class Build {
     static void OSXIntel64() {
-#if UNITY_2017_3_OR_NEWER
-        var buildTarget = BuildTarget.StandaloneOSX;
-#else
-		var buildTarget = BuildTarget.StandaloneOSXIntel64;
-#endif
-        build(GetBuildName(), GetAllScenePaths(), buildTarget);
+        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
     }
 
     static string GetBuildName() {
@@ -20,20 +16,31 @@ public class Build {
     }
 
     static void Linux64() {
-        build(GetBuildName(), GetAllScenePaths(), BuildTarget.StandaloneLinux64);
+        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
+    }
+
+    static void CloudRendering() {
+        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.CloudRendering, BuildTarget.CloudRendering);
     }
 
     static void WebGL() {
-        build(GetBuildName(), GetSceneFromEnv().ToList(), BuildTarget.WebGL);
+        build(GetBuildName(), GetSceneFromEnv().ToList(), BuildTargetGroup.WebGL, BuildTarget.WebGL);
     }
 
-    static void build(string buildName, List<string> scenes, BuildTarget target) {
+    static void build(string buildName, List<string> scenes, BuildTargetGroup targetGroup, BuildTarget target) {
+        Debug.Log("build name: " + buildName);
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
-            var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
         }
-        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle);
+   BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+    buildPlayerOptions.scenes = scenes.ToArray();
+    buildPlayerOptions.locationPathName = buildName;
+    buildPlayerOptions.target = target;
+    buildPlayerOptions.options = BuildOptions.None; //BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
+    EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
+    BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+    BuildSummary summary = report.summary;
     }
 
     private static List<string> GetAllScenePaths() {
@@ -47,7 +54,7 @@ public class Build {
         }
 
         foreach (string f in files) {
-            if (f.EndsWith(".unity")) {
+            if (f.EndsWith("FloorPlan28_physics.unity")) {
                 Debug.Log("Adding Scene " + f);
                 scenes.Add(f);
             }

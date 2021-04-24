@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.VR;
+// Commented out for Unity 2021.2
+//using UnityEngine.VR;
 
 public class MirrorCameraScript : MonoBehaviour
 {
