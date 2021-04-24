@@ -1,4 +1,4 @@
-<p align="center"><img width="50%" src="https://raw.githubusercontent.com/allenai/ai2thor/readme-updates/doc/static/logo.svg" /></p>
+<p align="center"><img width="50%" src="https://raw.githubusercontent.com/allenai/ai2thor/main/doc/static/logo.svg" /></p>
 <h3 align="center"><i>A Near Photo-Realistic Interactable framework for Embodied AI agents.</i></h3>
 
 <p align="center">
@@ -200,6 +200,6 @@ AI2 is a non-profit institute with the mission to contribute to humanity through
 <br />
 
 <a href="//prior.allenai.org">
-<p align="center"><img width="100%" src="https://raw.githubusercontent.com/allenai/ai2thor/readme-updates/doc/static/ai2-prior.svg" /></p>
+<p align="center"><img width="100%" src="https://raw.githubusercontent.com/allenai/ai2thor/main/doc/static/ai2-prior.svg" /></p>
 </a>
 
