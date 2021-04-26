@@ -414,6 +414,11 @@ class Controller(object):
 
         if server_class is None and platform.system() == "Windows":
             self.server_class = ai2thor.wsgi_server.WsgiServer
+        elif (
+            isinstance(server_class, ai2thor.fifo_server.FifoServer)
+            and platform.system() == "Windows"
+        ):
+            raise ValueError("server_class=FifoServer cannot be used on Windows.")
         elif server_class is None:
             self.server_class = ai2thor.fifo_server.FifoServer
         else:
