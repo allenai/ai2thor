@@ -787,6 +787,21 @@ def clean():
     scripts.update_private.checkout_branch()
 
 
+def ci_prune_cache(cache_dir):
+    entries = {}
+    for e in os.scandir(cache_dir):
+        if os.path.isdir(e.path):
+            mtime = os.stat(e.path).st_mtime
+            entries[e.path] = mtime
+
+    # keeping the most recent 60 entries (this keeps the cache around 300GB-500GB)
+    sorted_paths = sorted(entries.keys(), key=lambda x: entries[x])[:-60]
+    for path in sorted_paths:
+        if os.path.basename(path) != "main":
+            logger.info("pruning cache directory: %s" % path)
+            shutil.rmtree(path)
+
+
 def link_build_cache(branch):
     library_path = os.path.join("unity", "Library")
     logger.info("linking build cache for %s" % branch)
@@ -799,6 +814,10 @@ def link_build_cache(branch):
     encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+
+    ci_prune_cache(cache_base_dir)
+
+
     main_cache_dir = os.path.join(cache_base_dir, "main")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
     # use the main cache as a starting point to avoid
