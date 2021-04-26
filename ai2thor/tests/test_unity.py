@@ -9,14 +9,12 @@ import warnings
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
-from ai2thor.tests.constants import TESTS_DATA_DIR
+from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
 import glob
 import re
-
-TEST_SCENE = "FloorPlan28"
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -97,10 +95,7 @@ BASE_FP28_LOCATION = dict(
 
 
 def teleport_to_base_location(controller: Controller):
-    assert (
-        controller.last_event.metadata["sceneName"].replace("_physics", "")
-        == TEST_SCENE
-    )
+    assert controller.last_event.metadata["sceneName"] == TEST_SCENE
 
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
     assert controller.last_event.metadata["lastActionSuccess"]
@@ -1301,7 +1296,7 @@ def test_get_interactable_poses(controller):
 def test_2d_semantic_hulls(controller):
     from shapely.geometry import Polygon
 
-    controller.reset("FloorPlan28")
+    controller.reset(TEST_SCENE)
     obj_name_to_obj_id = {
         o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]
     }
@@ -1483,7 +1478,7 @@ def test_get_object_in_frame(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_coordinate_from_raycast(controller):
-    controller.reset(scene="FloorPlan28")
+    controller.reset(scene=TEST_SCENE)
     event = controller.step(
         action="TeleportFull",
         position=dict(x=-1.5, y=0.900998235, z=-1.5),
@@ -1518,7 +1513,7 @@ def test_get_coordinate_from_raycast(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_reachable_positions_with_directions_relative_agent(controller):
-    controller.reset("FloorPlan28")
+    controller.reset(TEST_SCENE)
 
     event = controller.step("GetReachablePositions")
     num_reachable_aligned = len(event.metadata["actionReturn"])
@@ -1546,7 +1541,7 @@ def test_get_reachable_positions_with_directions_relative_agent(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_move(controller):
-    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
     assert_near(
         point1={"x": -1.5, "y": 0.9009982347488403, "z": -1.5},
         point2=event.metadata["agent"]["position"],
@@ -1561,7 +1556,7 @@ def test_manipulathor_move(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_rotate(controller):
-    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
     assert_near(
         point1={"x": -0.0, "y": 180.0, "z": 0.0},
         point2=event.metadata["agent"]["rotation"],
