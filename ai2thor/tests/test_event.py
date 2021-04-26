@@ -1,6 +1,8 @@
 import os
 
 from ai2thor.server import Event
+import warnings
+import json
 import numpy as np
 import pytest
 
@@ -3312,7 +3314,78 @@ def test_metadata(event):
     assert event.pose == (-750, -250, 0, 0)
 
 
-def test_objets_by_test(event):
+def test_metadata_wrapper_reachable_positions_index_error():
+    metadata_clone = json.loads(json.dumps(metadata_simple))
+    metadata_clone["lastAction"] = "RotateRight"
+
+    e = Event(metadata_clone)
+    caught_error = False
+    try:
+        e.metadata["reachablePositions"]
+    except IndexError as e:
+        caught_error = True
+
+    assert (
+        caught_error
+    ), "should have caught an index error trying to access reachablePositions for a non-GetSceneBounds/GetReachablePositions action"
+
+
+def test_metadata_wrapper_reachable_positions():
+    metadata_clone = json.loads(json.dumps(metadata_simple))
+    metadata_clone["lastAction"] = "GetReachablePositions"
+    if "reachablePositions" in metadata_clone:
+        del metadata_clone["reachablePositions"]
+    metadata_clone["actionReturn"] = "GetReachablePositions RETURN"
+
+    e = Event(metadata_clone)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert (
+            e.metadata["reachablePositions"] == "GetReachablePositions RETURN"
+        ), "GetReachablePositions should return actionReturn"
+        assert len(w) == 1
+        assert (
+            'event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"]'
+            in str(w[-1].message)
+        )
+
+
+def test_metadata_wrapper_scene_bounds_reachable_positions():
+    metadata_clone = json.loads(json.dumps(metadata_simple))
+    metadata_clone["lastAction"] = "GetSceneBounds"
+    if "actionReturn" in metadata_clone:
+        del metadata_clone["actionReturn"]
+    metadata_clone["reachablePositions"] = "reachablePositions SCENEBOUNDS RETURN"
+
+    e = Event(metadata_clone)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert (
+            e.metadata["reachablePositions"] == "reachablePositions SCENEBOUNDS RETURN"
+        ), "GetSceneBounds reachablePositions should return reachablePositions"
+        assert len(w) == 0
+
+
+def test_metadata_wrapper_scene_bounds_action_return():
+    metadata_clone = json.loads(json.dumps(metadata_simple))
+    if "reachablePositions" in metadata_clone:
+        del metadata_clone["reachablePositions"]
+    metadata_clone["lastAction"] = "GetSceneBounds"
+    metadata_clone["actionReturn"] = "SCENEBOUNDS RETURN"
+    e = Event(metadata_clone)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert (
+            e.metadata["reachablePositions"] == "SCENEBOUNDS RETURN"
+        ), "GetSceneBounds reachablePositions should return actionReturn"
+        assert len(w) == 1
+        assert (
+            'event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"]'
+            in str(w[-1].message)
+        )
+
+
+def test_objects_by_test(event):
     all_mugs = [o["objectId"] for o in event.objects_by_type("Mug")]
     mug_object_ids = [
         "Mug|-00.78|+00.93|-03.85",
