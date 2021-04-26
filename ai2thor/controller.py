@@ -388,7 +388,7 @@ class Controller(object):
         add_depth_noise=False,
         download_only=False,
         include_private_scenes=False,
-        server_class=ai2thor.fifo_server.FifoServer,
+        server_class=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -410,7 +410,19 @@ class Controller(object):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
-        self.server_class = server_class
+
+        if server_class is None and platform.system() == "Windows":
+            self.server_class = ai2thor.wsgi_server.WsgiServer
+        elif (
+            isinstance(server_class, ai2thor.fifo_server.FifoServer)
+            and platform.system() == "Windows"
+        ):
+            raise ValueError("server_class=FifoServer cannot be used on Windows.")
+        elif server_class is None:
+            self.server_class = ai2thor.fifo_server.FifoServer
+        else:
+            self.server_class = server_class
+
         self._build = None
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -1175,8 +1187,9 @@ class Controller(object):
                 if not process_alive(self.unity_pid):
                     break
                 time.sleep(0.1)
-            if process_alive(self.unity_pid):
-                os.kill(self.unity_pid, signal.SIGKILL)
+            if platform.system() != "Windows":
+                if process_alive(self.unity_pid):
+                    os.kill(self.unity_pid, signal.SIGKILL)
 
 
 class BFSSearchPoint:
