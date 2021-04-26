@@ -1093,7 +1093,7 @@ public class AgentManager : MonoBehaviour {
             //    }
             //}
 
-            #endif
+#endif
 
 
 
@@ -1109,14 +1109,16 @@ public class AgentManager : MonoBehaviour {
         "renderImage",
         "agentId",
         "renderInstanceSegmentation",
-        "renderObjectImage"
+        "renderObjectImage",
+        "renderClassImage",
+        "renderSemanticSegmentation"
     };
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
     public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
-		this.currentSequenceId = controlCommand.sequenceId;
+        this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
@@ -1149,64 +1151,60 @@ public class AgentManager : MonoBehaviour {
             }
 
             // let's look in the agent's set of actions for the action
-			this.activeAgent().ProcessControlCommand(controlCommand: args);
-		}
+            this.activeAgent().ProcessControlCommand(controlCommand: args);
+        }
     }
 
     public BaseFPSAgentController GetActiveAgent() {
-		return this.agents[activeAgentId];
-	}
+        return this.agents[activeAgentId];
+    }
 
-	private int parseContentLength(string header) {
-		// Debug.Log("got header: " + header);
-		string[] fields = header.Split(new char[]{'\r','\n'});
-		foreach(string field in fields) {
-			string[] elements = field.Split(new char[]{':'});
-			if (elements[0].ToLower() == "content-length") {
-				return Int32.Parse(elements[1].Trim());
-			}
-		}
+    private int parseContentLength(string header) {
+        // Debug.Log("got header: " + header);
+        string[] fields = header.Split(new char[] { '\r', '\n' });
+        foreach (string field in fields) {
+            string[] elements = field.Split(new char[] { ':' });
+            if (elements[0].ToLower() == "content-length") {
+                return Int32.Parse(elements[1].Trim());
+            }
+        }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	private BaseFPSAgentController activeAgent() {
-		return this.agents[activeAgentId];
-	}
+    private BaseFPSAgentController activeAgent() {
+        return this.agents[activeAgentId];
+    }
 
-	private void ProcessControlCommand(string msg) {
+    private void ProcessControlCommand(string msg) {
         DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
         this.ProcessControlCommand(controlCommand);
-	}
+    }
 
-	// Extra helper functions
-	protected string LoadStringVariable(string variable, string name)
-	{
-		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-		return envVarValue == null ? variable : envVarValue;
-	}
+    // Extra helper functions
+    protected string LoadStringVariable(string variable, string name) {
+        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+        return envVarValue == null ? variable : envVarValue;
+    }
 
-	protected int LoadIntVariable(int variable, string name)
-	{
-		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-		return envVarValue == null ? variable : int.Parse(envVarValue);
-	}
+    protected int LoadIntVariable(int variable, string name) {
+        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+        return envVarValue == null ? variable : int.Parse(envVarValue);
+    }
 
-	protected float LoadFloatVariable(float variable, string name)
-	{
-		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-		return envVarValue == null ? variable : float.Parse(envVarValue);
-	}
+    protected float LoadFloatVariable(float variable, string name) {
+        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+        return envVarValue == null ? variable : float.Parse(envVarValue);
+    }
 
-	protected bool LoadBoolVariable(bool variable, string name)
-	{
-		string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-		string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-		return envVarValue == null ? variable : bool.Parse(envVarValue);
-	}
+    protected bool LoadBoolVariable(bool variable, string name) {
+        string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+        string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+        return envVarValue == null ? variable : bool.Parse(envVarValue);
+    }
 
 }
 
@@ -1647,7 +1645,7 @@ public class DynamicServerAction {
     public int Count() {
         return this.jObject.Count;
     }
-    
+
 }
 
 [Serializable]

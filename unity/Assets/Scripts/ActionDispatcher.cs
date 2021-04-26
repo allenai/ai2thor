@@ -292,7 +292,7 @@ public static class ActionDispatcher {
     }
 
     public static IEnumerable<MethodInfo> getMatchingMethodOverwrites(Type targetType, DynamicServerAction dynamicServerAction) {
-        return getCandidateMethods(targetType,  dynamicServerAction.action)
+        return getCandidateMethods(targetType, dynamicServerAction.action)
             .Select(
                 method => (
                     method,
@@ -318,26 +318,26 @@ public static class ActionDispatcher {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
-        }  else {
+        } else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var invalidArgs = dynamicServerAction
                 .Keys()
                 .Where(argName => !paramDict.ContainsKey(argName) && argName != "action")
                 .ToList();
             if (invalidArgs.Count > 0) {
-                Func<ParameterInfo, string> paramToString = 
-                    (ParameterInfo param) => 
-                        $"{param.ParameterType.Name} {param.Name}{(param.HasDefaultValue? " = "+param.DefaultValue: "")}";
+                Func<ParameterInfo, string> paramToString =
+                    (ParameterInfo param) =>
+                        $"{param.ParameterType.Name} {param.Name}{(param.HasDefaultValue ? " = " + param.DefaultValue : "")}";
                 var matchingMethodOverWrites = getMatchingMethodOverwrites(target.GetType(), dynamicServerAction).Select(
-                    m => 
-                        $"{m.ReturnType.Name} {m.Name}("+ 
+                    m =>
+                        $"{m.ReturnType.Name} {m.Name}(" +
                             string.Join(", ",
                                 m.GetParameters()
                                 .Select(paramToString)
                             )
                             + ")"
                 );
-               
+
                 throw new InvalidArgumentsException(
                     dynamicServerAction.Keys().Where(argName => argName != "action"),
                     invalidArgs,
@@ -345,7 +345,7 @@ public static class ActionDispatcher {
                     matchingMethodOverWrites
                 );
             }
-            for(int i = 0; i < methodParams.Length; i++) {
+            for (int i = 0; i < methodParams.Length; i++) {
                 System.Reflection.ParameterInfo pi = methodParams[i];
                 if (dynamicServerAction.ContainsKey(pi.Name)) {
                     try {

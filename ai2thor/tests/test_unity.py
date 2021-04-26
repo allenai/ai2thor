@@ -1603,16 +1603,17 @@ def test_unsupported_manipulathor(controller):
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_invalid_arguments(controller):
     controller.reset()
-
-    event = controller.step(
-        action="PutObject",
-        x=0.0,
-        y=0.0,
-        z=1.0,
-        forceAction=False,
-        placeStationary=True
-    )
-    assert not event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
-    assert event.metadata[
-        "errorMessage"
-    ], "errorMessage with invalid argument"
+    with pytest.raises(ValueError):
+        event = controller.step(
+            action="PutObject",
+            x=0.0,
+            y=0.0,
+            z=1.0,
+            forceAction=False,
+            placeStationary=True
+        )
+        print("Error code {0}".format(event.metadata["errorCode"]))
+        assert not event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
+        assert event.metadata[
+            "errorMessage"
+        ], "errorMessage with invalid argument"
