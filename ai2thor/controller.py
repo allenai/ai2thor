@@ -570,12 +570,19 @@ class Controller(object):
 
         return self._scenes_in_build
 
+    @staticmethod
+    def normalize_scene(scene):
+
+        if re.match(r"^FloorPlan[0-9]+$", scene):
+            scene = scene + "_physics"
+
+        return scene
+
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
-        if re.match(r"^FloorPlan[0-9]+$", scene):
-            scene = scene + "_physics"
+        scene = Controller.normalize_scene(scene)
 
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
         # for old builds
