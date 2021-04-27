@@ -165,37 +165,19 @@ class VideoController(Controller):
             # keep the position the same
             p = self.last_event.metadata["agent"]["position"]
             if smoothAnimation:
-                if agentId is None:
-                    yield self.step(
-                        action="TeleportFull",
-                        rotation=y0
-                        + rotateDegrees
-                        * self._linear_to_smooth(i + 1, frames, std_dev=1),
-                        agentId=agentId,
-                        **p,
-                    )
-                else:
-                    yield self.step(
-                        action="TeleportFull",
-                        rotation=y0
-                        + rotateDegrees
-                        * self._linear_to_smooth(i + 1, frames, std_dev=1),
-                        **p,
-                    )
+                yield self.step(
+                    action="TeleportFull",
+                    rotation=y0
+                    + rotateDegrees
+                    * self._linear_to_smooth(i + 1, frames, std_dev=1),
+                    **p,
+                )
             else:
-                if agentId is None:
-                    yield self.step(
-                        action="TeleportFull",
-                        rotation=y0 + rotateDegrees * ((i + 1) / frames),
-                        agentId=agentId,
-                        **p,
-                    )
-                else:
-                    yield self.step(
-                        action="TeleportFull",
-                        rotation=y0 + rotateDegrees * ((i + 1) / frames),
-                        **p,
-                    )
+                yield self.step(
+                    action="TeleportFull",
+                    rotation=y0 + rotateDegrees * ((i + 1) / frames),
+                    **p,
+                )
 
     def MoveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move(
