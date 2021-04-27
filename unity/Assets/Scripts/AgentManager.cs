@@ -1108,10 +1108,9 @@ public class AgentManager : MonoBehaviour {
         "sequenceId",
         "renderImage",
         "agentId",
-        "renderInstanceSegmentation",
         "renderObjectImage",
         "renderClassImage",
-        "renderSemanticSegmentation"
+        "renderNormalsImage"
     };
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls

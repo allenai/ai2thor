@@ -617,7 +617,7 @@ def test_open_interactable_with_filter(controller):
         action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
     )
 
-    controller.step(dict(action="ResetObjectFilter", objectIds=[]))
+    controller.step(dict(action="ResetObjectFilter"))
 
     fridge = next(
         obj
