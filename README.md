@@ -247,6 +247,7 @@ For playback:
   - Changed `nearestAngleIndex` to return the nearest index based on the minimum difference between the current angle and the angle at the index
   - Pulled out code for getting capsule parameters for agent from capsuleCastAllForAgent function to GetCapsuleInfoForAgent
   - Added factoring in scaling scaling to collider radius (now called adjustedRadius) in capsuleCastAllForAgent 
+  - Changed maxVisibleDistance to 1.0
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
   - Added `IsMovementTypeSlide` function
