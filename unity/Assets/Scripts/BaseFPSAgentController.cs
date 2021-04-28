@@ -136,7 +136,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
-        public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+        //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+        //MCS: changed back to 1.0f.  We used to pull from MCS python code which was 1.0f.
+        public float maxVisibleDistance = 1.0f; 
         protected float[, , ] flatSurfacesOnGrid = new float[0, 0, 0];
         protected float[, ] distances = new float[0, 0];
         protected float[, , ] normals = new float[0, 0, 0];
