@@ -6,13 +6,18 @@ __version__ = "0.0.1"
 if os.path.isfile("ai2thor/_version.py"):
     exec(open("ai2thor/_version.py").read())
 
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
+
 VERSION = __version__
 
 setup(
     name="ai2thor",
     version=VERSION,
-    description="AI2 Thor framework",
-    long_description="AI2 Thor is a lightweight AI framework that interacts with the Unity3d Game Engine.",
+    description="AI2-THOR: A Near Photo-Realistic Interactable framework for Embodied AI agents.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     classifiers=[
         "Intended Audience :: Science/Research",
         "Development Status :: 3 - Alpha",
@@ -27,7 +32,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    keywords="AI2 Thor API",
+    keywords="AI2-THOR, Allen AI, Python, Reinforcement Learning, Computer Vision, Artificial Intelligence",
     url="https://github.com/allenai/ai2thor",
     author="Allen Institute for Artificial Intelligence",
     author_email="ai2thor@allenai.org",

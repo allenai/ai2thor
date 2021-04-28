@@ -86,40 +86,32 @@ def unique_rows(arr, return_index=False, return_inverse=False):
 
 
 class MetadataWrapper(dict):
-    def __init__(self, raw_metadata: dict):
-        super().__init__(raw_metadata)
-        self._raw_metadata = raw_metadata
-
     def __getitem__(self, x):
         # alias deprecated functionality
-        if (
-            x == "reachablePositions"
-            and self._raw_metadata["lastAction"] == "GetReachablePositions"
-        ):
-            warnings.warn(
-                'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
-            )
-            x = "actionReturn"
-        elif (
-            x == "reachablePositions"
-            and self._raw_metadata["lastAction"] == "GetSceneBounds"
-        ):
-            # Undocumented GetSceneBounds used to only populate reachablePositions,
-            # and not actionReturn. This now maintains both sideways and
-            # backwards compatibility in such a case.
-            if "reachablePositions" in self._raw_metadata.keys():
-                return super().__getitem__(x)
-            else:
+        if x == "reachablePositions":
+            last_action = super().__getitem__("lastAction")
+            if last_action == "GetReachablePositions":
                 warnings.warn(
                     'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
                 )
                 x = "actionReturn"
-        elif x == "reachablePositions":
-            raise IndexError(
-                "You are trying to access event.metadata['reachablePositions'] without first "
-                + "calling controller.step(action='GetReachablePositions'). Also, "
-                + "the key 'reachablePositions' is deprecated in favor of event.metadata['actionReturn']."
-            )
+            elif last_action == "GetSceneBounds":
+                # Undocumented GetSceneBounds used to only populate reachablePositions,
+                # and not actionReturn. This now maintains both sideways and
+                # backwards compatibility in such a case.
+                if "reachablePositions" in self:
+                    return super().__getitem__(x)
+                else:
+                    warnings.warn(
+                        'The key event.metadata["reachablePositions"] is deprecated and has been remapped to event.metadata["actionReturn"].'
+                    )
+                    x = "actionReturn"
+            else:
+                raise IndexError(
+                    "You are trying to access event.metadata['reachablePositions'] without first "
+                    + "calling controller.step(action='GetReachablePositions'). Also, "
+                    + "the key 'reachablePositions' is deprecated in favor of event.metadata['actionReturn']."
+                )
         return super().__getitem__(x)
 
 
@@ -131,7 +123,7 @@ class Event:
     """
 
     def __init__(self, metadata):
-        self.metadata = MetadataWrapper(raw_metadata=metadata)
+        self.metadata = MetadataWrapper(metadata)
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 

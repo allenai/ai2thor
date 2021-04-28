@@ -8,7 +8,7 @@ using UnityEditor.Build.Reporting;
 
 public class Build {
     static void OSXIntel64() {
-        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
+        build(GetBuildName(),  BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
     }
 
     static string GetBuildName() {
@@ -16,22 +16,25 @@ public class Build {
     }
 
     static void Linux64() {
-        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
+        build(GetBuildName(), BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
     }
 
     static void CloudRendering() {
-        build(GetBuildName(), GetAllScenePaths(), BuildTargetGroup.CloudRendering, BuildTarget.CloudRendering);
+        build(GetBuildName(), BuildTargetGroup.CloudRendering, BuildTarget.CloudRendering);
     }
 
     static void WebGL() {
-        build(GetBuildName(), GetSceneFromEnv().ToList(), BuildTargetGroup.WebGL, BuildTarget.WebGL);
+        build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL);
     }
 
-    static void build(string buildName, List<string> scenes, BuildTargetGroup targetGroup, BuildTarget target) {
-        Debug.Log("build name: " + buildName);
+    static void build(string buildName, BuildTargetGroup targetGroup, BuildTarget target) {
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
+        }
+        List<string> scenes = GetScenes();
+        foreach (string scene in scenes) {
+            Debug.Log("Adding Scene " + scene);
         }
    BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
     buildPlayerOptions.scenes = scenes.ToArray();
@@ -41,6 +44,16 @@ public class Build {
     EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
     BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
     BuildSummary summary = report.summary;
+
+    }
+
+    private static List<string> GetScenes() {
+        List<string> envScenes = GetScenesFromEnv();
+        if (envScenes.Count > 0) {
+            return envScenes;
+        } else {
+            return GetAllScenePaths();
+        }
     }
 
     private static List<string> GetAllScenePaths() {
@@ -50,12 +63,10 @@ public class Build {
 
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
-
         }
 
         foreach (string f in files) {
-            if (f.EndsWith("FloorPlan28_physics.unity")) {
-                Debug.Log("Adding Scene " + f);
+            if (f.EndsWith(".unity")) {
                 scenes.Add(f);
             }
         }
@@ -64,10 +75,14 @@ public class Build {
         return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
     }
 
-    private static IEnumerable<string> GetSceneFromEnv() {
-        return Environment.GetEnvironmentVariable("SCENE").Split(',').Select(
-            x => "Assets/Scenes/" + x + ".unity"
-        );
+    private static List<string> GetScenesFromEnv() {
+        if (Environment.GetEnvironmentVariables().Contains(("BUILD_SCENES"))) {
+            return Environment.GetEnvironmentVariable("BUILD_SCENES").Split(',').Select(
+                x => "Assets/Scenes/" + x + ".unity"
+            ).ToList();
+        } else {
+            return new List<string>();
+        }
     }
 
     private static bool IncludePrivateScenes() {

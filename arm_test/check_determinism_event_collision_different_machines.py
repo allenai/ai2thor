@@ -198,14 +198,14 @@ def two_dict_equal(dict1, dict2):
     # removing calls to len to resolve https://lgtm.com/rules/7860092/
     dict_equal = len(dict1) == len(dict2)
 
-    assert dict_equal, print("different len", dict1, dict2)
+    assert dict_equal, ("different len", dict1, dict2)
     equal = True
     for k in dict1:
         val1 = dict1[k]
         val2 = dict2[k]
         # https://lgtm.com/rules/7860092/
         type_equal = type(val1) == type(val2)
-        assert type_equal, print("different type", dict1, dict2)
+        assert type_equal, ("different type", dict1, dict2)
         if type(val1) == dict:
             equal = two_dict_equal(val1, val2)
         elif type(val1) == list:
