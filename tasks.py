@@ -15,14 +15,7 @@ import boto3
 import botocore.exceptions
 import multiprocessing
 import io
-import platform
 import ai2thor.build
-from ai2thor.build import (
-    PUBLIC_S3_BUCKET,
-    PRIVATE_S3_BUCKET,
-    PUBLIC_WEBGL_S3_BUCKET,
-    PYPI_S3_BUCKET,
-)
 import logging
 
 logger = logging.getLogger()
@@ -53,9 +46,9 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
     # subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource("s3")
     acl = "public-read"
-    bucket = PUBLIC_S3_BUCKET
+    bucket = ai2thor.build.PUBLIC_S3_BUCKET
     if include_private_scenes:
-        bucket = PRIVATE_S3_BUCKET
+        bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
     archive_base = os.path.basename(build_archive_name)
@@ -127,6 +120,7 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
         % (_unity_path(), build_name, project_path, arch)
     )
+
     target_path = os.path.join(build_dir, build_name)
 
     full_env = os.environ.copy()
@@ -164,7 +158,6 @@ def class_dataset_images_for_scene(scene_name):
     from collections import defaultdict
     import numpy as np
     import cv2
-    import hashlib
 
     env = ai2thor.controller.Controller(quality="Low")
     player_size = 300
@@ -338,7 +331,6 @@ def class_dataset_images_for_scene(scene_name):
             # print("start x %s start_y %s end_x %s end y %s" % (start_x, start_y, end_x, end_y))
             print("storing %s " % object_id)
             img = event.cv2img[start_y:end_y, start_x:end_x, :]
-            seg_img = event.cv2img[min_y:max_y, min_x:max_x, :]
             dst = cv2.resize(
                 img, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4
             )
@@ -383,13 +375,26 @@ def local_build_name(prefix, arch):
 
 
 @task
-def local_build(context, prefix="local", arch="OSXIntel64"):
+def local_build_test(context, prefix="local", arch="OSXIntel64"):
+    from ai2thor.tests.constants import TEST_SCENE
+
+    local_build(context, prefix, arch, [TEST_SCENE])
+
+
+@task(iterable=["scenes"])
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None):
+    import ai2thor.controller
+
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
+    if scenes:
+        env["BUILD_SCENES"] = ",".join(
+            map(ai2thor.controller.Controller.normalize_scene, scenes)
+        )
 
     if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")
@@ -477,7 +482,8 @@ def webgl_build(
     if verbose:
         print(scenes)
 
-    env = dict(SCENE=scenes)
+    env = dict(BUILD_SCENES=scenes)
+
     if crowdsource_build:
         env["DEFINES"] = "CROWDSOURCE_TASK"
     if _build("unity", arch, directory, build_name, env=env):
@@ -608,9 +614,9 @@ def push_pip_commit(context):
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)).put(
-                Body=f, ACL=acl
-            )
+            s3.Object(
+                ai2thor.build.PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)
+            ).put(Body=f, ACL=acl)
 
 
 @task
@@ -641,8 +647,6 @@ def build_pip_commit(context):
 
 @task
 def build_pip(context, version):
-    from ai2thor.build import platform_map
-    import re
     import xml.etree.ElementTree as ET
     import requests
 
@@ -678,7 +682,7 @@ def build_pip(context, version):
     if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
 
-    for arch in platform_map.keys():
+    for arch in ai2thor.build.platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
         if not commit_build.exists():
             raise Exception("Build does not exist for %s/%s" % (commit_id, arch))
@@ -725,7 +729,6 @@ def build_pip(context, version):
 @task
 def fetch_source_textures(context):
     import ai2thor.downloader
-    import io
 
     zip_data = ai2thor.downloader.download(
         "http://s3-us-west-2.amazonaws.com/ai2-thor/assets/source-textures.zip",
@@ -744,11 +747,11 @@ def build_log_push(build_info, include_private_scenes):
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
 
-    bucket = PUBLIC_S3_BUCKET
+    bucket = ai2thor.build.PUBLIC_S3_BUCKET
     acl = "public-read"
 
     if include_private_scenes:
-        bucket = PRIVATE_S3_BUCKET
+        bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
     s3.Object(bucket, build_log_key).put(
@@ -775,7 +778,6 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
 @task
 def pre_test(context):
     import ai2thor.controller
-    import shutil
 
     c = ai2thor.controller.Controller()
     os.makedirs("unity/builds/%s" % c.build_name())
@@ -800,6 +802,21 @@ def clean():
     scripts.update_private.checkout_branch()
 
 
+def ci_prune_cache(cache_dir):
+    entries = {}
+    for e in os.scandir(cache_dir):
+        if os.path.isdir(e.path):
+            mtime = os.stat(e.path).st_mtime
+            entries[e.path] = mtime
+
+    # keeping the most recent 60 entries (this keeps the cache around 300GB-500GB)
+    sorted_paths = sorted(entries.keys(), key=lambda x: entries[x])[:-60]
+    for path in sorted_paths:
+        if os.path.basename(path) != "main":
+            logger.info("pruning cache directory: %s" % path)
+            shutil.rmtree(path)
+
+
 def link_build_cache(branch):
     library_path = os.path.join("unity", "Library")
     logger.info("linking build cache for %s" % branch)
@@ -812,6 +829,10 @@ def link_build_cache(branch):
     encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+
+    ci_prune_cache(cache_base_dir)
+
+
     main_cache_dir = os.path.join(cache_base_dir, "main")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
     # use the main cache as a starting point to avoid
@@ -826,6 +847,8 @@ def link_build_cache(branch):
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
     os.makedirs(branch_library_cache_dir, exist_ok=True)
     os.symlink(branch_library_cache_dir, library_path)
+    # update atime/mtime to simplify cache pruning
+    os.utime(branch_cache_dir)
 
 
 def travis_build(build_id):
@@ -873,7 +896,7 @@ def pytest_s3_object(commit_id):
     s3 = boto3.resource("s3")
     pytest_key = "builds/pytest-%s.json" % commit_id
 
-    return s3.Object(PUBLIC_S3_BUCKET, pytest_key)
+    return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
 
 def ci_pytest(build):
@@ -917,7 +940,6 @@ def ci_pytest(build):
 @task
 def ci_build(context):
     import fcntl
-    import io
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
 
@@ -1089,7 +1111,6 @@ def ci_build_arch(arch, include_private_scenes=False):
 
 @task
 def poll_ci_build(context):
-    from ai2thor.build import platform_map
     import requests.exceptions
     import requests
 
@@ -1104,7 +1125,7 @@ def poll_ci_build(context):
             print(".", end="")
             last_emit_time = time.time()
 
-        for arch in platform_map.keys():
+        for arch in ai2thor.build.platform_map.keys():
             commit_build = ai2thor.build.Build(arch, commit_id, False)
             try:
                 if not commit_build.log_exists():
@@ -1119,7 +1140,7 @@ def poll_ci_build(context):
         sys.stdout.flush()
         time.sleep(10)
 
-    for arch in platform_map.keys():
+    for arch in ai2thor.build.platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
         if not commit_build.exists():
             print("Build log url: %s" % commit_build.log_url)
@@ -1150,7 +1171,6 @@ def poll_ci_build(context):
 
 @task
 def build(context, local=False):
-    from ai2thor.build import platform_map
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
 
@@ -1158,7 +1178,7 @@ def build(context, local=False):
     threads = []
 
     for include_private_scenes in (True, False):
-        for arch in platform_map.keys():
+        for arch in ai2thor.build.platform_map.keys():
             env = {}
             if include_private_scenes:
                 env["INCLUDE_PRIVATE_SCENES"] = "true"
@@ -1166,7 +1186,7 @@ def build(context, local=False):
             build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
             build_dir = os.path.join("builds", build_name)
             build_path = build_dir + ".zip"
-            build_info = builds[platform_map[arch]] = {}
+            build_info = builds[ai2thor.build.platform_map[arch]] = {}
 
             build_info["log"] = "%s.log" % (build_name,)
 
@@ -1408,7 +1428,6 @@ def inspect_depth(
     import numpy as np
     import cv2
     import glob
-    import re
 
     under_prefix = "_" if under_score else ""
     regex_str = "depth{}(.*)\.png".format(under_prefix)
@@ -1477,15 +1496,11 @@ def inspect_depth(
 def real_2_sim(
     ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False
 ):
-    import json
     import numpy as np
     import cv2
     from ai2thor.util.transforms import transform_real_2_sim
 
-    depth_real_fn = os.path.join(source_dir, "depth_raw_{}.npy".format(index))
-    depth_metadata_fn = depth_real = os.path.join(
-        source_dir, "metadata_{}.json".format(index)
-    )
+    depth_metadata_fn = os.path.join(source_dir, "metadata_{}.json".format(index))
     color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
     color_sim_fn = os.path.join(output_dir, "color_teleport.png".format(index))
     with open(depth_metadata_fn, "r") as f:
@@ -1630,7 +1645,7 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 
     import ai2thor.controller
 
-    controller = ai2thor.controller.BFSController(local_build=True)
+    controller = ai2thor.controller.BFSController()
     controller.start()
     for i in range(int(start_scene), int(end_scene)):
         print("working on floorplan %s" % i)
@@ -1714,10 +1729,11 @@ def benchmark(
     editor_mode=False,
     out="benchmark.json",
     verbose=False,
+    local_build=False,
+    commit_id=ai2thor.build.COMMIT_ID,
 ):
     import ai2thor.controller
     import random
-    import json
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
     rotate_actions = ["RotateRight", "RotateLeft"]
@@ -1729,7 +1745,7 @@ def benchmark(
         for i in range(n):
             action = random.choice(test_actions)
             start = time.time()
-            event = env.step(dict(action=action))
+            env.step(dict(action=action))
             end = time.time()
             frame_time = end - start
             average_frame_time += frame_time
@@ -1745,16 +1761,19 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
-    env = ai2thor.controller.Controller(local_build=True)
+    args = {}
     if editor_mode:
-        env.start(
-            8200,
-            False,
-            width=screen_width,
-            height=screen_height,
-        )
+        args["port"] = 8200
+        args["start_unity"] = False
+    elif local_build:
+        args["local_build"] = local_build
     else:
-        env.start(width=screen_width, height=screen_height)
+        args["commit_id"] = commit_id
+
+    env = ai2thor.controller.Controller(
+        width=screen_width, height=screen_height, **args
+    )
+
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
     # Bedrooms:       FloorPlan301 - FloorPlan330
@@ -1842,7 +1861,7 @@ cache_seconds = 31536000
 @task
 def webgl_deploy(
     ctx,
-    bucket=PUBLIC_WEBGL_S3_BUCKET,
+    bucket=ai2thor.build.PUBLIC_WEBGL_S3_BUCKET,
     prefix="local",
     source_dir="builds",
     target_dir="",
@@ -1876,19 +1895,6 @@ def webgl_deploy(
     no_cache_extensions = {".txt", ".html", ".json", ".js"}
 
     no_cache_extensions.union(set(extensions_no_cache.split(",")))
-
-    if verbose:
-        session = boto3.Session()
-        credentials = session.get_credentials()
-
-        # Credentials are refreshable, so accessing your access key / secret key
-        # separately can lead to a race condition. Use this to get an actual matched
-        # set.
-        credentials = credentials.get_frozen_credentials()
-        access_key = credentials.access_key
-        secret_key = credentials.secret_key
-        # print("key:  {} pass: {}".format(access_key, secret_key))
-        # print("Deploying to: {}/{}".format(bucket_name, target_dir))
 
     def walk_recursive(path, func, parent_dir=""):
         for file_name in os.listdir(path):
@@ -1991,6 +1997,7 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         directory="builds/demo",
         content_addressable=content_addressable,
     )
+
     webgl_deploy(
         ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force
     )
@@ -2025,7 +2032,7 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
 def current_webgl_autodeploy_commit_id():
     s3 = boto3.resource("s3")
     try:
-        res = s3.Object(PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").get()
+        res = s3.Object(ai2thor.build.PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").get()
         return json.loads(res["Body"].read())["commit_id"]
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
@@ -2036,7 +2043,7 @@ def current_webgl_autodeploy_commit_id():
 
 def update_webgl_autodeploy_commit_id(commit_id):
     s3 = boto3.resource("s3")
-    s3.Object(PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").put(
+    s3.Object(ai2thor.build.PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").put(
         Body=json.dumps(dict(timestamp=time.time(), commit_id=commit_id)),
         ContentType="application/json",
     )
@@ -2181,18 +2188,16 @@ def mock_client_request(context):
     import numpy as np
     import requests
     import cv2
-    from pprint import pprint
 
     r = requests.post(
         "http://127.0.0.1:9200/step", json=dict(action="MoveAhead", sequenceId=1)
     )
-    s = time.time()
     payload = msgpack.unpackb(r.content, raw=False)
     metadata = payload["metadata"]["agents"][0]
     image = np.frombuffer(payload["frames"][0], dtype=np.uint8).reshape(
         metadata["screenHeight"], metadata["screenWidth"], 3
     )
-    pprint(metadata)
+    pprint.pprint(metadata)
     cv2.imshow("aoeu", image)
     cv2.waitKey(1000)
 
@@ -2226,8 +2231,6 @@ def create_robothor_dataset(
     """
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
-    import json
-    from pprint import pprint
 
     scene = "FloorPlan_Train1_1"
     angle = 45
@@ -2240,7 +2243,7 @@ def create_robothor_dataset(
         with open(filter_file, "r") as f:
             scene_object_filter = json.load(f)
             print("Filter:")
-            pprint(scene_object_filter)
+            pprint.pprint(scene_object_filter)
 
     print("Visibility distance: {}".format(visibility_distance))
     controller = ai2thor.controller.Controller(
@@ -2451,7 +2454,6 @@ def create_robothor_dataset(
             if os.path.exists(intermediate_directory):
                 shutil.rmtree(intermediate_directory)
             os.makedirs(intermediate_directory)
-    import re
 
     def key_sort_func(scene_name):
         m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", scene_name)
@@ -2521,7 +2523,6 @@ def shortest_path_to_object(
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
 
-    scene = scene
     angle = 45
     gridSize = grid_size
     controller = ai2thor.controller.Controller(
@@ -2554,8 +2555,6 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
     Filters objects in dataset that are not reachable in at least one of the scenes (have
     zero occurrences in the dataset)
     """
-    import json
-    from pprint import pprint
 
     with open(filename, "r") as f:
         obj = json.load(f)
@@ -2606,12 +2605,11 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
     with open("with_zero.json", "w") as fw:
         dict_list = {k: list(v) for k, v in objects_with_zero_by_obj.items()}
         json.dump(dict_list, fw, sort_keys=True, indent=4)
-    pprint(objects_with_zero_by_obj)
+    pprint.pprint(objects_with_zero_by_obj)
     filtered = [o for o in obj if o["object_type"] not in objects_with_zero]
     counter = 0
     current_scene = ""
     current_object_type = ""
-    import re
 
     for i, o in enumerate(filtered):
         if current_scene != o["scene"] or current_object_type != o["object_type"]:
@@ -2634,7 +2632,6 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
 def fix_dataset_object_types(
     ctx, input_file, output_file, editor_mode=False, local_build=False
 ):
-    import json
     import ai2thor.controller
 
     with open(input_file, "r") as f:
@@ -2683,7 +2680,6 @@ def fix_dataset_object_types(
 def test_dataset(
     ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False
 ):
-    import json
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
 
@@ -2760,7 +2756,6 @@ def visualize_shortest_paths(
 ):
     angle = 45
     import ai2thor.controller
-    import json
     from PIL import Image
 
     controller = ai2thor.controller.Controller(
@@ -2869,9 +2864,7 @@ def visualize_shortest_paths(
                 if not success
             ]
 
-        from pprint import pprint
-
-        pprint(failed)
+        pprint.pprint(failed)
 
 
 @task
@@ -2886,14 +2879,10 @@ def fill_in_dataset(
     editor_mode=False,
     visibility_distance=1.0,
 ):
-    import json
-    import re
     import glob
     import ai2thor.controller
 
     dataset_path = os.path.join(dataset_dir, dataset_filename)
-    output_dataset_path = os.path.join(dataset_dir, output_filename)
-    filled_dataset_path = os.path.join(intermediate_dir, output_filename)
 
     def key_sort_func(scene_name):
         m = re.search("FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)", scene_name)
@@ -2943,8 +2932,7 @@ def fill_in_dataset(
         partial_dataset_by_scene[scene] = []
 
     with open(dataset_path, "r") as f:
-        dataset = json.load(f)
-        fill_in_dataset = create_dataset(
+        create_dataset(
             ctx,
             local_build=local_build,
             editor_mode=editor_mode,
@@ -3026,8 +3014,6 @@ def test_teleport(ctx, editor_mode=False, local_build=False):
 
 @task
 def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build=True):
-    import json
-    import re
 
     with open(dataset_path, "r") as f:
         dataset = json.load(f)
@@ -3084,7 +3070,6 @@ def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_buil
 
 @task
 def remove_dataset_spaces(ctx, dataset_dir):
-    import json
 
     train = os.path.join(dataset_dir, "train.json")
     test = os.path.join(dataset_dir, "val.json")
@@ -3294,10 +3279,10 @@ def generate_pypi_index(context):
   </BODY>
 </HTML>
 """
-    s3.Object(PYPI_S3_BUCKET, "index.html").put(
+    s3.Object(ai2thor.build.PYPI_S3_BUCKET, "index.html").put(
         Body=root_index, ACL="public-read", ContentType="text/html"
     )
-    objects = list_objects_with_metadata(PYPI_S3_BUCKET)
+    objects = list_objects_with_metadata(ai2thor.build.PYPI_S3_BUCKET)
     links = []
     for k, v in objects.items():
         if k.split("/")[-1] != "index.html":
@@ -3312,7 +3297,7 @@ def generate_pypi_index(context):
 """ % "\n".join(
         links
     )
-    s3.Object(PYPI_S3_BUCKET, "ai2thor/index.html").put(
+    s3.Object(ai2thor.build.PYPI_S3_BUCKET, "ai2thor/index.html").put(
         Body=ai2thor_index, ACL="public-read", ContentType="text/html"
     )
 
@@ -3331,7 +3316,7 @@ def ci_test_utf(context, build):
     for l in [results_path, results_logfile]:
         key = "builds/" + os.path.basename(l)
         with open(l) as f:
-            s3.Object(PUBLIC_S3_BUCKET, key).put(
+            s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, key).put(
                 Body=f.read(), ContentType="text/plain", ACL="public-read"
             )
 

@@ -9,14 +9,12 @@ import warnings
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
-from ai2thor.tests.constants import TESTS_DATA_DIR
+from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
 import glob
 import re
-
-TEST_SCENE = "FloorPlan28"
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -90,17 +88,21 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
 def teleport_to_base_location(controller: Controller):
-    assert (
-        controller.last_event.metadata["sceneName"].replace("_physics", "")
-        == TEST_SCENE
-    )
+    assert controller.last_event.metadata["sceneName"] == TEST_SCENE
 
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
     assert controller.last_event.metadata["lastActionSuccess"]
@@ -198,7 +200,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -215,7 +219,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -256,16 +262,12 @@ def test_fast_emit(fifo_controller):
     event_no_fast_emit = fifo_controller.step(dict(action="LookUp"))
     event_no_fast_emit_2 = fifo_controller.step(dict(action="RotateRight"))
 
-    assert event.metadata._raw_metadata["actionReturn"] is None
-    assert event_fast_emit.metadata._raw_metadata["actionReturn"] == "foo"
-    assert id(event.metadata._raw_metadata["objects"]) == id(
-        event_fast_emit.metadata._raw_metadata["objects"]
-    )
-    assert id(event.metadata._raw_metadata["objects"]) != id(
-        event_no_fast_emit.metadata._raw_metadata["objects"]
-    )
-    assert id(event_no_fast_emit_2.metadata._raw_metadata["objects"]) != id(
-        event_no_fast_emit.metadata._raw_metadata["objects"]
+    assert event.metadata["actionReturn"] is None
+    assert event_fast_emit.metadata["actionReturn"] == "foo"
+    assert id(event.metadata["objects"]) == id(event_fast_emit.metadata["objects"])
+    assert id(event.metadata["objects"]) != id(event_no_fast_emit.metadata["objects"])
+    assert id(event_no_fast_emit_2.metadata["objects"]) != id(
+        event_no_fast_emit.metadata["objects"]
     )
 
 
@@ -614,7 +616,9 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter"))
@@ -646,7 +650,9 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -818,7 +824,7 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
         "TestActionDispatchConflict": ["param22"],
     }
 
-    assert event.metadata._raw_metadata["actionReturn"] == known_conflicts
+    assert event.metadata["actionReturn"] == known_conflicts
 
     skip_reset(fifo_controller)
 
@@ -1078,7 +1084,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1089,7 +1096,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1097,7 +1105,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1301,7 +1310,7 @@ def test_get_interactable_poses(controller):
 def test_2d_semantic_hulls(controller):
     from shapely.geometry import Polygon
 
-    controller.reset("FloorPlan28")
+    controller.reset(TEST_SCENE)
     obj_name_to_obj_id = {
         o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]
     }
@@ -1483,7 +1492,7 @@ def test_get_object_in_frame(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_coordinate_from_raycast(controller):
-    controller.reset(scene="FloorPlan28")
+    controller.reset(scene=TEST_SCENE)
     event = controller.step(
         action="TeleportFull",
         position=dict(x=-1.5, y=0.900998235, z=-1.5),
@@ -1518,7 +1527,7 @@ def test_get_coordinate_from_raycast(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_reachable_positions_with_directions_relative_agent(controller):
-    controller.reset("FloorPlan28")
+    controller.reset(TEST_SCENE)
 
     event = controller.step("GetReachablePositions")
     num_reachable_aligned = len(event.metadata["actionReturn"])
@@ -1546,7 +1555,7 @@ def test_get_reachable_positions_with_directions_relative_agent(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_move(controller):
-    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
     assert_near(
         point1={"x": -1.5, "y": 0.9009982347488403, "z": -1.5},
         point2=event.metadata["agent"]["position"],
@@ -1561,7 +1570,7 @@ def test_manipulathor_move(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_rotate(controller):
-    event = controller.reset(scene="FloorPlan28", agentMode="arm")
+    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
     assert_near(
         point1={"x": -0.0, "y": 180.0, "z": 0.0},
         point2=event.metadata["agent"]["rotation"],

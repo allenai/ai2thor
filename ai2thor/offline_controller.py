@@ -4,11 +4,7 @@ import glob
 import shutil
 import json
 import pickle
-import numpy as np
-import cv2
-from ai2thor.controller import key_for_point
 import ai2thor.controller
-from ai2thor.server import Event
 from collections import defaultdict
 import os
 
@@ -75,7 +71,7 @@ class Controller(object):
         return e
 
     def find_position(self, x, z, rotation, camera_horizon):
-        for p in self.positions.get(key_for_point(x, z), []):
+        for p in self.positions.get(ai2thor.controller.key_for_point(x, z), []):
             if (
                 abs(p["rotation"] - rotation) < 1.0
                 and abs(p["cameraHorizon"] - camera_horizon) < 1.0
@@ -161,9 +157,6 @@ class FrameCounter:
 
 
 def write_frame(event, base_dir, scene_name, frame_name):
-    import cv2
-    import os
-    import json
 
     events_dir = "%s/%s/events" % (base_dir, scene_name)
     met_dir = "%s/%s/metadata" % (base_dir, scene_name)
@@ -195,7 +188,7 @@ def index_metadata(base_dir, scene_name):
             j = json.loads(f.read())
             agent = j["agent"]
             pos = agent["position"]
-            key = key_for_point(pos["x"], pos["z"])
+            key = ai2thor.controller.key_for_point(pos["x"], pos["z"])
             pos_id = os.path.splitext(os.path.basename(g))[0]
             event_path = os.path.join(
                 "%s/%s/events/%s.pickle" % (base_dir, scene_name, pos_id)
@@ -221,7 +214,7 @@ def dump_scene_controller(base_dir, controller):
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
     event = controller.step(action="GetReachablePositions")
-    for p in event.metadata["reachablePositions"]:
+    for p in event.metadata["actionReturn"]:
         action = copy.deepcopy(p)
         action["action"] = "TeleportFull"
         action["horizon"] = 0.0
@@ -232,7 +225,7 @@ def dump_scene_controller(base_dir, controller):
         if event.metadata["lastActionSuccess"]:
             look_up_down_write(controller, base_dir, fc, scene_name)
             for i in range(3):
-                event = controller.step(action="RotateRight")
+                controller.step(action="RotateRight")
                 look_up_down_write(controller, base_dir, fc, scene_name)
 
     index_metadata(base_dir, scene_name)
@@ -248,7 +241,7 @@ def dump_scene(
     controller = ai2thor.controller.Controller()
     controller.start(height=448, width=448)
     controller.reset(scene_name)
-    event = controller.step(
+    controller.step(
         dict(
             action="Initialize",
             fieldOfView=90,

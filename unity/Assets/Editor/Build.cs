@@ -12,7 +12,7 @@ public class Build {
 #else
 		var buildTarget = BuildTarget.StandaloneOSXIntel64;
 #endif
-        build(GetBuildName(), GetAllScenePaths(), buildTarget);
+        build(GetBuildName(), buildTarget);
     }
 
     static string GetBuildName() {
@@ -20,20 +20,34 @@ public class Build {
     }
 
     static void Linux64() {
-        build(GetBuildName(), GetAllScenePaths(), BuildTarget.StandaloneLinux64);
+        build(GetBuildName(), BuildTarget.StandaloneLinux64);
     }
 
     static void WebGL() {
-        build(GetBuildName(), GetSceneFromEnv().ToList(), BuildTarget.WebGL);
+        build(GetBuildName(), BuildTarget.WebGL);
     }
 
-    static void build(string buildName, List<string> scenes, BuildTarget target) {
+    static void build(string buildName, BuildTarget target) {
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
             var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
         }
+
+        List<string> scenes = GetScenes();
+        foreach (string scene in scenes) {
+            Debug.Log("Adding Scene " + scene);
+        }
         BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle);
+    }
+
+    private static List<string> GetScenes() {
+        List<string> envScenes = GetScenesFromEnv();
+        if (envScenes.Count > 0) {
+            return envScenes;
+        } else {
+            return GetAllScenePaths();
+        }
     }
 
     private static List<string> GetAllScenePaths() {
@@ -43,12 +57,10 @@ public class Build {
 
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
-
         }
 
         foreach (string f in files) {
             if (f.EndsWith(".unity")) {
-                Debug.Log("Adding Scene " + f);
                 scenes.Add(f);
             }
         }
@@ -57,10 +69,14 @@ public class Build {
         return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
     }
 
-    private static IEnumerable<string> GetSceneFromEnv() {
-        return Environment.GetEnvironmentVariable("SCENE").Split(',').Select(
-            x => "Assets/Scenes/" + x + ".unity"
-        );
+    private static List<string> GetScenesFromEnv() {
+        if (Environment.GetEnvironmentVariables().Contains(("BUILD_SCENES"))) {
+            return Environment.GetEnvironmentVariable("BUILD_SCENES").Split(',').Select(
+                x => "Assets/Scenes/" + x + ".unity"
+            ).ToList();
+        } else {
+            return new List<string>();
+        }
     }
 
     private static bool IncludePrivateScenes() {

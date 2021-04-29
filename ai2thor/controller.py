@@ -23,7 +23,6 @@ import re
 import os
 import platform
 import uuid
-import sys
 from functools import lru_cache
 
 
@@ -389,7 +388,7 @@ class Controller(object):
         add_depth_noise=False,
         download_only=False,
         include_private_scenes=False,
-        server_class=ai2thor.fifo_server.FifoServer,
+        server_class=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -411,7 +410,19 @@ class Controller(object):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
-        self.server_class = server_class
+
+        if server_class is None and platform.system() == "Windows":
+            self.server_class = ai2thor.wsgi_server.WsgiServer
+        elif (
+            isinstance(server_class, ai2thor.fifo_server.FifoServer)
+            and platform.system() == "Windows"
+        ):
+            raise ValueError("server_class=FifoServer cannot be used on Windows.")
+        elif server_class is None:
+            self.server_class = ai2thor.fifo_server.FifoServer
+        else:
+            self.server_class = server_class
+
         self._build = None
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -559,12 +570,19 @@ class Controller(object):
 
         return self._scenes_in_build
 
+    @staticmethod
+    def normalize_scene(scene):
+
+        if re.match(r"^FloorPlan[0-9]+$", scene):
+            scene = scene + "_physics"
+
+        return scene
+
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
-        if re.match(r"^FloorPlan[0-9]+$", scene):
-            scene = scene + "_physics"
+        scene = Controller.normalize_scene(scene)
 
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
         # for old builds
@@ -933,7 +951,8 @@ class Controller(object):
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env)
+        makedirs(self.log_dir)
+        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -971,6 +990,10 @@ class Controller(object):
     @property
     def base_dir(self):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
+
+    @property
+    def log_dir(self):
+        return os.path.join(self.base_dir, "log")
 
     def _cache_commit_filename(self, branch):
         encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
@@ -1021,13 +1044,11 @@ class Controller(object):
         return [c["sha"] for c in payload]
 
     def find_build(self, local_build, commit_id, branch):
-        from ai2thor.build import arch_platform_map
-        import ai2thor.build
 
         if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
 
-        arch = arch_platform_map[platform.system()]
+        arch = ai2thor.build.arch_platform_map[platform.system()]
 
         if branch:
             commits = self._branch_commits(branch)
@@ -1035,7 +1056,10 @@ class Controller(object):
             ver_build = ai2thor.build.Build(
                 arch, commit_id, self.include_private_scenes, self.releases_dir
             )
-            ver_build.exists()
+
+            if not ver_build.exists():
+                raise ValueError("Invalid commit_id: %s - no build exists for arch=%s" % (commit_id, arch))
+
             return ver_build
         else:
             git_dir = os.path.normpath(
@@ -1067,7 +1091,7 @@ class Controller(object):
             )
 
             try:
-                if os.path.isfile(commit_build.executable_path) or (
+                if os.path.isdir(commit_build.base_dir) or (
                     not local_build and commit_build.exists()
                 ):
                     found_build = commit_build
@@ -1098,7 +1122,6 @@ class Controller(object):
         self._build_server(host, port, width, height)
 
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
-            import warnings
 
             warnings.warn(
                 "AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
@@ -1123,7 +1146,6 @@ class Controller(object):
             raise Exception("Screen resolution must be > 0x0")
 
         if self.server.started:
-            import warnings
 
             warnings.warn(
                 "start method depreciated. The server started when the Controller was initialized."
@@ -1175,8 +1197,9 @@ class Controller(object):
                 if not process_alive(self.unity_pid):
                     break
                 time.sleep(0.1)
-            if process_alive(self.unity_pid):
-                os.kill(self.unity_pid, signal.SIGKILL)
+            if platform.system() != "Windows":
+                if process_alive(self.unity_pid):
+                    os.kill(self.unity_pid, signal.SIGKILL)
 
 
 class BFSSearchPoint:
@@ -1429,7 +1452,7 @@ class BFSController(Controller):
         self.seen_points = []
         self.visited_seen_points = []
         self.grid_points = []
-        event = self.reset(scene_name)
+        self.reset(scene_name)
         event = self.step(dict(action="Initialize", gridSize=self.grid_size))
         self.enqueue_points(event.metadata["agent"]["position"])
         while self.queue:
