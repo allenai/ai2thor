@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 
 using System.Collections.Generic;
@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
+using System.Linq;
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -1102,36 +1103,34 @@ public class AgentManager : MonoBehaviour {
 
     }
 
-    private int parseContentLength(string header) {
-        // Debug.Log("got header: " + header);
-        string[] fields = header.Split(new char[] { '\r', '\n' });
-        foreach (string field in fields) {
-            string[] elements = field.Split(new char[] { ':' });
-            if (elements[0].ToLower() == "content-length") {
-                return Int32.Parse(elements[1].Trim());
-            }
-        }
+    // To distinguish between args for reflection function call and global control arguments
+    private HashSet<string> injectedArguments = new HashSet<string>(){
+        "sequenceId",
+        "renderImage",
+        "agentId",
+        "renderObjectImage",
+        "renderClassImage",
+        "renderNormalsImage"
+    };
 
-        return 0;
-    }
-
-    private BaseFPSAgentController activeAgent() {
-        return this.agents[activeAgentId];
-    }
-
-    private void ProcessControlCommand(string msg) {
+    // Uniform entry point for both the test runner and the python server for step dispatch calls
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
-
-        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
 
         this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
 
+        var args = new DynamicServerAction(
+            new JObject(
+                controlCommand.jObject.Properties().Where(p => !injectedArguments.Contains(p.Name))
+            )
+        );
+
         if (agentManagerActions.Contains(controlCommand.action)) {
             // let's look in this class for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
+            this.activeAgent().ProcessControlCommand(controlCommand: args, target: this);
         } else {
             // we only allow renderInstanceSegmentation to be flipped on
             // on a per step() basis, since by default the param is null
@@ -1151,8 +1150,34 @@ public class AgentManager : MonoBehaviour {
             }
 
             // let's look in the agent's set of actions for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
+            this.activeAgent().ProcessControlCommand(controlCommand: args);
         }
+    }
+
+    public BaseFPSAgentController GetActiveAgent() {
+        return this.agents[activeAgentId];
+    }
+
+    private int parseContentLength(string header) {
+        // Debug.Log("got header: " + header);
+        string[] fields = header.Split(new char[] { '\r', '\n' });
+        foreach (string field in fields) {
+            string[] elements = field.Split(new char[] { ':' });
+            if (elements[0].ToLower() == "content-length") {
+                return Int32.Parse(elements[1].Trim());
+            }
+        }
+
+        return 0;
+    }
+
+    private BaseFPSAgentController activeAgent() {
+        return this.agents[activeAgentId];
+    }
+
+    private void ProcessControlCommand(string msg) {
+        DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
+        this.ProcessControlCommand(controlCommand);
     }
 
     // Extra helper functions
@@ -1528,7 +1553,10 @@ to dispatch to the appropriate action based on the passed in params.
 The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
 public class DynamicServerAction {
-    private JObject jObject;
+    public JObject jObject {
+        get;
+        private set;
+    }
 
     public int agentId {
         get {
@@ -1607,6 +1635,14 @@ public class DynamicServerAction {
 
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
+    }
+
+    public IEnumerable<string> Keys() {
+        return this.jObject.Properties().Select(p => p.Name).ToList();
+    }
+
+    public int Count() {
+        return this.jObject.Count;
     }
 
 }

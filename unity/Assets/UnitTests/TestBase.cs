@@ -6,25 +6,47 @@ using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Tests
 {
     public class TestBase
     {
+        protected int sequenceId = 0;
+        protected bool lastActionSuccess;
+        protected string error;
 
+        // WARNING do not use this for testing as it adds the DebugInputField 
+        // and it's definitions as a dependency
         public IEnumerator ExecuteDebugAction(string action) {
             var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
             yield return debugInputField.ExecuteBatch(new List<string>{action});
         }
 
-        public IEnumerator ExecuteAction(Dictionary<string, object> action) {
-            var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
-            while(debugInputField.PhysicsController.IsProcessing) {
-                yield return new WaitForEndOfFrame();
-            }
-            debugInputField.PhysicsController.ProcessControlCommand(action);
+        public IEnumerator step(Dictionary<string, object> action) {
+            var agentManager = GameObject.FindObjectOfType<AgentManager>();
+            action["sequenceId"] = sequenceId;
+            agentManager.ProcessControlCommand(new DynamicServerAction(action));
+            yield return new WaitForEndOfFrame();
+            var agent = agentManager.GetActiveAgent();
+            lastActionSuccess = agent.lastActionSuccess;
+            error = agent.errorMessage;
+            sequenceId++;
         }
-        
+
+        public IEnumerator initalizeDefaultDiscrete() {
+            Dictionary<string, object> action = new Dictionary<string, object>() {
+                { "gridSize", 0.25f},
+                { "agentCount", 1},
+                { "fieldOfView", 90f},
+                { "snapToGrid", true},
+                { "action", "Initialize"}
+            };
+            yield return step(action);
+        }
+
         [SetUp]
         public virtual void Setup(){
             UnityEngine.SceneManagement.SceneManager.LoadScene ("FloorPlan1_physics");

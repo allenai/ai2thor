@@ -621,7 +621,7 @@ def test_open_interactable_with_filter(controller):
         raise_for_failure=True,
     )
 
-    controller.step(dict(action="ResetObjectFilter", objectIds=[]))
+    controller.step(dict(action="ResetObjectFilter"))
 
     fridge = next(
         obj
@@ -1607,3 +1607,22 @@ def test_unsupported_manipulathor(controller):
     )
     event = controller.step(action="PickupObject", objectId=objectId, forceAction=True)
     assert not event, "PickupObject(objectId) should have failed with agentMode=arm"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_invalid_arguments(controller):
+    controller.reset()
+    with pytest.raises(ValueError):
+        event = controller.step(
+            action="PutObject",
+            x=0.0,
+            y=0.0,
+            z=1.0,
+            forceAction=False,
+            placeStationary=True
+        )
+    print("Err {0}".format(controller.last_event.metadata["lastActionSuccess"]))
+    assert not controller.last_event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
+    assert controller.last_event.metadata[
+        "errorMessage"
+    ], "errorMessage with invalid argument"
