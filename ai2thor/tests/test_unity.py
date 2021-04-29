@@ -1612,8 +1612,8 @@ def test_invalid_arguments(controller):
             forceAction=False,
             placeStationary=True
         )
-        print("Error code {0}".format(event.metadata["errorCode"]))
-        assert not event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
-        assert event.metadata[
-            "errorMessage"
-        ], "errorMessage with invalid argument"
+    print("Err {0}".format(controller.last_event.metadata["lastActionSuccess"]))
+    assert not controller.last_event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
+    assert controller.last_event.metadata[
+        "errorMessage"
+    ], "errorMessage with invalid argument"
