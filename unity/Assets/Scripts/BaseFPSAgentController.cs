@@ -1695,10 +1695,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             try {
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
-            }
-            catch (InvalidArgumentsException e) {
+            } catch (InvalidArgumentsException e) {
                 errorMessage =
-                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1? "s": "")}: {string.Join(", ", e.InvalidArgumentNames.Select(name => $"'{name}'").ToArray())}" +
+                $"\n\tAction: \"{controlCommand.action}\" called with invalid argument{(e.InvalidArgumentNames.Count() > 1 ? "s" : "")}: {string.Join(", ", e.InvalidArgumentNames.Select(name => $"'{name}'").ToArray())}" +
                 $"\n\tExpected arguments: {string.Join(", ", e.ParameterNames)}" +
                 $"\n\tYour arguments: {string.Join(", ", e.ArgumentNames.Select(name => $"'{name}'"))}" +
                 $"\n\tValid ways to call \"{controlCommand.action}\" action:\n\t\t{string.Join("\n\t\t", e.PossibleOverwrites)}";
@@ -1706,9 +1705,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 var possibleOverwrites = ActionDispatcher.getMatchingMethodOverwrites(target.GetType(), controlCommand);
                 actionFinished(false);
-            }
-            catch (ToObjectArgumentActionException e)
-            {
+            } catch (ToObjectArgumentActionException e) {
                 Dictionary<string, string> typeMap = new Dictionary<string, string>{
                     {"Single", "float"},
                     {"Double", "float"},
