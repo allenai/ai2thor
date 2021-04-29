@@ -1056,7 +1056,10 @@ class Controller(object):
             ver_build = ai2thor.build.Build(
                 arch, commit_id, self.include_private_scenes, self.releases_dir
             )
-            ver_build.exists()
+
+            if not ver_build.exists():
+                raise ValueError("Invalid commit_id: %s - no build exists for arch=%s" % (commit_id, arch))
+
             return ver_build
         else:
             git_dir = os.path.normpath(
