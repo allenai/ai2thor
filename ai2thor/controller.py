@@ -23,7 +23,6 @@ import re
 import os
 import platform
 import uuid
-import sys
 from functools import lru_cache
 
 
@@ -933,7 +932,8 @@ class Controller(object):
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env)
+        makedirs(self.log_dir)
+        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -971,6 +971,10 @@ class Controller(object):
     @property
     def base_dir(self):
         return os.path.join(os.path.expanduser("~"), ".ai2thor")
+
+    @property
+    def log_dir(self):
+        return os.path.join(self.base_dir, "log")
 
     def _cache_commit_filename(self, branch):
         encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
@@ -1021,13 +1025,11 @@ class Controller(object):
         return [c["sha"] for c in payload]
 
     def find_build(self, local_build, commit_id, branch):
-        from ai2thor.build import arch_platform_map
-        import ai2thor.build
 
         if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
 
-        arch = arch_platform_map[platform.system()]
+        arch = ai2thor.build.arch_platform_map[platform.system()]
 
         if branch:
             commits = self._branch_commits(branch)
@@ -1067,7 +1069,7 @@ class Controller(object):
             )
 
             try:
-                if os.path.isfile(commit_build.executable_path) or (
+                if os.path.isdir(commit_build.base_dir) or (
                     not local_build and commit_build.exists()
                 ):
                     found_build = commit_build
@@ -1098,7 +1100,6 @@ class Controller(object):
         self._build_server(host, port, width, height)
 
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
-            import warnings
 
             warnings.warn(
                 "AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
@@ -1123,7 +1124,6 @@ class Controller(object):
             raise Exception("Screen resolution must be > 0x0")
 
         if self.server.started:
-            import warnings
 
             warnings.warn(
                 "start method depreciated. The server started when the Controller was initialized."
@@ -1429,7 +1429,7 @@ class BFSController(Controller):
         self.seen_points = []
         self.visited_seen_points = []
         self.grid_points = []
-        event = self.reset(scene_name)
+        self.reset(scene_name)
         event = self.step(dict(action="Initialize", gridSize=self.grid_size))
         self.enqueue_points(event.metadata["agent"]["position"])
         while self.queue:
