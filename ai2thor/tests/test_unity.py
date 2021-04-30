@@ -1018,6 +1018,17 @@ def test_get_reachable_positions(controller):
     except:
         pass
 
+def test_per_step_instance_segmentation(fifo_controller):
+    fifo_controller.reset(
+        TEST_SCENE,
+        width=300,
+        height=300,
+        renderInstanceSegmentation=False
+    )
+    event = fifo_controller.step("RotateRight")
+    assert event.instance_segmentation_frame is None
+    event = fifo_controller.step("Pass", renderInstanceSegmentation=True)
+    assert event.instance_segmentation_frame is not None
 
 #  Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
