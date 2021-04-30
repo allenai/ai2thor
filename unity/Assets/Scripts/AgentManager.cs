@@ -1103,15 +1103,6 @@ public class AgentManager : MonoBehaviour {
 
     }
 
-    // To distinguish between args for reflection function call and global control arguments
-    private HashSet<string> injectedArguments = new HashSet<string>(){
-        "sequenceId",
-        "renderImage",
-        "agentId",
-        "renderObjectImage",
-        "renderClassImage",
-        "renderNormalsImage"
-    };
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
     public void ProcessControlCommand(DynamicServerAction controlCommand) {
@@ -1122,21 +1113,19 @@ public class AgentManager : MonoBehaviour {
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
 
-        var args = new DynamicServerAction(
-            new JObject(
-                controlCommand.jObject.Properties().Where(p => !injectedArguments.Contains(p.Name))
-            )
-        );
-
         if (agentManagerActions.Contains(controlCommand.action)) {
             // let's look in this class for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: args, target: this);
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
         } else {
             // we only allow renderInstanceSegmentation to be flipped on
             // on a per step() basis, since by default the param is null
             // so we don't know if a request is meant to turn the param off
             // or if it is just the value by default
-            if (controlCommand.renderInstanceSegmentation == true) {
+            // We only assign if its true to handle the case when renderInstanceSegmentation
+            // was initialized to be true, but any particular step() may not set it
+            // so we don't want to disable it inadvertently
+
+            if (controlCommand.renderInstanceSegmentation) {
                 this.renderInstanceSegmentation = true;
             }
 
@@ -1150,7 +1139,7 @@ public class AgentManager : MonoBehaviour {
             }
 
             // let's look in the agent's set of actions for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: args);
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
         }
     }
 
@@ -1553,6 +1542,20 @@ to dispatch to the appropriate action based on the passed in params.
 The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
 public class DynamicServerAction {
+
+    // These parameters are allowed to exist as both parameters to an Action and as global
+    // paramaters.  This also excludes them from the InvalidArgument logic used in the ActionDispatcher
+    public static readonly IReadOnlyCollection<string> AllowedExtraneousParameters = new HashSet<string>(){
+        "sequenceId",
+        "renderImage",
+        "agentId",
+        "renderObjectImage",
+        "renderClassImage",
+        "renderNormalsImage",
+        "renderInstanceSegmentation",
+        "action"
+    };
+
     public JObject jObject {
         get;
         private set;
@@ -1635,6 +1638,13 @@ public class DynamicServerAction {
 
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
+    }
+    
+    // this is primarily used when detecting invalid arguments
+    // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
+    // valid argument for Initialize as well as a global parameter
+    public IEnumerable<string> ArgumentKeys() {
+        return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
     }
 
     public IEnumerable<string> Keys() {
