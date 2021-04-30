@@ -50,7 +50,7 @@ The `object` parameter can be `Tomato`, `Bread`, `Plunger`, `Cup`, or `Knife` wi
 
 You can call Unity functions from javascript, and javascript functions from C#. [Read more here](https://docs.unity3d.com/Manual/webgl-interactingwithbrowserscripting.html).
 
-For Thor we have a simple callback interface for initialization, events, and event's metadata.
+For AI2-THOR we have a simple callback interface for initialization, events, and event's metadata.
 
 In your javascript code you can register the following callbacks:
 
