@@ -756,7 +756,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-        if (this.renderInstanceSegmentation) {
+        if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
             }
