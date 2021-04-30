@@ -1543,7 +1543,8 @@ The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
 public class DynamicServerAction {
 
-    // To distinguish between args for reflection function call and global control arguments
+    // These parameters are allowed to exist as both parameters to an Action and as global
+    // paramaters.  This also excludes them from the InvalidArgument logic used in the ActionDispatcher
     public static readonly IReadOnlyCollection<string> AllowedExtraneousParameters = new HashSet<string>(){
         "sequenceId",
         "renderImage",
