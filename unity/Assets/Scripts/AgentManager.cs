@@ -1639,6 +1639,13 @@ public class DynamicServerAction {
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
+    
+    // this is primarily used when detecting invalid arguments
+    // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
+    // valid argument for Initialize as well as a global parameter
+    public IEnumerable<string> ArgumentKeys() {
+        return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
+    }
 
     public IEnumerable<string> Keys() {
         return this.jObject.Properties().Select(p => p.Name).ToList();

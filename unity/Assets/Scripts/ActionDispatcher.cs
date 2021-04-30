@@ -321,8 +321,8 @@ public static class ActionDispatcher {
         } else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var invalidArgs = dynamicServerAction
-                .Keys()
-                .Where(argName => !paramDict.ContainsKey(argName) && !DynamicServerAction.AllowedExtraneousParameters.Contains(argName))
+                .ArgumentKeys()
+                .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
             if (invalidArgs.Count > 0) {
                 Func<ParameterInfo, string> paramToString =
@@ -339,7 +339,7 @@ public static class ActionDispatcher {
                 );
 
                 throw new InvalidArgumentsException(
-                    dynamicServerAction.Keys().Where(argName => argName != "action"),
+                    dynamicServerAction.ArgumentKeys(),
                     invalidArgs,
                     methodParams.Select(paramToString),
                     matchingMethodOverWrites
