@@ -322,7 +322,7 @@ public static class ActionDispatcher {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var invalidArgs = dynamicServerAction
                 .Keys()
-                .Where(argName => !paramDict.ContainsKey(argName) && argName != "action")
+                .Where(argName => !paramDict.ContainsKey(argName) && !DynamicServerAction.AllowedExtraneousParameters.Contains(argName))
                 .ToList();
             if (invalidArgs.Count > 0) {
                 Func<ParameterInfo, string> paramToString =

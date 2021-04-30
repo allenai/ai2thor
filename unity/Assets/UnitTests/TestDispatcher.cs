@@ -6,11 +6,9 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests
-{
-    public class TestDispatcher : TestBase
-    {
-         [UnityTest]
+namespace Tests {
+    public class TestDispatcher : TestBase {
+        [UnityTest]
         public IEnumerator TestDispatchInvalidArguments() {
             yield return initalizeDefaultDiscrete();
             var controller = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
@@ -21,15 +19,14 @@ namespace Tests
                 {"z", 0.3f},
                 {"forceAction", false},
                 {"placeStationary", true}
-            }; 
-            Assert.Throws<InvalidArgumentsException> (() => {
+            };
+            Assert.Throws<InvalidArgumentsException>(() => {
                 ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             });
         }
 
         [UnityTest]
-        public IEnumerator TestStepInvalidArguments()
-        {
+        public IEnumerator TestStepInvalidArguments() {
             yield return initalizeDefaultDiscrete();
 
             var args = new Dictionary<string, object>() {
@@ -39,7 +36,7 @@ namespace Tests
                 {"z", 0.3f},
                 {"forceAction", false},
                 {"placeStationary", true}
-            }; 
+            };
 
             yield return step(args);
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
