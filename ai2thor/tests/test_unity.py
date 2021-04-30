@@ -582,6 +582,25 @@ def test_open_aabb_cache(controller):
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_toggle_stove(controller):
+    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -2.25}
+    action = position.copy()
+    action["rotation"] = dict(y=90)
+    action["horizon"] = 30.0
+    action["standing"] = True
+    action["action"] = "TeleportFull"
+    event = controller.step(action, raise_for_failure=True)
+    knob = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "StoveKnob" and obj['visible']
+    )
+    assert not knob['isToggled'], "knob should not be toggled"
+    assert knob['visible']
+    event = controller.step(dict(action='ToggleObjectOn', objectId=knob['objectId']), raise_for_failure=True)
+    knob = event.get_object(knob['objectId'])
+    assert knob['isToggled'], "knob should be toggled"
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
