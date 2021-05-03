@@ -775,7 +775,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         /**
          * @fromRoomTypes assumes all room types by default. Valid room types include
-         * {"Bedrooms", "Bathrooms", "LivingRooms", "Kitchens", "RoboTHOR"}. Casing is ignored.
+         * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
          */
         public void RandomizeMaterials(
             bool? useTrainMaterials = null,
@@ -784,10 +784,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useExternalMaterials = null,
             string[] fromRoomTypes = null
         ) {
+            // TODO: make sure it is true for the scene that they are currently in.
+
             HashSet<string> chosenRoomTypes = null;
             if (fromRoomTypes != null) {
                 HashSet<string> validRoomTypes = new HashSet<string>() {
-                    "Bedrooms", "Bathrooms", "Kitchens", "LivingRooms", "RoboTHOR"
+                    "Bedroom", "Bathroom", "Kitchen", "LivingRoom", "RoboTHOR"
                 };
                 
                 if (fromRoomTypes.Length == 0) {
@@ -798,7 +800,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (!validRoomTypes.Contains(roomType)) {
                         throw new ArgumentException(
                             $"fromRoomTypes contains unknown room type: {roomType}.\n" +
-                            "Valid room types include {\"Bedrooms\", \"Bathrooms\", \"LivingRooms\", \"Kitchens\", \"RoboTHOR\"}"
+                            "Valid room types include {\"Bedroom\", \"Bathroom\", \"LivingRoom\", \"Kitchen\", \"RoboTHOR\"}"
                         );
                     };
 

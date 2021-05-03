@@ -196,6 +196,13 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
+    private void shuffleMaterials(List<Material> materialGroup) {
+        for (int n = materialGroup.Count - 1; n >= 0; n--) {
+            int i = Random.Range(0, n + 1);
+            swapMaterial(materialGroup[i], materialGroup[n]);
+        }
+    }
+
     public void RandomizeMaterials(
         bool useTrainMaterials,
         bool useValMaterials,
@@ -203,9 +210,40 @@ public class ColorChanger : MonoBehaviour {
         bool useExternalMaterials,
         HashSet<string> fromRoomTypes
     ) {
-        foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
-            shuffleMaterials(materialGroup: materialGroup.Value);
+        List<Material> validMaterials = new List<Material>();
+        if (fromRoomTypes == null) {
+            // select from all room types
+            foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
+                foreach (Material material in materialGroup.Value) {
+                    if (
+                        useTrainMaterials && materialGroups["train"].Contains(material) ||
+                        useValMaterials && materialGroups["val"].Contains(material) ||
+                        useTestMaterials && materialGroups["test"].Contains(material)
+                    ) {
+                        validMaterials.Add(material);
+                    }
+                }
+            }
+        } else {
+            // select from only specific room types
+            foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
+                foreach (Material material in materialGroup.Value) {
+                    if (
+                        useTrainMaterials && materialGroups["train"].Contains(material) ||
+                        useValMaterials && materialGroups["val"].Contains(material) ||
+                        useTestMaterials && materialGroups["test"].Contains(material)
+                    ) {
+                        foreach (string roomType in fromRoomTypes) {
+                            if (materialGroups[roomType].Contains(material)) {
+                                validMaterials.Add(material);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
+        shuffleMaterials(materialGroup: validMaterials);
     }
 
     public void ResetMaterials() {
