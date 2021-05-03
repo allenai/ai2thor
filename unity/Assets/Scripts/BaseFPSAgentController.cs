@@ -806,13 +806,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            string sceneType = "train";
+            string sceneType;
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (scene.EndsWith("_physics")) {
                 // iTHOR scene
                 int sceneNumber = Int32.Parse(
                     scene.Substring("FloorPlan".Length, scene.Length - "_physics".Length)
                 ) % 100;
+
+                int sceneGroup = Int32.Parse(
+                    scene.Substring("FloorPlan".Length, scene.Length - "_physics".Length)
+                ) / 100;
+
+                if (fromRoomTypes != null) {
+                    switch (sceneGroup) {
+                        case 0:
+                            if (!chosenRoomTypes.Contains("kitchen")) {
+                                throw new ArgumentException(
+                                    $"fromRoomTypes must include \"Kitchen\" inside of a kitchen scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                );
+                            }
+                            break;
+                        case 2:
+                            if (!chosenRoomTypes.Contains("livingroom")) {
+                                throw new ArgumentException(
+                                    $"fromRoomTypes must include \"LivingRoom\" inside of a LivingRoom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                );
+                            }
+                            break;
+                        case 3:
+                            if (!chosenRoomTypes.Contains("bedroom")) {
+                                throw new ArgumentException(
+                                    $"fromRoomTypes must include \"Bedroom\" inside of a Bedroom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                );
+                            }
+                            break;
+                        case 4:
+                            if (!chosenRoomTypes.Contains("bathroom")) {
+                                throw new ArgumentException(
+                                    $"fromRoomTypes must include \"Bathroom\" inside of a Bathroom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                );
+                            }
+                            break;
+                    }
+                }
 
                 if (sceneNumber >= 1 && sceneNumber <= 20) {
                     sceneType = "train";
@@ -836,6 +873,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     default:
                         throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
+                }
+                if (fromRoomTypes != null) {
+                    if (!chosenRoomTypes.Contains("robothor")) {
+                        throw new ArgumentException(
+                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                        );
+                    }
                 }
             }
 
