@@ -85,6 +85,7 @@ public class ColorChanger : MonoBehaviour {
     Dictionary<string, Material[]> materials;
     Dictionary<string, Color[]> origColors;
     Dictionary<string, Texture[]> origTextures;
+    Dictionary<string, HashSet<Material>> materialGroups;
 
     public void Start() {
         materials = new Dictionary<string, Material[]> {
@@ -140,6 +141,18 @@ public class ColorChanger : MonoBehaviour {
             ["Pan"] = panMaterials,
             ["PanDecal"] = panDecalMaterials,
             ["CoffeeMachine"] = coffeeMachineMaterials,
+        };
+
+        // makes indexing into them faster
+        materialGroups = new Dictionary<string, HashSet<Material>> {
+            ["train"] = new HashSet<Material>(rawTrainMaterials),
+            ["val"] = new HashSet<Material>(rawValMaterials),
+            ["test"] = new HashSet<Material>(rawTestMaterials),
+            ["robothor"] = new HashSet<Material>(rawRobothorMaterials),
+            ["kitchen"] = new HashSet<Material>(rawKitchenMaterials),
+            ["livingRoom"] = new HashSet<Material>(rawLivingRoomMaterials),
+            ["bedroom"] = new HashSet<Material>(rawBedroomMaterials),
+            ["bathroom"] = new HashSet<Material>(rawBathroomMaterials)
         };
 
         // cache all the original values
