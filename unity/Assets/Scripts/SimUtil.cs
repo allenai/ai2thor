@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
@@ -539,6 +540,114 @@ public static class SimUtil {
             buildTarget,
             launchOnBuild ? UnityEditor.BuildOptions.AutoRunPlayer : UnityEditor.BuildOptions.None);
     }
+
+    [UnityEditor.MenuItem("AI2-THOR/RandomizeMaterials/Bin Materials")]
+    static void BinMaterials() {
+        HashSet<Material> getMaterialsInScene() {
+            HashSet<MeshRenderer> sceneMeshRenderers = new HashSet<MeshRenderer>();
+            HashSet<Material> sceneMaterials = new HashSet<Material>();
+
+            // Get all MeshRenderers under Objects and Structures groups
+            sceneMeshRenderers.UnionWith(GameObject.Find("Objects").GetComponentsInChildren<MeshRenderer>());
+            sceneMeshRenderers.UnionWith(GameObject.Find("Structure").GetComponentsInChildren<MeshRenderer>());
+
+            // Get all shared Materials from MeshRenderers
+            foreach (MeshRenderer meshRenderer in sceneMeshRenderers) {
+                sceneMaterials.UnionWith(meshRenderer.sharedMaterials);
+            }
+
+            return sceneMaterials;
+        }
+
+        Dictionary<string, HashSet<Material>> materialMetadata = new Dictionary<string, HashSet<Material>>() {
+            ["train"] = new HashSet<Material>(),
+            ["val"] = new HashSet<Material>(),
+            ["test"] = new HashSet<Material>(),
+            ["kitchen"] = new HashSet<Material>(),
+            ["livingRoom"] = new HashSet<Material>(),
+            ["bedroom"] = new HashSet<Material>(),
+            ["bathroom"] = new HashSet<Material>(),
+            ["robothor"] = new HashSet<Material>(),
+        };
+
+        // iTHOR scenes
+        foreach (int sceneType in new int[] {0, 200, 300, 400}) {
+            for (int i = 1; i <= 30; i++) {
+                string scenePath = $"Assets/Scenes/FloorPlan{sceneType + i}_physics.unity";
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+
+                HashSet<Material> materials = getMaterialsInScene();
+
+                switch (sceneType) {
+                    case 0:
+                        materialMetadata["kitchen"].UnionWith(materials);
+                        break;
+                    case 200:
+                        materialMetadata["livingRoom"].UnionWith(materials);
+                        break;
+                    case 300:
+                        materialMetadata["bedroom"].UnionWith(materials);
+                        break;
+                    case 400:
+                        materialMetadata["bathroom"].UnionWith(materials);
+                        break;
+                }
+
+                if (i <= 20) {
+                    // train scene
+                    materialMetadata["train"].UnionWith(materials);
+                } else if (i <= 25) {
+                    // val scene
+                    materialMetadata["val"].UnionWith(materials);
+                } else {
+                    // test scene
+                    materialMetadata["test"].UnionWith(materials);
+                }
+            }
+        }
+
+        // RoboTHOR train
+        for (int i = 1; i <= 12; i++) {
+            for (int j = 1; j <= 5; j++) {
+                string scenePath = $"Assets/Scenes/FloorPlan_Train{i}_{j}.unity";
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+
+                HashSet<Material> materials = getMaterialsInScene();
+                materialMetadata["robothor"].UnionWith(materials);
+                materialMetadata["train"].UnionWith(materials);
+            }
+        }
+
+        // RoboTHOR val
+        for (int i = 1; i <= 3; i++) {
+            for (int j = 1; j <= 5; j++) {
+                string scenePath = $"Assets/Scenes/FloorPlan_Val{i}_{j}.unity";
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+
+                HashSet<Material> materials = getMaterialsInScene();
+                materialMetadata["robothor"].UnionWith(materials);
+                materialMetadata["val"].UnionWith(materials);
+            }
+        }
+
+        // opens up the prefab asset
+        string prefabPath = "Assets/Physics/Scene Setup Prefabs/PhysicsSceneManager.prefab";
+        GameObject physicsSceneManager = UnityEditor.PrefabUtility.LoadPrefabContents(prefabPath);
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+
+        colorChangeComponent.rawTrainMaterials = materialMetadata["train"].ToArray();
+        colorChangeComponent.rawValMaterials = materialMetadata["val"].ToArray();
+        colorChangeComponent.rawTestMaterials = materialMetadata["test"].ToArray();
+        colorChangeComponent.rawRobothorMaterials = materialMetadata["robothor"].ToArray();
+        colorChangeComponent.rawKitchenMaterials = materialMetadata["kitchen"].ToArray();
+        colorChangeComponent.rawBedroomMaterials = materialMetadata["bedroom"].ToArray();
+        colorChangeComponent.rawBathroomMaterials = materialMetadata["bathroom"].ToArray();
+        colorChangeComponent.rawLivingRoomMaterials = materialMetadata["livingRoom"].ToArray();
+
+        // overrides the saved values on the prefab
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(instanceRoot: physicsSceneManager, assetPath: prefabPath);
+    }
+
 
     [UnityEditor.MenuItem("AI2-THOR/Replace Generic Prefabs in All Scenes")]
     static void ReplacePrefabsInAllScenes() {

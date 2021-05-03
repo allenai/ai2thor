@@ -773,10 +773,126 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // TODO: allow only certain materials to be passed in.
-        public void RandomizeMaterials() {
+        /**
+         * @fromRoomTypes assumes all room types by default. Valid room types include
+         * {"Bedrooms", "Bathrooms", "LivingRooms", "Kitchens", "RoboTHOR"}. Casing is ignored.
+         */
+        public void RandomizeMaterials(
+            bool? useTrainMaterials = null,
+            bool? useValMaterials = null,
+            bool? useTestMaterials = null,
+            bool? useExternalMaterials = null,
+            string[] fromRoomTypes = null
+        ) {
+            HashSet<string> chosenRoomTypes = null;
+            if (fromRoomTypes != null) {
+                HashSet<string> validRoomTypes = new HashSet<string>() {
+                    "Bedrooms", "Bathrooms", "Kitchens", "LivingRooms", "RoboTHOR"
+                };
+                
+                if (fromRoomTypes.Length == 0) {
+                    throw new ArgumentException("fromRoomTypes must have a non-zero length!");
+                }
+
+                foreach (string roomType in fromRoomTypes) {
+                    if (!validRoomTypes.Contains(roomType)) {
+                        throw new ArgumentException(
+                            $"fromRoomTypes contains unknown room type: {roomType}.\n" +
+                            "Valid room types include {\"Bedrooms\", \"Bathrooms\", \"LivingRooms\", \"Kitchens\", \"RoboTHOR\"}"
+                        );
+                    };
+
+                    chosenRoomTypes.Add(roomType.ToLower());
+                }
+            }
+
+            string sceneType = "train";
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (scene.EndsWith("_physics")) {
+                // iTHOR scene
+                int sceneNumber = Int32.Parse(
+                    scene.Substring("FloorPlan".Length, scene.Length - "_physics".Length)
+                ) % 100;
+
+                if (sceneNumber >= 1 && sceneNumber <= 20) {
+                    sceneType = "train";
+                } else if (sceneNumber <= 25) {
+                    sceneType = "val";
+                } else {
+                    sceneType = "test";
+                }
+            } else {
+                // RoboTHOR scene
+                string chars = scene.Substring("FloorPlan_".Length, "FloorPlan_".Length + 2);
+                switch (chars) {
+                    case "Tr":
+                        sceneType = "train";
+                        break;
+                    case "Va":
+                        sceneType = "val";
+                        break;
+                    case "Te":
+                        sceneType = "test";
+                        break;
+                    default:
+                        throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
+                }
+
+            }
+
+            switch (sceneType) {
+                case "train":
+                    if (!useTrainMaterials.HasValue) {
+                        useTrainMaterials = true;
+                    }
+                    if (!useValMaterials.HasValue) {
+                        useValMaterials = false;
+                    }
+                    if (!useTestMaterials.HasValue) {
+                        useTestMaterials = false;
+                    }
+                    if (!useExternalMaterials.HasValue) {
+                        useExternalMaterials = true;
+                    }
+                    break;
+                case "val":
+                    if (!useTrainMaterials.HasValue) {
+                        useTrainMaterials = false;
+                    }
+                    if (!useValMaterials.HasValue) {
+                        useValMaterials = true;
+                    }
+                    if (!useTestMaterials.HasValue) {
+                        useTestMaterials = false;
+                    }
+                    if (!useExternalMaterials.HasValue) {
+                        useExternalMaterials = false;
+                    }
+                    break;
+                case "test":
+                    if (!useTrainMaterials.HasValue) {
+                        useTrainMaterials = false;
+                    }
+                    if (!useValMaterials.HasValue) {
+                        useValMaterials = false;
+                    }
+                    if (!useTestMaterials.HasValue) {
+                        useTestMaterials = true;
+                    }
+                    if (!useExternalMaterials.HasValue) {
+                        useExternalMaterials = false;
+                    }
+                    break;
+            }
+
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            colorChangeComponent.RandomizeMaterials();
+            colorChangeComponent.RandomizeMaterials(
+                useTrainMaterials: useTrainMaterials.Value,
+                useValMaterials: useValMaterials.Value,
+                useTestMaterials: useTestMaterials.Value,
+                useExternalMaterials: useExternalMaterials.Value,
+                fromRoomTypes: chosenRoomTypes
+            );
             actionFinished(true);
         }
 

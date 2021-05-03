@@ -5,6 +5,18 @@ using System.Collections.Generic;
 using Random = UnityEngine.Random;
  
 public class ColorChanger : MonoBehaviour {
+    // These will eventually be turned into sets, such that they are
+    // easily checkable at runtime.
+    public Material[] rawTrainMaterials,
+                      rawValMaterials,
+                      rawTestMaterials,
+                      rawRobothorMaterials,
+                      rawKitchenMaterials,
+                      rawLivingRoomMaterials,
+                      rawBedroomMaterials,
+                      rawBathroomMaterials;
+
+
     public Material[] alarmClockMaterials,
                       appleMaterials,
                       basketballMaterials,
@@ -171,7 +183,13 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
-    public void RandomizeMaterials() {
+    public void RandomizeMaterials(
+        bool useTrainMaterials,
+        bool useValMaterials,
+        bool useTestMaterials,
+        bool useExternalMaterials,
+        HashSet<string> fromRoomTypes
+    ) {
         foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
             shuffleMaterials(materialGroup: materialGroup.Value);
         }
