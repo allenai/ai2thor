@@ -6,13 +6,10 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests
-{
-    public class TestRotate : TestBase
-    {
+namespace Tests {
+    public class TestRotate : TestBase {
         [UnityTest]
-        public IEnumerator TestRotateRight()
-        {
+        public IEnumerator TestRotateRight() {
             yield return ExecuteDebugAction("init");
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             agent.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);

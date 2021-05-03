@@ -7,10 +7,8 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests
-{
-    public class TestBase
-    {
+namespace Tests {
+    public class TestBase {
 
         public IEnumerator ExecuteDebugAction(string action) {
             var debugInputField = GameObject.FindObjectOfType<DebugInputField>();
@@ -29,6 +27,5 @@ namespace Tests
         public virtual void Setup(){
             UnityEngine.SceneManagement.SceneManager.LoadScene ("FloorPlan1_physics");
         }
-
     }
 }
