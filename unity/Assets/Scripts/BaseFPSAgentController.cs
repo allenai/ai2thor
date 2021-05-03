@@ -784,8 +784,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useExternalMaterials = null,
             string[] fromRoomTypes = null
         ) {
-            // TODO: make sure it is true for the scene that they are currently in.
-
             HashSet<string> chosenRoomTypes = null;
             if (fromRoomTypes != null) {
                 HashSet<string> validRoomTypes = new HashSet<string>() {
@@ -839,11 +837,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     default:
                         throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
                 }
-
             }
 
             switch (sceneType) {
                 case "train":
+                    if (useTrainMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTrainMaterials=false inside of a train scene.");
+                    }
                     if (!useTrainMaterials.HasValue) {
                         useTrainMaterials = true;
                     }
@@ -858,6 +858,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     break;
                 case "val":
+                    if (useValMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a train scene.");
+                    }
                     if (!useTrainMaterials.HasValue) {
                         useTrainMaterials = false;
                     }
@@ -872,6 +875,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     break;
                 case "test":
+                    if (useTestMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a train scene.");
+                    }
                     if (!useTrainMaterials.HasValue) {
                         useTrainMaterials = false;
                     }
