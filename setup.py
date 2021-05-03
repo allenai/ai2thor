@@ -38,9 +38,8 @@ setup(
     ],
     keywords="AI2-THOR, Allen AI, Python, Reinforcement Learning, Computer Vision, Artificial Intelligence",
     url="https://github.com/allenai/ai2thor",
-    author="Allen Institute for Artificial Intelligence",
+    author="Allen Institute for AI",
     author_email="ai2thor@allenai.org",
-    license="Apache",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
         "flask",
