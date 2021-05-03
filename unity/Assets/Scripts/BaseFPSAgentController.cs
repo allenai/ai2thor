@@ -808,11 +808,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (scene.EndsWith("_physics")) {
                 // iTHOR scene
                 int sceneNumber = Int32.Parse(
-                    scene.Substring("FloorPlan".Length, scene.Length - "_physics".Length)
+                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
                 ) % 100;
 
                 int sceneGroup = Int32.Parse(
-                    scene.Substring("FloorPlan".Length, scene.Length - "_physics".Length)
+                    scene.Substring(startIndex: "FloorPlan".Length, length:  scene.Length - "FloorPlan_physics".Length)
                 ) / 100;
 
                 if (fromRoomTypes != null) {
@@ -857,7 +857,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             } else {
                 // RoboTHOR scene
-                string chars = scene.Substring("FloorPlan_".Length, "FloorPlan_".Length + 2);
+                string chars = scene.Substring(startIndex: "FloorPlan_".Length, length: 2);
                 switch (chars) {
                     case "Tr":
                         sceneType = "train";
