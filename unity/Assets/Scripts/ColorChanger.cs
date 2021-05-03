@@ -203,13 +203,14 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
-    public void RandomizeMaterials(
+    public int RandomizeMaterials(
         bool useTrainMaterials,
         bool useValMaterials,
         bool useTestMaterials,
         bool useExternalMaterials,
         HashSet<string> fromRoomTypes
     ) {
+        int numTotalMaterials = 0;
         List<Material> validMaterials = new List<Material>();
         if (fromRoomTypes == null) {
             // select from all room types
@@ -221,6 +222,7 @@ public class ColorChanger : MonoBehaviour {
                         useTestMaterials && materialGroups["test"].Contains(material)
                     ) {
                         validMaterials.Add(material);
+                        numTotalMaterials++;
                     }
                 }
             }
@@ -236,6 +238,7 @@ public class ColorChanger : MonoBehaviour {
                         foreach (string roomType in fromRoomTypes) {
                             if (materialGroups[roomType].Contains(material)) {
                                 validMaterials.Add(material);
+                                numTotalMaterials++;
                                 break;
                             }
                         }
@@ -244,6 +247,7 @@ public class ColorChanger : MonoBehaviour {
             }
         }
         shuffleMaterials(materialGroup: validMaterials);
+        return numTotalMaterials;
     }
 
     public void ResetMaterials() {

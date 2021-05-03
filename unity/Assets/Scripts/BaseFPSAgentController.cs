@@ -183,8 +183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_WEBGL
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-		public Quaternion TargetRotation
-		{
+		public Quaternion TargetRotation {
 			get { return targetRotation; }
 		}
 #endif
@@ -209,8 +208,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Initialize parameters from environment variables
         protected virtual void Awake() {
 #if UNITY_WEBGL
-                this.jsInterface = this.GetComponent<JavaScriptInterface>();
-                this.jsInterface.enabled = true;
+            this.jsInterface = this.GetComponent<JavaScriptInterface>();
+            this.jsInterface.enabled = true;
 #endif
 
             // character controller parameters
@@ -316,8 +315,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected virtual void resumePhysics() { }
-
-
 
         public Vector3[] getReachablePositions(
             float gridMultiplier = 1.0f,
@@ -823,28 +820,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         case 0:
                             if (!chosenRoomTypes.Contains("kitchen")) {
                                 throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Kitchen\" inside of a kitchen scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                    $"fromRoomTypes must include \"Kitchen\" inside of a kitchen scene: {scene}. You gave: {fromRoomTypes.ToString()}."
                                 );
                             }
                             break;
                         case 2:
                             if (!chosenRoomTypes.Contains("livingroom")) {
                                 throw new ArgumentException(
-                                    $"fromRoomTypes must include \"LivingRoom\" inside of a LivingRoom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                    $"fromRoomTypes must include \"LivingRoom\" inside of a LivingRoom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
                                 );
                             }
                             break;
                         case 3:
                             if (!chosenRoomTypes.Contains("bedroom")) {
                                 throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Bedroom\" inside of a Bedroom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                    $"fromRoomTypes must include \"Bedroom\" inside of a Bedroom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
                                 );
                             }
                             break;
                         case 4:
                             if (!chosenRoomTypes.Contains("bathroom")) {
                                 throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Bathroom\" inside of a Bathroom scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                                    $"fromRoomTypes must include \"Bathroom\" inside of a Bathroom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
                                 );
                             }
                             break;
@@ -877,7 +874,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (fromRoomTypes != null) {
                     if (!chosenRoomTypes.Contains("robothor")) {
                         throw new ArgumentException(
-                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}. You gave: {fromRoomTypes.ToString()}"
+                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}. You gave: {fromRoomTypes.ToString()}."
                         );
                     }
                 }
@@ -938,14 +935,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            colorChangeComponent.RandomizeMaterials(
+            int numTotalMaterials = colorChangeComponent.RandomizeMaterials(
                 useTrainMaterials: useTrainMaterials.Value,
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
                 fromRoomTypes: chosenRoomTypes
             );
-            actionFinished(true);
+            actionFinished(
+                success: true,
+                actionReturn: new Dictionary<string, object>() {
+                    ["chosenRoomTypes"] = chosenRoomTypes,
+                    ["useTrainMaterials"] = useTrainMaterials.Value,
+                    ["useValMaterials"] = useValMaterials.Value,
+                    ["useTestMaterials"] = useTestMaterials.Value,
+                    ["useExternalMaterials"] = useExternalMaterials.Value,
+                    ["totalMaterialsConsidered"] = numTotalMaterials
+                }
+            );
         }
 
         public void ResetMaterials() {
