@@ -4629,7 +4629,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
         public void PickupContainedObjects(SimObjPhysics target) 
         {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle) && !target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
+            //Removed !target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking check because it causes items in bowl not being picked up.
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
             {
                 foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle) 
                 {

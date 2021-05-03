@@ -1331,12 +1331,14 @@ public struct MetadataWrapper
 	public List<Vector3> visibleRange;
     public System.Object actionReturn;
 	public float currentTime;
+	public float physicsFramesPerSecond;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 
     // MCS Additions
     public string lastActionStatus;
-    public float reachDistance;
+    public float performerReach;
     public string pose;
+	public float performerRadius;
 }
 
 [Serializable]

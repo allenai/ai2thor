@@ -220,6 +220,9 @@ public class MCSMain : MonoBehaviour {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                 Destroy(gameOrParentObject);
             });
+            //The way we use materials creates a bunch of instances.  This should clear them out after 
+            //we clean up the objects.
+            Resources.UnloadUnusedAssets();
         }
 
         if (scene != null) {
@@ -252,6 +255,7 @@ public class MCSMain : MonoBehaviour {
         } else {
             controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
         }
+        controller.GetComponent<MCSController>().OnSceneChange();
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
             // Only permit rotating left or right (along the Y axis).
@@ -1122,6 +1126,17 @@ public class MCSMain : MonoBehaviour {
         }).ToArray();
     }
 
+    // if open is true, try to open the container.  If open is false, try to close the container
+    private void OpenCloseContainer(bool open, GameObject gameOrParentObject) {
+        CanOpen_Object canOpen = gameOrParentObject.GetComponentInChildren<CanOpen_Object>();
+        if (canOpen != null) {
+            canOpen.SetOpenPercent(open ? 1 : 0);
+            if (canOpen.isOpen != open) {
+                canOpen.Interact();
+            }
+        }
+    }
+
     private GameObject CreateCustomGameObject(
         MCSConfigGameObject objectConfig,
         MCSConfigObjectDefinition objectDefinition
@@ -1489,6 +1504,10 @@ public class MCSMain : MonoBehaviour {
             this.AssignMaterials(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
         });
 
+        objectConfig.openClose.Where(change => change.step == step).ToList().ForEach((change) => {
+            this.OpenCloseContainer(change.open, gameOrParentObject);
+        });
+
         return objectsWereShown;
     }
 
@@ -1589,6 +1608,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigTeleport> teleports = new List<MCSConfigTeleport>();
     public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
     public List<MCSConfigMove> torques = new List<MCSConfigMove>();
+    public List<MCSContainerOpenClose> openClose = new List<MCSContainerOpenClose>();
 
     private GameObject gameObject;
     private GameObject parentObject;
@@ -1722,6 +1742,12 @@ public class MCSConfigVector {
     public float x;
     public float y;
     public float z;
+}
+
+[Serializable]
+public class MCSContainerOpenClose {
+    public bool open;
+    public int step;
 }
 
 [Serializable]
