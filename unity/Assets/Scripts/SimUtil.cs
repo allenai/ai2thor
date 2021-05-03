@@ -496,7 +496,7 @@ public static class SimUtil {
     #region editor commands
 
 #if UNITY_EDITOR
-    [UnityEditor.MenuItem("Thor/Set Up Base Objects")]
+    [UnityEditor.MenuItem("AI2-THOR/Set Up Base Objects")]
     public static void SetUpBaseObjects() {
         foreach (GameObject go in UnityEditor.Selection.gameObjects) {
             if (go.transform.childCount > 0 && go.transform.GetChild(0).name == "Base") {
@@ -540,7 +540,7 @@ public static class SimUtil {
             launchOnBuild ? UnityEditor.BuildOptions.AutoRunPlayer : UnityEditor.BuildOptions.None);
     }
 
-    [UnityEditor.MenuItem("Thor/Replace Generic Prefabs in All Scenes")]
+    [UnityEditor.MenuItem("AI2-THOR/Replace Generic Prefabs in All Scenes")]
     static void ReplacePrefabsInAllScenes() {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
         for (int i = 1; i <= 30; i++) {
@@ -565,7 +565,7 @@ public static class SimUtil {
         UnityEditor.EditorUtility.ClearProgressBar();
     }
 
-    [UnityEditor.MenuItem("Thor/Set SceneManager Scene Number")]
+    [UnityEditor.MenuItem("AI2-THOR/Set SceneManager Scene Number")]
     static void SetSceneManagerSceneNumber() {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
         for (int i = 1; i <= 30; i++) {
@@ -590,7 +590,7 @@ public static class SimUtil {
         UnityEditor.EditorUtility.ClearProgressBar();
     }
 
-    [UnityEditor.MenuItem("Thor/Set Pivot Scales to 1")]
+    [UnityEditor.MenuItem("AI2-THOR/Set Pivot Scales to 1")]
     static void SetPivotScalesToOne() {
         Transform[] transforms = GameObject.FindObjectsOfType<Transform>();
         foreach (Transform t in transforms) {

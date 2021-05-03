@@ -664,7 +664,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
 #if UNITY_EDITOR
 
-    [UnityEditor.MenuItem("Thor/Add GUID to Object Names")]
+    [UnityEditor.MenuItem("AI2-THOR/Add GUID to Object Names")]
     public static void AddGUIDToSimObjPhys() {
         SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>();// Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
         foreach (SimObjPhysics sop in objects) {
