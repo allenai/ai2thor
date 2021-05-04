@@ -786,11 +786,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
             };
             if (fromRoomTypes != null) {
-                
                 if (fromRoomTypes.Length == 0) {
                     throw new ArgumentException("fromRoomTypes must have a non-zero length!");
                 }
 
+                chosenRoomTypes = new HashSet<string>();
                 foreach (string roomType in fromRoomTypes) {
                     if (!validRoomTypes.Contains(roomType.ToLower())) {
                         throw new ArgumentException(
@@ -798,7 +798,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             "Valid room types include {\"Bedroom\", \"Bathroom\", \"LivingRoom\", \"Kitchen\", \"RoboTHOR\"}"
                         );
                     };
-
                     chosenRoomTypes.Add(roomType.ToLower());
                 }
             }
