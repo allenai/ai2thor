@@ -90,16 +90,9 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(
-    x=-1.5,
-    z=-1.5,
-    y=0.901,
-)
+BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION,
-    rotation={"x": 0, "y": 0, "z": 0},
-    horizon=0,
-    standing=True,
+    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
 )
 
 
@@ -205,9 +198,7 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE,
-        renderObjectImage=True,
-        renderClassImage=True,
+        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -224,9 +215,7 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE,
-        renderSemanticSegmentation=True,
-        renderInstanceSegmentation=True,
+        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -621,9 +610,7 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject",
-        objectId=fridge["objectId"],
-        raise_for_failure=True,
+        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter", objectIds=[]))
@@ -655,9 +642,7 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject",
-        objectId=fridge["objectId"],
-        raise_for_failure=True,
+        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1089,8 +1074,7 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1101,8 +1085,7 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1110,8 +1093,7 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1612,3 +1594,75 @@ def test_unsupported_manipulathor(controller):
     )
     event = controller.step(action="PickupObject", objectId=objectId, forceAction=True)
     assert not event, "PickupObject(objectId) should have failed with agentMode=arm"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_randomize_materials_scenes(controller):
+    for p in [0, 200, 300, 400]:
+        controller.reset(scene=f"FloorPlan{p + 20}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert meta["useTrainMaterials"]
+        assert meta["useExternalMaterials"]
+        assert not meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 689
+
+        controller.reset(scene=f"FloorPlan{p + 21}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 506
+
+        controller.reset(scene=f"FloorPlan{p + 24}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 506
+
+        controller.reset(scene=f"FloorPlan{p + 25}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert not meta["useValMaterials"]
+        assert meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 366
+
+    controller.reset(scene=f"FloorPlan_Train5_3")
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+    assert meta["useTrainMaterials"]
+    assert meta["useExternalMaterials"]
+    assert not meta["useValMaterials"]
+    assert not meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 689
+
+    controller.reset(scene=f"FloorPlan_Val2_1")
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+    assert not meta["useTrainMaterials"]
+    assert not meta["useExternalMaterials"]
+    assert meta["useValMaterials"]
+    assert not meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 506
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_randomize_materials_params(controller):
+    controller.reset(scene="FloorPlan15")
+    meta = controller.step(
+        action="RandomizeMaterials",
+        useTrainMaterials=True,
+        useValMaterials=True,
+        useTestMaterials=True,
+        useExternalMaterials=False,
+    ).metadata["actionReturn"]
+    assert meta["useTrainMaterials"]
+    assert not meta["useExternalMaterials"]
+    assert meta["useValMaterials"]
+    assert meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 752
+
+    assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
+
