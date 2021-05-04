@@ -150,7 +150,7 @@ public class ColorChanger : MonoBehaviour {
             ["test"] = new HashSet<Material>(rawTestMaterials),
             ["robothor"] = new HashSet<Material>(rawRobothorMaterials),
             ["kitchen"] = new HashSet<Material>(rawKitchenMaterials),
-            ["livingRoom"] = new HashSet<Material>(rawLivingRoomMaterials),
+            ["livingroom"] = new HashSet<Material>(rawLivingRoomMaterials),
             ["bedroom"] = new HashSet<Material>(rawBedroomMaterials),
             ["bathroom"] = new HashSet<Material>(rawBathroomMaterials)
         };
