@@ -782,17 +782,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string[] fromRoomTypes = null
         ) {
             HashSet<string> chosenRoomTypes = null;
+            HashSet<string> validRoomTypes = new HashSet<string>() {
+                "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
+            };
             if (fromRoomTypes != null) {
-                HashSet<string> validRoomTypes = new HashSet<string>() {
-                    "Bedroom", "Bathroom", "Kitchen", "LivingRoom", "RoboTHOR"
-                };
                 
                 if (fromRoomTypes.Length == 0) {
                     throw new ArgumentException("fromRoomTypes must have a non-zero length!");
                 }
 
                 foreach (string roomType in fromRoomTypes) {
-                    if (!validRoomTypes.Contains(roomType)) {
+                    if (!validRoomTypes.Contains(roomType.ToLower())) {
                         throw new ArgumentException(
                             $"fromRoomTypes contains unknown room type: {roomType}.\n" +
                             "Valid room types include {\"Bedroom\", \"Bathroom\", \"LivingRoom\", \"Kitchen\", \"RoboTHOR\"}"
@@ -945,7 +945,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(
                 success: true,
                 actionReturn: new Dictionary<string, object>() {
-                    ["chosenRoomTypes"] = chosenRoomTypes,
+                    ["chosenRoomTypes"] = chosenRoomTypes == null ? validRoomTypes : chosenRoomTypes,
                     ["useTrainMaterials"] = useTrainMaterials.Value,
                     ["useValMaterials"] = useValMaterials.Value,
                     ["useTestMaterials"] = useTestMaterials.Value,
