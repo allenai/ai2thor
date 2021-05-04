@@ -582,9 +582,10 @@ def test_open_aabb_cache(controller):
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_toggle_stove(controller):
-    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -2.25}
+    position = {"x": -1.0, "y": 0.9009982347488403, "z": -2.25}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 30.0
@@ -594,13 +595,16 @@ def test_toggle_stove(controller):
     knob = next(
         obj
         for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "StoveKnob" and obj['visible']
+        if obj["objectType"] == "StoveKnob" and obj["visible"]
     )
-    assert not knob['isToggled'], "knob should not be toggled"
-    assert knob['visible']
-    event = controller.step(dict(action='ToggleObjectOn', objectId=knob['objectId']), raise_for_failure=True)
-    knob = event.get_object(knob['objectId'])
-    assert knob['isToggled'], "knob should be toggled"
+    assert not knob["isToggled"], "knob should not be toggled"
+    assert knob["visible"]
+    event = controller.step(
+        dict(action="ToggleObjectOn", objectId=knob["objectId"]), raise_for_failure=True
+    )
+    knob = event.get_object(knob["objectId"])
+    assert knob["isToggled"], "knob should be toggled"
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
@@ -1021,17 +1025,16 @@ def test_get_reachable_positions(controller):
     except:
         pass
 
+
 def test_per_step_instance_segmentation(fifo_controller):
     fifo_controller.reset(
-        TEST_SCENE,
-        width=300,
-        height=300,
-        renderInstanceSegmentation=False
+        TEST_SCENE, width=300, height=300, renderInstanceSegmentation=False
     )
     event = fifo_controller.step("RotateRight")
     assert event.instance_segmentation_frame is None
     event = fifo_controller.step("Pass", renderInstanceSegmentation=True)
     assert event.instance_segmentation_frame is not None
+
 
 #  Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
@@ -1639,7 +1642,7 @@ def test_randomize_materials_scenes(controller):
         assert not meta["useTestMaterials"]
         assert meta["totalMaterialsConsidered"] == 506
 
-        controller.reset(scene=f"FloorPlan{p + 24}")
+        controller.reset(scene=f"FloorPlan{p + 25}")
         meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert not meta["useTrainMaterials"]
         assert not meta["useExternalMaterials"]
@@ -1647,7 +1650,7 @@ def test_randomize_materials_scenes(controller):
         assert not meta["useTestMaterials"]
         assert meta["totalMaterialsConsidered"] == 506
 
-        controller.reset(scene=f"FloorPlan{p + 25}")
+        controller.reset(scene=f"FloorPlan{p + 26}")
         meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert not meta["useTrainMaterials"]
         assert not meta["useExternalMaterials"]
@@ -1670,6 +1673,7 @@ def test_randomize_materials_scenes(controller):
     assert meta["useValMaterials"]
     assert not meta["useTestMaterials"]
     assert meta["totalMaterialsConsidered"] == 506
+    controller.step(action="ResetMaterials")
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -1689,6 +1693,51 @@ def test_randomize_materials_params(controller):
     assert meta["totalMaterialsConsidered"] == 752
 
     assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
+    assert controller.step(action="RandomizeMaterials", fromRoomTypes=["Kitchen"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 332
+    )
+    assert controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["Kitchen", "LivingRoom"]
+    )
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 512
+    )
+    assert not controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["LivingRoom"]
+    )
+    assert not controller.step(action="RandomizeMaterials", fromRoomTypes=["RoboTHOR"])
+
+    controller.reset(scene="FloorPlan_Train5_2")
+    assert not controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["Kitchen", "LivingRoom"]
+    )
+    assert not controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["LivingRoom"]
+    )
+    assert controller.step(action="RandomizeMaterials", fromRoomTypes=["RoboTHOR"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 352
+    )
+
+    controller.reset(scene="FloorPlan_Val3_2")
+    assert not controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["Kitchen", "LivingRoom"]
+    )
+    assert not controller.step(
+        action="RandomizeMaterials", fromRoomTypes=["LivingRoom"]
+    )
+    assert controller.step(action="RandomizeMaterials", fromRoomTypes=["RoboTHOR"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 320
+    )
+
+    controller.step(action="ResetMaterials")
+
 
 def test_invalid_arguments(controller):
     controller.reset()
