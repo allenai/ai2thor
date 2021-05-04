@@ -1739,6 +1739,7 @@ def test_randomize_materials_params(controller):
     controller.step(action="ResetMaterials")
 
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_invalid_arguments(controller):
     controller.reset()
     with pytest.raises(ValueError):
