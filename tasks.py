@@ -120,6 +120,7 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
         % (_unity_path(), build_name, project_path, arch)
     )
+
     target_path = os.path.join(build_dir, build_name)
 
     full_env = os.environ.copy()
@@ -374,13 +375,26 @@ def local_build_name(prefix, arch):
 
 
 @task
-def local_build(context, prefix="local", arch="OSXIntel64"):
+def local_build_test(context, prefix="local", arch="OSXIntel64"):
+    from ai2thor.tests.constants import TEST_SCENE
+
+    local_build(context, prefix, arch, [TEST_SCENE])
+
+
+@task(iterable=["scenes"])
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None):
+    import ai2thor.controller
+
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
+    if scenes:
+        env["BUILD_SCENES"] = ",".join(
+            map(ai2thor.controller.Controller.normalize_scene, scenes)
+        )
 
     if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")
@@ -468,7 +482,8 @@ def webgl_build(
     if verbose:
         print(scenes)
 
-    env = dict(SCENE=scenes)
+    env = dict(BUILD_SCENES=scenes)
+
     if crowdsource_build:
         env["DEFINES"] = "CROWDSOURCE_TASK"
     if _build("unity", arch, directory, build_name, env=env):
@@ -599,9 +614,9 @@ def push_pip_commit(context):
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(ai2thor.build.PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)).put(
-                Body=f, ACL=acl
-            )
+            s3.Object(
+                ai2thor.build.PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)
+            ).put(Body=f, ACL=acl)
 
 
 @task
@@ -1485,9 +1500,7 @@ def real_2_sim(
     import cv2
     from ai2thor.util.transforms import transform_real_2_sim
 
-    depth_metadata_fn = os.path.join(
-        source_dir, "metadata_{}.json".format(index)
-    )
+    depth_metadata_fn = os.path.join(source_dir, "metadata_{}.json".format(index))
     color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
     color_sim_fn = os.path.join(output_dir, "color_teleport.png".format(index))
     with open(depth_metadata_fn, "r") as f:
@@ -1717,7 +1730,7 @@ def benchmark(
     out="benchmark.json",
     verbose=False,
     local_build=False,
-    commit_id=ai2thor.build.COMMIT_ID
+    commit_id=ai2thor.build.COMMIT_ID,
 ):
     import ai2thor.controller
     import random
@@ -1750,14 +1763,16 @@ def benchmark(
 
     args = {}
     if editor_mode:
-        args['port'] = 8200
-        args['start_unity'] = False
+        args["port"] = 8200
+        args["start_unity"] = False
     elif local_build:
-        args['local_build'] = local_build
+        args["local_build"] = local_build
     else:
-        args['commit_id'] = commit_id
+        args["commit_id"] = commit_id
 
-    env = ai2thor.controller.Controller(width=screen_width, height=screen_height, **args)
+    env = ai2thor.controller.Controller(
+        width=screen_width, height=screen_height, **args
+    )
 
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
@@ -1982,6 +1997,7 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         directory="builds/demo",
         content_addressable=content_addressable,
     )
+
     webgl_deploy(
         ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force
     )

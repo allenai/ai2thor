@@ -141,7 +141,7 @@ public class ImageSynthesis : MonoBehaviour {
         // Note: Check that all image synthesis works with third party cameras, as the image synth assumes that it is taking default settings
         // from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
         if (go.transform.parent.GetComponent<FirstPersonCharacterCull>())
-            // add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
+        // add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
         {
             go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
         }

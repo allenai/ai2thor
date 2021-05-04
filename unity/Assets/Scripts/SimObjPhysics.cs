@@ -915,7 +915,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     void LateUpdate() {
         // only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
         if (sceneManager.physicsSimulationPaused == false)
-            // record this object's current velocity
+        // record this object's current velocity
         {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
         }
