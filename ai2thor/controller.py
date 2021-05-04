@@ -952,24 +952,83 @@ class Controller(object):
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
         makedirs(self.log_dir)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
+        self.server.unity_proc = proc = subprocess.Popen(
+            command, env=env, stdout=open(os.path.join(self.log_dir, "unity.log"), "a")
+        )
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
-    def check_x_display(self, x_display):
-        with open(os.devnull, "w") as dn:
-            # copying the environment so that we pickup
-            # XAUTHORITY values
-            env = os.environ.copy()
-            env["DISPLAY"] = x_display
+    def _valid_x_displays(self):
+        import Xlib.display
+        import glob
 
-            if subprocess.call(["which", "xdpyinfo"], stdout=dn) == 0:
-                assert (
-                    subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0
-                ), (
-                    "Invalid DISPLAY %s - cannot find X server with xdpyinfo"
-                    % x_display
+        open_display_strs = [
+            int(os.path.basename(s)[1:]) for s in glob.glob("/tmp/.X11-unix/X[0-9]*")
+        ]
+        valid_displays = []
+        for display_str in open_display_strs:
+            try:
+                disp = Xlib.display.Display(":%s" % display_str)
+                for screen in range(0, disp.screen_count()):
+                    disp_screen_str = ":%s.%s" % (display_str, screen)
+
+                    disp_screen = Xlib.display.Display(disp_screen_str)
+
+                    if "GLX" in disp_screen.list_extensions():
+                        valid_displays.append(disp_screen_str)
+
+            except Xlib.error.DisplayConnectionError as e:
+                logger.warning(
+                    "could not connect to X Display: %s, %s" % (display_str, e)
                 )
+
+        return valid_displays
+
+    def _select_x_display(self):
+
+        valid_displays = self._valid_x_displays()
+        if valid_displays:
+            return random.choice(valid_displays)
+        else:
+            # return 0.0 as default, an error will be thrown from check_display fails
+            return ":0.0"
+
+    def _valid_displays_message(self):
+        valid_displays = self._valid_x_displays()
+        if valid_displays:
+            return "The following valid displays were found %s" % (
+                ", ".join(valid_displays)
+            )
+        else:
+            return ""
+
+    def check_x_display(self, x_display):
+        import Xlib.display
+
+        try:
+            display = Xlib.display.Display(x_display)
+            screen_parts = x_display.split(".")
+            if len(screen_parts) > 1:
+                # this Xlib.display will find a valid screen if an
+                # invalid screen was passed in (e.g. :0.9999999 -> :0.1)
+                if screen_parts[1] != str(display.get_default_screen()):
+                    raise ValueError(
+                        "Invalid display, non-existent screen: %s; %s"
+                        % (x_display, self._valid_displays_message())
+                    )
+
+            if "GLX" not in display.list_extensions():
+                valid_displays = self._valid_x_displays()
+                raise ValueError(
+                    "Display %s does not have the GLX extension loaded.  GLX is required by Unity3D. %s"
+                    % (x_display, self._valid_displays_message())
+                )
+
+        except (Xlib.error.DisplayNameError, Xlib.error.DisplayConnectionError) as e:
+            raise ValueError(
+                "Invalid display: %s - %s. %s"
+                % (x_display, e, self._valid_displays_message())
+            )
 
     @property
     def tmp_dir(self):
@@ -1058,7 +1117,10 @@ class Controller(object):
             )
 
             if not ver_build.exists():
-                raise ValueError("Invalid commit_id: %s - no build exists for arch=%s" % (commit_id, arch))
+                raise ValueError(
+                    "Invalid commit_id: %s - no build exists for arch=%s"
+                    % (commit_id, arch)
+                )
 
             return ver_build
         else:
@@ -1161,10 +1223,14 @@ class Controller(object):
 
         self.server.start()
         if platform.system() == "Linux":
+
             if x_display:
-                env["DISPLAY"] = ":" + x_display
+                env["DISPLAY"] = x_display
             elif "DISPLAY" not in env:
-                env["DISPLAY"] = ":0.0"
+                env["DISPLAY"] = self._select_x_display()
+
+            if ":" not in env["DISPLAY"]:
+                env["DISPLAY"] = ":" + env["DISPLAY"]
 
             self.check_x_display(env["DISPLAY"])
 

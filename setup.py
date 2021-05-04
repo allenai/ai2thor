@@ -42,6 +42,7 @@ setup(
         "flask",
         "numpy",
         "pyyaml",
+        "python-xlib",
         "requests",
         "progressbar2",
         "botocore",
