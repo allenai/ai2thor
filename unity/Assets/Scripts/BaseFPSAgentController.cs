@@ -776,6 +776,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /**
          * @fromRoomTypes assumes all room types by default. Valid room types include
          * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
+         *
+         * TODO: Make the randomizations reproducible with a seed.
          */
         public void RandomizeMaterials(
             bool? useTrainMaterials = null,
