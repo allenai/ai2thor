@@ -953,7 +953,7 @@ def ci_build(context):
             )
             clean()
             subprocess.check_call("git fetch", shell=True)
-            subprocess.check_call("git checkout %s" % build["branch"], shell=True)
+            subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
             subprocess.check_call(
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )
