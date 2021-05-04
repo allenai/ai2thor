@@ -15,29 +15,29 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            yield return ExecuteAction(action);
-            
+            yield return step(action);
+
             action.Clear();
 
             action["action"] = "RotateRight";
-            yield return ExecuteAction(action);
-            yield return ExecuteAction(action);
+            yield return step(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "LookDown";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "MoveRight";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "PickupObject";
             action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
@@ -45,7 +45,7 @@ namespace Tests {
             action["x"] = 0.5f;
             action["y"] = 0.5f;
             action["putNearXY"] = true;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
 
@@ -67,29 +67,29 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "RotateRight";
-            yield return ExecuteAction(action);
-            yield return ExecuteAction(action);
+            yield return step(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "LookDown";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "MoveRight";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "PickupObject";
             action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
@@ -97,7 +97,7 @@ namespace Tests {
             action["x"] = 0.5f;
             action["y"] = 0.5f;
             action["putNearXY"] = false;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
 
@@ -124,29 +124,29 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "RotateRight";
-            yield return ExecuteAction(action);
-            yield return ExecuteAction(action);
+            yield return step(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "LookDown";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "MoveRight";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "PickupObject";
             action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
@@ -155,7 +155,7 @@ namespace Tests {
 
             // this should cause the exception
             action["z"] = 5.0f;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.AreEqual(agent.lastActionSuccess, false);
@@ -168,29 +168,29 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "RotateRight";
-            yield return ExecuteAction(action);
-            yield return ExecuteAction(action);
+            yield return step(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "LookDown";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "MoveRight";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "PickupObject";
             action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
@@ -200,7 +200,7 @@ namespace Tests {
 
             // this should cause the exception
             action["z"] = 5.0f;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.AreEqual(agent.lastActionSuccess, false);
@@ -213,29 +213,29 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "RotateRight";
-            yield return ExecuteAction(action);
-            yield return ExecuteAction(action);
+            yield return step(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "LookDown";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "MoveRight";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
             action["action"] = "PickupObject";
             action["objectId"] = "CreditCard|-00.46|+01.10|+00.87";
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             action.Clear();
 
@@ -246,7 +246,7 @@ namespace Tests {
 
             // this should cause the exception
             action["z"] = 5.0f;
-            yield return ExecuteAction(action);
+            yield return step(action);
 
             BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.AreEqual(agent.lastActionSuccess, false);

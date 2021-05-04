@@ -5225,7 +5225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private bool toggleObject(SimObjPhysics target, bool toggleOn, bool forceAction) {
-            if (!forceAction && IsInteractable(target)) {
+            if (!forceAction && !IsInteractable(target)) {
                 errorMessage = "object is visible but occluded by something: " + target.ObjectID;
                 actionFinished(false);
                 return false;
