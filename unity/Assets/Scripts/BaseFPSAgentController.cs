@@ -904,7 +904,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(
                 success: true,
                 actionReturn: new Dictionary<string, object>() {
-                    ["chosenRoomTypes"] = chosenRoomTypes == null ? validRoomTypes : chosenRoomTypes,
+                    ["chosenRoomTypes"] = fromRoomTypes == null ? validRoomTypes : chosenRoomTypes,
                     ["useTrainMaterials"] = useTrainMaterials.Value,
                     ["useValMaterials"] = useValMaterials.Value,
                     ["useTestMaterials"] = useTestMaterials.Value,
