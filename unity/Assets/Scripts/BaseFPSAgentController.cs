@@ -786,7 +786,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useExternalMaterials = null,
             string[] fromRoomTypes = null
         ) {
-            HashSet<string> chosenRoomTypes = null;
+            HashSet<string> chosenRoomTypes = new HashSet<string>();
             HashSet<string> validRoomTypes = new HashSet<string>() {
                 "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
             };
@@ -795,7 +795,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new ArgumentException("fromRoomTypes must have a non-zero length!");
                 }
 
-                chosenRoomTypes = new HashSet<string>();
                 foreach (string roomType in fromRoomTypes) {
                     if (!validRoomTypes.Contains(roomType.ToLower())) {
                         throw new ArgumentException(
@@ -823,7 +822,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     string sceneGroupName = new string[] { "kitchen", "livingroom", "bedroom", "bathroom" }[Math.Max(sceneGroup - 1, 0)];
                     if (!chosenRoomTypes.Contains(sceneGroupName)) {
                         throw new ArgumentException(
-                            $"fromRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}. You gave: {fromRoomTypes.ToString()}."
+                            $"fromRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}."
                         );
                     }
                 }
@@ -854,7 +853,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (fromRoomTypes != null) {
                     if (!chosenRoomTypes.Contains("robothor")) {
                         throw new ArgumentException(
-                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}. You gave: {fromRoomTypes.ToString()}."
+                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}."
                         );
                     }
                 }
@@ -888,6 +887,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     useTestMaterials = useTestMaterials.GetValueOrDefault(true);
                     useExternalMaterials = useExternalMaterials.GetValueOrDefault(false);
                     break;
+                default:
+                    throw new InvalidOperationException(
+                        "RandomizeMaterials sceneType is not in {train/val/test}. Please open an issue at github.com/allenai/ai2thor!"
+                    );
             }
 
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
