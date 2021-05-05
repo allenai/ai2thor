@@ -820,35 +820,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ) / 100;
 
                 if (fromRoomTypes != null) {
-                    switch (sceneGroup) {
-                        case 0:
-                            if (!chosenRoomTypes.Contains("kitchen")) {
-                                throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Kitchen\" inside of a kitchen scene: {scene}. You gave: {fromRoomTypes.ToString()}."
-                                );
-                            }
-                            break;
-                        case 2:
-                            if (!chosenRoomTypes.Contains("livingroom")) {
-                                throw new ArgumentException(
-                                    $"fromRoomTypes must include \"LivingRoom\" inside of a LivingRoom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
-                                );
-                            }
-                            break;
-                        case 3:
-                            if (!chosenRoomTypes.Contains("bedroom")) {
-                                throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Bedroom\" inside of a Bedroom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
-                                );
-                            }
-                            break;
-                        case 4:
-                            if (!chosenRoomTypes.Contains("bathroom")) {
-                                throw new ArgumentException(
-                                    $"fromRoomTypes must include \"Bathroom\" inside of a Bathroom scene: {scene}. You gave: {fromRoomTypes.ToString()}."
-                                );
-                            }
-                            break;
+                    string sceneGroupName = new string[] { "kitchen", "livingroom", "bedroom", "bathroom" }[Math.Max(sceneGroup - 1, 0)];
+                    if (!chosenRoomTypes.Contains(sceneGroupName)) {
+                        throw new ArgumentException(
+                            $"fromRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}. You gave: {fromRoomTypes.ToString()}."
+                        );
                     }
                 }
 
