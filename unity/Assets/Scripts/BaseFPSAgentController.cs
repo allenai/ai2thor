@@ -899,12 +899,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
-                fromRoomTypes: chosenRoomTypes
+                fromRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
             );
             actionFinished(
                 success: true,
                 actionReturn: new Dictionary<string, object>() {
-                    ["chosenRoomTypes"] = fromRoomTypes == null ? validRoomTypes : chosenRoomTypes,
+                    ["chosenRoomTypes"] = chosenRoomTypes.Count == 0 ? validRoomTypes : chosenRoomTypes,
                     ["useTrainMaterials"] = useTrainMaterials.Value,
                     ["useValMaterials"] = useValMaterials.Value,
                     ["useTestMaterials"] = useTestMaterials.Value,
