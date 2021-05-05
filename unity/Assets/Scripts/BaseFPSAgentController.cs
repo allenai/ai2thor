@@ -889,52 +889,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (useTrainMaterials.GetValueOrDefault(true) == false) {
                         throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTrainMaterials=false inside of a train scene.");
                     }
-                    if (!useTrainMaterials.HasValue) {
-                        useTrainMaterials = true;
-                    }
-                    if (!useValMaterials.HasValue) {
-                        useValMaterials = false;
-                    }
-                    if (!useTestMaterials.HasValue) {
-                        useTestMaterials = false;
-                    }
-                    if (!useExternalMaterials.HasValue) {
-                        useExternalMaterials = true;
-                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(true);
+                    useValMaterials = useValMaterials.GetValueOrDefault(false);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(false);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(true);
                     break;
                 case "val":
                     if (useValMaterials.GetValueOrDefault(true) == false) {
                         throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a train scene.");
                     }
-                    if (!useTrainMaterials.HasValue) {
-                        useTrainMaterials = false;
-                    }
-                    if (!useValMaterials.HasValue) {
-                        useValMaterials = true;
-                    }
-                    if (!useTestMaterials.HasValue) {
-                        useTestMaterials = false;
-                    }
-                    if (!useExternalMaterials.HasValue) {
-                        useExternalMaterials = false;
-                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
+                    useValMaterials = useValMaterials.GetValueOrDefault(true);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(false);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(false);
                     break;
                 case "test":
                     if (useTestMaterials.GetValueOrDefault(true) == false) {
                         throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a train scene.");
                     }
-                    if (!useTrainMaterials.HasValue) {
-                        useTrainMaterials = false;
-                    }
-                    if (!useValMaterials.HasValue) {
-                        useValMaterials = false;
-                    }
-                    if (!useTestMaterials.HasValue) {
-                        useTestMaterials = true;
-                    }
-                    if (!useExternalMaterials.HasValue) {
-                        useExternalMaterials = false;
-                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
+                    useValMaterials = useValMaterials.GetValueOrDefault(false);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(true);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(false);
                     break;
             }
 
