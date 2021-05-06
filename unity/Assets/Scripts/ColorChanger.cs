@@ -208,11 +208,11 @@ public class ColorChanger : MonoBehaviour {
         bool useValMaterials,
         bool useTestMaterials,
         bool useExternalMaterials,
-        HashSet<string> fromRoomTypes
+        HashSet<string> inRoomTypes
     ) {
         int numTotalMaterials = 0;
         List<Material> validMaterials = new List<Material>();
-        if (fromRoomTypes == null) {
+        if (inRoomTypes == null) {
             // select from all room types
             foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
                 foreach (Material material in materialGroup.Value) {
@@ -235,7 +235,7 @@ public class ColorChanger : MonoBehaviour {
                         useValMaterials && materialGroups["val"].Contains(material) ||
                         useTestMaterials && materialGroups["test"].Contains(material)
                     ) {
-                        foreach (string roomType in fromRoomTypes) {
+                        foreach (string roomType in inRoomTypes) {
                             if (materialGroups[roomType].Contains(material)) {
                                 validMaterials.Add(material);
                                 numTotalMaterials++;
