@@ -15,6 +15,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+using SD = System.Diagnostics;
+using Unity.Simulation;
+#if PLATFORM_CLOUD_RENDERING
+using UnityEngine.CloudRendering;
+#endif
 using UnityEngine.Networking;
 
 public class AgentManager : MonoBehaviour {
@@ -46,7 +53,9 @@ public class AgentManager : MonoBehaviour {
     private enum serverTypes { WSGI, FIFO };
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
+    
     private bool fastActionEmit = true;
+    private bool asyncFrameCaptured = false;
 
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
@@ -116,6 +125,9 @@ public class AgentManager : MonoBehaviour {
     void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
+        // necessary to get the instance to initialize Simulation Capture
+        // must wrap this in PLATFORM_CLOUDRENDERING
+        string  basdir = Manager.Instance.GetDirectoryFor(DataCapturePaths.ScreenCapture, "");
 
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
@@ -127,7 +139,7 @@ public class AgentManager : MonoBehaviour {
         primaryAgent.SetAgentMode("default");
 #endif
 
-        StartCoroutine(EmitFrame());
+        StartCoroutine(EmitFrameDebug());
     }
 
     private void initializePrimaryAgent() {
@@ -694,15 +706,61 @@ public class AgentManager : MonoBehaviour {
 
     }
 
+    private byte[] captureScreenAsync(int counter) {
+        byte[] data = null;
+        RenderTexture tt = this.primaryAgent.m_Camera.targetTexture;
+        RenderTexture.active = tt;
+        this.primaryAgent.m_Camera.Render();
+        var rt = RenderTexture.GetTemporary(300, 300, 0, GraphicsFormat.R8G8B8A8_UNorm);
+        Graphics.Blit(tt, rt);
+        AsyncGPUReadback.Request(rt, 0, (request) =>
+        {
+            if (!request.hasError) {
+                RenderTexture rt = this.primaryAgent.m_Camera.targetTexture; 
+                data = request.GetData<byte>().ToArray();
+                Debug.Log("got data async data " + data.Length);
+                var encodedData = ImageConversion.EncodeArrayToPNG(data, this.primaryAgent.m_Camera.targetTexture.graphicsFormat, (uint)rt.width, (uint)rt.height);
+                File.WriteAllBytes("/tmp/out-" + counter + ".png", encodedData);
+            }
+            else
+            {
+                Debug.Log("Request error: " + request.hasError);
+            }
+            RenderTexture.ReleaseTemporary(rt);
+        });
+        AsyncGPUReadback.WaitAllRequests();
+        return data;
+    }
+
     private byte[] captureScreen() {
         if (tex.height != UnityEngine.Screen.height ||
             tex.width != UnityEngine.Screen.width) {
             tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
             readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
         }
-        tex.ReadPixels(readPixelsRect, 0, 0);
-        tex.Apply();
-        return tex.GetRawTextureData();
+
+        var antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing);
+
+        var prevRT = this.primaryAgent.m_Camera.targetTexture;
+        var renderRT = RenderTexture.GetTemporary(300, 300, 24);
+        //RenderTexture rt = this.primaryAgent.m_Camera.targetTexture;
+        this.primaryAgent.m_Camera.targetTexture = renderRT;
+        RenderTexture.active = renderRT;
+        Rect myrect = new Rect(0, 0, 300, 300);
+        this.primaryAgent.m_Camera.Render();
+        Texture2D camtex = new Texture2D(300, 300);
+        camtex.ReadPixels(myrect, 0, 0);
+        camtex.Apply();
+        byte[] data = camtex.GetRawTextureData();
+        string path = "/tmp/out.png";
+        var encodedData = ImageConversion.EncodeArrayToPNG(data, renderRT.graphicsFormat, 300, 300);
+        File.WriteAllBytes(path, encodedData);
+        Debug.Log("got some data 32: " + data.Length);
+        RenderTexture.active = prevRT;
+        RenderTexture.ReleaseTemporary(renderRT);
+        
+        
+        return data;
     }
 
 
@@ -928,6 +986,36 @@ public class AgentManager : MonoBehaviour {
         return this.agentManagerState == AgentState.Emit && emit;
     }
 
+    public IEnumerator EmitFrameDebug() {
+        int counter = 0;
+        while (true) {
+            yield return new WaitForEndOfFrame();
+            if (this.agentManagerState == AgentState.ActionComplete) {
+                this.agentManagerState = AgentState.Emit;
+            }
+
+            foreach (BaseFPSAgentController agent in this.agents) {
+                if (agent.agentState == AgentState.ActionComplete) {
+                    agent.agentState = AgentState.Emit;
+                }
+            }
+            if (counter == 0) {
+                Debug.Log("initializing ****");
+                Dictionary<string, object> action = new Dictionary<string, object>();
+                action["fieldOfView"] = 90f;
+                action["snapToGrid"] = true;
+                action["action"] = "Initialize";
+                this.activeAgent().ProcessControlCommand(new DynamicServerAction(action), this);
+            } else if(this.canEmit() && counter < 50){
+                captureScreenAsync(counter);
+            }
+
+            counter++;
+
+        }
+
+
+    }
 
     public IEnumerator EmitFrame() {
         while (true) {
@@ -1212,9 +1300,7 @@ public class MetadataPatch {
     public bool lastActionSuccess;
     public int agentId;
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 }
 
@@ -1515,9 +1601,7 @@ public struct MetadataWrapper {
     public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 
 }
