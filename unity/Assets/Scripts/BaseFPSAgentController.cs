@@ -781,7 +781,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         /**
-         * @fromRoomTypes assumes all room types by default. Valid room types include
+         * @inRoomTypes assumes all room types by default. Valid room types include
          * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
          *
          * TODO: Make the randomizations reproducible with a seed.
@@ -792,21 +792,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
             bool? useExternalMaterials = null,
-            string[] fromRoomTypes = null
+            string[] inRoomTypes = null
         ) {
             HashSet<string> chosenRoomTypes = new HashSet<string>();
             HashSet<string> validRoomTypes = new HashSet<string>() {
                 "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
             };
-            if (fromRoomTypes != null) {
-                if (fromRoomTypes.Length == 0) {
-                    throw new ArgumentException("fromRoomTypes must have a non-zero length!");
+            if (inRoomTypes != null) {
+                if (inRoomTypes.Length == 0) {
+                    throw new ArgumentException("inRoomTypes must have a non-zero length!");
                 }
 
-                foreach (string roomType in fromRoomTypes) {
+                foreach (string roomType in inRoomTypes) {
                     if (!validRoomTypes.Contains(roomType.ToLower())) {
                         throw new ArgumentException(
-                            $"fromRoomTypes contains unknown room type: {roomType}.\n" +
+                            $"inRoomTypes contains unknown room type: {roomType}.\n" +
                             "Valid room types include {\"Bedroom\", \"Bathroom\", \"LivingRoom\", \"Kitchen\", \"RoboTHOR\"}"
                         );
                     };
@@ -826,11 +826,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     scene.Substring(startIndex: "FloorPlan".Length, length:  scene.Length - "FloorPlan_physics".Length)
                 ) / 100;
 
-                if (fromRoomTypes != null) {
+                if (inRoomTypes != null) {
                     string sceneGroupName = new string[] { "kitchen", "livingroom", "bedroom", "bathroom" }[Math.Max(sceneGroup - 1, 0)];
                     if (!chosenRoomTypes.Contains(sceneGroupName)) {
                         throw new ArgumentException(
-                            $"fromRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}."
+                            $"inRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}."
                         );
                     }
                 }
@@ -858,10 +858,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     default:
                         throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
                 }
-                if (fromRoomTypes != null) {
+                if (inRoomTypes != null) {
                     if (!chosenRoomTypes.Contains("robothor")) {
                         throw new ArgumentException(
-                            $"fromRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}."
+                            $"inRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}."
                         );
                     }
                 }
@@ -907,7 +907,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
-                fromRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
+                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
             );
 
             // Keep it here to make sure the action succeeds first
