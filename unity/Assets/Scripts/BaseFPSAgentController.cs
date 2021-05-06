@@ -81,6 +81,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public AgentState agentState = AgentState.Emit;
 
+        protected bool clearRandomizedMaterialsOnReset = false;
+
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
         protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
@@ -579,6 +581,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
+
+            if (clearRandomizedMaterialsOnReset) {
+                resetMaterials();
+                clearRandomizedMaterialsOnReset = false;
+            }
         }
 
         public void SetAgentMode(string mode) {
@@ -780,6 +787,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
          * TODO: Make the randomizations reproducible with a seed.
          */
         public void RandomizeMaterials(
+            bool clearOnReset,
             bool? useTrainMaterials = null,
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
@@ -901,6 +909,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useExternalMaterials: useExternalMaterials.Value,
                 fromRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
             );
+
+            // Keep it here to make sure the action succeeds first
+            clearRandomizedMaterialsOnReset = clearOnReset;
+
             actionFinished(
                 success: true,
                 actionReturn: new Dictionary<string, object>() {
@@ -914,9 +926,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void ResetMaterials() {
+        protected void resetMaterials() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.ResetMaterials();
+        }
+
+        public void ResetMaterials() {
+            resetMaterials();
             actionFinished(true);
         }
 
