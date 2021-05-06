@@ -952,7 +952,12 @@ class Controller(object):
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
         makedirs(self.log_dir)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
+        self.server.unity_proc = proc = subprocess.Popen(
+            command,
+            env=env,
+            stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
+            stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
+        )
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -1059,7 +1064,10 @@ class Controller(object):
             )
 
             if not ver_build.exists():
-                raise ValueError("Invalid commit_id: %s - no build exists for arch=%s" % (commit_id, arch))
+                raise ValueError(
+                    "Invalid commit_id: %s - no build exists for arch=%s"
+                    % (commit_id, arch)
+                )
 
             return ver_build
         else:
