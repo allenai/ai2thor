@@ -316,3 +316,7 @@ For playback:
   - Added property `guidForColors` and way to update it (`UpdateGuidForColors`). This is used to create random colors for object masks in `OnSceneChange`
 - `ImageSynthesis/Shaders/Depth`:
   - Changed the `frag` function to return pixels based on the camera's far clipping pane
+
+## Assets
+
+- Soccer ball prefab from Ahmet Gencoglu: https://assetstore.unity.com/packages/3d/low-polygon-soccer-ball-84382
