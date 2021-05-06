@@ -82,96 +82,98 @@ public class ColorChanger : MonoBehaviour {
 
                       coffeeMachineMaterials;
 
-    Dictionary<string, Material[]> materials;
+    Dictionary<string, Material[]> materials = null;
     Dictionary<string, Color[]> origColors;
     Dictionary<string, Texture[]> origTextures;
     Dictionary<string, HashSet<Material>> materialGroups;
 
     public void Start() {
-        materials = new Dictionary<string, Material[]> {
-            ["AlarmClock"] = alarmClockMaterials,
-            ["Apple"] = appleMaterials,
-            ["Basketball"] = basketballMaterials,
-            ["Bowl"] = bowlMaterials,
-            ["GarbageBin"] = garbageBinMaterials,
-            ["HousePlant"] = houseplantMaterials,
-            ["Pillow"] = pillowMaterials,
-            ["SprayBottle"] = sprayBottleMaterials,
-            ["Box"] = boxMaterials,
-            ["CellPhone"] = cellphoneMaterials,
-            ["Cup"] = cupMaterials,
-            ["FloorLamp"] = floorLampMaterials,
-            ["PenPencil"] = penPencilMaterials,
-            ["Plate"] = plateMaterials,
-            ["Pot"] = potMaterials,
-            ["Statue"] = statueMaterials,
-            ["Watch"] = watchMaterials,
-            ["ArmChair"] = armchairMaterials,
-            ["Bed"] = bedMaterials,
-            ["Chair"] = chairMaterials,
-            ["CoffeeTable"] = coffeeTableMaterials,
-            ["Desk"] = deskMaterials,
-            ["DiningTable"] = diningTableMaterials,
-            ["Dresser"] = dresserMaterials,
-            ["OfficeChair"] = officeChairMaterials,
-            ["ShelvingUnit"] = shelvingUnitMaterials,
-            ["SideTable"] = sideTableMaterials,
-            ["Sofa"] = sofaMaterials,
-            ["Fabric"] = fabricMaterials,
-            ["Glass"] = glassMaterials,
-            ["Light"] = lightMaterials,
-            ["Metal"] = metalMaterials,
-            ["Plastic"] = plasticMaterials,
-            ["Wood"] = woodMaterials,
-            ["Wall"] = wallMaterials,
-            ["Fridge"] = fridgeMaterials,
-            ["Paper"] = paperMaterials,
-            ["Grunge"] = grungeMaterials,
-            ["Wax"] = waxMaterials,
-            ["Soap"] = soapMaterials,
-            ["Microwave"] = microwaveMaterials,
-            ["Toaster"] = toasterMaterials,
-            ["Lettuce"] = lettuceMaterials,
-            ["SoapBottle"] = soapBottleMaterials,
-            ["Potato"] = potatoMaterials,
-            ["PotatoCooked"] = potatoCookedMaterials,
-            ["PotatoSliced"] = potatoSlicedMaterials,
-            ["Laptop"] = laptopMaterials,
-            ["Bread"] = breadMaterials,
-            ["Pan"] = panMaterials,
-            ["PanDecal"] = panDecalMaterials,
-            ["CoffeeMachine"] = coffeeMachineMaterials,
-        };
+        if (materials == null) {
+            materials = new Dictionary<string, Material[]> {
+                ["AlarmClock"] = alarmClockMaterials,
+                ["Apple"] = appleMaterials,
+                ["Basketball"] = basketballMaterials,
+                ["Bowl"] = bowlMaterials,
+                ["GarbageBin"] = garbageBinMaterials,
+                ["HousePlant"] = houseplantMaterials,
+                ["Pillow"] = pillowMaterials,
+                ["SprayBottle"] = sprayBottleMaterials,
+                ["Box"] = boxMaterials,
+                ["CellPhone"] = cellphoneMaterials,
+                ["Cup"] = cupMaterials,
+                ["FloorLamp"] = floorLampMaterials,
+                ["PenPencil"] = penPencilMaterials,
+                ["Plate"] = plateMaterials,
+                ["Pot"] = potMaterials,
+                ["Statue"] = statueMaterials,
+                ["Watch"] = watchMaterials,
+                ["ArmChair"] = armchairMaterials,
+                ["Bed"] = bedMaterials,
+                ["Chair"] = chairMaterials,
+                ["CoffeeTable"] = coffeeTableMaterials,
+                ["Desk"] = deskMaterials,
+                ["DiningTable"] = diningTableMaterials,
+                ["Dresser"] = dresserMaterials,
+                ["OfficeChair"] = officeChairMaterials,
+                ["ShelvingUnit"] = shelvingUnitMaterials,
+                ["SideTable"] = sideTableMaterials,
+                ["Sofa"] = sofaMaterials,
+                ["Fabric"] = fabricMaterials,
+                ["Glass"] = glassMaterials,
+                ["Light"] = lightMaterials,
+                ["Metal"] = metalMaterials,
+                ["Plastic"] = plasticMaterials,
+                ["Wood"] = woodMaterials,
+                ["Wall"] = wallMaterials,
+                ["Fridge"] = fridgeMaterials,
+                ["Paper"] = paperMaterials,
+                ["Grunge"] = grungeMaterials,
+                ["Wax"] = waxMaterials,
+                ["Soap"] = soapMaterials,
+                ["Microwave"] = microwaveMaterials,
+                ["Toaster"] = toasterMaterials,
+                ["Lettuce"] = lettuceMaterials,
+                ["SoapBottle"] = soapBottleMaterials,
+                ["Potato"] = potatoMaterials,
+                ["PotatoCooked"] = potatoCookedMaterials,
+                ["PotatoSliced"] = potatoSlicedMaterials,
+                ["Laptop"] = laptopMaterials,
+                ["Bread"] = breadMaterials,
+                ["Pan"] = panMaterials,
+                ["PanDecal"] = panDecalMaterials,
+                ["CoffeeMachine"] = coffeeMachineMaterials,
+            };
 
-        // makes indexing into them faster
-        materialGroups = new Dictionary<string, HashSet<Material>> {
-            ["train"] = new HashSet<Material>(rawTrainMaterials),
-            ["val"] = new HashSet<Material>(rawValMaterials),
-            ["test"] = new HashSet<Material>(rawTestMaterials),
-            ["robothor"] = new HashSet<Material>(rawRobothorMaterials),
-            ["kitchen"] = new HashSet<Material>(rawKitchenMaterials),
-            ["livingroom"] = new HashSet<Material>(rawLivingRoomMaterials),
-            ["bedroom"] = new HashSet<Material>(rawBedroomMaterials),
-            ["bathroom"] = new HashSet<Material>(rawBathroomMaterials)
-        };
+            // makes indexing into them faster
+            materialGroups = new Dictionary<string, HashSet<Material>> {
+                ["train"] = new HashSet<Material>(rawTrainMaterials),
+                ["val"] = new HashSet<Material>(rawValMaterials),
+                ["test"] = new HashSet<Material>(rawTestMaterials),
+                ["robothor"] = new HashSet<Material>(rawRobothorMaterials),
+                ["kitchen"] = new HashSet<Material>(rawKitchenMaterials),
+                ["livingroom"] = new HashSet<Material>(rawLivingRoomMaterials),
+                ["bedroom"] = new HashSet<Material>(rawBedroomMaterials),
+                ["bathroom"] = new HashSet<Material>(rawBathroomMaterials)
+            };
 
-        // cache all the original values
-        origColors = new Dictionary<string, Color[]>();
-        origTextures = new Dictionary<string, Texture[]>();
-        foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
-            Color[] groupColors = new Color[materialGroup.Value.Length];
-            Texture[] groupTextures = new Texture[materialGroup.Value.Length];
-            for (int i = 0; i < materialGroup.Value.Length; i++) {
-                Material mat = materialGroup.Value[i];
-                if (mat.HasProperty("_Color")) {
-                    groupColors[i] = mat.color;
+            // cache all the original values
+            origColors = new Dictionary<string, Color[]>();
+            origTextures = new Dictionary<string, Texture[]>();
+            foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
+                Color[] groupColors = new Color[materialGroup.Value.Length];
+                Texture[] groupTextures = new Texture[materialGroup.Value.Length];
+                for (int i = 0; i < materialGroup.Value.Length; i++) {
+                    Material mat = materialGroup.Value[i];
+                    if (mat.HasProperty("_Color")) {
+                        groupColors[i] = mat.color;
+                    }
+                    if (mat.HasProperty("_MainTex")) {
+                        groupTextures[i] = mat.mainTexture;
+                    }
                 }
-                if (mat.HasProperty("_MainTex")) {
-                    groupTextures[i] = mat.mainTexture;
-                }
+                origColors[materialGroup.Key] = groupColors;
+                origTextures[materialGroup.Key] = groupTextures;
             }
-            origColors[materialGroup.Key] = groupColors;
-            origTextures[materialGroup.Key] = groupTextures;
         }
     }
 
