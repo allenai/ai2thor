@@ -777,7 +777,7 @@ public class AgentManager : MonoBehaviour {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreenAsync(0)));
         }
     }
 
@@ -1004,6 +1004,8 @@ public class AgentManager : MonoBehaviour {
                 Dictionary<string, object> action = new Dictionary<string, object>();
                 action["fieldOfView"] = 90f;
                 action["snapToGrid"] = true;
+                //action["renderInstanceSegmentation"] = true;
+                //action["renderSemanticSegmentation"] = true;
                 action["action"] = "Initialize";
                 this.activeAgent().ProcessControlCommand(new DynamicServerAction(action), this);
             } else if(this.canEmit() && counter < 50){
