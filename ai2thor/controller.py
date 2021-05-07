@@ -1201,14 +1201,15 @@ class Controller(object):
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
             self.killing_unity = True
-            os.kill(self.unity_pid, signal.SIGTERM)
-            for i in range(10):
-                if not process_alive(self.unity_pid):
+            proc = self.server.unity_proc
+            for i in range(4):
+                if not process_alive(proc.pid):
                     break
-                time.sleep(0.1)
-            if platform.system() != "Windows":
-                if process_alive(self.unity_pid):
-                    os.kill(self.unity_pid, signal.SIGKILL)
+                try:
+                    proc.kill()
+                    proc.wait(1)
+                except subprocess.TimeoutExpired:
+                    pass
 
 
 class BFSSearchPoint:
