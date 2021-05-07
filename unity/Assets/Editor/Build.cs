@@ -38,7 +38,15 @@ public class Build {
         foreach (string scene in scenes) {
             Debug.Log("Adding Scene " + scene);
         }
-        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle);
+
+        BuildOptions options = BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
+        if (ScriptsOnly()) {
+            options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
+        }
+
+        Debug.Log("Build options " + options);
+
+        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, options);
     }
 
     private static List<string> GetScenes() {
@@ -79,10 +87,21 @@ public class Build {
         }
     }
 
-    private static bool IncludePrivateScenes() {
-        string privateScenes = Environment.GetEnvironmentVariable("INCLUDE_PRIVATE_SCENES");
+    private static bool GetBoolEnvVariable(string key, bool defaultValue = false) {
+        string value = Environment.GetEnvironmentVariable(key);
+        if (value != null) {
+            return value.ToLower() == "true";
+        } else {
+            return defaultValue;
+        }
+    }
 
-        return privateScenes != null && privateScenes.ToLower() == "true";
+    private static bool ScriptsOnly() {
+        return GetBoolEnvVariable("BUILD_SCRIPTS_ONLY");
+    }
+
+    private static bool IncludePrivateScenes() {
+        return GetBoolEnvVariable("INCLUDE_PRIVATE_SCENES");
     }
 
     private static string GetDefineSymbolsFromEnv() {
