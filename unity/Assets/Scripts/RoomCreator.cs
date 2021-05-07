@@ -632,6 +632,42 @@ public class RoomCreator : MonoBehaviour
 			return GetRectangleFloorMesh(new RectangleRoom[] { room });
 		}
 
+		public static GameObject CreateVisibilityPointsOnPlane(
+			Vector3 start,
+			Vector3 right,
+			Vector3 top,
+			float pointInterval = 1 / 3.0f,
+			string postfixName = "VisibilityPoints"
+		) {
+			var visibilityPoints = new GameObject($"VisibilityPoints{postfixName}");
+
+			// var normal = Vector3.Cross(right, top).normalized;
+
+			var width = right.magnitude;
+			var height = top.magnitude;
+
+			var step = pointInterval;
+			var count = 0;
+
+			//var offset = new Vector3(width / 2.0f, 0, depth / 2.0f);
+			//Debug.Log($"start{start} wi {width}");
+
+			var end = start + right + top;
+			var stepVecRight = step * right.normalized;
+			var stepVecTop = step * top.normalized;
+			var delta = Vector3.zero;
+			//Debug.Log($"Compare {(width * width) - delta.sqrMagnitude} {((width * width) - delta.sqrMagnitude < step)}");
+			for (Vector3 rightDelta = Vector3.zero; (width * width) - rightDelta.sqrMagnitude > (step * step); rightDelta += stepVecRight) {
+				for (Vector3 topDelta = Vector3.zero; (height * height) - topDelta.sqrMagnitude > (step * step); topDelta += stepVecTop) {
+					var vp = new GameObject($"VisibilityPoint{postfixName} ({count})");
+					vp.transform.position = start + rightDelta + topDelta;
+					vp.transform.parent = visibilityPoints.transform;
+					count++;
+				}
+			}
+			return visibilityPoints;
+		}
+
 		public static GameObject CreateVisibilityPointsGameObject(RectangleRoom room, float pointInterval = 1 / 3.0f) {
 			var visibilityPoints = new GameObject("VisibilityPoints");
 
@@ -669,11 +705,12 @@ public class RoomCreator : MonoBehaviour
 				(wallPair, w2) => (wallPair.w0, w2, wallPair.w1)
 			).ToArray();
 
-
+			var index = 0;
 			foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
 				// TODO query material
-				var wallGO = createAndJoinWall(w0, w1, w2);
+				var wallGO = createAndJoinWall(index, w0, w1, w2);
 				wallGO.transform.parent = structure.transform;
+				index++;
 			}
 
 			// foreach ((Wall w0, Wall w1) in zip) {
@@ -858,14 +895,24 @@ public class RoomCreator : MonoBehaviour
 			return wall1.p0 + (wall1.p1 - wall1.p0) * t;
 		}
 
-		public static GameObject createAndJoinWall(Wall toCreate, Wall previous = null, Wall next = null, float minimumBoxColliderThickness = 0.1f, bool globalVertexPositions = false) {
+		public static GameObject createAndJoinWall(
+			int index,
+			Wall toCreate,
+			Wall previous = null,
+			Wall next = null,
+			float visibilityPointInterval = 1 / 3.0f,
+			float minimumBoxColliderThickness = 0.1f,
+			bool globalVertexPositions = false
+		) {
 			var wallGO = new GameObject("Wall");
 
 			var meshF = wallGO.AddComponent<MeshFilter>();
-			var boxC = wallGO.AddComponent<MeshCollider>();
-			boxC.convex = true;
-			var renderBackFaces = false;
-			var colliderThickness = toCreate.thickness < 1e-4 ? minimumBoxColliderThickness : toCreate.thickness;
+			var boxC = wallGO.AddComponent<BoxCollider>();
+			// boxC.convex = true;
+			var generateBackFaces = true;
+			const float zeroThicknessEpsilon = 1e-4f;
+			var colliderThickness = toCreate.thickness < zeroThicknessEpsilon ? minimumBoxColliderThickness : toCreate.thickness;
+
 
 			var p0p1 = toCreate.p1 - toCreate.p0;
 
@@ -891,7 +938,7 @@ public class RoomCreator : MonoBehaviour
 				p0 = toCreate.p0;
 				p1 = toCreate.p1;
 
-
+				boxC.center = center;
 			} else {
 				p0 = -(width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
 				p1 = (width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
@@ -915,6 +962,12 @@ public class RoomCreator : MonoBehaviour
 				wallGO.transform.rotation = Quaternion.AngleAxis(theta * 180.0f / Mathf.PI, Vector3.up);
 			}
 
+			var colliderOffset = toCreate.thickness < zeroThicknessEpsilon ? normal * colliderThickness : Vector3.zero;
+
+			boxC.center += colliderOffset;
+
+			boxC.size = new Vector3(width, toCreate.height, colliderThickness);
+
 			var vertices = new List<Vector3>() {
 					p0,
 					p0 + new Vector3(0.0f, toCreate.height, 0.0f),
@@ -922,10 +975,8 @@ public class RoomCreator : MonoBehaviour
 					p1
 				};
 
-
-
 			var triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
-			if (renderBackFaces) {
+			if (generateBackFaces) {
 				triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
 			}
 			var uv = new List<Vector2>() {
@@ -934,70 +985,7 @@ public class RoomCreator : MonoBehaviour
 			var normals = new List<Vector3>() { -normal, -normal, -normal, -normal };
 
 			// if it is a double wall
-			if (toCreate.thickness > 0.0001f) {
-
-				var prevThickness = 0.0f;
-				Debug.Log(" prev != null " + (previous != null));
-				if (previous != null) {
-					var prevp0p1 = (previous.p1 - previous.p0).normalized;
-					var prevNormal = Vector3.Cross(prevp0p1, Vector3.up);
-
-					// var p1p0 = -p0p1;
-
-					// //var thicknessExtensionToPrevious = toCreate.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
-					// var denominator = (p1p0.z + prevp0p1.z * p1p0.x);
-					// // Lines do not intersect
-					// if ( Mathf.Abs(denominator) < 1E-4) {
-
-					// }
-					// var t = (previous.p0.x + prevp0p1.z * (toCreate.p0.x - previous.p0.x) ) / (p1p0.z + prevp0p1.z * p1p0.x) / denominator;
-					// var intersect = vectorsIntersectionXZ(previous.p0 + prevNormal * previous.thickness,
-
-					//  prevp0p1,
-					//  toCreate.p0 + normal * toCreate.thickness,
-					//  -p0p1);
-
-					// var intersect = vectorIntersect(previous, toCreate);
-					// if (intersect != null) {
-					// 	prevThickness = Vector3.Magnitude(intersect.GetValueOrDefault() - (toCreate.p0 + normal * toCreate.thickness));
-					// }
-					prevThickness = vectorIntersectThickness(previous, toCreate);
-
-
-					//prevThickness = previous.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
-				}
-
-				var nextThickness = 0.0f;
-				if (next != null) {
-					var nextp0p1 = (next.p1 - next.p0).normalized;
-					var nextNormal = Vector3.Cross(nextp0p1, Vector3.up);
-
-					// var p1p0 = -p0p1;
-
-					// //var thicknessExtensionToPrevious = toCreate.thickness * Mathf.Tan(Mathf.Asin(prevNormal.x * normal.z - prevNormal.z * normal.x) / 2.0f);
-					// var denominator = (p1p0.z + prevp0p1.z * p1p0.x);
-					// // Lines do not intersect
-					// if ( Mathf.Abs(denominator) < 1E-4) {
-
-					// }
-					// var t = (previous.p0.x + prevp0p1.z * (toCreate.p0.x - previous.p0.x) ) / (p1p0.z + prevp0p1.z * p1p0.x) / denominator;
-					// var intersect = vectorsIntersectionXZ(
-					//     next.p0 + nextNormal * next.thickness,
-					//     nextp0p1,
-					//     toCreate.p1 + normal * toCreate.thickness,
-					//     p0p1
-					// );
-
-
-					// var intersect = vectorIntersect(toCreate, next);
-					// if (intersect != null) {
-					// 	nextThickness = Vector3.Magnitude(intersect.GetValueOrDefault() - (toCreate.p0 + normal * toCreate.thickness));
-					// }
-
-					prevThickness = vectorIntersectThickness(next, toCreate);
-
-					//nextThickness = next.thickness * Mathf.Tan(Mathf.Asin(nextNormal.x * normal.z - nextNormal.z * normal.x) / 2.0f);
-				}
+			if (toCreate.thickness > zeroThicknessEpsilon) {
 
 
 				// var nextp0p1 =  (next.p1 - next.p0).normalized;
@@ -1027,7 +1015,11 @@ public class RoomCreator : MonoBehaviour
 				uv.AddRange(new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) });
 				// mesh.uv = mesh.uv.Concat(new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) }).ToArray();
 				normals.AddRange(new Vector3[] { normal, normal, normal, normal });
-				triangles.AddRange(new int[] { 4, 6, 5, 4, 7, 6, 5, 6, 4, 6, 7, 4 });
+				var backWallTriangles = new int[] { 4, 6, 5, 4, 7, 6 };
+				triangles.AddRange(backWallTriangles);
+				if (generateBackFaces) {
+					triangles.AddRange(backWallTriangles.AsEnumerable().Reverse().ToList());
+				}
 			}
 
 			mesh.vertices = vertices.ToArray();
@@ -1038,6 +1030,18 @@ public class RoomCreator : MonoBehaviour
 			// TODO use a material loader that has this dictionary
 			//var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
 			var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
+
+
+			var visibilityPointsGO = CreateVisibilityPointsOnPlane(
+				toCreate.p0,
+				p0p1,
+				(toCreate.p1 + Vector3.up * toCreate.height) - toCreate.p1,
+				visibilityPointInterval
+			);
+
+			setWallSimObjPhysics(wallGO, $"wall_{index}", visibilityPointsGO, boxC);
+
+			visibilityPointsGO.transform.parent = wallGO.transform;
 			//if (mats.ContainsKey(wall.materialId)) {
 			//Debug.Log("MAT query " +  wall.materialId+ " " + string.Join(",", mats.Select(m => m.Value.name).ToArray()) + " len " + mats.Count);
 			meshRenderer.material = mats[toCreate.materialId];
@@ -1061,13 +1065,13 @@ public class RoomCreator : MonoBehaviour
 
 
 			var vertices = new List<Vector3>() {
-			wall.p0, wall.p0 + new Vector3(0.0f, wall.height, 0.0f), wall.p1 +  new Vector3(0.0f, wall.height, 0.0f), wall.p1
-		};
+				wall.p0, wall.p0 + new Vector3(0.0f, wall.height, 0.0f), wall.p1 +  new Vector3(0.0f, wall.height, 0.0f), wall.p1
+			};
 
 			var triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
 			var uv = new List<Vector2>() {
-			new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)
-		};
+				new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)
+			};
 			var normals = new List<Vector3>() { -normal, -normal, -normal, -normal };
 
 			// if it is a double wall
@@ -1109,6 +1113,7 @@ public class RoomCreator : MonoBehaviour
 			// TODO use a material loader that has this dictionary
 			//var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
 			var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
+
 			//if (mats.ContainsKey(wall.materialId)) {
 			//Debug.Log("MAT query " +  wall.materialId+ " " + string.Join(",", mats.Select(m => m.Value.name).ToArray()) + " len " + mats.Count);
 			meshRenderer.material = mats[wall.materialId];
@@ -1162,6 +1167,38 @@ public class RoomCreator : MonoBehaviour
 
 			receptacleTriggerBox.transform.parent = floorGameObject.transform;
 			return receptacleTriggerBox;
+		}
+
+		public static SimObjPhysics setWallSimObjPhysics(
+			GameObject wallGameObject,
+			string simObjId,
+			GameObject visibilityPoints,
+			Collider collider
+		) {
+			var boundingBox = new GameObject("BoundingBox");
+			var bbCollider = boundingBox.AddComponent<BoxCollider>();
+			bbCollider.enabled = false;
+			boundingBox.transform.parent = wallGameObject.transform;
+
+			wallGameObject.tag = "SimObjPhysics";
+
+			var simObjPhysics = wallGameObject.AddComponent<SimObjPhysics>();
+			simObjPhysics.objectID = simObjId;
+			simObjPhysics.ObjType = SimObjType.Wall;
+			simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Wall;
+			simObjPhysics.SecondaryProperties = new SimObjSecondaryProperty[] { };
+
+			simObjPhysics.BoundingBox = boundingBox;
+
+			simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
+
+			// simObjPhysics.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBox };
+			simObjPhysics.MyColliders = new Collider[] { collider };
+
+			simObjPhysics.transform.parent = wallGameObject.transform;
+
+			// receptacleTriggerBox.AddComponent<Contains>();
+			return simObjPhysics;
 		}
 
 		public static SimObjPhysics setRoomSimObjectPhysics(

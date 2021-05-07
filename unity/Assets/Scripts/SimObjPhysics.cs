@@ -40,14 +40,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[SerializeField]
 	public Transform[] VisibilityPoints = null;
 
-    [Header("If this object is a Receptacle, put all trigger boxes here")]
+	[Header("If this object is a Receptacle, put all trigger boxes here")]
 	[SerializeField]
 	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	[Header("State information Bools here")]
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 	public bool isVisible = false;
-	#endif
+#endif
 	public bool isInteractable = false;
 	public bool isInAgentHand = false;
 
@@ -86,50 +86,47 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public bool inMotion = false;
 
-    //count of number of other sim objects this object has hit, if agent is drone
-    public int numSimObjHit = 0;
-    public int numFloorHit = 0;
-    public int numStructureHit = 0;
+	//count of number of other sim objects this object has hit, if agent is drone
+	public int numSimObjHit = 0;
+	public int numFloorHit = 0;
+	public int numStructureHit = 0;
 
-    //the velocity of this object from the last frame
-    public float lastVelocity = 0;//start at zero assuming at rest
+	//the velocity of this object from the last frame
+	public float lastVelocity = 0;//start at zero assuming at rest
 
-    //reference to this gameobject's rigidbody
-    private Rigidbody myRigidbody; 
+	//reference to this gameobject's rigidbody
+	private Rigidbody myRigidbody;
 
-    // properties initialized during Start()
-    public bool IsReceptacle;
-    public bool IsPickupable;
-    public bool IsMoveable;
+	// properties initialized during Start()
+	public bool IsReceptacle;
+	public bool IsPickupable;
+	public bool IsMoveable;
 	public bool isStatic;
-    public bool IsToggleable;
-    public bool IsOpenable;
-    public bool IsBreakable;
-    public bool IsFillable;
-    public bool IsDirtyable;
-    public bool IsCookable;
-    public bool IsSliceable;
+	public bool IsToggleable;
+	public bool IsOpenable;
+	public bool IsBreakable;
+	public bool IsFillable;
+	public bool IsDirtyable;
+	public bool IsCookable;
+	public bool IsSliceable;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
-    private Vector3 boundingBoxCachePosition;
-    private Quaternion boundingBoxCacheRotation;
-    private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
-    private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
+	private Vector3 boundingBoxCachePosition;
+	private Quaternion boundingBoxCacheRotation;
+	private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
+	private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
-	public float GetTimerResetValue()
-	{
+	public float GetTimerResetValue() {
 		return TimerResetValue;
 	}
-	
-	public void SetHowManySecondsUntilRoomTemp(float f)
-	{
+
+	public void SetHowManySecondsUntilRoomTemp(float f) {
 		TimerResetValue = f;
 		HowManySecondsUntilRoomTemp = f;
 	}
 	private bool StartRoomTempTimer = false;
 
-	public void SetStartRoomTempTimer(bool b)
-	{
+	public void SetStartRoomTempTimer(bool b) {
 		StartRoomTempTimer = b;
 	}
 
@@ -137,10 +134,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//actively contained by the sim object at the moment of pickup.
 	public List<SimObjPhysics> ContainedObjectReferences;
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 	//all objects currently contained by this receptacle
 	public List<GameObject> CurrentlyContains;
-	#endif
+#endif
 
 	public class PhysicsMaterialValues
 	{
@@ -148,228 +145,201 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		public float StaticFriction;
 		public float Bounciness;
 
-		public PhysicsMaterialValues (float dFriction, float sFriction, float b)
-		{
+		public PhysicsMaterialValues(float dFriction, float sFriction, float b) {
 			DynamicFriction = dFriction;
 			StaticFriction = sFriction;
 			Bounciness = b;
 		}
 	}
 
-	public void AddToContainedObjectReferences(SimObjPhysics t)
-	{
-        ContainedObjectReferences.Add(t);
+	public void AddToContainedObjectReferences(SimObjPhysics t) {
+		ContainedObjectReferences.Add(t);
 	}
 
-    public void RemoveFromContainedObjectReferences(SimObjPhysics t)
-    {
-        ContainedObjectReferences.Remove(t);
-    }
-
-
-    private void regenerateBoundingBoxes() {
-        Vector3 position = this.gameObject.transform.position;
-        Quaternion rotation = this.gameObject.transform.rotation;
-        // position and rotation will vary slightly due to floating point errors
-        // so we use a very small epsilon value for comparison instead of 
-        // checking equality
-        if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
-            return;
-        }
-
-        this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
-        this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
-            
-
-        boundingBoxCacheRotation = rotation;
-        boundingBoxCachePosition = position;
-    }
-
-    private AxisAlignedBoundingBox axisAlignedBoundigBox() {
-        AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
-
-        //get all colliders on the sop, excluding colliders if they are not enabled
-        Collider[] cols = this.GetComponentsInChildren<Collider>();
-
-        //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
-        if(cols.Length == 0)
-        {
-            SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
-            if(sopc.IsBroken || sopc.IsSliced)
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
-                #endif
-                return b;
-            }
-
-            else
-            {
-                #if UNITY_EDITOR
-                Debug.Log("Something went wrong, no Colliders were found on" + this.name);
-                #endif
-                return b;
-            }
-        }
-
-        Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
-
-        foreach(Collider c in cols)
-        {
-            if(c.enabled)
-            bounding.Encapsulate(c.bounds);
-        }
-
-        //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
-        List<float[]> cornerPoints = new List<float[]>();
-        float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
-        };
-        float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
-        };
-        float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
-        };
-        foreach(float x in xs) {
-            foreach (float y in ys) {
-                foreach (float z in zs) {
-                    cornerPoints.Add(new float[]{x, y, z});
-                }
-            }
-        }
-        b.cornerPoints = cornerPoints.ToArray();
-
-        b.center = bounding.center;//also return the center of this bounding box in world coordinates
-        b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
-
-        return b;
-    }
-
-    private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
-      if(this.IsPickupable || this.IsMoveable) {
-        ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
-
-        if(this.BoundingBox== null)
-        {
-            Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
-            return b;
-        }
-
-        BoxCollider col = this.BoundingBox.GetComponent<BoxCollider>();
-        
-        List<Vector3> points = new List<Vector3>();
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
-        points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
-
-        List<float[]> cornerPoints = new List<float[]>();
-        foreach(Vector3 p in points) {
-            cornerPoints.Add(new float[]{p.x, p.y, p.z});
-        }
-
-        b.cornerPoints = cornerPoints.ToArray();
-
-        return b;
-      }
-
-      return null;
-    }
-
-    public AxisAlignedBoundingBox AxisAlignedBoundingBox {
-        get {
-            this.regenerateBoundingBoxes();
-            return this.cachedAxisAlignedBoundingBox;
-        }
-    }
-
-    public ObjectOrientedBoundingBox ObjectOrientedBoundingBox {
-        get {
-            this.regenerateBoundingBoxes();
-            return this.cachedObjectOrientedBoundingBox;
-        }
-    }
-
-	public void ClearContainedObjectReferences()
-	{
-			ContainedObjectReferences.Clear();
+	public void RemoveFromContainedObjectReferences(SimObjPhysics t) {
+		ContainedObjectReferences.Remove(t);
 	}
 
-	public string ObjectID
-	{
-		get
-		{
+
+	private void regenerateBoundingBoxes() {
+		Vector3 position = this.gameObject.transform.position;
+		Quaternion rotation = this.gameObject.transform.rotation;
+		// position and rotation will vary slightly due to floating point errors
+		// so we use a very small epsilon value for comparison instead of 
+		// checking equality
+		if (Vector3.Distance(position, boundingBoxCachePosition) < 0.0001f && Quaternion.Angle(rotation, boundingBoxCacheRotation) < 0.0001f) {
+			return;
+		}
+
+		this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundigBox();
+		this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
+
+
+		boundingBoxCacheRotation = rotation;
+		boundingBoxCachePosition = position;
+	}
+
+	private AxisAlignedBoundingBox axisAlignedBoundigBox() {
+		AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+
+		//get all colliders on the sop, excluding colliders if they are not enabled
+		Collider[] cols = this.GetComponentsInChildren<Collider>();
+
+		//0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
+		if (cols.Length == 0) {
+			SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
+			if (sopc.IsBroken || sopc.IsSliced) {
+#if UNITY_EDITOR
+				Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
+#endif
+				return b;
+			} else {
+#if UNITY_EDITOR
+				Debug.Log("Something went wrong, no Colliders were found on" + this.name);
+#endif
+				return b;
+			}
+		}
+
+		Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
+
+		foreach (Collider c in cols) {
+			if (c.enabled)
+				bounding.Encapsulate(c.bounds);
+		}
+
+		//ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+		List<float[]> cornerPoints = new List<float[]>();
+		float[] xs = new float[]{
+			bounding.center.x + bounding.size.x/2f,
+			bounding.center.x - bounding.size.x/2f
+		};
+		float[] ys = new float[]{
+			bounding.center.y + bounding.size.y/2f,
+			bounding.center.y - bounding.size.y/2f
+		};
+		float[] zs = new float[]{
+			bounding.center.z + bounding.size.z/2f,
+			bounding.center.z - bounding.size.z/2f
+		};
+		foreach (float x in xs) {
+			foreach (float y in ys) {
+				foreach (float z in zs) {
+					cornerPoints.Add(new float[] { x, y, z });
+				}
+			}
+		}
+		b.cornerPoints = cornerPoints.ToArray();
+
+		b.center = bounding.center;//also return the center of this bounding box in world coordinates
+		b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+
+		return b;
+	}
+
+	private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
+		if (this.IsPickupable || this.IsMoveable) {
+			ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
+
+			if (this.BoundingBox == null) {
+				Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
+				return b;
+			}
+
+			BoxCollider col = this.BoundingBox.GetComponent<BoxCollider>();
+
+			List<Vector3> points = new List<Vector3>();
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
+			points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
+
+			List<float[]> cornerPoints = new List<float[]>();
+			foreach (Vector3 p in points) {
+				cornerPoints.Add(new float[] { p.x, p.y, p.z });
+			}
+
+			b.cornerPoints = cornerPoints.ToArray();
+
+			return b;
+		}
+
+		return null;
+	}
+
+	public AxisAlignedBoundingBox AxisAlignedBoundingBox {
+		get {
+			this.regenerateBoundingBoxes();
+			return this.cachedAxisAlignedBoundingBox;
+		}
+	}
+
+	public ObjectOrientedBoundingBox ObjectOrientedBoundingBox {
+		get {
+			this.regenerateBoundingBoxes();
+			return this.cachedObjectOrientedBoundingBox;
+		}
+	}
+
+	public void ClearContainedObjectReferences() {
+		ContainedObjectReferences.Clear();
+	}
+
+	public string ObjectID {
+		get {
 			return objectID;
 		}
 
-		set
-		{
+		set {
 			objectID = value;
 		}
 	}
 
-	public SimObjType ObjType
-	{
-		get
-		{
+	public SimObjType ObjType {
+		get {
 			return Type;
 		}
-        
-        set 
-        {
-            Type = value;
-        }
+
+		set {
+			Type = value;
+		}
 	}
 
-	public int ReceptacleCount
-	{
-		get
-		{
+	public int ReceptacleCount {
+		get {
 			return 0;
 		}
 	}
 
-	public List<string> ReceptacleObjectIds
-	{
-		get
-		{
+	public List<string> ReceptacleObjectIds {
+		get {
 			return this.GetAllSimObjectsInReceptacleTriggersByObjectID();
 		}
 	}
 
 	//get all objects contained by this receptacle object as a list of SimObjPhysics
-	public List<SimObjPhysics> SimObjectsContainedByReceptacle
-	{
-		get
-		{
+	public List<SimObjPhysics> SimObjectsContainedByReceptacle {
+		get {
 			return this.GetAllSimObjectsInReceptacleTriggers();
 		}
 
 	}
 
 	//return mass of object
-	public float Mass
-	{
-		get
-		{
+	public float Mass {
+		get {
 			return this.GetComponent<Rigidbody>().mass;
 		}
 	}
 
 
 	//if this pickupable object is being held by the agent right
-	public bool isPickedUp
-	{
-		get
-		{
+	public bool isPickedUp {
+		get {
 			return this.isInAgentHand;
 		}
 	}
@@ -377,131 +347,95 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//note some objects are not toggleable, but can still return the IsToggled meta value (ex: stove burners)
 	//stove burners are not toggleable directly, a stove knob controls them.
-	private bool isToggleable
-	{
-		get 
-		{ 
-			if(this.GetComponent<CanToggleOnOff>())
-			{
+	private bool isToggleable {
+		get {
+			if (this.GetComponent<CanToggleOnOff>()) {
 				//if this object is self controlled, it is toggleable
-				if(this.GetComponent<CanToggleOnOff>().ReturnSelfControlled())
-				return true;
+				if (this.GetComponent<CanToggleOnOff>().ReturnSelfControlled())
+					return true;
 
 				//if it is not self controlled (meaning controlled by another sim object) return not toggleable
 				//although if this object is not toggleable, it may still return isToggled as a state (see IsToggled below)
 				else
+					return false;
+			} else
 				return false;
-			}
-
-			else
-			return false;
 			//return this.GetComponent<CanToggleOnOff>(); 
 		}
 	}
 
-	public bool IsToggled
-	{
-		get
-		{
+	public bool IsToggled {
+		get {
 			//note: this can return "toggled on or off" info about objects that are controlled by other sim objects
 			//for example, a stove burner will return if it is on/off even though the burner itself cannot be interacted with
 			//to toggle the on/off state. Stove burners and objects like it can only have their state toggled by a sim object
 			//that controls it (in this case stove knob -controls-> stove burner)
 			CanToggleOnOff ctoo = this.GetComponent<CanToggleOnOff>();
 
-			if (ctoo != null)
-			{
+			if (ctoo != null) {
 				return ctoo.isOn;
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
 
-	public float openness
-	{
-		get {return this.GetComponent<CanOpen_Object>().currentOpenness;}
+	public float openness {
+		get { return this.GetComponent<CanOpen_Object>().currentOpenness; }
 	}
 
-	public bool IsOpen
-	{
-		get
-		{
+	public bool IsOpen {
+		get {
 			CanOpen_Object coo = this.GetComponent<CanOpen_Object>();
 
-			if (coo != null)
-			{
+			if (coo != null) {
 				return coo.isOpen;
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
-	public bool IsBroken
-	{
-		get
-		{
+	public bool IsBroken {
+		get {
 			Break b = this.GetComponentInChildren<Break>();
-			if(b != null)
-			{
+			if (b != null) {
 				return b.isBroken();
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
-	public bool IsFilled
-	{
-		get
-		{
+	public bool IsFilled {
+		get {
 			Fill f = this.GetComponent<Fill>();
-			if(f != null)
-			{
+			if (f != null) {
 				return f.IsFilled();
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
-	public bool IsDirty
-	{
-		get
-		{
+	public bool IsDirty {
+		get {
 			Dirty deedsdonedirtcheap = this.GetComponent<Dirty>();
-			if(deedsdonedirtcheap != null)
-			{
+			if (deedsdonedirtcheap != null) {
 				return deedsdonedirtcheap.IsDirty();
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
-	public bool IsCooked
-	{
-		get
-		{
+	public bool IsCooked {
+		get {
 			CookObject tasty = this.GetComponent<CookObject>();
-			if(tasty != null)
-			{
+			if (tasty != null) {
 				return tasty.IsCooked();
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
@@ -509,63 +443,48 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
 	//will still reflect it's last position at time of being sliced. This is similar to break
-	public bool IsSliced
-	{
-		get
-		{
+	public bool IsSliced {
+		get {
 			SliceObject kars = this.GetComponent<SliceObject>();
-			if(kars != null)
-			{
+			if (kars != null) {
 				return kars.IsSliced();
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 
 	///these aren't in yet, just placeholder
-	public bool CanBeUsedUp
-	{
-		get
-		{
+	public bool CanBeUsedUp {
+		get {
 			return false;
 		}
 	}
-	public bool IsUsedUp
-	{
-		get
-		{
+	public bool IsUsedUp {
+		get {
 			return false;
 		}
 	}
 	/// end placeholder stuff
 
 	//return temperature enum here
-	public ObjectMetadata.Temperature CurrentObjTemp
-	{
-		get
-		{
+	public ObjectMetadata.Temperature CurrentObjTemp {
+		get {
 			return CurrentTemperature;
 		}
 	}
 
-	private void FindMySpawnPoints(bool ReturnPointsCloseToAgent)
-	{
+	private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
 		List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
-		foreach(GameObject rtb in ReceptacleTriggerBoxes)
-		{
+		foreach (GameObject rtb in ReceptacleTriggerBoxes) {
 			Contains containsScript = rtb.GetComponent<Contains>();
 			temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
 		}
 
-		if(ReturnPointsCloseToAgent)
-		{
+		if (ReturnPointsCloseToAgent) {
 			GameObject agent = GameObject.Find("FPSController");
 
-			temp.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
-			{
+			temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
 				return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
 			});
 		}
@@ -573,22 +492,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		MySpawnPoints = temp;
 	}
 
-    //return spawn points for this receptacle objects based on the top part of all trigger boxes
-    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox(bool forceVisible = false)
-    {
-        List<Vector3> points = new List<Vector3>();
-        foreach(GameObject rtb in ReceptacleTriggerBoxes)
-        {
-            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTopOfTriggerBox());
-        }
+	//return spawn points for this receptacle objects based on the top part of all trigger boxes
+	public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox(bool forceVisible = false) {
+		List<Vector3> points = new List<Vector3>();
+		foreach (GameObject rtb in ReceptacleTriggerBoxes) {
+			points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTopOfTriggerBox());
+		}
 
-        return points;
-    }
+		return points;
+	}
 
 	//set ReturnPointsCloseToAgent to true if only points near the agent are wanted
 	//set to false if all potential points on the object are wanted
-	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent)
-	{
+	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
 		FindMySpawnPoints(ReturnPointsCloseToAgent);
 		return MySpawnPoints;
 	}
@@ -597,105 +513,84 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		contactPointsDictionary.Clear();
 	}
 
-	void OnCollisionEnter (Collision col)	
-    {		
+	void OnCollisionEnter(Collision col) {
 		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		//physics uppon being touched/collided
-        DroneFPSAgentController droneController;
+		DroneFPSAgentController droneController;
 
-        if(GameObject.Find("FPSController"))
-        {
-            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
-        }
+		if (GameObject.Find("FPSController")) {
+			droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
+		} else {
+			Debug.LogError("No FPSController in scene!");
+			return;
+		}
 
-        else
-        {
-            Debug.LogError("No FPSController in scene!");
-            return;
-        }
-
-        if(!droneController.enabled)
-        {
-            return;
-        }
+		if (!droneController.enabled) {
+			return;
+		}
 
 		//GameObject agent = GameObject.Find("FPSController");
-		if(col.transform.GetComponentInParent<SimObjPhysics>())
-		{ 
-            //add a check for if it's for initialization
-            if (droneController.HasLaunch(this))
-            {   
-                //add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this))
-                {   
-                    //emperically find the relative velocity > 1 means a "real" hit.
-                    if (col.relativeVelocity.magnitude > 1)
-                    {
-                        //make sure we only count hit once per time, not for all collision contact points of an object.
-                        if (!contactPointsDictionary.ContainsKey(col.collider))
-                        {
-                            numSimObjHit++;
-                        }
-                    }
-                }
-            }
+		if (col.transform.GetComponentInParent<SimObjPhysics>()) {
+			//add a check for if it's for initialization
+			if (droneController.HasLaunch(this)) {
+				//add a check for if this is the object caought by the drone
+				if (!droneController.isObjectCaught(this)) {
+					//emperically find the relative velocity > 1 means a "real" hit.
+					if (col.relativeVelocity.magnitude > 1) {
+						//make sure we only count hit once per time, not for all collision contact points of an object.
+						if (!contactPointsDictionary.ContainsKey(col.collider)) {
+							numSimObjHit++;
+						}
+					}
+				}
+			}
 		}
 
 
 		//add a check for if the hitting one is a structure object
-        else if (col.transform.GetComponentInParent<StructureObject>())
-        {   
-            //add a check for if it's for initialization
-            if (droneController.HasLaunch(this))
-            {   
-                //add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this))
-                {   
-                    //emperically find the relative velocity > 1 means a "real" hit.
-                    if (col.relativeVelocity.magnitude > 1)
-                    {   
-                        //make sure we only count hit once per time, not for all collision contact points of an object.
-                        if (!contactPointsDictionary.ContainsKey(col.collider))
-                        {
-                            numStructureHit++;
-                            //check if structure hit is a floor
-                            if (col.transform.GetComponentInParent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
-                            {
-                                numFloorHit++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
+		else if (col.transform.GetComponentInParent<StructureObject>()) {
+			//add a check for if it's for initialization
+			if (droneController.HasLaunch(this)) {
+				//add a check for if this is the object caought by the drone
+				if (!droneController.isObjectCaught(this)) {
+					//emperically find the relative velocity > 1 means a "real" hit.
+					if (col.relativeVelocity.magnitude > 1) {
+						//make sure we only count hit once per time, not for all collision contact points of an object.
+						if (!contactPointsDictionary.ContainsKey(col.collider)) {
+							numStructureHit++;
+							//check if structure hit is a floor
+							if (col.transform.GetComponentInParent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor) {
+								numFloorHit++;
+							}
+						}
+					}
+				}
+			}
+		}
+
 		contactPointsDictionary[col.collider] = col.contacts;
 	}
 
-	void OnCollisionExit (Collision col)	
-    {
+	void OnCollisionExit(Collision col) {
 		contactPointsDictionary.Remove(col.collider);
 	}
 
 #if UNITY_EDITOR
 
-    [UnityEditor.MenuItem("Thor/Add GUID to Object Names")]
-    public static void AddGUIDToSimObjPhys()
-    {
+	[UnityEditor.MenuItem("Thor/Add GUID to Object Names")]
+	public static void AddGUIDToSimObjPhys() {
 		SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>();//Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
-        foreach(SimObjPhysics sop in objects)
-        {
-            Guid g;
-            g = Guid.NewGuid();
-            sop.name = sop.GetComponent<SimObjPhysics>().Type.ToString()+ "_" + g.ToString("N").Substring(0, 8);
-        }
+		foreach (SimObjPhysics sop in objects) {
+			Guid g;
+			g = Guid.NewGuid();
+			sop.name = sop.GetComponent<SimObjPhysics>().Type.ToString() + "_" + g.ToString("N").Substring(0, 8);
+		}
 
-        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-    }
-	
+		EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+	}
+
 	[UnityEditor.MenuItem("SimObjectPhysics/Create RB Collider")]
-	public static void CreateRBCollider()
-	{
+	public static void CreateRBCollider() {
 		GameObject prefabRoot = Selection.activeGameObject;
 		//print(prefabRoot.name);
 
@@ -717,23 +612,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	[UnityEditor.MenuItem("SimObjectPhysics/Change All Lights to Soft")]
-	public static void AllOfTheLights()
-	{
+	public static void AllOfTheLights() {
 		Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
-		foreach(Light l in lights)
-		{
+		foreach (Light l in lights) {
 			l.shadows = LightShadows.Soft;
 		}
 	}
 
 	[UnityEditor.MenuItem("SimObjectPhysics/Create Sim Obj from Mesh &r")]
-	public static void CreateFromMesh()
-	{
+	public static void CreateFromMesh() {
 		GameObject prefabRoot = Selection.activeGameObject;
-        GameObject top = new GameObject(prefabRoot.name);
+		GameObject top = new GameObject(prefabRoot.name);
 		top.transform.position = prefabRoot.transform.position;
 		top.transform.rotation = prefabRoot.transform.rotation;
-        prefabRoot.name = "mesh";
+		prefabRoot.name = "mesh";
 
 		prefabRoot.transform.SetParent(top.transform);
 
@@ -743,216 +635,189 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 &e")]
-	public static void ResetTransformScale()
-	{
+	public static void ResetTransformScale() {
 		GameObject selected = Selection.activeGameObject;
 
-		List <Transform> selectedchildren = new List <Transform>();
+		List<Transform> selectedchildren = new List<Transform>();
 
-		foreach(Transform t in selected.transform)
-		{
+		foreach (Transform t in selected.transform) {
 			//print(t.name);
 			selectedchildren.Add(t);
 			//t.SetParent(null);
 		}
 
-		foreach(Transform yes in selectedchildren)
-		{
+		foreach (Transform yes in selectedchildren) {
 			yes.SetParent(null);
 		}
 
-		selected.transform.localScale = new Vector3 (1, 1, 1);
+		selected.transform.localScale = new Vector3(1, 1, 1);
 
-		foreach(Transform t in selectedchildren)
-		{
+		foreach (Transform t in selectedchildren) {
 			t.SetParent(selected.transform);
 		}
 
 
 	}
 
-    [UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
-    public static void ResetTransform()
-    {
-        GameObject selected = Selection.activeGameObject;
+	[UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
+	public static void ResetTransform() {
+		GameObject selected = Selection.activeGameObject;
 
-        List<Transform> selectedchildren = new List<Transform>();
+		List<Transform> selectedchildren = new List<Transform>();
 
-        foreach (Transform t in selected.transform)
-        {
-            //print(t.name);
-            selectedchildren.Add(t);
-            //t.SetParent(null);
-        }
+		foreach (Transform t in selected.transform) {
+			//print(t.name);
+			selectedchildren.Add(t);
+			//t.SetParent(null);
+		}
 
-        foreach (Transform yes in selectedchildren)
-        {
-            yes.SetParent(null);
-        }
+		foreach (Transform yes in selectedchildren) {
+			yes.SetParent(null);
+		}
 
-        selected.transform.localPosition = new Vector3(0, 0, 0);
-        selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
-        selected.transform.localScale = new Vector3(1, 1, 1);
+		selected.transform.localPosition = new Vector3(0, 0, 0);
+		selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
+		selected.transform.localScale = new Vector3(1, 1, 1);
 
-        foreach (Transform t in selectedchildren)
-        {
-            t.SetParent(selected.transform);
-        }
+		foreach (Transform t in selectedchildren) {
+			t.SetParent(selected.transform);
+		}
 
 
-    }
+	}
 
-    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
-    public static void RotateTheBoxFlap()
-    {
-        GameObject selected = Selection.activeGameObject;
+	[UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
+	public static void RotateTheBoxFlap() {
+		GameObject selected = Selection.activeGameObject;
 
-        List<Transform> selectedchildren = new List<Transform>();
+		List<Transform> selectedchildren = new List<Transform>();
 
-        foreach (Transform t in selected.transform)
-        {
-            //print(t.name);
-            selectedchildren.Add(t);
-            //t.SetParent(null);
-        }
+		foreach (Transform t in selected.transform) {
+			//print(t.name);
+			selectedchildren.Add(t);
+			//t.SetParent(null);
+		}
 
-        foreach (Transform yes in selectedchildren)
-        {
-            yes.SetParent(null);
-        }
+		foreach (Transform yes in selectedchildren) {
+			yes.SetParent(null);
+		}
 
-        float initialRot = selected.transform.localRotation.eulerAngles.x;
+		float initialRot = selected.transform.localRotation.eulerAngles.x;
 
 		Vector3 setrot = new Vector3(0, 90, 180 - initialRot); //This is weird and we don't know why
 
-        selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
-        selected.transform.localScale = new Vector3(1, 1, 1);
+		selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
+		selected.transform.localScale = new Vector3(1, 1, 1);
 
-        foreach (Transform t in selectedchildren)
-        {
-            t.SetParent(selected.transform);
-        }
-    }
+		foreach (Transform t in selectedchildren) {
+			t.SetParent(selected.transform);
+		}
+	}
 
 #endif
 
-    private void initializeProperties() {
-        this.IsReceptacle = Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && ReceptacleTriggerBoxes != null;
-        this.IsPickupable = this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-        this.IsMoveable = this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+	private void initializeProperties() {
+		this.IsReceptacle = Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && ReceptacleTriggerBoxes != null;
+		this.IsPickupable = this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+		this.IsMoveable = this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
 		this.isStatic = this.PrimaryProperty == SimObjPrimaryProperty.Static;
-        this.IsToggleable = this.isToggleable;
-        this.IsOpenable = this.GetComponent<CanOpen_Object>();
-        this.IsBreakable = this.GetComponentInChildren<Break>();
-        this.IsFillable = this.GetComponent<Fill>();
-        this.IsDirtyable = this.GetComponent<Dirty>();
-        this.IsCookable = this.GetComponent<CookObject>();
-        this.IsSliceable = this.GetComponent<SliceObject>();
-        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
+		this.IsToggleable = this.isToggleable;
+		this.IsOpenable = this.GetComponent<CanOpen_Object>();
+		this.IsBreakable = this.GetComponentInChildren<Break>();
+		this.IsFillable = this.GetComponent<Fill>();
+		this.IsDirtyable = this.GetComponent<Dirty>();
+		this.IsCookable = this.GetComponent<CookObject>();
+		this.IsSliceable = this.GetComponent<SliceObject>();
+		this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
+		this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
 
-    }
+	}
 
-    // Use this for initialization
-    void Start()
-	{
+	// Use this for initialization
+	void Start() {
 		//For debug in editor only
-		#if UNITY_EDITOR
+#if UNITY_EDITOR
 		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
-		if (temp.Contains(SimObjSecondaryProperty.Receptacle))
-		{
-			if (ReceptacleTriggerBoxes.Length == 0)
-			{
+		if (temp.Contains(SimObjSecondaryProperty.Receptacle)) {
+			if (ReceptacleTriggerBoxes.Length == 0) {
 				Debug.LogError(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
 			}
 		}
 
-		if(temp.Contains(SimObjSecondaryProperty.ObjectSpecificReceptacle))
-		{
-			if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
-			{
+		if (temp.Contains(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+			if (!gameObject.GetComponent<ObjectSpecificReceptacle>()) {
 				Debug.LogError(this.name + " is missing the ObjectSpecificReceptacle component!");
 			}
 		}
 
-		if(this.tag != "SimObjPhysics")
-		{
+		if (this.tag != "SimObjPhysics") {
 			Debug.LogError(this.name + " is missing SimObjPhysics tag!");
 		}
 
-		if(IsPickupable || IsMoveable)
-		{
-			if(salientMaterials.Length == 0)
-			{
+		if (IsPickupable || IsMoveable) {
+			if (salientMaterials.Length == 0) {
 				Debug.LogError(this.name + " is missing Salient Materials array!");
 			}
 		}
 
-        if(this.transform.localScale != new Vector3(1, 1, 1))
-        {
-            Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
-        }
-		#endif
-		
+		if (this.transform.localScale != new Vector3(1, 1, 1)) {
+			Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
+		}
+#endif
+
 		//end debug setup stuff
 
 		OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
 
-		for(int i = 0; i < MyColliders.Length; i++)
-		{
-			OriginalPhysicsMaterialValuesForAllMyColliders[i] = 
+		for (int i = 0; i < MyColliders.Length; i++) {
+			OriginalPhysicsMaterialValuesForAllMyColliders[i] =
 			new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
 		}
 
-        myRigidbody = gameObject.GetComponent<Rigidbody>();
+		myRigidbody = gameObject.GetComponent<Rigidbody>();
+		if (myRigidbody != null) {
+			Rigidbody rb = myRigidbody;
 
-		Rigidbody rb = myRigidbody;
+			RBoriginalAngularDrag = rb.angularDrag;
+			RBoriginalDrag = rb.drag;
 
-		RBoriginalAngularDrag = rb.angularDrag;
-		RBoriginalDrag = rb.drag;
+			//default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
+			if (myRigidbody.drag == 0) {
+				myRigidbody.drag = 0.01f;
+			}
+			if (myRigidbody.angularDrag == 0) {
+				myRigidbody.angularDrag = 0.01f;
+			}
+		}
 
 		TimerResetValue = HowManySecondsUntilRoomTemp;
 
 		sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+		Debug.Log($"NULL SCENEMANAGER ? {sceneManager == null} name {this.name}");
 
-        //default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
-        if(myRigidbody.drag == 0)
-        {
-            myRigidbody.drag = 0.01f;
-        }
-        if(myRigidbody.angularDrag == 0)
-        {
-            myRigidbody.angularDrag = 0.01f;
-        }
-
-        initializeProperties();
+		initializeProperties();
 	}
 
-	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
-	{
+	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {
 		bool result = false;
 		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
 
-		if (temp.Contains(prop))
-		{
+		if (temp.Contains(prop)) {
 			result = true;
 		}
 
 		return result;
 	}
 	// Update is called once per frame
-	void Update()
-	{
+	void Update() {
 		isInteractable = false;
 
-		if(sceneManager.AllowDecayTemperature)//only do this if the scene is initialized to use Temperature decay over time
+		if (sceneManager.AllowDecayTemperature)//only do this if the scene is initialized to use Temperature decay over time
 		{
 			//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
-			if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
-			{
+			if (CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true) {
 				HowManySecondsUntilRoomTemp -= Time.deltaTime;
-				if(HowManySecondsUntilRoomTemp < 0)
-				{
+				if (HowManySecondsUntilRoomTemp < 0) {
 					CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
 					HowManySecondsUntilRoomTemp = TimerResetValue;
 				}
@@ -961,63 +826,54 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			StartRoomTempTimer = true;
 		}
 	}
-    
-    void LateUpdate()
-    {
-        //only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
-        if(sceneManager.physicsSimulationPaused == false)
-        //record this object's current velocity
-        lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
-    }
-	private void FixedUpdate()
-	{
+
+	void LateUpdate() {
+		//only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
+		if (sceneManager.physicsSimulationPaused == false && myRigidbody != null) {
+			//record this object's current velocity
+			lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
+		}
+	}
+	private void FixedUpdate() {
 		//isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
-	public void ApplyForce(ServerAction action)
-	{
+	public void ApplyForce(ServerAction action) {
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 
-        if(myrb.IsSleeping())
-        myrb.WakeUp();
-        
+		if (myrb.IsSleeping())
+			myrb.WakeUp();
+
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
 	}
 
-    //overload that doesn't use a server action
-    public void ApplyForce(Vector3 dir, float magnitude)
-    {
+	//overload that doesn't use a server action
+	public void ApplyForce(Vector3 dir, float magnitude) {
 
-        Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 
-        if(myrb.IsSleeping())
-        myrb.WakeUp();
+		if (myrb.IsSleeping())
+			myrb.WakeUp();
 
-        myrb.isKinematic = false;
-        myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        myrb.AddForce(dir * magnitude);
-    }
+		myrb.isKinematic = false;
+		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		myrb.AddForce(dir * magnitude);
+	}
 
 	//return all sim objects contained by this object if it is a receptacle
-	public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers()
-	{
+	public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers() {
 		List<SimObjPhysics> objs = new List<SimObjPhysics>();
 
-		if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-		{
-			if(ReceptacleTriggerBoxes != null)
-			{
-				foreach (GameObject go in ReceptacleTriggerBoxes)
-				{
-					foreach(SimObjPhysics sop in go.GetComponent<Contains>().CurrentlyContainedObjects())
-					{
-						if(!objs.Contains(sop))
-						{
-                            //print(sop.transform.name);
+		if (DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+			if (ReceptacleTriggerBoxes != null) {
+				foreach (GameObject go in ReceptacleTriggerBoxes) {
+					foreach (SimObjPhysics sop in go.GetComponent<Contains>().CurrentlyContainedObjects()) {
+						if (!objs.Contains(sop)) {
+							//print(sop.transform.name);
 							objs.Add(sop);
 						}
 					}
@@ -1029,21 +885,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//return all sim objects by object ID contained by this object if it is a receptacle
-	public List<string> GetAllSimObjectsInReceptacleTriggersByObjectID()
-	{
+	public List<string> GetAllSimObjectsInReceptacleTriggersByObjectID() {
 		List<string> objs = new List<string>();
 
-		if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-		{
-			if(ReceptacleTriggerBoxes != null)
-			{
-				foreach (GameObject go in ReceptacleTriggerBoxes)
-				{
-					foreach(string s in go.GetComponent<Contains>().CurrentlyContainedObjectIDs())
-					{
-						if(!objs.Contains(s))
-						{
-                            //print(sop.transform.name);
+		if (DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+			if (ReceptacleTriggerBoxes != null) {
+				foreach (GameObject go in ReceptacleTriggerBoxes) {
+					foreach (string s in go.GetComponent<Contains>().CurrentlyContainedObjectIDs()) {
+						if (!objs.Contains(s)) {
+							//print(sop.transform.name);
 							objs.Add(s);
 						}
 					}
@@ -1054,46 +904,39 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return objs;
 	}
 
-	public List<GameObject> ContainedGameObjects()
-	{
+	public List<GameObject> ContainedGameObjects() {
 		List<GameObject> objs = new List<GameObject>();
 
 		//get box collider dimensions of ReceptacleTriggerBox if this is a receptacle
-		if(IsReceptacle)
-		{
-			foreach (GameObject rtb in ReceptacleTriggerBoxes)
-			{
-				foreach (GameObject g in rtb.GetComponent<Contains>().CurrentlyContainedGameObjects())
-				{
-					if(!objs.Contains(g))
-					{
+		if (IsReceptacle) {
+			foreach (GameObject rtb in ReceptacleTriggerBoxes) {
+				foreach (GameObject g in rtb.GetComponent<Contains>().CurrentlyContainedGameObjects()) {
+					if (!objs.Contains(g)) {
 						objs.Add(g);
 					}
 				}
 			}
 		}
 
-		#if UNITY_EDITOR
+#if UNITY_EDITOR
 		CurrentlyContains = objs;
-		#endif
+#endif
 
 		return objs;
 	}
 
 	public void OnTriggerEnter(Collider other) {
 		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
-		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
-		{
-			if(other.CompareTag("HighFriction")) //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		if ((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)) {
+			if (other.CompareTag("HighFriction")) //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
 				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
 				//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
 				rb.drag = HFrbdrag;
 				rb.angularDrag = HFrbangulardrag;
-				
-				foreach (Collider col in MyColliders)
-				{
+
+				foreach (Collider col in MyColliders) {
 					col.material.dynamicFriction = HFdynamicfriction;
 					col.material.staticFriction = HFstaticfriction;
 					col.material.bounciness = HFbounciness;
@@ -1102,19 +945,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public void OnTriggerExit(Collider other)
-	{
-		if(other.CompareTag("HighFriction") && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
-		{
+	public void OnTriggerExit(Collider other) {
+		if (other.CompareTag("HighFriction") && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)) {
 			//print( "resetting to default trigger exit");
 
 			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
 			rb.drag = RBoriginalDrag;
 			rb.angularDrag = RBoriginalAngularDrag;
-			
-			for(int i = 0; i < MyColliders.Length; i++)
-			{
+
+			for (int i = 0; i < MyColliders.Length; i++) {
 				MyColliders[i].material.dynamicFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].DynamicFriction;
 				MyColliders[i].material.staticFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].StaticFriction;
 				MyColliders[i].material.bounciness = OriginalPhysicsMaterialValuesForAllMyColliders[i].Bounciness;
@@ -1123,22 +963,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 #if UNITY_EDITOR
-	void OnDrawGizmos()
-	{
+	void OnDrawGizmos() {
 		Gizmos.color = Color.white;
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
-		{
+		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>()) {
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
-		{
+		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>()) {
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;
 			Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
@@ -1146,29 +983,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//draw visibility points for editor
 		Gizmos.color = Color.yellow;
-		if (VisibilityPoints != null && VisibilityPoints.Length > 0)
-		{
-            foreach (Transform t in VisibilityPoints)
-            {
-                //if (t != null)
-                //{
-                    Gizmos.DrawSphere(t.position, 0.01f);
-                //}
+		if (VisibilityPoints != null && VisibilityPoints.Length > 0) {
+			foreach (Transform t in VisibilityPoints) {
+				//if (t != null)
+				//{
+				Gizmos.DrawSphere(t.position, 0.01f);
+				//}
 			}
 		}
 
-        // foreach(Collider col in MyColliders)
-        // {
-        //     DebugExtension.DrawBounds(col.bounds, Color.green);
-        // }
+		// foreach(Collider col in MyColliders)
+		// {
+		//     DebugExtension.DrawBounds(col.bounds, Color.green);
+		// }
 	}
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
 
 	//[ContextMenu("Cabinet")]
-	void SetUpCabinet()
-	{
+	void SetUpCabinet() {
 		Type = SimObjType.Cabinet;
 		PrimaryProperty = SimObjPrimaryProperty.Static;
 
@@ -1184,8 +1018,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		this.GetComponent<Rigidbody>().isKinematic = true;
 
-		if (!gameObject.GetComponent<CanOpen_Object>())
-		{
+		if (!gameObject.GetComponent<CanOpen_Object>()) {
 			gameObject.AddComponent<CanOpen_Object>();
 			gameObject.GetComponent<CanOpen_Object>().SetMovementToRotate();
 		}
@@ -1205,8 +1038,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		Transform door = transform.Find("CabinetDoor");
 
 
-		if(!gameObject.transform.Find("StaticVisPoints"))
-		{
+		if (!gameObject.transform.Find("StaticVisPoints")) {
 			GameObject svp = new GameObject("StaticVisPoints");
 			svp.transform.position = gameObject.transform.position;
 			svp.transform.SetParent(gameObject.transform);
@@ -1216,8 +1048,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vp.transform.SetParent(svp.transform);
 		}
 
-		if(!door.Find("Colliders"))
-		{
+		if (!door.Find("Colliders")) {
 			GameObject col = new GameObject("Colliders");
 			col.transform.position = door.position;
 			col.transform.SetParent(door);
@@ -1230,8 +1061,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			coll.transform.SetParent(col.transform);
 		}
 
-		if(!door.Find("VisibilityPoints"))
-		{
+		if (!door.Find("VisibilityPoints")) {
 			GameObject VisPoints = new GameObject("VisibilityPoints");
 			VisPoints.transform.position = door.position;
 			VisPoints.transform.SetParent(door);
@@ -1239,13 +1069,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject vp = new GameObject("VisPoint");
 			vp.transform.position = VisPoints.transform.position;
 			vp.transform.SetParent(VisPoints.transform);
-		}
-
-		else
-		{
+		} else {
 			Transform VisPoints = door.Find("VisibilityPoints");
-			foreach (Transform child in VisPoints)
-			{
+			foreach (Transform child in VisPoints) {
 				vpoints.Add(child);
 				child.gameObject.tag = "Untagged";
 				child.gameObject.layer = 8;
@@ -1253,49 +1079,39 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 		////////////////////////
 
-		foreach (Transform child in gameObject.transform)
-		{
-			if (child.name == "StaticVisPoints")
-			{
-				foreach (Transform svp in child)
-				{
+		foreach (Transform child in gameObject.transform) {
+			if (child.name == "StaticVisPoints") {
+				foreach (Transform svp in child) {
 					if (!vpoints.Contains(svp))
 						vpoints.Add(svp);
 				}
 			}
 
-			if (child.name == "ReceptacleTriggerBox")
-			{
+			if (child.name == "ReceptacleTriggerBox") {
 				//print("check");
 				if (!recepboxes.Contains(child.gameObject))
 					recepboxes.Add(child.gameObject);
 			}
 
 			//found the cabinet door, go into it and populate triggerboxes, colliders, t colliders, and vis points
-			if (child.name == "CabinetDoor")
-			{
+			if (child.name == "CabinetDoor") {
 				if (child.GetComponent<Rigidbody>())
 					DestroyImmediate(child.GetComponent<Rigidbody>(), true);
 
 				if (child.GetComponent<SimObjPhysics>())
 					DestroyImmediate(child.GetComponent<SimObjPhysics>(), true);
 
-				if (!movparts.Contains(child.gameObject))
-				{
+				if (!movparts.Contains(child.gameObject)) {
 					movparts.Add(child.gameObject);
 				}
 
-				foreach (Transform c in child)
-				{
-					if (c.name == "Colliders")
-					{
-						foreach (Transform col in c)
-						{
+				foreach (Transform c in child) {
+					if (c.name == "Colliders") {
+						foreach (Transform col in c) {
 							if (!cols.Contains(col.gameObject))
 								cols.Add(col.gameObject);
 
-							if (col.childCount == 0)
-							{
+							if (col.childCount == 0) {
 								GameObject prefabRoot = col.gameObject;
 
 								GameObject inst = Instantiate(prefabRoot, col.gameObject.transform, true);
@@ -1323,10 +1139,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					// 	}
 					// }
 
-					if (c.name == "VisibilityPoints")
-					{
-						foreach (Transform col in c)
-						{
+					if (c.name == "VisibilityPoints") {
+						foreach (Transform col in c) {
 							if (!vpoints.Contains(col.transform))
 								vpoints.Add(col.transform);
 						}
@@ -1350,18 +1164,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
 	//[ContextMenu("Table")]
-	void SetUpTable()
-	{
+	void SetUpTable() {
 		this.Type = SimObjType.DiningTable;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
-		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle};
-		
+		this.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+
 		ContextSetUpSimObjPhysics();
 
 		// GameObject inst = Instantiate(new GameObject(), gameObject.transform, true);
 		// inst.AddComponent<BoxCollider>();
-		if(!gameObject.transform.Find("BoundingBox"))
-		{
+		if (!gameObject.transform.Find("BoundingBox")) {
 			GameObject bb = new GameObject("BoundingBox");
 			bb.transform.position = gameObject.transform.position;
 			bb.transform.SetParent(gameObject.transform);
@@ -1375,10 +1187,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		List<GameObject> recepboxes = new List<GameObject>();
 
-		foreach(Transform t in gameObject.transform)
-		{
-			if(t.GetComponent<Contains>())
-			{
+		foreach (Transform t in gameObject.transform) {
+			if (t.GetComponent<Contains>()) {
 				recepboxes.Add(t.gameObject);
 			}
 		}
@@ -1387,49 +1197,46 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	[ContextMenu("Setup Floor")]
-	void FloorSetupContext()
-	{
+	void FloorSetupContext() {
 		this.Type = SimObjType.Floor;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
 
-		this.SecondaryProperties = new SimObjSecondaryProperty[] 
+		this.SecondaryProperties = new SimObjSecondaryProperty[]
 		{SimObjSecondaryProperty.Receptacle};
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
 
 		this.GetComponent<Rigidbody>().isKinematic = true;
-		
+
 		ContextSetUpSimObjPhysics();
 
-        BoxCollider col = MyColliders[0].GetComponent<BoxCollider>();
-        BoxCollider meshbox = gameObject.transform.Find("mesh").GetComponent<BoxCollider>();
-        col.center = meshbox.center;
-        col.size = meshbox.size;
+		BoxCollider col = MyColliders[0].GetComponent<BoxCollider>();
+		BoxCollider meshbox = gameObject.transform.Find("mesh").GetComponent<BoxCollider>();
+		col.center = meshbox.center;
+		col.size = meshbox.size;
 
-        MeshRenderer r = meshbox.GetComponent<MeshRenderer>();
-        BoxCollider bb = BoundingBox.GetComponent<BoxCollider>();
-        bb.center = r.bounds.center;
-        bb.size = r.bounds.size * 1.1f;
+		MeshRenderer r = meshbox.GetComponent<MeshRenderer>();
+		BoxCollider bb = BoundingBox.GetComponent<BoxCollider>();
+		bb.center = r.bounds.center;
+		bb.size = r.bounds.size * 1.1f;
 
-        meshbox.enabled = false;
+		meshbox.enabled = false;
 
 	}
 
 	//[ContextMenu("Drawer")]
-	void SetUpDrawer()
-	{
+	void SetUpDrawer() {
 		this.Type = SimObjType.Drawer;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
-		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.CanOpen};
+		this.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.CanOpen };
 
 		ContextSetUpSimObjPhysics();
 
 		//delete the trigger colliders and bounding box here
 		//also probably edit ContextSetupSimObjPhysics to not create trigger colliders anymore
 
-		if (!gameObject.GetComponent<CanOpen_Object>())
-		{
+		if (!gameObject.GetComponent<CanOpen_Object>()) {
 			gameObject.AddComponent<CanOpen_Object>();
 		}
 		CanOpen_Object coo = gameObject.GetComponent<CanOpen_Object>();
@@ -1444,18 +1251,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		List<GameObject> recepboxes = new List<GameObject>();
 
-		foreach(Transform t in gameObject.transform)
-		{
-			if(t.name == "BoundingBox")
-			{
+		foreach (Transform t in gameObject.transform) {
+			if (t.name == "BoundingBox") {
 				DestroyImmediate(t.gameObject, true);
 				break;
 			}
-			
-			if(t.name == "ReceptacleTriggerBox")
-			{
-				if(!recepboxes.Contains(t.gameObject))
-				{
+
+			if (t.name == "ReceptacleTriggerBox") {
+				if (!recepboxes.Contains(t.gameObject)) {
 					recepboxes.Add(t.gameObject);
 				}
 			}
@@ -1494,15 +1297,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//[ContextMenu("Find BoundingBox")]
-	void ContextFindBoundingBox()
-	{
+	void ContextFindBoundingBox() {
 		BoundingBox = gameObject.transform.Find("BoundingBox").gameObject;
 
 	}
 
 	//[ContextMenu("Set Up Microwave")]
-	void ContextSetUpMicrowave()
-	{
+	void ContextSetUpMicrowave() {
 		this.Type = SimObjType.Microwave;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
 
@@ -1510,8 +1311,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.SecondaryProperties[0] = SimObjSecondaryProperty.Receptacle;
 		this.SecondaryProperties[1] = SimObjSecondaryProperty.CanOpen;
 
-		if(!gameObject.transform.Find("BoundingBox"))
-		{
+		if (!gameObject.transform.Find("BoundingBox")) {
 			GameObject bb = new GameObject("BoundingBox");
 			bb.transform.position = gameObject.transform.position;
 			bb.transform.SetParent(gameObject.transform);
@@ -1521,22 +1321,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			bb.layer = 0;
 
 			BoundingBox = bb;
-		}
-
-		else
-		{
+		} else {
 			BoundingBox = gameObject.transform.Find("BoundingBox").gameObject;
 		}
 
-		if(!gameObject.GetComponent<CanOpen_Object>())
-		{
+		if (!gameObject.GetComponent<CanOpen_Object>()) {
 			gameObject.AddComponent<CanOpen_Object>();
 		}
 
 		List<Transform> vplist = new List<Transform>();
 
-		if(!gameObject.transform.Find("StaticVisPoints"))
-		{
+		if (!gameObject.transform.Find("StaticVisPoints")) {
 			GameObject svp = new GameObject("StaticVisPoints");
 			svp.transform.position = gameObject.transform.position;
 			svp.transform.SetParent(gameObject.transform);
@@ -1544,13 +1339,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject vp = new GameObject("vPoint");
 			vp.transform.position = svp.transform.position;
 			vp.transform.SetParent(svp.transform);
-		}
-
-		else
-		{
+		} else {
 			Transform vp = gameObject.transform.Find("StaticVisPoints");
-			foreach (Transform child in vp)
-			{
+			foreach (Transform child in vp) {
 				vplist.Add(child);
 
 				//set correct tag and layer for each object
@@ -1560,8 +1351,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		Transform door = gameObject.transform.Find("Door");
-		if(!door.Find("Col"))
-		{
+		if (!door.Find("Col")) {
 			GameObject col = new GameObject("Col");
 			col.transform.position = door.transform.position;
 			col.transform.SetParent(door.transform);
@@ -1573,9 +1363,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		}
 
-		if(!door.Find("VisPoints"))
-		{
-						//empty to hold all visibility points
+		if (!door.Find("VisPoints")) {
+			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisPoints");
 			vp.transform.position = door.transform.position;
 			vp.transform.SetParent(door.transform);
@@ -1584,13 +1373,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject vpc = new GameObject("vPoint");
 			vpc.transform.position = vp.transform.position;
 			vpc.transform.SetParent(vp.transform);
-		}
-
-		else
-		{
+		} else {
 			Transform vp = door.Find("VisPoints");
-			foreach (Transform child in vp)
-			{
+			foreach (Transform child in vp) {
 				vplist.Add(child);
 
 				//set correct tag and layer for each object
@@ -1602,23 +1387,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		VisibilityPoints = vplist.ToArray();
 
 		CanOpen_Object coo = gameObject.GetComponent<CanOpen_Object>();
-		coo.MovingParts = new GameObject[] {door.transform.gameObject};
-		coo.openPositions = new Vector3[] {new Vector3(0, 90, 0)};
-		coo.closedPositions = new Vector3[] {Vector3.zero};
+		coo.MovingParts = new GameObject[] { door.transform.gameObject };
+		coo.openPositions = new Vector3[] { new Vector3(0, 90, 0) };
+		coo.closedPositions = new Vector3[] { Vector3.zero };
 		coo.SetMovementToRotate();
 
-		if(gameObject.transform.Find("ReceptacleTriggerBox"))
-		{
-			GameObject[] rtb = new GameObject[] {gameObject.transform.Find("ReceptacleTriggerBox").transform.gameObject};
+		if (gameObject.transform.Find("ReceptacleTriggerBox")) {
+			GameObject[] rtb = new GameObject[] { gameObject.transform.Find("ReceptacleTriggerBox").transform.gameObject };
 			ReceptacleTriggerBoxes = rtb;
 		}
 	}
 
 	//[ContextMenu("Static Mesh Collider with Receptacle")]
-	void SetUpSimObjWithStaticMeshCollider()
-	{
-		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
-		{
+	void SetUpSimObjWithStaticMeshCollider() {
+		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined) {
 			Debug.Log("Type / Primary Property is missing");
 			return;
 		}
@@ -1630,8 +1412,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			gameObject.AddComponent<Rigidbody>();
 
 		gameObject.GetComponent<Rigidbody>().isKinematic = true;
-		if (!gameObject.transform.Find("VisibilityPoints"))
-		{
+		if (!gameObject.transform.Find("VisibilityPoints")) {
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = gameObject.transform.position;
@@ -1643,8 +1424,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.SetParent(vp.transform);
 		}
 
-		if (!gameObject.transform.Find("BoundingBox"))
-		{
+		if (!gameObject.transform.Find("BoundingBox")) {
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
 			rac.transform.SetParent(gameObject.transform);
@@ -1652,28 +1432,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
-		List <GameObject> rtbList = new List <GameObject>();
+		List<GameObject> rtbList = new List<GameObject>();
 
-		foreach (Transform t in gameObject.transform)
-		{
-			if(t.GetComponent<MeshCollider>())
-			{
+		foreach (Transform t in gameObject.transform) {
+			if (t.GetComponent<MeshCollider>()) {
 				t.gameObject.tag = "SimObjPhysics";
 				t.gameObject.layer = 8;
 
 				//now check if it has pillows or something?
-				foreach(Transform yes in t)
-				{
-					if(yes.GetComponent<MeshCollider>())
-					{
+				foreach (Transform yes in t) {
+					if (yes.GetComponent<MeshCollider>()) {
 						yes.gameObject.tag = "SimObjPhysics";
 						yes.gameObject.layer = 8;
 					}
 				}
 			}
 
-			if(t.GetComponent<Contains>())
-			{
+			if (t.GetComponent<Contains>()) {
 				rtbList.Add(t.gameObject);
 			}
 		}
@@ -1685,8 +1460,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//[UnityEditor.MenuItem("SimObjectPhysics/AppleSlice")]
-	public static void ContextSetupAppleSlice()
-	{
+	public static void ContextSetupAppleSlice() {
 		GameObject prefabRoot = Selection.activeGameObject;
 		GameObject c = new GameObject("AppleSlice");
 		c.transform.position = prefabRoot.transform.position;
@@ -1694,13 +1468,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		prefabRoot.transform.SetParent(c.transform);
 		prefabRoot.name = "Mesh";
 
-		if(!c.GetComponent<SimObjPhysics>())
-		{
+		if (!c.GetComponent<SimObjPhysics>()) {
 			c.AddComponent<SimObjPhysics>();
 		}
 
-		if(c.GetComponent<SimObjPhysics>())
-		{
+		if (c.GetComponent<SimObjPhysics>()) {
 			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
 			sop.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
 			sop.Type = SimObjType.AppleSliced;
@@ -1712,12 +1484,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if (!c.GetComponent<Rigidbody>())
 			c.AddComponent<Rigidbody>();
 
-		if (!c.transform.Find("Colliders"))
-		{
+		if (!c.transform.Find("Colliders")) {
 			GameObject col = new GameObject("Colliders");
 			col.transform.position = c.transform.position;
 			col.transform.SetParent(c.transform);
-            
+
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = col.transform.position;
 			cc.transform.SetParent(col.transform);
@@ -1726,8 +1497,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			cc.layer = 8;
 		}
 
-		if (!c.transform.Find("VisibilityPoints"))
-		{
+		if (!c.transform.Find("VisibilityPoints")) {
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = c.transform.position;
@@ -1739,56 +1509,50 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.SetParent(vp.transform);
 		}
 
-		if (!c.transform.Find("BoundingBox"))
-		{
+		if (!c.transform.Find("BoundingBox")) {
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = c.transform.position;
 			rac.transform.SetParent(c.transform);
 			rac.AddComponent<BoxCollider>();
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
-		
+
 		//c.GetComponent<SimObjPhysics>().AppleSetupReferences();
 	}
 
 	//[UnityEditor.MenuItem("SimObjectPhysics/LightSwitch")]
-	public static void ContextSetupLightSwitch()
-	{
+	public static void ContextSetupLightSwitch() {
 		GameObject prefabRoot = Selection.activeGameObject;
 		GameObject c = new GameObject("LightSwitch");
 		c.transform.position = prefabRoot.transform.position;
 		prefabRoot.transform.SetParent(c.transform);
 		prefabRoot.name = "Mesh";
 
-		if(!c.GetComponent<SimObjPhysics>())
-		{
+		if (!c.GetComponent<SimObjPhysics>()) {
 			c.AddComponent<SimObjPhysics>();
 		}
 
-		if(c.GetComponent<SimObjPhysics>())
-		{
+		if (c.GetComponent<SimObjPhysics>()) {
 			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
 			sop.PrimaryProperty = SimObjPrimaryProperty.Static;
 			sop.Type = SimObjType.LightSwitch;
-			sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.CanToggleOnOff};
+			sop.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.CanToggleOnOff };
 		}
 
 		c.tag = "SimObjPhysics";
 		c.layer = 8;
 		c.isStatic = true;
 
-		if (!c.GetComponent<Rigidbody>())
-		{
+		if (!c.GetComponent<Rigidbody>()) {
 			Rigidbody rb = c.AddComponent<Rigidbody>();
 			rb.isKinematic = true;
 		}
 
-		if (!c.transform.Find("Colliders"))
-		{
+		if (!c.transform.Find("Colliders")) {
 			GameObject col = new GameObject("Colliders");
 			col.transform.position = c.transform.position;
 			col.transform.SetParent(c.transform);
-            
+
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = col.transform.position;
 			cc.transform.SetParent(col.transform);
@@ -1797,8 +1561,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			cc.layer = 8;
 		}
 
-		if (!c.transform.Find("VisibilityPoints"))
-		{
+		if (!c.transform.Find("VisibilityPoints")) {
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = c.transform.position;
@@ -1811,21 +1574,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		c.GetComponent<SimObjPhysics>().SetupCollidersVisPoints();
-		
+
 		//add the CanToggleOnOff component and set it up with correct values
-		if(!c.GetComponent<CanToggleOnOff>())
-		{	
+		if (!c.GetComponent<CanToggleOnOff>()) {
 			CanToggleOnOff ctoo = c.AddComponent<CanToggleOnOff>();
 
 			List<GameObject> childmeshes = new List<GameObject>();
 			List<Vector3> childRotations = new List<Vector3>();
 
-			foreach(Transform t in c.transform)
-			{
-				if(t.name == "Mesh")
-				{
-					foreach(Transform tt in t)
-					{
+			foreach (Transform t in c.transform) {
+				if (t.name == "Mesh") {
+					foreach (Transform tt in t) {
 						childmeshes.Add(tt.gameObject);
 						childRotations.Add(tt.transform.localEulerAngles);
 					}
@@ -1841,16 +1600,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 
 	[ContextMenu("Setup Colliders, VisPoints, and Bounding Box")]
-	public void SetupCollidersVisPoints()
-	{
+	public void SetupCollidersVisPoints() {
 		ContextSetUpColliders();
 		ContextSetUpVisibilityPoints();
-        ContextSetUpBoundingBox();
+		ContextSetUpBoundingBox();
 	}
 
 	//[UnityEditor.MenuItem("SimObjectPhysics/Toaster")]
-	public static void ContextSetupToaster()
-	{
+	public static void ContextSetupToaster() {
 		GameObject prefabRoot = Selection.activeGameObject;
 		GameObject c = new GameObject("Toaster_");
 		c.transform.position = prefabRoot.transform.position;
@@ -1858,13 +1615,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		prefabRoot.transform.SetParent(c.transform);
 		prefabRoot.name = "Mesh";
 
-		if(!c.GetComponent<SimObjPhysics>())
-		{
+		if (!c.GetComponent<SimObjPhysics>()) {
 			c.AddComponent<SimObjPhysics>();
 		}
 
-		if(c.GetComponent<SimObjPhysics>())
-		{
+		if (c.GetComponent<SimObjPhysics>()) {
 			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
 			sop.PrimaryProperty = SimObjPrimaryProperty.Static;
 			sop.Type = SimObjType.Toaster;
@@ -1877,12 +1632,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if (!c.GetComponent<Rigidbody>())
 			c.AddComponent<Rigidbody>();
 
-		if (!c.transform.Find("Colliders"))
-		{
+		if (!c.transform.Find("Colliders")) {
 			GameObject col = new GameObject("Colliders");
 			col.transform.position = c.transform.position;
 			col.transform.SetParent(c.transform);
-            
+
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = col.transform.position;
 			cc.transform.SetParent(col.transform);
@@ -1891,8 +1645,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			cc.layer = 8;
 		}
 
-		if (!c.transform.Find("VisibilityPoints"))
-		{
+		if (!c.transform.Find("VisibilityPoints")) {
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = c.transform.position;
@@ -1904,8 +1657,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.SetParent(vp.transform);
 		}
 
-		if (!c.transform.Find("BoundingBox"))
-		{
+		if (!c.transform.Find("BoundingBox")) {
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = c.transform.position;
 			rac.transform.SetParent(c.transform);
@@ -1917,32 +1669,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//[ContextMenu("Toaster Setup References")]
-	void ToasterSetupReferences()
-	{
+	void ToasterSetupReferences() {
 		ContextSetUpColliders();
 		ContextSetUpVisibilityPoints();
 		ContextSetUpBoundingBox();
 
-		foreach(Transform t in gameObject.transform)
-		{
-			if(t.name == "Colliders")
-			{
-				if(!gameObject.transform.Find("TriggerColliders"))
-				{
+		foreach (Transform t in gameObject.transform) {
+			if (t.name == "Colliders") {
+				if (!gameObject.transform.Find("TriggerColliders")) {
 					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
 					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
+					foreach (Transform yes in inst.transform) {
 						yes.GetComponent<Collider>().isTrigger = true;
 					}
-				}
-				else
-				{
+				} else {
 					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
 					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
 					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
+					foreach (Transform yes in inst.transform) {
 						yes.GetComponent<Collider>().isTrigger = true;
 					}
 				}
@@ -1951,10 +1695,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	[ContextMenu("Setup")]
-	public void ContextSetUpSimObjPhysics()
-	{
-		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
-		{
+	public void ContextSetUpSimObjPhysics() {
+		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined) {
 			Debug.Log("Type / Primary Property is missing");
 			return;
 		}
@@ -1967,96 +1709,81 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		gameObject.GetComponent<Rigidbody>().isKinematic = true;
 
-		if (!gameObject.transform.Find("Colliders"))
-		{
+		if (!gameObject.transform.Find("Colliders")) {
 			GameObject c = new GameObject("Colliders");
 			c.transform.position = gameObject.transform.position;
 			c.transform.SetParent(gameObject.transform);
-            c.transform.localEulerAngles = Vector3.zero;
-            
+			c.transform.localEulerAngles = Vector3.zero;
+
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = c.transform.position;
 			cc.transform.SetParent(c.transform);
-            cc.transform.localEulerAngles = Vector3.zero;
-            //cc.AddComponent<CapsuleCollider>();
-            cc.AddComponent<BoxCollider>();
+			cc.transform.localEulerAngles = Vector3.zero;
+			//cc.AddComponent<CapsuleCollider>();
+			cc.AddComponent<BoxCollider>();
 			cc.tag = "SimObjPhysics";
 			cc.layer = 8;
 		}
 
-		if (!gameObject.transform.Find("VisibilityPoints"))
-		{
+		if (!gameObject.transform.Find("VisibilityPoints")) {
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = gameObject.transform.position;
 			vp.transform.SetParent(gameObject.transform);
-            vp.transform.localEulerAngles = Vector3.zero;
+			vp.transform.localEulerAngles = Vector3.zero;
 
-            //create first Visibility Point to work with
-            GameObject vpc = new GameObject("vPoint");
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
 			vpc.transform.position = vp.transform.position;
 			vpc.transform.SetParent(vp.transform);
-            vpc.transform.localEulerAngles = Vector3.zero;
-        }
+			vpc.transform.localEulerAngles = Vector3.zero;
+		}
 
-		if (!gameObject.transform.Find("BoundingBox"))
-		{
+		if (!gameObject.transform.Find("BoundingBox")) {
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
 			rac.transform.SetParent(gameObject.transform);
-            rac.transform.localEulerAngles = Vector3.zero;
-            rac.AddComponent<BoxCollider>();
+			rac.transform.localEulerAngles = Vector3.zero;
+			rac.AddComponent<BoxCollider>();
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
 		List<GameObject> recepboxes = new List<GameObject>();
 
-		foreach(Transform t in gameObject.transform)
-		{
+		foreach (Transform t in gameObject.transform) {
 			//add any receptacle trigger boxes
-			if(t.GetComponent<Contains>())
-			{
-				if(!recepboxes.Contains(t.gameObject))
-				{
+			if (t.GetComponent<Contains>()) {
+				if (!recepboxes.Contains(t.gameObject)) {
 					recepboxes.Add(t.gameObject);
 				}
 			}
 
-			if(t.name == "Colliders")
-			{
-				if(!gameObject.transform.Find("TriggerColliders"))
-				{
+			if (t.name == "Colliders") {
+				if (!gameObject.transform.Find("TriggerColliders")) {
 					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
 					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
+					foreach (Transform yes in inst.transform) {
 						yes.GetComponent<Collider>().isTrigger = true;
 					}
-				}
-				else
-				{
+				} else {
 					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
 					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
 					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
+					foreach (Transform yes in inst.transform) {
 						yes.GetComponent<Collider>().isTrigger = true;
 					}
 				}
 			}
 
 			//check if child object "t" has any objects under it called "Colliders"
-			if(t.Find("Colliders"))
-			{
+			if (t.Find("Colliders")) {
 				Transform childColliderObject = t.Find("Colliders");
 
 				//if TriggerColliders dont already exist as a child under this child object t, create it by copying childColliderObject
-				if(!t.Find("TriggerColliders"))
-				{
+				if (!t.Find("TriggerColliders")) {
 					GameObject inst = Instantiate(childColliderObject.gameObject, t, true);
 					inst.name = "TriggerColliders";
-					foreach(Transform thing in inst.transform)
-					{
+					foreach (Transform thing in inst.transform) {
 						thing.GetComponent<Collider>().isTrigger = true;
 					}
 				}
@@ -2072,19 +1799,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpBoundingBox();
 	}
 
-	
+
 
 	//[ContextMenu("Set Up Colliders")]
-	public void ContextSetUpColliders()
-	{
+	public void ContextSetUpColliders() {
 		List<Collider> listColliders = new List<Collider>();
-		
-		if (transform.Find("Colliders"))
-		{
+
+		if (transform.Find("Colliders")) {
 			Transform Colliders = transform.Find("Colliders");
 
-			foreach (Transform child in Colliders)
-			{
+			foreach (Transform child in Colliders) {
 				//list.toarray
 				listColliders.Add(child.GetComponent<Collider>());
 
@@ -2093,8 +1817,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				child.gameObject.tag = "SimObjPhysics";
 				child.gameObject.layer = 8;
 
-				if (child.GetComponent<Collider>())
-				{
+				if (child.GetComponent<Collider>()) {
 					child.GetComponent<Collider>().enabled = true;
 					child.GetComponent<Collider>().isTrigger = false;
 				}
@@ -2102,14 +1825,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//loop through all child objects. For each object, check if the child itself has a child called Colliders....
-		foreach (Transform child in transform)
-		{
-			if(child.Find("Colliders") && !child.GetComponent<SimObjPhysics>())
-			{
+		foreach (Transform child in transform) {
+			if (child.Find("Colliders") && !child.GetComponent<SimObjPhysics>()) {
 				Transform Colliders = child.Find("Colliders");
 
-				foreach (Transform childschild in Colliders)
-				{
+				foreach (Transform childschild in Colliders) {
 					//list.toarray
 					listColliders.Add(childschild.GetComponent<Collider>());
 
@@ -2118,8 +1838,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					childschild.gameObject.tag = "SimObjPhysics";
 					childschild.gameObject.layer = 8;
 
-					if (childschild.GetComponent<Collider>())
-					{
+					if (childschild.GetComponent<Collider>()) {
 						childschild.GetComponent<Collider>().enabled = true;
 						childschild.GetComponent<Collider>().isTrigger = false;
 					}
@@ -2132,16 +1851,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//[ContextMenu("Set Up TriggerColliders")]
-	void ContextSetUpTriggerColliders()
-	{
-		if (transform.Find("TriggerColliders"))
-		{
+	void ContextSetUpTriggerColliders() {
+		if (transform.Find("TriggerColliders")) {
 			Transform tc = transform.Find("TriggerColliders");
 
 			List<GameObject> listtc = new List<GameObject>();
 
-			foreach (Transform child in tc)
-			{
+			foreach (Transform child in tc) {
 				//list.toarray
 				listtc.Add(child.gameObject);
 
@@ -2150,8 +1866,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				child.gameObject.tag = "SimObjPhysics";
 				child.gameObject.layer = 8;
 
-				if (child.GetComponent<Collider>())
-				{
+				if (child.GetComponent<Collider>()) {
 					child.GetComponent<Collider>().enabled = true;
 					child.GetComponent<Collider>().isTrigger = true;
 				}
@@ -2163,16 +1878,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	// [ContextMenu("Set Up VisibilityPoints")]
-	public void ContextSetUpVisibilityPoints()
-	{
+	public void ContextSetUpVisibilityPoints() {
 		List<Transform> vplist = new List<Transform>();
 
-		if (transform.Find("VisibilityPoints"))
-		{
+		if (transform.Find("VisibilityPoints")) {
 			Transform vp = transform.Find("VisibilityPoints");
 
-			foreach (Transform child in vp)
-			{
+			foreach (Transform child in vp) {
 				vplist.Add(child);
 
 				//set correct tag and layer for each object
@@ -2181,14 +1893,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			}
 		}
 
-		foreach (Transform child in transform)
-		{
-			if(child.Find("VisibilityPoints") && !child.GetComponent<SimObjPhysics>())
-			{
+		foreach (Transform child in transform) {
+			if (child.Find("VisibilityPoints") && !child.GetComponent<SimObjPhysics>()) {
 				Transform vp = child.Find("VisibilityPoints");
 
-				foreach (Transform childschild in vp)
-				{
+				foreach (Transform childschild in vp) {
 					vplist.Add(childschild);
 					childschild.gameObject.tag = "Untagged";
 					childschild.gameObject.layer = 8;
@@ -2200,123 +1909,117 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 #endif
 
-    //[ContextMenu("Set Up Bounding Box")]
-    public void ContextSetUpBoundingBox()
-    {
-        Vector3[] transformSaver = new Vector3[] { transform.position, transform.eulerAngles };
+	//[ContextMenu("Set Up Bounding Box")]
+	public void ContextSetUpBoundingBox() {
+		Vector3[] transformSaver = new Vector3[] { transform.position, transform.eulerAngles };
 
-        transform.position = Vector3.zero;
-        transform.eulerAngles = Vector3.zero;
+		transform.position = Vector3.zero;
+		transform.eulerAngles = Vector3.zero;
 
-        if (!transform.Find("BoundingBox"))
-        {
-            GameObject BoundingBox = new GameObject();
-            BoundingBox.transform.parent = gameObject.transform;
-            BoundingBox.transform.localPosition = Vector3.zero;
-            BoundingBox.transform.localEulerAngles = Vector3.zero;
-            BoundingBox.transform.localScale = Vector3.one;
-        }
+		if (!transform.Find("BoundingBox")) {
+			GameObject BoundingBox = new GameObject();
+			BoundingBox.transform.parent = gameObject.transform;
+			BoundingBox.transform.localPosition = Vector3.zero;
+			BoundingBox.transform.localEulerAngles = Vector3.zero;
+			BoundingBox.transform.localScale = Vector3.one;
+		}
 
-        BoundingBox = transform.Find("BoundingBox").gameObject;
+		BoundingBox = transform.Find("BoundingBox").gameObject;
 		BoundingBox.transform.localScale = Vector3.one;//make sure to default existing BoundingBox to 1 as well
-		
-        //This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
-        //to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
-        //SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
-        //is not enabled.
-        BoundingBox.tag = "Untagged";
-        BoundingBox.layer = 9;//layer 9 - SimObjInvisible
 
-        Collider[] colliders = transform.GetComponentsInChildren<Collider>();
-        MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
+		//This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
+		//to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
+		//SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
+		//is not enabled.
+		BoundingBox.tag = "Untagged";
+		BoundingBox.layer = 9;//layer 9 - SimObjInvisible
 
-        //SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
-        //Transform rootBoneParentSaver;
-        //Transform rootBoneSurrogateParent = new GameObject().transform;
+		Collider[] colliders = transform.GetComponentsInChildren<Collider>();
+		MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
 
-        //Reset existing Bounding Box
-        if (BoundingBox.GetComponent<BoxCollider>())
-        {
-            BoundingBox.GetComponent<BoxCollider>().enabled = true;
-            BoundingBox.GetComponent<BoxCollider>().center = colliders[0].bounds.center;
-            BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
-        }
+		//SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
+		//Transform rootBoneParentSaver;
+		//Transform rootBoneSurrogateParent = new GameObject().transform;
 
-        Bounds newBoundingBox = new Bounds();
-        Vector3 minMeshXZ = colliders[0].bounds.center;
-        Vector3 maxMeshXYZ = colliders[0].bounds.center;
+		//Reset existing Bounding Box
+		if (BoundingBox.GetComponent<BoxCollider>()) {
+			BoundingBox.GetComponent<BoxCollider>().enabled = true;
+			BoundingBox.GetComponent<BoxCollider>().center = colliders[0].bounds.center;
+			BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
+		}
 
-        //Encapsulate all colliders
-        foreach (Collider collider in colliders)
-        {
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.min);
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.max);
-        }
+		Bounds newBoundingBox = new Bounds();
+		Vector3 minMeshXZ = colliders[0].bounds.center;
+		Vector3 maxMeshXYZ = colliders[0].bounds.center;
 
-        //Encapsulate all mesh filters (used instead of mesh renderers because you can sample individual vertex ids with the filters)
-        //Excluded min-y because my material ID triangles are all located way below their respective main-meshes
-        //newBoundingBox.Encapsulate(meshGroup.GetComponent<meshFilter>().mesh.bounds.min);
-        foreach (MeshFilter meshFilter in meshes)
-        {
-            //if (meshFilter.gameObject.name != "screen_1" && meshFilter.gameObject.name != "screen_2")
-            //{
-            foreach (Vector3 vertex in meshFilter.sharedMesh.vertices)
-            {
-                if (minMeshXZ.x > meshFilter.gameObject.transform.TransformPoint(vertex).x)
-                    minMeshXZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
-                if (minMeshXZ.z > meshFilter.gameObject.transform.TransformPoint(vertex).z)
-                    minMeshXZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
-                if (maxMeshXYZ.x < meshFilter.gameObject.transform.TransformPoint(vertex).x)
-                    maxMeshXYZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
-                if (maxMeshXYZ.y < meshFilter.gameObject.transform.TransformPoint(vertex).y)
-                    maxMeshXYZ.y = meshFilter.gameObject.transform.TransformPoint(vertex).y;
-                if (maxMeshXYZ.z < meshFilter.gameObject.transform.TransformPoint(vertex).z)
-                    maxMeshXYZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
+		//Encapsulate all colliders
+		foreach (Collider collider in colliders) {
+			newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.min);
+			newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.max);
+		}
 
-                newBoundingBox.Encapsulate(minMeshXZ);
-                newBoundingBox.Encapsulate(maxMeshXYZ);
-            }
-            //}
-        }
+		//Encapsulate all mesh filters (used instead of mesh renderers because you can sample individual vertex ids with the filters)
+		//Excluded min-y because my material ID triangles are all located way below their respective main-meshes
+		//newBoundingBox.Encapsulate(meshGroup.GetComponent<meshFilter>().mesh.bounds.min);
+		foreach (MeshFilter meshFilter in meshes) {
+			//if (meshFilter.gameObject.name != "screen_1" && meshFilter.gameObject.name != "screen_2")
+			//{
+			foreach (Vector3 vertex in meshFilter.sharedMesh.vertices) {
+				if (minMeshXZ.x > meshFilter.gameObject.transform.TransformPoint(vertex).x)
+					minMeshXZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
+				if (minMeshXZ.z > meshFilter.gameObject.transform.TransformPoint(vertex).z)
+					minMeshXZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
+				if (maxMeshXYZ.x < meshFilter.gameObject.transform.TransformPoint(vertex).x)
+					maxMeshXYZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
+				if (maxMeshXYZ.y < meshFilter.gameObject.transform.TransformPoint(vertex).y)
+					maxMeshXYZ.y = meshFilter.gameObject.transform.TransformPoint(vertex).y;
+				if (maxMeshXYZ.z < meshFilter.gameObject.transform.TransformPoint(vertex).z)
+					maxMeshXYZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
 
-        //Encapsulate all skinned mesh renderers (requires moving the bones, not the skinned mesh renderers)
-        //foreach (SkinnedMeshRenderer skinnedMesh in skinnedMeshes)
-        //{
-        //    skinnedMesh.updateWhenOffscreen = true;
+				newBoundingBox.Encapsulate(minMeshXZ);
+				newBoundingBox.Encapsulate(maxMeshXYZ);
+			}
+			//}
+		}
 
-        //    rootBoneParentSaver = skinnedMesh.rootBone.parent;
+		//Encapsulate all skinned mesh renderers (requires moving the bones, not the skinned mesh renderers)
+		//foreach (SkinnedMeshRenderer skinnedMesh in skinnedMeshes)
+		//{
+		//    skinnedMesh.updateWhenOffscreen = true;
 
-        //    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
-        //    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
-        //    skinnedMesh.rootBone.transform.SetParent(rootBoneSurrogateParent);
+		//    rootBoneParentSaver = skinnedMesh.rootBone.parent;
 
-        //    rootBoneSurrogateParent.transform.position = Vector3.zero;
-        //    rootBoneSurrogateParent.transform.rotation = Quaternion.identity;
+		//    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
+		//    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
+		//    skinnedMesh.rootBone.transform.SetParent(rootBoneSurrogateParent);
 
-        //    newBoundingBox.Encapsulate(skinnedMesh.bounds.min);
-        //    newBoundingBox.Encapsulate(skinnedMesh.bounds.max);
+		//    rootBoneSurrogateParent.transform.position = Vector3.zero;
+		//    rootBoneSurrogateParent.transform.rotation = Quaternion.identity;
 
-        //    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
-        //    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
-        //    skinnedMesh.rootBone.SetParent(rootBoneParentSaver);
-        //}
+		//    newBoundingBox.Encapsulate(skinnedMesh.bounds.min);
+		//    newBoundingBox.Encapsulate(skinnedMesh.bounds.max);
 
-        //DestroyImmediate(rootBoneSurrogateParent.gameObject);
+		//    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
+		//    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
+		//    skinnedMesh.rootBone.SetParent(rootBoneParentSaver);
+		//}
 
-        //Assign new bounds to BoundingBox
-        //Debug.Log("Min/max of BoundingBox: " + newBoundingBox.min + ", " + newBoundingBox.max);
-        BoundingBox.GetComponent<BoxCollider>().center = newBoundingBox.center;
-        //Set Bounding Box Buffer Here!!!
-        BoundingBox.GetComponent<BoxCollider>().size = newBoundingBox.size + new Vector3(0.01f, 0.01f, 0.01f);
-        BoundingBox.GetComponent<BoxCollider>().enabled = false;
+		//DestroyImmediate(rootBoneSurrogateParent.gameObject);
 
-        //var currentBoundingBox = currentGameObject.transform.Find("BoundingBox").GetComponent<BoxCollider>();
-        //currentBoundingBox.size = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.size + new Vector3(0.2f, 0.2f, 0.2f);
-        //currentBoundingBox.center = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.center
+		//Assign new bounds to BoundingBox
+		//Debug.Log("Min/max of BoundingBox: " + newBoundingBox.min + ", " + newBoundingBox.max);
+		BoundingBox.GetComponent<BoxCollider>().center = newBoundingBox.center;
+		//Set Bounding Box Buffer Here!!!
+		BoundingBox.GetComponent<BoxCollider>().size = newBoundingBox.size + new Vector3(0.01f, 0.01f, 0.01f);
+		BoundingBox.GetComponent<BoxCollider>().enabled = false;
 
-        transform.position = transformSaver[0];
-        transform.eulerAngles = transformSaver[1];
+		//var currentBoundingBox = currentGameObject.transform.Find("BoundingBox").GetComponent<BoxCollider>();
+		//currentBoundingBox.size = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.size + new Vector3(0.2f, 0.2f, 0.2f);
+		//currentBoundingBox.center = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.center
 
-    }
+		transform.position = transformSaver[0];
+		transform.eulerAngles = transformSaver[1];
+
+	}
 
 }
