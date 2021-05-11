@@ -83,7 +83,7 @@ public class CanOpen_Object : MonoBehaviour
     }
 
 	// Use this for initialization
-	void Start () 
+	void Awake () 
 	{
 		//init Itween in all doors to prep for animation
 		if(MovingParts != null)
