@@ -1,16 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
+/// <summary>
+/// 
+/// </summary>
 public class AddressablesUtil : MonoBehaviour
 {
     public static AddressablesUtil Instance { get; private set; }
+    private List<GameObject> addressableGameObjects = new List<GameObject>();
 
-    private List<AsyncOperationHandle<GameObject>> gameObjects { get; } = new List<AsyncOperationHandle<GameObject>>();
-    private List<AsyncOperationHandle> objects { get; } = new List<AsyncOperationHandle>();
-
+    public bool IsAddressableObject(GameObject go)
+    {
+        return addressableGameObjects.Contains(go);
+    }
 
     private void Awake()
     {
@@ -21,36 +26,37 @@ public class AddressablesUtil : MonoBehaviour
     {
         AsyncOperationHandle<T> objectOperation = Addressables.LoadAssetAsync<T>(path);
         T objectAsset = objectOperation.WaitForCompletion();
-        T objectInstance = Instantiate(objectAsset);
 
-        objects.Add(objectOperation);
+        StartCoroutine(WaitForAssetRelease(objectAsset));
+        return objectAsset;
+    }
 
-        return objectInstance;
+    private IEnumerator WaitForAssetRelease<T>(T asset)
+    {
+        yield return null;
+        Addressables.Release(asset);
     }
 
     public GameObject InstantiateAddressableGameObject(string path)
     {
         AsyncOperationHandle<GameObject> objectOperation = Addressables.LoadAssetAsync<GameObject>(path);
         GameObject objectAsset = objectOperation.WaitForCompletion();
-        GameObject objectInstance = Instantiate(objectAsset);
 
-        gameObjects.Add(objectOperation);
+        var op = Addressables.InstantiateAsync(path);
+        GameObject objectInstance = op.WaitForCompletion();
+        addressableGameObjects.Add(objectInstance);
+
+        Addressables.Release(objectAsset);
 
         return objectInstance;
     }
 
-    public void ReleaseAddressables()
+    public void ReleaseAddressableGameObjects()
     {
-        foreach (var go in gameObjects)
+        foreach (var go in addressableGameObjects)
         {
-            Addressables.Release(go);
+            Addressables.ReleaseInstance(go);
         }
-        gameObjects.Clear();
-
-        foreach (var obj in objects)
-        {
-            Addressables.Release(obj);
-        }
-        objects.Clear();
+        addressableGameObjects.Clear();
     }
 }

@@ -218,9 +218,12 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
-                Destroy(gameOrParentObject);
+                if (!AddressablesUtil.Instance.IsAddressableObject(gameOrParentObject))
+                {
+                    Destroy(gameOrParentObject);
+                }
             });
-            AddressablesUtil.Instance.ReleaseAddressables();
+            AddressablesUtil.Instance.ReleaseAddressableGameObjects();
             //The way we use materials creates a bunch of instances.  This should clear them out after 
             //we clean up the objects.
             Resources.UnloadUnusedAssets();
