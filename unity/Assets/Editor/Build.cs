@@ -36,14 +36,19 @@ public class Build {
         foreach (string scene in scenes) {
             Debug.Log("Adding Scene " + scene);
         }
-   BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-    buildPlayerOptions.scenes = scenes.ToArray();
-    buildPlayerOptions.locationPathName = buildName;
-    buildPlayerOptions.target = target;
-    buildPlayerOptions.options = BuildOptions.None; //BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
-    EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
-    BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
-    BuildSummary summary = report.summary;
+        BuildOptions options = BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
+        if (ScriptsOnly()) {
+            options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
+        }
+        Debug.Log("Build options " + options);
+        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+        buildPlayerOptions.scenes = scenes.ToArray();
+        buildPlayerOptions.locationPathName = buildName;
+        buildPlayerOptions.target = target;
+        buildPlayerOptions.options = options;
+        EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
+        BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+        BuildSummary summary = report.summary;
 
     }
 
@@ -85,10 +90,21 @@ public class Build {
         }
     }
 
-    private static bool IncludePrivateScenes() {
-        string privateScenes = Environment.GetEnvironmentVariable("INCLUDE_PRIVATE_SCENES");
+    private static bool GetBoolEnvVariable(string key, bool defaultValue = false) {
+        string value = Environment.GetEnvironmentVariable(key);
+        if (value != null) {
+            return value.ToLower() == "true";
+        } else {
+            return defaultValue;
+        }
+    }
 
-        return privateScenes != null && privateScenes.ToLower() == "true";
+    private static bool ScriptsOnly() {
+        return GetBoolEnvVariable("BUILD_SCRIPTS_ONLY");
+    }
+
+    private static bool IncludePrivateScenes() {
+        return GetBoolEnvVariable("INCLUDE_PRIVATE_SCENES");
     }
 
     private static string GetDefineSymbolsFromEnv() {

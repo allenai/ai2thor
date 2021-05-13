@@ -14,7 +14,6 @@ from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
 import glob
-import re
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -88,16 +87,9 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(
-    x=-1.5,
-    z=-1.5,
-    y=0.901,
-)
+BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION,
-    rotation={"x": 0, "y": 0, "z": 0},
-    horizon=0,
-    standing=True,
+    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
 )
 
 
@@ -200,9 +192,7 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE,
-        renderObjectImage=True,
-        renderClassImage=True,
+        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -219,9 +209,7 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE,
-        renderSemanticSegmentation=True,
-        renderInstanceSegmentation=True,
+        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -594,6 +582,25 @@ def test_open_aabb_cache(controller):
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_toggle_stove(controller):
+    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -2.25}
+    action = position.copy()
+    action["rotation"] = dict(y=90)
+    action["horizon"] = 30.0
+    action["standing"] = True
+    action["action"] = "TeleportFull"
+    event = controller.step(action, raise_for_failure=True)
+    knob = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectType"] == "StoveKnob" and obj['visible']
+    )
+    assert not knob['isToggled'], "knob should not be toggled"
+    assert knob['visible']
+    event = controller.step(dict(action='ToggleObjectOn', objectId=knob['objectId']), raise_for_failure=True)
+    knob = event.get_object(knob['objectId'])
+    assert knob['isToggled'], "knob should be toggled"
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
@@ -616,12 +623,10 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject",
-        objectId=fridge["objectId"],
-        raise_for_failure=True,
+        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
     )
 
-    controller.step(dict(action="ResetObjectFilter", objectIds=[]))
+    controller.step(dict(action="ResetObjectFilter"))
 
     fridge = next(
         obj
@@ -650,9 +655,7 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject",
-        objectId=fridge["objectId"],
-        raise_for_failure=True,
+        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1018,6 +1021,17 @@ def test_get_reachable_positions(controller):
     except:
         pass
 
+def test_per_step_instance_segmentation(fifo_controller):
+    fifo_controller.reset(
+        TEST_SCENE,
+        width=300,
+        height=300,
+        renderInstanceSegmentation=False
+    )
+    event = fifo_controller.step("RotateRight")
+    assert event.instance_segmentation_frame is None
+    event = fifo_controller.step("Pass", renderInstanceSegmentation=True)
+    assert event.instance_segmentation_frame is not None
 
 #  Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
@@ -1084,8 +1098,7 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1096,8 +1109,7 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1105,8 +1117,7 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport",
-        **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1607,3 +1618,42 @@ def test_unsupported_manipulathor(controller):
     )
     event = controller.step(action="PickupObject", objectId=objectId, forceAction=True)
     assert not event, "PickupObject(objectId) should have failed with agentMode=arm"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_invalid_arguments(controller):
+    controller.reset()
+    with pytest.raises(ValueError):
+        event = controller.step(
+            action="PutObject",
+            x=0.0,
+            y=0.0,
+            z=1.0,
+            forceAction=False,
+            placeStationary=True,
+        )
+    print("Err {0}".format(controller.last_event.metadata["lastActionSuccess"]))
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Extra parameter 'z' in action"
+    assert controller.last_event.metadata[
+        "errorMessage"
+    ], "errorMessage with invalid argument"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_segmentation_colors(controller):
+    event = controller.reset(renderSemanticSegmentation=True)
+    fridge_color = event.object_id_to_color["Fridge"]
+    assert (
+        event.color_to_object_id[fridge_color] == "Fridge"
+    ), "Fridge should have this color semantic seg"
+
+    event = controller.reset(
+        renderSemanticSegmentation=False, renderInstanceSegmentation=True
+    )
+    fridge_color = event.object_id_to_color["Fridge"]
+    assert (
+        event.color_to_object_id[fridge_color] == "Fridge"
+    ), "Fridge should have this color on instance seg"
+

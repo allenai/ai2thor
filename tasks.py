@@ -99,7 +99,7 @@ def _unity_path():
         # TODO: Verify windows unity standalone path
         standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
     elif sys.platform.startswith("linux"):
-        unity_hub_path = "{}/Unity/{}/Editor/Unity".format(
+        unity_hub_path = "{}/Unity/Hub/Editor/{}/Editor/Unity".format(
             os.environ["HOME"], unity_version
         )
 
@@ -382,7 +382,7 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None):
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
@@ -391,6 +391,9 @@ def local_build(context, prefix="local", arch="OSXIntel64", scenes=None):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
+    if scripts_only:
+        env["BUILD_SCRIPTS_ONLY"] = "true";
+
     if scenes:
         env["BUILD_SCENES"] = ",".join(
             map(ai2thor.controller.Controller.normalize_scene, scenes)
@@ -953,7 +956,7 @@ def ci_build(context):
             )
             clean()
             subprocess.check_call("git fetch", shell=True)
-            subprocess.check_call("git checkout %s" % build["branch"], shell=True)
+            subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
             subprocess.check_call(
                 "git checkout -qf %s" % build["commit_id"], shell=True
             )

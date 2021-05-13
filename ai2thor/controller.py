@@ -952,24 +952,30 @@ class Controller(object):
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
         makedirs(self.log_dir)
-        self.server.unity_proc = proc = subprocess.Popen(command, env=env, stdout=open(os.path.join(self.log_dir, 'unity.log'), "a"))
+        self.server.unity_proc = proc = subprocess.Popen(
+            command,
+            env=env,
+            stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
+            stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
+        )
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
     def check_x_display(self, x_display):
-        with open(os.devnull, "w") as dn:
-            # copying the environment so that we pickup
-            # XAUTHORITY values
-            env = os.environ.copy()
-            env["DISPLAY"] = x_display
+        if not self.headless:
+            with open(os.devnull, "w") as dn:
+                # copying the environment so that we pickup
+                # XAUTHORITY values
+                env = os.environ.copy()
+                env["DISPLAY"] = x_display
 
-            if subprocess.call(["which", "xdpyinfo"], stdout=dn) == 0:
-                assert (
-                    subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0
-                ), (
-                    "Invalid DISPLAY %s - cannot find X server with xdpyinfo"
-                    % x_display
-                )
+                if subprocess.call(["which", "xdpyinfo"], stdout=dn) == 0:
+                    assert (
+                        subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0
+                    ), (
+                        "Invalid DISPLAY %s - cannot find X server with xdpyinfo"
+                        % x_display
+                    )
 
     @property
     def tmp_dir(self):
@@ -1056,7 +1062,13 @@ class Controller(object):
             ver_build = ai2thor.build.Build(
                 arch, commit_id, self.include_private_scenes, self.releases_dir
             )
-            ver_build.exists()
+
+            if not ver_build.exists():
+                raise ValueError(
+                    "Invalid commit_id: %s - no build exists for arch=%s"
+                    % (commit_id, arch)
+                )
+
             return ver_build
         else:
             git_dir = os.path.normpath(
@@ -1189,14 +1201,15 @@ class Controller(object):
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
             self.killing_unity = True
-            os.kill(self.unity_pid, signal.SIGTERM)
-            for i in range(10):
-                if not process_alive(self.unity_pid):
+            proc = self.server.unity_proc
+            for i in range(4):
+                if not process_alive(proc.pid):
                     break
-                time.sleep(0.1)
-            if platform.system() != "Windows":
-                if process_alive(self.unity_pid):
-                    os.kill(self.unity_pid, signal.SIGKILL)
+                try:
+                    proc.kill()
+                    proc.wait(1)
+                except subprocess.TimeoutExpired:
+                    pass
 
 
 class BFSSearchPoint:
