@@ -24,8 +24,12 @@ try:
 except ImportError:
     pass
 
-platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
-arch_platform_map = {v: k for k, v in platform_map.items()}
+platform_map = dict(Linux64="Linux", OSXIntel64="Darwin", CloudRendering="Linux")
+arch_platform_map = dict(
+    # order is important as that determines which platform we search for first
+    Linux=("CloudRendering", "Linux64"),
+    Darwin=("OSXIntel64",)
+)
 
 
 def build_name(arch, commit_id, include_private_scenes=False):
@@ -166,7 +170,7 @@ class Build(object):
 
     @property
     def executable_path(self):
-        if self.arch == "Linux64":
+        if self.arch == "Linux64" or self.arch == "CloudRendering":
             return os.path.join(self.base_dir, self.name)
         elif self.arch == "OSXIntel64":
             plist = self.parse_plist()
