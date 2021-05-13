@@ -1059,6 +1059,26 @@ def ci_build(context):
 
     lock_f.close()
 
+@task
+def build_cloudrendering(context):
+    # XXX check for local changes
+    arch = 'CloudRendering'
+    commit_id = git_commit_id()
+    unity_path = "unity"
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
+    build_dir = os.path.join("builds", build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+    build_info["log"] = "%s.log" % (build_name,)
+    _build(unity_path, arch, build_dir, build_name, {})
+    build_pip_commit()
+
+
+@task
+def build_deploy_cloudrendering(context):
+    pass
+    # ci_build_arch
+    # build_pip_commit
 
 @task
 def ci_build_webgl(context, commit_id):
@@ -3258,9 +3278,16 @@ def generate_msgpack_resolver(task):
     # need to download/unzip into this path, add gatekeeper permission
     target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
     shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
+    base_dir = os.path.normpath(
+        os.path.dirname(os.path.realpath(__file__))
+    )
+    dotnet_path = os.path.join(base_dir, ".dotnet/dotnet")
+
+    if not os.path.isfile(dotnet_path):
+        raise Exception("missing local dotnet install. run invoke install-dotnet")
+
     subprocess.check_call(
-        "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
+        "%s tool run mpc -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (dotnet_path, target_dir),
         shell=True,
     )
     for g in glob.glob(os.path.join(target_dir, "*.cs")):
@@ -3327,6 +3354,42 @@ def ci_test_utf(context, build):
         "finished Unity Test framework runner for %s %s"
         % (build["branch"], build["commit_id"])
     )
+
+@task
+def install_msgpack_generator(context):
+    mpc_version = "2.2.85"
+    import subprocess
+    base_dir = os.path.normpath(
+        os.path.dirname(os.path.realpath(__file__))
+    )
+    command = os.path.join(base_dir, ".dotnet/dotnet") + " new tool-manifest"
+    subprocess.check_call(command, shell=True)
+    command = os.path.join(base_dir, ".dotnet/dotnet") + " tool install MessagePack.Generator --version=%s" % mpc_version
+    subprocess.check_call(command, shell=True)
+
+
+@task
+def install_dotnet(context):
+    import requests
+    import os
+    import stat
+    base_dir = os.path.normpath(
+        os.path.dirname(os.path.realpath(__file__))
+    )
+    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script
+    res = requests.get("https://dot.net/v1/dotnet-install.sh")
+    res.raise_for_status()
+    target = os.path.join(base_dir, "dotnet-install.sh")
+    with open(target, "wb") as f:
+        f.write(res.content)
+
+    os.chmod(target,  stat.S_IREAD | stat.S_IEXEC | stat.S_IWRITE) 
+    env = os.environ.copy()
+    # should use filename
+    env["DOTNET_INSTALL_DIR"] = os.path.join(base_dir, ".dotnet")
+    subprocess.check_call(target, shell=True, env=env)
+    os.unlink(target)
+
 
 
 @task
@@ -3410,3 +3473,5 @@ class {encoded_class_name}:
         )
     with open("ai2thor/tests/test_utf.py", "w") as f:
         f.write("\n".join(class_data))
+
+
