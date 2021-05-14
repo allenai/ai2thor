@@ -17,8 +17,8 @@ using System.Reflection;
 using System.Text;
 using UnityEngine.Rendering;
 using Unity.Simulation;
-#if PLATFORM_CLOUD_RENDERING
 using UnityEngine.Experimental.Rendering;
+#if PLATFORM_CLOUD_RENDERING
 using UnityEditor;
 using UnityEngine.CloudRendering;
 #endif
