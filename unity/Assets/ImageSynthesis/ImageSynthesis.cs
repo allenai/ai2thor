@@ -329,6 +329,9 @@ public class ImageSynthesis : MonoBehaviour {
 				classTag = "" + sop.Type;
 				objTag = sop.ObjectID;
 			}
+            if (objTag.StartsWith("fuse_wall_")) {
+                objTag = "fuse_wall";
+            }
 
 
 			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
