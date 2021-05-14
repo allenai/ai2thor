@@ -1627,9 +1627,7 @@ def test_unsupported_manipulathor(controller):
 def test_randomize_materials_scenes(controller):
     for p in [0, 200, 300, 400]:
         controller.reset(scene=f"FloorPlan{p + 20}")
-        meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-            "actionReturn"
-        ]
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert meta["useTrainMaterials"]
         assert meta["useExternalMaterials"]
         assert not meta["useValMaterials"]
@@ -1637,9 +1635,7 @@ def test_randomize_materials_scenes(controller):
         assert meta["totalMaterialsConsidered"] == 689
 
         controller.reset(scene=f"FloorPlan{p + 21}")
-        meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-            "actionReturn"
-        ]
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert not meta["useTrainMaterials"]
         assert not meta["useExternalMaterials"]
         assert meta["useValMaterials"]
@@ -1647,9 +1643,7 @@ def test_randomize_materials_scenes(controller):
         assert meta["totalMaterialsConsidered"] == 506
 
         controller.reset(scene=f"FloorPlan{p + 25}")
-        meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-            "actionReturn"
-        ]
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert not meta["useTrainMaterials"]
         assert not meta["useExternalMaterials"]
         assert meta["useValMaterials"]
@@ -1657,9 +1651,7 @@ def test_randomize_materials_scenes(controller):
         assert meta["totalMaterialsConsidered"] == 506
 
         controller.reset(scene=f"FloorPlan{p + 26}")
-        meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-            "actionReturn"
-        ]
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
         assert not meta["useTrainMaterials"]
         assert not meta["useExternalMaterials"]
         assert not meta["useValMaterials"]
@@ -1667,9 +1659,7 @@ def test_randomize_materials_scenes(controller):
         assert meta["totalMaterialsConsidered"] == 366
 
     controller.reset(scene=f"FloorPlan_Train5_3")
-    meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-        "actionReturn"
-    ]
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
     assert meta["useTrainMaterials"]
     assert meta["useExternalMaterials"]
     assert not meta["useValMaterials"]
@@ -1677,9 +1667,7 @@ def test_randomize_materials_scenes(controller):
     assert meta["totalMaterialsConsidered"] == 689
 
     controller.reset(scene=f"FloorPlan_Val2_1")
-    meta = controller.step("RandomizeMaterials", clearOnReset=True).metadata[
-        "actionReturn"
-    ]
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
     assert not meta["useTrainMaterials"]
     assert not meta["useExternalMaterials"]
     assert meta["useValMaterials"]
@@ -1723,7 +1711,6 @@ def test_randomize_materials_params(controller):
     controller.reset(scene="FloorPlan15")
     meta = controller.step(
         action="RandomizeMaterials",
-        clearOnReset=True,
         useTrainMaterials=True,
         useValMaterials=True,
         useTestMaterials=True,
@@ -1735,44 +1722,28 @@ def test_randomize_materials_params(controller):
     assert meta["useTestMaterials"]
     assert meta["totalMaterialsConsidered"] == 752
 
-    assert not controller.step(
-        action="RandomizeMaterials", clearOnReset=True, useTrainMaterials=False
-    )
-    assert controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["Kitchen"]
-    )
+    assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["Kitchen"])
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
         == 332
     )
     assert controller.step(
-        action="RandomizeMaterials",
-        clearOnReset=True,
-        inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
         == 512
     )
-    assert not controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["LivingRoom"]
-    )
-    assert not controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["RoboTHOR"]
-    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
 
     controller.reset(scene="FloorPlan_Train5_2")
     assert not controller.step(
-        action="RandomizeMaterials",
-        clearOnReset=True,
-        inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
     )
-    assert not controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["LivingRoom"]
-    )
-    assert controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["RoboTHOR"]
-    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
         == 352
@@ -1780,16 +1751,10 @@ def test_randomize_materials_params(controller):
 
     controller.reset(scene="FloorPlan_Val3_2")
     assert not controller.step(
-        action="RandomizeMaterials",
-        clearOnReset=True,
-        inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
     )
-    assert not controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["LivingRoom"]
-    )
-    assert controller.step(
-        action="RandomizeMaterials", clearOnReset=True, inRoomTypes=["RoboTHOR"]
-    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
         == 320
