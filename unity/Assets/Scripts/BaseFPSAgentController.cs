@@ -81,7 +81,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public AgentState agentState = AgentState.Emit;
 
-        protected bool clearRandomizeMaterialsOnReset = false;
+        public bool clearRandomizeMaterialsOnReset = false;
 
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
@@ -581,11 +581,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
-
-            if (clearRandomizeMaterialsOnReset) {
-                resetMaterials();
-                clearRandomizeMaterialsOnReset = false;
-            }
         }
 
         public void SetAgentMode(string mode) {
@@ -910,7 +905,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // Keep it here to make sure the action succeeds first
-            clearRandomizeMaterialsOnReset = true;
+            agentManager.doResetMaterials = true;
 
             actionFinished(
                 success: true,
@@ -925,13 +920,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected void resetMaterials() {
-            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            colorChangeComponent.ResetMaterials();
-        }
-
         public void ResetMaterials() {
-            resetMaterials();
+            agentManager.resetMaterials();
             actionFinished(true);
         }
 
