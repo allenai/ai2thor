@@ -87,7 +87,7 @@ public class ColorChanger : MonoBehaviour {
     Dictionary<string, Texture[]> origTextures;
     Dictionary<string, HashSet<Material>> materialGroups;
 
-    public void Start() {
+    protected void cacheMaterials() {
         if (materials == null) {
             materials = new Dictionary<string, Material[]> {
                 ["AlarmClock"] = alarmClockMaterials,
@@ -212,6 +212,9 @@ public class ColorChanger : MonoBehaviour {
         bool useExternalMaterials,
         HashSet<string> inRoomTypes
     ) {
+        if (materials == null) {
+            cacheMaterials();
+        }
         int numTotalMaterials = 0;
         List<Material> validMaterials = new List<Material>();
         if (inRoomTypes == null) {

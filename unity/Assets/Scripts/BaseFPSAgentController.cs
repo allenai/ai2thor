@@ -81,7 +81,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public AgentState agentState = AgentState.Emit;
 
-        protected bool clearRandomizedMaterialsOnReset = false;
+        protected bool clearRandomizeMaterialsOnReset = false;
 
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
@@ -582,9 +582,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
 
-            if (clearRandomizedMaterialsOnReset) {
+            if (clearRandomizeMaterialsOnReset) {
                 resetMaterials();
-                clearRandomizedMaterialsOnReset = false;
+                clearRandomizeMaterialsOnReset = false;
             }
         }
 
@@ -787,7 +787,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
          * TODO: Make the randomizations reproducible with a seed.
          */
         public void RandomizeMaterials(
-            bool clearOnReset,
             bool? useTrainMaterials = null,
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
@@ -911,7 +910,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // Keep it here to make sure the action succeeds first
-            clearRandomizedMaterialsOnReset = clearOnReset;
+            clearRandomizeMaterialsOnReset = true;
 
             actionFinished(
                 success: true,
