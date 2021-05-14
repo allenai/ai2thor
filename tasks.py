@@ -625,6 +625,26 @@ def push_pip_commit(context):
 
 
 @task
+def build_cloudrendering(context):
+    # XXX check for local changes
+    arch = 'CloudRendering'
+    commit_id = git_commit_id()
+    unity_path = "unity"
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
+    build_dir = os.path.join("builds", build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+    build_info["log"] = "%s.log" % (build_name,)
+    _build(unity_path, arch, build_dir, build_name, {})
+    build_pip_commit()
+
+@task
+def build_deploy_cloudrendering(context):
+    pass
+    # ci_build_arch
+    # build_pip_commit
+
+@task
 def build_pip_commit(context):
 
     commit_id = git_commit_id()
@@ -3275,6 +3295,7 @@ def get_physics_determinism(
 
 @task
 def install_msgpack_compiler(context, version, target_path):
+    import platform
     import requests
     import stat
 
@@ -3285,7 +3306,9 @@ def install_msgpack_compiler(context, version, target_path):
     res = requests.get(url)
     res.raise_for_status()
     z = zipfile.ZipFile(io.BytesIO(res.content))
-    mpc_data = z.read("linux/mpc")
+    member_path = dict(Linux="linux/mpc", Darwin="osx/mpc")
+    mpc_data = z.read(member_path[platform.system()])
+
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
     with open(target_path, "wb") as f:
         f.write(mpc_data)
@@ -3377,7 +3400,6 @@ def ci_test_utf(context, build):
         "finished Unity Test framework runner for %s %s"
         % (build["branch"], build["commit_id"])
     )
-
 
 @task
 def test_utf(context):

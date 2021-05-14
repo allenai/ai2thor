@@ -1304,9 +1304,7 @@ public class MetadataPatch {
     public bool lastActionSuccess;
     public int agentId;
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 }
 
@@ -1607,9 +1605,7 @@ public struct MetadataWrapper {
     public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 
 }
