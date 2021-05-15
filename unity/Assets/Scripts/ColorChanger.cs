@@ -216,10 +216,10 @@ public class ColorChanger : MonoBehaviour {
             cacheMaterials();
         }
         int numTotalMaterials = 0;
-        List<Material> validMaterials = new List<Material>();
         if (inRoomTypes == null) {
             // select from all room types
             foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
+                List<Material> validMaterials = new List<Material>();
                 foreach (Material material in materialGroup.Value) {
                     if (
                         useTrainMaterials && materialGroups["train"].Contains(material) ||
@@ -230,10 +230,12 @@ public class ColorChanger : MonoBehaviour {
                         numTotalMaterials++;
                     }
                 }
+                shuffleMaterials(materialGroup: validMaterials);
             }
         } else {
             // select from only specific room types
             foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
+                List<Material> validMaterials = new List<Material>();
                 foreach (Material material in materialGroup.Value) {
                     if (
                         useTrainMaterials && materialGroups["train"].Contains(material) ||
@@ -249,9 +251,9 @@ public class ColorChanger : MonoBehaviour {
                         }
                     }
                 }
+                shuffleMaterials(materialGroup: validMaterials);
             }
         }
-        shuffleMaterials(materialGroup: validMaterials);
         return numTotalMaterials;
     }
 
