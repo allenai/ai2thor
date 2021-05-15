@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 
 using System.Collections.Generic;
@@ -51,6 +51,8 @@ public class AgentManager : MonoBehaviour {
 
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
+
+    public bool doResetMaterials = false;
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -638,7 +640,16 @@ public class AgentManager : MonoBehaviour {
         }
     }
 
+    public void resetMaterials() {
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+        colorChangeComponent.ResetMaterials();
+    }
+
     public void Reset(ServerAction response) {
+        if (doResetMaterials) {
+            resetMaterials();
+            doResetMaterials = false;
+        }
         StartCoroutine(ResetCoroutine(response));
     }
 

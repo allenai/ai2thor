@@ -81,6 +81,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public AgentState agentState = AgentState.Emit;
 
+        public bool clearRandomizeMaterialsOnReset = false;
+
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
         protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
@@ -186,8 +188,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_WEBGL
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-		public Quaternion TargetRotation
-		{
+		public Quaternion TargetRotation {
 			get { return targetRotation; }
 		}
 #endif
@@ -212,8 +213,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Initialize parameters from environment variables
         protected virtual void Awake() {
 #if UNITY_WEBGL
-                this.jsInterface = this.GetComponent<JavaScriptInterface>();
-                this.jsInterface.enabled = true;
+            this.jsInterface = this.GetComponent<JavaScriptInterface>();
+            this.jsInterface.enabled = true;
 #endif
 
             // character controller parameters
@@ -319,8 +320,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected virtual void resumePhysics() { }
-
-
 
         public Vector3[] getReachablePositions(
             float gridMultiplier = 1.0f,
@@ -773,6 +772,156 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RandomizeColors() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.RandomizeColor();
+            actionFinished(true);
+        }
+
+        /**
+         * @inRoomTypes assumes all room types by default. Valid room types include
+         * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
+         *
+         * TODO: Make the randomizations reproducible with a seed.
+         */
+        public void RandomizeMaterials(
+            bool? useTrainMaterials = null,
+            bool? useValMaterials = null,
+            bool? useTestMaterials = null,
+            bool? useExternalMaterials = null,
+            string[] inRoomTypes = null
+        ) {
+            HashSet<string> chosenRoomTypes = new HashSet<string>();
+            HashSet<string> validRoomTypes = new HashSet<string>() {
+                "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
+            };
+            if (inRoomTypes != null) {
+                if (inRoomTypes.Length == 0) {
+                    throw new ArgumentException("inRoomTypes must have a non-zero length!");
+                }
+
+                foreach (string roomType in inRoomTypes) {
+                    if (!validRoomTypes.Contains(roomType.ToLower())) {
+                        throw new ArgumentException(
+                            $"inRoomTypes contains unknown room type: {roomType}.\n" +
+                            "Valid room types include {\"Bedroom\", \"Bathroom\", \"LivingRoom\", \"Kitchen\", \"RoboTHOR\"}"
+                        );
+                    };
+                    chosenRoomTypes.Add(roomType.ToLower());
+                }
+            }
+
+            string sceneType;
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (scene.EndsWith("_physics")) {
+                // iTHOR scene
+                int sceneNumber = Int32.Parse(
+                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
+                ) % 100;
+
+                int sceneGroup = Int32.Parse(
+                    scene.Substring(startIndex: "FloorPlan".Length, length:  scene.Length - "FloorPlan_physics".Length)
+                ) / 100;
+
+                if (inRoomTypes != null) {
+                    string sceneGroupName = new string[] { "kitchen", "livingroom", "bedroom", "bathroom" }[Math.Max(sceneGroup - 1, 0)];
+                    if (!chosenRoomTypes.Contains(sceneGroupName)) {
+                        throw new ArgumentException(
+                            $"inRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}."
+                        );
+                    }
+                }
+
+                if (sceneNumber >= 1 && sceneNumber <= 20) {
+                    sceneType = "train";
+                } else if (sceneNumber <= 25) {
+                    sceneType = "val";
+                } else {
+                    sceneType = "test";
+                }
+            } else {
+                // RoboTHOR scene
+                string chars = scene.Substring(startIndex: "FloorPlan_".Length, length: 2);
+                switch (chars) {
+                    case "Tr":
+                        sceneType = "train";
+                        break;
+                    case "Va":
+                        sceneType = "val";
+                        break;
+                    case "Te":
+                        sceneType = "test";
+                        break;
+                    default:
+                        throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
+                }
+                if (inRoomTypes != null) {
+                    if (!chosenRoomTypes.Contains("robothor")) {
+                        throw new ArgumentException(
+                            $"inRoomTypes must include \"RoboTHOR\" inside of a RoboTHOR scene: {scene}."
+                        );
+                    }
+                }
+            }
+
+            switch (sceneType) {
+                case "train":
+                    if (useTrainMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTrainMaterials=false inside of a train scene.");
+                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(true);
+                    useValMaterials = useValMaterials.GetValueOrDefault(false);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(false);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(true);
+                    break;
+                case "val":
+                    if (useValMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a train scene.");
+                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
+                    useValMaterials = useValMaterials.GetValueOrDefault(true);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(false);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(false);
+                    break;
+                case "test":
+                    if (useTestMaterials.GetValueOrDefault(true) == false) {
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a train scene.");
+                    }
+                    useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
+                    useValMaterials = useValMaterials.GetValueOrDefault(false);
+                    useTestMaterials = useTestMaterials.GetValueOrDefault(true);
+                    useExternalMaterials = useExternalMaterials.GetValueOrDefault(false);
+                    break;
+                default:
+                    throw new InvalidOperationException(
+                        "RandomizeMaterials sceneType is not in {train/val/test}. Please open an issue at github.com/allenai/ai2thor!"
+                    );
+            }
+
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            int numTotalMaterials = colorChangeComponent.RandomizeMaterials(
+                useTrainMaterials: useTrainMaterials.Value,
+                useValMaterials: useValMaterials.Value,
+                useTestMaterials: useTestMaterials.Value,
+                useExternalMaterials: useExternalMaterials.Value,
+                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
+            );
+
+            // Keep it here to make sure the action succeeds first
+            agentManager.doResetMaterials = true;
+
+            actionFinished(
+                success: true,
+                actionReturn: new Dictionary<string, object>() {
+                    ["chosenRoomTypes"] = chosenRoomTypes.Count == 0 ? validRoomTypes : chosenRoomTypes,
+                    ["useTrainMaterials"] = useTrainMaterials.Value,
+                    ["useValMaterials"] = useValMaterials.Value,
+                    ["useTestMaterials"] = useTestMaterials.Value,
+                    ["useExternalMaterials"] = useExternalMaterials.Value,
+                    ["totalMaterialsConsidered"] = numTotalMaterials
+                }
+            );
+        }
+
+        public void ResetMaterials() {
+            agentManager.resetMaterials();
             actionFinished(true);
         }
 
