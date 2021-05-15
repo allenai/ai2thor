@@ -50,7 +50,6 @@ public class ColorChanger : MonoBehaviour {
 
                       fabricMaterials,
                       glassMaterials,
-                      lightMaterials,
                       metalMaterials,
 
                       paperMaterials,
@@ -120,7 +119,6 @@ public class ColorChanger : MonoBehaviour {
                 ["Sofa"] = sofaMaterials,
                 ["Fabric"] = fabricMaterials,
                 ["Glass"] = glassMaterials,
-                ["Light"] = lightMaterials,
                 ["Metal"] = metalMaterials,
                 ["Plastic"] = plasticMaterials,
                 ["Wood"] = woodMaterials,
