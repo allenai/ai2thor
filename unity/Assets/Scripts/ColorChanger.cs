@@ -270,6 +270,9 @@ public class ColorChanger : MonoBehaviour {
     }
 
     public void RandomizeColor() {
+        if (materials == null) {
+            cacheMaterials();
+        }
         foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
             for (int i = 0; i < materialGroup.Value.Length; i++) {
                 Material mat = materialGroup.Value[i];
