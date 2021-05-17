@@ -793,7 +793,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		TimerResetValue = HowManySecondsUntilRoomTemp;
 
 		sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-		Debug.Log($"NULL SCENEMANAGER ? {sceneManager == null} name {this.name}");
 
 		initializeProperties();
 	}
