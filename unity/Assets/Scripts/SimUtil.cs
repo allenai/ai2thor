@@ -1,10 +1,12 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using System.IO;
 
 public static class SimUtil {
 
@@ -497,6 +499,59 @@ public static class SimUtil {
     #region editor commands
 
 #if UNITY_EDITOR
+    [UnityEditor.MenuItem("AI2-THOR/RandomizeMaterials/CC0Textures/Create Materials From Images")]
+    public static void MaterialsFromMaps() {
+        // Creates Unity Materials from .jpg texture image maps
+        string basePath = "Assets/CC0Materials/FromCC0Textures/";
+        DirectoryInfo parentDir = new DirectoryInfo(basePath);
+        FileInfo[] info = parentDir.GetFiles("*.meta");
+        foreach (FileInfo folderMeta in info) {
+            string mType = folderMeta.Name.Substring(0, folderMeta.Name.Length - ".meta".Length);
+            DirectoryInfo mDir = new DirectoryInfo(basePath + mType);
+            FileInfo[] mInfo = mDir.GetFiles("*_Color.jpg");
+            foreach (FileInfo materialColor in mInfo) {
+                string assetId = materialColor.Name.Substring(0, materialColor.Name.Length - "_Color.jpg".Length);
+                string assetBasePath = $"{basePath}/{mType}/{assetId}";
+
+                Material material = new Material(Shader.Find("Standard"));
+                Texture2D color = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    assetBasePath + "_Color.jpg"
+                );
+                material.SetTexture("_MainTex", color);
+
+                string normalsPath = assetBasePath + "_Normal.jpg";
+                if (System.IO.File.Exists(normalsPath)) {
+                    TextureImporter importer = AssetImporter.GetAtPath(normalsPath) as TextureImporter;
+                    importer.textureType = TextureImporterType.NormalMap;
+                    AssetDatabase.WriteImportSettingsIfDirty(normalsPath);
+                    AssetDatabase.Refresh();
+
+                    Texture2D normals = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        assetBasePath + "_Normal.jpg"
+                    );
+                    material.SetTexture("_BumpMap", normals);
+                }
+
+                string occlusionPath = assetBasePath + "_AmbientOcclusion.jpg";
+                if (System.IO.File.Exists(occlusionPath)) {
+                    Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(occlusionPath);
+                    material.SetTexture("_OcclusionMap", texture);
+                }
+
+                string displacementPath = assetBasePath + "_Displacement.jpg";
+                if (System.IO.File.Exists(displacementPath)) {
+                    Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(displacementPath);
+                    material.SetTexture("_ParallaxMap", texture);
+                }
+
+                AssetDatabase.CreateAsset(
+                    material,
+                    $"{assetBasePath.Substring(0, assetBasePath.Length - 3)}.mat"
+                );
+            }
+        }
+    }
+
     [UnityEditor.MenuItem("AI2-THOR/Set Up Base Objects")]
     public static void SetUpBaseObjects() {
         foreach (GameObject go in UnityEditor.Selection.gameObjects) {
