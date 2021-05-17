@@ -309,11 +309,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // checks if a float is a multiple of 0.1f
         private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
-            if (((decimal)f % 0.1M == 0) == false)
+            if (((decimal)f % 0.1M == 0) == false) {
                 return false;
-
-            else
+            } else {
                 return true;
+            }
         }
 
         public override void LookDown(ServerAction action) {
@@ -349,8 +349,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 base.LookDown(action);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract)
+                if (!action.manualInteract) {
                     DefaultAgentHand();
+                }
             } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates down " + action.degrees + " degrees";
                 actionFinished(false);
@@ -392,8 +393,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 base.LookUp(action);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract)
+                if (!action.manualInteract) {
                     DefaultAgentHand();
+                }
             } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates up " + action.degrees + " degrees";
                 actionFinished(false);
@@ -402,8 +404,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateRight(ServerAction action) {
             // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f)
+            if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
+            }
 
             if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
 
@@ -421,16 +424,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateLeft(ServerAction action) {
             // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f)
+            if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
+            }
 
             if (CheckIfAgentCanRotate("left", action.degrees) || action.forceAction) {
 
                 base.RotateLeft(action);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract)
+                if (!action.manualInteract) {
                     DefaultAgentHand();
+                }
             } else {
                 errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees + " degrees";
                 actionFinished(false);
@@ -1957,8 +1962,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool canbepushed = false;
 
             if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                 canbepushed = true;
+            }
 
             if (!canbepushed) {
                 errorMessage = "Target Primary Property type incompatible with push/pull";
@@ -2051,8 +2057,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool canbepushed = false;
 
             if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                 canbepushed = true;
+            }
 
             if (!canbepushed) {
                 errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
@@ -2557,8 +2564,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     bool canbepushed = false;
 
                     if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                        target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                        target.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                         canbepushed = true;
+                    }
 
                     if (!canbepushed) {
                         // the sim object hit was not moveable or pickupable
@@ -2837,8 +2845,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool IsInArray(Collider collider, GameObject[] arrayOfCol) {
             for (int i = 0; i < arrayOfCol.Length; i++) {
-                if (collider == arrayOfCol[i].GetComponent<Collider>())
+                if (collider == arrayOfCol[i].GetComponent<Collider>()) {
                     return true;
+                }
             }
             return false;
         }
@@ -2867,8 +2876,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
 
                             // oh it is the item we are holding, it's fine
-                            else
+                            else {
                                 result = true;
+                            }
                         }
 
                         // ok it's not a sim obj and it's not the player, so it must be a structure or something else that would block
@@ -2990,10 +3000,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y))
+            if (ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y)) {
                 actionFinished(true);
-
-            else {
+            } else {
                 errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
                 actionFinished(false);
             }
@@ -3030,10 +3039,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y))
+            if (ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y)) {
                 actionFinished(true);
-
-            else {
+            } else {
                 errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
                 actionFinished(false);
             }
@@ -3620,11 +3628,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target == null) {
-                if (action.anywhere)
+                if (action.anywhere) {
                     errorMessage = "No valid Receptacle found in scene";
-
-                else
+                } else {
                     errorMessage = "No valid Receptacle found in view";
+                }
 
                 actionFinished(false);
                 return;
@@ -3698,8 +3706,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 // targetReceptacles.AddRange(physicsSceneManager.ReceptaclesInScene); 
                 foreach (SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene()) {
-                    if (ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
+                    if (ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                         targetReceptacles.Add(sop);
+                    }
                 }
             }
 
@@ -3708,8 +3717,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (action.objectId != null) {
                 List<SimObjPhysics> filteredTargetReceptacleList = new List<SimObjPhysics>();
                 foreach (SimObjPhysics sop in targetReceptacles) {
-                    if (sop.objectID == action.objectId)
+                    if (sop.objectID == action.objectId) {
                         filteredTargetReceptacleList.Add(sop);
+                    }
                 }
 
                 targetReceptacles = filteredTargetReceptacleList;
@@ -3775,8 +3785,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                if (constraintsUsed)
+                if (constraintsUsed) {
                     rsps = editedRsps;
+                }
 
                 rsps.Shuffle_(action.randomSeed);
 
@@ -3802,8 +3813,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
                 BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
                 if (primaryAgent.imageSynthesis) {
-                    if (primaryAgent.imageSynthesis.enabled)
+                    if (primaryAgent.imageSynthesis.enabled) {
                         primaryAgent.imageSynthesis.OnSceneChange();
+                    }
                 }
 
                 SimObjPhysics targetSOP = targetCircle.GetComponent<SimObjPhysics>();
@@ -3994,10 +4006,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     if (SetObjectStates.objectType != null) {
                                         if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             b.BreakObject(null);
-                                        } else
+                                        } else {
                                             continue;
-                                    } else
+                                        }
+                                    } else {
                                         b.BreakObject(null);
+                                    }
                                 }
                             }
                         }
@@ -4016,12 +4030,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     // oh, we have a specific object type?
                                     if (SetObjectStates.objectType != null) {
                                         // we found an object of the type we want to set
-                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             fil.FillObject("water");
+                                        }
 
                                         // doesn't match objectType, continue to next object
-                                        else
+                                        else {
                                             continue;
+                                        }
                                     } else {
                                         fil.FillObject("water");
                                     }
@@ -4032,12 +4048,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     // oh, we have a specific object type?
                                     if (SetObjectStates.objectType != null) {
                                         // we found an object of the type we want to set
-                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             fil.EmptyObject();
+                                        }
 
                                         // doesn't match objectType, continue to next object
-                                        else
+                                        else {
                                             continue;
+                                        }
                                     } else {
                                         fil.EmptyObject();
                                     }
@@ -4059,12 +4077,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     // oh, we have a specific object type?
                                     if (SetObjectStates.objectType != null) {
                                         // we found an object of the type we want to set
-                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             deedsDoneDirtCheap.ToggleCleanOrDirty();
+                                        }
 
                                         // doesn't match objectType, continue to next object
-                                        else
+                                        else {
                                             continue;
+                                        }
                                     } else {
                                         deedsDoneDirtCheap.ToggleCleanOrDirty();
                                     }
@@ -4075,12 +4095,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     // oh, we have a specific object type?
                                     if (SetObjectStates.objectType != null) {
                                         // we found an object of the type we want to set
-                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                        if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             deedsDoneDirtCheap.ToggleCleanOrDirty();
+                                        }
 
                                         // doesn't match objectType, continue to next object
-                                        else
+                                        else {
                                             continue;
+                                        }
                                     } else {
                                         deedsDoneDirtCheap.ToggleCleanOrDirty();
                                     }
@@ -4102,10 +4124,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     if (SetObjectStates.objectType != null) {
                                         if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             c.Cook();
-                                        } else
+                                        } else {
                                             continue;
-                                    } else
+                                        }
+                                    } else {
                                         c.Cook();
+                                    }
                                 }
                             }
                         }
@@ -4124,10 +4148,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     if (SetObjectStates.objectType != null) {
                                         if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             s.Slice();
-                                        } else
+                                        } else {
                                             continue;
-                                    } else
+                                        }
+                                    } else {
                                         s.Slice();
+                                    }
                                 }
                             }
                         }
@@ -4146,10 +4172,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     if (SetObjectStates.objectType != null) {
                                         if (sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType)) {
                                             u.UseUp();
-                                        } else
+                                        } else {
                                             continue;
-                                    } else
+                                        }
+                                    } else {
                                         u.UseUp();
+                                    }
                                 }
                             }
                         }
@@ -5216,8 +5244,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if object needs to be closed to turn on...
                 if (toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type)) {
                     // if the object is open and we are trying to turn it on, do nothing because it can't
-                    if (target.GetComponent<CanOpen_Object>().isOpen)
+                    if (target.GetComponent<CanOpen_Object>().isOpen) {
                         yield break;
+                    }
                 }
 
                 ctof.Toggle();
@@ -5285,8 +5314,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected IEnumerator ToggleAndWait(CanToggleOnOff ctof) {
             bool ctofInitialState = ctof.isOn;
 
-            if (ctof != null)
+            if (ctof != null) {
                 ctof.Toggle();
+            }
 
             bool success = false;
 
@@ -6096,10 +6126,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (Physics.Raycast(m_Camera.transform.position,
                         (point.position - m_Camera.transform.position),
                         out hit, Mathf.Infinity, (1 << 8) | (1 << 10))) {
-                            if (hit.transform != sop.transform)
+                            if (hit.transform != sop.transform) {
                                 result = false;
-
-                            else {
+                            } else {
                                 result = true;
                                 break;
                             }
