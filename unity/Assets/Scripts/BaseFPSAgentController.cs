@@ -817,7 +817,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ) % 100;
 
                 int sceneGroup = Int32.Parse(
-                    scene.Substring(startIndex: "FloorPlan".Length, length:  scene.Length - "FloorPlan_physics".Length)
+                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
                 ) / 100;
 
                 if (inRoomTypes != null) {

@@ -382,7 +382,9 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
+def local_build(
+    context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False
+):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
@@ -392,7 +394,7 @@ def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts
 
     build_dir = os.path.join("builds", build.name)
     if scripts_only:
-        env["BUILD_SCRIPTS_ONLY"] = "true";
+        env["BUILD_SCRIPTS_ONLY"] = "true"
 
     if scenes:
         env["BUILD_SCENES"] = ",".join(
@@ -834,7 +836,6 @@ def link_build_cache(branch):
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
 
     ci_prune_cache(cache_base_dir)
-
 
     main_cache_dir = os.path.join(cache_base_dir, "main")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)

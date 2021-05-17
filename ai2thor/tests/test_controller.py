@@ -69,10 +69,11 @@ def test_distance():
 def test_key_for_point():
     assert ai2thor.controller.key_for_point(2.567, -3.43) == "2.6 -3.4"
 
+
 def test_invalid_commit():
     caught_exception = False
     try:
-        c = ai2thor.controller.Controller(commit_id='1234567x')
+        c = ai2thor.controller.Controller(commit_id="1234567x")
     except ValueError as e:
         caught_exception = True
 

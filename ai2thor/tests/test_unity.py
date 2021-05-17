@@ -87,9 +87,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -192,7 +199,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -209,7 +218,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -627,7 +638,9 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter"))
@@ -659,7 +672,9 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1101,7 +1116,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1112,7 +1128,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1120,7 +1137,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1729,7 +1747,8 @@ def test_randomize_materials_params(controller):
         == 332
     )
     assert controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
@@ -1740,7 +1759,8 @@ def test_randomize_materials_params(controller):
 
     controller.reset(scene="FloorPlan_Train5_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
@@ -1751,7 +1771,8 @@ def test_randomize_materials_params(controller):
 
     controller.reset(scene="FloorPlan_Val3_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
