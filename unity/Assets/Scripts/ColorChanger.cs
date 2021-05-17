@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using UnityEngine;
- 
+
 public class ColorChanger : MonoBehaviour {
     // Define all material types
     public Material[] alarmClockMaterials;
