@@ -419,7 +419,9 @@ public class AgentManager : MonoBehaviour {
         float fieldOfView,
         string skyboxColor,
         bool? orthographic,
-        float? orthographicSize
+        float? orthographicSize,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -441,6 +443,21 @@ public class AgentManager : MonoBehaviour {
                 camera.orthographicSize = (float)orthographicSize;
             }
         }
+
+        //updates camera near and far clipping planes
+        //default to near and far clipping planes of agent camera, which are currently
+        //static values and are not exposed in anything like Initialize
+        if(nearClippingPlane == null) {
+            camera.nearClipPlane = 0.1f;
+        }
+
+        else { camera.nearClipPlane = (float) nearClippingPlane;}
+
+        if(farClippingPlane == null) {
+            camera.farClipPlane = 20.0f;
+        }
+
+        else { camera.farClipPlane = (float) farClippingPlane;}
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
         if (skyboxColor == "default") {
@@ -471,7 +488,9 @@ public class AgentManager : MonoBehaviour {
         float fieldOfView = DEFAULT_FOV,
         string skyboxColor = null,
         bool orthographic = false,
-        float? orthographicSize = null
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -494,7 +513,9 @@ public class AgentManager : MonoBehaviour {
             fieldOfView: fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane
         );
     }
 
