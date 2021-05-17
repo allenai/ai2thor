@@ -37,7 +37,9 @@ def build_name(arch, commit_id, include_private_scenes=False):
 
 
 def boto_auth():
-    return BotoAWSRequestsAuth(aws_host='s3-us-west-2.amazonaws.com', aws_region='us-west-2', aws_service='s3')
+    return BotoAWSRequestsAuth(
+        aws_host="s3-us-west-2.amazonaws.com", aws_region="us-west-2", aws_service="s3"
+    )
 
 
 base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PUBLIC_S3_BUCKET
@@ -48,7 +50,7 @@ private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 class EditorBuild(object):
     def __init__(self):
         # assuming that an external build supports both server types
-        self.server_types = ['FIFO', 'WSGI']
+        self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
 
@@ -61,12 +63,13 @@ class EditorBuild(object):
     def lock_sh(self):
         pass
 
+
 class ExternalBuild(object):
     def __init__(self, executable_path):
         self.executable_path = executable_path
 
         # assuming that an external build supports both server types
-        self.server_types = ['FIFO', 'WSGI']
+        self.server_types = ["FIFO", "WSGI"]
 
     def download(self):
         pass
@@ -79,7 +82,6 @@ class ExternalBuild(object):
 
 
 class Build(object):
-
     def __init__(self, arch, commit_id, include_private_scenes, releases_dir=None):
 
         self.arch = arch
@@ -93,7 +95,7 @@ class Build(object):
 
     def download(self):
 
-        if platform.architecture()[0] != '64bit':
+        if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
 
         makedirs(self.releases_dir)
@@ -109,9 +111,11 @@ class Build(object):
 
                 os.rename(extract_dir, os.path.join(self.releases_dir, self.name))
                 # This can be removed after migrating OSXIntel64 builds to have the AI2Thor executable
-                if os.path.exists(self.old_executable_path) and not os.path.exists(self.executable_path):
+                if os.path.exists(self.old_executable_path) and not os.path.exists(
+                    self.executable_path
+                ):
                     os.link(self.old_executable_path, self.executable_path)
-                
+
                 # we can lose the executable permission when unzipping a build
                 os.chmod(self.executable_path, 0o755)
 
@@ -120,52 +124,53 @@ class Build(object):
 
     def zipfile(self):
         zip_data = ai2thor.downloader.download(
-            self.url,
-            self.sha256(),
-            self.include_private_scenes)
+            self.url, self.sha256(), self.include_private_scenes
+        )
 
         return zipfile.ZipFile(io.BytesIO(zip_data))
 
     def download_metadata(self):
-        # this can happen if someone has an existing release without the metadata 
+        # this can happen if someone has an existing release without the metadata
         # built prior to the backfill
         # can add check to see if metadata has expired/we update metadata
         # if we want to add more info to metadata
         if not self.metadata:
             z = self.zipfile()
-            atomic_write(self.metadata_path, z.read('metadata.json'))
+            atomic_write(self.metadata_path, z.read("metadata.json"))
 
     @property
     def old_executable_path(self):
         target_arch = platform.system()
-        if target_arch == 'Linux':
+        if target_arch == "Linux":
             return self.executable_path
-        elif target_arch == 'Darwin':
+        elif target_arch == "Darwin":
             return os.path.join(
                 self.releases_dir,
                 self.name,
                 self.name + ".app",
                 "Contents/MacOS",
-                self.name)
+                self.name,
+            )
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
+            raise Exception("unable to handle target arch %s" % target_arch)
 
     @property
     def executable_path(self):
         target_arch = platform.system()
 
-        if target_arch == 'Linux':
+        if target_arch == "Linux":
             return os.path.join(self.releases_dir, self.name, self.name)
-        elif target_arch == 'Darwin':
+        elif target_arch == "Darwin":
             return os.path.join(
                 self.releases_dir,
                 self.name,
                 self.name + ".app",
                 "Contents/MacOS",
-                "AI2-Thor")
+                "AI2-Thor",
+            )
         else:
-            raise Exception('unable to handle target arch %s' % target_arch)
-    
+            raise Exception("unable to handle target arch %s" % target_arch)
+
     @property
     def metadata_path(self):
         return os.path.join(self.releases_dir, self.name, "metadata.json")
@@ -181,7 +186,7 @@ class Build(object):
     @property
     def server_types(self):
         self.download_metadata()
-        return self.metadata.get('server_types', [])
+        return self.metadata.get("server_types", [])
 
     def auth(self):
         if self.include_private_scenes:
@@ -197,7 +202,7 @@ class Build(object):
 
     @property
     def url(self):
-        return self._base_url() + os.path.join('builds', self.name + ".zip")
+        return self._base_url() + os.path.join("builds", self.name + ".zip")
 
     @property
     def name(self):
@@ -214,15 +219,15 @@ class Build(object):
 
     @property
     def log_url(self):
-        return os.path.splitext(self.url)[0] + '.log'
+        return os.path.splitext(self.url)[0] + ".log"
 
     @property
     def metadata_url(self):
-        return os.path.splitext(self.url)[0] + '.json'
+        return os.path.splitext(self.url)[0] + ".json"
 
     @property
     def sha256_url(self):
-        return os.path.splitext(self.url)[0] + '.sha256'
+        return os.path.splitext(self.url)[0] + ".sha256"
 
     def exists(self):
         x = requests.head(self.url, auth=self.auth())
@@ -234,4 +239,4 @@ class Build(object):
     def sha256(self):
         res = requests.get(self.sha256_url, auth=self.auth())
         res.raise_for_status()
-        return res.content.decode('ascii')
+        return res.content.decode("ascii")

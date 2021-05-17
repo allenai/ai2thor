@@ -4,90 +4,90 @@ using System.Collections;
 
 //[ExecuteInEditMode]
 public class Microwave : MonoBehaviour {
-	public Transform Door;
-	public Vector3 DoorOpenRot;
-	public Vector3 DoorClosedRot;
-	public SimObj SimObjParent;
-	public Material OnGlassMat;
-	public Material OffGlassMat;
-	public Renderer GlassRenderer;
-	public int MatIndex;
+    public Transform Door;
+    public Vector3 DoorOpenRot;
+    public Vector3 DoorClosedRot;
+    public SimObj SimObjParent;
+    public Material OnGlassMat;
+    public Material OffGlassMat;
+    public Renderer GlassRenderer;
+    public int MatIndex;
 
-	Vector3 targetDoorRotation;
+    Vector3 targetDoorRotation;
 
-	public bool EditorOpen = false;
-	public bool EditorOn = false;
-	
-	bool displayedError = false;
+    public bool EditorOpen = false;
+    public bool EditorOn = false;
 
-	public void Update() {
-		if (!Application.isPlaying) {
-			Door.localEulerAngles = EditorOpen ? DoorOpenRot : DoorClosedRot;
-			Material[] sharedMats = GlassRenderer.sharedMaterials;
-			sharedMats [MatIndex] = EditorOn ? OnGlassMat : OffGlassMat;
-			GlassRenderer.sharedMaterials = sharedMats;
-		} else {
-			if (SimObjParent == null || GlassRenderer == null || Door == null) {
-				if (!displayedError) {
-					Debug.LogError ("Component null in microwave " + name);
-					displayedError = true;
-				}
-				return;
-			}
-		
-			int animState = SimObjParent.Animator.GetInteger ("AnimState1");
-			//1 - Closed, Off
-			//2 - Open, Off
-			//3 - Closed, On
-			Material[] sharedMats = GlassRenderer.sharedMaterials;
-			bool waitForDoorToClose = false;
-			switch (animState) {
-			case 1:
-			default:
-				targetDoorRotation = DoorClosedRot;
-				sharedMats [MatIndex] = OffGlassMat;
-				break;
+    bool displayedError = false;
 
-			case 2:
-				targetDoorRotation = DoorOpenRot;
-				sharedMats [MatIndex] = OffGlassMat;
-				break;
+    public void Update() {
+        if (!Application.isPlaying) {
+            Door.localEulerAngles = EditorOpen ? DoorOpenRot : DoorClosedRot;
+            Material[] sharedMats = GlassRenderer.sharedMaterials;
+            sharedMats[MatIndex] = EditorOn ? OnGlassMat : OffGlassMat;
+            GlassRenderer.sharedMaterials = sharedMats;
+        } else {
+            if (SimObjParent == null || GlassRenderer == null || Door == null) {
+                if (!displayedError) {
+                    Debug.LogError("Component null in microwave " + name);
+                    displayedError = true;
+                }
+                return;
+            }
 
-			case 3:
-				targetDoorRotation = DoorClosedRot;
-				sharedMats [MatIndex] = OnGlassMat;
-				waitForDoorToClose = true;
-				break;
-			}
+            int animState = SimObjParent.Animator.GetInteger("AnimState1");
+            //1 - Closed, Off
+            //2 - Open, Off
+            //3 - Closed, On
+            Material[] sharedMats = GlassRenderer.sharedMaterials;
+            bool waitForDoorToClose = false;
+            switch (animState) {
+                case 1:
+                default:
+                    targetDoorRotation = DoorClosedRot;
+                    sharedMats[MatIndex] = OffGlassMat;
+                    break;
 
-			switch (SceneManager.Current.AnimationMode) {
-			case SceneAnimationMode.Smooth:
-				Quaternion doorStartRotation = Quaternion.identity;
+                case 2:
+                    targetDoorRotation = DoorOpenRot;
+                    sharedMats[MatIndex] = OffGlassMat;
+                    break;
 
-				doorStartRotation = Door.rotation;
+                case 3:
+                    targetDoorRotation = DoorClosedRot;
+                    sharedMats[MatIndex] = OnGlassMat;
+                    waitForDoorToClose = true;
+                    break;
+            }
 
-				Door.localEulerAngles = targetDoorRotation;
-				targetDoorRotation = Door.localEulerAngles;
+            switch (SceneManager.Current.AnimationMode) {
+                case SceneAnimationMode.Smooth:
+                    Quaternion doorStartRotation = Quaternion.identity;
 
-				Door.rotation = Quaternion.RotateTowards (doorStartRotation, Door.rotation, Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25);
+                    doorStartRotation = Door.rotation;
 
-				float distanceToTarget = Vector3.Distance (Door.localEulerAngles, targetDoorRotation);
-				if (distanceToTarget >= 360f)
-					distanceToTarget -= 360f;
+                    Door.localEulerAngles = targetDoorRotation;
+                    targetDoorRotation = Door.localEulerAngles;
 
-				if (!waitForDoorToClose || distanceToTarget < 0.005f) {
-					GlassRenderer.sharedMaterials = sharedMats;
-				}
+                    Door.rotation = Quaternion.RotateTowards(doorStartRotation, Door.rotation, Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25);
 
-				SimObjParent.IsAnimating = distanceToTarget > 0.0025f;
-				break;
+                    float distanceToTarget = Vector3.Distance(Door.localEulerAngles, targetDoorRotation);
+                    if (distanceToTarget >= 360f)
+                        distanceToTarget -= 360f;
 
-			case SceneAnimationMode.Instant:
-			default:
-				Door.localEulerAngles = targetDoorRotation;
-				GlassRenderer.sharedMaterials = sharedMats;
-				break;
-			}
-		}
-	}
+                    if (!waitForDoorToClose || distanceToTarget < 0.005f) {
+                        GlassRenderer.sharedMaterials = sharedMats;
+                    }
+
+                    SimObjParent.IsAnimating = distanceToTarget > 0.0025f;
+                    break;
+
+                case SceneAnimationMode.Instant:
+                default:
+                    Door.localEulerAngles = targetDoorRotation;
+                    GlassRenderer.sharedMaterials = sharedMats;
+                    break;
+            }
+        }
+    }
 }

@@ -56,7 +56,7 @@
 //             {
 //                 whichOne = bathroomCount;
 //             }
-            
+
 //             foreach (SimObjPhysics currentSimObject in simObjects)
 //             {
 
@@ -75,7 +75,7 @@
 //         }
 
 //         var file = "ObjectTypesInAllScenes.txt";
-                
+
 //         // if(File.Exists("Assets/DebugTextFiles/" + file))
 //         // {
 //         //     //return;
@@ -121,7 +121,7 @@
 //         var file = "PlacementRestrictions.txt";
 
 //         var create = File.CreateText("Assets/DebugTextFiles/" + file);
-        
+
 //         foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions)
 //         {
 //             //create.WriteLine("/////////////////////////////");

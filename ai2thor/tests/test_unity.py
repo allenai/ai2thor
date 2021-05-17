@@ -1136,8 +1136,10 @@ def test_get_object_in_frame(controller):
 
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_2d_semantic_hulls(controller):
-    controller.reset('FloorPlan28')
-    obj_name_to_obj_id = {o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]}
+    controller.reset("FloorPlan28")
+    obj_name_to_obj_id = {
+        o["name"]: o["objectId"] for o in controller.last_event.metadata["objects"]
+    }
     # Used to save fixed object locations.
     # with open("ai2thor/tests/data/floorplan28-fixed-obj-poses.json", "w") as f:
     #     json.dump(
@@ -1157,7 +1159,7 @@ def test_2d_semantic_hulls(controller):
                 rotation=o["rotation"],
                 forceAction=True,
                 forceKinematic=True,
-                makeUnbreakable=True
+                makeUnbreakable=True,
             ).metadata["lastActionSuccess"]
             assert teleport_success
 
@@ -1165,7 +1167,7 @@ def test_2d_semantic_hulls(controller):
     object_ids = [
         "Mug|-03.15|+00.82|-03.47",
         "Faucet|-00.39|+00.93|-03.61",
-        "StoveBurner|-00.22|+00.92|-01.85"
+        "StoveBurner|-00.22|+00.92|-01.85",
     ]
 
     def get_rounded_hulls(**kwargs):
@@ -1228,7 +1230,5 @@ def test_2d_semantic_hulls(controller):
 
     # Should fail when given types and ids
     assert not controller.step(
-        "Get2DSemanticHulls",
-        objectTypes=object_types,
-        objectIds=object_ids
+        "Get2DSemanticHulls", objectTypes=object_types, objectIds=object_ids
     ).metadata["lastActionSuccess"]

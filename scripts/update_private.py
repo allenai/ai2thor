@@ -8,12 +8,21 @@ import os
 import subprocess
 
 private_repo_url = "https://github.com/allenai/ai2thor-private"
-base_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)) , ".."))
+base_dir = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+)
 private_dir = os.path.join(base_dir, "unity", "Assets", "Private")
 
+
 def current_branch():
-    git_dir = os.path.join(base_dir, '.git')
-    return subprocess.check_output(f"git --git-dir={git_dir} rev-parse --abbrev-ref HEAD", shell=True).decode('ascii').strip()
+    git_dir = os.path.join(base_dir, ".git")
+    return (
+        subprocess.check_output(
+            f"git --git-dir={git_dir} rev-parse --abbrev-ref HEAD", shell=True
+        )
+        .decode("ascii")
+        .strip()
+    )
 
 
 def checkout_branch(remote="origin"):
@@ -29,7 +38,7 @@ def checkout_branch(remote="origin"):
         subprocess.check_call(f"git checkout {branch}", shell=True)
         subprocess.check_call(f"git pull {remote} {branch}", shell=True)
     except subprocess.CalledProcessError as e:
-        print(f"No branch exists for private: {branch} - remaining on master" )
+        print(f"No branch exists for private: {branch} - remaining on master")
         subprocess.check_call(f"git fetch {remote} master", shell=True)
         subprocess.check_call(f"git checkout master", shell=True)
         subprocess.check_call(f"git pull {remote} master", shell=True)
@@ -39,6 +48,8 @@ def checkout_branch(remote="origin"):
 
 if __name__ == "__main__":
     if not os.path.isdir(private_dir) and os.path.exists(private_dir):
-        raise Exception(f"Private directory {private_dir} is not a directory - please remove")
+        raise Exception(
+            f"Private directory {private_dir} is not a directory - please remove"
+        )
     else:
         checkout_branch()

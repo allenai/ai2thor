@@ -374,13 +374,17 @@ def local_build_name(prefix, arch):
 
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
-    build = ai2thor.build.Build(arch=arch, commit_id=prefix, include_private_scenes=False)
+    build = ai2thor.build.Build(
+        arch=arch, commit_id=prefix, include_private_scenes=False
+    )
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
-    print(f"Saving local build to '{os.path.abspath(os.path.join('unity', build_dir))}'")
+    print(
+        f"Saving local build to '{os.path.abspath(os.path.join('unity', build_dir))}'"
+    )
 
     start_time = time.time()
     if _build("unity", arch, build_dir, build.name, env=env):
@@ -533,7 +537,7 @@ def generate_quality_settings(ctx):
             return self.construct_mapping(node)
 
     YamlUnity3dTag.add_constructor(
-        u"tag:unity3d.com,2011:47", YamlUnity3dTag.let_through
+        "tag:unity3d.com,2011:47", YamlUnity3dTag.let_through
     )
 
     qs = yaml.load(
@@ -554,7 +558,6 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-
 def git_commit_comment():
     comment = (
         subprocess.check_output("git log -n 1 --format=%s", shell=True)
@@ -563,6 +566,7 @@ def git_commit_comment():
     )
 
     return comment
+
 
 def git_commit_id():
     commit_id = (
@@ -584,14 +588,17 @@ def deploy_pip(context):
 @task
 def push_pip_commit(context):
     import glob
+
     commit_id = git_commit_id()
     s3 = boto3.resource("s3")
-    for g in glob.glob('dist/ai2thor-%s*' % commit_id):
+    for g in glob.glob("dist/ai2thor-%s*" % commit_id):
         acl = "public-read"
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(PUBLIC_S3_BUCKET, os.path.join('pip', pip_name)).put(Body=f, ACL=acl)
+            s3.Object(PUBLIC_S3_BUCKET, os.path.join("pip", pip_name)).put(
+                Body=f, ACL=acl
+            )
 
 
 @task
@@ -617,9 +624,8 @@ def build_pip_commit(context):
         fi.write("__version__ = '%s'\n" % (version))
 
     subprocess.check_call("python setup.py clean --all", shell=True)
-    subprocess.check_call(
-        "python setup.py sdist bdist_wheel --universal", shell=True
-    )
+    subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
+
 
 @task
 def build_pip(context, version):
@@ -864,9 +870,7 @@ def pytest_s3_object(commit_id):
 def ci_pytest(build):
     import requests
 
-    logger.info(
-        "running pytest for %s %s" % (build["branch"], build["commit_id"])
-    )
+    logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
     commit_id = git_commit_id()
 
     s3_obj = pytest_s3_object(commit_id)
@@ -879,7 +883,10 @@ def ci_pytest(build):
 
     if res.status_code == 200 and res.json()["success"]:
         # if we already have a successful pytest, skip running
-        logger.info("pytest results already exist for %s %s" % (build['branch'], build['commit_id']))
+        logger.info(
+            "pytest results already exist for %s %s"
+            % (build["branch"], build["commit_id"])
+        )
         return
 
     proc = subprocess.run(
@@ -895,9 +902,7 @@ def ci_pytest(build):
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType="application/json"
     )
-    logger.info(
-        "finished pytest for %s %s" % (build["branch"], build["commit_id"])
-    )
+    logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
 
 
 @task
@@ -936,7 +941,9 @@ def ci_build(context):
                         % (arch, build["branch"], build["commit_id"])
                     )
                     if ai2thor.build.Build(
-                        arch, build["commit_id"], include_private_scenes=include_private_scenes
+                        arch,
+                        build["commit_id"],
+                        include_private_scenes=include_private_scenes,
                     ).exists():
                         logger.info(
                             "found build for commit %s %s" % (build["commit_id"], arch)
@@ -956,14 +963,12 @@ def ci_build(context):
 
                     # don't run tests for a tag since results should exist
                     # for the branch commit
-                    if arch == 'OSXIntel64' and build["tag"] is None:
+                    if arch == "OSXIntel64" and build["tag"] is None:
                         pytest_proc = multiprocessing.Process(
-                            target=ci_pytest,
-                            args=(build,)
+                            target=ci_pytest, args=(build,)
                         )
                         pytest_proc.start()
                         procs.append(pytest_proc)
-
 
             # give the travis poller time to see the result
             for i in range(6):
@@ -975,8 +980,8 @@ def ci_build(context):
                 time.sleep(10)
 
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
-            if build["branch"] == "master" and '#webgl-deploy' in git_commit_comment():
-                ci_build_webgl(context, build['commit_id'])
+            if build["branch"] == "master" and "#webgl-deploy" in git_commit_comment():
+                ci_build_webgl(context, build["commit_id"])
 
             for p in procs:
                 if p:
@@ -991,7 +996,7 @@ def ci_build(context):
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
-        #elif datetime.datetime.now().hour == 2:
+        # elif datetime.datetime.now().hour == 2:
         #    clean()
         #    subprocess.check_call("git checkout master", shell=True)
         #    subprocess.check_call("git pull origin master", shell=True)
@@ -1005,25 +1010,19 @@ def ci_build(context):
 
     lock_f.close()
 
+
 @task
 def ci_build_webgl(context, commit_id):
-    branch = 'master'
-    logger.info(
-        "starting auto-build webgl build deploy %s %s"
-        % (branch, commit_id)
-    )
-    # linking here in the event we didn't link above since the builds had 
+    branch = "master"
+    logger.info("starting auto-build webgl build deploy %s %s" % (branch, commit_id))
+    # linking here in the event we didn't link above since the builds had
     # already completed. Omitting this will cause the webgl build
     # to import all assets from scratch into a new unity/Library
     link_build_cache(branch)
-    webgl_build_deploy_demo(
-        context, verbose=True, content_addressable=True, force=True
-    )
-    logger.info(
-        "finished webgl build deploy %s %s"
-        % (branch, commit_id)
-    )
+    webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+    logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
+
 
 def ci_build_arch(arch, include_private_scenes=False):
 
@@ -1077,10 +1076,10 @@ def poll_ci_build(context):
     last_emit_time = 0
     for i in range(360):
         missing = False
-        # must emit something at least once every 10 minutes 
+        # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
-        if (time.time() - last_emit_time) > 540: 
-            print(".", end='')
+        if (time.time() - last_emit_time) > 540:
+            print(".", end="")
             last_emit_time = time.time()
 
         for arch in platform_map.keys():
@@ -1919,7 +1918,7 @@ def webgl_deploy(
                     ContentType=content_types[ext],
                     CacheControl=cache,
                     Expires=expires,
-                    **kwargs
+                    **kwargs,
                 )
             else:
                 if verbose:
@@ -1989,22 +1988,26 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
     if verbose:
         print("Deployed all scenes to bucket's root.")
 
+
 def current_webgl_autodeploy_commit_id():
     s3 = boto3.resource("s3")
     try:
-        res = s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').get()
-        return json.loads(res['Body'].read())['commit_id']
+        res = s3.Object(PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").get()
+        return json.loads(res["Body"].read())["commit_id"]
     except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] == "NoSuchKey":
+        if e.response["Error"]["Code"] == "NoSuchKey":
             return None
         else:
             raise e
 
+
 def update_webgl_autodeploy_commit_id(commit_id):
     s3 = boto3.resource("s3")
-    s3.Object(PUBLIC_WEBGL_S3_BUCKET, 'autodeploy.json').put(
-        Body=json.dumps(dict(timestamp=time.time(), commit_id=commit_id)), ContentType="application/json"
+    s3.Object(PUBLIC_WEBGL_S3_BUCKET, "autodeploy.json").put(
+        Body=json.dumps(dict(timestamp=time.time(), commit_id=commit_id)),
+        ContentType="application/json",
     )
+
 
 @task
 def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
@@ -3166,12 +3169,16 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
         )
     )
 
-    print("After teleport: {}".format(evt.metadata['agent']['position']))
+    print("After teleport: {}".format(evt.metadata["agent"]["position"]))
+
 
 @task
-def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100):
+def get_physics_determinism(
+    ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100
+):
     import ai2thor.controller
     import random
+
     num_trials = n
     width = 300
     height = 300
@@ -3184,14 +3191,15 @@ def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n
 
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
-        scene=scene, gridSize=0.25,
+        scene=scene,
+        gridSize=0.25,
         width=width,
         height=height,
         agentMode=agent_mode,
         fieldOfView=fov,
-        agentControllerType='mid-level',
+        agentControllerType="mid-level",
         server_class=ai2thor.fifo_server.FifoServer,
-        visibilityScheme='Distance'
+        visibilityScheme="Distance",
     )
 
     from ai2thor.util.trials import trial_runner, ObjectPositionVarianceAverage
@@ -3210,25 +3218,33 @@ def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n
     ]
 
     for action_name, actions, n in action_tuples:
-        for controller, metric in trial_runner(controller, num_trials, ObjectPositionVarianceAverage()):
+        for controller, metric in trial_runner(
+            controller, num_trials, ObjectPositionVarianceAverage()
+        ):
             act(controller, actions, n)
-        print(" actions: '{}', object_position_variance_average: {} ".format(action_name, metric))
+        print(
+            " actions: '{}', object_position_variance_average: {} ".format(
+                action_name, metric
+            )
+        )
 
 
 @task
 def generate_msgpack_resolver(task):
     import glob
+
     # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
     # need to download/unzip into this path, add gatekeeper permission
     target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
     shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ['HOME'], 'local/bin/mpc')
-    subprocess.check_call("%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir), shell=True)
+    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
+    subprocess.check_call(
+        "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
+        shell=True,
+    )
     for g in glob.glob(os.path.join(target_dir, "*.cs")):
         with open(g) as f:
             source_code = f.read()
             source_code = "using UnityEngine;\n" + source_code
         with open(g, "w") as f:
             f.write(source_code)
-
-
