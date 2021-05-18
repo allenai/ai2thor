@@ -297,9 +297,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Get all colliders on the sop, excluding colliders if they are not enabled 
             // List<Collider> cols = new List<Collider>();
             List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
+            // save the state of all the layers prior to modifying
             foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
                     cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
+                }
+            }
+
+            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
                     // move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
                     c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
                 }
