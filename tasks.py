@@ -3372,7 +3372,6 @@ def install_dotnet_format(context, force=False):
 @task
 def install_dotnet(context, force=False):
     import requests
-    import os
     import stat
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
