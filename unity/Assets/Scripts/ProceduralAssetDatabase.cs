@@ -7,8 +7,13 @@ namespace Thor.Procedural
 {
 	public class ProceduralAssetDatabase : MonoBehaviour
 	{
-		[SerializeField]
-		public AssetMap<Material> materials;
-		[SerializeField] public AssetMap<GameObject> prefabs;
+		[SerializeField] public List<Material> materials;
+		[SerializeField] public List<GameObject> prefabs;
+		[SerializeField] public int totalMats;
+
+		// public AssetMap<Material> materialDb {
+		//     get;
+
+		// }
 	}
 }
