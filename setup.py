@@ -53,5 +53,6 @@ setup(
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely"],
+    scripts=["scripts/ai2thor-startx"],
     include_package_data=False,
 )
