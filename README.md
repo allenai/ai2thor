@@ -93,7 +93,7 @@
             5/2021
         </td>
         <td width="50%">
-            <video src="https://user-images.githubusercontent.com/28768645/118584412-b7dbd600-b74b-11eb-82c1-09b34ba54e25.mp4"/>
+            <video src="https://user-images.githubusercontent.com/28768645/118589971-58cf8e80-b756-11eb-82ea-a94f84f57353.mp4"/>
         </td>
         <td>
             <code>RandomizeMaterials</code> is now supported! It enables a massive amount of realistic looking domain randomization within each scene. Try it out on the <a href="https://ai2thor.allenai.org/demo">demo</a>
@@ -112,8 +112,8 @@
             4/2021
         </td>
         <td width="50%">
-            <video src="https://user-images.githubusercontent.com/28768645/118586529-ca580e80-b74f-11eb-9bfa-690822a34c50.mp4"></video>
-            <video src="https://user-images.githubusercontent.com/28768645/118586586-e360bf80-b74f-11eb-98a8-745ac71a0d72.mp4"></video>
+            <video src="https://user-images.githubusercontent.com/28768645/118590040-7a307a80-b756-11eb-9b4c-c43373bea528.mp4"></video>
+            <video src="https://user-images.githubusercontent.com/28768645/118589727-d1821b00-b755-11eb-9dff-9eda97fe0998.mp4"></video>
         </td>
         <td>
             <code>RandomizeLighting</code> is now supported! It includes many tunable parameters to allow for vast control over its effects. Try it out on the <a href="https://ai2thor.allenai.org">demo</a>!<br/><br/>
