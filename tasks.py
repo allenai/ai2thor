@@ -3395,7 +3395,6 @@ def install_dotnet(context, force=False):
 
 @task
 def format_py(context):
-    import subprocess
 
     try:
         import black
