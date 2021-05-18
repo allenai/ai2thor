@@ -3340,7 +3340,6 @@ def format(context):
 def format_cs(context):
     install_dotnet_format(context)
 
-    # subprocess.check_call("black **/.py", shell=True)
     # the following message will get emitted, this can safely be ignored
     # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
     subprocess.check_call(
