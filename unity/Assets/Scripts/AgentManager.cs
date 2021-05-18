@@ -420,8 +420,8 @@ public class AgentManager : MonoBehaviour {
         string skyboxColor,
         bool? orthographic,
         float? orthographicSize,
-        float? nearClippingPlane = null,
-        float? farClippingPlane = null
+        float? nearClippingPlane,
+        float? farClippingPlane
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -489,8 +489,8 @@ public class AgentManager : MonoBehaviour {
         string skyboxColor = null,
         bool orthographic = false,
         float? orthographicSize = null,
-        float? nearClippingPlane = null,
-        float? farClippingPlane = null
+        float nearClippingPlane = 0.1f,
+        float farClippingPlane = 20.0f
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -551,7 +551,9 @@ public class AgentManager : MonoBehaviour {
         float? fieldOfView = null,
         string skyboxColor = null,
         bool? orthographic = null,
-        float? orthographicSize = null
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -582,7 +584,9 @@ public class AgentManager : MonoBehaviour {
             fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float)fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane
         );
     }
 
