@@ -447,17 +447,13 @@ public class AgentManager : MonoBehaviour {
         //updates camera near and far clipping planes
         //default to near and far clipping planes of agent camera, which are currently
         //static values and are not exposed in anything like Initialize
-        if(nearClippingPlane == null) {
-            camera.nearClipPlane = 0.1f;
+        if (nearClippingPlane != null) {
+            camera.nearClipPlane = (float)nearClippingPlane;
         }
 
-        else { camera.nearClipPlane = (float) nearClippingPlane;}
-
-        if(farClippingPlane == null) {
-            camera.farClipPlane = 20.0f;
+        if (farClippingPlane != null) {
+            camera.farClipPlane = (float)farClippingPlane;
         }
-
-        else { camera.farClipPlane = (float) farClippingPlane;}
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
         if (skyboxColor == "default") {
@@ -1675,7 +1671,7 @@ public class DynamicServerAction {
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
-    
+
     // this is primarily used when detecting invalid arguments
     // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
     // valid argument for Initialize as well as a global parameter
