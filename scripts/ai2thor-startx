@@ -14,7 +14,6 @@ import signal
 
 
 PID_FILE = "/var/run/ai2thor-xorg.pid"
-LOG_FILE = "/var/log/ai2thor-xorg.log"
 CONFIG_FILE = "/tmp/ai2thor-xorg.conf"
 
 def process_alive(pid):
@@ -82,15 +81,30 @@ def start(display):
     with open(CONFIG_FILE, "w") as f:
         f.write(generate_xorg_conf())
 
+    log_file = "/var/log/ai2thor-xorg.%s.log" % display
+    error_log_file = "/var/log/ai2thor-xorg-error.%s.log" % display
     command = shlex.split(
-        "Xorg -quiet -maxclients 1024 -noreset +extension GLX +extension RANDR +extension RENDER -config %s :%s"
-        % (CONFIG_FILE, display)
+        "Xorg -quiet -maxclients 1024 -noreset +extension GLX +extension RANDR +extension RENDER -logfile %s -config %s :%s"
+        % (log_file, CONFIG_FILE, display)
     )
-    with open(LOG_FILE, "a") as output:
-        proc = subprocess.Popen(command, start_new_session=True, stdin=subprocess.DEVNULL, stdout=output, stderr=output, env=os.environ)
 
-    with open(PID_FILE, "w") as f:
-        f.write(str(proc.pid))
+
+    pid = None
+    with open(error_log_file, "w") as error_log_f:
+        proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=error_log_f)
+        pid = proc.pid
+        try:
+            proc.wait(timeout=0.25)
+        except subprocess.TimeoutExpired:
+            pass
+
+    if pid and process_alive(pid):
+        with open(PID_FILE, "w") as f:
+            f.write(str(proc.pid))
+    else:
+        print("Error: error with command '%s'" % " ".join(command))
+        with open(error_log_file, "r") as f:
+            print(f.read())
 
 def print_config():
     print(generate_xorg_conf())
