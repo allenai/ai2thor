@@ -3532,7 +3532,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			var receptacleHeight = 0.7f;
 
 			ProceduralTools.createMultiRoomFloorGameObject(
-					$"House_{house.id}",
+					$"Floor",
 					rectRooms,
 					materials,
 					$"simobj_{house.id}",
