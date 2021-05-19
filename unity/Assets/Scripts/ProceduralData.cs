@@ -14,10 +14,20 @@ namespace Thor.Procedural.Data
 {
 
 	[Serializable]
-	public class TestRoom
+
+	[MessagePackObject(keyAsPropertyName: true)]
+	public class House
 	{
-		public Thor.Procedural.Data.Wall[] walls;
+		public RectangleRoom[] rooms;
+		public string ceilingMaterialId;
+		public string id;
 	}
+
+	// TODO more general
+	// public class House<T> where T : Room
+	// {
+
+	// }
 
 
 	[Serializable]
@@ -39,7 +49,9 @@ namespace Thor.Procedural.Data
 		string materialId { get; }
 	}
 
-	// TODO unused for now, add this instead of Room properties
+	[Serializable]
+
+	[MessagePackObject(keyAsPropertyName: true)]
 	public class RectangleFloor : Floor
 	{
 		public Vector3 center;
@@ -73,6 +85,7 @@ namespace Thor.Procedural.Data
 			}
 		}
 
+		[NonSerialized()]
 		private Vector3[] _corners;
 
 		public static Wall[] createSurroundingWalls(Floor floor, string wallMaterialId, float wallHeight, float wallThickness = 0.0f) {
@@ -93,6 +106,10 @@ namespace Thor.Procedural.Data
 
 		Vector3 center { get; }
 
+		string type { get; }
+
+		string id { get; }
+
 		// float width { get; }
 
 		// float depth { get; }
@@ -112,17 +129,25 @@ namespace Thor.Procedural.Data
 
 	}
 
-	public class House<T> where T : Room
-	{
+	// public class House<T> where T : Room
+	// {
 
-	}
+	// }
 
+	[Serializable]
+
+	[MessagePackObject(keyAsPropertyName: true)]
 	// TODO move to this interface
 	public class RectangleRoom : Room
 	{
 		public RectangleFloor rectangleFloor { get; set; }
-		public Floor floor { get { return rectangleFloor; } }
+
 		public Wall[] walls { get; set; }
+
+		public string type { get; set; }
+
+		public string id { get; set; }
+		public Floor floor { get { return rectangleFloor; } }
 
 		public Vector3 center { get { return rectangleFloor.center; } }
 
@@ -140,15 +165,15 @@ namespace Thor.Procedural.Data
 		public Vector3[] cornersClockWise { get { return rectangleFloor.cornersClockwise; } }
 
 
-		public static RectangleRoom roomFromWallPoints(IEnumerable<Vector3> corners, float wallHeight, float wallThickness, string floorMaterialId, string wallMaterialId, float marginWidth = 0.0f, float marginDepth = 0.0f) {
+		public static RectangleRoom roomFromWallPoints(IEnumerable<Vector3> cornersClockWise, float wallHeight, float wallThickness, string floorMaterialId, string wallMaterialId, float marginWidth = 0.0f, float marginDepth = 0.0f) {
 
-			var centroid = corners.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / corners.Count();
+			var centroid = cornersClockWise.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / cornersClockWise.Count();
 
 
 			// var cornersClockWise = corners
 			//     .OrderBy(p => p.z)
 			//     .ThenBy(p => p, Comparer<Vector3>.Create((a, b) => System.Math.Sign( (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y)))).ToArray();
-			var cornersClockWise = corners;
+			// var cornersClockWise = corners;
 
 			// TODO what to do when different heights?
 			var minY = cornersClockWise.Min(p => p.y);
@@ -183,7 +208,7 @@ namespace Thor.Procedural.Data
 			var minY = walls.SelectMany(w => new Vector3[] { w.p0, w.p1 }).Min(p => p.y);
 
 
-			var centroid = wallPoints.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / wallPoints.Count();
+			// var centroid = wallPoints.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / wallPoints.Count();
 
 			// Clockwise point sort with determinant (pseduo-cross), move to Room interface general for any convex room
 			// var cornersClockWise = wallPoints

@@ -30,6 +30,10 @@ namespace Thor.Procedural
 			return assetMap[name];
 		}
 
+		public bool ContainsKey(string key) {
+			return assetMap.ContainsKey(key);
+		}
+
 		public int Count() {
 			return assetMap.Count;
 		}
@@ -50,7 +54,7 @@ namespace Thor.Procedural
 	public static class ProceduralTools
 	{
 
-		public static UnityEngine.Mesh GetRectangleFloorMesh(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f) {
+		public static UnityEngine.Mesh GetRectangleFloorMesh(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
 			var mesh = new Mesh();
 
 			var oppositeCorners = rooms.SelectMany(r => new Vector3[] {
@@ -71,17 +75,40 @@ namespace Thor.Procedural
 
 			var scale = maxPoint - minPoint;
 
-			mesh.vertices = new Vector3[] {
+			var vertices = new Vector3[] {
 				minPoint,
 				minPoint + new Vector3(0, 0, scale.z),
 				maxPoint,
 				minPoint + new Vector3(scale.x, 0, 0)
 			};
-			mesh.uv = new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
-			mesh.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
-			mesh.normals = new Vector3[] { Vector3.up, Vector3.up, Vector3.up, Vector3.up };
+
+			var uvs = new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
+			var triangles = new List<int>() { 3, 2, 0, 2, 1, 0, 0, 1, 2, 0, 2, 3 };
+			var normals = new Vector3[] { Vector3.up, Vector3.up, Vector3.up, Vector3.up };
+
+			// TODO: this is not working for some reason, works with the walls
+			if (generateBackFaces) {
+				// vertices = vertices.Concat(vertices).ToArray();
+				// uvs = uvs.Concat(uvs).ToArray();
+				//triangles = triangles.Concat(triangles.AsEnumerable().Reverse()).ToArray();
+				triangles.AddRange(triangles.AsEnumerable().Reverse());
+				//normals = normals.Concat(normals).ToArray();
+
+			}
+			// Debug.Log($"Triangles {triangles.Count()}");
+			mesh.vertices = vertices;
+			mesh.uv = uvs;
+			mesh.triangles = triangles.ToArray();
+			mesh.normals = normals;
 
 			return mesh;
+		}
+
+		public static IEnumerable<UnityEngine.Mesh> GetMultipleRectangleFloorMeshes(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
+			return rooms.Select(
+				r =>
+					GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
+				);
 		}
 
 		// TODO call above for ceiling using yOffset
@@ -143,9 +170,9 @@ namespace Thor.Procedural
 			return visibilityPoints;
 		}
 
-		public static GameObject createWalls(Room room, string gameObjectId = "Structure") {
+		public static GameObject createWalls(Room room, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
 			var structure = new GameObject(gameObjectId);
-
+			Debug.Log($"Walls {room.walls} len {room.walls.Length}");
 
 			var zip3 = room.walls.Zip(
 				room.walls.Skip(1).Concat(new Wall[] { room.walls.FirstOrDefault() }),
@@ -156,10 +183,12 @@ namespace Thor.Procedural
 			).ToArray();
 
 			var index = 0;
+			Debug.Log("Len " + zip3.Length);
 			foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
 				// TODO query material
-				Debug.Log($"Wall i {index} ");
-				var wallGO = createAndJoinWall(index, w0, w1, w2);
+				Debug.Log($"Wall i {index} {w0} {w1} {w2}");
+				var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2);
+
 				wallGO.transform.parent = structure.transform;
 				index++;
 			}
@@ -303,6 +332,7 @@ namespace Thor.Procedural
 
 		public static GameObject createAndJoinWall(
 			int index,
+			AssetMap<Material> materialDb,
 			Wall toCreate,
 			Wall previous = null,
 			Wall next = null,
@@ -310,7 +340,7 @@ namespace Thor.Procedural
 			float minimumBoxColliderThickness = 0.1f,
 			bool globalVertexPositions = false
 		) {
-			var wallGO = new GameObject("Wall");
+			var wallGO = new GameObject($"Wall_{index}");
 
 			var meshF = wallGO.AddComponent<MeshFilter>();
 			var boxC = wallGO.AddComponent<BoxCollider>();
@@ -435,7 +465,7 @@ namespace Thor.Procedural
 			var meshRenderer = wallGO.AddComponent<MeshRenderer>();
 			// TODO use a material loader that has this dictionary
 			//var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
-			var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
+			// var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
 
 
 			var visibilityPointsGO = CreateVisibilityPointsOnPlane(
@@ -450,7 +480,7 @@ namespace Thor.Procedural
 			visibilityPointsGO.transform.parent = wallGO.transform;
 			//if (mats.ContainsKey(wall.materialId)) {
 			//Debug.Log("MAT query " +  wall.materialId+ " " + string.Join(",", mats.Select(m => m.Value.name).ToArray()) + " len " + mats.Count);
-			meshRenderer.material = mats[toCreate.materialId];
+			meshRenderer.material = materialDb.getAsset(toCreate.materialId);
 			//}
 
 			return wallGO;
@@ -518,11 +548,14 @@ namespace Thor.Procedural
 			var meshRenderer = wallGO.AddComponent<MeshRenderer>();
 			// TODO use a material loader that has this dictionary
 			//var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
-			var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
+
+			//var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
 
 			//if (mats.ContainsKey(wall.materialId)) {
 			//Debug.Log("MAT query " +  wall.materialId+ " " + string.Join(",", mats.Select(m => m.Value.name).ToArray()) + " len " + mats.Count);
-			meshRenderer.material = mats[wall.materialId];
+
+			// TODO: Set material for asset database
+			// meshRenderer.material = mats[wall.materialId];
 			//}
 
 			return wallGO;
@@ -639,13 +672,13 @@ namespace Thor.Procedural
 		}
 
 		// 
-		public static GameObject createFloorGameObject(string name = "Floor", Vector3? position = null) {
+		public static GameObject createSimObjPhysicsGameObject(string name = "Floor", Vector3? position = null, string tag = "SimObjPhysics", int layer = 8) {
 
 			var floorGameObject = new GameObject(name);
 			floorGameObject.transform.position = position.GetValueOrDefault();
 
-			floorGameObject.tag = "SimObjPhysics";
-			floorGameObject.layer = 8;
+			floorGameObject.tag = tag;
+			floorGameObject.layer = layer;
 
 			var rb = floorGameObject.AddComponent<Rigidbody>();
 			rb.mass = 1.0f;
@@ -659,8 +692,9 @@ namespace Thor.Procedural
 
 			return floorGameObject;
 		}
+
 		public static GameObject createFloorGameObject(string name, RectangleRoom room, AssetMap<Material> materialDb, string simObjId, float receptacleHeight = 0.7f, float floorColliderThickness = 1.0f, Vector3? position = null) {
-			var floorGameObject = createFloorGameObject(name, position);
+			var floorGameObject = createSimObjPhysicsGameObject(name, position);
 
 			floorGameObject.GetComponent<MeshFilter>().mesh = ProceduralTools.GetRectangleFloorMesh(room);
 			// TODO generate ceiling
@@ -678,19 +712,56 @@ namespace Thor.Procedural
 
 			receptacleTriggerBox.AddComponent<Contains>();
 
-			ProceduralTools.createWalls(room, "Structure");
+			ProceduralTools.createWalls(room, materialDb, "Structure");
 			return floorGameObject;
+		}
+
+		private static void setUpFloorMesh(GameObject floorGameObject, Mesh mesh, Material material) {
+			floorGameObject.GetComponent<MeshFilter>().mesh = mesh;
+			var meshRenderer = floorGameObject.GetComponent<MeshRenderer>();
+			meshRenderer.material = material;
 		}
 
 		public static GameObject createMultiRoomFloorGameObject(
 			string name,
 			IEnumerable<RectangleRoom> rooms,
-			AssetMap<Material> materialDb, string simObjId, float receptacleHeight = 0.7f, float floorColliderThickness = 1.0f, Vector3? position = null) {
-			var floorGameObject = createFloorGameObject(name, position);
+			AssetMap<Material> materialDb,
+			string simObjId,
+			float receptacleHeight = 0.7f,
+			float floorColliderThickness = 1.0f,
+			string ceilingMaterialId = "",
+			bool individualRoomFloorMesh = false,
+			Vector3? position = null
+		) {
+			var walls = rooms.SelectMany(r => r.walls);
+			var wallPoints = walls.SelectMany(w => new List<Vector3>() { w.p0, w.p1 });
+			var wallsMinY = wallPoints.Min(p => p.y);
+			var wallsMaxY = wallPoints.Max(p => p.y);
+			var wallsMaxHeight = walls.Max(w => w.height);
+
+
+			var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
 			var mesh = ProceduralTools.GetRectangleFloorMesh(rooms);
+			if (individualRoomFloorMesh) {
+				// TODO: solution for this, both the multi-object and multi-material approach lead to Z-fighting 
+				// mesh.subMeshCount = rooms.Count();
+				for (int i = 0; i < rooms.Count(); i++) {
+					var room = rooms.ElementAt(i);
+					var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
+					var meshes = ProceduralTools.GetMultipleRectangleFloorMeshes(rooms);
+					// mesh.subMeshCount
+					subFloorGO.GetComponent<MeshFilter>().mesh = meshes.ElementAt(i);
+					var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
+					meshRenderer.material = materialDb.getAsset(room.floor.materialId);
+					subFloorGO.transform.parent = floorGameObject.transform;
+				}
+			} else {
+				floorGameObject.GetComponent<MeshFilter>().mesh = mesh;
+				var meshRenderer = floorGameObject.GetComponent<MeshRenderer>();
+				meshRenderer.material = materialDb.getAsset(rooms.ElementAt(0).floor.materialId);
+			}
 
-			floorGameObject.GetComponent<MeshFilter>().mesh = mesh;
 
 			var minPoint = mesh.vertices[0];
 			var maxPoint = mesh.vertices[2];
@@ -709,10 +780,7 @@ namespace Thor.Procedural
 				rectangleFloor = floor
 			};
 
-			// TODO generate ceiling
 
-			var meshRenderer = floorGameObject.GetComponent<MeshRenderer>();
-			meshRenderer.material = materialDb.getAsset(roomCluster.rectangleFloor.materialId);
 
 			var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(roomCluster);
 			visibilityPoints.transform.parent = floorGameObject.transform;
@@ -722,6 +790,15 @@ namespace Thor.Procedural
 			var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, roomCluster, receptacleHeight);
 			var collider = ProceduralTools.createFloorCollider(floorGameObject, roomCluster, floorColliderThickness);
 
+			// generate ceiling
+			if (ceilingMaterialId != "") {
+				var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Ceiling", 0);
+				var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(rooms, 0.0f, true);
+				ceilingGameObject.GetComponent<MeshFilter>().mesh = mesh;
+				ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+			}
+
+
 			ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
 			receptacleTriggerBox.AddComponent<Contains>();
@@ -729,8 +806,9 @@ namespace Thor.Procedural
 			// ProceduralTools.createWalls(room, "Structure");
 			Debug.Log($"Structure creation {rooms.Count()}");
 			var index = 0;
+			//Debug.Log($" Room {rooms} roomlen {}");
 			foreach (RectangleRoom room in rooms) {
-				var wallGO = ProceduralTools.createWalls(room, $"Structure_{index}");
+				var wallGO = ProceduralTools.createWalls(room, materialDb, $"Structure_{index}");
 				floorGameObject.transform.parent = wallGO.transform;
 				index++;
 			}
@@ -739,6 +817,7 @@ namespace Thor.Procedural
 			return floorGameObject;
 		}
 
+#if UNITY_EDITOR
 		public static List<T> FindAssetsByType<T>() where T : UnityEngine.Object {
 			List<T> assets = new List<T>();
 			string[] guids = AssetDatabase.FindAssets(string.Format("t:{0}", typeof(T).ToString().Replace("UnityEngine.", "")));
@@ -764,7 +843,7 @@ namespace Thor.Procedural
 			}
 			return assets;
 		}
-
+#endif
 		public static GameObject spawnObjectAtReceptacle(AssetMap<GameObject> goDb, string objectId, SimObjPhysics receptacleSimObj, Vector3 position) {
 			var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
 			var go = goDb.getAsset(objectId);
