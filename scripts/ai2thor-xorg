@@ -43,7 +43,7 @@ def find_devices():
             devices.append(bus_id)
 
     if not devices:
-        print("Error: ai2thor-startx requires at least one NVIDIA device")
+        print("Error: ai2thor-xorg requires at least one NVIDIA device")
         sys.exit(1)
 
     return devices
@@ -75,7 +75,7 @@ def start(display):
     pid = read_pid()
 
     if pid and process_alive(pid):
-        print("Error: ai2thor-startx is already running with pid: %s" % pid)
+        print("Error: ai2thor-xorg is already running with pid: %s" % pid)
         sys.exit(1)
 
     with open(CONFIG_FILE, "w") as f:
@@ -171,11 +171,11 @@ EndSection
 if __name__ == "__main__":
 
     if os.geteuid() != 0:
-        print("Error: ai2thor-startx must be run as root or launched with sudo")
+        print("Error: ai2thor-xorg must be run as root or launched with sudo")
         sys.exit(1)
 
     if platform.system() != "Linux":
-        print("Error: Can only run ai2thor-startx on linux")
+        print("Error: Can only run ai2thor-xorg on linux")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
