@@ -3246,7 +3246,7 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mod
         local_executable_path=None,
         local_build=local_build,
         start_unity=False if editor_mode else True,
-        scene="base", gridSize=0.25,
+        scene="procedural", gridSize=0.25,
         width=width,
         height=height,
         fieldOfView=fov,

@@ -187,10 +187,12 @@ namespace Thor.Procedural
 			foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
 				// TODO query material
 				Debug.Log($"Wall i {index} {w0} {w1} {w2}");
-				var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2);
+				if (!w0.empty) {
+					var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2);
 
-				wallGO.transform.parent = structure.transform;
-				index++;
+					wallGO.transform.parent = structure.transform;
+					index++;
+				}
 			}
 
 			// foreach ((Wall w0, Wall w1) in zip) {
