@@ -53,6 +53,7 @@ public class AgentManager : MonoBehaviour {
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
 
     public bool doResetMaterials = false;
+    public bool doResetColors = false;
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -643,12 +644,21 @@ public class AgentManager : MonoBehaviour {
     public void resetMaterials() {
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
         colorChangeComponent.ResetMaterials();
+        doResetMaterials = false;
+        doResetColors = false;
+    }
+
+    public void resetColors() {
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+        colorChangeComponent.ResetColors();
+        doResetColors = false;
     }
 
     public void Reset(ServerAction response) {
         if (doResetMaterials) {
             resetMaterials();
-            doResetMaterials = false;
+        } else if (doResetColors) {
+            resetColors();
         }
         StartCoroutine(ResetCoroutine(response));
     }
