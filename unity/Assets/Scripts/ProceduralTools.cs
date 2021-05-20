@@ -355,7 +355,7 @@ namespace Thor.Procedural {
                 wallGO.transform.rotation = Quaternion.AngleAxis(theta * 180.0f / Mathf.PI, Vector3.up);
             }
 
-            var colliderOffset = toCreate.thickness < zeroThicknessEpsilon ? normal * colliderThickness : Vector3.zero;
+            var colliderOffset = Vector3.zero;//toCreate.thickness < zeroThicknessEpsilon ? normal * colliderThickness : Vector3.zero;
 
             boxC.center += colliderOffset;
 
