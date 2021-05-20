@@ -3410,3 +3410,63 @@ class {encoded_class_name}:
         )
     with open("ai2thor/tests/test_utf.py", "w") as f:
         f.write("\n".join(class_data))
+        
+
+@task
+def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mode=False, local_build=False):
+    import ai2thor.controller
+    import random
+    import json
+    import os
+    print(os.getcwd())
+    width = 300
+    height = 300
+    fov = 100
+    n = 20
+    import os;
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=local_build,
+        start_unity=False if editor_mode else True,
+        scene="procedural", gridSize=0.25,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    # print(
+    #     "constoller.last_action Agent Pos: {}".format(
+    #         controller.last_event.metadata["agent"]["position"]
+    #     )
+    # )
+
+    # evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
+
+    # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+    #
+    # print(evt.metadata["lastActionSuccess"])
+    # print(evt.metadata["errorMessage"])
+    #
+    # reachable_pos = evt.metadata["actionReturn"]
+    #
+    # print(evt.metadata["actionReturn"])
+    print(os.getcwd())
+    with open(file_path, "r") as f:
+        json = json.load(f)
+        walls = json["walls"]
+
+        evt = controller.step(
+            dict(
+                action="CreateRoom",
+                walls=walls,
+                wallHeight=2.0,
+                wallMaterialId="DrywallOrange",
+                floorMaterialId="DarkWoodFloors"
+            )
+        )
+
+        for i in range(n):
+            controller.step("MoveAhead")

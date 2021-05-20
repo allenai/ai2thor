@@ -66,6 +66,8 @@ public class Build {
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
         }
+        
+        files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
 
         foreach (string f in files) {
             if (f.EndsWith(".unity")) {
