@@ -772,6 +772,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RandomizeColors() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             colorChangeComponent.RandomizeColor();
+            agentManager.doResetMaterials = true;
             actionFinished(true);
         }
 
@@ -926,8 +927,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ResetColors() {
-            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            colorChangeComponent.ResetColors();
+            agentManager.resetColors();
             actionFinished(true);
         }
 
