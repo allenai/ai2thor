@@ -3400,7 +3400,6 @@ def format_py(context):
     except ImportError:
         raise Exception("black not installed - run pip install black")
 
-    # subprocess.check_call("black **/.py", shell=True)
     subprocess.check_call(
         "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
     )
