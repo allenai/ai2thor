@@ -459,7 +459,7 @@ public class ImageSynthesis : MonoBehaviour {
 
         tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
         tex.Apply();
-        Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
+        // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
 
         startTime = Time.realtimeSinceStartup;
 
@@ -471,7 +471,7 @@ public class ImageSynthesis : MonoBehaviour {
             bytes = tex.GetRawTextureData();
         }
 
-        Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
+        // Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
 
 
         // restore state and cleanup
