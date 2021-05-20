@@ -382,7 +382,9 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
+def local_build(
+    context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False
+):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
@@ -392,7 +394,7 @@ def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts
 
     build_dir = os.path.join("builds", build.name)
     if scripts_only:
-        env["BUILD_SCRIPTS_ONLY"] = "true";
+        env["BUILD_SCRIPTS_ONLY"] = "true"
 
     if scenes:
         env["BUILD_SCENES"] = ",".join(
@@ -834,7 +836,6 @@ def link_build_cache(branch):
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
 
     ci_prune_cache(cache_base_dir)
-
 
     main_cache_dir = os.path.join(cache_base_dir, "main")
     branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
@@ -3326,6 +3327,81 @@ def ci_test_utf(context, build):
     logger.info(
         "finished Unity Test framework runner for %s %s"
         % (build["branch"], build["commit_id"])
+    )
+
+
+@task
+def format(context):
+    format_py(context)
+    format_cs(context)
+
+
+@task
+def format_cs(context):
+    install_dotnet_format(context)
+
+    # the following message will get emitted, this can safely be ignored
+    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    subprocess.check_call(
+        ".dotnet/dotnet tool run dotnet-format unity/AI2-THOR-Base.csproj -w -s",
+        shell=True,
+    )
+
+
+@task
+def install_dotnet_format(context, force=False):
+    install_dotnet(context)
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    if not os.path.isfile(".config/dotnet-tools.json"):
+        command = os.path.join(base_dir, ".dotnet/dotnet") + " new tool-manifest"
+        subprocess.check_call(command, shell=True)
+
+    with open(".config/dotnet-tools.json") as f:
+        tools = json.loads(f.read())
+
+    # we may want to specify a version here in the future
+    if not force and "dotnet-format" in tools.get("tools", {}):
+        # dotnet-format already installed
+        return
+
+    command = os.path.join(base_dir, ".dotnet/dotnet") + " tool install dotnet-format"
+    subprocess.check_call(command, shell=True)
+
+
+@task
+def install_dotnet(context, force=False):
+    import requests
+    import stat
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    if not force and os.path.isfile(os.path.join(base_dir, ".dotnet/dotnet")):
+        # dotnet already installed
+        return
+    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script
+    res = requests.get("https://dot.net/v1/dotnet-install.sh")
+    res.raise_for_status()
+    target = os.path.join(base_dir, "dotnet-install.sh")
+    with open(target, "wb") as f:
+        f.write(res.content)
+
+    os.chmod(target, stat.S_IREAD | stat.S_IEXEC | stat.S_IWRITE)
+    env = os.environ.copy()
+    env["DOTNET_INSTALL_DIR"] = os.path.join(base_dir, ".dotnet")
+    subprocess.check_call(target, shell=True, env=env)
+    os.unlink(target)
+
+
+@task
+def format_py(context):
+
+    try:
+        import black
+    except ImportError:
+        raise Exception("black not installed - run pip install black")
+
+    subprocess.check_call(
+        "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
     )
 
 
