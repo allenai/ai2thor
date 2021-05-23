@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -1896,13 +1896,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            // the direction vecctor to push the target object defined by action.PushAngle 
-            // degrees clockwise from the agent's forward, the PushAngle must be less than 360
-            if (action.pushAngle <= 0 || action.pushAngle >= 360) {
-                errorMessage = "please give a PushAngle between 0 and 360.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+            // The direction vector to push the target object defined by action.pushAngle
+            // degrees clockwise from the agent's forward.
+            action.pushAngle %= 360;
+
+            // converts negative rotations to be positive
+            if (action.pushAngle < 360) {
+                action.pushAngle += 360;
             }
 
             SimObjPhysics target = null;
