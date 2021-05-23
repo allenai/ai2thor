@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -2764,47 +2764,83 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(waitForNFramesAndReturn(1, moveHandToXYZ(newPos.x, newPos.y, newPos.z)));
         }
 
-        // moves hand constrained to x, y, z axes a given magnitude- x y z describe the magnitude in this case
-        // pass in x,y,z of 0 if no movement is desired on that axis
-        // pass in x,y,z of + for positive movement along that axis
-        // pass in x,y,z of - for negative movement along that axis
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObject(right, up, ahead) instead.", error: false)]
         public void MoveHandDelta(float x, float y, float z, bool forceVisible = false) {
+            MoveHeldObject(right: x, up: y, ahead: z);
+        }
+
+        // moves hand constrained to x, y, z axes a given magnitude- x y z describe the magnitude in this case
+        public void MoveHeldObject(float right = 0, float up = 0, float ahead = 0, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
-            newPos = newPos + (m_Camera.transform.forward * z) + (m_Camera.transform.up * y) + (m_Camera.transform.right * x);
+            newPos += (
+                m_Camera.transform.forward * ahead
+                + m_Camera.transform.up * up
+                + m_Camera.transform.right * right
+            );
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectAhead() instead.", error: false)]
         public void MoveHandAhead(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectAhead(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectAhead(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.forward * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectLeft() instead.", error: false)]
         public void MoveHandLeft(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectLeft(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectLeft(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.right * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectDown() instead.", error: false)]
         public void MoveHandDown(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectDown(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectDown(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.up * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectUp() instead.", error: false)]
         public void MoveHandUp(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectUp(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectUp(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.up * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectRight() instead.", error: false)]
         public void MoveHandRight(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectRight(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectRight(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.right * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Call MoveHeldObjectBack() instead.", error: false)]
         public void MoveHandBack(float moveMagnitude, bool forceVisible = false) {
+            MoveHeldObjectBack(moveMagnitude: moveMagnitude, forceVisible: forceVisible);
+        }
+
+        public void MoveHeldObjectBack(float moveMagnitude, bool forceVisible = false) {
             Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (-m_Camera.transform.forward * moveMagnitude);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z, forceVisible));
