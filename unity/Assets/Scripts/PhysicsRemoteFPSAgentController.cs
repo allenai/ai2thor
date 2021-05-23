@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -4615,7 +4615,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        // private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
+        // private IEnumerator checkDropObjectAction(SimObjPhysics currentHandSimObj) 
         // {
         //     yield return null; // wait for two frames to pass
         //     yield return null;
@@ -4648,7 +4648,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     actionFinished(true);
         // }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
+        private IEnumerator checkDropObjectActionFast(SimObjPhysics currentHandSimObj) {
             if (currentHandSimObj != null) {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
                 Physics.autoSimulation = false;
@@ -4670,7 +4670,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(ServerAction action) {
+        public void DropObject(ServerAction action) {
             // make sure something is actually in our hands
             if (ItemInHand != null) {
                 // we do need this to check if the item is currently colliding with the agent, otherwise
@@ -4709,7 +4709,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (action.autoSimulation) {
                             StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                         } else {
-                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                            StartCoroutine(checkDropObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                         }
                     } else {
                         actionFinished(true);
@@ -4724,6 +4724,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call DropObject instead.", error: false)]
+        public void DropHandObject(ServerAction action) {
+            DropObject(action);
         }
 
         // by default will throw in the forward direction relative to the Agent's Camera
@@ -4737,8 +4743,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject go = ItemInHand;
-            DropHandObject(action);
-            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
+            DropObject(action);
+            // Force is not applied because action success from DropObject starts a coroutine that waits for the object to be stationary
             // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
             // if (this.lastActionSuccess) {
             Vector3 dir = m_Camera.transform.forward;
