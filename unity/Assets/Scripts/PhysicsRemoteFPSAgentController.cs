@@ -2936,41 +2936,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        // rotat ethe hand if there is an object in it
-        public void RotateHand(ServerAction action) {
+        [ObsoleteAttribute(message: "This action is deprecated. Call RotateHeldObject() instead.", error: false)]
+        public void RotateHand(float x, float y, float z) {
+            RotateHeldObject(rotation: new Vector3(x, y, z));
+        }
 
+        // rotate the held object if there is an object in it
+        public void RotateHeldObject(Vector3 rotation) {
             if (ItemInHand == null) {
-                errorMessage = "Can't rotate hand unless holding object";
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Can't rotate hand unless holding object.");
             }
 
-            if (CheckIfAgentCanRotateHand()) {
-                Vector3 vec = new Vector3(action.x, action.y, action.z);
-                AgentHand.transform.localRotation = Quaternion.Euler(vec);
-                // SetUpRotationBoxChecks();
-
-                // if this is rotated too much, drop any contained object if held item is a receptacle
-                if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
-                    DropContainedObjects(
-                        target: ItemInHand.GetComponent<SimObjPhysics>(),
-                        reparentContainedObjects: true,
-                        forceKinematic: false
-                    );
-                }
-
-                actionFinished(true);
-            } else {
-                actionFinished(false);
+            if (!CheckIfAgentCanRotateHand()) {
+                throw new InvalidOperationException("Object is unable to rotate in its current state!");
             }
+
+            AgentHand.transform.localRotation = Quaternion.Euler(rotation);
+            // SetUpRotationBoxChecks();
+
+            // if this is rotated too much, drop any contained object if held item is a receptacle
+            if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
+                DropContainedObjects(
+                    target: ItemInHand.GetComponent<SimObjPhysics>(),
+                    reparentContainedObjects: true,
+                    forceKinematic: false
+                );
+            }
+
+            actionFinished(true);
         }
 
         // rotate the hand if there is an object in it
-        public void RotateHandRelative(ServerAction action) {
-
+        public void RotateHeldObject(float pitch = 0, float yaw = 0, float roll = 0) {
             if (ItemInHand == null) {
-                errorMessage = "Can't rotate hand unless holding object";
-                return;
+                throw new InvalidOperationException("Can't rotate hand unless holding object.");
             }
 
             Quaternion agentRot = transform.rotation;
@@ -2978,22 +2977,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             transform.rotation = Quaternion.identity;
 
+            // NOTE: -roll is used so that rotating an object rightward is positive
             AgentHand.transform.Rotate(
-                new Vector3(action.x, action.y, action.z), Space.World
+                new Vector3(pitch, yaw, -roll), Space.World
             );
             transform.rotation = agentRot;
 
             if (isHandObjectColliding(true)) {
-                errorMessage = "Hand object is coliding after rotation.";
                 AgentHand.transform.rotation = agentHandStartRot;
-                actionFinished(false);
-            } else {
-                actionFinished(true);
+                throw new InvalidOperationException("Hand object is coliding after rotation.");
             }
+
+            actionFinished(true);
+        }
+
+        // rotate the hand if there is an object in it
+        public void RotateHandRelative(float x = 0, float y = 0, float z = 0) {
+            // NOTE: -z is used for backwards compatibility.
+            RotateHeldObject(pitch: x, yaw: y, roll: -z);
         }
 
         // action to return points from a grid that have an experiment receptacle below it
-        // creates a grid startinng from the agent's current hand position and projects that grid
+        // creates a grid starting from the agent's current hand position and projects that grid
         // forward relative to the agent
         // grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
         public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount) {
