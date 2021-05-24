@@ -24,6 +24,10 @@ public class Fill : MonoBehaviour {
         return isFilled;
     }
 
+    public string FilledLiquid() {
+        return currentlyFilledWith;
+    }
+
     void Start() {
 #if UNITY_EDITOR
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
