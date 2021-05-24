@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -8543,6 +8543,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Missing Liquid string for FillObject action";
                 actionFinished(false);
             }
+
+            // ignore casing
+            action.fillLiquid = action.fillLiquid.ToLower();
 
             if (target) {
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
