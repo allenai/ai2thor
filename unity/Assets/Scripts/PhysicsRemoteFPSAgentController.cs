@@ -2944,7 +2944,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // rotate the held object if there is an object in it
         public void RotateHeldObject(Vector3 rotation) {
             if (ItemInHand == null) {
-                throw new InvalidOperationException("Can't rotate hand unless holding object.");
+                throw new InvalidOperationException("Can't rotate held object since no object is being held.");
             }
 
             if (!CheckIfAgentCanRotateHand()) {
@@ -2969,7 +2969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // rotate the hand if there is an object in it
         public void RotateHeldObject(float pitch = 0, float yaw = 0, float roll = 0) {
             if (ItemInHand == null) {
-                throw new InvalidOperationException("Can't rotate hand unless holding object.");
+                throw new InvalidOperationException("Can't rotate held object since no object is being held.");
             }
 
             Quaternion agentRot = transform.rotation;
@@ -2985,7 +2985,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (isHandObjectColliding(true)) {
                 AgentHand.transform.rotation = agentHandStartRot;
-                throw new InvalidOperationException("Hand object is coliding after rotation.");
+                throw new InvalidOperationException("Held object is coliding after rotation.");
             }
 
             actionFinished(true);
