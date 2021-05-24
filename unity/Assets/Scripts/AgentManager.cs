@@ -451,8 +451,18 @@ public class AgentManager : MonoBehaviour {
             camera.nearClipPlane = (float)nearClippingPlane;
         }
 
+        //default to primary agent's near clip plane value
+        else {
+            camera.nearClipPlane = this.primaryAgent.m_Camera.nearClipPlane;
+        }
+
         if (farClippingPlane != null) {
             camera.farClipPlane = (float)farClippingPlane;
+        }
+
+        //default to primary agent's far clip plane value
+        else {
+            camera.farClipPlane = this.primaryAgent.m_Camera.farClipPlane;
         }
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
@@ -485,8 +495,8 @@ public class AgentManager : MonoBehaviour {
         string skyboxColor = null,
         bool orthographic = false,
         float? orthographicSize = null,
-        float nearClippingPlane = 0.1f,
-        float farClippingPlane = 20.0f
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
