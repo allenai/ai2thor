@@ -8540,8 +8540,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (action.fillLiquid == null) {
-                errorMessage = "";
-                actionFinished(false);
                 throw new InvalidOperationException("Missing Liquid string for FillObject action");
             }
 
