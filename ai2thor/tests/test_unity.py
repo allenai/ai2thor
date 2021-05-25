@@ -423,6 +423,38 @@ def test_add_third_party_camera(controller):
         "action: AddThirdPartyCamera has an invalid argument: orthographicSize"
     )
 
+def test_third_party_camera_depth(fifo_controller):
+    fifo_controller.reset(
+        TEST_SCENE,
+        width=300,
+        height=300,
+        renderDepthImage=True
+    )
+
+    agent_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.75}
+    agent_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+
+    agent_init_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.25}
+    camera_position = {'x': -2.75, 'y': 1.5759992599487305, 'z': -1.75}
+    camera_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+    # teleport agent into a position the third-party camera won't see
+    fifo_controller.step(action="Teleport", position=agent_init_position, rotation=agent_rotation, horizon=0.0, standing=True)
+
+    camera_event = fifo_controller.step(
+        dict(
+            action=Actions.AddThirdPartyCamera,
+            position=camera_position,
+            rotation=camera_rotation
+        )
+    )
+    camera_depth = camera_event.third_party_depth_frames[0]
+    agent_event = fifo_controller.step(action="Teleport", position=agent_position, rotation=agent_rotation, horizon=0.0, standing=True)
+    agent_depth = agent_event.depth_frame
+    mse = np.square((np.subtract(camera_depth, agent_depth))).mean()
+    # if the clipping planes aren't the same between the agent and third-party camera
+    # the mse will be > 1.0
+    assert mse < 0.0001
+
 
 def test_update_third_party_camera(fifo_controller):
     # add a new camera
