@@ -32,22 +32,6 @@ public class AddressablesUtil : MonoBehaviour
         Addressables.InitializeAsync();
     }
 
-    private void Update()
-    {
-        if (Input.GetKey(KeyCode.LeftAlt))
-        {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                ClearAllAddressablesCache();
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                CacheAllAddressables();
-            }
-        }
-    }
-
     /// <summary>
     /// Creates an addressables object (Materials, Text Assets etc)
     /// </summary>
@@ -59,21 +43,7 @@ public class AddressablesUtil : MonoBehaviour
         AsyncOperationHandle<T> objectOperation = Addressables.LoadAssetAsync<T>(path);
         T objectAsset = objectOperation.WaitForCompletion();
 
-        StartCoroutine(WaitForAssetRelease(objectAsset));
         return objectAsset;
-    }
-
-    /// <summary>
-    /// Waits for asset creation and reference to be made before clearing intial resource in memory
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    private IEnumerator WaitForAssetRelease<T>(T asset)
-    {
-        yield return null;
-        // We are releasing this way primarily for materials which on assignment create a new instance
-        Addressables.Release(asset);
     }
 
     /// <summary>
@@ -113,28 +83,14 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void ClearAllAddressablesCache()
     {
-        Debug.LogError("Clearing Cache");
-
-        System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
-        stopWatch.Start();
-
-        StartCoroutine(ClearAllCoroutine(stopWatch));
+        StartCoroutine(ClearAllCoroutine());
     }
 
-    private IEnumerator ClearAllCoroutine(System.Diagnostics.Stopwatch stopWatch)
+    private IEnumerator ClearAllCoroutine()
     {
         yield return Addressables.InitializeAsync();
         var handle = ClearAllAddressablesCacheHandle();
         yield return handle;
-
-        // Everything has finished, log the time it took
-        stopWatch.Stop();
-
-        System.TimeSpan ts = stopWatch.Elapsed;
-        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            ts.Hours, ts.Minutes, ts.Seconds,
-            ts.Milliseconds / 10);
-        Debug.LogError("Cache Cleared : " + elapsedTime);
     }
 
     private AsyncOperationHandle<bool> ClearAllAddressablesCacheHandle()
@@ -148,29 +104,15 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void CacheAllAddressables()
     {
-        Debug.LogError("Caching All Addressables");
-
-        System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
-        stopWatch.Start();
-
-        StartCoroutine(DownloadAllCoroutine(stopWatch));
+        StartCoroutine(DownloadAllCoroutine());
     }
 
-    private IEnumerator DownloadAllCoroutine(System.Diagnostics.Stopwatch stopWatch)
+    private IEnumerator DownloadAllCoroutine()
     {
         yield return Addressables.InitializeAsync();
         var handle = CacheAllAddressablesHandle();
         yield return handle;
         Caching.ClearCache();
-
-        // Everything has finished, log the time it took
-        stopWatch.Stop();
-
-        System.TimeSpan ts = stopWatch.Elapsed;
-        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            ts.Hours, ts.Minutes, ts.Seconds,
-            ts.Milliseconds / 10);
-        Debug.LogError("Addressables Cached! : " + elapsedTime);
     }
 
     private AsyncOperationHandle<IList<IAssetBundleResource>> CacheAllAddressablesHandle()
@@ -201,7 +143,7 @@ public class AddressablesUtil : MonoBehaviour
                     {
                         var dls = Addressables.GetDownloadSizeAsync(location);
                         dls.WaitForCompletion();
-                        
+
                         // this does not seem to be returning different results
                         //if (dls.Result > 0)
                         {
