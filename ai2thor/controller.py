@@ -16,7 +16,6 @@ import math
 import time
 import random
 import shlex
-import signal
 import subprocess
 import shutil
 import re
@@ -36,6 +35,7 @@ import ai2thor.build
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 from ai2thor.util import makedirs, atomic_write
 from ai2thor.util.lock import LockEx
+import ai2thor.platform
 
 import warnings
 
@@ -438,11 +438,6 @@ class Controller(object):
             self._build = ai2thor.build.ExternalBuild(local_executable_path)
         else:
             self._build = self.find_build(local_build, commit_id, branch)
-
-        if self._build is None:
-            raise Exception(
-                "Couldn't find a suitable build for platform: %s" % platform.system()
-            )
 
         self._build.download()
 
@@ -1049,73 +1044,105 @@ class Controller(object):
 
         return [c["sha"] for c in payload]
 
-    def find_build(self, local_build, commit_id, branch):
+    def local_commits(self):
 
+        git_dir = os.path.normpath(
+            os.path.dirname(os.path.realpath(__file__)) + "/../.git"
+        )
+        commits = (
+            subprocess.check_output(
+                "git --git-dir=" + git_dir + " log -n 10 --format=%H", shell=True
+            )
+            .decode("ascii")
+            .strip()
+            .split("\n")
+        )
+
+        return commits
+
+    def find_build(self, local_build, commit_id, branch):
+        releases_dir = self.releases_dir
         if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
-
-        arch = ai2thor.build.arch_platform_map[platform.system()]
-
         if branch:
             commits = self._branch_commits(branch)
         elif commit_id:
-            ver_build = ai2thor.build.Build(
-                arch, commit_id, self.include_private_scenes, self.releases_dir
-            )
-
-            if not ver_build.exists():
-                raise ValueError(
-                    "Invalid commit_id: %s - no build exists for arch=%s"
-                    % (commit_id, arch)
-                )
-
-            return ver_build
+            commits = [commit_id]
         else:
-            git_dir = os.path.normpath(
-                os.path.dirname(os.path.realpath(__file__)) + "/../.git"
-            )
-            commits = (
-                subprocess.check_output(
-                    "git --git-dir=" + git_dir + " log -n 10 --format=%H", shell=True
-                )
-                .decode("ascii")
-                .strip()
-                .split("\n")
-            )
-
-        rdir = self.releases_dir
-        found_build = None
+            commits = self.local_commits()
 
         if local_build:
-            rdir = os.path.normpath(
+
+            releases_dir = os.path.normpath(
                 os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds"
             )
             commits = [
-                "local"
+                ai2thor.build.LOCAL_BUILD_COMMIT_ID
             ] + commits  # we add the commits to the list to allow the ci_build to succeed
 
-        for commit_id in commits:
-            commit_build = ai2thor.build.Build(
-                arch, commit_id, self.include_private_scenes, rdir
-            )
+        request = ai2thor.platform.Request(
+            platform.system(), self.width, self.height, self.x_display
+        )
+        builds = self.find_platform_builds(request, commits, releases_dir, local_build)
+        if not builds:
+            if commit_id:
+                raise ValueError(
+                    "Invalid commit_id: %s - no build exists for arch=%s"
+                    % (commit_id, platform.system())
+                )
+            else:
+                raise Exception(
+                    "No build exists for arch=%s and commits: %s"
+                    % (platform.system(), ", ".join(map(lambda x: x[:8], commits)))
+                )
 
-            try:
-                if os.path.isdir(commit_build.base_dir) or (
-                    not local_build and commit_build.exists()
-                ):
-                    found_build = commit_build
-                    break
-            except Exception:
-                pass
+        # select the first build + platform that succeeds
+        # For Linux, this will select CloudRendering, then Linux64 (X11)
+        for build in builds:
+            if build.platform.is_valid(request):
+                if build.commit_id != commits[0]:
+                    warnings.warn(
+                        "Build for the most recent commit: %s is not available.  Using commit build %s"
+                        % (commits[0], build.commit_id)
+                    )
+                return build
 
-        if commit_build and commit_build.commit_id != commits[0]:
-            warnings.warn(
-                "Build for the most recent commit: %s is not available.  Using commit build %s"
-                % (commits[0], commit_build.commit_id)
+        error_messages = [
+            "The following builds were found, but had missing dependencies. Only one valid platform is required to run AI2-THOR."
+        ]
+        for build in builds:
+            errors = build.platform.validate(request)
+            message = "Platform %s failed validation with the following errors: %s" % (
+                build.platform.name(),
+                ", ".join(errors),
             )
+            instructions = build.platform.dependency_instructions(request)
+            if instructions:
+                message += instructions
+            error_messages.append(message)
+        raise Exception("\n".join(error_messages))
+
+    def find_platform_builds(self, request, commits, releases_dir, local_build):
+        candidate_platforms = ai2thor.platform.select_platforms(request)
+        builds = []
+        for plat in candidate_platforms:
+            for commit_id in commits:
+                commit_build = ai2thor.build.Build(
+                    plat, commit_id, self.include_private_scenes, releases_dir
+                )
+
+                try:
+                    if os.path.isdir(commit_build.base_dir) or (
+                        not local_build and commit_build.exists()
+                    ):
+                        builds.append(commit_build)
+                        # break out of commit loop, but allow search through all the platforms
+                        break
+                except Exception:
+                    pass
 
         # print("Got build for %s: " % (found_build.url))
-        return found_build
+        return builds
 
     def start(
         self,

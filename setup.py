@@ -48,10 +48,11 @@ setup(
         "aws-requests-auth",
         "msgpack",
         "Pillow",
+        "python-xlib",
         "opencv-python",
         "werkzeug>=0.15.0",  # needed for unix socket support
     ],
     setup_requires=["pytest-runner"],
-    tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely"],
+    tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock"],
     include_package_data=False,
 )
