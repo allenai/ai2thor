@@ -8,11 +8,12 @@ import xml.etree.ElementTree as ET
 
 
 class Request:
-    def __init__(self, system, width, height, x_display):
+    def __init__(self, system, width, height, x_display, headless):
         self.system = system
         self.width = width
         self.height = height
         self.x_display = x_display
+        self.headless = headless
 
 
 class BasePlatform:
@@ -32,6 +33,10 @@ class BasePlatform:
     def name(cls):
         return cls.__name__
 
+    @classmethod
+    def launch_env(cls, x_display):
+        return {}
+
 
 class BaseLinuxPlatform(BasePlatform):
     @classmethod
@@ -48,24 +53,32 @@ class Linux64(BaseLinuxPlatform):
     def dependency_instructions(cls, request):
         message = "Linux64 requires a X11 server to be running with GLX. "
 
-        displays = cls._valid_x_displays(request)
+        displays = cls._valid_x_displays(request.width, request.height)
         if displays:
             message += "The following valid displays were found %s" % (
                 ", ".join(displays)
-           )
+            )
         else:
             message += "If you have a NVIDIA GPU, please run: sudo ai2thor-xorg start"
 
         return message
 
     @classmethod
-    def _select_x_display(cls, request):
+    def _select_x_display(cls, width, height):
 
-        valid_displays = cls._valid_x_displays(request)
+        valid_displays = cls._valid_x_displays(width, height)
         if valid_displays:
             return valid_displays[0]
         else:
             return None
+
+    @classmethod
+    def launch_env(cls, width, height, x_display):
+        env = dict(DISPLAY=x_display)
+        if env["DISPLAY"] is None:
+            env["DISPLAY"] = cls._select_x_display(width, height)
+
+        return env
 
     @classmethod
     def _validate_screen(cls, display_screen_str, width, height):
@@ -91,8 +104,8 @@ class Linux64(BaseLinuxPlatform):
                 )
 
             if (
-                disp_screen["width_in_pixels"] < width
-                or disp_screen["height_in_pixels"] < height
+                disp_screen.screen()["width_in_pixels"] < width
+                or disp_screen.screen()["height_in_pixels"] < height
             ):
                 errors.append(
                     "Display %s does not have a large enough resolution for the target resolution: %sx%s vs. %sx%s"
@@ -105,14 +118,14 @@ class Linux64(BaseLinuxPlatform):
                     )
                 )
 
-            if disp_screen["root_depth"] != 24:
+            if disp_screen.screen()["root_depth"] != 24:
                 errors.append(
                     "Display %s does not have a color depth of 24: %s"
                     % (display_screen_str, disp_screen["root_depth"])
                 )
         except (Xlib.error.DisplayNameError, Xlib.error.DisplayConnectionError) as e:
             errors.append(
-                "Invalid display: %s. Failed to connect %s" % (display_screen_str, e)
+                "Invalid display: %s. Failed to connect %s " % (display_screen_str, e)
             )
 
         return errors
@@ -122,7 +135,7 @@ class Linux64(BaseLinuxPlatform):
         return len(cls._validate_screen(display_screen_str, width, height)) == 0
 
     @classmethod
-    def _valid_x_displays(cls, request):
+    def _valid_x_displays(cls, width, height):
         open_display_strs = [
             int(os.path.basename(s)[1:]) for s in glob.glob("/tmp/.X11-unix/X[0-9]*")
         ]
@@ -132,9 +145,7 @@ class Linux64(BaseLinuxPlatform):
                 disp = Xlib.display.Display(":%s" % display_str)
                 for screen in range(0, disp.screen_count()):
                     disp_screen_str = ":%s.%s" % (display_str, screen)
-                    if cls._is_valid_screen(
-                        disp_screen_str, request.width, request.height
-                    ):
+                    if cls._is_valid_screen(disp_screen_str, width, height):
                         valid_displays.append(disp_screen_str)
 
             except Xlib.error.DisplayConnectionError as e:
@@ -146,12 +157,16 @@ class Linux64(BaseLinuxPlatform):
 
     @classmethod
     def validate(cls, request):
-        if request.x_display:
+        if request.headless:
+            return []
+        elif request.x_display:
             return cls._validate_screen(
                 request.x_display, request.width, request.height
             )
-        elif cls._select_x_display(request) is None:
+        elif cls._select_x_display(request.width, request.height) is None:
             return ["No valid X display found"]
+        else:
+            return []
 
 
 class OSXIntel64(BasePlatform):

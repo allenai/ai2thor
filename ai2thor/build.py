@@ -146,6 +146,10 @@ class Build(object):
         return os.path.join(self.releases_dir, self.name)
 
     @property
+    def old_executable_path(self):
+        return self.platform.old_executable_path(self.base_dir, self.name)
+
+    @property
     def executable_path(self):
         return self.platform.executable_path(self.base_dir, self.name)
 

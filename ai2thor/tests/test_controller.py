@@ -89,6 +89,10 @@ class FakeQueue(object):
 
 def controller(**args):
 
+    # delete display so the tests can run on Linux
+    if 'DISPLAY' in os.environ:
+        del(os.environ["DISPLAY"])
+
     # during a ci-build we will get a warning that we are using a commit_id for the
     # build instead of 'local'
     default_args = dict(download_only=True, local_build=True)
@@ -99,11 +103,6 @@ def controller(**args):
         c.server = FakeServer()
 
     return c
-
-
-def test_contstruct():
-    c = controller()
-    assert True
 
 
 def test_osx_build_missing(mocker):
@@ -269,7 +268,7 @@ def test_key_for_point():
     assert ai2thor.controller.key_for_point(2.567, -3.43) == "2.6 -3.4"
 
 
-def test_invalid_commit():
+def test_invalid_commit(mocker):
     caught_exception = False
     try:
         c = ai2thor.controller.Controller(commit_id="1234567x")
@@ -279,14 +278,20 @@ def test_invalid_commit():
     assert caught_exception, "invalid commit id should throw ValueError"
 
 
-def test_scene_names():
+def test_scene_names(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     c = controller()
     assert len(c.scene_names()) == 195
     assert len(c.ithor_scenes()) == 120
     assert len(c.robothor_scenes()) == 195 - 120
 
 
-def test_invalid_action():
+def test_invalid_action(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
         dict(
             screenWidth=300,
@@ -307,7 +312,10 @@ def test_invalid_action():
     assert excinfo.value.args == ("Invalid method: moveaheadbadmethod",)
 
 
-def test_fix_visibility_distance_env():
+def test_fix_visibility_distance_env(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     try:
         os.environ["AI2THOR_VISIBILITY_DISTANCE"] = "2.0"
         fake_event = Event(
@@ -328,7 +336,10 @@ def test_fix_visibility_distance_env():
         del os.environ["AI2THOR_VISIBILITY_DISTANCE"]
 
 
-def test_raise_for_failure():
+def test_raise_for_failure(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_not_exists)
+
     fake_event = Event(
         dict(
             screenWidth=300,
@@ -347,7 +358,10 @@ def test_raise_for_failure():
         c.step(action1, raise_for_failure=True)
 
 
-def test_failure():
+def test_failure(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
         dict(
             screenWidth=300,
@@ -366,7 +380,10 @@ def test_failure():
     assert not e.metadata["lastActionSuccess"]
 
 
-def test_last_action():
+def test_last_action(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
         dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True)
     )
@@ -387,7 +404,10 @@ def test_last_action():
     assert e.metadata["lastActionSuccess"]
 
 
-def test_unity_command():
+def test_unity_command(mocker):
+    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     c = controller()
     assert c.unity_command(650, 550, False) == [
         c._build.executable_path,

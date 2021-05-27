@@ -397,7 +397,6 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
-        self.x_display = x_display
 
         self.last_event = None
         self.scene = None
@@ -410,6 +409,34 @@ class Controller(object):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
+        self.x_display = None
+
+        if x_display:
+            self.x_display = x_display
+        elif "DISPLAY" in os.environ:
+            self.x_display = os.environ["DISPLAY"]
+
+        if self.x_display and ":" not in self.x_display:
+            self.x_display = ":" + self.x_display
+
+        if quality not in QUALITY_SETTINGS:
+            valid_qualities = filter(
+                lambda q: QUALITY_SETTINGS[q] > 0,
+                sorted(QUALITY_SETTINGS.keys(), key=lambda q: QUALITY_SETTINGS[q]),
+            )
+            raise ValueError(
+                "Quality {} is invalid, please select from one of the following settings: ".format(
+                    quality
+                )
+                + ", ".join(valid_qualities)
+            )
+        elif QUALITY_SETTINGS[quality] == 0:
+            raise ValueError(
+                "Quality {} is associated with an index of 0. "
+                "Due to a bug in unity, this quality setting would be ignored.".format(
+                    quality
+                )
+            )
 
         if server_class is None and platform.system() == "Windows":
             self.server_class = ai2thor.wsgi_server.WsgiServer
@@ -917,22 +944,18 @@ class Controller(object):
         return self.last_event
 
     def unity_command(self, width, height, headless):
+        fullscreen = 1 if self.fullscreen else 0
+
         command = self._build.executable_path
+
         if headless:
             command += " -batchmode -nographics"
         else:
-            fullscreen = 1 if self.fullscreen else 0
-            if QUALITY_SETTINGS[self.quality] == 0:
-                raise RuntimeError(
-                    "Quality {} is associated with an index of 0. "
-                    "Due to a bug in unity, this quality setting would be ignored.".format(
-                        self.quality
-                    )
-                )
             command += (
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
+
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, server_params, image_name):
@@ -945,7 +968,12 @@ class Controller(object):
             env["AI2THOR_" + k.upper()] = v
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
-        command = self.unity_command(width, height, headless=self.headless)
+
+        command = self.unity_command(self.width, self.height, self.headless)
+        env.update(
+            self._build.platform.launch_env(self.width, self.height, self.x_display)
+        )
+
         makedirs(self.log_dir)
         self.server.unity_proc = proc = subprocess.Popen(
             command,
@@ -955,22 +983,6 @@ class Controller(object):
         )
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
-
-    def check_x_display(self, x_display):
-        if not self.headless:
-            with open(os.devnull, "w") as dn:
-                # copying the environment so that we pickup
-                # XAUTHORITY values
-                env = os.environ.copy()
-                env["DISPLAY"] = x_display
-
-                if subprocess.call(["which", "xdpyinfo"], stdout=dn) == 0:
-                    assert (
-                        subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0
-                    ), (
-                        "Invalid DISPLAY %s - cannot find X server with xdpyinfo"
-                        % x_display
-                    )
 
     @property
     def tmp_dir(self):
@@ -1081,7 +1093,7 @@ class Controller(object):
             ] + commits  # we add the commits to the list to allow the ci_build to succeed
 
         request = ai2thor.platform.Request(
-            platform.system(), self.width, self.height, self.x_display
+            platform.system(), self.width, self.height, self.x_display, self.headless
         )
         builds = self.find_platform_builds(request, commits, releases_dir, local_build)
         if not builds:
@@ -1196,13 +1208,6 @@ class Controller(object):
         image_name = None
 
         self.server.start()
-        if platform.system() == "Linux":
-            if x_display:
-                env["DISPLAY"] = ":" + x_display
-            elif "DISPLAY" not in env:
-                env["DISPLAY"] = ":0.0"
-
-            self.check_x_display(env["DISPLAY"])
 
         if start_unity:
 
