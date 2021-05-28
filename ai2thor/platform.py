@@ -34,7 +34,7 @@ class BasePlatform:
         return cls.__name__
 
     @classmethod
-    def launch_env(cls, x_display):
+    def launch_env(cls, width, height, x_display):
         return {}
 
 
