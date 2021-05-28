@@ -1,10 +1,9 @@
 import Xlib.display
 import glob
-import random
 import warnings
 import os
 import ctypes.util
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree
 
 
 class Request:
@@ -191,7 +190,7 @@ class OSXIntel64(BasePlatform):
 
         with open(plist_path) as f:
             plist = f.read()
-        root = ET.fromstring(plist)
+        root = xml.etree.ElementTree.fromstring(plist)
 
         keys = [x.text for x in root.findall("dict/key")]
         values = [x.text for x in root.findall("dict/string")]
