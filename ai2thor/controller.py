@@ -969,7 +969,7 @@ class Controller(object):
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
 
-        command = self.unity_command(self.width, self.height, self.headless)
+        command = self.unity_command(width, height, self.headless)
         env.update(
             self._build.platform.launch_env(self.width, self.height, self.x_display)
         )
