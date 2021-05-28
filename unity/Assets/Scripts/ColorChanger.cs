@@ -50,7 +50,6 @@ public class ColorChanger : MonoBehaviour {
 
                       fabricMaterials,
                       glassMaterials,
-                      lightMaterials,
                       metalMaterials,
 
                       paperMaterials,
@@ -120,7 +119,6 @@ public class ColorChanger : MonoBehaviour {
                 ["Sofa"] = sofaMaterials,
                 ["Fabric"] = fabricMaterials,
                 ["Glass"] = glassMaterials,
-                ["Light"] = lightMaterials,
                 ["Metal"] = metalMaterials,
                 ["Plastic"] = plasticMaterials,
                 ["Wood"] = woodMaterials,
@@ -272,6 +270,9 @@ public class ColorChanger : MonoBehaviour {
     }
 
     public void RandomizeColor() {
+        if (materials == null) {
+            cacheMaterials();
+        }
         foreach (KeyValuePair<string, Material[]> materialGroup in materials) {
             for (int i = 0; i < materialGroup.Value.Length; i++) {
                 Material mat = materialGroup.Value[i];
