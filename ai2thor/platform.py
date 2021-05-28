@@ -17,6 +17,9 @@ class Request:
 
 
 class BasePlatform:
+
+    enabled = True
+
     @classmethod
     def validate(cls, r):
         return []
@@ -196,6 +199,8 @@ class OSXIntel64(BasePlatform):
 
 
 class CloudRendering(BaseLinuxPlatform):
+    enabled = False
+
     @classmethod
     def dependency_instructions(cls, request):
         return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y libvulkan1"
@@ -220,6 +225,8 @@ def select_platforms(request):
     candidates = []
     system_platform_map = dict(Linux=(CloudRendering, Linux64), Darwin=(OSXIntel64,))
     for p in system_platform_map.get(request.system, ()):
+        if not p.enabled:
+            continue
         # skip CloudRendering when a x_display is specified
         if p == CloudRendering and request.x_display is not None:
             continue
