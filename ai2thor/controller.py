@@ -1124,9 +1124,9 @@ class Controller(object):
         ]
         for build in builds:
             errors = build.platform.validate(request)
-            message = "Platform %s failed validation with the following errors: %s" % (
+            message = "Platform %s failed validation with the following errors: %s\n  " % (
                 build.platform.name(),
-                ", ".join(errors),
+                "\t\n".join(errors),
             )
             instructions = build.platform.dependency_instructions(request)
             if instructions:
