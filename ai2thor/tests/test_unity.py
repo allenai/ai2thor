@@ -1799,3 +1799,67 @@ def test_segmentation_colors(controller):
     assert (
         event.color_to_object_id[fridge_color] == "Fridge"
     ), "Fridge should have this color on instance seg"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_rotate_hand(controller):
+    # PITCH
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(action="RotateHeldObject", pitch=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["x"] - h1["rotation"]["x"] == 90
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(action="RotateHeldObject", yaw=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["y"] - h1["rotation"]["y"] == 90
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # ROLL
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(action="RotateHeldObject", roll=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+
+    # NOTE: 270 is expected if you want roll to be positive moving rightward
+    assert h2["rotation"]["z"] - h1["rotation"]["z"] == 270
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+
+    # ROLL + PITCH + YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(action="RotateHeldObject", roll=90, pitch=90, yaw=90).metadata[
+        "hand"
+    ]
+
+    assert_near(h1["position"], h2["position"])
+    assert_near(h1["rotation"], dict(x=0, y=180, z=0))
+
+    # Unity will normalize the rotation, so x=90, y=270, and z=270 becomes x=90, y=0, z=0
+    assert_near(h2["rotation"], dict(x=90, y=0, z=0))
