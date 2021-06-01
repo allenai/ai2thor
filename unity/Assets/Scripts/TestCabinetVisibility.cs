@@ -46,7 +46,7 @@ public class TestCabinetVisibility : MonoBehaviour {
     }
 
     public IEnumerator Start() {
-        //wait for cabinets to set their startup positions
+        // wait for cabinets to set their startup positions
         yield return new WaitForSeconds(0.1f);
 
         ProblemCabinets.Clear();
@@ -66,28 +66,28 @@ public class TestCabinetVisibility : MonoBehaviour {
         Vector3 startPos = transform.position;
 
         foreach (SimObj c in cabinets) {
-            //bool seenAtLeastOnce = false;
+            // bool seenAtLeastOnce = false;
             currentCabinet = c;
-            //close the cabinet
+            // close the cabinet
             currentCabinet.Animator.SetBool("AnimState1", false);
-            //get some valid random positions around the cabinet
+            // get some valid random positions around the cabinet
             Vector3 cabinetPos = currentCabinet.CenterPoint;
             cabinetPos.y = startPos.y;
             positions.Clear();
             int numSkippedPositions = 0;
             while (positions.Count < ChecksPerCabinet && numSkippedPositions < MaxSkippedPositions) {
-                //get a point inside a circle
+                // get a point inside a circle
                 Vector3 randomPos = cabinetPos;
                 randomPos.x += (Random.value - 0.5f) * MaxDistance;
                 randomPos.z += (Random.value - 0.5f) * MaxDistance;
                 randomPos.y = startPos.y;
-                //if the circle is too close to the cabinet, move away
+                // if the circle is too close to the cabinet, move away
                 if (Vector3.Distance(cabinetPos, randomPos) < MinDistance) {
-                    //don't include it
+                    // don't include it
                     continue;
                 }
                 RaycastHit hit;
-                //check to see if the agent is above the floor
+                // check to see if the agent is above the floor
                 bool aboveGround = Physics.Raycast(randomPos, Vector3.down, out hit, 1.1f, SimUtil.RaycastVisibleLayerMask, QueryTriggerInteraction.Ignore);
                 if (!aboveGround || !hit.collider.CompareTag(SimUtil.StructureTag) || !hit.collider.name.Equals("Floor")) {
                     numSkippedPositions++;
@@ -111,12 +111,12 @@ public class TestCabinetVisibility : MonoBehaviour {
                     }
                 }
             }
-            //start moving
+            // start moving
             float progressInterval = 1f / cabinets.Count;
             for (int i = 0; i < positions.Count; i++) {
-                //move the agent to the random position
+                // move the agent to the random position
                 transform.position = positions[i];
-                //look around the world in 60-degree increments
+                // look around the world in 60-degree increments
                 EditorUtility.DisplayProgressBar(
                     "Testing " + cabinets.Count.ToString() + " cabinets",
                     currentCabinet.ObjectID + " (position " + i.ToString() + ")",
@@ -127,44 +127,44 @@ public class TestCabinetVisibility : MonoBehaviour {
                     for (int k = 0; k < headingAngles.Length; k++) {
 
                         headingAngle = headingAngles[k];
-                        //at each step, check whether we can see the cabinet
+                        // at each step, check whether we can see the cabinet
                         bool cabinetVisibleClosed = false;
                         bool cabinetVisibleOpen = false;
                         transform.localEulerAngles = new Vector3(0f, headingAngle, 0f);
                         cam.transform.localRotation = Quaternion.identity;
                         cam.transform.Rotate(horizonAngle, 0f, 0f);
-                        //close the cabinet
-                        //currentCabinet.Animator.SetBool ("AnimState1", false);
-                        //yield return null;
-                        //get visible again
+                        // close the cabinet
+                        // currentCabinet.Animator.SetBool ("AnimState1", false);
+                        // yield return null;
+                        // get visible again
                         foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
                             if (visibleSimObj == currentCabinet) {
                                 cabinetVisibleClosed = true;
-                                //seenAtLeastOnce = true;
+                                // seenAtLeastOnce = true;
                                 break;
                             }
                         }
-                        //don't bother if we didn't see anything
+                        // don't bother if we didn't see anything
                         if (!cabinetVisibleClosed) {
                             yield return null;
                             continue;
                         }
 
-                        //open the cabinet
+                        // open the cabinet
                         currentCabinet.Animator.SetBool("AnimState1", true);
                         yield return null;
                         yield return new WaitForEndOfFrame();
-                        //get visible objects again
+                        // get visible objects again
                         foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
                             if (visibleSimObj == currentCabinet) {
                                 cabinetVisibleOpen = true;
-                                //seenAtLeastOnce = true;
+                                // seenAtLeastOnce = true;
                                 break;
                             }
                         }
-                        //now check to see if there were any we could see closed that we CAN'T see open
+                        // now check to see if there were any we could see closed that we CAN'T see open
                         if (cabinetVisibleClosed && !cabinetVisibleOpen) {
-                            //we found one we could see before, but can't see now
+                            // we found one we could see before, but can't see now
                             if (!ProblemCabinets.Contains(currentCabinet)) {
                                 ProblemCabinets.Add(currentCabinet);
                                 ProblemPositions.Add(positions[i]);
@@ -178,7 +178,7 @@ public class TestCabinetVisibility : MonoBehaviour {
                                 yield break;
                             }
                         }
-                        //close the cabinet
+                        // close the cabinet
                         currentCabinet.Animator.SetBool("AnimState1", false);
                         yield return null;
                     }

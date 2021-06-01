@@ -32,10 +32,11 @@ public class Convertable : MonoBehaviour {
     }
 
     void Update() {
-        if (parentObj == null)
+        if (parentObj == null) {
             parentObj = gameObject.GetComponent<SimObj>();
+        }
 
-        //anim state is 1-4
+        // anim state is 1-4
         int animState = -1;
         if (Application.isPlaying) {
             animState = parentObj.Animator.GetInteger("AnimState1");
@@ -49,7 +50,7 @@ public class Convertable : MonoBehaviour {
             animState = -1;
         }
 
-        //stateIndex is 0-3
+        // stateIndex is 0-3
         int stateIndex = animState - 1;
         if (currentState != stateIndex && stateIndex >= 0) {
             currentState = stateIndex;

@@ -29,18 +29,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	            if (input == Vector2.zero) return;
 				if (input.x > 0 || input.x < 0)
 				{
-					//strafe
+					// strafe
 					CurrentTargetSpeed = StrafeSpeed;
 				}
 				if (input.y < 0)
 				{
-					//backwards
+					// backwards
 					CurrentTargetSpeed = BackwardSpeed;
 				}
 				if (input.y > 0)
 				{
-					//forwards
-					//handled last as if strafing and moving forward at the same time forwards speed should take precedence
+					// forwards
+					// handled last as if strafing and moving forward at the same time forwards speed should take precedence
 					CurrentTargetSpeed = ForwardSpeed;
 				}
 #if !MOBILE_INPUT
@@ -73,7 +73,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             public float slowDownRate = 20f; // rate at which the controller comes to a stop when there is no input
             public bool airControl; // can the user control the direction that is being moved in the air
             [Tooltip("set it to 0.1 or more if you get stuck in wall")]
-            public float shellOffset; //reduce the radius by that ratio to avoid getting stuck in wall (a value of 0.1f is nice)
+            public float shellOffset; // reduce the radius by that ratio to avoid getting stuck in wall (a value of 0.1f is nice)
         }
 
 
@@ -224,7 +224,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void RotateView()
         {
-            //avoids the mouse looking if the game is effectively paused
+            // avoids the mouse looking if the game is effectively paused
             if (Mathf.Abs(Time.timeScale) < float.Epsilon) return;
 
             // get the rotation before it's changed

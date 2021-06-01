@@ -218,11 +218,11 @@ namespace UnityStandardAssets.ImageEffects
                 Graphics.Blit (mediumRezWorkTexture, bokehSource2, dofMaterial, 11);
 
                 // remove those parts (maybe even a little tittle bittle more) from the regurlarly blurred buffer
-                //Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture, dofMaterial, 10);
+                // Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture, dofMaterial, 10);
                 Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture);//, dofMaterial, 10);
 
                 // maybe you want to reblur the small blur ... but not really needed.
-                //Blur (mediumRezWorkTexture, mediumRezWorkTexture, DofBlurriness.Low, 4, maxBlurSpread);
+                // Blur (mediumRezWorkTexture, mediumRezWorkTexture, DofBlurriness.Low, 4, maxBlurSpread);
 
                 // bigger BLUR
                 Blur (lowRezWorkTexture, lowRezWorkTexture, bluriness, 0, maxBlurSpread * bokehBlurAmplifier);
@@ -268,7 +268,7 @@ namespace UnityStandardAssets.ImageEffects
                     Graphics.Blit (mediumRezWorkTexture, bokehSource2, dofMaterial, 11);
 
                     // remove the parts (maybe even a little tittle bittle more) that will end up in bokeh space
-                    //Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture, dofMaterial, 10);
+                    // Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture, dofMaterial, 10);
                     Graphics.Blit (mediumRezWorkTexture, lowRezWorkTexture);//, dofMaterial, 10);
 
                     // big BLUR

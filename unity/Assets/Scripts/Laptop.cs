@@ -18,10 +18,10 @@ public class Laptop : MonoBehaviour {
     public bool EditorOn;
     public bool EditorOpen;
 
-    //1 - Closed
-    //2 - Open, Off
-    //3 - Open, On
-    //4 - Open, Synced
+    // 1 - Closed
+    // 2 - Open, Off
+    // 3 - Open, On
+    // 4 - Open, Synced
 
     bool displayedError;
 
@@ -50,9 +50,9 @@ public class Laptop : MonoBehaviour {
             }
 
             int animState = SimObjParent.Animator.GetInteger("AnimState1");
-            //1 - Closed, Off
-            //2 - Open, Off
-            //3 - Closed, On
+            // 1 - Closed, Off
+            // 2 - Open, Off
+            // 3 - Closed, On
 
             switch (animState) {
                 case 1:

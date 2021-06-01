@@ -223,7 +223,7 @@ namespace MIConvexHull
                     }
                     else if (difference > -PlaneDistanceTolerance)
                     {
-                        //same or almost as good as current limit, so store it
+                        // same or almost as good as current limit, so store it
                         minIndices.Add(j);
                     }
                     difference = v - max;
@@ -243,7 +243,7 @@ namespace MIConvexHull
                     }
                     else if (difference > -PlaneDistanceTolerance)
                     {
-                        //same or almost as good as current limit, so store it
+                        // same or almost as good as current limit, so store it
                         maxIndices.Add(j);
                     }
                 }

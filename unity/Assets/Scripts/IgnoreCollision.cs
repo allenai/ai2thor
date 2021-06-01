@@ -24,13 +24,14 @@ public class IgnoreCollision : MonoBehaviour {
 
         Collider[] otherCollidersToIgnore = null;
 
-        //if the object to ignore has been manually set already
+        // if the object to ignore has been manually set already
         if (objectToIgnoreCollisionsWith != null) {
-            //do this if we are ignoring a sim object like a dresser with drawers in it
-            if (objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>())
+            // do this if we are ignoring a sim object like a dresser with drawers in it
+            if (objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>()) {
                 otherCollidersToIgnore = objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>().MyColliders;
+            }
 
-            //do this if we are ignoring the agent
+            // do this if we are ignoring the agent
             if (objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>()) {
                 otherCollidersToIgnore = new Collider[] { objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>().GetComponent<CapsuleCollider>() };
             }
@@ -38,15 +39,16 @@ public class IgnoreCollision : MonoBehaviour {
         }
 
 #if UNITY_EDITOR
-        else
+        else {
             Debug.LogError("IgnoreCollision on " + gameObject.transform.name + " is missing an objectToIgnoreCollisionsWith!");
+        }
 #endif
-        // //otherwise, default to finding the SimObjPhysics component in the nearest parent to use as the object to ignore
+        // // otherwise, default to finding the SimObjPhysics component in the nearest parent to use as the object to ignore
         // else
         // otherCollidersToIgnore = gameObject.GetComponentInParent<SimObjPhysics>().MyColliders;
 
         foreach (Collider col in myColliders) {
-            //Physics.IgnoreCollision(col 1, col2, true) with all combinations?
+            // Physics.IgnoreCollision(col 1, col2, true) with all combinations?
             foreach (Collider otherCol in otherCollidersToIgnore) {
                 Physics.IgnoreCollision(col, otherCol);
             }

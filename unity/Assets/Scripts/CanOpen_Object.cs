@@ -50,11 +50,11 @@ public class CanOpen_Object : MonoBehaviour {
     //[Header("References for the Open or Closed bounding box for openable and pickupable objects")]
     //// the bounding box to use when this object is in the open state
     //[SerializeField]
-    //protected GameObject OpenBoundingBox;
+    // protected GameObject OpenBoundingBox;
     //
     //// the bounding box to use when this object is in the closed state
     //[SerializeField]
-    //protected GameObject ClosedBoundingBox;
+    // protected GameObject ClosedBoundingBox;
 
     public List<SimObjType> WhatReceptaclesMustBeOffToOpen() {
         return MustBeOffToOpen;
@@ -67,9 +67,9 @@ public class CanOpen_Object : MonoBehaviour {
             foreach (GameObject go in MovingParts) {
                 iTween.Init(go);
 
-                //check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
-                //if (!go.GetComponent<Fridge_Door>())
-                //Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
+                // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
+                // if (!go.GetComponent<Fridge_Door>())
+                // Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
             }
         }
 
@@ -79,17 +79,18 @@ public class CanOpen_Object : MonoBehaviour {
         }
 #endif
 
-        if (!isOpen)
+        if (!isOpen) {
             currentOpenness = 0.0f;
+        }
 
-        ////make sure correct bounding box is referenced depending on if initial state at scene start is open or closed
-        ////set initial state by toggling the isOpen bool on this component, and also adjusting the rotation/position of any openable parts accordingly
-        //SwitchActiveBoundingBox();
+        //// make sure correct bounding box is referenced depending on if initial state at scene start is open or closed
+        //// set initial state by toggling the isOpen bool on this component, and also adjusting the rotation/position of any openable parts accordingly
+        // SwitchActiveBoundingBox();
     }
 
     // Update is called once per frame
     void Update() {
-        //test if it can open without Agent Command - Debug Purposes
+        // test if it can open without Agent Command - Debug Purposes
 #if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.Equals)) {
             Interact();
@@ -100,7 +101,7 @@ public class CanOpen_Object : MonoBehaviour {
     // Helper functions for setting up scenes, only for use in Editor
 #if UNITY_EDITOR
     void OnEnable() {
-        //debug check for missing CanOpen property
+        // debug check for missing CanOpen property
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
             Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanOpen!");
         }
@@ -189,10 +190,10 @@ public class CanOpen_Object : MonoBehaviour {
     private void setIsOpen(float openness) {
         isOpen = openness != 0;
         currentOpenness = openness;
-        //SwitchActiveBoundingBox();
+        // SwitchActiveBoundingBox();
     }
 
-    ////private void SwitchActiveBoundingBox() {
+    //// private void SwitchActiveBoundingBox() {
     //    // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
     //    // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
     //    if (OpenBoundingBox == null || ClosedBoundingBox == null) {
@@ -228,7 +229,7 @@ public class CanOpen_Object : MonoBehaviour {
         foreach (GameObject go in MovingParts) {
             count += iTween.Count(go);
         }
-        return count; //iTween.Count(this.transform.gameObject);
+        return count; // iTween.Count(this.transform.gameObject);
     }
 
     // note: reset can interrupt the Interact() itween call because
@@ -275,10 +276,10 @@ public class CanOpen_Object : MonoBehaviour {
             return;
         }
 
-        //if hitting another object that has double doors, do some checks 
+        // if hitting another object that has double doors, do some checks 
         if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
             if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
-                //don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
+                // don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
                 return;
             }
 
@@ -289,7 +290,7 @@ public class CanOpen_Object : MonoBehaviour {
                 // object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
                 // this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
                 if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0
-                    && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)//check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
+                    && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)// check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
                 {
 #if UNITY_EDITOR
                     Debug.Log(gameObject.name + " hit " + other.name + " on " + other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");

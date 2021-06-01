@@ -3,9 +3,7 @@ import requests
 from progressbar import ProgressBar, Bar, Percentage, FileTransferSpeed
 import hashlib
 import logging
-import os
 import ai2thor.build
-from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
 logger = logging.getLogger(__name__)
 

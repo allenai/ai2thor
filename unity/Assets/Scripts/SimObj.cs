@@ -14,7 +14,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
         }
 
         set {
-            //TODO add an ID lock
+            // TODO add an ID lock
             objectID = value;
         }
     }
@@ -46,7 +46,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     public bool UseWidthSearch = false;
     public bool hasCollision = false;
     public Transform BoundsTransform;
-    //stores the location of the simObj on startup
+    // stores the location of the simObj on startup
 
     public SimObjType ObjType {
 
@@ -205,7 +205,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     public bool VisibleNow = false;
 
 #if UNITY_EDITOR
-    //used for debugging object visibility
+    // used for debugging object visibility
     public string Error {
         get {
             return error;
@@ -231,7 +231,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     private Bounds bounds;
 
 
-    //this guy right here caused the giant groceries... should only be an issue with pivots
+    // this guy right here caused the giant groceries... should only be an issue with pivots
     public void ResetScale() {
         Transform tempParent = transform.parent;
         transform.parent = null;
@@ -267,7 +267,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
 
     public void RecalculatePoints() {
 
-        //get first renderer in object, use that object's bounds to get center point
+        // get first renderer in object, use that object's bounds to get center point
         Renderer r = null;
         if (!IsReceptacle) {
             r = gameObject.GetComponentInChildren<MeshRenderer>();
@@ -284,7 +284,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
             }
             bounds = r.bounds;
         } else {
-            //get the first collider
+            // get the first collider
             Collider c = null;
             if (IsReceptacle) {
                 c = receptacle.VisibilityCollider;
@@ -319,25 +319,26 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     }
 
     protected virtual void OnEnable() {
-        if (SceneManager.Current == null)
+        if (SceneManager.Current == null) {
             return;
+        }
 
-        //reset this in case one of our scripts was interrupted
+        // reset this in case one of our scripts was interrupted
         isAnimating = false;
 
-        //store this beacause we'll be parenting / unparenting objects rapidly
-        //and the floating point math can get wonky real quick
+        // store this beacause we'll be parenting / unparenting objects rapidly
+        // and the floating point math can get wonky real quick
         startupScale = transform.lossyScale;
 
-        //the receptacle script is guaranteed to run before sim obj
-        //so it's safe to get our colliders here - we won't accidentally
-        //grab colliders of nested objects
+        // the receptacle script is guaranteed to run before sim obj
+        // so it's safe to get our colliders here - we won't accidentally
+        // grab colliders of nested objects
         receptacle = gameObject.GetComponent<Receptacle>();
         animator = gameObject.GetComponent<Animator>();
         rearrangeable = gameObject.GetComponent<Rearrangeable>();
         colliders = gameObject.GetComponentsInChildren<Collider>();
 
-        //if the manip type isn't inventory, use the presence of the rearrangeable component to determine type
+        // if the manip type isn't inventory, use the presence of the rearrangeable component to determine type
         switch (Manipulation) {
             case SimObjManipType.Inventory:
                 break;
@@ -350,7 +351,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
 
 #if UNITY_EDITOR
         if (Type == SimObjType.Undefined) {
-            //check our prefab just in case the enum has gotten disconnected
+            // check our prefab just in case the enum has gotten disconnected
             GameObject prefabParent = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(gameObject) as GameObject;
             if (prefabParent != null) {
                 SimObj ps = prefabParent.GetComponent<SimObj>();
@@ -365,7 +366,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
                 c.gameObject.layer = SimUtil.RaycastVisibleLayer;
             }
 
-            //if we're type static, set our renderers to static so navmeshes generate correctly
+            // if we're type static, set our renderers to static so navmeshes generate correctly
             MeshRenderer[] renderers = gameObject.GetComponentsInChildren<MeshRenderer>();
             foreach (MeshRenderer mr in renderers) {
                 switch (Manipulation) {
@@ -417,8 +418,8 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
             if (startupTransform == null) {
                 switch (Manipulation) {
                     case SimObjManipType.Inventory:
-                        //if we can enter inventory
-                        //create a transform that stores our startup position
+                        // if we can enter inventory
+                        // create a transform that stores our startup position
                         startupTransform = new GameObject(name + "_Startup").transform;
                         startupTransform.position = transform.position;
                         startupTransform.rotation = transform.rotation;
@@ -430,9 +431,9 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
                         break;
                 }
             }
-            //make sure we're visible
+            // make sure we're visible
             gameObject.layer = SimUtil.RaycastVisibleLayer;
-            //force-update our colliders
+            // force-update our colliders
             visibleToRaycasts = false;
             VisibleToRaycasts = true;
         }
@@ -450,7 +451,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     void CheckForErrors() {
         error = string.Empty;
         colliders = gameObject.GetComponentsInChildren<Collider>();
-        //make sure all raycast targets are tagged correctly
+        // make sure all raycast targets are tagged correctly
         if (colliders.Length == 0) {
             error = "No colliders attached!";
             return;
@@ -461,7 +462,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
         }
 
         foreach (Collider c in colliders) {
-            //don't re-tag something that's tagged as a receptacle
+            // don't re-tag something that's tagged as a receptacle
             if (!c.CompareTag(SimUtil.ReceptacleTag)) {
                 c.gameObject.tag = SimUtil.SimObjTag;
             }
@@ -478,7 +479,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     }
 
     void Update() {
-        //TEMPORARY - we'll move this into receptacl
+        // TEMPORARY - we'll move this into receptacl
         if (transform.position != lastPosition) {
             lastPosition = transform.position;
             RecalculatePoints();
@@ -488,8 +489,9 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
     void OnDrawGizmos() {
         Gizmos.color = Color.white;
 
-        if (!SimUtil.ShowObjectVisibility)
+        if (!SimUtil.ShowObjectVisibility) {
             VisibleNow = false;
+        }
 
         if (!string.IsNullOrEmpty(error)) {
             Gizmos.color = Color.Lerp(Color.red, Color.clear, 0.5f);
@@ -498,13 +500,13 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
         } else {
             if (UseCustomBounds && SimUtil.ShowCustomBounds) {
                 if (BoundsTransform != null) {
-                    //draw aligned bounding box
+                    // draw aligned bounding box
                     Gizmos.matrix = transform.localToWorldMatrix;
                     Gizmos.color = VisibleNow ? Color.yellow : Color.cyan;
                     Gizmos.DrawWireCube(BoundsTransform.localPosition, BoundsTransform.localScale);
                     Gizmos.color = Color.Lerp(VisibleNow ? Color.yellow : Color.cyan, Color.clear, 0.45f);
                     Gizmos.DrawCube(BoundsTransform.localPosition, BoundsTransform.localScale);
-                    //reset matrix
+                    // reset matrix
                     Gizmos.matrix = Matrix4x4.identity;
                 }
             }
@@ -518,16 +520,16 @@ public class SimObj : MonoBehaviour, SimpleSimObj {
             }
 
             if (VisibleNow) {
-                //draw an outline around our biggest renderer
+                // draw an outline around our biggest renderer
                 MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
                 if (mf != null) {
                     Gizmos.color = Color.yellow;
                     Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
                 } else {
-                    //probably a visibility collider only sim obj
+                    // probably a visibility collider only sim obj
                     if (IsReceptacle) {
                         Gizmos.color = Color.yellow;
-                        //Gizmos.matrix = receptacle.VisibilityCollider.transform.worldToLocalMatrix;
+                        // Gizmos.matrix = receptacle.VisibilityCollider.transform.worldToLocalMatrix;
                         Gizmos.DrawSphere(centerPoint, 0.25f);
                         Gizmos.DrawWireSphere(centerPoint, 0.25f);
                     }

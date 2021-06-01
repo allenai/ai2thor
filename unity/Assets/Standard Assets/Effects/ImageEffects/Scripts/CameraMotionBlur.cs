@@ -243,15 +243,15 @@ namespace UnityStandardAssets.ImageEffects
 
                 // pitch (vertical)
                 farHeur = (Vector3.Angle (transform.up, prevFrameUp) / _camera.fieldOfView) * (source.width * 0.75f);
-                blurVector.x =  rotationScale * farHeur;//Mathf.Clamp01((1.0ff-Vector3.Dot(transform.up, prevFrameUp)));
+                blurVector.x =  rotationScale * farHeur;// Mathf.Clamp01((1.0ff-Vector3.Dot(transform.up, prevFrameUp)));
 
                 // yaw #1 (horizontal, faded by pitch)
                 farHeur = (Vector3.Angle (transform.forward, prevFrameForward) / _camera.fieldOfView) * (source.width * 0.75f);
-                blurVector.y = rotationScale * lookUpDown * farHeur;//Mathf.Clamp01((1.0ff-Vector3.Dot(transform.forward, prevFrameForward)));
+                blurVector.y = rotationScale * lookUpDown * farHeur;// Mathf.Clamp01((1.0ff-Vector3.Dot(transform.forward, prevFrameForward)));
 
                 // yaw #2 (when looking down, faded by 1-pitch)
                 farHeur = (Vector3.Angle (transform.forward, prevFrameForward) / _camera.fieldOfView) * (source.width * 0.75f);
-                blurVector.z = rotationScale * (1.0f- lookUpDown) * farHeur;//Mathf.Clamp01((1.0ff-Vector3.Dot(transform.forward, prevFrameForward)));
+                blurVector.z = rotationScale * (1.0f- lookUpDown) * farHeur;// Mathf.Clamp01((1.0ff-Vector3.Dot(transform.forward, prevFrameForward)));
 
                 if (distMag > Mathf.Epsilon && movementScale > Mathf.Epsilon) {
                     // forward (probably most important)
@@ -297,8 +297,8 @@ namespace UnityStandardAssets.ImageEffects
             // debug vel buffer:
             if (showVelocity) {
                 // generate tile max and neighbour max
-                //Graphics.Blit (velBuffer, tileMax, motionBlurMaterial, 2);
-                //Graphics.Blit (tileMax, neighbourMax, motionBlurMaterial, 3);
+                // Graphics.Blit (velBuffer, tileMax, motionBlurMaterial, 2);
+                // Graphics.Blit (tileMax, neighbourMax, motionBlurMaterial, 3);
                 motionBlurMaterial.SetFloat ("_DisplayVelocityScale", showVelocityScale);
                 Graphics.Blit (velBuffer, destination, motionBlurMaterial, 1);
             }

@@ -36,9 +36,9 @@ public class Microwave : MonoBehaviour {
             }
 
             int animState = SimObjParent.Animator.GetInteger("AnimState1");
-            //1 - Closed, Off
-            //2 - Open, Off
-            //3 - Closed, On
+            // 1 - Closed, Off
+            // 2 - Open, Off
+            // 3 - Closed, On
             Material[] sharedMats = GlassRenderer.sharedMaterials;
             bool waitForDoorToClose = false;
             switch (animState) {
@@ -72,8 +72,9 @@ public class Microwave : MonoBehaviour {
                     Door.rotation = Quaternion.RotateTowards(doorStartRotation, Door.rotation, Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25);
 
                     float distanceToTarget = Vector3.Distance(Door.localEulerAngles, targetDoorRotation);
-                    if (distanceToTarget >= 360f)
+                    if (distanceToTarget >= 360f) {
                         distanceToTarget -= 360f;
+                    }
 
                     if (!waitForDoorToClose || distanceToTarget < 0.005f) {
                         GlassRenderer.sharedMaterials = sharedMats;

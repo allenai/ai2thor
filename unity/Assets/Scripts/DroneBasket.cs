@@ -24,18 +24,18 @@ public class DroneBasket : MonoBehaviour {
     }
 
     public void OnTriggerStay(Collider other) {
-        //from the collider, see if the thing hit is a sim object physics
-        //don't detect other trigger colliders to prevent nested objects from containing each other
+        // from the collider, see if the thing hit is a sim object physics
+        // don't detect other trigger colliders to prevent nested objects from containing each other
         if (other.GetComponentInParent<SimObjPhysics>() && !other.isTrigger) {
 
             SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
 
-            //don't add any parent objects in case this is a child sim object
+            // don't add any parent objects in case this is a child sim object
             if (sop.transform == myParent.transform) {
                 return;
             }
 
-            //check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
+            // check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
             if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
             {
                 CurrentlyContains.Add(sop);

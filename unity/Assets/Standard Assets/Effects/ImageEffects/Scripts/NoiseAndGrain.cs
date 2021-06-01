@@ -147,8 +147,8 @@ namespace UnityStandardAssets.ImageEffects
                     float tcXStart = Random.Range (0.0f, 1.0f);
                     float tcYStart = Random.Range (0.0f, 1.0f);
 
-                    //Vector3 v3 = Random.insideUnitSphere;
-                    //Color c = new Color(v3.x, v3.y, v3.z);
+                    // Vector3 v3 = Random.insideUnitSphere;
+                    // Color c = new Color(v3.x, v3.y, v3.z);
 
                     tcXStart = Mathf.Floor(tcXStart*noiseSize) / noiseSize;
                     tcYStart = Mathf.Floor(tcYStart*noiseSize) / noiseSize;
@@ -157,19 +157,19 @@ namespace UnityStandardAssets.ImageEffects
 
                     GL.MultiTexCoord2 (0, tcXStart, tcYStart);
                     GL.MultiTexCoord2 (1, 0.0f, 0.0f);
-                    //GL.Color( c );
+                    // GL.Color( c );
                     GL.Vertex3 (x1, y1, 0.1f);
                     GL.MultiTexCoord2 (0, tcXStart + texTile * texTileMod, tcYStart);
                     GL.MultiTexCoord2 (1, 1.0f, 0.0f);
-                    //GL.Color( c );
+                    // GL.Color( c );
                     GL.Vertex3 (x1 + stepSizeX, y1, 0.1f);
                     GL.MultiTexCoord2 (0, tcXStart + texTile * texTileMod, tcYStart + texTile * texTileMod);
                     GL.MultiTexCoord2 (1, 1.0f, 1.0f);
-                    //GL.Color( c );
+                    // GL.Color( c );
                     GL.Vertex3 (x1 + stepSizeX, y1 + stepSizeY, 0.1f);
                     GL.MultiTexCoord2 (0, tcXStart, tcYStart + texTile * texTileMod);
                     GL.MultiTexCoord2 (1, 0.0f, 1.0f);
-                    //GL.Color( c );
+                    // GL.Color( c );
                     GL.Vertex3 (x1, y1 + stepSizeY, 0.1f);
                 }
             }

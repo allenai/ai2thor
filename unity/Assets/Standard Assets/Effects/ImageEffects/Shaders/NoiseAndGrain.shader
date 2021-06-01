@@ -72,7 +72,7 @@ Shader "Hidden/NoiseAndGrain" {
 			
 			// black & white intensities
 			float2 blackWhiteCurve = Luminance(color.rgb) - _MidGrey.x; // maybe tweak middle grey
-			blackWhiteCurve.xy = saturate(blackWhiteCurve.xy * _MidGrey.yz); //float2(1.0/0.8, -1.0/0.2));
+			blackWhiteCurve.xy = saturate(blackWhiteCurve.xy * _MidGrey.yz); // float2(1.0/0.8, -1.0/0.2));
 
 			float finalIntensity = _NoiseAmount.x + max(0.0f, dot(_NoiseAmount.zy, blackWhiteCurve.xy));
 			
@@ -93,7 +93,7 @@ Shader "Hidden/NoiseAndGrain" {
 			
 			// black & white intensities
 			float2 blackWhiteCurve = Luminance(color.rgb) - _MidGrey.x; // maybe tweak middle grey
-			blackWhiteCurve.xy = saturate(blackWhiteCurve.xy * _MidGrey.yz); //float2(1.0/0.8, -1.0/0.2));
+			blackWhiteCurve.xy = saturate(blackWhiteCurve.xy * _MidGrey.yz); // float2(1.0/0.8, -1.0/0.2));
 
 			float finalIntensity = _NoiseAmount.x + max(0.0f, dot(_NoiseAmount.zy, blackWhiteCurve.xy));
 			

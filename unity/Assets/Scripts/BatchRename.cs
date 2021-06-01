@@ -50,8 +50,9 @@ public class BatchRename : ScriptableWizard {
 
         helpString = "";
 
-        if (Selection.objects != null)
+        if (Selection.objects != null) {
             helpString = "Number of objects selected: " + Selection.objects.Length;
+        }
     }
 
 
@@ -61,8 +62,9 @@ public class BatchRename : ScriptableWizard {
     void OnWizardCreate() {
 
         // If selection is empty, then exit
-        if (Selection.objects == null)
+        if (Selection.objects == null) {
             return;
+        }
 
         // Current Increment
         int PostFix = StartNumber;

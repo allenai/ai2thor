@@ -22,9 +22,12 @@ public static class UtilityFunctions {
             while (value < n) {
                 result[index++] = value++;
                 stack.Push(value);
-                if (index != m) continue;
+                if (index != m) {
+                    continue;
+                }
+
                 yield return (int[])result.Clone(); // thanks to @xanatos
-                //yield return result;
+                // yield return result;
                 break;
             }
         }
@@ -182,11 +185,14 @@ public static class UtilityFunctions {
         return hits.ToArray();
     }
 
-    //get a copy of a specific component and apply it to another object at runtime
-    //usage: var copy = myComp.GetCopyOf(someOtherComponent);
+    // get a copy of a specific component and apply it to another object at runtime
+    // usage: var copy = myComp.GetCopyOf(someOtherComponent);
     public static T GetCopyOf<T>(this Component comp, T other) where T : Component {
         Type type = comp.GetType();
-        if (type != other.GetType()) return null; // type mis-match
+        if (type != other.GetType()) {
+            return null; // type mis-match
+        }
+
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
         PropertyInfo[] pinfos = type.GetProperties(flags);
         foreach (var pinfo in pinfos) {
@@ -203,7 +209,7 @@ public static class UtilityFunctions {
         return comp as T;
     }
 
-    //usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
+    // usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
     public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component {
         return go.AddComponent<T>().GetCopyOf(toAdd) as T;
     }

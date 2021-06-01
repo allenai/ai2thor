@@ -91,11 +91,13 @@ public class Rearrangeable : MonoBehaviour {
     }
 
     void OnDrawGizmos() {
-        if (Application.isPlaying)
+        if (Application.isPlaying) {
             return;
+        }
 
-        if (ParentSimObj == null || StartPosition == null || EndPosition == null)
+        if (ParentSimObj == null || StartPosition == null || EndPosition == null) {
             return;
+        }
 
         MeshFilter mf = ParentSimObj.GetComponentInChildren<MeshFilter>();
         if (mf != null) {

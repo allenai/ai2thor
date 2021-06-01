@@ -4,8 +4,6 @@ import sys
 root_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
 sys.path.insert(0, root_dir)
 
-import time
-import random
 import ai2thor.controller
 
 c = ai2thor.controller.Controller(
@@ -21,7 +19,7 @@ c = ai2thor.controller.Controller(
 )
 
 print(c.build_url())
-event = c.step(
+c.step(
     action="TeleportFull",
     x=-1,
     y=0.9009995460510254,
@@ -29,7 +27,7 @@ event = c.step(
     rotation=dict(x=0, y=180, z=0),
     horizon=0,
 )
-event = c.step(
+c.step(
     action="MoveMidLevelArm",
     disableRendering=False,
     position=dict(x=0.01, y=0, z=0.01),
@@ -37,12 +35,12 @@ event = c.step(
     returnToStart=False,
     handCameraSpace=False,
 )
-event = c.step(
+c.step(
     action="MoveArmBase", disableRendering=False, y=0.9, speed=2, returnToStart=False
 )
 
 pose = {"x": -1.0, "y": 0.9009995460510254, "z": 1, "rotation": 135, "horizon": 0}
-event = c.step(
+c.step(
     action="TeleportFull",
     x=pose["x"],
     y=pose["y"],

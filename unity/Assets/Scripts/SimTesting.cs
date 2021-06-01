@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System;
 
-//class for testing SimUtil functions
+// class for testing SimUtil functions
 public class SimTesting : MonoBehaviour {
 
     public enum TestMethod {
@@ -25,7 +25,7 @@ public class SimTesting : MonoBehaviour {
     public float SpherecastRadius;
     public Camera Cam;
     RaycastHit hit;
-    //RaycastHit[] hits = new RaycastHit[MaxHits];
+    // RaycastHit[] hits = new RaycastHit[MaxHits];
     public Vector3 placementPoint;
     public bool foundPlacementPoint;
     public SimObj inventoryObject;
@@ -37,7 +37,7 @@ public class SimTesting : MonoBehaviour {
     }
 
 #if UNITY_EDITOR
-    //used to show what's currently visible
+    // used to show what's currently visible
     void OnGUI() {
         if (SimObjsInView != null) {
             if (SimObjsInView.Length > 10) {
@@ -64,7 +64,7 @@ public class SimTesting : MonoBehaviour {
 
 #if UNITY_EDITOR
     void OnDisable() {
-        //make all sim objs invisible
+        // make all sim objs invisible
         SimObj[] simObjs = GameObject.FindObjectsOfType<SimObj>();
         foreach (SimObj o in simObjs) {
             o.VisibleNow = false;
@@ -74,7 +74,7 @@ public class SimTesting : MonoBehaviour {
 
     void Update() {
 
-        //check for a navmesh hit
+        // check for a navmesh hit
         foundPlacementPoint = PlacementManager.GetPlacementPoint(transform.position, Cam.transform.forward, Cam, ReachDistance, MaxPlaceDistance, ref placementPoint);
 
         if (inventoryObject != null && Input.GetKeyDown(KeyCode.P)) {
@@ -95,7 +95,7 @@ public class SimTesting : MonoBehaviour {
         }
 
 
-        //resize the array to avoid confusion in the test
+        // resize the array to avoid confusion in the test
         if (SimObjsInView.Length != NumItems) {
             Array.Resize<SimObj>(ref SimObjsInView, NumItems);
         }

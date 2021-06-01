@@ -139,13 +139,13 @@ namespace MIConvexHull
             if (minY == maxY) minYIndex = maxYIndex = minXIndex;
             // what if all points are on a vertical line? then do the opposite
             if (minX == maxX) minXIndex = maxXIndex = minYIndex;
-            //put these on a list in counter-clockwise (CCW) direction
+            // put these on a list in counter-clockwise (CCW) direction
             var extremeIndices = new List<int>(new[]
             {
                 minXIndex, minSumIndex, minYIndex, maxDiffIndex,
                 maxXIndex, maxSumIndex, maxYIndex, minDiffIndex
             });
-            var cvxVNum = 8; //in some cases, we need to reduce from this eight to a smaller set
+            var cvxVNum = 8; // in some cases, we need to reduce from this eight to a smaller set
             // The next two loops handle this reduction from 8 to as few as 3.
             // In the first loop, simply check if any indices are repeated. Thanks to the CCW order,
             // any repeat indices are adjacent on the list. Start from the back of the loop and
@@ -197,13 +197,13 @@ namespace MIConvexHull
                     if ((nextPt.X - currentPt.X) * (prevPt.Y - currentPt.Y) +
                         (nextPt.Y - currentPt.Y) * (currentPt.X - prevPt.X) > tolerance)
                         convexHullCCW.Insert(0,
-                            currentPt); //because we are counting backwards, we need to ensure that new points are added
+                            currentPt); // because we are counting backwards, we need to ensure that new points are added
                                         // to the front of the list
                     else
                     {
                         cvxVNum--;
-                        extremeIndices.RemoveAt(i); //the only reason to do this is to ensure that - if the loop is to 
-                                                    //continue - that the vectors are made to the proper new adjacent vertices
+                        extremeIndices.RemoveAt(i); // the only reason to do this is to ensure that - if the loop is to 
+                                                    // continue - that the vectors are made to the proper new adjacent vertices
                     }
                 }
             #endregion
@@ -214,11 +214,11 @@ namespace MIConvexHull
 
             #region Set local variables for the points in the convex hull
 
-            //This is used to limit the number of calls to convexHullCCW[] and point.X and point.Y, which 
-            //can take a significant amount of time. 
-            //Initialize the point locations and vectors:
-            //At minimum, the convex hull must contain two points (e.g. consider three points in a near line,
-            //the third point will be added later, since it was not an extreme.)
+            // This is used to limit the number of calls to convexHullCCW[] and point.X and point.Y, which 
+            // can take a significant amount of time. 
+            // Initialize the point locations and vectors:
+            // At minimum, the convex hull must contain two points (e.g. consider three points in a near line,
+            // the third point will be added later, since it was not an extreme.)
             var p0 = convexHullCCW[0];
             var p0X = p0.X;
             var p0Y = p0.Y;
@@ -253,7 +253,7 @@ namespace MIConvexHull
                 v6Y = 0,
                 v7X = 0,
                 v7Y = 0;
-            //A big if statement to make sure the convex hull wraps properly, since the number of initial cvxHull points changes
+            // A big if statement to make sure the convex hull wraps properly, since the number of initial cvxHull points changes
             if (cvxVNum > 2)
             {
                 var p2 = convexHullCCW[2];
@@ -296,17 +296,17 @@ namespace MIConvexHull
                                     p7Y = p7.Y;
                                     v6X = p7X - p6X;
                                     v6Y = p7Y - p6Y;
-                                    //Wrap around from 7
+                                    // Wrap around from 7
                                     v7X = p0X - p7X;
                                     v7Y = p0Y - p7Y;
                                 }
-                                else //Wrap around from 6
+                                else // Wrap around from 6
                                 {
                                     v6X = p0X - p6X;
                                     v6Y = p0Y - p6Y;
                                 }
                             }
-                            else //Wrap around from 5
+                            else // Wrap around from 5
                             {
                                 v5X = p0X - p5X;
                                 v5Y = p0Y - p5Y;
@@ -314,28 +314,28 @@ namespace MIConvexHull
                         }
                         else
                         {
-                            //Wrap around from 4
+                            // Wrap around from 4
                             v4X = p0X - p4X;
                             v4Y = p0Y - p4Y;
                         }
                     }
                     else
                     {
-                        //Wrap around from 3
+                        // Wrap around from 3
                         v3X = p0X - p3X;
                         v3Y = p0Y - p3Y;
                     }
                 }
                 else
                 {
-                    //Wrap around from 2
+                    // Wrap around from 2
                     v2X = p0X - p2X;
                     v2Y = p0Y - p2Y;
                 }
             }
             else
             {
-                //Wrap around from 1
+                // Wrap around from 1
                 v1X = p0X - p1X;
                 v1Y = p0Y - p1Y;
             }
@@ -356,15 +356,15 @@ namespace MIConvexHull
                 sortedDistances[i] = new double[numPoints];
             }
             var indexOfUsedIndices = 0;
-            var nextUsedIndex = indicesUsed[indexOfUsedIndices++]; //Note: it increments after getting the current index
+            var nextUsedIndex = indicesUsed[indexOfUsedIndices++]; // Note: it increments after getting the current index
             /* Now a big loop. For each of the original vertices, check them with the 3 to 8 edges to see if they 
              * are inside or out. If they are out, add them to the proper row of the hullCands array. */
             for (var i = 0; i < numPoints; i++)
             {
                 if (indexOfUsedIndices < indicesUsed.Length && i == nextUsedIndex)
-                    //in order to avoid a contains function call, we know to only check with next usedIndex in order
+                    // in order to avoid a contains function call, we know to only check with next usedIndex in order
                     nextUsedIndex =
-                        indicesUsed[indexOfUsedIndices++]; //Note: it increments after getting the current index
+                        indicesUsed[indexOfUsedIndices++]; // Note: it increments after getting the current index
                 else
                 {
                     var point = points[i];
@@ -419,7 +419,7 @@ namespace MIConvexHull
                     var i = size;
                     while (i > 0)
                     {
-                        //var currentPoint =
+                        // var currentPoint =
                         double lX = pointsAlong[i].X - pointsAlong[i - 1].X, lY = pointsAlong[i].Y - pointsAlong[i - 1].Y;
                         double rX = pointsAlong[i + 1].X - pointsAlong[i].X, rY = pointsAlong[i + 1].Y - pointsAlong[i].Y;
                         double zValue = lX * rY - lY * rX;

@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
+using System.Linq;
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -50,6 +51,9 @@ public class AgentManager : MonoBehaviour {
 
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
+
+    public bool doResetMaterials = false;
+    public bool doResetColors = false;
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -114,14 +118,14 @@ public class AgentManager : MonoBehaviour {
     }
 
     void Start() {
-        //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
+        // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
 
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-        //auto set agentMode to default for the web demo
+        // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
         primaryAgent.SetAgentMode("default");
@@ -135,7 +139,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     public void Initialize(ServerAction action) {
-        //first parse agentMode and agentControllerType
+        // first parse agentMode and agentControllerType
         //"default" agentMode can use either default or "stochastic" agentControllerType
         //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
@@ -146,23 +150,23 @@ public class AgentManager : MonoBehaviour {
                 SetUpPhysicsController();
             }
 
-            //if not stochastic, default to physics controller
+            // if not stochastic, default to physics controller
             if (action.agentControllerType.ToLower() == "physics") {
-                //set up physics controller
+                // set up physics controller
                 SetUpPhysicsController();
             }
 
-            //if stochastic, set up stochastic controller
+            // if stochastic, set up stochastic controller
             else if (action.agentControllerType.ToLower() == "stochastic") {
-                //set up stochastic controller
+                // set up stochastic controller
                 SetUpStochasticController(action);
             }
         } else if (action.agentMode.ToLower() == "locobot") {
-            //if not stochastic, default to stochastic
+            // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-                //set up stochastic controller
+                // set up stochastic controller
                 SetUpStochasticController(action);
             } else {
                 SetUpStochasticController(action);
@@ -172,7 +176,7 @@ public class AgentManager : MonoBehaviour {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
 
-                //ok now set up drone controller
+                // ok now set up drone controller
                 SetUpDroneController(action);
             } else {
                 SetUpDroneController(action);
@@ -191,7 +195,7 @@ public class AgentManager : MonoBehaviour {
                 primaryAgent.actionFinished(false, error);
                 return;
             } else if (action.agentControllerType.ToLower() == "mid-level") {
-                //set up physics controller
+                // set up physics controller
                 SetUpArmController(true);
                 // the arm should currently be used only with autoSimulation off
                 // as we manually control Physics during its movement
@@ -246,7 +250,7 @@ public class AgentManager : MonoBehaviour {
 
     private void SetUpStochasticController(ServerAction action) {
         this.agents.Clear();
-        //force snapToGrid to be false since we are stochastic
+        // force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         primaryAgent.enabled = false;
@@ -259,7 +263,7 @@ public class AgentManager : MonoBehaviour {
 
     private void SetUpDroneController(ServerAction action) {
         this.agents.Clear();
-        //force snapToGrid to be false
+        // force snapToGrid to be false
         action.snapToGrid = false;
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         primaryAgent.enabled = false;
@@ -269,8 +273,8 @@ public class AgentManager : MonoBehaviour {
         this.agents.Add(primaryAgent);
     }
 
-    //note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
-    //to be false like in other controller types.
+    // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
+    // to be false like in other controller types.
     private void SetUpPhysicsController() {
         this.agents.Clear();
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
@@ -288,23 +292,23 @@ public class AgentManager : MonoBehaviour {
         primaryAgent = baseController.GetComponent<ArmAgentController>();
         primaryAgent.enabled = true;
         primaryAgent.agentManager = this;
-        //primaryAgent.actionComplete = true;
+        // primaryAgent.actionComplete = true;
         this.agents.Add(primaryAgent);
 
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
     }
 
-    //on initialization of agentMode = "arm" and agentControllerType = "mid-level"
-    //if mass threshold should be used to prevent arm from knocking over objects that
-    //are too big (table, sofa, shelf, etc) use this
+    // on initialization of agentMode = "arm" and agentControllerType = "mid-level"
+    // if mass threshold should be used to prevent arm from knocking over objects that
+    // are too big (table, sofa, shelf, etc) use this
     private void SetUpMassThreshold(float massThreshold) {
         CollisionListener.useMassThreshold = true;
         CollisionListener.massThreshold = massThreshold;
         primaryAgent.MakeObjectsStaticKinematicMassThreshold();
     }
 
-    //return reference to primary agent in case we need a reference to the primary
+    // return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent() {
         return primaryAgent;
     }
@@ -565,8 +569,8 @@ public class AgentManager : MonoBehaviour {
     private void addAgent(ServerAction action) {
         Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
-        //disable ambient occlusion on primary agent because it causes issues with multiple main cameras
-        //primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
+        // disable ambient occlusion on primary agent because it causes issues with multiple main cameras
+        // primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
         BaseFPSAgentController clone = UnityEngine.Object.Instantiate(primaryAgent);
         clone.IsVisible = action.makeAgentsVisible;
@@ -637,7 +641,25 @@ public class AgentManager : MonoBehaviour {
         }
     }
 
+    public void resetMaterials() {
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+        colorChangeComponent.ResetMaterials();
+        doResetMaterials = false;
+        doResetColors = false;
+    }
+
+    public void resetColors() {
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+        colorChangeComponent.ResetColors();
+        doResetColors = false;
+    }
+
     public void Reset(ServerAction response) {
+        if (doResetMaterials) {
+            resetMaterials();
+        } else if (doResetColors) {
+            resetColors();
+        }
         StartCoroutine(ResetCoroutine(response));
     }
 
@@ -653,7 +675,7 @@ public class AgentManager : MonoBehaviour {
     // And if we need to capture a new frame
 
     private void Update() {
-        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
+        physicsSceneManager.isSceneAtRest = true;// assume the scene is at rest by default
     }
 
     private void LateUpdate() {
@@ -661,32 +683,32 @@ public class AgentManager : MonoBehaviour {
         /*
                 if (readyToEmit)
                 {
-                    //start emit frame for physics and stochastic controllers
+                    // start emit frame for physics and stochastic controllers
                     if(!droneMode)
                     {
-                        //readyToEmit = false;
-                        //StartCoroutine (EmitFrame());
+                        // readyToEmit = false;
+                        // StartCoroutine (EmitFrame());
                     }
 
-                    //start emit frame for flying drone controller
+                    // start emit frame for flying drone controller
                     if(droneMode)
                     {
-                        //make sure each agent in flightMode has updated at least once
+                        // make sure each agent in flightMode has updated at least once
                         if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                         {
                             readyToEmit = false;
-                            //StartCoroutine (EmitFrame());
+                            // StartCoroutine (EmitFrame());
                         }
                     }
                 }
          */
 
-        //ok now if the scene is at rest, turn back on physics autosimulation automatically
-        //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
+        // ok now if the scene is at rest, turn back on physics autosimulation automatically
+        // note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
         // if(physicsSceneManager.isSceneAtRest && !droneMode &&
         // physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         // {
-        //     //print("soshite toki wa ugoki desu");
+        //     // print("soshite toki wa ugoki desu");
         //     Physics.autoSimulation = true;
         //     physicsSceneManager.physicsSimulationPaused = false;
         //     AdvancePhysicsStepCount = 0;
@@ -755,7 +777,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
-        if (this.renderInstanceSegmentation) {
+        if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
             }
@@ -871,7 +893,7 @@ public class AgentManager : MonoBehaviour {
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
                 addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");// XXX fix this in a bit
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -1048,7 +1070,7 @@ public class AgentManager : MonoBehaviour {
                         }
 
                         bodyBytesReceived += received;
-                        //Debug.Log("total bytes received: " + bodyBytesReceived);
+                        // Debug.Log("total bytes received: " + bodyBytesReceived);
                     }
 
                     string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
@@ -1080,7 +1102,7 @@ public class AgentManager : MonoBehaviour {
                 }
             }
 
-            //if(droneMode)
+            // if(droneMode)
             //{
             //    if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
             //    {
@@ -1102,6 +1124,50 @@ public class AgentManager : MonoBehaviour {
 
     }
 
+
+    // Uniform entry point for both the test runner and the python server for step dispatch calls
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
+        this.renderInstanceSegmentation = this.initializedInstanceSeg;
+
+        this.currentSequenceId = controlCommand.sequenceId;
+        // the following are handled this way since they can be null
+        this.renderImage = controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId;
+
+        if (agentManagerActions.Contains(controlCommand.action)) {
+            // let's look in this class for the action
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
+        } else {
+            // we only allow renderInstanceSegmentation to be flipped on
+            // on a per step() basis, since by default the param is null
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            // We only assign if its true to handle the case when renderInstanceSegmentation
+            // was initialized to be true, but any particular step() may not set it
+            // so we don't want to disable it inadvertently
+
+            if (controlCommand.renderInstanceSegmentation) {
+                this.renderInstanceSegmentation = true;
+            }
+
+            if (this.renderDepthImage ||
+                this.renderSemanticSegmentation ||
+                this.renderInstanceSegmentation ||
+                this.renderNormalsImage
+            ) {
+                updateImageSynthesis(true);
+                updateThirdPartyCameraImageSynthesis(true);
+            }
+
+            // let's look in the agent's set of actions for the action
+            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
+        }
+    }
+
+    public BaseFPSAgentController GetActiveAgent() {
+        return this.agents[activeAgentId];
+    }
+
     private int parseContentLength(string header) {
         // Debug.Log("got header: " + header);
         string[] fields = header.Split(new char[] { '\r', '\n' });
@@ -1120,39 +1186,8 @@ public class AgentManager : MonoBehaviour {
     }
 
     private void ProcessControlCommand(string msg) {
-        this.renderInstanceSegmentation = this.initializedInstanceSeg;
-
         DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
-
-        this.currentSequenceId = controlCommand.sequenceId;
-        // the following are handled this way since they can be null
-        this.renderImage = controlCommand.renderImage;
-        this.activeAgentId = controlCommand.agentId;
-
-        if (agentManagerActions.Contains(controlCommand.action)) {
-            // let's look in this class for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
-        } else {
-            // we only allow renderInstanceSegmentation to be flipped on
-            // on a per step() basis, since by default the param is null
-            // so we don't know if a request is meant to turn the param off
-            // or if it is just the value by default
-            if (controlCommand.renderInstanceSegmentation == true) {
-                this.renderInstanceSegmentation = true;
-            }
-
-            if (this.renderDepthImage ||
-                this.renderSemanticSegmentation ||
-                this.renderInstanceSegmentation ||
-                this.renderNormalsImage
-            ) {
-                updateImageSynthesis(true);
-                updateThirdPartyCameraImageSynthesis(true);
-            }
-
-            // let's look in the agent's set of actions for the action
-            this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
-        }
+        this.ProcessControlCommand(controlCommand);
     }
 
     // Extra helper functions
@@ -1218,8 +1253,8 @@ public class MetadataPatch {
     public object actionReturn;
 }
 
-//adding AgentMetdata class so there is less confusing
-//overlap between ObjectMetadata and AgentMetadata
+// adding AgentMetdata class so there is less confusing
+// overlap between ObjectMetadata and AgentMetadata
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class AgentMetadata {
@@ -1244,7 +1279,7 @@ public class DroneAgentMetadata : AgentMetadata {
     public Vector3 LauncherPosition;
 }
 
-//additional metadata for drone objects (only use with Drone controller)
+// additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class DroneObjectMetadata : ObjectMetadata {
@@ -1264,68 +1299,69 @@ public class ObjectMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
-    //public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
+    // public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
     public bool visible;
-    public bool obstructed; //if true, object is obstructed by something and actions cannot be performed on it. This means an object behind glass will be obstructed=True and visible=True
+    public bool obstructed; // if true, object is obstructed by something and actions cannot be performed on it. This means an object behind glass will be obstructed=True and visible=True
     public bool receptacle;
     ///
-    //note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
-    public bool toggleable;//is this object able to be toggled on/off directly?
+    // note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
+    public bool toggleable;// is this object able to be toggled on/off directly?
 
-    //note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
-    public bool isToggled;//is this object currently on or off? true is on
+    // note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
+    public bool isToggled;// is this object currently on or off? true is on
     ///
     public bool breakable;
-    public bool isBroken;//is this object broken?
+    public bool isBroken;// is this object broken?
     ///
-    public bool canFillWithLiquid;//objects filled with liquids
-    public bool isFilledWithLiquid;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+    public bool canFillWithLiquid;// objects filled with liquids
+    public bool isFilledWithLiquid;// is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+    public string fillLiquid; // coffee, wine, water
     ///
-    public bool dirtyable;//can toggle object state dirty/clean
-    public bool isDirty;//is this object in a dirty or clean state?
+    public bool dirtyable;// can toggle object state dirty/clean
+    public bool isDirty;// is this object in a dirty or clean state?
     ///
-    public bool canBeUsedUp;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+    public bool canBeUsedUp;// for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
     public bool isUsedUp;
     ///
-    public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
-    public bool isCooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
+    public bool cookable;// can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
+    public bool isCooked;// is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
                          // ///
-                         // public bool abletocook;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
-                         // public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
+                         // public bool abletocook;// can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
+                         // public bool isabletocook;// object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
                          //
-                         //temperature placeholder values, might get more specific later with degrees but for now just track these three states
+                         // temperature placeholder values, might get more specific later with degrees but for now just track these three states
     public enum Temperature { RoomTemp, Hot, Cold };
-    public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
+    public string ObjectTemperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
                                     //
-    public bool canChangeTempToHot;//can change other object temp to hot
-    public bool canChangeTempToCold;//can change other object temp to cool
+    public bool canChangeTempToHot;// can change other object temp to hot
+    public bool canChangeTempToCold;// can change other object temp to cool
                                     //
-    public bool sliceable;//can this be sliced in some way?
-    public bool isSliced;//currently sliced?
+    public bool sliceable;// can this be sliced in some way?
+    public bool isSliced;// currently sliced?
     ///
     public bool openable;
     public bool isOpen;
     public float openness; // if the object is openable, what is the current openness? It's a normalized percentage from [0:1]
     ///
     public bool pickupable;
-    public bool isPickedUp;//if the pickupable object is actively being held by the agent
-    public bool moveable;//if the object is moveable, able to be pushed/affected by physics but is too big to pick up
+    public bool isPickedUp;// if the pickupable object is actively being held by the agent
+    public bool moveable;// if the object is moveable, able to be pushed/affected by physics but is too big to pick up
 
-    public float mass;//mass is only for moveable and pickupable objects
+    public float mass;// mass is only for moveable and pickupable objects
 
-    //salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
-    public enum ObjectSalientMaterial { Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic, Leather } //salient materials that make up an object (ie: cell phone - metal, glass)
+    // salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
+    public enum ObjectSalientMaterial { Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic, Leather } // salient materials that make up an object (ie: cell phone - metal, glass)
 
-    public string[] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
+    public string[] salientMaterials; // salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
     ///
     public string[] receptacleObjectIds;
-    public float distance;//dintance fromm object's transform to agent transform
+    public float distance;// dintance fromm object's transform to agent transform
     public String objectType;
     public string objectId;
-    //public string parentReceptacle;
+    // public string parentReceptacle;
     public string[] parentReceptacles;
-    //public float currentTime;
-    public bool isMoving;//true if this game object currently has a non-zero velocity
+    // public float currentTime;
+    public bool isMoving;// true if this game object currently has a non-zero velocity
     public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
 
@@ -1335,42 +1371,42 @@ public class ObjectMetadata {
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class SceneBounds {
-    //8 corners of the world axis aligned box that bounds a sim object
-    //8 rows - 8 corners, one per row
-    //3 columns - x, y, z of each corner respectively
+    // 8 corners of the world axis aligned box that bounds a sim object
+    // 8 rows - 8 corners, one per row
+    // 3 columns - x, y, z of each corner respectively
     public float[][] cornerPoints;
 
-    //center of the bounding box of the scene in worldspace coordinates
+    // center of the bounding box of the scene in worldspace coordinates
     public Vector3 center;
 
-    //the size of the bounding box of the scene in worldspace coordinates (world x, y, z)
+    // the size of the bounding box of the scene in worldspace coordinates (world x, y, z)
     public Vector3 size;
 }
 
-//for returning a world axis aligned bounding box
-//if an object is rotated, the dimensions of this box are subject to change
+// for returning a world axis aligned bounding box
+// if an object is rotated, the dimensions of this box are subject to change
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class AxisAlignedBoundingBox {
-    //8 corners of the world axis aligned box that bounds a sim object
-    //8 rows - 8 corners, one per row
-    //3 columns - x, y, z of each corner respectively
+    // 8 corners of the world axis aligned box that bounds a sim object
+    // 8 rows - 8 corners, one per row
+    // 3 columns - x, y, z of each corner respectively
     public float[][] cornerPoints;
 
-    //center of the bounding box of this object in worldspace coordinates
+    // center of the bounding box of this object in worldspace coordinates
     public Vector3 center;
 
-    //the size of the bounding box in worldspace coordinates (world x, y, z)
+    // the size of the bounding box in worldspace coordinates (world x, y, z)
     public Vector3 size;
 }
 
-//for returning an object oriented bounds not locked to world axes
-//if an object is rotated, this object oriented box will not change dimensions
+// for returning an object oriented bounds not locked to world axes
+// if an object is rotated, this object oriented box will not change dimensions
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class ObjectOrientedBoundingBox {
-    //probably return these from the BoundingBox component of the object for now?
-    //this means that it will only work for Pickupable objects at the moment
+    // probably return these from the BoundingBox component of the object for now?
+    // this means that it will only work for Pickupable objects at the moment
     public float[][] cornerPoints;
 }
 
@@ -1437,27 +1473,34 @@ public class ArmMetadata {
 
 [Serializable]
 public class ObjectTypeCount {
-    public string objectType; //specify object by type in scene
-    public int count; //the total count of objects of type objectType that we will try to make exist in the scene
+    public string objectType; // specify object by type in scene
+    public int count; // the total count of objects of type objectType that we will try to make exist in the scene
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose {
+
+    public ObjectPose() : this("", new Vector3(), new Vector3()) { }
+    public ObjectPose(string objectName, Vector3 position, Vector3 rotation) {
+        this.objectName = objectName;
+        this.position = position;
+        this.rotation = rotation;
+    }
     public string objectName;
     public Vector3 position;
     public Vector3 rotation;
 }
 
-//set object states either by Type or by compatible State
+// set object states either by Type or by compatible State
 //"slice all objects of type Apple"
 //"slice all objects that have the sliceable property"
-//also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
+// also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class SetObjectStates {
-    public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
-    public string stateChange = null; //valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
+    public string objectType = null; // valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
+    public string stateChange = null; // valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
     public bool isOpen;
     public bool isToggled;
     public bool isBroken;
@@ -1472,7 +1515,7 @@ public class SetObjectStates {
 [MessagePackObject(keyAsPropertyName: true)]
 public struct MetadataWrapper {
     public ObjectMetadata[] objects;
-    public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
+    public bool isSceneAtRest;// set true if all objects in the scene are at rest (or very very close to 0 velocity)
     public AgentMetadata agent;
     public HandMetadata hand;
     public ArmMetadata arm;
@@ -1510,7 +1553,7 @@ public struct MetadataWrapper {
     public Vector3[] actionVector3sReturn;
     public List<Vector3> visibleRange;
     public float currentTime;
-    public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
+    public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
     public int updateCount;
     public int fixedUpdateCount;
 
@@ -1528,7 +1571,24 @@ to dispatch to the appropriate action based on the passed in params.
 The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
 public class DynamicServerAction {
-    private JObject jObject;
+
+    // These parameters are allowed to exist as both parameters to an Action and as global
+    // paramaters.  This also excludes them from the InvalidArgument logic used in the ActionDispatcher
+    public static readonly IReadOnlyCollection<string> AllowedExtraneousParameters = new HashSet<string>(){
+        "sequenceId",
+        "renderImage",
+        "agentId",
+        "renderObjectImage",
+        "renderClassImage",
+        "renderNormalsImage",
+        "renderInstanceSegmentation",
+        "action"
+    };
+
+    public JObject jObject {
+        get;
+        private set;
+    }
 
     public int agentId {
         get {
@@ -1609,6 +1669,21 @@ public class DynamicServerAction {
         return this.jObject.ToObject<T>();
     }
 
+    // this is primarily used when detecting invalid arguments
+    // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
+    // valid argument for Initialize as well as a global parameter
+    public IEnumerable<string> ArgumentKeys() {
+        return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
+    }
+
+    public IEnumerable<string> Keys() {
+        return this.jObject.Properties().Select(p => p.Name).ToList();
+    }
+
+    public int Count() {
+        return this.jObject.Count;
+    }
+
 }
 
 [Serializable]
@@ -1642,7 +1717,7 @@ public class ServerAction {
     public Vector3 direction;
 
     public bool allowAgentsToIntersect = false;
-    public float handDistance;//used for max distance agent's hand can move
+    public float handDistance;// used for max distance agent's hand can move
     public List<Vector3> positions = null;
     public bool standing = true;
     public bool forceAction;
@@ -1660,7 +1735,7 @@ public class ServerAction {
     public string sceneName;
     public bool rotateOnTeleport;
     public bool forceVisible;
-    public bool anywhere;//used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view
+    public bool anywhere;// used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view
     public bool randomizeOpen;
     public int randomSeed;
     public float moveMagnitude;
@@ -1678,33 +1753,33 @@ public class ServerAction {
     public bool renderNormalsImage;
     public bool renderFlowImage;
     public float cameraY = 0.675f;
-    public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
-                                        //public string ssao = "default";
-    public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
+    public bool placeStationary = true; // when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
+                                        // public string ssao = "default";
+    public string fillLiquid; // string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
     public float TimeUntilRoomTemp;
-    public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
-    public string StateChange;//a string that specifies which state change to randomly toggle
+    public bool allowDecayTemperature = true; // set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
+    public string StateChange;// a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
     public float mass;
     public float drag;
     public float angularDrag;
-    public ObjectTypeCount[] numDuplicatesOfType; //specify, by object Type, how many duplicates of that given object type to try and spawn
-    //use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
+    public ObjectTypeCount[] numDuplicatesOfType; // specify, by object Type, how many duplicates of that given object type to try and spawn
+    // use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
     public String[] excludedReceptacles;
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
-    public float minDistance;//used in target circle spawning function
-    public float maxDistance;//used in target circle spawning function
+    public float minDistance;// used in target circle spawning function
+    public float maxDistance;// used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
     public string agentControllerType = "";
-    public string agentMode = "default"; //mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
+    public string agentMode = "default"; // mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
     public int maxStepCount;
-    public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
+    public float rotateStepDegrees = 90.0f; // default rotation amount for RotateRight/RotateLeft actions
 
-    public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
+    public float degrees;// for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;
 
@@ -1716,15 +1791,15 @@ public class ServerAction {
 
     public Gradient pathGradient;
 
-    //should actions like pickup and moveHand have more manual, less abstracted behavior?
+    // should actions like pickup and moveHand have more manual, less abstracted behavior?
     public bool manualInteract = false;
 
-    //color 0-255
+    // color 0-255
     public float r;
     public float g;
     public float b;
 
-    //default time for objects to wait before returning actionFinished() if an action put them in motion
+    // default time for objects to wait before returning actionFinished() if an action put them in motion
     public float TimeToWaitForObjectsToComeToRest = 10.0f;
     public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
@@ -1745,19 +1820,19 @@ public class ServerAction {
 
     public bool disableRendering = false;
 
-    //this restricts arm position to the hemisphere in front of the agent
+    // this restricts arm position to the hemisphere in front of the agent
     public bool restrictMovement = false;
 
-    //used to determine which coordinate space is used in Mid Level Arm actions
-    //valid options are relative to: world, wrist, armBase
+    // used to determine which coordinate space is used in Mid Level Arm actions
+    // valid options are relative to: world, wrist, armBase
     public string coordinateSpace = "armBase";
 
-    //if agent is using arm mode, determines if a mass threshold should be used
-    //for when the arm hits heavy objects. If threshold is used, the arm will
-    //collide and stop moving when hitting a heavy enough sim object rather than
-    //move through it (this is for when colliding with pickupable and moveable sim objs)
-    //the mass threshold for how massive a pickupable/moveable sim object needs to be
-    //for the arm to detect collisions and stop moving
+    // if agent is using arm mode, determines if a mass threshold should be used
+    // for when the arm hits heavy objects. If threshold is used, the arm will
+    // collide and stop moving when hitting a heavy enough sim object rather than
+    // move through it (this is for when colliding with pickupable and moveable sim objs)
+    // the mass threshold for how massive a pickupable/moveable sim object needs to be
+    // for the arm to detect collisions and stop moving
     public float? massThreshold;
 
 
@@ -1773,7 +1848,7 @@ public class ServerAction {
         try {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         }
-        //including this pragma so the "ex variable declared but not used" warning stops yelling
+        // including this pragma so the "ex variable declared but not used" warning stops yelling
 #pragma warning disable 0168
         catch (ArgumentException ex) {
 #pragma warning restore 0168

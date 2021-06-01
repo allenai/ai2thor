@@ -15,8 +15,8 @@ public class SceneManagerEditor : Editor {
                 BuildTarget.StandaloneOSXIntel64,
 #endif
 		BuildTarget.StandaloneLinux64,
-		//BuildTarget.StandaloneLinux,
-		//BuildTarget.StandaloneLinuxUniversal,
+		// BuildTarget.StandaloneLinux,
+		// BuildTarget.StandaloneLinuxUniversal,
 		BuildTarget.StandaloneWindows,
         BuildTarget.StandaloneWindows64,
     };
@@ -168,7 +168,7 @@ public class SceneManagerEditor : Editor {
 #endif
 
         if (showBuildOptions) {
-            //figure out what scene we want to build
+            // figure out what scene we want to build
             List<string> dropdownOptions = new List<string>();
             foreach (UnityEngine.Object scene in sm.Scenes) {
                 dropdownOptions.Add(scene.name);

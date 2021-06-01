@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+import os
+import sys
+import time
+import platform
+import re
+import shlex
+import subprocess
+import argparse
+import signal
+
+# Turning off automatic black formatting for this script as it breaks quotes.
+# fmt: off
+
+
+PID_FILE = "/var/run/ai2thor-xorg.pid"
+CONFIG_FILE = "/tmp/ai2thor-xorg.conf"
+
+def process_alive(pid):
+    """
+    Use kill(0) to determine if pid is alive
+    :param pid: process id
+    :rtype: bool
+    """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+
+    return True
+
+
+def find_devices():
+    devices = []
+    for r in pci_records():
+        if r.get("Vendor", "") == "NVIDIA Corporation" and r["Class"] in [
+            "VGA compatible controller",
+            "3D controller",
+        ]:
+            bus_id = "PCI:" + ":".join(
+                map(lambda x: str(int(x, 16)), re.split(r"[:\.]", r["Slot"]))
+            )
+            devices.append(bus_id)
+
+    if not devices:
+        print("Error: ai2thor-xorg requires at least one NVIDIA device")
+        sys.exit(1)
+
+    return devices
+
+def pci_records():
+    records = []
+    command = shlex.split("lspci -vmm")
+    output = subprocess.check_output(command).decode()
+
+    for devices in output.strip().split("\n\n"):
+        record = {}
+        records.append(record)
+        for row in devices.split("\n"):
+            key, value = row.split("\t")
+            record[key.split(":")[0]] = value
+
+    return records
+
+
+def read_pid():
+    if os.path.isfile(PID_FILE):
+        with open(PID_FILE) as f:
+            return int(f.read())
+    else:
+        return None
+
+def start(display):
+
+    pid = read_pid()
+
+    if pid and process_alive(pid):
+        print("Error: ai2thor-xorg is already running with pid: %s" % pid)
+        sys.exit(1)
+
+    with open(CONFIG_FILE, "w") as f:
+        f.write(generate_xorg_conf())
+
+    log_file = "/var/log/ai2thor-xorg.%s.log" % display
+    error_log_file = "/var/log/ai2thor-xorg-error.%s.log" % display
+    command = shlex.split(
+        "Xorg -quiet -maxclients 1024 -noreset +extension GLX +extension RANDR +extension RENDER -logfile %s -config %s :%s"
+        % (log_file, CONFIG_FILE, display)
+    )
+
+
+    pid = None
+    with open(error_log_file, "w") as error_log_f:
+        proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=error_log_f)
+        pid = proc.pid
+        try:
+            proc.wait(timeout=0.25)
+        except subprocess.TimeoutExpired:
+            pass
+
+    if pid and process_alive(pid):
+        with open(PID_FILE, "w") as f:
+            f.write(str(proc.pid))
+    else:
+        print("Error: error with command '%s'" % " ".join(command))
+        with open(error_log_file, "r") as f:
+            print(f.read())
+
+def print_config():
+    print(generate_xorg_conf())
+
+def stop():
+    pid = read_pid()
+    if pid and process_alive(pid):
+        os.kill(pid, signal.SIGTERM)
+   
+        for i in range(10):
+            time.sleep(0.2)
+            if not process_alive(pid):
+                os.unlink(PID_FILE)
+                break
+
+
+def generate_xorg_conf():
+
+    devices = find_devices()
+
+    xorg_conf = []
+
+    device_section = """
+Section "Device"
+    Identifier     "Device{device_id}"
+    Driver         "nvidia"
+    VendorName     "NVIDIA Corporation"
+    BusID          "{bus_id}"
+EndSection
+"""
+    server_layout_section = """
+Section "ServerLayout"
+    Identifier     "Layout0"
+    {screen_records}
+EndSection
+"""
+    screen_section = """
+Section "Screen"
+    Identifier     "Screen{screen_id}"
+    Device         "Device{device_id}"
+    DefaultDepth    24
+    Option         "AllowEmptyInitialConfiguration" "True"
+    SubSection     "Display"
+        Depth       24
+        Virtual 1024 768
+    EndSubSection
+EndSection
+"""
+    screen_records = []
+    for i, bus_id in enumerate(devices):
+        xorg_conf.append(device_section.format(device_id=i, bus_id=bus_id))
+        xorg_conf.append(screen_section.format(device_id=i, screen_id=i))
+        screen_records.append(
+            'Screen {screen_id} "Screen{screen_id}" 0 0'.format(screen_id=i)
+        )
+
+    xorg_conf.append(
+        server_layout_section.format(screen_records="\n    ".join(screen_records))
+    )
+
+    output = "\n".join(xorg_conf)
+    return output
+
+if __name__ == "__main__":
+
+    if os.geteuid() != 0:
+        print("Error: ai2thor-xorg must be run as root or launched with sudo")
+        sys.exit(1)
+
+    if platform.system() != "Linux":
+        print("Error: Can only run ai2thor-xorg on linux")
+        sys.exit(1)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", help="command to be executed", choices=["start", "stop", "print-config"])
+    parser.add_argument("display", help="display to be used", nargs="?", type=int, default=0)
+    args = parser.parse_args()
+    if args.command == "start":
+        start(args.display)
+    elif args.command == "stop":
+        stop()
+    elif args.command == "print-config":
+        print_config()

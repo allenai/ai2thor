@@ -230,8 +230,8 @@ namespace UnityStandardAssets.ImageEffects
                 else
 				{
 
-                    //Vignette (0.975ff, rtFlares4, rtFlares4);
-                    //DrawBorder(rtFlares4, screenBlend, 8);
+                    // Vignette (0.975ff, rtFlares4, rtFlares4);
+                    // DrawBorder(rtFlares4, screenBlend, 8);
 
                     float flareXRot = 1.0f * Mathf.Cos(flareRotation);
                     float flareyRot = 1.0f * Mathf.Sin(flareRotation);
@@ -294,7 +294,7 @@ namespace UnityStandardAssets.ImageEffects
             }
 
             int blendPass = (int) realBlendMode;
-            //if (Mathf.Abs(chromaticBloom) < Mathf.Epsilon)
+            // if (Mathf.Abs(chromaticBloom) < Mathf.Epsilon)
             //	blendPass += 4;
 
             screenBlend.SetFloat ("_Intensity", bloomIntensity);

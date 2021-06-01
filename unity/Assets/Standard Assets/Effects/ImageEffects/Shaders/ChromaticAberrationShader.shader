@@ -103,13 +103,13 @@ Shader "Hidden/ChromaticAberration" {
 		blurredTap.rgb /= (float)SmallDiscKernelSamples + 0.2h;
 
 		// debug:
-		//return blurredTap;
+		// return blurredTap;
 
 		half lumDiff = Luminance(abs(blurredTap.rgb-color.rgb));
 		half isEdge = saturate(_Luminance * lumDiff);
 		
 		// debug #2:
-		//return isEdge;
+		// return isEdge;
 
 		color.rb = lerp(color.rb, blurredTap.rb, isEdge);
 		

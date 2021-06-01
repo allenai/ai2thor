@@ -197,9 +197,9 @@
 				
 		half4 fgColor = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv.xy, _MainTex_ST));
 				
-		//fgBlur.a = saturate(fgBlur.a*_ForegroundBlurWeight+saturate(fgColor.a-fgBlur.a));
-		//fgBlur.a = max (fgColor.a, (2.0 * fgBlur.a - fgColor.a)) * _ForegroundBlurExtrude;
-		fgBlur.a = max(fgColor.a, fgBlur.a * _ForegroundBlurExtrude); //max (fgColor.a, (2.0*fgBlur.a-fgColor.a)) * _ForegroundBlurExtrude;
+		// fgBlur.a = saturate(fgBlur.a*_ForegroundBlurWeight+saturate(fgColor.a-fgBlur.a));
+		// fgBlur.a = max (fgColor.a, (2.0 * fgBlur.a - fgColor.a)) * _ForegroundBlurExtrude;
+		fgBlur.a = max(fgColor.a, fgBlur.a * _ForegroundBlurExtrude); // max (fgColor.a, (2.0*fgBlur.a-fgColor.a)) * _ForegroundBlurExtrude;
 		
 		return lerp (fgColor, fgBlur, saturate(fgBlur.a));
 	}	
@@ -209,7 +209,7 @@
 					
 		half4 fgColor = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv.xy, _MainTex_ST));
 		
-		fgBlur.a = max(fgColor.a, fgBlur.a * _ForegroundBlurExtrude); //max (fgColor.a, (2.0*fgBlur.a-fgColor.a)) * _ForegroundBlurExtrude;
+		fgBlur.a = max(fgColor.a, fgBlur.a * _ForegroundBlurExtrude); // max (fgColor.a, (2.0*fgBlur.a-fgColor.a)) * _ForegroundBlurExtrude;
 		
 		half4 tapMedium = half4 (1, 1, 0, fgBlur.a);	
 		tapMedium.rgb = 0.5 * (tapMedium.rgb + fgColor.rgb);
@@ -381,7 +381,7 @@ Subshader {
  Pass {
 	  ZTest Always Cull Off ZWrite Off
 	  ColorMask RGB
-	  //Blend One One
+	  // Blend One One
 
       CGPROGRAM
       #pragma vertex vertDofApply

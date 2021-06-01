@@ -33,12 +33,14 @@ static class CopyLightingSettings {
     [MenuItem(k_CopySettingsMenuPath, priority = 200)]
     static void CopySettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings))
+        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
             return;
+        }
 
         UnityEngine.Object renderSettings;
-        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings))
+        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings)) {
             return;
+        }
 
         s_SourceLightmapSettings = new SerializedObject(lightmapSettings);
         s_SourceRenderSettings = new SerializedObject(renderSettings);
@@ -47,12 +49,14 @@ static class CopyLightingSettings {
     [MenuItem(k_PasteSettingsMenuPath, priority = 201)]
     static void PasteSettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings))
+        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
             return;
+        }
 
         UnityEngine.Object renderSettings;
-        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings))
+        if (!TryGetSettings(typeof(RenderSettings), "GetRenderSettings", out renderSettings)) {
             return;
+        }
 
         CopyInternal(s_SourceLightmapSettings, new SerializedObject(lightmapSettings));
         CopyInternal(s_SourceRenderSettings, new SerializedObject(renderSettings));
@@ -76,8 +80,9 @@ static class CopyLightingSettings {
                 }
             }
 
-            if (copyProperty)
+            if (copyProperty) {
                 dest.CopyFromSerializedProperty(prop);
+            }
         }
 
         dest.ApplyModifiedProperties();

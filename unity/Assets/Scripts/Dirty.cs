@@ -5,10 +5,10 @@ using UnityEngine;
 public class Dirty : MonoBehaviour {
 
     [SerializeField]
-    public SwapObjList[] MaterialSwapObjects; //put objects that need amterial swaps here, use OnMaterials for Dirty, OffMaterials for Clean
+    public SwapObjList[] MaterialSwapObjects; // put objects that need amterial swaps here, use OnMaterials for Dirty, OffMaterials for Clean
 
     [SerializeField]
-    public GameObject[] ObjectsToEnableIfClean; //for things like bed sheets, decals etc. that need to toggle on and off the entire game object
+    public GameObject[] ObjectsToEnableIfClean; // for things like bed sheets, decals etc. that need to toggle on and off the entire game object
     [SerializeField]
     public GameObject[] ObjectsToEnableIfDirty;
     [SerializeField]
@@ -35,23 +35,23 @@ public class Dirty : MonoBehaviour {
     }
 
     public void ToggleCleanOrDirty() {
-        //if clean make dirty
+        // if clean make dirty
         if (!isDirty) {
-            //swap all material swap objects to OnMaterials
+            // swap all material swap objects to OnMaterials
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
-            //disable disable all clean objects
+            // disable disable all clean objects
             if (ObjectsToEnableIfClean.Length > 0) {
                 for (int i = 0; i < ObjectsToEnableIfClean.Length; i++) {
                     ObjectsToEnableIfClean[i].SetActive(false);
                 }
             }
 
-            //enable all dirty objects
+            // enable all dirty objects
             if (ObjectsToEnableIfDirty.Length > 0) {
                 for (int i = 0; i < ObjectsToEnableIfDirty.Length; i++) {
                     ObjectsToEnableIfDirty[i].SetActive(true);
@@ -61,23 +61,23 @@ public class Dirty : MonoBehaviour {
             isDirty = true;
         }
 
-        //if dirt, make clean
+        // if dirt, make clean
         else {
-            //swap all material swap object to OffMaterials
+            // swap all material swap object to OffMaterials
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OffMaterials;
                 }
             }
 
-            //enable all clean objects
+            // enable all clean objects
             if (ObjectsToEnableIfClean.Length > 0) {
                 for (int i = 0; i < ObjectsToEnableIfClean.Length; i++) {
                     ObjectsToEnableIfClean[i].SetActive(true);
                 }
             }
 
-            //disable all dirty objects
+            // disable all dirty objects
             if (ObjectsToEnableIfDirty.Length > 0) {
                 for (int i = 0; i < ObjectsToEnableIfDirty.Length; i++) {
                     ObjectsToEnableIfDirty[i].SetActive(false);
@@ -88,9 +88,9 @@ public class Dirty : MonoBehaviour {
         }
     }
 
-    //similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
+    // similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
     public void OnTriggerStay(Collider other) {
-        //only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
+        // only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
         if (other.CompareTag("Liquid")) {
             if (isDirty) {
                 ToggleCleanOrDirty();

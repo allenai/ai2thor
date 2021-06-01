@@ -67,12 +67,12 @@ public class Randomizer : MonoBehaviour {
         switch (Style) {
             case RandomizerStyle.GameObject:
             case RandomizerStyle.MeshAndMat:
-                //no wait necessary
+                // no wait necessary
                 break;
 
             case RandomizerStyle.MatColorFixed:
             case RandomizerStyle.MatColorRandom:
-                //wait until gameObject & meshAndMat styles are done
+                // wait until gameObject & meshAndMat styles are done
                 yield return new WaitForEndOfFrame();
                 break;
         }
@@ -158,7 +158,7 @@ public class Randomizer : MonoBehaviour {
     }
 
     //#if UNITY_EDITOR
-    //void Update() {
+    // void Update() {
     //	if (Application.isPlaying)
     //		return;
 

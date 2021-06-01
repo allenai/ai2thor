@@ -145,7 +145,7 @@ CGINCLUDE
 		// Do not fog skybox
 		if (dpth == _DistanceParams.y)
 			fogFac = 1.0;
-		//return fogFac; // for debugging
+		// return fogFac; // for debugging
 		
 		// Lerp between fog color & original scene color
 		// by fog amount

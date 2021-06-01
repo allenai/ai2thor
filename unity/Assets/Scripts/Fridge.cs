@@ -23,8 +23,9 @@ public class Fridge : MonoBehaviour {
 
     void Update() {
         bool open = false;
-        if (!ParentObj.IsAnimated)
+        if (!ParentObj.IsAnimated) {
             return;
+        }
 
         open = ParentObj.Animator.GetBool("AnimState1");
 
@@ -55,8 +56,9 @@ public class Fridge : MonoBehaviour {
                     distanceToTarget = Mathf.Max(distanceToTarget, Vector3.Distance(Doors[i].localPosition, drawerTargetPosition));
                 }
 
-                if (distanceToTarget >= 360f)
+                if (distanceToTarget >= 360f) {
                     distanceToTarget -= 360f;
+                }
 
                 ParentObj.IsAnimating = distanceToTarget > 0.0025f;
                 break;

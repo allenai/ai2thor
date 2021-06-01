@@ -1,13 +1,10 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, make_response
 import numpy as np
-import io
-import threading
 import random
 import msgpack
 import werkzeug
 import werkzeug.serving
 import werkzeug.http
-import os
 
 
 def random_image(height, width):

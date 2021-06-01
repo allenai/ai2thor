@@ -41,7 +41,7 @@ public class LightSwitch : MonoBehaviour {
     }
 
     void Update() {
-        //print(SourceRenderers.Length);
+        // print(SourceRenderers.Length);
 
         bool on = EditorOn;
         if (Application.isPlaying) {
