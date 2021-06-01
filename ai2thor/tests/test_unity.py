@@ -1786,7 +1786,7 @@ def test_invalid_arguments(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_drop_object(controller):
-    for action in ["DropObject", "DropHandObject"]:
+    for action in ["DropHeldObject", "DropHandObject"]:
         assert not controller.last_event.metadata["inventoryObjects"]
         controller.step(
             action="PickupObject",
