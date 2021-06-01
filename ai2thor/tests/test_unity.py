@@ -1983,6 +1983,7 @@ def test_rotate_hand(controller):
     assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
 
 
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_fill_liquid(controller):
     pot = next(
         obj
