@@ -506,6 +506,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
+    public string FillLiquid {
+        get {
+            Fill f = this.GetComponent<Fill>();
+            return f == null ? null : f.FilledLiquid();
+        }
+    }
+
     public bool IsDirty {
         get {
             Dirty deedsdonedirtcheap = this.GetComponent<Dirty>();

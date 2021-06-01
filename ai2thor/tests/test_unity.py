@@ -1799,3 +1799,45 @@ def test_segmentation_colors(controller):
     assert (
         event.color_to_object_id[fridge_color] == "Fridge"
     ), "Fridge should have this color on instance seg"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_fill_liquid(controller):
+    pot = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+    )
+    assert pot["fillLiquid"] is None
+    assert not pot["isFilledWithLiquid"]
+    assert pot["canFillWithLiquid"]
+
+    for fillLiquid in ["water", "wine", "coffee"]:
+        controller.step(
+            action="FillObjectWithLiquid",
+            fillLiquid=fillLiquid,
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] == fillLiquid
+        assert pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+
+        controller.step(
+            action="EmptyLiquidFromObject",
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] is None
+        assert not pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]

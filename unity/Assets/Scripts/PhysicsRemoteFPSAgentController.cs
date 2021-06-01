@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -8540,46 +8540,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (action.fillLiquid == null) {
-                errorMessage = "Missing Liquid string for FillObject action";
-                actionFinished(false);
+                throw new InvalidOperationException("Missing Liquid string for FillObject action");
             }
 
-            if (target) {
-                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
-                    Fill fil = target.GetComponent<Fill>();
+            // ignore casing
+            action.fillLiquid = action.fillLiquid.ToLower();
 
-                    // if the passed in liquid string is not valid
-                    if (!fil.Liquids.ContainsKey(action.fillLiquid)) {
-                        errorMessage = action.fillLiquid + " is not a valid Liquid Type";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    // make sure object is empty
-                    if (!fil.IsFilled()) {
-                        if (fil.FillObject(action.fillLiquid)) {
-                            actionFinished(true);
-                            return;
-                        } else {
-                            actionFinished(false);
-                            errorMessage = target.transform.name + " cannot be filled with " + action.fillLiquid;
-                            return;
-                        }
-
-                    } else {
-                        errorMessage = target.transform.name + " is already Filled!";
-                        actionFinished(false);
-                        return;
-                    }
-                } else {
-                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
-                    actionFinished(false);
-                    return;
-                }
-            } else {
-                errorMessage = "object not found: " + action.objectId;
-                actionFinished(false);
+            if (!target) {
+                throw new ArgumentException("object not found: " + action.objectId);
             }
+
+            if (!target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
+                throw new ArgumentException(target.transform.name + " does not have CanBeFilled property!");
+            }
+
+            Fill fil = target.GetComponent<Fill>();
+
+            // if the passed in liquid string is not valid
+            if (!fil.Liquids.ContainsKey(action.fillLiquid)) {
+                throw new ArgumentException(action.fillLiquid + " is not a valid Liquid Type");
+            }
+
+            if (fil.IsFilled()) {
+                throw new InvalidOperationException(target.transform.name + " is already Filled!");
+            }
+
+            fil.FillObject(action.fillLiquid);
+            actionFinished(true);
         }
 
         public void EmptyLiquidFromObject(ServerAction action) {
