@@ -1562,6 +1562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.canFillWithLiquid = simObj.IsFillable;
             if (objMeta.canFillWithLiquid) {
                 objMeta.isFilledWithLiquid = simObj.IsFilled;
+                objMeta.fillLiquid = simObj.FillLiquid;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;

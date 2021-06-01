@@ -1707,6 +1707,43 @@ def test_randomize_materials_clearOnReset(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_directionalPush(controller):
+    positions = []
+    for angle in [0, 90, 180, 270, -1, -90]:
+        controller.reset(scene="FloorPlan28")
+        start = controller.step(
+            action="TeleportFull",
+            position=dict(x=-3.25, y=0.9, z=-1.25),
+            rotation=dict(x=0, y=0, z=0),
+            horizon=30,
+            standing=True,
+        )
+        # z increases
+        end = controller.step(
+            action="DirectionalPush",
+            pushAngle=angle,
+            objectId="Tomato|-03.13|+00.92|-00.39",
+            moveMagnitude=25,
+        )
+        start_obj = next(
+            obj for obj in start.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        end_obj = next(
+            obj for obj in end.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        positions.append((start_obj["position"], end_obj["position"]))
+
+    assert positions[0][1]["z"] - positions[0][0]["z"] > 0.2
+    assert positions[4][1]["z"] - positions[4][0]["z"] > 0.2
+
+    assert positions[1][1]["x"] - positions[1][0]["x"] > 0.2
+    assert positions[2][1]["z"] - positions[2][0]["z"] < -0.2
+
+    assert positions[3][1]["x"] - positions[3][0]["x"] < -0.2
+    assert positions[5][1]["x"] - positions[5][0]["x"] < -0.2
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_randomize_materials_params(controller):
     controller.reset(scene="FloorPlan15")
     meta = controller.step(
@@ -1944,3 +1981,45 @@ def test_rotate_hand(controller):
     assert_near(h1["position"], h2["position"])
     assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
     assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
+
+
+def test_fill_liquid(controller):
+    pot = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+    )
+    assert pot["fillLiquid"] is None
+    assert not pot["isFilledWithLiquid"]
+    assert pot["canFillWithLiquid"]
+
+    for fillLiquid in ["water", "wine", "coffee"]:
+        controller.step(
+            action="FillObjectWithLiquid",
+            fillLiquid=fillLiquid,
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] == fillLiquid
+        assert pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+
+        controller.step(
+            action="EmptyLiquidFromObject",
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] is None
+        assert not pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+

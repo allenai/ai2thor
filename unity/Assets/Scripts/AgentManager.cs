@@ -1315,6 +1315,7 @@ public class ObjectMetadata {
     ///
     public bool canFillWithLiquid;// objects filled with liquids
     public bool isFilledWithLiquid;// is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+    public string fillLiquid; // coffee, wine, water
     ///
     public bool dirtyable;// can toggle object state dirty/clean
     public bool isDirty;// is this object in a dirty or clean state?
