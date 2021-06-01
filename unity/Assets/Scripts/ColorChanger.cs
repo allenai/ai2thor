@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
- 
+
 public class ColorChanger : MonoBehaviour {
     // These will eventually be turned into sets, such that they are
     // easily checkable at runtime.

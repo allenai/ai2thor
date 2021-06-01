@@ -669,29 +669,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeColor":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "RandomizeColors"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeColors"
+                    });
+                    break;
                 case "resetColor":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "ResetColors"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetColors"
+                    });
+                    break;
 
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeMaterial":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "RandomizeMaterials"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeMaterials"
+                    });
+                    break;
                 case "resetMaterial":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "ResetMaterials"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetMaterials"
+                    });
+                    break;
 
                 case "light": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {

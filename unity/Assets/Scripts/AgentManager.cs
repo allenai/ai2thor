@@ -1480,6 +1480,13 @@ public class ObjectTypeCount {
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose {
+
+    public ObjectPose() : this("", new Vector3(), new Vector3()) { }
+    public ObjectPose(string objectName, Vector3 position, Vector3 rotation) {
+        this.objectName = objectName;
+        this.position = position;
+        this.rotation = rotation;
+    }
     public string objectName;
     public Vector3 position;
     public Vector3 rotation;
@@ -1661,7 +1668,7 @@ public class DynamicServerAction {
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
-    
+
     // this is primarily used when detecting invalid arguments
     // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
     // valid argument for Initialize as well as a global parameter
