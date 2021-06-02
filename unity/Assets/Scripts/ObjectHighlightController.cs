@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] private Slider ThrowForceBarSlider = null;
         [SerializeField] private float MinHighlightDistance = 5f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
-        [SerializeField] private float MaxThrowForce = 1000.0f;
+        [SerializeField] private float MaxThrowForce = 400.0f;
         [SerializeField] private bool DisplayTargetText = true;
         [SerializeField]
         private HighlightConfig HighlightParams = new HighlightConfig {
@@ -71,7 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float minHighlightDistance,
             bool highlightEnabled = true,
             bool ThrowEnabled = true,
-            float maxThrowForce = 1000.0f,
+            float maxThrowForce = 400.0f,
             float maxChargeThrowSeconds = 1.4f,
             bool highlightWhileHolding = false,
             HighlightConfig highlightConfig = null
