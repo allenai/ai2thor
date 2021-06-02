@@ -302,12 +302,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
 
-                        action["gridSize"] = 0.25f;
-                        action["visibilityDistance"] = 1.0f;
-                        action["fieldOfView"] = 60;
-                        action["rotateStepDegrees"] = 45;
+                        action["action"] = "Initialize";
                         action["agentMode"] = "locobot";
-                        action["agentControllerType"] = "stochastic";
+                        // action["gridSize"] = 0.25f;
+                        // action["visibilityDistance"] = 1.0f;
+                        // action["rotateStepDegrees"] = 45;
+                        // action["agentControllerType"] = "stochastic";
+                        // action["applyActionNoise"] = true;
+                        // action["snapToGrid"] = false;
+                        // action["fieldOfView"] = 90;
+                        // action["gridSize"] = 0.25f;
+
 
                         action["applyActionNoise"] = true;
 
