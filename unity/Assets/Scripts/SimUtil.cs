@@ -571,7 +571,7 @@ public static class SimUtil {
         };
 
         // iTHOR scenes
-        foreach (int sceneType in new int[] {0, 200, 300, 400}) {
+        foreach (int sceneType in new int[] { 0, 200, 300, 400 }) {
             for (int i = 1; i <= 30; i++) {
                 string scenePath = $"Assets/Scenes/FloorPlan{sceneType + i}_physics.unity";
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);

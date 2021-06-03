@@ -30,8 +30,9 @@ def process_alive(pid):
     return True
 
 
-def find_devices():
+def find_devices(excluded_device_ids):
     devices = []
+    id_counter = 0
     for r in pci_records():
         if r.get("Vendor", "") == "NVIDIA Corporation" and r["Class"] in [
             "VGA compatible controller",
@@ -40,7 +41,11 @@ def find_devices():
             bus_id = "PCI:" + ":".join(
                 map(lambda x: str(int(x, 16)), re.split(r"[:\.]", r["Slot"]))
             )
-            devices.append(bus_id)
+
+            if id_counter not in excluded_device_ids:
+                devices.append(bus_id)
+
+            id_counter += 1
 
     if not devices:
         print("Error: ai2thor-xorg requires at least one NVIDIA device")
@@ -70,7 +75,7 @@ def read_pid():
     else:
         return None
 
-def start(display):
+def start(display, excluded_device_ids):
 
     pid = read_pid()
 
@@ -79,7 +84,7 @@ def start(display):
         sys.exit(1)
 
     with open(CONFIG_FILE, "w") as f:
-        f.write(generate_xorg_conf())
+        f.write(generate_xorg_conf(excluded_device_ids))
 
     log_file = "/var/log/ai2thor-xorg.%s.log" % display
     error_log_file = "/var/log/ai2thor-xorg-error.%s.log" % display
@@ -106,8 +111,8 @@ def start(display):
         with open(error_log_file, "r") as f:
             print(f.read())
 
-def print_config():
-    print(generate_xorg_conf())
+def print_config(excluded_device_ids):
+    print(generate_xorg_conf(excluded_device_ids))
 
 def stop():
     pid = read_pid()
@@ -121,9 +126,9 @@ def stop():
                 break
 
 
-def generate_xorg_conf():
+def generate_xorg_conf(excluded_device_ids):
 
-    devices = find_devices()
+    devices = find_devices(excluded_device_ids)
 
     xorg_conf = []
 
@@ -179,12 +184,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--exclude-device", help="exclude a specific GPU device", action="append", type=int)
     parser.add_argument("command", help="command to be executed", choices=["start", "stop", "print-config"])
     parser.add_argument("display", help="display to be used", nargs="?", type=int, default=0)
     args = parser.parse_args()
     if args.command == "start":
-        start(args.display)
+        start(args.display, args.exclude_device)
     elif args.command == "stop":
         stop()
     elif args.command == "print-config":
-        print_config()
+        print_config(args.exclude_device)
