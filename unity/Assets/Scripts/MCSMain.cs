@@ -1400,7 +1400,8 @@ public class MCSMain : MonoBehaviour {
 
         Rigidbody rigidbody = objectConfig.GetRigidbody();
 
-        if (objectConfig.resetCenterOfMass && rigidbody.velocity.y > 0) {
+        // Use 0.1 here because a lower value doesn't work correctly.
+        if (objectConfig.resetCenterOfMass && rigidbody.velocity.y > 0.1) {
             rigidbody.ResetCenterOfMass();
         }
 
