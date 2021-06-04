@@ -420,10 +420,8 @@ class Controller(object):
             self.x_display = ":" + self.x_display
 
         if quality not in QUALITY_SETTINGS:
-            valid_qualities = filter(
-                lambda q: QUALITY_SETTINGS[q] > 0,
-                sorted(QUALITY_SETTINGS.keys(), key=lambda q: QUALITY_SETTINGS[q]),
-            )
+            valid_qualities = [q for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1]) if v > 0]
+
             raise ValueError(
                 "Quality {} is invalid, please select from one of the following settings: ".format(
                     quality
