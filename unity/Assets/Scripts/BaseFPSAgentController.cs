@@ -818,7 +818,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ) % 100;
 
                 int sceneGroup = Int32.Parse(
-                    scene.Substring(startIndex: "FloorPlan".Length, length:  scene.Length - "FloorPlan_physics".Length)
+                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
                 ) / 100;
 
                 if (inRoomTypes != null) {
@@ -1562,6 +1562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.canFillWithLiquid = simObj.IsFillable;
             if (objMeta.canFillWithLiquid) {
                 objMeta.isFilledWithLiquid = simObj.IsFilled;
+                objMeta.fillLiquid = simObj.FillLiquid;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
