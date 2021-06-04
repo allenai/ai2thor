@@ -1109,7 +1109,8 @@ class Controller(object):
                 )
 
         # select the first build + platform that succeeds
-        # For Linux, this will select CloudRendering, then Linux64 (X11)
+        # For Linux, this will select Linux64 (X11).  If CloudRendering
+        # is enabled, then it will get selected over Linux64 (assuming a build is available)
         for build in builds:
             if build.platform.is_valid(request):
                 if build.commit_id != commits[0]:
