@@ -343,10 +343,10 @@ public class ImageSynthesis : MonoBehaviour {
             //			}
             //
             // updated per @danielg - replaces commented out code
-            if (r.material.name.ToLower().Contains("lightray")) {
-                r.enabled = false;
-                continue;
-            }
+            // if (r.material.name.ToLower().Contains("lightray")) {
+            //     r.enabled = false;
+            //     continue;
+            // }
 
             objColor.a = 1;
             classColor.a = 1;
