@@ -1,61 +1,84 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEngine;
 
 /// <summary>
 /// 
 /// </summary>
 public class AddressablesEditor
 {
-    [MenuItem("Tools/Addressables/Refresh Addressables Folder")]
+    /// <summary>
+    /// Configures all assets within Addressables folder to addressables group
+    /// </summary>
     public static void RefreshAddressables()
     {
-        var settings = AddressableAssetSettingsDefaultObject.Settings;
-        var group = settings.DefaultGroup;
-        var guids = AssetDatabase.FindAssets("", new[] { "Assets/Addressables" });
+        string path = "Assets/Addressables";
+        string[] guids = AssetDatabase.FindAssets("", new[] { path });
 
-        var entriesAdded = new List<AddressableAssetEntry>();
+        List<AddressableAssetEntry> entriesAdded = new List<AddressableAssetEntry>();
         for (int i = 0; i < guids.Length; i++)
         {
-            var entry = settings.CreateOrMoveEntry(guids[i], group, readOnly: false, postEvent: false);
-            entry.address = AssetDatabase.GUIDToAssetPath(guids[i]);
-            entry.labels.Add("MyLabel");
-            entriesAdded.Add(entry);
+            entriesAdded.Add(AddToAddressablesDefaultGroup(guids[i]));
         }
 
-        settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entriesAdded, true);
+        AddressableAssetSettingsDefaultObject.Settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entriesAdded, true);
     }
 
-    [MenuItem("Tools/Addressables/Add Addressables From Selected Folder")]
+    /// <summary>
+    /// Adds all content within folder recursively to addressables
+    /// </summary>
+    [MenuItem("Tools/Addressables/Add To Addressables From Selected Folder")]
     public static void SetAddressablesAtFolder()
     {
-        var settings = AddressableAssetSettingsDefaultObject.Settings;
-        var group = settings.DefaultGroup;
-        var path = GetSelectedFolder();
+        string path = GetSelectedFolder();
 
-        path = string.IsNullOrEmpty(path) ? "Assets/AddressableAssets" : path;
-        var guids = AssetDatabase.FindAssets("", new[] { path });
+        if (string.IsNullOrEmpty(path))
+        {
+            Debug.LogWarning("No path selected for marking as addressables!");
+            return;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("", new[] { path });
 
         var entriesAdded = new List<AddressableAssetEntry>();
         for (int i = 0; i < guids.Length; i++)
         {
-            var entry = settings.CreateOrMoveEntry(guids[i], group, readOnly: false, postEvent: false);
-            entry.address = AssetDatabase.GUIDToAssetPath(guids[i]);
-            entry.labels.Add("MyLabel");
-            entriesAdded.Add(entry);
+            entriesAdded.Add(AddToAddressablesDefaultGroup(guids[i]));
         }
 
-        settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entriesAdded, true);
+        AddressableAssetSettingsDefaultObject.Settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entriesAdded, true);
+    }
+
+    private static AddressableAssetEntry AddToAddressablesDefaultGroup(string guid)
+    {
+        AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+        AddressableAssetGroup group = settings.DefaultGroup;
+
+        AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, readOnly: false, postEvent: false);
+        entry.address = AssetDatabase.GUIDToAssetPath(guid);
+        entry.labels.Add("MyLabel");
+
+        Debug.Log(AssetDatabase.GUIDToAssetPath(guid) + " was added to Addressables default group!");
+
+        return entry;
     }
 
     private static string GetSelectedFolder()
     {
         var path = "";
         var obj = Selection.activeObject;
-        if (obj == null) path = "Assets";
-        else path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+        if (obj == null)
+        {
+            return string.Empty;
+        }
+        else
+        {
+            path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+        }
         if (path.Length > 0)
         {
             if (Directory.Exists(path))

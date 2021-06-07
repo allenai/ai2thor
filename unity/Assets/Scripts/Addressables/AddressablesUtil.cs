@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -9,12 +9,15 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 
 /// <summary>
-/// 
+/// Runtime helper for interfacing with addressables content. Manages memory for assets loaded/unloaded from runtime.
 /// </summary>
 public class AddressablesUtil : MonoBehaviour
 {
     public static AddressablesUtil Instance { get; private set; }
     private List<GameObject> addressableGameObjects = new List<GameObject>();
+
+    private static string CACHING_ARG = "CACHEADDRESSABLES";
+    private bool cachingAddressablesBuild = false;
 
     /// <summary>
     /// Check if gameobject is managed through addressables
@@ -30,6 +33,12 @@ public class AddressablesUtil : MonoBehaviour
     {
         Instance = this;
         Addressables.InitializeAsync();
+
+        cachingAddressablesBuild = MCSUtil.HasArg(CACHING_ARG);
+        if (cachingAddressablesBuild)
+        {
+            ClearAllAddressablesCache(() => CacheAllAddressables());         
+        }
     }
 
     /// <summary>
@@ -38,7 +47,7 @@ public class AddressablesUtil : MonoBehaviour
     /// <typeparam name="T"></typeparam>
     /// <param name="path"></param>
     /// <returns></returns>
-    public T InstantiateAddressable<T>(string path) where T : Object
+    public T InstantiateAddressable<T>(string path) where T : UnityEngine.Object
     {
         AsyncOperationHandle<T> objectOperation = Addressables.LoadAssetAsync<T>(path);
         T objectAsset = objectOperation.WaitForCompletion();
@@ -81,16 +90,20 @@ public class AddressablesUtil : MonoBehaviour
     /// <summary>
     /// Clears all downloaded addressables cached on local machine
     /// </summary>
-    public void ClearAllAddressablesCache()
+    public void ClearAllAddressablesCache(Action completedAction = null)
     {
-        StartCoroutine(ClearAllCoroutine());
+        Debug.Log("Clearing Addressables...");
+        StartCoroutine(ClearAllCoroutine(completedAction));
     }
 
-    private IEnumerator ClearAllCoroutine()
+    private IEnumerator ClearAllCoroutine(Action completedAction = null)
     {
         yield return Addressables.InitializeAsync();
         var handle = ClearAllAddressablesCacheHandle();
         yield return handle;
+        Caching.ClearCache();
+
+        completedAction?.Invoke();
     }
 
     private AsyncOperationHandle<bool> ClearAllAddressablesCacheHandle()
@@ -102,17 +115,25 @@ public class AddressablesUtil : MonoBehaviour
     /// <summary>
     /// Downloads and caches all addressable bundles on local machine
     /// </summary>
-    public void CacheAllAddressables()
+    public void CacheAllAddressables(Action completedAction = null)
     {
-        StartCoroutine(DownloadAllCoroutine());
+        Debug.Log("Caching Addressables...");
+        StartCoroutine(DownloadAllCoroutine(completedAction));
     }
 
-    private IEnumerator DownloadAllCoroutine()
+    private IEnumerator DownloadAllCoroutine(Action completedAction = null)
     {
         yield return Addressables.InitializeAsync();
-        var handle = CacheAllAddressablesHandle();
+        var handle = CacheAllAddressablesHandle().WaitForCompletion();
         yield return handle;
-        Caching.ClearCache();
+
+        if (cachingAddressablesBuild)
+        {
+            Debug.Log("Addressables Cached!");
+            MCSUtil.CloseApplication();
+        }
+
+        completedAction?.Invoke();
     }
 
     private AsyncOperationHandle<IList<IAssetBundleResource>> CacheAllAddressablesHandle()
@@ -143,7 +164,7 @@ public class AddressablesUtil : MonoBehaviour
                     {
                         var dls = Addressables.GetDownloadSizeAsync(location);
                         dls.WaitForCompletion();
-
+                        
                         // this does not seem to be returning different results
                         //if (dls.Result > 0)
                         {
