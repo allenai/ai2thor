@@ -28,7 +28,9 @@ Note that while installing and/or launching Unity, you may get an error about `l
 
 ### Assets
 
-Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Resources/MCS/UnityAssetStore/`.
+CACI employees and subcontractors: Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Resources/MCS/UnityAssetStore/`.
+
+Non-CACI employees: Please continue with the rest of these instructions.
 
 ## Run
 
@@ -316,3 +318,11 @@ For playback:
   - Added property `guidForColors` and way to update it (`UpdateGuidForColors`). This is used to create random colors for object masks in `OnSceneChange`
 - `ImageSynthesis/Shaders/Depth`:
   - Changed the `frag` function to return pixels based on the camera's far clipping pane
+
+## Assets
+
+- Soccer ball prefab from Ahmet Gencoglu: https://assetstore.unity.com/packages/3d/low-polygon-soccer-ball-84382
+
+## Acknowledgements
+
+This material is based upon work supported by the Defense Advanced Research Projects Agency (DARPA) and Naval Information Warfare Center, Pacific (NIWC Pacific) under Contract No. N6600119C4030. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the DARPA or NIWC Pacific.
