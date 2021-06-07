@@ -28,7 +28,7 @@ Note that while installing and/or launching Unity, you may get an error about `l
 
 ### Assets
 
-CACI employees and subcontractors: Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Resources/MCS/UnityAssetStore/`.
+CACI employees and subcontractors: Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Addressables/MCS/UnityAssetStore/`.
 
 Non-CACI employees: Please continue with the rest of these instructions.
 
