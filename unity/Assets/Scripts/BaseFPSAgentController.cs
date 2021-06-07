@@ -4188,7 +4188,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             receptacleHeight,
             floorColliderThickness,
             house.ceilingMaterialId,
-            false
+            true
             );
             // TODO if we want to teleport agent should probably be done in a different call
             // var maxY =  house.rooms.SelectMany(r => r.walls.SelectMany( w => new List<Vector3>() {w.p0, w.p1})).Max(p => p.y);
