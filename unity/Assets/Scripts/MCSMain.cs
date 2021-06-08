@@ -308,12 +308,23 @@ public class MCSMain : MonoBehaviour {
             myDefaultWallMaterial);
 
         // Remove the ceiling from all intuitive physics and isometric scenes.
-        this.ceiling.SetActive(!(this.currentScene.intuitivePhysics || this.currentScene.observation ||
-                this.currentScene.isometric));
+        this.ceiling.SetActive(!this.isPassiveScene);
 
         // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
-        if (this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric) {
+        // TODO MCS-608 Remove substeps
+        if (this.isPassiveScene) {
             this.agentController.substeps = 1;
+        }
+
+        // Reset the floorProperties in case the previous scene was intuitivePhysics.
+        if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
+            this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+            this.currentScene.floorProperties.enable = true;
+            this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_DEFAULT;
+            this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_DEFAULT;
+            this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+            this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+            this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         }
 
         // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
@@ -423,7 +434,7 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.LIGHT_Z_POSITION_SCREENSHOT);
         } else {
             // Intuitive physics and isometric scenes don't have ceilings.
-            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
+            if (!this.isPassiveScene) {
                 AssignMaterial(this.ceiling, ceilingMaterial);
             }
 
