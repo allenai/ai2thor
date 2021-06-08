@@ -116,11 +116,159 @@ namespace Thor.Procedural {
             return mesh;
         }
 
-        public static IEnumerable<UnityEngine.Mesh> GetMultipleRectangleFloorMeshes(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
-            return rooms.Select(
-                r =>
-                    GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
-                );
+        // public static IEnumerable<UnityEngine.Mesh> GetMultipleRectangleFloorMeshes(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
+        //     return rooms.Select(
+        //         r =>
+        //             GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
+        //         );
+        // }
+
+        public static Mesh GenerateFloorMesh(RectangleRoom room, float yOffset = 0.0f) {
+
+            // Get indices for creating triangles
+            var m_points = room.walls.Select(w => new Vector2(w.p0.x, w.p0.z)).ToArray();
+
+            var triangleIndices = TriangulateVertices();
+            //Debug.Log("TriangleIndices has length of " + triangleIndices.Length);
+
+            // Get array of vertices for floor
+            var floorVertices = m_points.Select(p => new Vector3(p.x, yOffset, p.y)).ToArray();
+
+            // Create the mesh
+            var floor = new Mesh();
+            floor.vertices = floorVertices;
+            floor.triangles = triangleIndices;
+            floor.RecalculateNormals();
+            floor.RecalculateBounds();
+
+            //Get UVs for mesh's vertices
+            floor.uv = GenerateUVs();
+            return floor;
+
+            int[] TriangulateVertices() {
+                List<int> indices = new List<int>();
+
+                int n = m_points.Length;
+                if (n < 3) {
+                    return indices.ToArray();
+                }
+
+                int[] V = new int[n];
+                if (Area() > 0) {
+                    for (int v = 0; v < n; v++) {
+                        V[v] = v;
+                    }
+                } else {
+                    for (int v = 0; v < n; v++) {
+                        V[v] = (n - 1) - v;
+                    }
+                }
+
+                int nv = n;
+                int count = 2 * nv;
+                for (int v = nv - 1; nv > 2;) {
+                    if ((count--) <= 0) {
+                        return indices.ToArray();
+                    }
+
+                    int u = v;
+                    if (nv <= u) {
+                        u = 0;
+                    }
+
+                    v = u + 1;
+                    if (nv <= v) {
+                        v = 0;
+                    }
+
+                    int w = v + 1;
+                    if (nv <= w) {
+                        w = 0;
+                    }
+
+                    if (Snip(u, v, w, nv, V)) {
+                        int a, b, c, s, t;
+                        a = V[u];
+                        b = V[v];
+                        c = V[w];
+                        indices.Add(a);
+                        indices.Add(b);
+                        indices.Add(c);
+                        for (s = v, t = v + 1; t < nv; s++, t++) {
+                            V[s] = V[t];
+                        }
+
+                        nv--;
+                        count = 2 * nv;
+                    }
+                }
+
+                indices.Reverse();
+                return indices.ToArray();
+            }
+
+            float Area() {
+                int n = m_points.Length;
+                float A = 0.0f;
+                for (int p = n - 1, q = 0; q < n; p = q++) {
+                    Vector2 pval = m_points[p];
+                    Vector2 qval = m_points[q];
+                    A += pval.x * qval.y - qval.x * pval.y;
+                }
+                return (A * 0.5f);
+            }
+
+            bool Snip(int u, int v, int w, int n, int[] V) {
+                int p;
+                Vector2 A = m_points[V[u]];
+                Vector2 B = m_points[V[v]];
+                Vector2 C = m_points[V[w]];
+                if (Mathf.Epsilon > (((B.x - A.x) * (C.y - A.y)) - ((B.y - A.y) * (C.x - A.x)))) {
+                    return false;
+                }
+
+                for (p = 0; p < n; p++) {
+                    if ((p == u) || (p == v) || (p == w)) {
+                        continue;
+                    }
+
+                    Vector2 P = m_points[V[p]];
+                    if (InsideTriangle(A, B, C, P)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            bool InsideTriangle(Vector2 A, Vector2 B, Vector2 C, Vector2 P) {
+                float ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
+                float cCROSSap, bCROSScp, aCROSSbp;
+
+                ax = C.x - B.x; ay = C.y - B.y;
+                bx = A.x - C.x; by = A.y - C.y;
+                cx = B.x - A.x; cy = B.y - A.y;
+                apx = P.x - A.x; apy = P.y - A.y;
+                bpx = P.x - B.x; bpy = P.y - B.y;
+                cpx = P.x - C.x; cpy = P.y - C.y;
+
+                aCROSSbp = ax * bpy - ay * bpx;
+                cCROSSap = cx * apy - cy * apx;
+                bCROSScp = bx * cpy - by * cpx;
+
+                return ((aCROSSbp >= 0.0f) && (bCROSScp >= 0.0f) && (cCROSSap >= 0.0f));
+            }
+
+            Vector2[] GenerateUVs() {
+                Vector2[] uvArray = new Vector2[m_points.Length];
+                float texelDensity = 5f;
+
+                for (int i = 0; i < m_points.Length; i++) {
+                    uvArray[i] = (m_points[i] - m_points[0]) / texelDensity;
+                }
+
+                return uvArray;
+            }
         }
 
         // TODO triangulation code here
@@ -660,8 +808,6 @@ namespace Thor.Procedural {
             receptacleTriggerBox.AddComponent<Contains>();
             return simObjPhysics;
         }
-
-        // 
         public static GameObject createSimObjPhysicsGameObject(string name = "Floor", Vector3? position = null, string tag = "SimObjPhysics", int layer = 8) {
 
             var floorGameObject = new GameObject(name);
@@ -738,21 +884,31 @@ namespace Thor.Procedural {
             var wallsMaxY = wallPoints.Max(p => p.y);
             var wallsMaxHeight = walls.Max(w => w.height);
 
-
             var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
             var mesh = ProceduralTools.GetRectangleFloorMesh(rooms);
+
+            // If you want to generate an individual floor for each room
             if (individualRoomFloorMesh) {
                 // TODO: solution for this, both the multi-object and multi-material approach lead to Z-fighting 
                 // mesh.subMeshCount = rooms.Count();
+
+                // For each room, generate floor mesh
                 for (int i = 0; i < rooms.Count(); i++) {
+
+                    // Select single RectangleRoom
                     var room = rooms.ElementAt(i);
+
+                    // Create GameObject
                     var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
-                    var meshes = ProceduralTools.GetMultipleRectangleFloorMeshes(rooms);
-                    // mesh.subMeshCount
-                    subFloorGO.GetComponent<MeshFilter>().mesh = meshes.ElementAt(i);
+
+                    // Create current floor's mesh and set up meshFilter and MeshRenderer material
+                    var currentFloorMesh = ProceduralTools.GenerateFloorMesh(rooms.ElementAt(i));
+                    subFloorGO.GetComponent<MeshFilter>().mesh = currentFloorMesh;
                     var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
                     meshRenderer.material = materialDb.getAsset(room.floor.materialId);
+
+                    // Parent GameObject to floor-master gameObject
                     subFloorGO.transform.parent = floorGameObject.transform;
                 }
             } else {
