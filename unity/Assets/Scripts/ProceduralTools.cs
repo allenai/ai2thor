@@ -947,7 +947,7 @@ namespace Thor.Procedural {
 
             // generate ceiling
             if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject("Structure", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Ceiling", 0);
+                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(rooms, 0.0f, true);
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = mesh;
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
