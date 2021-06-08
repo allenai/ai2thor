@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.Build.Reporting;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 /// <summary>
@@ -88,5 +91,38 @@ public class AddressablesEditor
         }
 
         return string.Empty;
+    }
+
+    [PostProcessBuild]
+    public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
+    {
+
+#if UNITY_STANDALONE_LINUX
+        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), "CachedAddressableLink/Linux/aa");
+        string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
+        string targetDir = Path.Combine(dataDir, "StreamingAssets/aa");
+#endif
+
+#if UNITY_STANDALONE_OSX
+        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), "CachedAddressableLink/OSX/aa");
+        string targetDir = Path.Combine(pathToBuiltProject, "Contents/Resources/Data/StreamingAssets/aa");
+#endif    
+
+        // Do not copy default addressables if newly generated addressables were detected
+        if (!Directory.Exists(targetDir))
+        {
+            CopyFilesRecursively(sourceDir, targetDir);
+        }
+    }
+
+    private static void CopyFilesRecursively(string sourceDir, string targetDir)
+    {
+        Directory.CreateDirectory(targetDir);
+
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)));
+
+        foreach (var directory in Directory.GetDirectories(sourceDir))
+            CopyFilesRecursively(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
     }
 }
