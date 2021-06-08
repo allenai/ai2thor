@@ -4196,6 +4196,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void CreateHouseFromJson(ProceduralHouse house) {
+
+            var rectRooms = house.rooms.SelectMany(
+                room => house.rooms
+            );
+
+            var materials = ProceduralTools.GetMaterials();
+
+            var materialIds = new HashSet<string>(
+                house.rooms.SelectMany(
+                    r => r.ceilings.Select(c => c.material).Concat(
+                                new List<string>() { r.floor_material })
+                        .Concat(
+                            house.walls.Select(w => w.material)
+                        )
+                )
+            );
+
+            var missingIds = materialIds.Where(id => !materials.ContainsKey(id));
+            if (missingIds.Count() > 0) {
+                errorMessage = $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component.";
+                actionFinished(false);
+                return;
+            }
+
+            var floorColliderThickness = 1.0f;
+            var receptacleHeight = 0.7f;
+
+            ProceduralTools.creatPolygonFloorHouse(
+                $"Floor",
+                house,
+                materials,
+                $"simobj_{house.id}",
+                receptacleHeight,
+                floorColliderThickness,
+                ""
+            );
+
+            actionFinished(true);
+        }
+
         public void OnTriggerStay(Collider other) {
             if (other.CompareTag("HighFriction")) {
                 inHighFrictionArea = true;

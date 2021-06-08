@@ -70,6 +70,22 @@ namespace Thor.Procedural {
             var minPoint = new Vector3(oppositeCorners.Min(c => c.x), minY + yOffset, oppositeCorners.Min(c => c.z));
             var maxPoint = new Vector3(oppositeCorners.Max(c => c.x), minY + yOffset, oppositeCorners.Max(c => c.z));
 
+            return GetRectangleMesh(new BoundingBox() { min = minPoint, max = maxPoint });
+        }
+
+        public static UnityEngine.Mesh GetRectangleMesh(BoundingBox box, bool generateBackFaces = false) {
+            var mesh = new Mesh();
+
+            //TODO check they have same y?
+            // var l = oppositeCorners.Select(c => c.y).Distinct();
+            // var currentY = l.First();
+            // foreach (var y in l) {
+            // }
+            var minY = box.min.y;
+
+            var minPoint = box.min;
+            var maxPoint = box.max;
+
             var scale = maxPoint - minPoint;
 
             var vertices = new Vector3[] {
@@ -105,6 +121,11 @@ namespace Thor.Procedural {
                 r =>
                     GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
                 );
+        }
+
+        // TODO triangulation code here
+        public static UnityEngine.Mesh GetPolygonMesh(RoomHierarchy room, float yOffset = 0.0f, bool generateBackFaces = false) {
+            return new Mesh();
         }
 
         // TODO call above for ceiling using yOffset
@@ -160,14 +181,14 @@ namespace Thor.Procedural {
             return visibilityPoints;
         }
 
-        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
+        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
             var structure = new GameObject(gameObjectId);
 
-            var zip3 = room.walls.Zip(
-                room.walls.Skip(1).Concat(new Wall[] { room.walls.FirstOrDefault() }),
+            var zip3 = walls.Zip(
+                walls.Skip(1).Concat(new Wall[] { walls.FirstOrDefault() }),
                 (w0, w1) => (w0, w1)
             ).Zip(
-                new Wall[] { room.walls.LastOrDefault() }.Concat(room.walls.Take(room.walls.Length - 1)),
+                new Wall[] { walls.LastOrDefault() }.Concat(walls.Take(walls.Count() - 1)),
                 (wallPair, w2) => (wallPair.w0, w2, wallPair.w1)
             ).ToArray();
 
@@ -181,6 +202,10 @@ namespace Thor.Procedural {
                 }
             }
             return structure;
+        }
+
+        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
+            return createWalls(room.walls, materialDb, gameObjectId);
         }
 
         private static Vector3? vectorsIntersectionXZ(Vector3 line1P0, Vector3 line1Dir, Vector3 line2P0, Vector3 line2Dir) {
@@ -307,9 +332,12 @@ namespace Thor.Procedural {
             Wall next = null,
             float visibilityPointInterval = 1 / 3.0f,
             float minimumBoxColliderThickness = 0.1f,
-            bool globalVertexPositions = false
+            bool globalVertexPositions = false,
+            int layer = 8
         ) {
             var wallGO = new GameObject($"Wall_{index}");
+
+            wallGO.layer = layer;
 
             var meshF = wallGO.AddComponent<MeshFilter>();
             var boxC = wallGO.AddComponent<BoxCollider>();
@@ -517,12 +545,14 @@ namespace Thor.Procedural {
             var colliders = new GameObject("Colliders");
 
             var collider = new GameObject("Col");
+            // SimObjVisible
+            collider.layer = 8;
+            collider.tag = "SimObjPhysics";
             var box = collider.AddComponent<BoxCollider>();
 
             var size = new Vector3(room.width + room.marginWidth * 2.0f, thickness, room.depth + room.marginDepth * 2.0f);
 
             var center = room.center - new Vector3(0, thickness / 2.0f, 0);
-            // TODO set collider params
             box.size = size;
             box.center = center;
             collider.transform.parent = colliders.transform;
@@ -531,6 +561,9 @@ namespace Thor.Procedural {
 
             var triggerColliders = new GameObject("TriggerColliders");
             var triggerCollider = new GameObject("Col");
+
+            triggerCollider.layer = 8;
+            triggerCollider.tag = "SimObjPhysics";
             var triggerBox = triggerCollider.AddComponent<BoxCollider>();
 
             triggerBox.center = center;
@@ -547,6 +580,9 @@ namespace Thor.Procedural {
         GameObject floorGameObject, RectangleRoom room, float height, string namePostfix = ""
     ) {
             var receptacleTriggerBox = new GameObject($"ReceptacleTriggerBox{namePostfix}");
+            // SimObjInvisible
+            receptacleTriggerBox.layer = 9;
+            receptacleTriggerBox.tag = "Receptacle";
             var receptacleCollider = receptacleTriggerBox.AddComponent<BoxCollider>();
             receptacleCollider.isTrigger = true;
             var widthMinusMargin = room.width - 2.0f * room.marginWidth;
@@ -567,6 +603,8 @@ namespace Thor.Procedural {
             Collider collider
         ) {
             var boundingBox = new GameObject("BoundingBox");
+            // SimObjInvisible
+            boundingBox.layer = 9;
             var bbCollider = boundingBox.AddComponent<BoxCollider>();
             bbCollider.enabled = false;
             boundingBox.transform.parent = wallGameObject.transform;
@@ -674,6 +712,15 @@ namespace Thor.Procedural {
             meshRenderer.material = material;
         }
 
+        private static BoundingBox getRoomRectangle(IEnumerable<Vector3> polygonPoints) {
+            var minY = polygonPoints.Min(p => p.y);
+
+            var minPoint = new Vector3(polygonPoints.Min(c => c.x), minY, polygonPoints.Min(c => c.z));
+            var maxPoint = new Vector3(polygonPoints.Max(c => c.x), minY, polygonPoints.Max(c => c.z));
+
+            return new BoundingBox() { min = minPoint, max = maxPoint };
+        }
+
         public static GameObject createMultiRoomFloorGameObject(
             string name,
             IEnumerable<RectangleRoom> rooms,
@@ -744,7 +791,7 @@ namespace Thor.Procedural {
 
             // generate ceiling
             if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Ceiling", 0);
+                var ceilingGameObject = createSimObjPhysicsGameObject("Structure", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Ceiling", 0);
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(rooms, 0.0f, true);
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = mesh;
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
@@ -764,6 +811,106 @@ namespace Thor.Procedural {
                 floorGameObject.transform.parent = wallGO.transform;
                 index++;
             }
+            return floorGameObject;
+        }
+
+        private static Wall polygonWallToSimpleWall(PolygonWall wall) {
+            //wall.polygon.
+            var polygons = wall.polygon.OrderBy(p => p.y);
+            var maxY = wall.polygon.Max(p => p.y);
+            var p0 = polygons.ElementAt(0);
+            return new Wall() {
+                p0 = polygons.ElementAt(0),
+                p1 = polygons.ElementAt(1),
+                height = maxY - p0.y,
+                materialId = wall.material
+            };
+        }
+
+        public static GameObject creatPolygonFloorHouse(
+           string name,
+           ProceduralHouse house,
+           AssetMap<Material> materialDb,
+           string simObjId,
+           float receptacleHeight = 0.7f,
+           float floorColliderThickness = 1.0f,
+           string ceilingMaterialId = "",
+           Vector3? position = null
+       ) {
+
+            var walls = house.walls.Select(w => polygonWallToSimpleWall(w));
+            var wallPoints = walls.SelectMany(w => new List<Vector3>() { w.p0, w.p1 });
+            var wallsMinY = wallPoints.Min(p => p.y);
+            var wallsMaxY = wallPoints.Max(p => p.y);
+            var wallsMaxHeight = walls.Max(w => w.height);
+
+
+            var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
+
+            for (int i = 0; i < house.rooms.Count(); i++) {
+                var room = house.rooms.ElementAt(i);
+                var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
+                var mesh = ProceduralTools.GetPolygonMesh(room);
+                // mesh.subMeshCount
+                subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
+                var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
+
+                meshRenderer.material = materialDb.getAsset(room.floor_material);
+
+                subFloorGO.transform.parent = floorGameObject.transform;
+            }
+
+
+            // var minPoint = mesh.vertices[0];
+            // var maxPoint = mesh.vertices[2];
+
+
+            var boundingBox = getRoomRectangle(house.rooms.SelectMany(r => r.floor_polygon));
+            var dimension = boundingBox.max - boundingBox.max;
+
+            var floor = new RectangleFloor() {
+                center = boundingBox.min + dimension / 2.0f,
+                width = dimension.x,
+                depth = dimension.z,
+                marginWidth = dimension.x * 0.05f,
+                marginDepth = dimension.z * 0.05f
+            };
+            var roomCluster = new RectangleRoom() {
+                rectangleFloor = floor
+            };
+
+            var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(roomCluster);
+            visibilityPoints.transform.parent = floorGameObject.transform;
+
+            // rooms.Select((room, index) => ProceduralTools.createFloorReceptacle(floorGameObject, room, receptacleHeight, $"{index}"));
+
+            var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, roomCluster, receptacleHeight);
+            var collider = ProceduralTools.createFloorCollider(floorGameObject, roomCluster, floorColliderThickness);
+
+            // generate ceiling
+            if (ceilingMaterialId != "") {
+                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, true);
+                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
+                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+            }
+
+
+            ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
+
+            receptacleTriggerBox.AddComponent<Contains>();
+
+            // ProceduralTools.createWalls(room, "Structure");
+            Debug.Log($"Structure creation count: {house.rooms.Count()}");
+            var index = 0;
+            //Debug.Log($" Room {rooms} roomlen {}");
+            // house.walls.
+            // foreach (Room room in house.rooms.Select() ) {
+            //     var wallGO = ProceduralTools.createWalls(room, materialDb, $"Structure_{index}");
+            //     floorGameObject.transform.parent = wallGO.transform;
+            //     index++;
+            // }
+            var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
             return floorGameObject;
         }
 
