@@ -29,7 +29,7 @@ pip install ai2thor --upgrade
 ```
 
 It is also possible to install a commit based pip by adding the following to a `requirements.txt`:
-```txt
+```text
 --extra-index-url https://ai2thor-pypi.allenai.org
 
 ai2thor==0+d26bb0ef75d95074c39718cf9f1a0890ac2c974f
