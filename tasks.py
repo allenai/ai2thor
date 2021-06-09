@@ -707,10 +707,10 @@ def build_pip(context, version):
     if not re.match(r"^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$", version):
         raise Exception("invalid version: %s" % version)
 
-    for arch in ai2thor.build.platform_map.keys():
-        commit_build = ai2thor.build.Build(arch, commit_id, False)
+    for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+        commit_build = ai2thor.build.Build(plat, commit_id, False)
         if not commit_build.exists():
-            raise Exception("Build does not exist for %s/%s" % (commit_id, arch))
+            raise Exception("Build does not exist for %s/%s" % (commit_id, plat.name()))
 
     current_maj, current_min, current_sub = list(map(int, latest_version.split(".")))
     next_maj, next_min, next_sub = list(map(int, version.split(".")))
@@ -1171,8 +1171,8 @@ def poll_ci_build(context):
             print(".", end="")
             last_emit_time = time.time()
 
-        for arch in ai2thor.build.platform_map.keys():
-            commit_build = ai2thor.build.Build(arch, commit_id, False)
+        for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+            commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
                 if not commit_build.log_exists():
                     missing = True
@@ -1186,8 +1186,8 @@ def poll_ci_build(context):
         sys.stdout.flush()
         time.sleep(10)
 
-    for arch in ai2thor.build.platform_map.keys():
-        commit_build = ai2thor.build.Build(arch, commit_id, False)
+    for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+        commit_build = ai2thor.build.Build(plat, commit_id, False)
         if not commit_build.exists():
             print("Build log url: %s" % commit_build.log_url)
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
@@ -1224,19 +1224,19 @@ def build(context, local=False):
     threads = []
 
     for include_private_scenes in (True, False):
-        for arch in ai2thor.build.platform_map.keys():
+        for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
             env = {}
             if include_private_scenes:
                 env["INCLUDE_PRIVATE_SCENES"] = "true"
             unity_path = "unity"
-            build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
+            build_name = ai2thor.build.build_name(plat.name(), version, include_private_scenes)
             build_dir = os.path.join("builds", build_name)
             build_path = build_dir + ".zip"
-            build_info = builds[ai2thor.build.platform_map[arch]] = {}
+            build_info = builds[plat.name()] = {}
 
             build_info["log"] = "%s.log" % (build_name,)
 
-            _build(unity_path, arch, build_dir, build_name, env=env)
+            _build(unity_path, plat.name(), build_dir, build_name, env=env)
             t = threading.Thread(
                 target=archive_push,
                 args=(
@@ -3400,6 +3400,81 @@ def ci_test_utf(context, build):
         "finished Unity Test framework runner for %s %s"
         % (build["branch"], build["commit_id"])
     )
+
+@task
+def format(context):
+    format_py(context)
+    format_cs(context)
+
+
+@task
+def format_cs(context):
+    install_dotnet_format(context)
+
+    # the following message will get emitted, this can safely be ignored
+    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    subprocess.check_call(
+        ".dotnet/dotnet tool run dotnet-format unity/AI2-THOR-Base.csproj -w -s",
+        shell=True,
+    )
+
+
+@task
+def install_dotnet_format(context, force=False):
+    install_dotnet(context)
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    if not os.path.isfile(".config/dotnet-tools.json"):
+        command = os.path.join(base_dir, ".dotnet/dotnet") + " new tool-manifest"
+        subprocess.check_call(command, shell=True)
+
+    with open(".config/dotnet-tools.json") as f:
+        tools = json.loads(f.read())
+
+    # we may want to specify a version here in the future
+    if not force and "dotnet-format" in tools.get("tools", {}):
+        # dotnet-format already installed
+        return
+
+    command = os.path.join(base_dir, ".dotnet/dotnet") + " tool install dotnet-format"
+    subprocess.check_call(command, shell=True)
+
+
+@task
+def install_dotnet(context, force=False):
+    import requests
+    import stat
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    if not force and os.path.isfile(os.path.join(base_dir, ".dotnet/dotnet")):
+        # dotnet already installed
+        return
+    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script
+    res = requests.get("https://dot.net/v1/dotnet-install.sh")
+    res.raise_for_status()
+    target = os.path.join(base_dir, "dotnet-install.sh")
+    with open(target, "wb") as f:
+        f.write(res.content)
+
+    os.chmod(target, stat.S_IREAD | stat.S_IEXEC | stat.S_IWRITE)
+    env = os.environ.copy()
+    env["DOTNET_INSTALL_DIR"] = os.path.join(base_dir, ".dotnet")
+    subprocess.check_call(target, shell=True, env=env)
+    os.unlink(target)
+
+
+@task
+def format_py(context):
+
+    try:
+        import black
+    except ImportError:
+        raise Exception("black not installed - run pip install black")
+
+    subprocess.check_call(
+        "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
+    )
+
 
 @task
 def test_utf(context):

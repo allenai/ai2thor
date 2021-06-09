@@ -16,7 +16,6 @@ namespace Tests {
         protected bool lastActionSuccess;
         protected string error;
 
-
         public IEnumerator step(Dictionary<string, object> action) {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
             action["sequenceId"] = sequenceId;
@@ -43,6 +42,5 @@ namespace Tests {
         public virtual void Setup() {
             UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan1_physics");
         }
-
     }
 }

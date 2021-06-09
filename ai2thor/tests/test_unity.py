@@ -87,9 +87,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -192,7 +199,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -209,7 +218,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -423,6 +434,38 @@ def test_add_third_party_camera(controller):
         "action: AddThirdPartyCamera has an invalid argument: orthographicSize"
     )
 
+def test_third_party_camera_depth(fifo_controller):
+    fifo_controller.reset(
+        TEST_SCENE,
+        width=300,
+        height=300,
+        renderDepthImage=True
+    )
+
+    agent_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.75}
+    agent_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+
+    agent_init_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.25}
+    camera_position = {'x': -2.75, 'y': 1.5759992599487305, 'z': -1.75}
+    camera_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+    # teleport agent into a position the third-party camera won't see
+    fifo_controller.step(action="Teleport", position=agent_init_position, rotation=agent_rotation, horizon=0.0, standing=True)
+
+    camera_event = fifo_controller.step(
+        dict(
+            action=Actions.AddThirdPartyCamera,
+            position=camera_position,
+            rotation=camera_rotation
+        )
+    )
+    camera_depth = camera_event.third_party_depth_frames[0]
+    agent_event = fifo_controller.step(action="Teleport", position=agent_position, rotation=agent_rotation, horizon=0.0, standing=True)
+    agent_depth = agent_event.depth_frame
+    mse = np.square((np.subtract(camera_depth, agent_depth))).mean()
+    # if the clipping planes aren't the same between the agent and third-party camera
+    # the mse will be > 1.0
+    assert mse < 0.0001
+
 
 def test_update_third_party_camera(fifo_controller):
     # add a new camera
@@ -582,9 +625,10 @@ def test_open_aabb_cache(controller):
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_toggle_stove(controller):
-    position = {'x': -1.0, 'y': 0.9009982347488403, 'z': -2.25}
+    position = {"x": -1.0, "y": 0.9009982347488403, "z": -2.25}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 30.0
@@ -594,13 +638,16 @@ def test_toggle_stove(controller):
     knob = next(
         obj
         for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "StoveKnob" and obj['visible']
+        if obj["objectType"] == "StoveKnob" and obj["visible"]
     )
-    assert not knob['isToggled'], "knob should not be toggled"
-    assert knob['visible']
-    event = controller.step(dict(action='ToggleObjectOn', objectId=knob['objectId']), raise_for_failure=True)
-    knob = event.get_object(knob['objectId'])
-    assert knob['isToggled'], "knob should be toggled"
+    assert not knob["isToggled"], "knob should not be toggled"
+    assert knob["visible"]
+    event = controller.step(
+        dict(action="ToggleObjectOn", objectId=knob["objectId"]), raise_for_failure=True
+    )
+    knob = event.get_object(knob["objectId"])
+    assert knob["isToggled"], "knob should be toggled"
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
@@ -623,7 +670,9 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter"))
@@ -655,7 +704,9 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1020,17 +1071,16 @@ def test_get_reachable_positions(controller):
     except:
         pass
 
+
 def test_per_step_instance_segmentation(fifo_controller):
     fifo_controller.reset(
-        TEST_SCENE,
-        width=300,
-        height=300,
-        renderInstanceSegmentation=False
+        TEST_SCENE, width=300, height=300, renderInstanceSegmentation=False
     )
     event = fifo_controller.step("RotateRight")
     assert event.instance_segmentation_frame is None
     event = fifo_controller.step("Pass", renderInstanceSegmentation=True)
     assert event.instance_segmentation_frame is not None
+
 
 #  Test for Issue: 477
 def test_change_resolution_image_synthesis(fifo_controller):
@@ -1097,7 +1147,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1108,7 +1159,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1116,7 +1168,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1620,6 +1673,186 @@ def test_unsupported_manipulathor(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_randomize_materials_scenes(controller):
+    for p in [0, 200, 300, 400]:
+        controller.reset(scene=f"FloorPlan{p + 20}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert meta["useTrainMaterials"]
+        assert meta["useExternalMaterials"]
+        assert not meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 679
+
+        controller.reset(scene=f"FloorPlan{p + 21}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 500
+
+        controller.reset(scene=f"FloorPlan{p + 25}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert meta["useValMaterials"]
+        assert not meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 500
+
+        controller.reset(scene=f"FloorPlan{p + 26}")
+        meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+        assert not meta["useTrainMaterials"]
+        assert not meta["useExternalMaterials"]
+        assert not meta["useValMaterials"]
+        assert meta["useTestMaterials"]
+        assert meta["totalMaterialsConsidered"] == 358
+
+    controller.reset(scene=f"FloorPlan_Train5_3")
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+    assert meta["useTrainMaterials"]
+    assert meta["useExternalMaterials"]
+    assert not meta["useValMaterials"]
+    assert not meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 679
+
+    controller.reset(scene=f"FloorPlan_Val2_1")
+    meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
+    assert not meta["useTrainMaterials"]
+    assert not meta["useExternalMaterials"]
+    assert meta["useValMaterials"]
+    assert not meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 500
+    controller.step(action="ResetMaterials")
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_randomize_materials_clearOnReset(controller):
+    f1 = controller.reset().frame.astype(np.float16)
+    f2 = controller.step(action="RandomizeMaterials").frame.astype(np.float16)
+    f3 = controller.reset().frame.astype(np.float16)
+    # giving some leway with 0.05, but that as a baseline should be plenty enough
+    assert (
+        np.abs(f1 - f2).flatten() / 255
+    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (
+        np.abs(f2 - f3).flatten() / 255
+    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (
+        np.abs(f1 - f3).flatten() / 255
+    ).sum() / 300 / 300 < 0.01, "Materials should look the same"
+
+    f1 = controller.reset().frame.astype(np.float16)
+    f2 = controller.step(action="RandomizeMaterials").frame.astype(np.float16)
+    f3 = controller.step(action="ResetMaterials").frame.astype(np.float16)
+    assert (
+        np.abs(f1 - f2).flatten() / 255
+    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (
+        np.abs(f2 - f3).flatten() / 255
+    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (
+        np.abs(f1 - f3).flatten() / 255
+    ).sum() / 300 / 300 < 0.01, "Materials should look the same"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_directionalPush(controller):
+    positions = []
+    for angle in [0, 90, 180, 270, -1, -90]:
+        controller.reset(scene="FloorPlan28")
+        start = controller.step(
+            action="TeleportFull",
+            position=dict(x=-3.25, y=0.9, z=-1.25),
+            rotation=dict(x=0, y=0, z=0),
+            horizon=30,
+            standing=True,
+        )
+        # z increases
+        end = controller.step(
+            action="DirectionalPush",
+            pushAngle=angle,
+            objectId="Tomato|-03.13|+00.92|-00.39",
+            moveMagnitude=25,
+        )
+        start_obj = next(
+            obj for obj in start.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        end_obj = next(
+            obj for obj in end.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        positions.append((start_obj["position"], end_obj["position"]))
+
+    assert positions[0][1]["z"] - positions[0][0]["z"] > 0.2
+    assert positions[4][1]["z"] - positions[4][0]["z"] > 0.2
+
+    assert positions[1][1]["x"] - positions[1][0]["x"] > 0.2
+    assert positions[2][1]["z"] - positions[2][0]["z"] < -0.2
+
+    assert positions[3][1]["x"] - positions[3][0]["x"] < -0.2
+    assert positions[5][1]["x"] - positions[5][0]["x"] < -0.2
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_randomize_materials_params(controller):
+    controller.reset(scene="FloorPlan15")
+    meta = controller.step(
+        action="RandomizeMaterials",
+        useTrainMaterials=True,
+        useValMaterials=True,
+        useTestMaterials=True,
+        useExternalMaterials=False,
+    ).metadata["actionReturn"]
+    assert meta["useTrainMaterials"]
+    assert not meta["useExternalMaterials"]
+    assert meta["useValMaterials"]
+    assert meta["useTestMaterials"]
+    assert meta["totalMaterialsConsidered"] == 741
+
+    assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["Kitchen"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 325
+    )
+    assert controller.step(
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
+    )
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 503
+    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
+
+    controller.reset(scene="FloorPlan_Train5_2")
+    assert not controller.step(
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
+    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 350
+    )
+
+    controller.reset(scene="FloorPlan_Val3_2")
+    assert not controller.step(
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
+    )
+    assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
+    assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
+    assert (
+        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
+        == 318
+    )
+
+    controller.step(action="ResetMaterials")
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_invalid_arguments(controller):
     controller.reset()
     with pytest.raises(ValueError):
@@ -1656,3 +1889,44 @@ def test_segmentation_colors(controller):
         event.color_to_object_id[fridge_color] == "Fridge"
     ), "Fridge should have this color on instance seg"
 
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_fill_liquid(controller):
+    pot = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+    )
+    assert pot["fillLiquid"] is None
+    assert not pot["isFilledWithLiquid"]
+    assert pot["canFillWithLiquid"]
+
+    for fillLiquid in ["water", "wine", "coffee"]:
+        controller.step(
+            action="FillObjectWithLiquid",
+            fillLiquid=fillLiquid,
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] == fillLiquid
+        assert pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+
+        controller.step(
+            action="EmptyLiquidFromObject",
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] is None
+        assert not pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]

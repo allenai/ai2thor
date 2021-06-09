@@ -297,9 +297,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Get all colliders on the sop, excluding colliders if they are not enabled 
             // List<Collider> cols = new List<Collider>();
             List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
+            // save the state of all the layers prior to modifying
             foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
                     cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
+                }
+            }
+
+            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
                     // move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
                     c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
                 }
@@ -506,6 +512,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
+    public string FillLiquid {
+        get {
+            Fill f = this.GetComponent<Fill>();
+            return f == null ? null : f.FilledLiquid();
+        }
+    }
+
     public bool IsDirty {
         get {
             Dirty deedsdonedirtcheap = this.GetComponent<Dirty>();
@@ -664,7 +677,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
 #if UNITY_EDITOR
 
-    [UnityEditor.MenuItem("Thor/Add GUID to Object Names")]
+    [UnityEditor.MenuItem("AI2-THOR/Add GUID to Object Names")]
     public static void AddGUIDToSimObjPhys() {
         SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>();// Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
         foreach (SimObjPhysics sop in objects) {

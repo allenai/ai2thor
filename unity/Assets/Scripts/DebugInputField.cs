@@ -302,12 +302,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.renderInstanceSegmentation = true;
                         // action.renderFlowImage = true;
 
-                        action["gridSize"] = 0.25f;
-                        action["visibilityDistance"] = 1.0f;
-                        action["fieldOfView"] = 60;
-                        action["rotateStepDegrees"] = 45;
+                        action["action"] = "Initialize";
                         action["agentMode"] = "locobot";
-                        action["agentControllerType"] = "stochastic";
+                        // action["gridSize"] = 0.25f;
+                        // action["visibilityDistance"] = 1.0f;
+                        // action["rotateStepDegrees"] = 45;
+                        // action["agentControllerType"] = "stochastic";
+                        // action["applyActionNoise"] = true;
+                        // action["snapToGrid"] = false;
+                        // action["fieldOfView"] = 90;
+                        // action["gridSize"] = 0.25f;
+
 
                         action["applyActionNoise"] = true;
 
@@ -665,6 +670,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                // This is dangerous because it will modify the underlying
+                // materials, and you'll have to call "git restore *.mat *maT"
+                // to revert the materials.
+                case "dangerouslyChangeColor":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeColors"
+                    });
+                    break;
+                case "resetColor":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetColors"
+                    });
+                    break;
+
+                // This is dangerous because it will modify the underlying
+                // materials, and you'll have to call "git restore *.mat *maT"
+                // to revert the materials.
+                case "dangerouslyChangeMaterial":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeMaterials"
+                    });
+                    break;
+                case "resetMaterial":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetMaterials"
+                    });
+                    break;
+
                 case "light": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "RandomizeLighting",
@@ -681,19 +714,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "ResetLighting"
                         };
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-
-                case "color": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RandomizeColors";
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-                case "resetcolor": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "ResetColors";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
