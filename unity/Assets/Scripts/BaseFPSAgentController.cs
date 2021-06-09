@@ -1226,6 +1226,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return true;
         }
 
+        //TODO: May need to track enabled/disabled objecst separately since some
+        //actions loop through the ObjectIdTOSimObjPhysics dict and this may have adverse effects
         public void DisableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
@@ -1235,6 +1237,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //TODO: May need to track enabled/disabled objecst separately since some
+        //actions loop through the ObjectIdTOSimObjPhysics dict and this may have adverse effects
+        public void DisableAllObjectsOfType(ServerAction action) {
+            string type = action.objectType;
+            if (type == "") {
+                type = action.objectId;
+            }
+
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (Enum.GetName(typeof(SimObjType), so.Type) == type) {
+                    so.gameObject.SetActive(false);
+                }
+            }
+            actionFinished(true);
+        }
+
+        //TODO: May need to track enabled/disabled objecst separately since some
+        //actions loop through the ObjectIdTOSimObjPhysics dict and this may have adverse effects
         public void EnableObject(string objectId) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
@@ -1256,7 +1276,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // see if the object exists in this scene
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
-                physicsSceneManager.SetupScene();
+                //don't do a full scene setup to prevent overwriting already assigned objectIds
+                //TODO: More robust objectId system
+                physicsSceneManager.RemoveFromObjectsInScene(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
                 actionFinished(true);
                 return;
             }
