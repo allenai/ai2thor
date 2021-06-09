@@ -152,22 +152,7 @@ class Build(object):
 
     @property
     def executable_path(self):
-<<<<<<< HEAD
-        if self.arch == "Linux64" or self.arch == "CloudRendering":
-            return os.path.join(self.base_dir, self.name)
-        elif self.arch == "OSXIntel64":
-            plist = self.parse_plist()
-            return os.path.join(
-                self.base_dir,
-                self.name + ".app",
-                "Contents/MacOS",
-                plist["CFBundleExecutable"],
-            )
-        else:
-            raise Exception("unable to handle target arch %s" % self.arch)
-=======
         return self.platform.executable_path(self.base_dir, self.name)
->>>>>>> main
 
     @property
     def metadata_path(self):
