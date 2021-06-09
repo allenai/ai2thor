@@ -165,12 +165,8 @@ public class AddressablesUtil : MonoBehaviour
                         var dls = Addressables.GetDownloadSizeAsync(location);
                         dls.WaitForCompletion();
                         
-                        // this does not seem to be returning different results
-                        //if (dls.Result > 0)
-                        {
-                            locations.Add(location);
-                            addedLocations.Add(hash);
-                        }
+                        locations.Add(location);
+                        addedLocations.Add(hash);
                     }
                 }
             }

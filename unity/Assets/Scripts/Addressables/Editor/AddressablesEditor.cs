@@ -14,6 +14,12 @@ using UnityEngine;
 /// </summary>
 public class AddressablesEditor
 {
+    private static string LINUX_CACHED_DIR = "CachedAddressableLink/Linux/aa";
+    private static string LINUX_STREAMING_DIR = "StreamingAssets/aa";
+
+    private static string OSX_CACHED_DIR = "CachedAddressableLink/OSX/aa";
+    private static string OSX_STREAMING_DIR = "Contents/Resources/Data/StreamingAssets/aa";
+
     /// <summary>
     /// Configures all assets within Addressables folder to addressables group
     /// </summary>
@@ -96,16 +102,15 @@ public class AddressablesEditor
     [PostProcessBuild]
     public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
     {
-
 #if UNITY_STANDALONE_LINUX
-        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), "CachedAddressableLink/Linux/aa");
+        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), LINUX_CACHED_DIR);
         string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
-        string targetDir = Path.Combine(dataDir, "StreamingAssets/aa");
+        string targetDir = Path.Combine(dataDir, LINUX_STREAMING_DIR);
 #endif
 
 #if UNITY_STANDALONE_OSX
-        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), "CachedAddressableLink/OSX/aa");
-        string targetDir = Path.Combine(pathToBuiltProject, "Contents/Resources/Data/StreamingAssets/aa");
+        string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
+        string targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
 #endif    
 
         // Do not copy default addressables if newly generated addressables were detected

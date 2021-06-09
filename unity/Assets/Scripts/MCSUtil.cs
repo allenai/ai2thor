@@ -30,8 +30,6 @@ public class MCSUtil
     /// </summary>
     public static void CloseApplication()
     {
-        // For some reason this is not working on linux, should reinvestigate later as this is the correct way to do this.
-        //Application.Quit();
-        Process.GetCurrentProcess().Kill();
+        Application.Quit();
     }
 }
