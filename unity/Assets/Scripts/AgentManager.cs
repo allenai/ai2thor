@@ -773,13 +773,13 @@ public class AgentManager : MonoBehaviour {
         byte[] data = null;
         RenderTexture tt = camera.targetTexture;
         RenderTexture.active = tt;
-        this.primaryAgent.m_Camera.Render();
+        camera.Render();
         var rt = RenderTexture.GetTemporary(tt.width, tt.height, 0, tt.graphicsFormat, antiAliasing: tt.antiAliasing);
         Graphics.Blit(tt, rt);
         AsyncGPUReadback.Request(rt, 0, (request) =>
         {
             if (!request.hasError) {
-                RenderTexture rt = this.primaryAgent.m_Camera.targetTexture; 
+                //RenderTexture rt = this.primaryAgent.m_Camera.targetTexture; 
                 data = request.GetData<byte>().ToArray();
                 //Debug.Log("got data async data " + data.Length);
                 //var encodedData = ImageConversion.EncodeArrayToPNG(data, this.primaryAgent.m_Camera.targetTexture.graphicsFormat, (uint)rt.width, (uint)rt.height);
@@ -808,20 +808,28 @@ public class AgentManager : MonoBehaviour {
 
 
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
+#if PLATFORM_CLOUD_RENDERING
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreenAsync(camera)));
+#else
         RenderTexture.active = camera.activeTexture;
         camera.Render();
-        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreenAsync(camera)));
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+#endif
     }
 
     private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
         if (this.renderImage) {
 
+#if PLATFORM_CLOUD_RENDERING
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreenAsync(agent.m_Camera)));
+#else
             // XXX may not need this since we call render in captureScreenAsync
             if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreenAsync(agent.m_Camera)));
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+#endif
         }
     }
 
