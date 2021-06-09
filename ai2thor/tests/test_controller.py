@@ -34,6 +34,8 @@ def fake_cr_exists(self):
 def fake_not_exists(self):
     return False
 
+def fake_find_platform_builds(self, request, commits, releases_dir, local_build):
+    return []
 
 def fake_exists(self):
     return True
@@ -107,7 +109,7 @@ def controller(**args):
 
 def test_osx_build_missing(mocker):
     mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
-    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_not_exists)
+    mocker.patch("ai2thor.controller.Controller.find_platform_builds", fake_find_platform_builds)
 
     with pytest.raises(Exception) as ex:
         c = controller()
