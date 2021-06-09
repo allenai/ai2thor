@@ -15,6 +15,29 @@ controller = ai2thor.controller.Controller(
 )
 ```
 
+# Install PIP based on a SHA
+
+The continuous integration system generates a pip on each push to the repo.  These can be installed by using the ai2thor pypi index url.  For example, to install the pip associated with the commit `d26bb0ef75d95074c39718cf9f1a0890ac2c974f` the following can be run from the shell
+
+```bash
+pip install --extra-index-url https://ai2thor-pypi.allenai.org ai2thor==0+d26bb0ef75d95074c39718cf9f1a0890ac2c974f
+```
+
+To install the latest production release (and also uninstall the pip based on the specific commit), run the following:
+```bash
+pip install ai2thor --upgrade
+```
+
+It is also possible to install a commit based pip by adding the following to a `requirements.txt`:
+```text
+--extra-index-url https://ai2thor-pypi.allenai.org
+
+ai2thor==0+d26bb0ef75d95074c39718cf9f1a0890ac2c974f
+```
+
+This will force the installation of the pip associated with the commit `d26bb0ef75d95074c39718cf9f1a0890ac2c974f` when running `pip install -r requirements.txt`.
+
+
 ## Add Third-Party Plugin
 
 AI2-THOR uses [Assembly definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) to declare dependencies between libraries within the project.  To add a third-party package to the project:
