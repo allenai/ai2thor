@@ -7,9 +7,20 @@ using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
+
+    //position y creates the pose
+    //collider height is adjusted for each pose to prevent clipping inside the floor, allow traversal under structures, and allow ramp ascension
+    //collider center shifts when the position y is changed for poses
     public static float STANDING_POSITION_Y = 0.762f;
+    public static float STANDING_COLLIDER_HEIGHT = 1.23f; //1.3875f;
+    public static float STANDING_COLLIDER_CENTER = -0.33f; //-0.4625f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
+    public static float CRAWLING_COLLIDER_HEIGHT = 0.75f;
+    public static float CRAWLING_COLLIDER_CENTER = -0.05f;
     public static float LYING_POSITION_Y = 0.1f;
+    public static float LYING_COLLIDER_HEIGHT = 0.05f;
+    public static float LYING_COLLIDER_CENTER = 0.15f;
+
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
@@ -799,17 +810,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) &&
-            hit.collider.tag == "SimObjPhysics" &&
-            hit.transform.GetComponent<StructureObject>() == null)
+        if (direction == Vector3.up && Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight) + 0.1f, layerMask) &&
+            hit.collider.tag == "SimObjPhysics")
         {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
-            Debug.Log("Agent is Obstructed");
+            Debug.Log("Agent is Obstructed for a pose change by a structure above");
         } else {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
-            this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            if(this.pose == PlayerPose.LYING)
+            {
+                cc.height = LYING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,LYING_COLLIDER_CENTER,0);
+            }
+            else if(this.pose == PlayerPose.CRAWLING)
+            {
+                cc.height = CRAWLING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,CRAWLING_COLLIDER_CENTER,0);
+            }
+
+            else
+            {
+                cc.height = STANDING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
+            }
             //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
@@ -865,7 +891,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
+        if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
             (hit.transform.GetComponent<StructureObject>() != null)) {
             //for pose changes on structures only
             if (poseChange)
@@ -888,8 +914,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         float radius;
         Vector3 point1, point2;
         //Determine if we are colliding (or within skin width) of another object
-        GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
-        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8);
+        //GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
+
+        //This method shoots a ray down from the agents head to find the highest point below the agent that is touching the ground and uses that point as the base of the overlap check
+        CapsuleCastInfoByShootingRayToFloor(out point1, out point2, out radius);
+        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius + (radius*0.5f), 1 << 8);
 
         //we divide by scale here because we are going to expand the scaled collider by this value
         float obstructionVsCollisionDifference = m_CharacterController.skinWidth / Mathf.Max(transform.localScale.x, transform.localScale.z);
@@ -907,7 +936,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 myCollider.radius -= obstructionVsCollisionDifference;
                 Vector3 newPos = transform.position;
                 if (overlap) {
-                    Vector3 shift = direction * (distance);
+                    float additionalPush = 1.25f; //for ramps this is necessary, otherwise the agent will hang off the side of the ramp and clip into it
+                    Vector3 shift = direction * (distance * additionalPush);
                     newPos += shift;
                     transform.position = newPos;
                 }

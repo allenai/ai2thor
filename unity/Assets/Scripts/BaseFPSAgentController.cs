@@ -79,6 +79,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         public AgentState agentState = AgentState.Emit;
 
+        protected string inputDirection;
+
+        //These are for ramp debugging gizmos and helpful for capusle collider visualizations when checking if movement is possible - see OnDrawGizmosSelected()
+        //private Vector3 point1Gizmo;
+        //private Vector3 point2Gizmo;
+        //private float radiusGizmo;
+        //private Vector3 directionGizmo;
+        //private Ray rayGizmo;
+
         public bool IsVisible
         {
 			get 
@@ -922,7 +931,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         // Check if distance to object is greater than 0.1, if so than we can move partial amount
                         // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
-                        if (moveMagnitude > res.distance && res.distance > 0.1)
+                        if (moveMagnitude > res.distance && res.distance > 0.1f)
                         {
                             moveMagnitude = res.distance - 0.1f / moveMagnitude;
                             return true;
@@ -933,7 +942,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
                             simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
                         if (structureObject != null || immobile || res.rigidbody.mass > this.GetComponent<Rigidbody>().mass)
-                        {
+                        { 
+                            //checks if the obstruction is a structure ramp at a 45 degree angle
+                            if(ShootRay45DegreesUp(this.inputDirection, moveMagnitude) && structureObject != null) 
+                            {
+                                return true;
+                            }     
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
@@ -950,31 +964,56 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //Acending and Descending Structures//
         public bool ShootRay45DegreesUp(string inputDir, float length)
         {
-            RaycastHit baseHit;
-            LayerMask layerMask = ~(1 << 10);
-            float baseHeight = 0f;
-            if (Physics.Raycast(transform.position, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore))
-            {
-                baseHeight = baseHit.point.y;
-            }
-
-            Vector3 origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
+            LayerMask layerMask = 1 << 8;
+            float rayCastBuffer = 0.1f;
+            float angle = 45;
             Vector3 direction =
-                inputDir == "left" ? Quaternion.AngleAxis(-45, transform.forward) * (-1 * transform.right) :
-                inputDir == "right" ? Quaternion.AngleAxis(45, transform.forward) * transform.right :
-                inputDir == "forward" ? Quaternion.AngleAxis(-45, transform.right) * transform.forward :
-                inputDir == "back" ? Quaternion.AngleAxis(45, transform.right) * (-1 * transform.forward) : new Vector3();
+                inputDir == "left" ? Quaternion.AngleAxis(-angle, transform.forward) * (-transform.right) :
+                inputDir == "right" ? Quaternion.AngleAxis(angle, transform.forward) * transform.right :
+                inputDir == "forward" ? Quaternion.AngleAxis(-angle, transform.right) * transform.forward :
+                inputDir == "back" ? Quaternion.AngleAxis(angle, transform.right) * (-transform.forward) : new Vector3();
 
-            RaycastHit[] hit = Physics.RaycastAll(origin, direction, length, layerMask, QueryTriggerInteraction.Ignore);
-            foreach (RaycastHit point in hit)
+            float radius;
+            Vector3 p1, p2;
+            CapsuleCastInfoByShootingRayToFloor(out p1, out p2, out radius);
+            //Gizmos debbuging
+            //this.point1Gizmo = p1;
+            //this.point2Gizmo = p2;
+            //this.radiusGizmo = radius;
+            //this.directionGizmo = direction;
+            //Debug.DrawRay(p1, direction, Color.white, 10f, false);
+
+            RaycastHit[] hits = Physics.CapsuleCastAll(p1, p2, radius, direction, length + rayCastBuffer, layerMask, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit point in hits)
             {
-                if (point.transform.GetComponent<StructureObject>() != null ||
-                    (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass && point.transform.tag == "SimObjPhysics"))
-                {
+                if (point.transform.GetComponent<StructureObject>() != null || (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass))
                     return false;
-                }
             }
             return true;
+        }
+
+        protected void CapsuleCastInfoByShootingRayToFloor(out Vector3 p1, out Vector3 p2, out float radius)
+        {
+            RaycastHit baseHit;
+            LayerMask layerMask = 1 << 8;
+            float baseHeight = 0f;
+            float slightHeightOffset = 0.01f;
+            float rayCastDownHeight = 0.2f;
+            CapsuleCollider cc = GetComponent<CapsuleCollider>();
+            Vector3 origin = transform.position + Vector3.up * rayCastDownHeight;
+            radius  = cc.radius * Mathf.Max(transform.localScale.x, transform.localScale.z);
+            if (Physics.SphereCast(origin, radius, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore))
+            {
+                baseHeight = baseHit.point.y;
+                //Gizmos debbuging
+                //rayGizmo = new Ray();
+                //rayGizmo.direction = Vector3.up;
+                //rayGizmo.origin = baseHit.point;
+            }
+
+            origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
+            p1 = new Vector3(transform.position.x, baseHeight + radius + slightHeightOffset, transform.position.z);
+            p2 = new Vector3(transform.position.x,  cc.bounds.max.y - radius + slightHeightOffset, transform.position.z);
         }
 
         public void DisableObject(string objectId) {
@@ -3274,7 +3313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         #if UNITY_EDITOR
-        void OnDrawGizmos()
+        void OnDrawGizmosSelected()
         {
             ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
             // Gizmos.color = Color.magenta;
@@ -3295,6 +3334,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //         Gizmos.DrawWireCube(g.center, g.size);
             //     }
             // }
+            // Display the explosion radius when selected
+
+            //Ramp gizmos, point1 is a sphere representing the top of the agent collider, point2 is the bottom
+            //Radius is the collider radius for both points, direction is the path of the capsule
+            //The bottom point is drawn twice, one at its current location, 
+            //the second at a point 45 degrees up in the direction of movement with a seperation of movement magnitude
+            //Gizmos.color = Color.white;
+            //Gizmos.DrawWireSphere(point1Gizmo, radiusGizmo);
+            //Gizmos.DrawWireSphere(point1Gizmo + directionGizmo.normalized * 0.1f, radiusGizmo);
+            //Gizmos.color = Color.red;
+            //Gizmos.DrawWireSphere(point2Gizmo, radiusGizmo);
+            //Gizmos.DrawRay(rayGizmo);
         }
         #endif
 
