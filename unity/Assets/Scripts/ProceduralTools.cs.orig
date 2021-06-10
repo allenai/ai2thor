@@ -18,7 +18,6 @@ using UnityEditor;
 
 namespace Thor.Procedural {
     [ExecuteInEditMode]
-    [Serializable]
     public class AssetMap<T> {
         private Dictionary<string, T> assetMap;
         public AssetMap(Dictionary<string, T> assetMap) {
@@ -117,26 +116,26 @@ namespace Thor.Procedural {
             return mesh;
         }
 
-        // public static IEnumerable<UnityEngine.Mesh> GetMultipleRectangleFloorMeshes(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
-        //     return rooms.Select(
-        //         r =>
-        //             GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
-        //         );
-        // }
-
         public static Mesh GenerateFloorMesh(RectangleRoom room, float yOffset = 0.0f) {
 
             // Get indices for creating triangles
-            var m_points = room.walls.Select(w => new Vector2(w.p0.x, w.p0.z)).ToArray();
+            Vector2[] m_points = new Vector2[room.walls.Length];
+            for (int i = 0; i < m_points.Length; i++) {
+                m_points[i] = new Vector2(room.walls[i].p0.x, room.walls[i].p0.z);
+                //Debug.Log("Point " + i + " is " + m_points[i]);
+            }
 
-            var triangleIndices = TriangulateVertices();
+            int[] triangleIndices = TriangulateVertices();
             //Debug.Log("TriangleIndices has length of " + triangleIndices.Length);
 
             // Get array of vertices for floor
-            var floorVertices = m_points.Select(p => new Vector3(p.x, yOffset, p.y)).ToArray();
+            Vector3[] floorVertices = new Vector3[room.walls.Length];
+            for (int i = 0; i < floorVertices.Length; i++) {
+                floorVertices[i] = new Vector3(m_points[i].x, yOffset, m_points[i].y);
+            }
 
             // Create the mesh
-            var floor = new Mesh();
+            Mesh floor = new Mesh();
             floor.vertices = floorVertices;
             floor.triangles = triangleIndices;
             floor.RecalculateNormals();
@@ -204,6 +203,14 @@ namespace Thor.Procedural {
                     }
                 }
 
+<<<<<<< HEAD
+        // TODO triangulation code here
+        public static UnityEngine.Mesh GetPolygonMesh(RoomHierarchy room, float yOffset = 0.0f, bool generateBackFaces = false) {
+            return new Mesh();
+        }
+
+        // TODO call above for ceiling using yOffset
+=======
                 indices.Reverse();
                 return indices.ToArray();
             }
@@ -245,6 +252,7 @@ namespace Thor.Procedural {
             bool InsideTriangle(Vector2 A, Vector2 B, Vector2 C, Vector2 P) {
                 float ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
                 float cCROSSap, bCROSScp, aCROSSbp;
+>>>>>>> ccc7dac4667138c768a33339afe8fa8a4ee7340e
 
                 ax = C.x - B.x; ay = C.y - B.y;
                 bx = A.x - C.x; by = A.y - C.y;
@@ -271,14 +279,6 @@ namespace Thor.Procedural {
                 return uvArray;
             }
         }
-
-        // TODO triangulation code here
-        public static UnityEngine.Mesh GetPolygonMesh(RoomHierarchy room, float yOffset = 0.0f, bool generateBackFaces = false) {
-            return new Mesh();
-        }
-
-        // TODO call above for ceiling using yOffset
-
         public static UnityEngine.Mesh GetRectangleFloorMesh(RectangleRoom room) {
             return GetRectangleFloorMesh(new RectangleRoom[] { room });
         }
@@ -859,6 +859,7 @@ namespace Thor.Procedural {
             meshRenderer.material = material;
         }
 
+<<<<<<< HEAD
         private static BoundingBox getRoomRectangle(IEnumerable<Vector3> polygonPoints) {
             var minY = polygonPoints.Min(p => p.y);
 
@@ -868,6 +869,9 @@ namespace Thor.Procedural {
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
 
+=======
+        // Create floor for nth floor
+>>>>>>> ccc7dac4667138c768a33339afe8fa8a4ee7340e
         public static GameObject createMultiRoomFloorGameObject(
             string name,
             IEnumerable<RectangleRoom> rooms,
@@ -896,19 +900,19 @@ namespace Thor.Procedural {
 
                 // For each room, generate floor mesh
                 for (int i = 0; i < rooms.Count(); i++) {
-
+                    
                     // Select single RectangleRoom
                     var room = rooms.ElementAt(i);
 
                     // Create GameObject
                     var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
-
+                    
                     // Create current floor's mesh and set up meshFilter and MeshRenderer material
                     var currentFloorMesh = ProceduralTools.GenerateFloorMesh(rooms.ElementAt(i));
                     subFloorGO.GetComponent<MeshFilter>().mesh = currentFloorMesh;
                     var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
                     meshRenderer.material = materialDb.getAsset(room.floor.materialId);
-
+                    
                     // Parent GameObject to floor-master gameObject
                     subFloorGO.transform.parent = floorGameObject.transform;
                 }
@@ -948,7 +952,7 @@ namespace Thor.Procedural {
 
             // generate ceiling
             if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+                var ceilingGameObject = createSimObjPhysicsGameObject("Structure", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Ceiling", 0);
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(rooms, 0.0f, true);
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = mesh;
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);

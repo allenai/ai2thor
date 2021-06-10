@@ -669,29 +669,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeColor":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "RandomizeColors"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeColors"
+                    });
+                    break;
                 case "resetColor":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "ResetColors"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetColors"
+                    });
+                    break;
 
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeMaterial":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "RandomizeMaterials"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "RandomizeMaterials"
+                    });
+                    break;
                 case "resetMaterial":
-                        CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                            ["action"] = "ResetMaterials"
-                        });
-                        break;
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ResetMaterials"
+                    });
+                    break;
 
                 case "light": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
@@ -3210,191 +3210,220 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "cr": {
-                    
-                    // dynamic action = new JObject();
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    
-                    // AssetDatabase.Refresh();
-                    action["action"] = "CreateRoom";
-                    TextAsset text = Resources.Load<TextAsset>("rooms/" + "4.json");
-                    var ROOM_BASE_PATH = "/Resources/rooms/";
-                    path = "";
-                    if (splitcommand.Length == 1) {
-                        // opens up a file explorer in the background
-                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "Resources", extension: "json");
-                    } else if (splitcommand.Length == 2) {
-                        // uses ./debug/{splitcommand[1]}[.json]
-                        file = splitcommand[1].Trim();
-                        if (!file.EndsWith(".json")) {
-                            file += ".json";
+
+                        // dynamic action = new JObject();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateRoom";
+                        TextAsset text = Resources.Load<TextAsset>("rooms/" + "4.json");
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+                        path = "";
+                        if (splitcommand.Length == 1) {
+                            // opens up a file explorer in the background
+                            path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "Resources", extension: "json");
+                        } else if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
                         }
-                        path = Application.dataPath + ROOM_BASE_PATH + file;
+                        //var json = text.text;
+
+                        // var json = text.text;
+
+                        // var json = "{\r\n  \"walls\": [\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    }\r\n  ]\r\n}";
+                        // var walls = Newtonsoft.Json.JsonConvert.DeserializeObject<TestRoom>(json);
+
+                        // Debug.Log($"App path {Application.dataPath}");
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+
+                        // var k = JObject.Parse(jsonStr);
+                        // JArray wallsJson = k["walls"];
+
+
+                        // foreach (JObject wall in wallsJson) {
+                        // 	while (PhysicsController.IsProcessing) {
+                        // 		yield return new WaitForEndOfFrame();
+                        // 	}
+
+                        // 	CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        // }
+
+                        // var r = k.ToObject<Thor.Procedural.Data.TestRoom>();
+
+                        // var l = new List<Thor.Procedural.Data.Wall>();
+                        // foreach (var wall in wallsJson) {
+                        // 	l.Add(wall.ToObject<Thor.Procedural.Data.Wall>());
+                        // }
+                        action["walls"] = obj["walls"];
+                        action["wallHeight"] = 2.0f;
+                        action["wallMaterialId"] = "DrywallOrange";
+                        action["floorMaterialId"] = "DarkWoodFloors";
+                        action["ceilingMaterialId"] = "";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+
+                        // CurrentActiveController().CreateRoom(
+                        // 	new Wall[] {
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 0),
+                        // 			p1 = new Vector3(10, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 10),
+                        // 			p1 = new Vector3(10, 0, 10),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(10, 0, 10),
+                        // 			p1 = new Vector3(10, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 10),
+                        // 			p1 = new Vector3(0, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		}
+                        // 	},
+                        // 	2.0f,
+                        // 	"DrywallOrange",
+                        // 	"DarkWoodFloors"
+                        // );
+                        break;
+
+                        // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
+
                     }
-                    //var json = text.text;
-                    
-                    // var json = text.text;
-                    
-                    // var json = "{\r\n  \"walls\": [\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    }\r\n  ]\r\n}";
-                    // var walls = Newtonsoft.Json.JsonConvert.DeserializeObject<TestRoom>(json);
-                    
-                    // Debug.Log($"App path {Application.dataPath}");
-                    var jsonStr = System.IO.File.ReadAllText(path);
-                    Debug.Log($"jjson: {jsonStr}");
-                    
-                    JObject obj = JObject.Parse(jsonStr);
-                    
-                    
-                    // var k = JObject.Parse(jsonStr);
-                    // JArray wallsJson = k["walls"];
-                    
-                    
-                    // foreach (JObject wall in wallsJson) {
-                    // 	while (PhysicsController.IsProcessing) {
-                    // 		yield return new WaitForEndOfFrame();
-                    // 	}
-                    
-                    // 	CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                    // }
-                    
-                    // var r = k.ToObject<Thor.Procedural.Data.TestRoom>();
-                    
-                    // var l = new List<Thor.Procedural.Data.Wall>();
-                    // foreach (var wall in wallsJson) {
-                    // 	l.Add(wall.ToObject<Thor.Procedural.Data.Wall>());
-                    // }
-                    action["walls"] = obj["walls"];
-                    action["wallHeight"] = 2.0f;
-                    action["wallMaterialId"] = "DrywallOrange";
-                    action["floorMaterialId"] = "DarkWoodFloors";
-                    action["ceilingMaterialId"] = "";
-                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                    
-                    
-                    // CurrentActiveController().CreateRoom(
-                    // 	new Wall[] {
-                    // 		new Wall() {
-                    // 			p0 = new Vector3(0, 0, 0),
-                    // 			p1 = new Vector3(10, 0, 0),
-                    // 			height = 2.0f,
-                    // 			materialId = "DrywallOrange"
-                    // 		},
-                    // 		new Wall() {
-                    // 			p0 = new Vector3(0, 0, 10),
-                    // 			p1 = new Vector3(10, 0, 10),
-                    // 			height = 2.0f,
-                    // 			materialId = "DrywallOrange"
-                    // 		},
-                    // 		new Wall() {
-                    // 			p0 = new Vector3(10, 0, 10),
-                    // 			p1 = new Vector3(10, 0, 0),
-                    // 			height = 2.0f,
-                    // 			materialId = "DrywallOrange"
-                    // 		},
-                    // 		new Wall() {
-                    // 			p0 = new Vector3(0, 0, 10),
-                    // 			p1 = new Vector3(0, 0, 0),
-                    // 			height = 2.0f,
-                    // 			materialId = "DrywallOrange"
-                    // 		}
-                    // 	},
-                    // 	2.0f,
-                    // 	"DrywallOrange",
-                    // 	"DarkWoodFloors"
-                    // );
-                    break;
-                    
-                    // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
-                    
-                }
                 case "ch": {
-                    
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    
-                    // AssetDatabase.Refresh();
-                    action["action"] = "CreateHouse";
-                    
-                    var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
-                    Debug.Log($"jjson: {jsonStr}");
-                    
-                    JObject obj = JObject.Parse(jsonStr);
-                    
-                    action["house"] = obj;
-                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                    
-                    // CurrentActiveController().CreateHouse(
-                    // 	new House() {
-                    // 		ceilingMaterialId = "DrywallOrange",
-                    // 		rooms = new RectangleRoom[] {
-                    // 			new RectangleRoom() {
-                    // 				walls =
-                    // 				new Wall[] {
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(0, 0, 0),
-                    // 						p1 = new Vector3(10, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(0, 0, 10),
-                    // 						p1 = new Vector3(10, 0, 10),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(10, 0, 10),
-                    // 						p1 = new Vector3(10, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(0, 0, 10),
-                    // 						p1 = new Vector3(0, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					}
-                    // 				},
-                    // 				rectangleFloor = new RectangleFloor() {
-                    // 					materialId = "DarkWoodFloors"
-                    // 				}
-                    // 			},
-                    // 			new RectangleRoom() {
-                    // 				walls =
-                    // 				new Wall[] {
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(2.5f, 0, 0),
-                    // 						p1 = new Vector3(5, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(2.5f, 0, 5),
-                    // 						p1 = new Vector3(5, 0, 5),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(5, 0, 5),
-                    // 						p1 = new Vector3(5, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					},
-                    // 					new Wall() {
-                    // 						p0 = new Vector3(2.5f, 0, 5),
-                    // 						p1 = new Vector3(2.5f, 0, 0),
-                    // 						height = 2.0f,
-                    // 						materialId = "DrywallOrange"
-                    // 					}
-                    // 				},
-                    // 				rectangleFloor = new RectangleFloor() {
-                    // 					materialId = "DarkWoodFloors"
-                    // 				}
-                    // 			},
-                    // 		}
-                    // 	}
-                    // );
-                    
-                    break;
-                }
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+
+                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        // CurrentActiveController().CreateHouse(
+                        // 	new House() {
+                        // 		ceilingMaterialId = "DrywallOrange",
+                        // 		rooms = new RectangleRoom[] {
+                        // 			new RectangleRoom() {
+                        // 				walls =
+                        // 				new Wall[] {
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 0),
+                        // 						p1 = new Vector3(10, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 10),
+                        // 						p1 = new Vector3(10, 0, 10),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(10, 0, 10),
+                        // 						p1 = new Vector3(10, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 10),
+                        // 						p1 = new Vector3(0, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					}
+                        // 				},
+                        // 				rectangleFloor = new RectangleFloor() {
+                        // 					materialId = "DarkWoodFloors"
+                        // 				}
+                        // 			},
+                        // 			new RectangleRoom() {
+                        // 				walls =
+                        // 				new Wall[] {
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 0),
+                        // 						p1 = new Vector3(5, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 5),
+                        // 						p1 = new Vector3(5, 0, 5),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(5, 0, 5),
+                        // 						p1 = new Vector3(5, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 5),
+                        // 						p1 = new Vector3(2.5f, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					}
+                        // 				},
+                        // 				rectangleFloor = new RectangleFloor() {
+                        // 					materialId = "DarkWoodFloors"
+                        // 				}
+                        // 			},
+                        // 		}
+                        // 	}
+                        // );
+
+                        break;
+                    }
+
+                case "chp": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+
+                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
+                case "gad": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "GetAssetDatabase";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
+                        Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
+                        break;
+                    }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
