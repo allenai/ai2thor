@@ -957,6 +957,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             // myRigidbody.angularDrag = 0.01f;
         }
 
+		if(BoundingBox == null)
+		{
+			SimObjPhysics[] simObjParents = GetComponentsInParent<SimObjPhysics>();
+			foreach(SimObjPhysics sop in simObjParents)
+			{
+				if(sop.BoundingBox!=null)
+				{
+					BoundingBox = sop.BoundingBox;
+					break;
+				}
+			}
+		}
+
         initializeProperties();
 	}
 
