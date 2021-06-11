@@ -4237,6 +4237,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void GetAssetDatabase() {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinished(false);
+                return;
+            }
+            var metadata = assetDb.prefabs.Where(p => p.GetComponent<SimObjPhysics>() != null).Select(
+                p => {
+                    var simObj = p.GetComponent<SimObjPhysics>();
+                    var bb = simObj.AxisAlignedBoundingBox;
+                    return new AssetMetadata() {
+                        id = simObj.gameObject.name,
+                        type = simObj.Type.ToString(),
+                        primaryProperty = simObj.PrimaryProperty.ToString(),
+                        secondaryProperties = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
+                        boundingBox = new BoundingBox() {
+                            min = bb.center - bb.size / 2.0f,
+                            max = bb.center + bb.size / 2.0f
+                        }
+                    };
+                }
+            ).ToList();
+            actionFinished(true, metadata);
+        }
+
         public void OnTriggerStay(Collider other) {
             if (other.CompareTag("HighFriction")) {
                 inHighFrictionArea = true;

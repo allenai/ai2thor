@@ -15,6 +15,20 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class AssetMetadata {
+        public string id;
+
+        public string type;
+
+        public string primaryProperty;
+
+        public List<string> secondaryProperties;
+
+        public BoundingBox boundingBox;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
         public string room_id { get; set; }
@@ -60,13 +74,6 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Corner {
-        public double x { get; set; }
-        public double z { get; set; }
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
     public class Polygon {
         public double x { get; set; }
         public double y { get; set; }
@@ -102,7 +109,7 @@ namespace Thor.Procedural.Data {
     public class PolygonWall {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
-        public List<string> rooms { get; set; }
+        public string room_id { get; set; }
         public double thickness { get; set; }
         public string material { get; set; }
     }
