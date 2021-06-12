@@ -2969,6 +2969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ret);
         }
 
+        //used to spawn in a new object at a given position
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = t;
             //find the object in the scene, disregard visibility
@@ -2985,26 +2986,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     return false;
             // }
 
+            //currently we have to hard find the agentManager for some reason? Why is this null?
+            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            if (agentManager == null) {
+                print("but why");
+            }
+
             //make sure point we are moving the object to is valid
-            if (!agentManager.sceneBounds.Contains(position)) {
+            if (!agentManager.SceneBounds.Contains(position)) {
                 return false;
             }
 
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
-
             b.enabled = true;
+
             Vector3 bottomPoint = b.ClosestPoint(targetNegY);
             b.enabled = false;
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint;
-
+            //adding slight offset so it doesn't clip with the floor
+            float offset = distFromSopToBottomPoint + 0.005f;
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
-
 
             //check spawn area, if its clear, then place object at finalPos
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();

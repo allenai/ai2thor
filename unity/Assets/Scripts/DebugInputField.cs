@@ -3424,6 +3424,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
                         break;
                     }
+                case "soih": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnObjectInHouse";
+                        action["prefabName"] = "Dining_Table_16_1";
+                        action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
+                        action["position"] = new Vector3(8f, 10f, 6f);
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

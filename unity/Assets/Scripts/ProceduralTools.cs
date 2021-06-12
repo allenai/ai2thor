@@ -968,6 +968,10 @@ namespace Thor.Procedural {
                 floorGameObject.transform.parent = wallGO.transform;
                 index++;
             }
+
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.SetupScene();
+
             return floorGameObject;
         }
 
@@ -1098,9 +1102,16 @@ namespace Thor.Procedural {
             return assets;
         }
 #endif
-        public static GameObject spawnObjectAtReceptacle(AssetMap<GameObject> goDb, string objectId, SimObjPhysics receptacleSimObj, Vector3 position) {
+
+        //not sure if this is needed, a helper function like this might exist somewhere already?
+        public static AssetMap<GameObject> getAssetMap(){
+        var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+        }
+
+        public static GameObject spawnObjectAtReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, Vector3 position) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
-            var go = goDb.getAsset(objectId);
+            var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
             //GameObject.Instantiate(go, pos, Quaternion.identity);
             var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
@@ -1112,7 +1123,10 @@ namespace Thor.Procedural {
             var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
+            rb.isKinematic= true;
 
+            //ensure bounding boxes for spawned object are defaulted correctly so placeNewObjectAtPoint doesn't FREAK OUT
+            toSpawn.RegenerateBoundingBoxes();
 
             var success = false;
 
@@ -1144,6 +1158,7 @@ namespace Thor.Procedural {
                     }
 
                     if (!cornerCheck) {
+
                         success = false;
                         continue;
                     }
@@ -1152,9 +1167,8 @@ namespace Thor.Procedural {
                 //if all corners were succesful, break out of this loop, don't keep trying
                 if (success) {
                     rb.isKinematic = false;
-                    //run scene setup to grab reference to object and give it objectId
-                    sceneManager.SetupScene();
-                    sceneManager.ResetObjectIdToSimObjPhysics();
+                    sceneManager.Generate_ObjectID(toSpawn);
+                    sceneManager.AddToObjectsInScene(toSpawn);
                     break;
                 }
             }
