@@ -957,7 +957,8 @@ namespace Thor.Procedural {
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
-            receptacleTriggerBox.AddComponent<Contains>();
+            //no need for this, <Contains> component added via setRoomSimObjectPhysics
+            //receptacleTriggerBox.AddComponent<Contains>();
 
             // ProceduralTools.createWalls(room, "Structure");
             Debug.Log($"Structure creation count: {rooms.Count()}");
@@ -969,6 +970,10 @@ namespace Thor.Procedural {
                 index++;
             }
 
+            //generate objectId for newly created wall/floor objects
+            //also add them to objectIdToSimObjPhysics dict so they can be found via
+            //getTargetObject() and other things that use that dict
+            //also add their rigidbodies to the list of all rigid body objects in scene
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.SetupScene();
 
@@ -1113,12 +1118,14 @@ namespace Thor.Procedural {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
-            //GameObject.Instantiate(go, pos, Quaternion.identity);
-            var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
+            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
+
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = position;
-
 
             var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
@@ -1169,6 +1176,7 @@ namespace Thor.Procedural {
                     rb.isKinematic = false;
                     sceneManager.Generate_ObjectID(toSpawn);
                     sceneManager.AddToObjectsInScene(toSpawn);
+                    toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
                     break;
                 }
             }

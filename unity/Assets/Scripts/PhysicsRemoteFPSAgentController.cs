@@ -2969,28 +2969,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ret);
         }
 
-        //used to spawn in a new object at a given position
+        //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = t;
-            //find the object in the scene, disregard visibility
-            // foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            // {
-            //     if(sop.objectID == t.objectID)
-            //     {
-            //         target = sop;
-            //     }
-            // }
-
-            // if(target == null)
-            // {
-            //     return false;
-            // }
-
-            //currently we have to hard find the agentManager for some reason? Why is this null?
-            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            if (agentManager == null) {
-                print("but why");
-            }
 
             //make sure point we are moving the object to is valid
             if (!agentManager.SceneBounds.Contains(position)) {

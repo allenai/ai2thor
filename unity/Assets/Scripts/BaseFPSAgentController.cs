@@ -4154,10 +4154,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // transform.position = room.center + new Vector3(0, maxY + 2.0f, 0);
         }
         public void SpawnObjectInHouse(string prefabName, string targetReceptacle, Vector3 position) {
-            SimObjPhysics floor = getTargetObject(targetReceptacle, true);
-            //should be able to pass in AssetDatabase but for now i'm just getting it here to test without
-            //having to pass this in via input field
-            ProceduralTools.spawnObjectAtReceptacle(ProceduralTools.getAssetMap(), prefabName, floor, position);
+            //grab target receptacle with forceAction true, meaning visibility to agent is ignored
+            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            //currently passing in asset map via helper function in ProceduralTools.cs, I assume we may want to be able to
+            //pass in different maps in the future, so not quite sure what to do with this 
+            ProceduralTools.spawnObjectAtReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
         }
         public void CreateHouse(House house) {
 
