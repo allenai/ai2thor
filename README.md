@@ -173,10 +173,16 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 
 ## Adding an Object to the MCS Scene
 
-1. Create a Unity Prefab and save it in the `unity/Assets/Resources/MCS/` folder.
+Simple Workflow:
+1. Create a Unity Prefab and save it in the `unity/Assets/Addressables/MCS/` folder.
 2. Add the relevant scripts and subcomponents to it (see the section below).
-3. Add it to the `unity/Assets/Resources/MCS/mcs_object_registry.json` file with a unique ID and a path to the prefab.
-4. Rebuild the Unity application.
+3. Add it to the `unity/Assets/Addressables/MCS/mcs_object_registry.json` file with a unique ID and a path to the prefab.
+4. While the object is selected, the check the box at the top of the inspector window to mark object as addressable.
+5. Build the updated Addressables bundle.
+6. Rebuild the Unity application.
+
+For a more detailed walkthrough how adding objects:
+https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2280161285/Adding+Content+To+Addressables
 
 ## Modifying a Prefab to Work in the MCS Scene
 
