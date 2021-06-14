@@ -491,7 +491,7 @@ public class Contains : MonoBehaviour
 	}
 
     public Vector3 FindReceptacleTriggerBoxSize() {
-        GameObject simObj = gameObject.GetComponentInParent<SimObjPhysics>().gameObject;
+        GameObject simObj = myParent;
         // Sometimes the receptacle trigger box has a component between itself and the SimObjPhysics object.
         GameObject parentObject = (gameObject.transform.parent.gameObject.GetInstanceID() == simObj.GetInstanceID()) ?
             null : gameObject.transform.parent.gameObject;
