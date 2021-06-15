@@ -1014,6 +1014,16 @@ namespace Thor.Procedural {
 
                 meshRenderer.material = materialDb.getAsset(room.floor_material);
 
+                Debug.Log("After room " + room.id);
+
+                GameObject.Destroy(subFloorGO.GetComponent<Rigidbody>()); //these meshes dont need a rigidbody, only colliders
+
+                //set up mesh collider to allow raycasts against only the floor inside the room
+                subFloorGO.AddComponent<MeshCollider>();
+                var meshCollider = subFloorGO.GetComponent<MeshCollider>();
+                meshCollider.sharedMesh = mesh;
+                subFloorGO.layer = 12; //raycast to layer 12 so it doesn't interact with any other layer
+
                 subFloorGO.transform.parent = floorGameObject.transform;
             }
 
@@ -1177,7 +1187,12 @@ namespace Thor.Procedural {
                     }
                 }
 
-                if (!cornerCheck) {
+                bool floorCheck = true;
+                //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
+                if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12))
+                    floorCheck = false;
+
+                if (!cornerCheck || !floorCheck) {
                     success = false;
                 }
 
@@ -1223,7 +1238,6 @@ namespace Thor.Procedural {
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
             }
 
-
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -1252,8 +1266,12 @@ namespace Thor.Procedural {
                         }
                     }
 
-                    if (!cornerCheck) {
+                    bool floorCheck = true;
+                    //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
+                    if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12))
+                        floorCheck = false;
 
+                    if (!cornerCheck || !floorCheck) {
                         success = false;
                         continue;
                     }
