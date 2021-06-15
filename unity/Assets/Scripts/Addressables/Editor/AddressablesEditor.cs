@@ -130,35 +130,4 @@ public class AddressablesEditor
         foreach (var directory in Directory.GetDirectories(sourceDir))
             CopyFilesRecursively(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
     }
-
-    private static void BuildAddressablesContent()
-    {
-        AddressableAssetSettings.CleanPlayerContent(
-            AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
-        AddressableAssetSettings.BuildPlayerContent();
-    }
-
-    [InitializeOnLoadMethod]
-    private static void Initialize()
-    {
-        BuildPlayerWindow.RegisterBuildPlayerHandler(BuildPlayerHandler);
-    }
-
-    private static void BuildPlayerHandler(BuildPlayerOptions options)
-    {
-        if (IsHeadlessMode())
-        {
-            BuildAddressablesContent();
-        }
-        BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
-    }
-
-    /// <summary>
-    /// Determines if the build was triggered through headless mode (ex: Jenkins build)
-    /// </summary>
-    /// <returns></returns>
-    public static bool IsHeadlessMode()
-    {
-        return SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null;
-    }
 }
