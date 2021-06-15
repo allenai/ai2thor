@@ -1077,12 +1077,8 @@ namespace Thor.Procedural {
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
 
             foreach (var obj in house.objects) {
-                var k = ProceduralTools.spawnObjectInReceptacle(
-                    ProceduralTools.getAssetMap(),
-                    obj.asset_id, floorGameObject.GetComponentInChildren<SimObjPhysics>(),
-                obj.position,
-                obj.rotation
-                );
+                var k = ProceduralTools.spawnObject(
+                    ProceduralTools.getAssetMap(), obj);
                 Debug.Log("obj " + obj.asset_id + " id " + obj.id + " null " + (k == null));
             }
 
@@ -1130,7 +1126,37 @@ namespace Thor.Procedural {
             return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
 
-        public static GameObject spawnObjectInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, Vector3 position, AxisAngleRotation rotation = null) {
+        //generic function to spawn object in scene. No bounds or collision checks done
+        public static GameObject spawnObject(
+            AssetMap<GameObject> goDb,
+            HouseObject ho) {
+
+            var go = goDb.getAsset(ho.asset_id);
+            var spawned = GameObject.Instantiate(go, ho.position, Quaternion.identity);
+            Vector3 toRot = ho.rotation.axis * ho.rotation.degrees;
+            spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
+
+            var toSpawn = spawned.GetComponent<SimObjPhysics>();
+            Rigidbody rb = spawned.GetComponent<Rigidbody>();
+            rb.isKinematic = ho.kinematic;
+
+            toSpawn.objectID = ho.id;
+            toSpawn.name = ho.id;
+
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.AddToObjectsInScene(toSpawn);
+            toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+
+            return toSpawn.transform.gameObject;
+        }
+
+        public static GameObject spawnObjectInReceptacle(
+            AssetMap<GameObject> goDb, 
+            string prefabName,
+            string objectId,
+            SimObjPhysics receptacleSimObj, 
+            Vector3 position, 
+            AxisAngleRotation rotation = null) {
             var go = goDb.getAsset(prefabName);
             //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
@@ -1141,6 +1167,11 @@ namespace Thor.Procedural {
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
             var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            if (rotation != null) {
+                Vector3 toRot = rotation.axis * rotation.degrees;
+                spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
+            }
+
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -1173,7 +1204,8 @@ namespace Thor.Procedural {
                 //if all corners were succesful, break out of this loop, don't keep trying
                 if (success) {
                     rb.isKinematic = false;
-                    sceneManager.Generate_ObjectID(toSpawn);
+                    toSpawn.objectID = objectId;
+                    toSpawn.name = objectId;
                     sceneManager.AddToObjectsInScene(toSpawn);
                     toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
                 }
@@ -1189,7 +1221,12 @@ namespace Thor.Procedural {
         }
 
         //will attempt to spawn prefabName at random free position in receptacle
-        public static GameObject spawnObjectAtRandomSpotInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj) {
+        public static GameObject spawnObjectInReceptacleRandomly(
+            AssetMap<GameObject> goDb, 
+            string prefabName,
+            string objectId, 
+            SimObjPhysics receptacleSimObj,
+            AxisAngleRotation rotation = null) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
@@ -1198,11 +1235,16 @@ namespace Thor.Procedural {
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
 
-
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
             var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            if (rotation != null) {
+                Vector3 toRot = rotation.axis * rotation.degrees;
+                spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
+            }
+
+
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -1241,7 +1283,8 @@ namespace Thor.Procedural {
                 //if all corners were succesful, break out of this loop, don't keep trying
                 if (success) {
                     rb.isKinematic = false;
-                    sceneManager.Generate_ObjectID(toSpawn);
+                    toSpawn.objectID = objectId;
+                    toSpawn.name = objectId;
                     sceneManager.AddToObjectsInScene(toSpawn);
                     toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
                     break;

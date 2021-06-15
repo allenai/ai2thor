@@ -15,6 +15,7 @@ using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
 using Thor.Procedural;
+using Thor.Procedural.Data;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -2970,13 +2971,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ret);
         }
 
-        //utility function, generate randomly object placed in the scene.
-        //should be able to do this without instantiation and only return positions similar to GetReachable in future
-        public void SpawnObjectInHouseRandomly(string prefabName, string targetReceptacle) {
-            //grab target receptacle with forceAction true, meaning visibility to agent is ignored
+        //utility function, spawn prefab at random position in receptacle
+        //Object will fall into place with physics resolution
+        public void SpawnObjectInReceptacleRandomly(string objectId, string prefabName, string targetReceptacle, AxisAngleRotation rotation) {
             SimObjPhysics target = getTargetObject(targetReceptacle, true);
-            //spawn in the prefab away from the generated house so it doesn't interfere with overlap checks
-            var spawnedObj = ProceduralTools.spawnObjectAtRandomSpotInReceptacle(ProceduralTools.getAssetMap(), prefabName, target);
+            var spawnedObj = ProceduralTools.spawnObjectInReceptacleRandomly(ProceduralTools.getAssetMap(), prefabName, objectId, target, rotation);
             bool result = false;
             //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
             if (spawnedObj != null) {
@@ -2985,15 +2984,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle})";
                 //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
-                actionFinished(result, spawnedObj);
+                actionFinished(result, errorMessage);
             }
         }
 
-        //spawn prefab in a receptacle at target position.
-        public void SpawnObjectInHouse(string prefabName, string targetReceptacle, Vector3 position)
-        {
+        //spawn prefab in a receptacle at target position. Object will fall into place with physics resolution
+        public void SpawnObjectInReceptacle(string objectId, string prefabName, string targetReceptacle, Vector3 position, AxisAngleRotation rotation) {
             SimObjPhysics target = getTargetObject(targetReceptacle, true);
-            var spawnedObj = ProceduralTools.spawnObjectInReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
+            var spawnedObj = ProceduralTools.spawnObjectInReceptacle(ProceduralTools.getAssetMap(), prefabName, objectId, target, position, rotation);
             bool result = false;
             //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
             if (spawnedObj != null) {
@@ -3002,10 +3000,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle}) at position ({position})";
                 //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
-                actionFinished(result, spawnedObj);
+                actionFinished(result, errorMessage);
             }
         }
 
+        //generic spawn object in scene, no physics resoultion or bounds/collision check
+        public void SpawnObjectInScene(HouseObject ho){
+            var spawnedObj = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), ho);
+            actionFinished(true);
+        }
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
         //places an object on the surface directly below the `position` value, with slight offset
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
