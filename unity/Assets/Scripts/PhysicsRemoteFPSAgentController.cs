@@ -3009,6 +3009,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var spawnedObj = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), ho);
             actionFinished(true);
         }
+        
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
         //places an object on the surface directly below the `position` value, with slight offset
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
