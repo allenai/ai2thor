@@ -4198,12 +4198,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CreateHouseFromJson(ProceduralHouse house) {
 
-            var rectRooms = house.rooms.SelectMany(
+            Debug.Log("Start");
+            var rooms = house.rooms.SelectMany(
                 room => house.rooms
             );
 
             var materials = ProceduralTools.GetMaterials();
-
+            Debug.Log("before mat array");
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
                     r => r.ceilings.Select(c => c.material).Concat(
@@ -4211,28 +4212,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         .Concat(
                             house.walls.Select(w => w.material)
                         )
-                )
+                ).Concat(new List<string>() { house.procedural_parameters.ceiling_material })
             );
+            Debug.Log("After matarray " + string.Join(", ", materialIds.Select(id => $"'{id}'")));
+            var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
 
-            var missingIds = materialIds.Where(id => !materials.ContainsKey(id));
+            Debug.Log("null?  " + (missingIds == null));
+            Debug.Log("Before check count " + missingIds.Count());
+            //Debug.Log("Before check " + string.Join(", ", missingIds.Select(id => $"'{id}'")));
             if (missingIds.Count() > 0) {
                 errorMessage = $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component.";
                 actionFinished(false);
                 return;
             }
-
-            var floorColliderThickness = 1.0f;
-            var receptacleHeight = 0.7f;
-
-            ProceduralTools.creatPolygonFloorHouse(
+            Debug.Log("Before Procedural call");
+            var floor = ProceduralTools.creatPolygonFloorHouse(
                 $"Floor",
                 house,
-                materials,
-                $"simobj_{house.id}",
-                receptacleHeight,
-                floorColliderThickness,
-                ""
+                materials
             );
+
 
             actionFinished(true);
         }

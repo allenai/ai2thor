@@ -34,7 +34,7 @@ namespace Thor.Procedural.Data {
         public string room_id { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
-        public double intensity { get; set; }
+        public float intensity { get; set; }
         public Color rgb { get; set; }
         public string asset_id { get; set; }
     }
@@ -42,10 +42,10 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class Margin {
-        public double bottom { get; set; }
-        public double top { get; set; }
-        public double left { get; set; }
-        public double right { get; set; }
+        public float bottom { get; set; }
+        public float top { get; set; }
+        public float left { get; set; }
+        public float right { get; set; }
     }
 
     [Serializable]
@@ -66,18 +66,13 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralParameters {
-        public double floor_collider_thickness { get; set; }
+        public float floor_collider_thickness { get; set; }
+        public float receptacle_height { get; set; }
         public string skybox_id { get; set; }
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
-    }
 
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class Polygon {
-        public double x { get; set; }
-        public double y { get; set; }
-        public double z { get; set; }
+        public string ceiling_material { get; set; }
     }
 
     [Serializable]
@@ -94,7 +89,7 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string type { get; set; }
         public string floor_material { get; set; }
-        // public double y { get; set; }
+        // public float y { get; set; }
         public List<Vector3> floor_polygon { get; set; }
         public List<Ceiling> ceilings { get; set; }
         public List<RoomHierarchy> rooms = null;
@@ -110,8 +105,9 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
         public string room_id { get; set; }
-        public double thickness { get; set; }
+        public float thickness { get; set; }
         public string material { get; set; }
+        public bool empty { get; set; }
     }
 
     [Serializable]
@@ -179,7 +175,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class Roof {
-        public double thickness { get; set; }
+        public float thickness { get; set; }
         public string material { get; set; }
         public string asset_id { get; set; }
     }

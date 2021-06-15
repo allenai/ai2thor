@@ -3425,9 +3425,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
-                        action["action"] = "CreateHouse";
+                        action["action"] = "CreateHouseFromJson";
 
-                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
+                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house_full.json");
                         Debug.Log($"jjson: {jsonStr}");
 
                         JObject obj = JObject.Parse(jsonStr);
@@ -3461,7 +3461,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "SpawnObjectInHouse";
                         action["prefabName"] = "Dining_Table_16_1";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
-                        action["position"] = new Vector3(5f,0.0006076097f,8.15f);
+                        action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
