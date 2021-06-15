@@ -157,7 +157,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         ContainedObjectReferences.Remove(t);
     }
 
-
+    public void RegenerateBoundingBoxes() {
+        regenerateBoundingBoxes();
+    }
+    
     private void regenerateBoundingBoxes() {
 
         Vector3 position = this.gameObject.transform.position;

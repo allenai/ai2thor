@@ -14,6 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
+using Thor.Procedural;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -2262,7 +2263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if passed in length is 0, don't return feedback cause not all actions need that
                 else {
                     DefaultAgentHand();
-                    actionFinished(true, "object settled after: " + (Time.time - startTime));
+                    actionFinished(true, sop.transform.position);
                 }
             } else {
                 errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
@@ -2969,42 +2970,66 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ret);
         }
 
+        //utility function, generate randomly object placed in the scene.
+        //should be able to do this without instantiation and only return positions similar to GetReachable in future
+        public void SpawnObjectInHouseRandomly(string prefabName, string targetReceptacle) {
+            //grab target receptacle with forceAction true, meaning visibility to agent is ignored
+            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            //spawn in the prefab away from the generated house so it doesn't interfere with overlap checks
+            var spawnedObj = ProceduralTools.spawnObjectAtRandomSpotInReceptacle(ProceduralTools.getAssetMap(), prefabName, target);
+            bool result = false;
+            //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
+            if (spawnedObj != null) {
+                result = true;
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: spawnedObj.GetComponent<SimObjPhysics>(), length: 0, useTimeout: false));
+            } else {
+                errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle})";
+                //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
+                actionFinished(result, spawnedObj);
+            }
+        }
+
+        //spawn prefab in a receptacle at target position.
+        public void SpawnObjectInHouse(string prefabName, string targetReceptacle, Vector3 position)
+        {
+            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            var spawnedObj = ProceduralTools.spawnObjectInReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
+            bool result = false;
+            //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
+            if (spawnedObj != null) {
+                result = true;
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: spawnedObj.GetComponent<SimObjPhysics>(), length: 0, useTimeout: false));
+            } else {
+                errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle}) at position ({position})";
+                //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
+                actionFinished(result, spawnedObj);
+            }
+        }
+
+        //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
+        //places an object on the surface directly below the `position` value, with slight offset
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = t;
-            //find the object in the scene, disregard visibility
-            // foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            // {
-            //     if(sop.objectID == t.objectID)
-            //     {
-            //         target = sop;
-            //     }
-            // }
-
-            // if(target == null)
-            // {
-            //     return false;
-            // }
 
             //make sure point we are moving the object to is valid
-            if (!agentManager.sceneBounds.Contains(position)) {
+            if (!agentManager.SceneBounds.Contains(position)) {
                 return false;
             }
 
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
-
             b.enabled = true;
+
             Vector3 bottomPoint = b.ClosestPoint(targetNegY);
             b.enabled = false;
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint;
-
+            //adding slight offset so it doesn't clip with the floor
+            float offset = distFromSopToBottomPoint + 0.00001f;
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
-
 
             //check spawn area, if its clear, then place object at finalPos
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();

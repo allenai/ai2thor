@@ -936,8 +936,6 @@ namespace Thor.Procedural {
                 rectangleFloor = floor
             };
 
-
-
             var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(roomCluster);
             visibilityPoints.transform.parent = floorGameObject.transform;
 
@@ -954,10 +952,7 @@ namespace Thor.Procedural {
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
             }
 
-
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
-
-            receptacleTriggerBox.AddComponent<Contains>();
 
             // ProceduralTools.createWalls(room, "Structure");
             Debug.Log($"Structure creation count: {rooms.Count()}");
@@ -968,6 +963,14 @@ namespace Thor.Procedural {
                 floorGameObject.transform.parent = wallGO.transform;
                 index++;
             }
+
+            //generate objectId for newly created wall/floor objects
+            //also add them to objectIdToSimObjPhysics dict so they can be found via
+            //getTargetObject() and other things that use that dict
+            //also add their rigidbodies to the list of all rigid body objects in scene
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.SetupScene();
+
             return floorGameObject;
         }
 
@@ -1001,7 +1004,6 @@ namespace Thor.Procedural {
             var wallsMaxY = wallPoints.Max(p => p.y);
             var wallsMaxHeight = walls.Max(w => w.height);
 
-
             var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
             for (int i = 0; i < house.rooms.Count(); i++) {
@@ -1017,10 +1019,8 @@ namespace Thor.Procedural {
                 subFloorGO.transform.parent = floorGameObject.transform;
             }
 
-
             // var minPoint = mesh.vertices[0];
             // var maxPoint = mesh.vertices[2];
-
 
             var boundingBox = getRoomRectangle(house.rooms.SelectMany(r => r.floor_polygon));
             var dimension = boundingBox.max - boundingBox.max;
@@ -1052,10 +1052,7 @@ namespace Thor.Procedural {
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
             }
 
-
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
-
-            receptacleTriggerBox.AddComponent<Contains>();
 
             // ProceduralTools.createWalls(room, "Structure");
             Debug.Log($"Structure creation count: {house.rooms.Count()}");
@@ -1068,6 +1065,14 @@ namespace Thor.Procedural {
             //     index++;
             // }
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
+
+            //generate objectId for newly created wall/floor objects
+            //also add them to objectIdToSimObjPhysics dict so they can be found via
+            //getTargetObject() and other things that use that dict
+            //also add their rigidbodies to the list of all rigid body objects in scene
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.SetupScene();
+
             return floorGameObject;
         }
 
@@ -1098,21 +1103,92 @@ namespace Thor.Procedural {
             return assets;
         }
 #endif
-        public static GameObject spawnObjectAtReceptacle(AssetMap<GameObject> goDb, string objectId, SimObjPhysics receptacleSimObj, Vector3 position) {
-            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
-            var go = goDb.getAsset(objectId);
-            var pos = spawnCoordinates.Shuffle_().First();
-            //GameObject.Instantiate(go, pos, Quaternion.identity);
-            var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+
+        //not sure if this is needed, a helper function like this might exist somewhere already?
+        public static AssetMap<GameObject> getAssetMap(){
+        var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+        }
+
+        public static GameObject spawnObjectInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, Vector3 position) {
+            var go = goDb.getAsset(prefabName);
+            //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
+            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            var initialSpawnPosition = position;
-
+            var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z);;
 
             var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
+            rb.isKinematic= true;
 
+            //ensure bounding boxes for spawned object are defaulted correctly so placeNewObjectAtPoint doesn't FREAK OUT
+            toSpawn.RegenerateBoundingBoxes();
+
+            var success = false;
+
+            if (fpsAgent.placeNewObjectAtPoint(toSpawn, position)) {
+                success = true;
+                List<Vector3> corners = GetCorners(toSpawn);
+                //this only attempts to check the first ReceptacleTriggerBox of the receptacle, does not handle multiple receptacle boxes
+                Contains con = receptacleSimObj.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
+                bool cornerCheck = true;
+                foreach (Vector3 p in corners) {
+                    if (!con.CheckIfPointIsAboveReceptacleTriggerBox(p)) {
+                        cornerCheck = false;
+                        //this position would cause object to fall off table
+                        //double back and reset object to try again with another point
+                        spawned.transform.position = initialSpawnPosition;
+                        break;
+                    }
+                }
+
+                if (!cornerCheck) {
+                    success = false;
+                }
+
+                //if all corners were succesful, break out of this loop, don't keep trying
+                if (success) {
+                    rb.isKinematic = false;
+                    sceneManager.Generate_ObjectID(toSpawn);
+                    sceneManager.AddToObjectsInScene(toSpawn);
+                    toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+                }
+            }
+
+            //if after trying all spawn points, it failed to position, delete object from scene and return null
+            if(!success) {
+                UnityEngine.Object.Destroy(toSpawn.transform.gameObject);
+                return null;
+            }
+
+            return toSpawn.transform.gameObject;
+        }
+
+        //will attempt to spawn prefabName at random free position in receptacle
+        public static GameObject spawnObjectAtRandomSpotInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj) {
+            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
+            var go = goDb.getAsset(prefabName);
+            var pos = spawnCoordinates.Shuffle_().First();
+            //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
+            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
+
+
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z);;
+
+            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var toSpawn = spawned.GetComponent<SimObjPhysics>();
+            Rigidbody rb = spawned.GetComponent<Rigidbody>();
+            rb.isKinematic= true;
+
+            //ensure bounding boxes for spawned object are defaulted correctly so placeNewObjectAtPoint doesn't FREAK OUT
+            toSpawn.RegenerateBoundingBoxes();
 
             var success = false;
 
@@ -1120,17 +1196,9 @@ namespace Thor.Procedural {
                 //place object at the given point, this also checks the spawn area to see if its clear
                 //if not clear, it will return false
                 if (fpsAgent.placeNewObjectAtPoint(toSpawn, spawnCoordinates[i])) {
-                    //we set success to true, if one of the corners doesn't fit on the table
-                    //this will be switched to false and will be returned at the end
                     success = true;
-
-                    //double check if all corners of spawned object's bounding box are
-                    //above the targetReceptacle table
-                    //note this only accesses the very first receptacle trigger box, so
-                    //for EXPERIMENT ROOM TABLES make sure there is only one
-                    //receptacle trigger box on the square table
                     List<Vector3> corners = GetCorners(toSpawn);
-
+                    //this only attempts to check the first ReceptacleTriggerBox of the receptacle, does not handle multiple receptacle boxes
                     Contains con = receptacleSimObj.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
                     bool cornerCheck = true;
                     foreach (Vector3 p in corners) {
@@ -1144,6 +1212,7 @@ namespace Thor.Procedural {
                     }
 
                     if (!cornerCheck) {
+
                         success = false;
                         continue;
                     }
@@ -1152,14 +1221,20 @@ namespace Thor.Procedural {
                 //if all corners were succesful, break out of this loop, don't keep trying
                 if (success) {
                     rb.isKinematic = false;
-                    //run scene setup to grab reference to object and give it objectId
-                    sceneManager.SetupScene();
-                    sceneManager.ResetObjectIdToSimObjPhysics();
+                    sceneManager.Generate_ObjectID(toSpawn);
+                    sceneManager.AddToObjectsInScene(toSpawn);
+                    toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
                     break;
                 }
             }
 
-            return null;
+            //if after trying all spawn points, it failed to position, delete object from scene and return null
+            if(!success) {
+                UnityEngine.Object.Destroy(toSpawn.transform.gameObject);
+                return null;
+            }
+
+            return toSpawn.transform.gameObject;
         }
 
         private static List<Vector3> GetCorners(SimObjPhysics sop) {

@@ -242,7 +242,13 @@ public class AgentManager : MonoBehaviour {
         if (action.alwaysReturnVisibleRange) {
             ((PhysicsRemoteFPSAgentController)primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
         }
-        print("start addAgents");
+        //if multi agent requested, add duplicates of primary agent now
+        //note: for Houses, adding multiple agents in will need to be done differently as currently
+        //initializing additional agents assumes the scene is already setup, and Houses initialize the 
+        //primary agent floating in space, then generates the house, then teleports the primary agent.
+        //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
+        //agents, which won't work if we initialize the agent(s) before the scene exists
+        if(!action.procedural)
         StartCoroutine(addAgents(action));
 
     }
@@ -1816,6 +1822,8 @@ public class ServerAction {
     // the mass threshold for how massive a pickupable/moveable sim object needs to be
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
+
+    public bool procedural = false;
 
 
     public SimObjType ReceptableSimObjType() {
