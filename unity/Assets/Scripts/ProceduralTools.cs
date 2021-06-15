@@ -936,8 +936,6 @@ namespace Thor.Procedural {
                 rectangleFloor = floor
             };
 
-
-
             var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(roomCluster);
             visibilityPoints.transform.parent = floorGameObject.transform;
 
@@ -954,11 +952,7 @@ namespace Thor.Procedural {
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
             }
 
-
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
-
-            //no need for this, <Contains> component added via setRoomSimObjectPhysics
-            //receptacleTriggerBox.AddComponent<Contains>();
 
             // ProceduralTools.createWalls(room, "Structure");
             Debug.Log($"Structure creation count: {rooms.Count()}");
@@ -1114,7 +1108,8 @@ namespace Thor.Procedural {
         return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
 
-        public static GameObject spawnObjectAtReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, Vector3 position) {
+        //will attempt to spawn prefabName at random free position in receptacle
+        public static GameObject spawnObjectAtRandomSpotInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, Vector3 position) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
@@ -1181,7 +1176,13 @@ namespace Thor.Procedural {
                 }
             }
 
-            return null;
+            //if after trying all spawn points, it failed to position, delete object from scene and return null
+            if(!success) {
+                UnityEngine.Object.Destroy(toSpawn.transform.gameObject);
+                return null;
+            }
+
+            return toSpawn.transform.gameObject;
         }
 
         private static List<Vector3> GetCorners(SimObjPhysics sop) {

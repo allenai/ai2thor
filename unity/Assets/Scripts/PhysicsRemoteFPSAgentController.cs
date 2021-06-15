@@ -14,6 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
+using Thor.Procedural;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -2262,7 +2263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if passed in length is 0, don't return feedback cause not all actions need that
                 else {
                     DefaultAgentHand();
-                    actionFinished(true, "object settled after: " + (Time.time - startTime));
+                    actionFinished(true, sop.transform.position);
                 }
             } else {
                 errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
@@ -2969,7 +2970,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ret);
         }
 
+        //utility function, generate randomly object placed in the scene.
+        //should be able to do this without instantiation and only return positions similar to GetReachable in future
+        public void SpawnObjectInHouseRandomly(string prefabName, string targetReceptacle) {
+            //grab target receptacle with forceAction true, meaning visibility to agent is ignored
+            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            //spawn in the prefab away from the generated house so it doesn't interfere with overlap checks
+            Vector3 position = new Vector3(target.transform.position.x, target.transform.position.y + 100f, target.transform.position.z);
+            var spawnedObj = ProceduralTools.spawnObjectAtRandomSpotInReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
+            bool result = false;
+            //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
+            if (spawnedObj != null) {
+                result = true;
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: spawnedObj.GetComponent<SimObjPhysics>(), length: 0, useTimeout: false));
+            } else {
+                errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle})";
+                //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
+                actionFinished(result, spawnedObj);
+            }
+
+            //delete objects that failed to spawn
+        }
+
+        //place object at given position
+        //find floor auto?
+        //pass in return from SpawnObjectInHouseRandomly
+        public void SpawnObjectInHouse()
+        {
+
+        }
+
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
+        //places an object on the surface directly below the `position` value, with slight offset
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = t;
 
@@ -2989,7 +3021,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
             //adding slight offset so it doesn't clip with the floor
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint + 0.00001f;
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
 
