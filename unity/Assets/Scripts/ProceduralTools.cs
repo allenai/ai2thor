@@ -1004,7 +1004,6 @@ namespace Thor.Procedural {
             var wallsMaxY = wallPoints.Max(p => p.y);
             var wallsMaxHeight = walls.Max(w => w.height);
 
-
             var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
             for (int i = 0; i < house.rooms.Count(); i++) {
@@ -1020,10 +1019,8 @@ namespace Thor.Procedural {
                 subFloorGO.transform.parent = floorGameObject.transform;
             }
 
-
             // var minPoint = mesh.vertices[0];
             // var maxPoint = mesh.vertices[2];
-
 
             var boundingBox = getRoomRectangle(house.rooms.SelectMany(r => r.floor_polygon));
             var dimension = boundingBox.max - boundingBox.max;
@@ -1055,10 +1052,7 @@ namespace Thor.Procedural {
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
             }
 
-
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
-
-            receptacleTriggerBox.AddComponent<Contains>();
 
             // ProceduralTools.createWalls(room, "Structure");
             Debug.Log($"Structure creation count: {house.rooms.Count()}");
@@ -1071,6 +1065,14 @@ namespace Thor.Procedural {
             //     index++;
             // }
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
+
+            //generate objectId for newly created wall/floor objects
+            //also add them to objectIdToSimObjPhysics dict so they can be found via
+            //getTargetObject() and other things that use that dict
+            //also add their rigidbodies to the list of all rigid body objects in scene
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.SetupScene();
+
             return floorGameObject;
         }
 
