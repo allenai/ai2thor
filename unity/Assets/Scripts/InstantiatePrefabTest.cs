@@ -12,11 +12,12 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
 #if UNITY_EDITOR
     private bool m_Started = false;
-#endif
-
     Vector3 gizmopos;
     Vector3 gizmoscale;
     Quaternion gizmoquaternion;
+#endif
+
+
     private float yoffset = 0.005f; // y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
