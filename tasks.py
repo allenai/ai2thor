@@ -3413,7 +3413,7 @@ class {encoded_class_name}:
         
 
 @task
-def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mode=False, local_build=False):
+def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mode=False, local_build=False):
     import ai2thor.controller
     import random
     import json
@@ -3429,6 +3429,7 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mod
         local_build=local_build,
         start_unity=False if editor_mode else True,
         scene="procedural", gridSize=0.25,
+        procedural = True,
         width=width,
         height=height,
         fieldOfView=fov,
@@ -3547,10 +3548,10 @@ def create_json(ctx, file_path, output=None):
             {
                 "id": "room_{}".format(room_i),
                 "type": "",
-                "material": room['rectangleFloor']['materialId'],
+                "floor_material": room['rectangleFloor']['materialId'],
                 "children": [],
                 "ceilings": [],
-                "polygon": walls_to_floor_poly(room["walls"])}
+                "floor_polygon": walls_to_floor_poly(room["walls"])}
             for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
 
         ]
@@ -3562,6 +3563,10 @@ def create_json(ctx, file_path, output=None):
             'walls': walls,
             'procedural_parameters': {
                 'ceiling_material': obj['ceilingMaterialId'],
+                "floor_collider_thickness": 1.0,
+                "receptacle_height": 0.7,
+                "skybox_id": "Sky1",
+                "lights": []
             }
         }
 
@@ -3572,3 +3577,84 @@ def create_json(ctx, file_path, output=None):
                 json.dump(house, fw, indent=4, sort_keys=True)
 
 
+@task
+def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False):
+    import ai2thor.controller
+    import random
+    import json
+    import os
+    import time
+
+    print(os.getcwd())
+    width = 300
+    height = 300
+    fov = 100
+    n = 20
+    import os
+    from pprint import pprint
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=local_build,
+        start_unity=False if editor_mode else True,
+        scene="procedural", gridSize=0.25,
+        procedural=True,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    # print(
+    #     "constoller.last_action Agent Pos: {}".format(
+    #         controller.last_event.metadata["agent"]["position"]
+    #     )
+    # )
+
+    # evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
+
+    # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+    #
+    # print(evt.metadata["lastActionSuccess"])
+    # print(evt.metadata["errorMessage"])
+    #
+    # reachable_pos = evt.metadata["actionReturn"]
+    #
+    # print(evt.metadata["actionReturn"])
+    print(os.getcwd())
+    with open(file_path, "r") as f:
+        obj = json.load(f)
+
+        # obj['walls'] = [wall for wall in obj['walls'] if wall['room_id'] == room_id]
+        # obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
+        obj['objects'] = []
+
+        pprint(obj)
+        evt = controller.step(
+            dict(
+                action="CreateHouseFromJson",
+                house=obj
+            )
+        )
+
+        evt = controller.step(dict(
+            action="TeleportFull", x=4.0, y=0.9010001, z=4.0, rotation=dict(x=0, y=0, z=0),
+            horizon = 30, standing = True, forceAction = True
+        ))
+        # dict("axis" = dict(x=0, y=1.0, z=0), "degrees": 90)
+
+        # SpawnObjectInReceptacleRandomly(string objectId, string prefabName, string targetReceptacle, AxisAngleRotation rotation)
+        evt = controller.step(dict(
+            action="SpawnObjectInReceptacleRandomly",
+            objectId="table_1",
+            prefabName="Coffee_Table_211_1",
+            targetReceptacle="Floor|+00.00|+00.00|+00.00",
+
+            rotation=dict(axis=dict(x=0, y=1.0, z=0), degrees=90)
+        ))
+        print(evt.metadata['lastActionSuccess'])
+        print(evt.metadata['errorMessage'])
+        for i in range(n):
+            controller.step("MoveAhead")
+            time.sleep(0.2)

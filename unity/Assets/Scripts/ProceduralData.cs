@@ -161,15 +161,15 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class HouseObject {
-        public string id { get; set; }
+        public string id { get; set; } //set to SimObjPhysics.objectId
         public Vector3 position { get; set; }
         public AxisAngleRotation rotation { get; set; }
-        public bool movable { get; set; }
+        public bool kinematic { get; set; } //should the rigidbody be kinematic or not
         public BoundingBox bounding_box { get; set; }
         public string room { get; set; }
         public List<object> children { get; set; }
         public List<Taxonomy> types { get; set; }
-        public string asset_id { get; set; }
+        public string asset_id { get; set; } //name of prefab asset from asset database
     }
 
     [Serializable]

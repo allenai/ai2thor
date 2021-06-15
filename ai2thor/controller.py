@@ -647,6 +647,15 @@ class Controller(object):
                 + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
             )
 
+        if (
+            scene in self.procedural_scenes()
+            and self.initialization_parameters.get("procedural", False)
+            != True
+        ):
+            warnings.warn(
+                "Procedural scene should be initialized with `procedural=True` parameter"
+            )
+
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
@@ -694,6 +703,10 @@ class Controller(object):
             for i in range(low, high):
                 scenes.append("FloorPlan%s_physics" % i)
         return scenes
+
+    @lru_cache()
+    def procedural_scenes(self):
+        return ['procedural']
 
     @lru_cache()
     def robothor_scenes(self, include_train=True, include_val=True):
