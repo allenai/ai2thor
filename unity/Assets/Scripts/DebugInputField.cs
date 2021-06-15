@@ -3448,11 +3448,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
                         break;
                     }
-                case "soih": {
+                case "soihr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnObjectInHouseRandomly";
                         action["prefabName"] = "Dining_Table_16_1";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "soih": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnObjectInHouse";
+                        action["prefabName"] = "Dining_Table_16_1";
+                        action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
+                        action["position"] = new Vector3(5f,0.0006076097f,8.15f);
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }

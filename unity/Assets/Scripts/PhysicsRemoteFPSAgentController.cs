@@ -2976,8 +2976,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //grab target receptacle with forceAction true, meaning visibility to agent is ignored
             SimObjPhysics target = getTargetObject(targetReceptacle, true);
             //spawn in the prefab away from the generated house so it doesn't interfere with overlap checks
-            Vector3 position = new Vector3(target.transform.position.x, target.transform.position.y + 100f, target.transform.position.z);
-            var spawnedObj = ProceduralTools.spawnObjectAtRandomSpotInReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
+            var spawnedObj = ProceduralTools.spawnObjectAtRandomSpotInReceptacle(ProceduralTools.getAssetMap(), prefabName, target);
             bool result = false;
             //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
             if (spawnedObj != null) {
@@ -2988,16 +2987,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
                 actionFinished(result, spawnedObj);
             }
-
-            //delete objects that failed to spawn
         }
 
-        //place object at given position
-        //find floor auto?
-        //pass in return from SpawnObjectInHouseRandomly
-        public void SpawnObjectInHouse()
+        //spawn prefab in a receptacle at target position.
+        public void SpawnObjectInHouse(string prefabName, string targetReceptacle, Vector3 position)
         {
-
+            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            var spawnedObj = ProceduralTools.spawnObjectInReceptacle(ProceduralTools.getAssetMap(), prefabName, target, position);
+            bool result = false;
+            //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
+            if (spawnedObj != null) {
+                result = true;
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: spawnedObj.GetComponent<SimObjPhysics>(), length: 0, useTimeout: false));
+            } else {
+                errorMessage = $"object ({prefabName}) could not find free space to spawn in ({targetReceptacle}) at position ({position})";
+                //if spawnedObj null, that means the random spawn failed because it couldn't find a free position
+                actionFinished(result, spawnedObj);
+            }
         }
 
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
