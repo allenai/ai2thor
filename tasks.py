@@ -116,9 +116,14 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
 
     project_path = os.path.join(os.getcwd(), unity_path)
 
+    # osxintel64 is not a BuildTarget
+    build_target_map = dict(OSXIntel64="OSXUniversal")
+
+    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
+    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -625,26 +630,6 @@ def push_pip_commit(context):
 
 
 @task
-def build_cloudrendering(context):
-    # XXX check for local changes
-    arch = 'CloudRendering'
-    commit_id = git_commit_id()
-    unity_path = "unity"
-    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
-    build_dir = os.path.join("builds", build_name)
-    build_path = build_dir + ".zip"
-    build_info = {}
-    build_info["log"] = "%s.log" % (build_name,)
-    _build(unity_path, arch, build_dir, build_name, {})
-    build_pip_commit()
-
-@task
-def build_deploy_cloudrendering(context):
-    pass
-    # ci_build_arch
-    # build_pip_commit
-
-@task
 def build_pip_commit(context):
 
     commit_id = git_commit_id()
@@ -1084,6 +1069,10 @@ def ci_build(context):
 @task
 def build_cloudrendering(context):
     # XXX check for local changes
+
+    global _unity_version
+    _unity_version = lambda: "2021.2.0a14"
+
     arch = "CloudRendering"
     commit_id = git_commit_id()
     unity_path = "unity"
@@ -1093,7 +1082,7 @@ def build_cloudrendering(context):
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
     _build(unity_path, arch, build_dir, build_name, {})
-    build_pip_commit()
+    build_pip_commit(context)
 
 
 @task
