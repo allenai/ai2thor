@@ -142,7 +142,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class AxisAngleRotation {
         public Vector3 axis;
-        public int degrees;
+        public float degrees;
     }
 
     [Serializable]

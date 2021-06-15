@@ -864,7 +864,7 @@ namespace Thor.Procedural {
 
             var minPoint = new Vector3(polygonPoints.Min(c => c.x), minY, polygonPoints.Min(c => c.z));
             var maxPoint = new Vector3(polygonPoints.Max(c => c.x), minY, polygonPoints.Max(c => c.z));
-            // Debug.Log(" min " + minPoint + " max " + maxPoint);
+
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
 
@@ -954,10 +954,7 @@ namespace Thor.Procedural {
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
-            // ProceduralTools.createWalls(room, "Structure");
-            Debug.Log($"Structure creation count: {rooms.Count()}");
             var index = 0;
-            //Debug.Log($" Room {rooms} roomlen {}");
             foreach (RectangleRoom room in rooms) {
                 var wallGO = ProceduralTools.createWalls(room, materialDb, $"Structure_{index}");
                 floorGameObject.transform.parent = wallGO.transform;
@@ -1007,7 +1004,6 @@ namespace Thor.Procedural {
 
             var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
-            Debug.Log("Floor");
             for (int i = 0; i < house.rooms.Count(); i++) {
                 var room = house.rooms.ElementAt(i);
                 var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
@@ -1015,11 +1011,8 @@ namespace Thor.Procedural {
                 // mesh.subMeshCount
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
-                Debug.Log("room " + room.id + " mat " + room.floor_material);
 
                 meshRenderer.material = materialDb.getAsset(room.floor_material);
-
-                Debug.Log("After room " + room.id);
 
                 subFloorGO.transform.parent = floorGameObject.transform;
             }
@@ -1037,7 +1030,6 @@ namespace Thor.Procedural {
                 // marginWidth = dimension.x * 0.05f,
                 // marginDepth = dimension.z * 0.05f
             };
-            Debug.Log("floor " + floor.center + " wid " + floor.width + " dep " + floor.depth);
             var roomCluster = new RectangleRoom() {
                 rectangleFloor = floor
             };
@@ -1053,7 +1045,6 @@ namespace Thor.Procedural {
 
             // generate ceiling
             if (ceilingMaterialId != "") {
-                Debug.Log("Ceiling");
                 var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, true);
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
@@ -1062,28 +1053,17 @@ namespace Thor.Procedural {
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
-            // ProceduralTools.createWalls(room, "Structure");
-            Debug.Log($"Structure creation count: {house.rooms.Count()}");
             var index = 0;
-            //Debug.Log($" Room {rooms} roomlen {}");
-            // house.walls.
-            // foreach (Room room in house.rooms.Select() ) {
-            //     var wallGO = ProceduralTools.createWalls(room, materialDb, $"Structure_{index}");
-            //     floorGameObject.transform.parent = wallGO.transform;
-            //     index++;
-            // }
 
-            Debug.Log("Walls");
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
 
             foreach (var obj in house.objects) {
                 var k = ProceduralTools.spawnObjectInReceptacle(
                     ProceduralTools.getAssetMap(),
                     obj.asset_id, floorGameObject.GetComponentInChildren<SimObjPhysics>(),
-                obj.position,
-                obj.rotation
+                    obj.position,
+                    obj.rotation
                 );
-                Debug.Log("obj " + obj.asset_id + " id " + obj.id + " null " + (k == null));
             }
 
             //generate objectId for newly created wall/floor objects
@@ -1140,7 +1120,7 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(go, initialSpawnPosition, rotation == null ? Quaternion.identity : Quaternion.AngleAxis(rotation.degrees, rotation.axis));
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -1184,12 +1164,11 @@ namespace Thor.Procedural {
                 UnityEngine.Object.Destroy(toSpawn.transform.gameObject);
                 return null;
             }
-
             return toSpawn.transform.gameObject;
         }
 
         //will attempt to spawn prefabName at random free position in receptacle
-        public static GameObject spawnObjectAtRandomSpotInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj) {
+        public static GameObject spawnObjectAtRandomSpotInReceptacle(AssetMap<GameObject> goDb, string prefabName, SimObjPhysics receptacleSimObj, AxisAngleRotation rotation = null) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
@@ -1202,7 +1181,7 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(go, initialSpawnPosition, rotation == null ? Quaternion.identity : Quaternion.AngleAxis(rotation.degrees, rotation.axis));
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = true;

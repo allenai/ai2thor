@@ -3455,8 +3455,8 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mod
     # print(evt.metadata["actionReturn"])
     print(os.getcwd())
     with open(file_path, "r") as f:
-        json = json.load(f)
-        walls = json["walls"]
+        obj = json.load(f)
+        walls = obj["walls"]
 
         evt = controller.step(
             dict(
@@ -3470,3 +3470,105 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/0.json", editor_mod
 
         for i in range(n):
             controller.step("MoveAhead")
+
+
+# def walls_to_polygon(walls):
+
+
+@task
+def create_json(ctx, file_path, output=None):
+    import json
+    import functools
+    import itertools
+    from pprint import pprint
+
+    add = lambda x, y: x + y
+    sub = lambda x, y: x - y
+
+    def vec3(x, y, z):
+        return {"x": x, "y": y, "z": z}
+
+    def point_wise_2(v1, v2, func):
+        return {k: func(v1[k], v2[k]) for k in ['x', 'y', 'z']}
+
+    def point_wise(v1, func):
+        return {k: func(v1[k]) for k in ['x', 'y', 'z']}
+
+    def sum(vec):
+        return functools.reduce(lambda a, b: a + b, vec.values())
+
+    def sqr_dist(v1, v2):
+        return sum(point_wise(point_wise_2(v1, v2, sub), lambda x: x ** 2))
+
+    def wall_to_poly(wall):
+        return [ wall['p0'], wall['p1'], point_wise_2(wall['p1'], vec3(0, wall['height'], 0), add), point_wise_2(wall['p0'], vec3(0, wall['height'], 0), add)]
+
+
+    def walls_to_floor_poly(walls):
+        result = []
+        wall_list = list(walls)
+        eps = 1e-4
+        eps_sqr = eps ** 2
+
+        result.append(walls[0]['p0'])
+
+        while len(wall_list) != 0:
+            wall = wall_list.pop(0)
+            p1 = wall['p1']
+            wall_list = sorted(wall_list, key=lambda w: sqr_dist(p1, w['p0']))
+            if len(wall_list) != 0:
+                closest = wall_list[0]
+                dist = sqr_dist(p1, closest['p0'])
+                if dist < eps_sqr:
+                    result.append(closest['p0'])
+                else:
+                    return None
+        return result
+
+
+    with open(file_path, "r") as f:
+        obj = json.load(f)
+        walls = \
+        [
+            [
+                {
+                    "id": "wall_{}_{}".format(room_i, wall_indx),
+                    "room_id": "room_{}".format(room_i),
+                    "material": wall['materialId'],
+                    "empty": wall['empty'] if 'empty' in wall else False,
+                    'polygon': wall_to_poly(wall)
+                } for (wall, wall_indx) in zip(room["walls"], range(0, len(room["walls"])))
+            ] for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
+        ]
+
+
+        rooms = \
+        [
+            {
+                "id": "room_{}".format(room_i),
+                "type": "",
+                "material": room['rectangleFloor']['materialId'],
+                "children": [],
+                "ceilings": [],
+                "polygon": walls_to_floor_poly(room["walls"])}
+            for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
+
+        ]
+
+        walls = list(itertools.chain(*walls))
+
+        house = {
+            'rooms': rooms,
+            'walls': walls,
+            'procedural_parameters': {
+                'ceiling_material': obj['ceilingMaterialId'],
+            }
+        }
+
+        pprint(house)
+
+        if output is not None:
+            with open(output, "w") as fw:
+                json.dump(house, fw, indent=4, sort_keys=True)
+
+
