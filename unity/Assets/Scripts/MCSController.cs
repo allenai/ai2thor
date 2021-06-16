@@ -21,6 +21,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float LYING_COLLIDER_HEIGHT = 0.05f;
     public static float LYING_COLLIDER_CENTER = 0.15f;
 
+    //This is an extra collider that slightly clips into the ground to ensure collision with objects of any size.
+    //When lying down, the radius increases to simulate the expansion of the body when horizontal
+    public CapsuleCollider groundObjectsCollider;
+    public static float GROUND_OBJECTS_COLLIDER_RADIUS = 0.5f;
+    public static float GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS = 0.675f;
+
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
@@ -809,8 +815,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RaycastHit hit;
         LayerMask layerMask = ~(1 << 10);
 
+        float rayCastDistanceBuffer = pose == PlayerPose.LYING ? 0 : 0.2f; //this is needed for being below an angled incline structure
         //if raycast hits an object, the agent does not move on y-axis
-        if (direction == Vector3.up && Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight) + 0.1f, layerMask) &&
+        if (direction == Vector3.up && Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight)+rayCastDistanceBuffer, layerMask) &&
             hit.collider.tag == "SimObjPhysics")
         {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
@@ -824,17 +831,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             {
                 cc.height = LYING_COLLIDER_HEIGHT;
                 cc.center = new Vector3(0,LYING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS;
             }
             else if(this.pose == PlayerPose.CRAWLING)
             {
                 cc.height = CRAWLING_COLLIDER_HEIGHT;
                 cc.center = new Vector3(0,CRAWLING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
             }
 
             else
             {
                 cc.height = STANDING_COLLIDER_HEIGHT;
                 cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
+
             }
             //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);

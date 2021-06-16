@@ -881,6 +881,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     break;
             }
 
+            /*
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
@@ -888,9 +889,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 dir,
                 moveMagnitude,
                 1 << 8 | 1 << 10
-            );
+            );*/
 
-            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, sweepResults);
+            Vector3 p1,p2;
+            float radius;
+            CapsuleCastInfoByShootingRayToFloor(out p1, out p2, out radius);
+            RaycastHit[] hits = Physics.CapsuleCastAll(p1, p2, radius, dir, moveMagnitude, 1<<8, QueryTriggerInteraction.Ignore);
+
+            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, hits);
             return hasNoBlockingObjectsInWay;
         }
 
