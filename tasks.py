@@ -950,8 +950,8 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        blacklist_branches = ["vids", "video"]
-        if build and build["branch"] not in blacklist_branches:
+        skip_branches = ["vids", "video", "erick/cloudrendering"]
+        if build and build["branch"] not in skip_branches:
             logger.info(
                 "pending build for %s %s" % (build["branch"], build["commit_id"])
             )
