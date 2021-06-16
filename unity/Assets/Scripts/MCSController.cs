@@ -20,6 +20,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float LYING_POSITION_Y = 0.1f;
     public static float LYING_COLLIDER_HEIGHT = 0.05f;
     public static float LYING_COLLIDER_CENTER = 0.15f;
+    public static float CAPSULE_COLLIDER_RADIUS = 0.251f;
 
     //This is an extra collider that slightly clips into the ground to ensure collision with objects of any size.
     //When lying down, the radius increases to simulate the expansion of the body when horizontal
@@ -277,6 +278,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public void OnSceneChange() {
         pose = PlayerPose.STANDING;
+        CapsuleCollider cc = GetComponent<CapsuleCollider>();
+        cc.height = STANDING_COLLIDER_HEIGHT;
+        cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
+        cc.radius = CAPSULE_COLLIDER_RADIUS;
+        groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
     }
 
     public void MCSCloseObject(ServerAction action) {
