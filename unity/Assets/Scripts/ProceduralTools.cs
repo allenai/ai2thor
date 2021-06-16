@@ -1078,6 +1078,8 @@ namespace Thor.Procedural {
             //also add their rigidbodies to the list of all rigid body objects in scene
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.SetupScene();
+            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            agentManager.ResetSceneBounds();
 
             return floorGameObject;
         }
@@ -1141,11 +1143,11 @@ namespace Thor.Procedural {
         }
 
         public static GameObject spawnObjectInReceptacle(
-            AssetMap<GameObject> goDb, 
+            AssetMap<GameObject> goDb,
             string prefabName,
             string objectId,
-            SimObjPhysics receptacleSimObj, 
-            Vector3 position, 
+            SimObjPhysics receptacleSimObj,
+            Vector3 position,
             AxisAngleRotation rotation = null) {
             var go = goDb.getAsset(prefabName);
             //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
@@ -1171,6 +1173,7 @@ namespace Thor.Procedural {
 
             var success = false;
 
+            Debug.Log("---- placeNewObjectAtPoint check");
             if (fpsAgent.placeNewObjectAtPoint(toSpawn, position)) {
                 success = true;
                 List<Vector3> corners = GetCorners(toSpawn);
@@ -1179,6 +1182,7 @@ namespace Thor.Procedural {
                 bool cornerCheck = true;
                 foreach (Vector3 p in corners) {
                     if (!con.CheckIfPointIsAboveReceptacleTriggerBox(p)) {
+                        Debug.Log("Corner check false");
                         cornerCheck = false;
                         //this position would cause object to fall off table
                         //double back and reset object to try again with another point
@@ -1189,10 +1193,13 @@ namespace Thor.Procedural {
 
                 bool floorCheck = true;
                 //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
-                if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12))
+                if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12)) {
+                    Debug.Log("FloorCheck");
                     floorCheck = false;
+                }
 
                 if (!cornerCheck || !floorCheck) {
+                    Debug.Log("corner || floor");
                     success = false;
                 }
 
@@ -1216,9 +1223,9 @@ namespace Thor.Procedural {
 
         //will attempt to spawn prefabName at random free position in receptacle
         public static GameObject spawnObjectInReceptacleRandomly(
-            AssetMap<GameObject> goDb, 
+            AssetMap<GameObject> goDb,
             string prefabName,
-            string objectId, 
+            string objectId,
             SimObjPhysics receptacleSimObj,
             AxisAngleRotation rotation = null) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
@@ -1250,7 +1257,8 @@ namespace Thor.Procedural {
             for (int i = 0; i < spawnCoordinates.Count; i++) {
                 //place object at the given point, this also checks the spawn area to see if its clear
                 //if not clear, it will return false
-                if (fpsAgent.placeNewObjectAtPoint(toSpawn, spawnCoordinates[i])) {
+                var canPlace = fpsAgent.placeNewObjectAtPoint(toSpawn, spawnCoordinates[i]);
+                if (canPlace) {
                     success = true;
                     List<Vector3> corners = GetCorners(toSpawn);
                     //this only attempts to check the first ReceptacleTriggerBox of the receptacle, does not handle multiple receptacle boxes
@@ -1268,8 +1276,9 @@ namespace Thor.Procedural {
 
                     bool floorCheck = true;
                     //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
-                    if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12))
+                    if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12)) {
                         floorCheck = false;
+                    }
 
                     if (!cornerCheck || !floorCheck) {
                         success = false;
@@ -1293,7 +1302,6 @@ namespace Thor.Procedural {
                 UnityEngine.Object.Destroy(toSpawn.transform.gameObject);
                 return null;
             }
-
             return toSpawn.transform.gameObject;
         }
 

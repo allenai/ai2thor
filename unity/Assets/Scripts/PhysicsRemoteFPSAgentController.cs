@@ -3005,17 +3005,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //generic spawn object in scene, no physics resoultion or bounds/collision check
-        public void SpawnObjectInScene(HouseObject ho){
+        public void SpawnObjectInScene(HouseObject ho) {
             var spawnedObj = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), ho);
             actionFinished(true);
         }
-        
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
         //places an object on the surface directly below the `position` value, with slight offset
         public bool placeNewObjectAtPoint(SimObjPhysics t, Vector3 position) {
             SimObjPhysics target = t;
 
-            //make sure point we are moving the object to is valid
+            // make sure point we are moving the object to is valid
             if (!agentManager.SceneBounds.Contains(position)) {
                 return false;
             }

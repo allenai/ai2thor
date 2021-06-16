@@ -1577,7 +1577,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // if the sim object is moveable or pickupable
-            if (simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0) {
+            if (simObj.IsPickupable || simObj.IsMoveable || (simObj.salientMaterials != null && simObj.salientMaterials.Length > 0)) {
                 // this object should report back mass and salient materials
 
                 string[] salientMaterialsToString = new string[simObj.salientMaterials.Length];

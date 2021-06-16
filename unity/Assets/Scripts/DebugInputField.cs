@@ -3426,8 +3426,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         // AssetDatabase.Refresh();
                         action["action"] = "CreateHouseFromJson";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
 
-                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house_full.json");
+                        path = Application.dataPath + "/Resources/rooms/house_full.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
                         Debug.Log($"jjson: {jsonStr}");
 
                         JObject obj = JObject.Parse(jsonStr);
@@ -3451,10 +3463,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "soirr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnObjectInReceptacleRandomly";
-                        action["prefabName"] = "Dining_Table_16_1";
+                        action["prefabName"] = "Coffee_Table_211_1";
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
-                        action["rotation"] = new AxisAngleRotation(){axis = new Vector3(0, 1, 0), degrees = 45};
+                        action["rotation"] = new AxisAngleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
@@ -3465,7 +3477,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
                         action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
-                        action["rotation"] = new AxisAngleRotation(){axis = new Vector3(0, 1, 0), degrees = 45};
+                        action["rotation"] = new AxisAngleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }

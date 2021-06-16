@@ -604,7 +604,9 @@ public class InstantiatePrefabTest : MonoBehaviour {
     public bool CheckSpawnArea(
         SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand
     ) {
-        return null == ColliderHitByObjectInSpawnArea(simObj, position, rotation, spawningInHand);
+        var hitColliders = ColliderHitByObjectInSpawnArea(simObj, position, rotation, spawningInHand);
+        // Debug.Log("Colliders " + hitColliders.gameObject.name);
+        return null == hitColliders;
     }
 
 #if UNITY_EDITOR

@@ -3626,8 +3626,8 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
     with open(file_path, "r") as f:
         obj = json.load(f)
 
-        # obj['walls'] = [wall for wall in obj['walls'] if wall['room_id'] == room_id]
-        # obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
+        obj['walls'] = [wall for wall in obj['walls'] if wall['room_id'] == room_id]
+        obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
         obj['objects'] = []
 
         pprint(obj)
@@ -3655,6 +3655,11 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         ))
         print(evt.metadata['lastActionSuccess'])
         print(evt.metadata['errorMessage'])
+
+        print(evt.metadata['actionReturn'])
         for i in range(n):
             controller.step("MoveAhead")
-            time.sleep(0.2)
+            time.sleep(0.4)
+        for j in range(6):
+            controller.step("RotateRight")
+            time.sleep(0.7)
