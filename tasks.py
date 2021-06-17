@@ -1117,6 +1117,7 @@ def ci_build_arch(arch, include_private_scenes=False):
 def poll_ci_build(context):
     import requests.exceptions
     import requests
+    print("starting poll")
 
     commit_id = git_commit_id()
 
@@ -1125,7 +1126,7 @@ def poll_ci_build(context):
         missing = False
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
-        if (time.time() - last_emit_time) > 540:
+        if (time.time() - last_emit_time) > 60:
             print(".", end="")
             last_emit_time = time.time()
 
