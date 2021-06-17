@@ -71,11 +71,10 @@ public class JenkinsBuild
         {
             if (args[i] == "-executeMethod")
             {
-                if (i + 4 < args.Length)
+                if (i + 3 <= args.Length)
                 {
                     returnedArgs[0] = args[i + 2];
                     returnedArgs[1] = args[i + 3];
-                    i += 3;
                     return returnedArgs;
                 }
                 else
