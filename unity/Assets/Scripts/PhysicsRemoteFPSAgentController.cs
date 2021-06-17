@@ -1,4 +1,4 @@
-﻿// Copyright Allen Institute for Artificial Intelligence 2017
+// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -7275,20 +7275,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             transform.rotation = oldRotation;
 
             actionFinished(true, objectIdToVisiblePositions);
-        }
-
-        public void DisableAllObjectsOfType(ServerAction action) {
-            string type = action.objectType;
-            if (type == "") {
-                type = action.objectId;
-            }
-
-            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (Enum.GetName(typeof(SimObjType), so.Type) == type) {
-                    so.gameObject.SetActive(false);
-                }
-            }
-            actionFinished(true);
         }
 
         public void StackBooks() {
