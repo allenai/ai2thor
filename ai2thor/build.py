@@ -9,6 +9,8 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
+from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64
+import platform
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,9 @@ PUBLIC_WEBGL_S3_BUCKET = "ai2-thor-webgl-public"
 PRIVATE_S3_BUCKET = "ai2-thor-private"
 PYPI_S3_BUCKET = "ai2-thor-pypi"
 
+LOCAL_BUILD_COMMIT_ID = "local"
+AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64]
+
 COMMIT_ID = None
 try:
     import ai2thor._builds
@@ -24,9 +29,6 @@ try:
     COMMIT_ID = ai2thor._builds.COMMIT_ID
 except ImportError:
     pass
-
-platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
-arch_platform_map = {v: k for k, v in platform_map.items()}
 
 
 def build_name(arch, commit_id, include_private_scenes=False):
@@ -67,6 +69,8 @@ class EditorBuild(object):
 class ExternalBuild(object):
     def __init__(self, executable_path):
         self.executable_path = executable_path
+        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64)
+        self.platform = external_system_platforms[platform.system()]
 
         # assuming that an external build supports both server types
         self.server_types = ["FIFO", "WSGI"]
@@ -82,9 +86,15 @@ class ExternalBuild(object):
 
 
 class Build(object):
-    def __init__(self, arch, commit_id, include_private_scenes, releases_dir=None):
+    def __init__(self, platform, commit_id, include_private_scenes, releases_dir=None):
 
-        self.arch = arch
+        if type(platform) is str:
+            if platform in STR_PLATFORM_MAP:
+                platform = STR_PLATFORM_MAP[platform]
+            else:
+                raise ValueError("Invalid platform: %s" % platform)
+
+        self.platform = platform
         self.commit_id = commit_id
         self.include_private_scenes = include_private_scenes
         self.releases_dir = releases_dir
@@ -136,49 +146,16 @@ class Build(object):
             atomic_write(self.metadata_path, z.read("metadata.json"))
 
     @property
-    def old_executable_path(self):
-        if self.arch == "Linux64":
-            return self.executable_path
-        elif self.arch == "OSXIntel64":
-            return os.path.join(
-                self.base_dir, self.name + ".app", "Contents/MacOS", self.name
-            )
-        else:
-            raise Exception("unable to handle target arch %s" % self.arch)
-
-    def parse_plist(self):
-        import xml.etree.ElementTree as ET
-
-        plist_path = os.path.join(
-            self.base_dir, self.name + ".app", "Contents/Info.plist"
-        )
-
-        with open(plist_path) as f:
-            plist = f.read()
-        root = ET.fromstring(plist)
-
-        keys = [x.text for x in root.findall("dict/key")]
-        values = [x.text for x in root.findall("dict/string")]
-        return dict(zip(keys, values))
-
-    @property
     def base_dir(self):
         return os.path.join(self.releases_dir, self.name)
 
     @property
+    def old_executable_path(self):
+        return self.platform.old_executable_path(self.base_dir, self.name)
+
+    @property
     def executable_path(self):
-        if self.arch == "Linux64":
-            return os.path.join(self.base_dir, self.name)
-        elif self.arch == "OSXIntel64":
-            plist = self.parse_plist()
-            return os.path.join(
-                self.base_dir,
-                self.name + ".app",
-                "Contents/MacOS",
-                plist["CFBundleExecutable"],
-            )
-        else:
-            raise Exception("unable to handle target arch %s" % self.arch)
+        return self.platform.executable_path(self.base_dir, self.name)
 
     @property
     def metadata_path(self):
@@ -215,7 +192,9 @@ class Build(object):
 
     @property
     def name(self):
-        return build_name(self.arch, self.commit_id, self.include_private_scenes)
+        return build_name(
+            self.platform.name(), self.commit_id, self.include_private_scenes
+        )
 
     def unlock(self):
         if self._lock:

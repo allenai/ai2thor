@@ -184,7 +184,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exclude-device", help="exclude a specific GPU device", action="append", type=int)
+    parser.add_argument("--exclude-device", help="exclude a specific GPU device", action="append", type=int, default=[])
     parser.add_argument("command", help="command to be executed", choices=["start", "stop", "print-config"])
     parser.add_argument("display", help="display to be used", nargs="?", type=int, default=0)
     args = parser.parse_args()
