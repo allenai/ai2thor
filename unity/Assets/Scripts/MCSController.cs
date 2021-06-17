@@ -930,11 +930,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
         float radius;
         Vector3 point1, point2;
-        //Determine if we are colliding (or within skin width) of another object
-        //GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
 
         //This method shoots a ray down from the agents head to find the highest point below the agent that is touching the ground and uses that point as the base of the overlap check
         CapsuleCastInfoByShootingRayToFloor(out point1, out point2, out radius);
+        
+        //Determine if we are colliding (or within skin width) of another object
         Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius + (radius*0.5f), 1 << 8);
 
         //we divide by scale here because we are going to expand the scaled collider by this value

@@ -82,11 +82,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected string inputDirection;
 
         //These are for ramp debugging gizmos and helpful for capusle collider visualizations when checking if movement is possible - see OnDrawGizmosSelected()
-        //private Vector3 point1Gizmo;
-        //private Vector3 point2Gizmo;
-        //private float radiusGizmo;
-        //private Vector3 directionGizmo;
-        //private Ray rayGizmo;
+        [Tooltip("This will show the top and bottom of the agent's collider used for any capsule casting methods. A ray is displayed a 45 degree angle from the base of capsule cast for ramp ascension. " +
+        "Another vertical ray is displayed at the base of the agent showing where the agent's height is based on the strucute below.")]
+        public bool showDebugCapsuleGizmos = false;
+        private Vector3 point1Gizmo;
+        private Vector3 point2Gizmo;
+        private float radiusGizmo;
+        private Vector3 directionGizmo;
+        private Ray rayGizmo1;
+        private Ray rayGizmo2;
 
         public bool IsVisible
         {
@@ -879,18 +883,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 default:
                     Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
                     break;
-            }
-
-            /*
-            RaycastHit[] sweepResults = capsuleCastAllForAgent(
-                GetComponent<CapsuleCollider>(),
-                m_CharacterController.skinWidth,
-                transform.position,
-                dir,
-                moveMagnitude,
-                1 << 8 | 1 << 10
-            );*/
-
+            }        
             Vector3 p1,p2;
             float radius;
             CapsuleCastInfoByShootingRayToFloor(out p1, out p2, out radius);
@@ -982,12 +975,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float radius;
             Vector3 p1, p2;
             CapsuleCastInfoByShootingRayToFloor(out p1, out p2, out radius);
+
             //Gizmos debbuging
-            //this.point1Gizmo = p1;
-            //this.point2Gizmo = p2;
-            //this.radiusGizmo = radius;
-            //this.directionGizmo = direction;
-            //Debug.DrawRay(p1, direction, Color.white, 10f, false);
+            this.point1Gizmo = p1;
+            this.point2Gizmo = p2;
+            this.radiusGizmo = radius;
+            this.directionGizmo = direction;
+            this.rayGizmo1 = new Ray(p1, direction);
 
             RaycastHit[] hits = Physics.CapsuleCastAll(p1, p2, radius, direction, length + rayCastBuffer, layerMask, QueryTriggerInteraction.Ignore);
             foreach (RaycastHit point in hits)
@@ -1010,11 +1004,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             radius  = cc.radius * Mathf.Max(transform.localScale.x, transform.localScale.z);
             if (Physics.SphereCast(origin, radius, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore))
             {
-                baseHeight = baseHit.point.y;
-                //Gizmos debbuging
-                //rayGizmo = new Ray();
-                //rayGizmo.direction = Vector3.up;
-                //rayGizmo.origin = baseHit.point;
+                baseHeight = baseHit.point.y;           
+                rayGizmo2 = new Ray(baseHit.point, Vector3.up); //Gizmos Debugging
             }
 
             origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
@@ -3346,12 +3337,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //Radius is the collider radius for both points, direction is the path of the capsule
             //The bottom point is drawn twice, one at its current location, 
             //the second at a point 45 degrees up in the direction of movement with a seperation of movement magnitude
-            //Gizmos.color = Color.white;
-            //Gizmos.DrawWireSphere(point1Gizmo, radiusGizmo);
-            //Gizmos.DrawWireSphere(point1Gizmo + directionGizmo.normalized * 0.1f, radiusGizmo);
-            //Gizmos.color = Color.red;
-            //Gizmos.DrawWireSphere(point2Gizmo, radiusGizmo);
-            //Gizmos.DrawRay(rayGizmo);
+            if(showDebugCapsuleGizmos)
+            {
+                Gizmos.color = Color.white;
+                Gizmos.DrawWireSphere(point1Gizmo, radiusGizmo);
+                Gizmos.DrawWireSphere(point1Gizmo + directionGizmo.normalized * 0.1f, radiusGizmo);
+                Gizmos.DrawWireSphere(point1Gizmo, radiusGizmo);
+                Gizmos.DrawRay(rayGizmo1);
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(point2Gizmo, radiusGizmo);
+                Gizmos.DrawRay(rayGizmo2);
+
+            }
         }
         #endif
 
