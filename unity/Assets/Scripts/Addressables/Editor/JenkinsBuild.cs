@@ -80,6 +80,8 @@ public class JenkinsBuild
                 else
                 {
                     System.Console.WriteLine("[JenkinsBuild] Incorrect Parameters for -executeMethod Format: -executeMethod Build[PLATFORM] <app name> <output dir>");
+                    System.Console.WriteLine("[JenkinsBuild] Parameter 1: " + args[i + 2]);
+                    System.Console.WriteLine("[JenkinsBuild] Parameter 2: " + args[i + 3]);
                     return null;
                 }
             }
