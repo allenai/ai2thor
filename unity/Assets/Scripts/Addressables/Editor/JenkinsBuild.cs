@@ -119,9 +119,11 @@ public class JenkinsBuild
 
     private static void BuildAddressablesContent()
     {
+        System.Console.WriteLine("[JenkinsBuild] Building Addressables");
         AddressableAssetSettings.CleanPlayerContent(
             AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
         AddressableAssetSettings.BuildPlayerContent();
+        System.Console.WriteLine("[JenkinsBuild] Addressables Built!");
     }
 
     private static void BuildProject(string[] scenes, string buildDir, BuildTarget buildTarget, BuildOptions buildOptions)
