@@ -76,6 +76,7 @@ public class JenkinsBuild
                     returnedArgs[0] = args[i + 2];
                     returnedArgs[1] = args[i + 3];
                     i += 3;
+                    return returnedArgs;
                 }
                 else
                 {
