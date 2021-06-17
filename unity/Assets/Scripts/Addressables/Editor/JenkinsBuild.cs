@@ -56,6 +56,13 @@ public class JenkinsBuild
         BuildProject(EnabledScenes, fullPathAndName, buildTarget, BuildOptions.None);
     }
 
+    /// <summary>
+    /// Example:
+    /// -executeMethod JenkinsBuild.BuildLinux
+    /// MCS-AI2-THOR
+    /// ai2thor/unity/Builds/Linux
+    /// </summary>
+    /// <returns></returns>
     private static string[] GetExecuteMethodArguments()
     {
         string[] returnedArgs = new string[] { DEFAULT_BUILD_NAME, DEFAULT_BUILD_DIR};
