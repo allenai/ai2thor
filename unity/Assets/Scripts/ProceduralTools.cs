@@ -1057,6 +1057,10 @@ namespace Thor.Procedural {
             if (ceilingMaterialId != "") {
                 var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, true);
+                
+                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
+                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
+                
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
             }
