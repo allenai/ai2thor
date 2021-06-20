@@ -882,6 +882,7 @@ def pending_travis_build():
             "Content-Type": "application/json",
             "Travis-API-Version": "3",
         },
+        timeout=10,
     )
     for b in res.json()["builds"]:
         tag = None
