@@ -168,8 +168,7 @@ class VideoController(Controller):
                 yield self.step(
                     action="TeleportFull",
                     rotation=y0
-                    + rotateDegrees
-                    * self._linear_to_smooth(i + 1, frames, std_dev=1),
+                    + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                     **p,
                 )
             else:

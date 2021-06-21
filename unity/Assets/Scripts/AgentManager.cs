@@ -53,6 +53,7 @@ public class AgentManager : MonoBehaviour {
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
 
     public bool doResetMaterials = false;
+    public bool doResetColors = false;
 
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
@@ -425,7 +426,9 @@ public class AgentManager : MonoBehaviour {
         float fieldOfView,
         string skyboxColor,
         bool? orthographic,
-        float? orthographicSize
+        float? orthographicSize,
+        float? nearClippingPlane,
+        float? farClippingPlane
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -446,6 +449,27 @@ public class AgentManager : MonoBehaviour {
             if (orthographic == true && orthographicSize != null) {
                 camera.orthographicSize = (float)orthographicSize;
             }
+        }
+
+        //updates camera near and far clipping planes
+        //default to near and far clipping planes of agent camera, which are currently
+        //static values and are not exposed in anything like Initialize
+        if (nearClippingPlane != null) {
+            camera.nearClipPlane = (float)nearClippingPlane;
+        }
+
+        //default to primary agent's near clip plane value
+        else {
+            camera.nearClipPlane = this.primaryAgent.m_Camera.nearClipPlane;
+        }
+
+        if (farClippingPlane != null) {
+            camera.farClipPlane = (float)farClippingPlane;
+        }
+
+        //default to primary agent's far clip plane value
+        else {
+            camera.farClipPlane = this.primaryAgent.m_Camera.farClipPlane;
         }
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
@@ -477,7 +501,9 @@ public class AgentManager : MonoBehaviour {
         float fieldOfView = DEFAULT_FOV,
         string skyboxColor = null,
         bool orthographic = false,
-        float? orthographicSize = null
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -500,7 +526,9 @@ public class AgentManager : MonoBehaviour {
             fieldOfView: fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane
         );
     }
 
@@ -536,7 +564,9 @@ public class AgentManager : MonoBehaviour {
         float? fieldOfView = null,
         string skyboxColor = null,
         bool? orthographic = null,
-        float? orthographicSize = null
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -567,7 +597,9 @@ public class AgentManager : MonoBehaviour {
             fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float)fieldOfView,
             skyboxColor: skyboxColor,
             orthographic: orthographic,
-            orthographicSize: orthographicSize
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane
         );
     }
 
@@ -649,12 +681,21 @@ public class AgentManager : MonoBehaviour {
     public void resetMaterials() {
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
         colorChangeComponent.ResetMaterials();
+        doResetMaterials = false;
+        doResetColors = false;
+    }
+
+    public void resetColors() {
+        ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+        colorChangeComponent.ResetColors();
+        doResetColors = false;
     }
 
     public void Reset(ServerAction response) {
         if (doResetMaterials) {
             resetMaterials();
-            doResetMaterials = false;
+        } else if (doResetColors) {
+            resetColors();
         }
         StartCoroutine(ResetCoroutine(response));
     }
@@ -1311,6 +1352,7 @@ public class ObjectMetadata {
     ///
     public bool canFillWithLiquid;// objects filled with liquids
     public bool isFilledWithLiquid;// is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+    public string fillLiquid; // coffee, wine, water
     ///
     public bool dirtyable;// can toggle object state dirty/clean
     public bool isDirty;// is this object in a dirty or clean state?
@@ -1475,6 +1517,13 @@ public class ObjectTypeCount {
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
 public class ObjectPose {
+
+    public ObjectPose() : this("", new Vector3(), new Vector3()) { }
+    public ObjectPose(string objectName, Vector3 position, Vector3 rotation) {
+        this.objectName = objectName;
+        this.position = position;
+        this.rotation = rotation;
+    }
     public string objectName;
     public Vector3 position;
     public Vector3 rotation;
@@ -1656,7 +1705,7 @@ public class DynamicServerAction {
     public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
-    
+
     // this is primarily used when detecting invalid arguments
     // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a 
     // valid argument for Initialize as well as a global parameter

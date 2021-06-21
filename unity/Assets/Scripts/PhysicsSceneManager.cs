@@ -318,6 +318,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         SetupScene();
         errorMessage = "";
         bool shouldFail = false;
+        GameObject topObject = GameObject.Find("Objects");
         if (objectPoses != null && objectPoses.Length > 0) {
             // Perform object location sets
             SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
@@ -380,6 +381,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.transform.position = objectPose.position;
                 copy.transform.eulerAngles = objectPose.rotation;
                 copy.gameObject.SetActive(true);
+                copy.gameObject.transform.parent = topObject.transform;
 
                 if (placeStationary) {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;

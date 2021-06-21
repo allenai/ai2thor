@@ -95,17 +95,13 @@ def execute_command(controller, command, action_dict_addition):
 
         if "moveSpeed" in action_dict_addition:
             action_dict_addition["speed"] = action_dict_addition["moveSpeed"]
-        controller.step(
-            action="RotateContinuous", degrees=45, **action_dict_addition
-        )
+        controller.step(action="RotateContinuous", degrees=45, **action_dict_addition)
         action_details = dict(
             action="RotateContinuous", degrees=45, **action_dict_addition
         )
     elif command == "ll":
         action_dict_addition = copy.copy(action_dict_addition)
-        controller.step(
-            action="RotateContinuous", degrees=-45, **action_dict_addition
-        )
+        controller.step(action="RotateContinuous", degrees=-45, **action_dict_addition)
         action_details = dict(
             action="RotateContinuous", degrees=-45, **action_dict_addition
         )
@@ -114,9 +110,7 @@ def execute_command(controller, command, action_dict_addition):
         action_details = dict(action="MoveAhead", **action_dict_addition)
 
     elif command == "r":
-        controller.step(
-            action="RotateRight", degrees=45, **action_dict_addition
-        )
+        controller.step(action="RotateRight", degrees=45, **action_dict_addition)
         action_details = dict(action="RotateRight", degrees=45, **action_dict_addition)
     elif command == "l":
         controller.step(action="RotateLeft", degrees=45, **action_dict_addition)
@@ -160,7 +154,6 @@ def execute_command(controller, command, action_dict_addition):
         action_details = dict(
             action="MoveArmBase", y=base_position["h"], **action_dict_addition
         )
-
 
     return action_details
 
