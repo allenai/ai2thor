@@ -228,6 +228,53 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
+    protected IEnumerator resetArmTargetPositionAsLastStep(IEnumerator steps) {
+        while (steps.MoveNext()) {
+            yield return steps.Current;
+        }
+        armTarget.position = handCameraTransform.transform.position;
+    }
+
+    public void moveArmRelative(
+        PhysicsRemoteFPSAgentController controller,
+        Vector3 offset,
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStart = false,
+        string coordinateSpace = "arm",
+        bool restrictTargetPosition = false,
+        bool disableRendering = false
+    ) {
+        Vector3 offsetWorldPos = Vector3.zero;
+        switch (coordinateSpace) {
+            case "world":
+                // world space, can be used to move directly toward positions
+                // returned by sim objects
+                offsetWorldPos = offset;
+                break;
+            case "wrist":
+                // space relative to base of the wrist, where the camera is
+                offsetWorldPos = handCameraTransform.TransformPoint(offset) - handCameraTransform.TransformPoint(Vector3.zero);
+                break;
+            case "armBase":
+                // space relative to the root of the arm, joint 1
+                offsetWorldPos = this.transform.TransformPoint(offset) - this.transform.TransformPoint(Vector3.zero);
+                break;
+            default:
+                throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
+        }
+        moveArmTarget(
+            controller: controller,
+            target: armTarget.position + offsetWorldPos,
+            unitsPerSecond: unitsPerSecond,
+            fixedDeltaTime: fixedDeltaTime,
+            returnToStart: returnToStart,
+            coordinateSpace: "world",
+            restrictTargetPosition: restrictTargetPosition,
+            disableRendering: disableRendering
+        );
+    }
+
     public void moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
         Vector3 target,
@@ -285,18 +332,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
-        Vector3 originalPos = armTarget.position;
-        Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
-
-        IEnumerator moveCall = ContinuousMovement.move(
-            controller,
-            collisionListener,
-            armTarget,
-            targetWorldPos,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            unitsPerSecond,
-            returnToStart,
-            false
+        IEnumerator moveCall = resetArmTargetPositionAsLastStep(
+            ContinuousMovement.move(
+                controller,
+                collisionListener,
+                armTarget,
+                targetWorldPos,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond,
+                returnToStart,
+                false
+            )
         );
 
         if (disableRendering) {

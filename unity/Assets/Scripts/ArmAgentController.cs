@@ -20,6 +20,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+        public void MoveArmRelative(
+            Vector3 offset,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.moveArmRelative(
+                controller: this,
+                offset: offset,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement,
+                disableRendering: disableRendering
+            );
+        }
+
         public void MoveArm(
             Vector3 position,
             float speed = 1,
