@@ -20,7 +20,7 @@ public class JenkinsBuild
     /// </summary>
     public static void BuildMacOS()
     {
-        StartBuild(BuildTarget.StandaloneOSX);
+        StartBuild(BuildTarget.StandaloneOSX, ".app");
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public class JenkinsBuild
     /// </summary>
     public static void BuildLinux()
     {
-        StartBuild(BuildTarget.StandaloneLinux64);
+        StartBuild(BuildTarget.StandaloneLinux64, ".x86_64");
     }
 
     /// <summary>
@@ -36,10 +36,10 @@ public class JenkinsBuild
     /// </summary>
     public static void BuildWindows()
     {
-        StartBuild(BuildTarget.StandaloneWindows);
+        StartBuild(BuildTarget.StandaloneWindows, ".exe");
     }
 
-    private static void StartBuild(BuildTarget buildTarget)
+    private static void StartBuild(BuildTarget buildTarget, string extension)
     {
         string[] args = GetExecuteMethodArguments();
 
@@ -52,7 +52,7 @@ public class JenkinsBuild
 
         SwitchPlatform(BuildTargetGroup.Standalone, buildTarget);
         BuildAddressablesContent();
-        string fullPathAndName = buildPath + System.IO.Path.DirectorySeparatorChar + buildName;
+        string fullPathAndName = buildPath + System.IO.Path.DirectorySeparatorChar + buildName + extension;
         BuildProject(EnabledScenes, fullPathAndName, buildTarget, BuildOptions.None);
     }
 
