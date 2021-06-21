@@ -122,8 +122,17 @@ public class JenkinsBuild
     private static void BuildAddressablesContent()
     {
         System.Console.WriteLine("[JenkinsBuild] Building Addressables");
+        // Clean current settings for new build
         AddressableAssetSettings.CleanPlayerContent(
             AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
+
+        // Set remote profile for new addressables bundle
+        AddressableAssetSettings addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
+        string id = addressableAssetSettings.profileSettings.GetProfileId("Remote");
+        addressableAssetSettings.activeProfileId = id;
+        System.Console.WriteLine("[JenkinsBuild] Setting Addressable Profile To: " + addressableAssetSettings.activeProfileId);
+
+        // Build addressables 
         AddressableAssetSettings.BuildPlayerContent();
         System.Console.WriteLine("[JenkinsBuild] Addressables Built!");
     }
