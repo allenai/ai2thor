@@ -126,11 +126,12 @@ public class JenkinsBuild
         AddressableAssetSettings.CleanPlayerContent(
             AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
 
-        // Set remote profile for new addressables bundle
+        // Log build and load paths
         AddressableAssetSettings addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
-        string id = addressableAssetSettings.profileSettings.GetProfileId("Remote");
-        addressableAssetSettings.activeProfileId = id;
-        System.Console.WriteLine("[JenkinsBuild] Setting Addressable Profile To: " + addressableAssetSettings.activeProfileId);
+        System.Console.WriteLine("[JenkinsBuild] Addressables Build Path: " + 
+            addressableAssetSettings.RemoteCatalogBuildPath.GetValue(addressableAssetSettings));
+        System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + 
+            addressableAssetSettings.RemoteCatalogLoadPath.GetValue(addressableAssetSettings));
 
         // Build addressables 
         AddressableAssetSettings.BuildPlayerContent();
