@@ -318,8 +318,8 @@ For playback:
   - Added property `guidForColors` and way to update it (`UpdateGuidForColors`). This is used to create random colors for object masks in `OnSceneChange`
 - `ImageSynthesis/Shaders/Depth`:
   - Changed the `frag` function to return pixels based on the camera's far clipping pane
-  - In `BaseFPSController` added a 45 degree angle check for ramp ascension and descension that occurs when the agents collider is obstructed by a structure. If a capsule cast the size of the agents collider shot 45 degrees up from the base of the agent is not obstrucuted, then the agent can move sucesfully.
-  - In `BaseFPSController` changed capusle cast obstruction checks to use a point detected by a sphere-casted shot from the center of agent directly below as the bottom base of capsule cast checks rather than the base of the agent's collider. This results in higher accruacy and avoids clipping into the floor
+  - In `BaseFPSAgentController` added a 45 degree angle check for ramp ascension and descension that occurs when the agents collider is obstructed by a structure. If a capsule cast the size of the agents collider shot 45 degrees up from the base of the agent is not obstrucuted, then the agent can move sucesfully.
+  - In `BaseFPSAgentController` changed capusle cast obstruction checks to use a point detected by a sphere-casted shot from the center of agent directly below as the bottom base of capsule cast checks rather than the base of the agent's collider. This results in higher accruacy and avoids clipping into the floor
 
 ## Assets
 
