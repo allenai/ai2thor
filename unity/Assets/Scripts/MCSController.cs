@@ -8,12 +8,15 @@ using System.Collections.Generic;
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
 
-    //position y creates the pose
-    //collider height is adjusted for each pose to prevent clipping inside the floor, allow traversal under structures, and allow ramp ascension
-    //collider center shifts when the position y is changed for poses
+    //Position y creates the pose
+    //Collider height is adjusted for each pose to prevent clipping inside the floor, allow traversal under structures, and allow ramp ascension
+    //Collider center shifts when the position y is changed for poses
+    //These collider numbers were derived from the agents y position on pose changes by hand. 
+    //In an orthographic perspective, the value were shifted until the collider's bottom most point was touching the ground when on a flat surface, 
+    //and the topmost point was touching the tip of the agents head.
     public static float STANDING_POSITION_Y = 0.762f;
-    public static float STANDING_COLLIDER_HEIGHT = 1.23f; //1.3875f;
-    public static float STANDING_COLLIDER_CENTER = -0.33f; //-0.4625f;
+    public static float STANDING_COLLIDER_HEIGHT = 1.23f;
+    public static float STANDING_COLLIDER_CENTER = -0.33f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float CRAWLING_COLLIDER_HEIGHT = 0.75f;
     public static float CRAWLING_COLLIDER_CENTER = -0.05f;
@@ -953,8 +956,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 myCollider.radius -= obstructionVsCollisionDifference;
                 Vector3 newPos = transform.position;
                 if (overlap) {
-                    float additionalPush = 1.25f; //for ramps this is necessary, otherwise the agent will hang off the side of the ramp and clip into it
-                    Vector3 shift = direction * (distance * additionalPush);
+                    Vector3 shift = direction * distance;
                     newPos += shift;
                     transform.position = newPos;
                 }

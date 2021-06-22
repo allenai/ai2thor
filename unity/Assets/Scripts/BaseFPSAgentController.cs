@@ -83,7 +83,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //These are for ramp debugging gizmos and helpful for capusle collider visualizations when checking if movement is possible - see OnDrawGizmosSelected()
         [Tooltip("This will show the top and bottom of the agent's collider used for any capsule casting methods. A ray is displayed a 45 degree angle from the base of capsule cast for ramp ascension. " +
-        "Another vertical ray is displayed at the base of the agent showing where the agent's height is based on the strucute below.")]
+        "Another vertical ray is displayed at the base of the agent showing where the agent's height is based on the structure below.")]
         public bool showDebugCapsuleGizmos = false;
         private Vector3 point1Gizmo;
         private Vector3 point2Gizmo;
