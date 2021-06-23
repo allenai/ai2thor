@@ -245,7 +245,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
-        Vector3 offsetWorldPos = Vector3.zero;
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
