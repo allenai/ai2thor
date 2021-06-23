@@ -2525,6 +2525,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void ParentObjects(string parentId, string childId) {
+            if (parentId == childId) {
+                errorMessage = $"Parent id ({parentId}) must not equal child id.";
+                actionFinished(false);
+                return;
+            }
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(parentId)) {
+                errorMessage = $"No parent object with ID {parentId}";
+                actionFinished(false);
+                return;
+            }
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(childId)) {
+                errorMessage = $"No parent object with ID {childId}";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics parent = physicsSceneManager.ObjectIdToSimObjPhysics[parentId];
+            SimObjPhysics child = physicsSceneManager.ObjectIdToSimObjPhysics[childId];
+
+            child.gameObject.transform.parent = parent.gameObject.transform;
+            child.GetComponent<Rigidbody>().isKinematic = parent.GetComponent<Rigidbody>().isKinematic;
+
+            actionFinished(true);
+        }
+
+        public void UnparentObject(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"No object with ID {objectId}";
+                actionFinished(false);
+                return;
+            }
+
+            GameObject topLevelObject = GameObject.Find("Objects");
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            sop.gameObject.transform.parent = topLevelObject.transform;
+            actionFinished(true);
+        }
+
         protected bool hasAncestor(GameObject child, GameObject potentialAncestor) {
             if (child == potentialAncestor) {
                 return true;
