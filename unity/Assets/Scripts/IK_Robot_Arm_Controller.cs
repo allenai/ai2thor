@@ -479,6 +479,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             List<Collider> cols = new List<Collider>();
 
             foreach (Collider c in sop.MyColliders) {
+                // One set of colliders are used to check collisions
+                // with kinematic objects
                 Collider clone = Instantiate(
                     c,
                     c.transform.position,
@@ -486,6 +488,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                     FourthJoint
                 );
                 clone.isTrigger = true;
+
+                // The other set is used to interact with moveable objects
+                cols.Add(Instantiate(
+                    c,
+                    c.transform.position,
+                    c.transform.rotation,
+                    FourthJoint
+                ));
 
                 // must disable the colliders on the held object so they 
                 // don't interact with anything

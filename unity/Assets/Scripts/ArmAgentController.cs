@@ -149,37 +149,104 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void MoveAhead(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
+        public void MoveAhead(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
+        public void MoveBack(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
+        public void MoveRight(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveBack(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public void MoveLeft(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRelative(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public void RotateRight(
+            float? degrees = null,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
-        public override void RotateRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
-        }
-
-        public override void RotateLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
-        }
-
-        // this is supported in base
-        public override void Rotate(Vector3 rotation) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
+        public void RotateLeft(
+            float? degrees = null,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
         public void RotateAgent(

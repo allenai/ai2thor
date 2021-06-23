@@ -402,42 +402,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void RotateRight(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
+        public void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false
+        ) {
+            if (!degrees.HasValue) {
+                degrees = rotateStepDegrees;
+            } else if (degrees == 0f) {
+                throw new InvalidOperationException(
+                    "Cannot rotate by 0 degrees as this previously defaulted to rotating by a diferent amount."
+                );
             }
 
-            if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
+            if (CheckIfAgentCanRotate("right", degrees.Value) || forceAction) {
 
-                base.RotateRight(action);
+                transform.Rotate(0, degrees.Value, 0);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
+                if (!manualInteract) {
                     DefaultAgentHand();
                 }
+
+                actionFinished(true);
             } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Right " + action.degrees + " degrees";
+                errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Right {degrees} degrees";
                 actionFinished(false);
             }
         }
 
-        public override void RotateLeft(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
+        public void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false
+        ) {
+            if (!degrees.HasValue) {
+                degrees = rotateStepDegrees;
+            } else if (degrees == 0f) {
+                throw new InvalidOperationException(
+                    "Cannot rotate by 0 degrees as this previously defaulted to rotating by a diferent amount."
+                );
             }
 
-            if (CheckIfAgentCanRotate("left", action.degrees) || action.forceAction) {
-
-                base.RotateLeft(action);
+            if (CheckIfAgentCanRotate("left", degrees.Value) || forceAction) {
+                transform.Rotate(0, -degrees.Value, 0);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
+                if (!manualInteract) {
                     DefaultAgentHand();
                 }
+                
+                actionFinished(true);
             } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees + " degrees";
+                errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
                 actionFinished(false);
             }
         }
@@ -1793,60 +1810,101 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return colliders;
         }
 
-        public override void MoveLeft(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public void MoveLeft(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude < 0f) {
+                throw new InvalidOperationException("moveMagnitude but be > 0");
+            }
+
             actionFinished(moveInDirection(
-                -1 * transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.right * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveRight(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public void MoveRight(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude < 0f) {
+                throw new InvalidOperationException("moveMagnitude but be > 0");
+            }
+
             actionFinished(moveInDirection(
-                transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.right * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveAhead(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public void MoveAhead(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude < 0f) {
+                throw new InvalidOperationException("moveMagnitude but be > 0");
+            }
+
             actionFinished(moveInDirection(
-                transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.forward * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveBack(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public void MoveBack(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude < 0f) {
+                throw new InvalidOperationException("moveMagnitude but be > 0");
+            }
+
             actionFinished(moveInDirection(
-                -1 * transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.forward * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
-
-#if UNITY_EDITOR
-        // for use in Editor to test the Reset function.
-        public void Reset(ServerAction action) {
-            physicsSceneManager.GetComponent<AgentManager>().Reset(action);
-        }
-#endif
 
         // a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
         public void NoOp() {

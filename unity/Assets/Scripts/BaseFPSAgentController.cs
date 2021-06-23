@@ -1932,6 +1932,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+#if UNITY_EDITOR
+        // for use in Editor to test the Reset function.
+        public void Reset(ServerAction action) {
+            physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+        }
+#endif
+
         // no op action
         public void Done() {
             actionFinished(true);
@@ -2267,50 +2274,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // StartCoroutine(checkMoveAction(action));
         }
 
-        // do not use this base version, use the override from PhysicsRemote or Stochastic
-        public virtual void MoveLeft(ServerAction action) {
-            moveCharacter(action, 270);
-        }
-
-        public virtual void MoveRight(ServerAction action) {
-            moveCharacter(action, 90);
-        }
-
-        public virtual void MoveAhead(ServerAction action) {
-            moveCharacter(action, 0);
-        }
-
-        public virtual void MoveBack(ServerAction action) {
-            moveCharacter(action, 180);
-        }
-
-        // overwritten by stochastic
-        public virtual void MoveRelative(ServerAction action) {
-            var moveLocal = new Vector3(action.x, 0, action.z);
-            Vector3 moveWorldSpace = transform.rotation * moveLocal;
-            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(moveWorldSpace);
-            actionFinished(true);
-        }
-
-        // free rotate, change forward facing of Agent
-        // this is currently overwritten by Rotate in Stochastic Controller
-        public virtual void Rotate(Vector3 rotation) {
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-            actionFinished(true);
-        }
-
-        // rotates controlCommand.degrees degrees left w/ respect to current forward
-        public virtual void RotateLeft(ServerAction controlCommand) {
-            transform.Rotate(0, -controlCommand.degrees, 0);
-            actionFinished(true);
-        }
-
-        // rotates controlCommand.degrees degrees right w/ respect to current forward
-        public virtual void RotateRight(ServerAction controlCommand) {
-            transform.Rotate(0, controlCommand.degrees, 0);
-            actionFinished(true);
-        }
 
         // iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
         public virtual void LookDown(ServerAction controlCommand) {

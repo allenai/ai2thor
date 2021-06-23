@@ -61,22 +61,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        public override void RotateRight(ServerAction action) {
+        public void RotateRight(ServerAction action) {
             // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
             if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
             }
 
-            base.RotateRight(action);
+            transform.Rotate(0, action.degrees, 0);
+            actionFinished(true);
         }
 
-        public override void RotateLeft(ServerAction action) {
+        public void RotateLeft(ServerAction action) {
             // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
             if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
             }
 
-            base.RotateLeft(action);
+            transform.Rotate(0, -action.degrees, 0);
+            actionFinished(true);
         }
 
         void FixedUpdate() {
