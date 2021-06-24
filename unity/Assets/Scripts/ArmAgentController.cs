@@ -149,6 +149,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public override void MoveAhead(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            MoveAhead(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
+        }
+
         public void MoveAhead(
             float? moveMagnitude = null,
             float speed = 1,
@@ -163,6 +176,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 returnToStart: returnToStart,
                 disableRendering: disableRendering
             );
+        }
+
+        public override void MoveBack(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            MoveBack(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
         }
 
         public void MoveBack(
@@ -181,6 +207,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public override void MoveRight(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            MoveRight(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
+        }
+
         public void MoveRight(
             float? moveMagnitude = null,
             float speed = 1,
@@ -195,6 +234,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 returnToStart: returnToStart,
                 disableRendering: disableRendering
             );
+        }
+
+        public override void MoveLeft(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            MoveLeft(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
         }
 
         public void MoveLeft(
@@ -213,6 +265,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public override void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            RotateRight(degrees: degrees, fixedDeltaTime: Time.fixedDeltaTime);
+        }
+
         public void RotateRight(
             float? degrees = null,
             float speed = 1.0f,
@@ -229,6 +291,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime
             );
+        }
+
+        public override void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false
+        ) {
+            // TODO: This is an ugly necessity until we refactor all
+            // of the agent controllers
+            RotateLeft(degrees: degrees, fixedDeltaTime: Time.fixedDeltaTime);
         }
 
         public void RotateLeft(

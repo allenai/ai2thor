@@ -306,7 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["agentMode"] = "locobot";
                         // action["gridSize"] = 0.25f;
                         // action["visibilityDistance"] = 1.0f;
-                        // action["rotateStepDegrees"] = 45;
+                        action["rotateStepDegrees"] = 45;
                         // action["agentControllerType"] = "stochastic";
                         // action["applyActionNoise"] = true;
                         // action["snapToGrid"] = false;

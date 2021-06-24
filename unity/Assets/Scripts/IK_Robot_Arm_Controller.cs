@@ -482,25 +482,25 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 // One set of colliders are used to check collisions
                 // with kinematic objects
                 Collider clone = Instantiate(
-                    c,
-                    c.transform.position,
-                    c.transform.rotation,
-                    FourthJoint
+                    original: c,
+                    position:c.transform.position,
+                    rotation: c.transform.rotation,
+                    parent: FourthJoint
                 );
                 clone.isTrigger = true;
+                cols.Add(clone);
 
                 // The other set is used to interact with moveable objects
                 cols.Add(Instantiate(
-                    c,
-                    c.transform.position,
-                    c.transform.rotation,
-                    FourthJoint
+                    original: c,
+                    position:c.transform.position,
+                    rotation: c.transform.rotation,
+                    parent: FourthJoint
                 ));
 
                 // must disable the colliders on the held object so they 
                 // don't interact with anything
                 c.enabled = false;
-                cols.Add(clone);
             }
 
             pickedUp = true;

@@ -65,37 +65,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        public void MoveRelative(ServerAction action) {
-            if (!allowHorizontalMovement && Math.Abs(action.x) > 0) {
+        public void MoveRelative(
+            float? moveMagnitude = null,
+            float x = 0f,
+            float z = 0f,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
+
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude.Value <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be null or >= 0.");
+            }
+
+            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
-            var moveLocal = new Vector3(action.x, 0, action.z);
-            var moveMagnitude = moveLocal.magnitude;
-            if (moveMagnitude > 0.00001) {
-                // random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
-                var random = new System.Random();
+
+            var moveLocal = new Vector3(x, 0, z);
+            float xzMag = moveLocal.magnitude;
+            if (xzMag > 0.00001) {
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
                 if (this.applyActionNoise) {
-                    var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    var random = new System.Random();
+                    var rotateNoise = (float) random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
                 }
-                var moveLocalNorm = moveLocal / moveMagnitude;
-                if (action.moveMagnitude > 0.0) {
-                    action.moveMagnitude = moveMagnitude * action.moveMagnitude;
-                } else {
-                    action.moveMagnitude = moveMagnitude * gridSize;
-                }
 
-                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
+                var moveLocalNorm = moveLocal / xzMag;
+                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(
+                    moveMagnitude: xzMag * moveMagnitude.Value,
+                    noise: noise
+                );
 
                 actionFinished(moveInDirection(
-                    this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
-                    action.objectId,
-                    action.maxAgentsDistance,
-                    action.forceAction
+                    direction: this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
+                    forceAction: forceAction
                 ));
             } else {
+                errorMessage = "either x or z must be != 0 for the MoveRelative action";
                 actionFinished(false);
             }
         }
@@ -238,48 +248,68 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: true);
         }
 
-        public void MoveAhead() {
-            ServerAction action = new ServerAction();
-            action.x = 0.0f;
-            action.y = 0;
-            action.z = 1.0f;
-            MoveRelative(action);
+        public void MoveAhead(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
+            MoveRelative(
+                z: 1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
         }
 
-        public void MoveBack() {
-            ServerAction action = new ServerAction();
-            action.x = 0.0f;
-            action.y = 0;
-            action.z = -1.0f;
-            MoveRelative(action);
+        public void MoveBack(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
+            MoveRelative(
+                z: -1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
         }
 
-        public void MoveRight() {
-            ServerAction action = new ServerAction();
+        public void MoveRight(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
             if (!allowHorizontalMovement) {
                 throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
-            action.x = 1.0f;
-            action.y = 0;
-            action.z = 0.0f;
-            MoveRelative(action);
+            MoveRelative(
+                x: 1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
         }
 
-        public void MoveLeft() {
-            ServerAction action = new ServerAction();
+        public void MoveLeft(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
             if (!allowHorizontalMovement) {
-                throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
+                throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
-            action.x = -1.0f;
-            action.y = 0;
-            action.z = 1.0f;
-            MoveRelative(action);
+            MoveRelative(
+                x: -1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
         }
 
-        protected float GetMoveMagnitudeWithNoise(ServerAction action) {
+        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
             System.Random random = new System.Random();
-            float internalNoise = applyActionNoise ? (float)random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-            return action.moveMagnitude + action.noise + (float)internalNoise;
+            float internalNoise = applyActionNoise ? (float) random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
+            return moveMagnitude + noise + (float) internalNoise;
         }
 
         protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {

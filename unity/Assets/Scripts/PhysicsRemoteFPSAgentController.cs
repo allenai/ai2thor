@@ -402,7 +402,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateRight(
+        public virtual void RotateRight(
             float? degrees = null,
             bool manualInteract = false,
             bool forceAction = false
@@ -431,7 +431,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateLeft(
+        public virtual void RotateLeft(
             float? degrees = null,
             bool manualInteract = false,
             bool forceAction = false
@@ -1810,7 +1810,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return colliders;
         }
 
-        public void MoveLeft(
+        public virtual void MoveLeft(
             float? moveMagnitude = null,
             string objectId = "",
             float maxAgentsDistance = -1f,
@@ -1834,7 +1834,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ));
         }
 
-        public void MoveRight(
+        public virtual void MoveRight(
             float? moveMagnitude = null,
             string objectId = "",
             float maxAgentsDistance = -1f,
@@ -1858,7 +1858,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ));
         }
 
-        public void MoveAhead(
+        public virtual void MoveAhead(
             float? moveMagnitude = null,
             string objectId = "",
             float maxAgentsDistance = -1f,
@@ -1882,7 +1882,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ));
         }
 
-        public void MoveBack(
+        public virtual void MoveBack(
             float? moveMagnitude = null,
             string objectId = "",
             float maxAgentsDistance = -1f,
