@@ -133,48 +133,12 @@ public class JenkinsBuild
             addressableAssetSettings.RemoteCatalogBuildPath.GetValue(addressableAssetSettings));
         System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + 
             addressableAssetSettings.RemoteCatalogLoadPath.GetValue(addressableAssetSettings));
+        System.Console.WriteLine("[JenkinsBuild] Addressables Active Data Builder: " +
+            AddressableAssetSettingsDefaultObject.Settings.DataBuilders[AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilderIndex].name);
 
         // Build addressables 
         AddressableAssetSettings.BuildPlayerContent();
         System.Console.WriteLine("[JenkinsBuild] Addressables Built!");
-
-        FileWriteTest();
-    }
-
-    private static void FileWriteTest()
-    {
-        // Check ServerData path
-        var serverDataPath = Path.GetDirectoryName(Application.dataPath) + Path.DirectorySeparatorChar + "ServerData";
-        System.Console.WriteLine("[JenkinsBuild] ServerData path: " + serverDataPath);
-        var serverDataPathExists = Directory.Exists(serverDataPath);
-        System.Console.WriteLine("[JenkinsBuild] ServerData exists? : " + serverDataPathExists);
-
-        // Write to path if it does not exist
-        if (!serverDataPathExists)
-        {
-            Directory.CreateDirectory(serverDataPath);
-
-            var filePath = serverDataPath + Path.DirectorySeparatorChar + "didthiswork.txt";
-            try
-            {
-                if (!File.Exists(filePath))
-                {
-                    // Create a file to write to.
-                    using (StreamWriter sw = File.CreateText(filePath))
-                    {
-                        sw.WriteLine("yes?");
-                    }
-                }
-            }
-            catch (System.Exception Ex)
-            {
-                // Catch any error which could be causing addressables write failure
-                System.Console.WriteLine("[JenkinsBuild] ServerData write failure: " + Ex.ToString());
-            }
-        }
-
-        // Does it exist yet?
-        System.Console.WriteLine("[JenkinsBuild] ServerData exists? : " + Directory.Exists(serverDataPath));
     }
 
     private static void BuildProject(string[] scenes, string buildDir, BuildTarget buildTarget, BuildOptions buildOptions)
