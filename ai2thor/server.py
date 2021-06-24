@@ -112,6 +112,13 @@ class MetadataWrapper(dict):
                     + "calling controller.step(action='GetReachablePositions'). Also, "
                     + "the key 'reachablePositions' is deprecated in favor of event.metadata['actionReturn']."
                 )
+        elif x == "hand":
+            if "hand" not in self:
+                # maintains sideways compatibility
+                warnings.warn(
+                    'The key event.metadata["hand"] is deprecated and has been remapped to event.metadata["heldObjectPose"].'
+                )
+                x = "heldObjectPose"
         return super().__getitem__(x)
 
 
