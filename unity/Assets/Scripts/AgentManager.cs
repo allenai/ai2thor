@@ -1548,7 +1548,7 @@ public struct MetadataWrapper {
     public ObjectMetadata[] objects;
     public bool isSceneAtRest;// set true if all objects in the scene are at rest (or very very close to 0 velocity)
     public AgentMetadata agent;
-    public HandMetadata hand;
+    public HandMetadata heldObjectPose;
     public ArmMetadata arm;
     public float fov;
     public Vector3 cameraPosition;

@@ -1892,6 +1892,151 @@ def test_segmentation_colors(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_move_hand(controller):
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="MoveHeldObject", ahead=0.1).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert abs(h2["localPosition"]["y"] - h1["localPosition"]["y"]) < 1e-3
+    assert abs(h2["localPosition"]["x"] - h1["localPosition"]["x"]) < 1e-3
+
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(
+        action="MoveHeldObject", ahead=0.1, right=0.1, up=0.1
+    ).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["x"] - h1["localPosition"]["x"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["y"] - h1["localPosition"]["y"] <= 0.1 + 1e-3
+    )
+
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(
+        action="MoveHeldObject", ahead=0.1, right=0.05, up=-0.1
+    ).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.05 - 1e-3
+        <= h2["localPosition"]["x"] - h1["localPosition"]["x"]
+        <= 0.05 + 1e-3
+    )
+    assert (
+        -0.1 - 1e-3
+        <= h2["localPosition"]["y"] - h1["localPosition"]["y"]
+        <= -0.1 + 1e-3
+    )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_rotate_hand(controller):
+    # Tests RotateHeldObject and that event.metadata["hand"] is equivalent to
+    # event.metadata["heldObjectPose"] for backwards compatibility purposes
+    # PITCH
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", pitch=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["x"] - h1["rotation"]["x"] == 90
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", yaw=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["y"] - h1["rotation"]["y"] == 90
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # ROLL
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", roll=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+
+    # NOTE: 270 is expected if you want roll to be positive moving rightward
+    assert h2["rotation"]["z"] - h1["rotation"]["z"] == 270
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+
+    # ROLL + PITCH + YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", roll=90, pitch=90, yaw=90).metadata[
+        "hand"
+    ]
+
+    assert_near(h1["position"], h2["position"])
+    assert_near(h1["rotation"], dict(x=0, y=180, z=0))
+
+    # Unity will normalize the rotation, so x=90, y=270, and z=270 becomes x=90, y=0, z=0
+    assert_near(h2["rotation"], dict(x=90, y=0, z=0))
+
+    # local rotation test
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(
+        action="RotateHeldObject", rotation=dict(x=90, y=180, z=0)
+    ).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
+    assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_fill_liquid(controller):
     pot = next(
         obj
@@ -1931,3 +2076,4 @@ def test_fill_liquid(controller):
         assert pot["fillLiquid"] is None
         assert not pot["isFilledWithLiquid"]
         assert pot["canFillWithLiquid"]
+

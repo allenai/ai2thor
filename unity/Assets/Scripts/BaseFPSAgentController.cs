@@ -1753,11 +1753,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: remove from base.
             // HAND
-            metaMessage.hand = new HandMetadata();
-            metaMessage.hand.position = AgentHand.transform.position;
-            metaMessage.hand.localPosition = AgentHand.transform.localPosition;
-            metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
-            metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
+            metaMessage.heldObjectPose = new HandMetadata();
+            metaMessage.heldObjectPose.position = AgentHand.transform.position;
+            metaMessage.heldObjectPose.localPosition = AgentHand.transform.localPosition;
+            metaMessage.heldObjectPose.rotation = AgentHand.transform.eulerAngles;
+            metaMessage.heldObjectPose.localRotation = AgentHand.transform.localEulerAngles;
 
             // TODO: remove from base.
             // ARM
