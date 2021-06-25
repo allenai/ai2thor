@@ -401,9 +401,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
-    public void rotateHand(
+    public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
-        Quaternion targetQuat,
+        Quaternion rotation,
         float degreesPerSecond,
         bool disableRendering = false,
         float fixedDeltaTime = 0.02f,
@@ -414,7 +414,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             controller,
             collisionListener,
             armTarget.transform,
-            armTarget.transform.rotation * targetQuat,
+            armTarget.transform.rotation * rotation,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
             returnToStartPositionIfFailed

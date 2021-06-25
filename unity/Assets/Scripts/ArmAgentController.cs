@@ -355,27 +355,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // currently not finished action. New logic needs to account for the
         // hierarchy of rigidbodies of each arm joint and how to detect collision
-        // between a given arm joint an other arm joints.
-        public void RotateMidLevelHand(ServerAction action) {
+        // between a given arm joint and other arm joints.
+        public void RotateWristRelative(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
             IK_Robot_Arm_Controller arm = getArm();
             Quaternion target = new Quaternion();
 
-            // rotate around axis aliged x, y, z with magnitude based on vector3
-            if (action.degrees == 0) {
-                // use euler angles
-                target = Quaternion.Euler(action.rotation);
-            } else {
-                // rotate action.degrees about axis
-                target = Quaternion.AngleAxis(action.degrees, action.rotation);
-            }
-
-            arm.rotateHand(
+            arm.rotateWrist(
                 controller: this,
-                targetQuat: target,
-                degreesPerSecond: action.speed,
-                disableRendering: action.disableRendering,
-                fixedDeltaTime: action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: action.returnToStart
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
             );
         }
 

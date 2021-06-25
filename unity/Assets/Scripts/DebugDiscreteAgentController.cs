@@ -103,8 +103,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 if (!inputField.isFocused) {
-                    bool armMode = Input.GetKey(KeyCode.LeftShift);
-                    if (!armMode) {
+                    bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                    bool altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+                    bool noModifier = (!shiftHeld) && (!altHeld);
+                    bool armMoveMode = shiftHeld && !altHeld;
+                    bool armRotateMode = shiftHeld && altHeld;
+
+                    if (noModifier) {
                         float WalkMagnitude = 0.25f;
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -150,7 +155,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
 
-                    } else {
+                    } else if (armMoveMode) {
                         var actionName = "MoveArmRelative";
                         var localPos = new Vector3(0, 0, 0);
                         float ArmMoveMagnitude = 0.05f;
@@ -183,6 +188,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 //action["fixedDeltaTime"] = fixedDeltaTime;
                                 //action["speed"] = 0.1;
                             }
+                            this.CurrentActiveController().ProcessControlCommand(action);
+                        }
+                    } else if (armRotateMode) {
+                        var actionName = "RotateWristRelative";
+                        var localPos = new Vector3(0, 0, 0);
+                        float rotateMag = 30f;
+                        float pitch = 0f;
+                        float yaw = 0f;
+                        float roll = 0f;
+
+                        if (Input.GetKeyDown(KeyCode.W)) {
+                            roll += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.S)) {
+                            roll -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                            pitch += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                            pitch -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                            yaw -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                            yaw += rotateMag;
+                        } else {
+                            actionName = "";
+                        }
+
+                        if (actionName != "") {
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["action"] = actionName;
+                            action["pitch"] = pitch;
+                            action["yaw"] = yaw;
+                            action["roll"] = roll;
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
                     }
