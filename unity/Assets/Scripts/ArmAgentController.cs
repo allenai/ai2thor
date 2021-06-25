@@ -353,9 +353,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        // currently not finished action. New logic needs to account for the
-        // hierarchy of rigidbodies of each arm joint and how to detect collision
-        // between a given arm joint and other arm joints.
+        /*
+        Rotates the wrist (in a relative fashion) given some input
+        pitch, yaw, and roll offsets. Easiest to see how this works by
+        using the editor debugging and shift+alt+(arrow keys or s/w).
+
+        Currently not a completely finished action. New logic is needed
+        to prevent self-collisions. In particular we need to
+        account for the hierarchy of rigidbodies of each arm joint and
+        determine how to detect collision between a given arm joint and other arm joints.
+        */
         public void RotateWristRelative(
             float pitch = 0f,
             float yaw = 0f,
