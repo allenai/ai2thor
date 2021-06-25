@@ -192,7 +192,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     } else if (armRotateMode) {
                         var actionName = "RotateWristRelative";
-                        var localPos = new Vector3(0, 0, 0);
                         float rotateMag = 30f;
                         float pitch = 0f;
                         float yaw = 0f;

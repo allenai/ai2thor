@@ -373,7 +373,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true
         ) {
             IK_Robot_Arm_Controller arm = getArm();
-            Quaternion target = new Quaternion();
 
             arm.rotateWrist(
                 controller: this,
@@ -403,7 +402,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true
         ) {
             IK_Robot_Arm_Controller arm = getArm();
-            Quaternion target = new Quaternion();
 
             arm.rotateElbowRelative(
                 controller: this,
@@ -426,7 +424,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true
         ) {
             IK_Robot_Arm_Controller arm = getArm();
-            Quaternion target = new Quaternion();
 
             arm.rotateElbow(
                 controller: this,

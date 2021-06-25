@@ -245,7 +245,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
-        Vector3 offsetWorldPos = Vector3.zero;
+
+        Vector3 offsetWorldPos;
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
@@ -291,9 +292,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         IK_Robot_Arm_Controller arm = this;
 
         // Move arm based on hand space or arm origin space
-        // Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
-        Vector3 targetWorldPos = Vector3.zero;
-
+        Vector3 targetWorldPos;
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
