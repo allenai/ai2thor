@@ -20,6 +20,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+
+        /*
+        This function is identical to `MoveArm` except that rather than
+        giving a target position you instead give an "offset" w.r.t.
+        the arm's (i.e. wrist's) current location.
+
+        Thus if you want to increase the
+        arms x position (in world coordinates) by 0.1m you should
+        pass in `offset=Vector3(0.1f, 0f, 0f)` and `coordinateSpace="world"`.
+        If you wanted to move the arm 0.1m to the "right" from the agent's
+        perspective then you would pass in the same offset but set
+        `coordinateSpace="armBase"`. Note that this last movement is **not**
+        the same as passing `position=Vector3(0.1f, 0f, 0f)` to the `MoveArm`
+        action with `coordinateSpace="wrist"` as, if the wrist has been rotated,
+        right need not mean the same thing to the arm base as it does to the wrist.
+
+        Finally note that when `coordinateSpace="wrist"` then both `MoveArm` and
+        `MoveArmRelative` are identical.
+        */
         public void MoveArmRelative(
             Vector3 offset,
             float speed = 1,
