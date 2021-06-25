@@ -197,6 +197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         float pitch = 0f;
                         float yaw = 0f;
                         float roll = 0f;
+                        float degrees = 0f;
 
                         if (Input.GetKeyDown(KeyCode.W)) {
                             roll += rotateMag;
@@ -210,6 +211,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             yaw -= rotateMag;
                         } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
                             yaw += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.E)) {
+                            actionName = "RotateElbowRelative";
+                            degrees += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.Q)) {
+                            // Why Q/E rather than A/D? Because apparently
+                            // shift+alt+A is a Unity shortcut and Unity
+                            // doesn't provide the ability to disable shortcuts in
+                            // play mode despite this being a feature request since 2013.
+                            actionName = "RotateElbowRelative";
+                            degrees -= rotateMag;
                         } else {
                             actionName = "";
                         }
@@ -217,9 +228,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (actionName != "") {
                             Dictionary<string, object> action = new Dictionary<string, object>();
                             action["action"] = actionName;
-                            action["pitch"] = pitch;
-                            action["yaw"] = yaw;
-                            action["roll"] = roll;
+                            if (actionName == "RotateWristRelative") {
+                                action["pitch"] = pitch;
+                                action["yaw"] = yaw;
+                                action["roll"] = roll;
+                            } else if (actionName == "RotateElbowRelative") {
+                                action["degrees"] = degrees;
+                            }
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
                     }

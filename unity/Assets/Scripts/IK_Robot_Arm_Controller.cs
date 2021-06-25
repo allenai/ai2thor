@@ -430,6 +430,56 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
+    public void rotateElbowRelative(
+        PhysicsRemoteFPSAgentController controller,
+        float degrees,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        collisionListener.Reset();
+        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
+        IEnumerator rotate = ContinuousMovement.rotate(
+            controller,
+            collisionListener,
+            poleManipulator.transform,
+            poleManipulator.transform.rotation * rotation,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            degreesPerSecond,
+            returnToStartPositionIfFailed
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                rotate,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(rotate);
+        }
+    }
+
+    public void rotateElbow(
+        PhysicsRemoteFPSAgentController controller,
+        float degrees,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        rotateElbowRelative(
+            controller: controller,
+            degrees: (degrees - poleManipulator.transform.eulerAngles.z),
+            degreesPerSecond: degreesPerSecond,
+            disableRendering: disableRendering,
+            fixedDeltaTime: fixedDeltaTime,
+            returnToStartPositionIfFailed: returnToStartPositionIfFailed
+        );
+    }
+
     public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {
         return magnetSphereComp.CurrentlyContainedSimObjectsByID();
     }
