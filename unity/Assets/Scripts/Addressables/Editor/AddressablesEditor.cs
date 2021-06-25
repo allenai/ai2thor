@@ -111,13 +111,15 @@ public class AddressablesEditor
 #if UNITY_STANDALONE_OSX
         string sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
         string targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
-#endif    
+#endif
 
+#if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
         // Do not copy default addressables if newly generated addressables were detected
         if (!Directory.Exists(targetDir))
         {
             CopyFilesRecursively(sourceDir, targetDir);
         }
+#endif
     }
 
     private static void CopyFilesRecursively(string sourceDir, string targetDir)
