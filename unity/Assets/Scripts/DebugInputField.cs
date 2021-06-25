@@ -401,7 +401,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 case "parent": {
                     Dictionary<string, object> action = new Dictionary<string, object>{
-                        {"action", "ParentObjects"},
+                        {"action", "ParentObject"},
                     };
                     action["parentId"] = splitcommand[1];
                     action["childId"] = splitcommand[2];

@@ -2488,7 +2488,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void ParentObjects(string parentId, string childId) {
+
+        /*
+        Naively parents one sim object under another game object. The child object
+        will become kinematic, this is necessary as parenting non-kinematic rigidbodies
+        can cause all sorts of issues.
+
+        Note that this function is "dangerous" in that it can have unintended interactions
+        with other actions. Please only use this action if you understand what you're doing.
+        */
+        public void ParentObject(string parentId, string childId) {
             if (parentId == childId) {
                 errorMessage = $"Parent id ({parentId}) must not equal child id.";
                 actionFinished(false);
@@ -2509,12 +2518,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics child = physicsSceneManager.ObjectIdToSimObjPhysics[childId];
 
             child.gameObject.transform.parent = parent.gameObject.transform;
-            child.GetComponent<Rigidbody>().isKinematic = parent.GetComponent<Rigidbody>().isKinematic;
+            child.GetComponent<Rigidbody>().isKinematic = true;
 
             actionFinished(true);
         }
 
-        public void UnparentObject(string objectId) {
+        /*
+        Can be used to undo the effect of `ParentObject`. Will set the
+        parent of the object corresponding to objectId to be the top-level
+        "Objects" object of the scene (the default parent of all objects).
+        You must also explicitly pass in whether you want the object to be
+        kinematic or not after unparenting.
+
+        No error will be thrown if the object is already a child of the
+        top level "Objects" object and the kinematic state of the object will
+        still be changed in such a case.
+
+        Note that this function is "dangerous" in that it can have unintended interactions
+        with other actions. Please only use this action if you understand what you're doing.
+        */
+        public void UnparentObject(string objectId, bool kinematic) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"No object with ID {objectId}";
                 actionFinished(false);
@@ -2524,6 +2547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject topLevelObject = GameObject.Find("Objects");
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             sop.gameObject.transform.parent = topLevelObject.transform;
+            sop.GetComponent<Rigidbody>().isKinematic = kinematic;
             actionFinished(true);
         }
 
