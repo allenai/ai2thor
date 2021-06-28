@@ -1018,39 +1018,56 @@ class Controller(object):
     def _get_cache_commit_history(self, branch):
         cache_filename = self._cache_commit_filename(branch)
         payload = None
+        mtime = None
         if os.path.exists(cache_filename):
+            mtime = os.stat(cache_filename).st_mtime
             with open(cache_filename, "r") as f:
                 payload = json.loads(f.read())
 
-        return payload
+        return (payload, mtime)
 
     def _branch_commits(self, branch):
         import requests
 
         payload = []
-        try:
-            res = requests.get(
-                "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
-            )
-            if res.status_code == 404:
-                raise ValueError("Invalid branch name: %s" % branch)
-            elif res.status_code == 200:
-                payload = res.json()
-                self._cache_commit_history(branch, payload)
-            else:
-                res.raise_for_status()
-        except requests.exceptions.ConnectionError as e:
-            payload = self._get_cache_commit_history(branch)
-            if payload:
-                warnings.warn(
-                    "Unable to connect to github.com: %s - using cached commit history for %s"
-                    % (e, branch)
+        cache_payload, cache_mtime = self._get_cache_commit_history(branch)
+        # we need to limit how often we hit api.github.com since 
+        # there is a rate limit of 60 per hour per IP
+        if cache_payload and (time.time() - cache_mtime) < 300:
+            payload = cache_payload
+        else:
+            try:
+                res = requests.get(
+                    "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
                 )
-            else:
-                raise Exception(
-                    "Unable to get commit history for branch %s and no cached history exists: %s"
-                    % (branch, e)
-                )
+                if res.status_code == 404:
+                    raise ValueError("Invalid branch name: %s" % branch)
+                elif res.status_code == 403:
+                    payload, _ = self._get_cache_commit_history(branch)
+                    if payload:
+                        warnings.warn(
+                            "Error retrieving commits: %s - using cached commit history for %s"
+                            % (res.text, branch)
+                        )
+                    else:
+                        res.raise_for_status()
+                elif res.status_code == 200:
+                    payload = res.json()
+                    self._cache_commit_history(branch, payload)
+                else:
+                    res.raise_for_status()
+            except requests.exceptions.ConnectionError as e:
+                payload, _ = self._get_cache_commit_history(branch)
+                if payload:
+                    warnings.warn(
+                        "Unable to connect to github.com: %s - using cached commit history for %s"
+                        % (e, branch)
+                    )
+                else:
+                    raise Exception(
+                        "Unable to get commit history for branch %s and no cached history exists: %s"
+                        % (branch, e)
+                    )
 
         return [c["sha"] for c in payload]
 
