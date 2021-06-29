@@ -35,7 +35,10 @@ def add_files(zipf, start_dir):
         for f in files:
             fn = os.path.join(root, f)
             arcname = os.path.relpath(fn, start_dir)
-            # print("adding %s" % arcname)
+            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
+                #print("skipping %s" % arcname)
+                continue
+            #print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
 
@@ -779,6 +782,9 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
+    #print("pushing %s" % archive_name)
+    #with open(archive_name, "wb") as f:
+    #    f.write(zip_data)
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -1083,7 +1089,10 @@ def build_cloudrendering(context):
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
     _build(unity_path, arch, build_dir, build_name, {})
+    archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)
     build_pip_commit(context)
+    push_pip_commit(context)
+    generate_pypi_index(context)
 
 
 @task
