@@ -116,9 +116,14 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
 
     project_path = os.path.join(os.getcwd(), unity_path)
 
+    # osxintel64 is not a BuildTarget
+    build_target_map = dict(OSXIntel64="OSXUniversal")
+
+    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
+    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -1060,6 +1065,32 @@ def ci_build(context):
         pass
 
     lock_f.close()
+
+
+@task
+def build_cloudrendering(context):
+    # XXX check for local changes
+
+    global _unity_version
+    _unity_version = lambda: "2021.2.0a14"
+
+    arch = "CloudRendering"
+    commit_id = git_commit_id()
+    unity_path = "unity"
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
+    build_dir = os.path.join("builds", build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+    build_info["log"] = "%s.log" % (build_name,)
+    _build(unity_path, arch, build_dir, build_name, {})
+    build_pip_commit(context)
+
+
+@task
+def build_deploy_cloudrendering(context):
+    pass
+    # ci_build_arch
+    # build_pip_commit
 
 
 @task
@@ -3253,14 +3284,44 @@ def get_physics_determinism(
 
 
 @task
-def generate_msgpack_resolver(task):
+def install_msgpack_compiler(context, version, target_path):
+    import platform
+    import requests
+    import stat
+
+    url = (
+        "https://github.com/neuecc/MessagePack-CSharp/releases/download/v%s/mpc.zip"
+        % version
+    )
+    res = requests.get(url)
+    res.raise_for_status()
+    z = zipfile.ZipFile(io.BytesIO(res.content))
+    member_path = dict(Linux="linux/mpc", Darwin="osx/mpc")
+    mpc_data = z.read(member_path[platform.system()])
+
+    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+    with open(target_path, "wb") as f:
+        f.write(mpc_data)
+
+    os.chmod(target_path, stat.S_IREAD | stat.S_IEXEC | stat.S_IWRITE)
+
+
+@task
+def generate_msgpack_resolver(context):
     import glob
 
     # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
     # need to download/unzip into this path, add gatekeeper permission
     target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
     shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+
+    mpc_version = "2.1.194"
+    mpc_path = os.path.join(base_dir, "tmp/mpc-%s" % mpc_version)
+    if not os.path.isfile(mpc_path):
+        install_msgpack_compiler(context, mpc_version, mpc_path)
+        print("installing mpc")
+
     subprocess.check_call(
         "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
         shell=True,
@@ -3329,7 +3390,6 @@ def ci_test_utf(context, build):
         "finished Unity Test framework runner for %s %s"
         % (build["branch"], build["commit_id"])
     )
-
 
 @task
 def format(context):

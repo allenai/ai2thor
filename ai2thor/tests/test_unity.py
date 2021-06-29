@@ -63,7 +63,7 @@ def reset_controller(controller):
         controller._original_initialization_parameters
     )
     if not hasattr(controller.last_event, "_pytest_skip_reset"):
-        controller.reset(TEST_SCENE)
+        controller.reset(TEST_SCENE, height=300, width=300)
         skip_reset(controller)
 
     return controller
@@ -889,7 +889,6 @@ def test_action_dispatch_missing_args(fifo_controller):
         event = fifo_controller.step(
             dict(action="TestActionDispatchNoop", param6="foo")
         )
-        print(event.metadata["actionReturn"])
     except ValueError as e:
         caught_exception = True
     assert caught_exception

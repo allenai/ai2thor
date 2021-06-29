@@ -628,23 +628,25 @@ class Controller(object):
 
         # update the initialization parameters
         init_params = init_params.copy()
+        target_width = init_params.pop("width", self.width)
+        target_height = init_params.pop("height", self.height)
 
         # width and height are updates in 'ChangeResolution', not 'Initialize'
-        if ("width" in init_params and init_params["width"] != self.width) or (
-            "height" in init_params and init_params["height"] != self.height
+        # with CloudRendering the command-line height/width aren't respected, so
+        # we compare here with what the desired height/width are and
+        # update the resolution if they are different
+        if (
+            target_width != self.last_event.screen_width
+            or target_height != self.last_event.screen_height
         ):
-            if "width" in init_params:
-                self.width = init_params["width"]
-                del init_params["width"]
-            if "height" in init_params:
-                self.height = init_params["height"]
-                del init_params["height"]
             self.step(
                 action="ChangeResolution",
-                x=self.width,
-                y=self.height,
+                x=target_width,
+                y=target_height,
                 raise_for_failure=True,
             )
+            self.width = target_width
+            self.height = target_height
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
@@ -1236,6 +1238,7 @@ class Controller(object):
         # receive the first request
         self.last_event = self.server.receive()
 
+        # we should be able to get rid of this since we check the resolution in .reset()
         if height < 300 or width < 300:
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 

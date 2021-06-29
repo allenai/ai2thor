@@ -15,6 +15,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using UnityEngine.Rendering;
+using Unity.Simulation;
+using UnityEngine.Experimental.Rendering;
+#if PLATFORM_CLOUD_RENDERING
+using UnityEditor;
+using UnityEngine.CloudRendering;
+#endif
 using UnityEngine.Networking;
 using System.Linq;
 
@@ -105,7 +112,6 @@ public class AgentManager : MonoBehaviour {
 
         }
 
-
         bool trainPhase = true;
         trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -120,6 +126,14 @@ public class AgentManager : MonoBehaviour {
     void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
+        #if PLATFORM_CLOUD_RENDERING    
+        // must wrap this in PLATFORM_CLOUDRENDERING
+        // needed to ensure that the com.unity.simulation.capture package
+        // gets initialized
+        var instance = Manager.Instance;
+        Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
+        camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
+        #endif
 
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
@@ -511,6 +525,10 @@ public class AgentManager : MonoBehaviour {
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
+        
+        #if PLATFORM_CLOUD_RENDERING
+        camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
+        #endif
 
         thirdPartyCameras.Add(camera);
         updateCameraProperties(
@@ -609,6 +627,10 @@ public class AgentManager : MonoBehaviour {
         // clone.m_Camera.targetDisplay = this.agents.Count;
         clone.transform.position = clonePosition;
         UpdateAgentColor(clone, agentColors[this.agents.Count]);
+        
+#if PLATFORM_CLOUD_RENDERING
+        clone.m_Camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.targetTexture.width, this.primaryAgent.m_Camera.targetTexture.height);
+#endif 
         clone.ProcessControlCommand(action.dynamicServerAction);
         this.agents.Add(clone);
     }
@@ -747,6 +769,32 @@ public class AgentManager : MonoBehaviour {
 
     }
 
+    private byte[] captureScreenAsync(Camera camera) {
+        byte[] data = null;
+        RenderTexture tt = camera.targetTexture;
+        RenderTexture.active = tt;
+        camera.Render();
+        var rt = RenderTexture.GetTemporary(tt.width, tt.height, 0, tt.graphicsFormat, antiAliasing: tt.antiAliasing);
+        Graphics.Blit(tt, rt);
+        AsyncGPUReadback.Request(rt, 0, (request) =>
+        {
+            if (!request.hasError) {
+                //RenderTexture rt = this.primaryAgent.m_Camera.targetTexture; 
+                data = request.GetData<byte>().ToArray();
+                //Debug.Log("got data async data " + data.Length);
+                //var encodedData = ImageConversion.EncodeArrayToPNG(data, this.primaryAgent.m_Camera.targetTexture.graphicsFormat, (uint)rt.width, (uint)rt.height);
+                //File.WriteAllBytes("/tmp/out-" + counter + ".png", encodedData);
+            }
+            else
+            {
+                Debug.Log("Request error: " + request.hasError);
+            }
+            RenderTexture.ReleaseTemporary(rt);
+        });
+        AsyncGPUReadback.WaitAllRequests();
+        return data;
+    }
+
     private byte[] captureScreen() {
         if (tex.height != UnityEngine.Screen.height ||
             tex.width != UnityEngine.Screen.width) {
@@ -760,19 +808,28 @@ public class AgentManager : MonoBehaviour {
 
 
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
+#if PLATFORM_CLOUD_RENDERING
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreenAsync(camera)));
+#else
         RenderTexture.active = camera.activeTexture;
         camera.Render();
         payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+#endif
     }
 
     private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
         if (this.renderImage) {
 
+#if PLATFORM_CLOUD_RENDERING
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreenAsync(agent.m_Camera)));
+#else
+            // XXX may not need this since we call render in captureScreenAsync
             if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
             payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+#endif
         }
     }
 
@@ -804,6 +861,22 @@ public class AgentManager : MonoBehaviour {
 
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
+        Debug.Log("current screen resolution pre change: " + Screen.width + " height" + Screen.height);
+#if PLATFORM_CLOUD_RENDERING
+        foreach (var agent in this.agents) {
+            var rt = agent.m_Camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           agent.m_Camera.targetTexture = createRenderTexture(x, y); 
+        }
+        
+        foreach (var camera in this.thirdPartyCameras) {
+            var rt = camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           camera.targetTexture = createRenderTexture(x, y); 
+        }
+#endif
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
@@ -981,6 +1054,19 @@ public class AgentManager : MonoBehaviour {
         return this.agentManagerState == AgentState.Emit && emit;
     }
 
+    private RenderTexture createRenderTexture(int width, int height) {
+        RenderTexture rt = new RenderTexture(width: width, height: height,depth:0, GraphicsFormat.R8G8B8A8_UNorm);
+        rt.antiAliasing = 4;
+        if (rt.Create()) {
+            Debug.Log(" created render texture with width= " + width + " height=" + height);
+            return rt;
+        } else {
+            // throw exception ?
+            Debug.LogError("Could not create a renderTexture");
+            return null;
+        }
+
+    }
 
     public IEnumerator EmitFrame() {
         while (true) {
@@ -1278,9 +1364,7 @@ public class MetadataPatch {
     public bool lastActionSuccess;
     public int agentId;
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 }
 
@@ -1589,9 +1673,7 @@ public struct MetadataWrapper {
     public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
     [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 
 }

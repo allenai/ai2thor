@@ -35,6 +35,12 @@ namespace MessagePack.Formatters {
         }
 
         public void Serialize(ref MessagePackWriter writer, global::System.Object value, global::MessagePack.MessagePackSerializerOptions options) {
+            #if !ENABLE_IL2CPP
+                IMessagePackFormatter<global::System.Object> dynamicFormatter = (IMessagePackFormatter<global::System.Object>)DynamicObjectTypeFallbackFormatter.Instance;
+                dynamicFormatter.Serialize(ref writer, value, options);
+                return;
+            #endif
+        
             if (value == null) {
                 writer.WriteNil();
                 return;
