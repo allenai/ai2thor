@@ -87,9 +87,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -192,7 +199,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -209,7 +218,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -423,6 +434,38 @@ def test_add_third_party_camera(controller):
         "action: AddThirdPartyCamera has an invalid argument: orthographicSize"
     )
 
+def test_third_party_camera_depth(fifo_controller):
+    fifo_controller.reset(
+        TEST_SCENE,
+        width=300,
+        height=300,
+        renderDepthImage=True
+    )
+
+    agent_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.75}
+    agent_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+
+    agent_init_position = {'x': -2.75, 'y': 0.9009982347488403, 'z': -1.25}
+    camera_position = {'x': -2.75, 'y': 1.5759992599487305, 'z': -1.75}
+    camera_rotation = {'x': 0.0, 'y': 90.0, 'z': 0.0}
+    # teleport agent into a position the third-party camera won't see
+    fifo_controller.step(action="Teleport", position=agent_init_position, rotation=agent_rotation, horizon=0.0, standing=True)
+
+    camera_event = fifo_controller.step(
+        dict(
+            action=Actions.AddThirdPartyCamera,
+            position=camera_position,
+            rotation=camera_rotation
+        )
+    )
+    camera_depth = camera_event.third_party_depth_frames[0]
+    agent_event = fifo_controller.step(action="Teleport", position=agent_position, rotation=agent_rotation, horizon=0.0, standing=True)
+    agent_depth = agent_event.depth_frame
+    mse = np.square((np.subtract(camera_depth, agent_depth))).mean()
+    # if the clipping planes aren't the same between the agent and third-party camera
+    # the mse will be > 1.0
+    assert mse < 0.0001
+
 
 def test_update_third_party_camera(fifo_controller):
     # add a new camera
@@ -627,7 +670,9 @@ def test_open_interactable_with_filter(controller):
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter"))
@@ -659,7 +704,9 @@ def test_open_interactable(controller):
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
         obj
@@ -1101,7 +1148,8 @@ def test_teleport(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1112,7 +1160,8 @@ def test_teleport(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1120,7 +1169,8 @@ def test_teleport(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1707,6 +1757,43 @@ def test_randomize_materials_clearOnReset(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_directionalPush(controller):
+    positions = []
+    for angle in [0, 90, 180, 270, -1, -90]:
+        controller.reset(scene="FloorPlan28")
+        start = controller.step(
+            action="TeleportFull",
+            position=dict(x=-3.25, y=0.9, z=-1.25),
+            rotation=dict(x=0, y=0, z=0),
+            horizon=30,
+            standing=True,
+        )
+        # z increases
+        end = controller.step(
+            action="DirectionalPush",
+            pushAngle=angle,
+            objectId="Tomato|-03.13|+00.92|-00.39",
+            moveMagnitude=25,
+        )
+        start_obj = next(
+            obj for obj in start.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        end_obj = next(
+            obj for obj in end.metadata["objects"] if obj["objectType"] == "Tomato"
+        )
+        positions.append((start_obj["position"], end_obj["position"]))
+
+    assert positions[0][1]["z"] - positions[0][0]["z"] > 0.2
+    assert positions[4][1]["z"] - positions[4][0]["z"] > 0.2
+
+    assert positions[1][1]["x"] - positions[1][0]["x"] > 0.2
+    assert positions[2][1]["z"] - positions[2][0]["z"] < -0.2
+
+    assert positions[3][1]["x"] - positions[3][0]["x"] < -0.2
+    assert positions[5][1]["x"] - positions[5][0]["x"] < -0.2
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_randomize_materials_params(controller):
     controller.reset(scene="FloorPlan15")
     meta = controller.step(
@@ -1729,7 +1816,8 @@ def test_randomize_materials_params(controller):
         == 325
     )
     assert controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert (
         controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
@@ -1740,7 +1828,8 @@ def test_randomize_materials_params(controller):
 
     controller.reset(scene="FloorPlan_Train5_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
@@ -1751,7 +1840,8 @@ def test_randomize_materials_params(controller):
 
     controller.reset(scene="FloorPlan_Val3_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
@@ -1799,3 +1889,191 @@ def test_segmentation_colors(controller):
     assert (
         event.color_to_object_id[fridge_color] == "Fridge"
     ), "Fridge should have this color on instance seg"
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_move_hand(controller):
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="MoveHeldObject", ahead=0.1).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert abs(h2["localPosition"]["y"] - h1["localPosition"]["y"]) < 1e-3
+    assert abs(h2["localPosition"]["x"] - h1["localPosition"]["x"]) < 1e-3
+
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(
+        action="MoveHeldObject", ahead=0.1, right=0.1, up=0.1
+    ).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["x"] - h1["localPosition"]["x"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["y"] - h1["localPosition"]["y"] <= 0.1 + 1e-3
+    )
+
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(
+        action="MoveHeldObject", ahead=0.1, right=0.05, up=-0.1
+    ).metadata["heldObjectPose"]
+
+    assert_near(h1["rotation"], h2["rotation"])
+    assert (
+        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    )
+    assert (
+        0.05 - 1e-3
+        <= h2["localPosition"]["x"] - h1["localPosition"]["x"]
+        <= 0.05 + 1e-3
+    )
+    assert (
+        -0.1 - 1e-3
+        <= h2["localPosition"]["y"] - h1["localPosition"]["y"]
+        <= -0.1 + 1e-3
+    )
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_rotate_hand(controller):
+    # Tests RotateHeldObject and that event.metadata["hand"] is equivalent to
+    # event.metadata["heldObjectPose"] for backwards compatibility purposes
+    # PITCH
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", pitch=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["x"] - h1["rotation"]["x"] == 90
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", yaw=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert h2["rotation"]["y"] - h1["rotation"]["y"] == 90
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["z"] == h1["rotation"]["z"]
+
+    # ROLL
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", roll=90).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+
+    # NOTE: 270 is expected if you want roll to be positive moving rightward
+    assert h2["rotation"]["z"] - h1["rotation"]["z"] == 270
+    assert h2["rotation"]["x"] == h1["rotation"]["x"]
+    assert h2["rotation"]["y"] == h1["rotation"]["y"]
+
+    # ROLL + PITCH + YAW
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="RotateHeldObject", roll=90, pitch=90, yaw=90).metadata[
+        "hand"
+    ]
+
+    assert_near(h1["position"], h2["position"])
+    assert_near(h1["rotation"], dict(x=0, y=180, z=0))
+
+    # Unity will normalize the rotation, so x=90, y=270, and z=270 becomes x=90, y=0, z=0
+    assert_near(h2["rotation"], dict(x=90, y=0, z=0))
+
+    # local rotation test
+    controller.reset()
+    h1 = controller.step(
+        action="PickupObject",
+        objectId="SoapBottle|-00.84|+00.93|-03.76",
+        forceAction=True,
+    ).metadata["hand"]
+    h2 = controller.step(
+        action="RotateHeldObject", rotation=dict(x=90, y=180, z=0)
+    ).metadata["hand"]
+
+    assert_near(h1["position"], h2["position"])
+    assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
+    assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
+def test_fill_liquid(controller):
+    pot = next(
+        obj
+        for obj in controller.last_event.metadata["objects"]
+        if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+    )
+    assert pot["fillLiquid"] is None
+    assert not pot["isFilledWithLiquid"]
+    assert pot["canFillWithLiquid"]
+
+    for fillLiquid in ["water", "wine", "coffee"]:
+        controller.step(
+            action="FillObjectWithLiquid",
+            fillLiquid=fillLiquid,
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] == fillLiquid
+        assert pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+
+        controller.step(
+            action="EmptyLiquidFromObject",
+            objectId="Pot|-00.61|+00.80|-03.42",
+            forceAction=True,
+        )
+        pot = next(
+            obj
+            for obj in controller.last_event.metadata["objects"]
+            if obj["objectId"] == "Pot|-00.61|+00.80|-03.42"
+        )
+        assert pot["fillLiquid"] is None
+        assert not pot["isFilledWithLiquid"]
+        assert pot["canFillWithLiquid"]
+

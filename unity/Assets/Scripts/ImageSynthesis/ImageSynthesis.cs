@@ -318,7 +318,6 @@ public class ImageSynthesis : MonoBehaviour {
                 objTag = sop.ObjectID;
             }
 
-
             Color classColor = ColorEncoding.EncodeTagAsColor(classTag);
             Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
@@ -331,19 +330,12 @@ public class ImageSynthesis : MonoBehaviour {
                 colorIds[objColor] = r.gameObject.name;
             }
 
-            //			if (r.material.name.ToLower().Contains ("lightray")) {
-            //				objColor.a = 0;
-            //				classColor.a = 0;
-            //				mpb.SetFloat ("_Opacity", 0);
-            //
-            //			} else {
-            //				objColor.a = 1;
-            //				classColor.a = 1;
-            //				mpb.SetFloat ("_Opacity", 1);
-            //			}
-            //
-            // updated per @danielg - replaces commented out code
-            if (r.material.name.ToLower().Contains("lightray")) {
+            // Check to name sure name includes lightray for RandomizeMaterials to continue to work
+            // with image synthesis on.
+            if (
+                r.gameObject.name.ToLower().Contains("lightray")
+                && r.material.name.ToLower().Contains("lightray")
+            ) {
                 r.enabled = false;
                 continue;
             }
@@ -459,7 +451,7 @@ public class ImageSynthesis : MonoBehaviour {
 
         tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
         tex.Apply();
-        Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
+        // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
 
         startTime = Time.realtimeSinceStartup;
 
@@ -471,7 +463,7 @@ public class ImageSynthesis : MonoBehaviour {
             bytes = tex.GetRawTextureData();
         }
 
-        Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
+        // Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
 
 
         // restore state and cleanup
