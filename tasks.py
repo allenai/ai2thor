@@ -3577,6 +3577,8 @@ def create_json(ctx, file_path, output=None):
                 json.dump(house, fw, indent=4, sort_keys=True)
 
 
+
+
 @task
 def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False):
     import ai2thor.controller
@@ -3656,7 +3658,11 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         print(evt.metadata['lastActionSuccess'])
         print(evt.metadata['errorMessage'])
 
-        print(evt.metadata['actionReturn'])
+        # this is what you need
+        object_position = evt.metadata['actionReturn'];
+
+        print(object_position)
+
         for i in range(n):
             controller.step("MoveAhead")
             time.sleep(0.4)
