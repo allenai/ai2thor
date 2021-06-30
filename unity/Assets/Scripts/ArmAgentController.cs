@@ -64,6 +64,81 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        /*
+        Let's say you wanted the agent to be able to rotate the object it's
+        holding so that it could get multiple views of the object. You
+        could do this by using the RotateWristRelative action but the downside
+        of using that function is that object will be translated as the
+        wrist rotates. This RotateWristAroundHeldObject action gets around this
+        problem by allowing you to specify how much you'd like the object to
+        rotate by and then figuring out how to translate/rotate the wrist so
+        that the object rotates while staying fixed in space.
+
+        Note that the object may stil be translated if the specified rotation
+        of the object is not feasible given the arm's DOF and length/joint
+        constraints.
+        */
+        public void RotateWristAroundHeldObject(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            if (arm.heldObjects.Count == 1) {
+                SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
+                RotateWristAroundPoint(
+                    point: sop.gameObject.transform.position,
+                    pitch: pitch,
+                    yaw: yaw,
+                    roll: roll,
+                    speed: speed,
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStart: returnToStart,
+                    disableRendering: disableRendering
+                );
+            } else {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Cannot RotateWristAroundHeldObject when holding" +
+                        $" != 1 objects, currently holding {arm.heldObjects.Count} objects."
+                );
+            }
+
+        }
+
+        /*
+        Rotates and translates the wrist so that its position
+        stays fixed relative some given point as that point
+        rotates some given amount.
+        */
+        public void RotateWristAroundPoint(
+            Vector3 point,
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateWristAroundPoint(
+                controller: this,
+                rotatePoint: point,
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
         // enabled because it is a successful "attempt" to pickup something

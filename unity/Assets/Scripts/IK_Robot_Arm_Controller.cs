@@ -228,11 +228,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
-    protected IEnumerator resetArmTargetPositionAsLastStep(IEnumerator steps) {
+    protected IEnumerator resetArmTargetPositionRotationAsLastStep(IEnumerator steps) {
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
-        armTarget.position = handCameraTransform.transform.position;
+        Vector3 pos = handCameraTransform.transform.position;
+        Quaternion rot = handCameraTransform.transform.rotation;
+        armTarget.position = pos;
+        armTarget.rotation = rot;
     }
 
     public void moveArmRelative(
@@ -331,7 +334,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
-        IEnumerator moveCall = resetArmTargetPositionAsLastStep(
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.move(
                 controller,
                 collisionListener,
@@ -379,15 +382,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
-        IEnumerator moveCall = ContinuousMovement.move(
-            controller: controller,
-            collisionListener: collisionListener,
-            moveTransform: this.transform,
-            targetPosition: target,
-            fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            unitsPerSecond: unitsPerSecond,
-            returnToStartPropIfFailed: returnToStartPositionIfFailed,
-            localPosition: true
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.move(
+                controller: controller,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: target,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond: unitsPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed,
+                localPosition: true
+            )
         );
 
         if (disableRendering) {
@@ -400,6 +405,39 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
+    public void rotateWristAroundPoint(
+        PhysicsRemoteFPSAgentController controller,
+        Vector3 rotatePoint,
+        Quaternion rotation,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        collisionListener.Reset();
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotateAroundPoint(
+                controller: controller,
+                collisionListener: collisionListener,
+                updateTransform: armTarget.transform,
+                rotatePoint: rotatePoint,
+                targetRotation: rotation,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond: degreesPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed
+            )
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                rotate,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(rotate);
+        }
+    }
+
     public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
@@ -409,14 +447,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        IEnumerator rotate = ContinuousMovement.rotate(
-            controller,
-            collisionListener,
-            armTarget.transform,
-            armTarget.transform.rotation * rotation,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            degreesPerSecond,
-            returnToStartPositionIfFailed
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotate(
+                controller,
+                collisionListener,
+                armTarget.transform,
+                armTarget.transform.rotation * rotation,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond,
+                returnToStartPositionIfFailed
+            )
         );
 
         if (disableRendering) {
@@ -440,14 +480,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         collisionListener.Reset();
         GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
-        IEnumerator rotate = ContinuousMovement.rotate(
-            controller,
-            collisionListener,
-            poleManipulator.transform,
-            poleManipulator.transform.rotation * rotation,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            degreesPerSecond,
-            returnToStartPositionIfFailed
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotate(
+                controller,
+                collisionListener,
+                poleManipulator.transform,
+                poleManipulator.transform.rotation * rotation,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond,
+                returnToStartPositionIfFailed
+            )
         );
 
         if (disableRendering) {

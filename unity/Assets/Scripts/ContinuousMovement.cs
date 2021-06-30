@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
 
-
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
@@ -107,6 +106,92 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 setPosFunc,
                 nextPosFunc
             );
+        }
+
+        protected static IEnumerator finallyDestroyGameObjects(
+            List<GameObject> gameObjectsToDestroy,
+            IEnumerator steps
+        ) {
+            while (steps.MoveNext()) {
+                yield return steps.Current;
+            }
+
+            foreach (GameObject go in gameObjectsToDestroy) {
+                GameObject.Destroy(go);
+            }
+        }
+
+        public static IEnumerator rotateAroundPoint(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform updateTransform,
+            Vector3 rotatePoint,
+            Quaternion targetRotation,
+            float fixedDeltaTime,
+            float degreesPerSecond,
+            bool returnToStartPropIfFailed = false
+        ) {
+            bool teleport = (degreesPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
+            // To figure out how to translate/rotate the undateTransform
+            // we just create two proxy game object that represent the
+            // transforms of objects sitting at the updateTransform
+            // position (fulcrum) and the rotatePoint (wristProxy). The
+            // wristProxy transform is a child of the fulcrum transform.
+            // As we rotate the fulcrum transform we thus figure out how the
+            // updateTransform should be updated by looking at how the
+            // wristProxy transform has changed.
+
+            GameObject fulcrum = new GameObject();
+            fulcrum.transform.position = rotatePoint;
+            fulcrum.transform.rotation = updateTransform.rotation;
+            targetRotation = fulcrum.transform.rotation * targetRotation;
+
+            GameObject wristProxy = new GameObject();
+            wristProxy.transform.parent = fulcrum.transform;
+            wristProxy.transform.position = updateTransform.position;
+            wristProxy.transform.rotation = updateTransform.rotation;
+
+            List<GameObject> tmpObjects = new List<GameObject>();
+            tmpObjects.Add(fulcrum);
+            tmpObjects.Add(wristProxy);
+
+            Quaternion updateTransformStartRotation = updateTransform.rotation;
+
+            Func<Quaternion, Quaternion, Quaternion> directionFunc = (target, current) => target;
+            Func<Quaternion, Quaternion, float> distanceFunc = (target, current) => Quaternion.Angle(current, target);
+
+            Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
+            Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
+                 t.rotation = newRotation;
+                 updateTransform.position = wristProxy.transform.position;
+                 updateTransform.rotation = newRotation;
+            };
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
+                return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+            };
+
+            if (teleport) {
+                nextRotFunc = (t, direction) => targetRotation;
+            }
+
+            return finallyDestroyGameObjects(
+                gameObjectsToDestroy: tmpObjects,
+                steps: updateTransformPropertyFixedUpdate(
+                    controller: controller,
+                    collisionListener: collisionListener,
+                    moveTransform: fulcrum.transform,
+                    target: targetRotation,
+                    getProp: getRotFunc,
+                    setProp: setRotFunc,
+                    nextProp: nextRotFunc,
+                    getDirection: directionFunc,
+                    distanceMetric: distanceFunc,
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStartPropIfFailed: returnToStartPropIfFailed
+                )
+            );
+
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
