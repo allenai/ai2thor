@@ -4226,7 +4226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.creatPolygonFloorHouse(
+            var floor = ProceduralTools.createHouse(
                 $"Floor",
                 house,
                 materials
@@ -4243,6 +4243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
             var metadata = assetDb.prefabs.Where(p => p.GetComponent<SimObjPhysics>() != null).Select(
                 p => {
                     var simObj = p.GetComponent<SimObjPhysics>();
@@ -4260,6 +4261,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             ).ToList();
             actionFinished(true, metadata);
+        }
+
+        public void BakeNavMesh() {
+            var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
+            if (navmesh == null) {
+                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`.");
+                return;
+            }
+            navmesh.BuildNavMesh();
+            actionFinished(true);
         }
 
         public void OnTriggerStay(Collider other) {

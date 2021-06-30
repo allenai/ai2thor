@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
+using UnityEngine.AI;
 
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -985,7 +986,7 @@ namespace Thor.Procedural {
             };
         }
 
-        public static GameObject creatPolygonFloorHouse(
+        public static GameObject createHouse(
            string name,
            ProceduralHouse house,
            AssetMap<Material> materialDb,
@@ -1059,6 +1060,8 @@ namespace Thor.Procedural {
                 var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, true);
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
                 ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+
+                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
             }
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
@@ -1068,8 +1071,9 @@ namespace Thor.Procedural {
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
 
             foreach (var obj in house.objects) {
-                var k = ProceduralTools.spawnObject(
-                    ProceduralTools.getAssetMap(), obj);
+                // var go = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), obj);
+                // tagObjectNavmesh(go, "Not Walkable");
+                spawnObjectHierarchy(obj);
             }
 
             //generate objectId for newly created wall/floor objects
@@ -1081,7 +1085,69 @@ namespace Thor.Procedural {
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
+            buildNavMesh(floorGameObject, house.procedural_parameters.navmesh_voxel_size);
+
+            //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
+
+            //UnityEngine.AI.NavMEshSur
+            //NavMeshSurface[] surfaces;
+
             return floorGameObject;
+        }
+
+        public static void spawnObjectHierarchy(HouseObject houseObject) {
+            if (houseObject == null) {
+                return;
+            }
+            if (houseObject.children != null) {
+                foreach (var child in houseObject.children) {
+                    spawnObjectHierarchy(child);
+                }
+            }
+            var go = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), houseObject);
+            // Debug.Log("navmesh area for obj " + houseObject.asset_id + " area " + houseObject.navmesh_area + " bool " + (houseObject.navmesh_area != ""));
+            tagObjectNavmesh(go, "Not Walkable");
+        }
+
+        public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable") {
+            var modifier = gameObject.GetComponent<NavMeshModifier>();
+            if (modifier == null) {
+                modifier = gameObject.AddComponent<NavMeshModifier>();
+            }
+            // var modifier = gameObject.AddComponent<NavMeshModifier>();
+            modifier.overrideArea = true;
+            Debug.Log("navmesh area " + navMeshAreaName);
+            modifier.area = NavMesh.GetAreaFromName(navMeshAreaName);
+        }
+
+
+        public static void buildNavMesh(GameObject floorGameObject, float? voxelSize = null) {
+
+            var navMesh = floorGameObject.AddComponent<NavMeshSurface>();
+            // TODO multiple agents
+            var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+
+            navMesh.agentTypeID = navMeshAgent.agentTypeID;
+            var settings = navMesh.GetBuildSettings();
+            Debug.Log("Navmesh Agent radius: " + settings.agentRadius + ", Agent height " + settings.agentHeight);
+
+            navMesh.overrideVoxelSize = voxelSize != null;
+            navMesh.voxelSize = voxelSize.GetValueOrDefault(0.0f);
+
+            navMesh.BuildNavMesh();
+
+            //     new NavMeshBuildSettings() {
+            //     agentTypeID = navmeshAgent.agentTypeID,
+            //     agentRadius = 0.2f,
+            //     agentHeight = 1.8f,
+            //     agentSlope = 10,
+            //     agentClimb = 0.5f,
+            //     minRegionArea = 0.05f,
+            //     overrideVoxelSize = false,
+            //     overrideTileSize = false
+            // };
+            // NavMeshSetup.SetNavMeshNotWalkable(GameObject.Find("Objects"));
+
         }
 
 #if UNITY_EDITOR

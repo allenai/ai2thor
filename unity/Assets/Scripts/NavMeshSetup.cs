@@ -184,7 +184,7 @@ public class NavMeshSetup : MonoBehaviour {
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
     }
 
-    private static void SetNavMeshNotWalkable(GameObject hirerarchy) {
+    public static void SetNavMeshNotWalkable(GameObject hirerarchy) {
 
         var objectHierarchy = GameObject.Find("Objects");
         if (objectHierarchy == null) {

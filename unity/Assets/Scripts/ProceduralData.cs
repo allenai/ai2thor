@@ -55,8 +55,10 @@ namespace Thor.Procedural.Data {
         public Margin margin { get; set; }
         public string room_0 { get; set; }
         public string room_1 { get; set; }
+        public string wall_0_id { get; set; }
+        public string wall_1_id { get; set; }
         public BoundingBox bounding_box { get; set; }
-        public string wall_id { get; set; }
+
         public List<VectorXZ> axes_xz { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
@@ -73,6 +75,7 @@ namespace Thor.Procedural.Data {
         public List<LightParameters> lights { get; set; }
 
         public string ceiling_material { get; set; }
+        public float navmesh_voxel_size { get; set; }
     }
 
     [Serializable]
@@ -167,9 +170,10 @@ namespace Thor.Procedural.Data {
         public bool kinematic { get; set; } //should the rigidbody be kinematic or not
         public BoundingBox bounding_box { get; set; }
         public string room { get; set; }
-        public List<object> children { get; set; }
+        public List<HouseObject> children { get; set; }
         public List<Taxonomy> types { get; set; }
         public string asset_id { get; set; } //name of prefab asset from asset database
+        public string navmesh_area { get; set; }
     }
 
     [Serializable]
