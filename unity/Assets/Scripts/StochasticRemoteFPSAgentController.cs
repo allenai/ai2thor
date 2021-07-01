@@ -85,8 +85,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var moveLocal = new Vector3(x, 0, z);
             float xzMag = moveLocal.magnitude;
-            if (xzMag > 1e-5) {
-
+            if (xzMag > 1e-5f) {
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
                 if (this.applyActionNoise) {
                     var random = new System.Random();
