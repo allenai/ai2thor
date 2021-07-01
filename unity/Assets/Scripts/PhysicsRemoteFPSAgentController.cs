@@ -1834,8 +1834,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1862,8 +1862,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1890,8 +1890,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1918,8 +1918,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
