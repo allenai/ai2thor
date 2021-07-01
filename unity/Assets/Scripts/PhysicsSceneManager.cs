@@ -825,11 +825,13 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     // manually advance the physics timestep 
     public void AdvancePhysicsStep(
-            float timeStep = 0.02f,
-            float? simSeconds = null,
-            bool allowAutoSimulation = false
-        ) {
-
+        float timeStep = 0.02f,
+        float? simSeconds = null,
+        bool allowAutoSimulation = false
+    ) {
+        if (timeStep <= 0f && simSeconds.GetValueOrDefault(0f) > 0f) {
+            throw new InvalidOperationException($"timestep must be > 0");
+        }
         bool oldPhysicsAutoSim = Physics.autoSimulation;
         Physics.autoSimulation = false;
 

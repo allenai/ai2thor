@@ -250,7 +250,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
-        Vector3 offsetWorldPos = Vector3.zero;
+
+        Vector3 offsetWorldPos;
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
@@ -296,9 +297,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         IK_Robot_Arm_Controller arm = this;
 
         // Move arm based on hand space or arm origin space
-        // Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
-        Vector3 targetWorldPos = Vector3.zero;
-
+        Vector3 targetWorldPos;
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
@@ -406,9 +405,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
-    public void rotateHand(
+    public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
-        Quaternion targetQuat,
+        Quaternion rotation,
         float degreesPerSecond,
         bool disableRendering = false,
         float fixedDeltaTime = 0.02f,
@@ -419,7 +418,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             controller,
             collisionListener,
             armTarget.transform,
-            armTarget.transform.rotation * targetQuat,
+            armTarget.transform.rotation * rotation,
             disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
             degreesPerSecond,
             returnToStartPositionIfFailed
@@ -433,6 +432,56 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         } else {
             StartCoroutine(rotate);
         }
+    }
+
+    public void rotateElbowRelative(
+        PhysicsRemoteFPSAgentController controller,
+        float degrees,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        collisionListener.Reset();
+        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
+        IEnumerator rotate = ContinuousMovement.rotate(
+            controller,
+            collisionListener,
+            poleManipulator.transform,
+            poleManipulator.transform.rotation * rotation,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            degreesPerSecond,
+            returnToStartPositionIfFailed
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                rotate,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(rotate);
+        }
+    }
+
+    public void rotateElbow(
+        PhysicsRemoteFPSAgentController controller,
+        float degrees,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        rotateElbowRelative(
+            controller: controller,
+            degrees: (degrees - poleManipulator.transform.eulerAngles.z),
+            degreesPerSecond: degreesPerSecond,
+            disableRendering: disableRendering,
+            fixedDeltaTime: fixedDeltaTime,
+            returnToStartPositionIfFailed: returnToStartPositionIfFailed
+        );
     }
 
     public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {

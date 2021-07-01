@@ -324,31 +324,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        // currently not finished action. New logic needs to account for the
-        // hierarchy of rigidbodies of each arm joint and how to detect collision
-        // between a given arm joint an other arm joints.
-        public void RotateMidLevelHand(ServerAction action) {
+        /*
+        Rotates the wrist (in a relative fashion) given some input
+        pitch, yaw, and roll offsets. Easiest to see how this works by
+        using the editor debugging and shift+alt+(arrow keys or s/w).
+
+        Currently not a completely finished action. New logic is needed
+        to prevent self-collisions. In particular we need to
+        account for the hierarchy of rigidbodies of each arm joint and
+        determine how to detect collision between a given arm joint and other arm joints.
+        */
+        public void RotateWristRelative(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
             IK_Robot_Arm_Controller arm = getArm();
-            Quaternion target = new Quaternion();
 
-            // rotate around axis aliged x, y, z with magnitude based on vector3
-            if (action.degrees == 0) {
-                // use euler angles
-                target = Quaternion.Euler(action.rotation);
-            } else {
-                // rotate action.degrees about axis
-                target = Quaternion.AngleAxis(action.degrees, action.rotation);
-            }
-
-            arm.rotateHand(
+            arm.rotateWrist(
                 controller: this,
-                targetQuat: target,
-                degreesPerSecond: action.speed,
-                disableRendering: action.disableRendering,
-                fixedDeltaTime: action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: action.returnToStart
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
             );
         }
+
+        /*
+        Rotates the elbow (in a relative fashion) by some given
+        number of degrees. Easiest to see how this works by
+        using the editor debugging and shift+alt+(q/e).
+
+        Currently not a completely finished action. New logic is needed
+        to prevent self-collisions. In particular we need to
+        account for the hierarchy of rigidbodies of each arm joint and
+        determine how to detect collision between a given arm joint and other arm joints.
+        */
+        public void RotateElbowRelative(
+            float degrees,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateElbowRelative(
+                controller: this,
+                degrees: degrees,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
+        /*
+        Same as RotateElbowRelative but rotates the elbow to a given angle directly.
+        */
+        public void RotateElbow(
+            float degrees,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateElbow(
+                controller: this,
+                degrees: degrees,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
 
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the

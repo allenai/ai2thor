@@ -103,8 +103,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 if (!inputField.isFocused) {
-                    bool armMode = Input.GetKey(KeyCode.LeftShift);
-                    if (!armMode) {
+                    bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                    bool altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+                    bool noModifier = (!shiftHeld) && (!altHeld);
+                    bool armMoveMode = shiftHeld && !altHeld;
+                    bool armRotateMode = shiftHeld && altHeld;
+
+                    if (noModifier) {
                         float WalkMagnitude = 0.25f;
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -150,7 +155,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
 
-                    } else {
+                    } else if (armMoveMode) {
                         var actionName = "MoveArmRelative";
                         var localPos = new Vector3(0, 0, 0);
                         float ArmMoveMagnitude = 0.05f;
@@ -182,6 +187,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["offset"] = localPos;
                                 //action["fixedDeltaTime"] = fixedDeltaTime;
                                 //action["speed"] = 0.1;
+                            }
+                            this.CurrentActiveController().ProcessControlCommand(action);
+                        }
+                    } else if (armRotateMode) {
+                        var actionName = "RotateWristRelative";
+                        float rotateMag = 30f;
+                        float pitch = 0f;
+                        float yaw = 0f;
+                        float roll = 0f;
+                        float degrees = 0f;
+
+                        if (Input.GetKeyDown(KeyCode.W)) {
+                            roll += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.S)) {
+                            roll -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                            pitch += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                            pitch -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                            yaw -= rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                            yaw += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.E)) {
+                            actionName = "RotateElbowRelative";
+                            degrees += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.Q)) {
+                            // Why Q/E rather than A/D? Because apparently
+                            // shift+alt+A is a Unity shortcut and Unity
+                            // doesn't provide the ability to disable shortcuts in
+                            // play mode despite this being a feature request since 2013.
+                            actionName = "RotateElbowRelative";
+                            degrees -= rotateMag;
+                        } else {
+                            actionName = "";
+                        }
+
+                        if (actionName != "") {
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["action"] = actionName;
+                            if (actionName == "RotateWristRelative") {
+                                action["pitch"] = pitch;
+                                action["yaw"] = yaw;
+                                action["roll"] = roll;
+                            } else if (actionName == "RotateElbowRelative") {
+                                action["degrees"] = degrees;
                             }
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
