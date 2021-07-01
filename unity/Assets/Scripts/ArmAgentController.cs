@@ -168,37 +168,128 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void MoveAhead(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
+        public override void MoveAhead(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
+        public override void MoveBack(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
+        public override void MoveRight(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveBack(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public override void MoveLeft(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRelative(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public override void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
-        public override void RotateRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
-        }
-
-        public override void RotateLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
-        }
-
-        // this is supported in base
-        public override void Rotate(Vector3 rotation) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
+        public override void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
         public void RotateAgent(

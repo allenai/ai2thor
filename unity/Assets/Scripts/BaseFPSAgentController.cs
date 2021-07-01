@@ -1932,6 +1932,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+#if UNITY_EDITOR
+        // for use in Editor to test the Reset function.
+        public void Reset(ServerAction action) {
+            physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+        }
+#endif
+
         // no op action
         public void Done() {
             actionFinished(true);
@@ -2267,50 +2274,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // StartCoroutine(checkMoveAction(action));
         }
 
-        // do not use this base version, use the override from PhysicsRemote or Stochastic
-        public virtual void MoveLeft(ServerAction action) {
-            moveCharacter(action, 270);
-        }
-
-        public virtual void MoveRight(ServerAction action) {
-            moveCharacter(action, 90);
-        }
-
-        public virtual void MoveAhead(ServerAction action) {
-            moveCharacter(action, 0);
-        }
-
-        public virtual void MoveBack(ServerAction action) {
-            moveCharacter(action, 180);
-        }
-
-        // overwritten by stochastic
-        public virtual void MoveRelative(ServerAction action) {
-            var moveLocal = new Vector3(action.x, 0, action.z);
-            Vector3 moveWorldSpace = transform.rotation * moveLocal;
-            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(moveWorldSpace);
-            actionFinished(true);
-        }
-
-        // free rotate, change forward facing of Agent
-        // this is currently overwritten by Rotate in Stochastic Controller
-        public virtual void Rotate(Vector3 rotation) {
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation.y, 0.0f));
-            actionFinished(true);
-        }
-
-        // rotates controlCommand.degrees degrees left w/ respect to current forward
-        public virtual void RotateLeft(ServerAction controlCommand) {
-            transform.Rotate(0, -controlCommand.degrees, 0);
-            actionFinished(true);
-        }
-
-        // rotates controlCommand.degrees degrees right w/ respect to current forward
-        public virtual void RotateRight(ServerAction controlCommand) {
-            transform.Rotate(0, controlCommand.degrees, 0);
-            actionFinished(true);
-        }
 
         // iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
         public virtual void LookDown(ServerAction controlCommand) {
@@ -2523,6 +2486,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
+        }
+
+
+        /*
+        Naively parents one sim object under another game object. The child object
+        will become kinematic, this is necessary as parenting non-kinematic rigidbodies
+        can cause all sorts of issues.
+
+        Note that this function is "dangerous" in that it can have unintended interactions
+        with other actions. Please only use this action if you understand what you're doing.
+        */
+        public void ParentObject(string parentId, string childId) {
+            if (parentId == childId) {
+                errorMessage = $"Parent id ({parentId}) must not equal child id.";
+                actionFinished(false);
+                return;
+            }
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(parentId)) {
+                errorMessage = $"No parent object with ID {parentId}";
+                actionFinished(false);
+                return;
+            }
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(childId)) {
+                errorMessage = $"No parent object with ID {childId}";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics parent = physicsSceneManager.ObjectIdToSimObjPhysics[parentId];
+            SimObjPhysics child = physicsSceneManager.ObjectIdToSimObjPhysics[childId];
+
+            child.gameObject.transform.parent = parent.gameObject.transform;
+            child.GetComponent<Rigidbody>().isKinematic = true;
+
+            actionFinished(true);
+        }
+
+        /*
+        Can be used to undo the effect of `ParentObject`. Will set the
+        parent of the object corresponding to objectId to be the top-level
+        "Objects" object of the scene (the default parent of all objects).
+        You must also explicitly pass in whether you want the object to be
+        kinematic or not after unparenting.
+
+        No error will be thrown if the object is already a child of the
+        top level "Objects" object and the kinematic state of the object will
+        still be changed in such a case.
+
+        Note that this function is "dangerous" in that it can have unintended interactions
+        with other actions. Please only use this action if you understand what you're doing.
+        */
+        public void UnparentObject(string objectId, bool kinematic) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"No object with ID {objectId}";
+                actionFinished(false);
+                return;
+            }
+
+            GameObject topLevelObject = GameObject.Find("Objects");
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            sop.gameObject.transform.parent = topLevelObject.transform;
+            sop.GetComponent<Rigidbody>().isKinematic = kinematic;
+            actionFinished(true);
         }
 
         protected bool hasAncestor(GameObject child, GameObject potentialAncestor) {

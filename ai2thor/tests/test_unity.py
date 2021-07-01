@@ -1619,9 +1619,12 @@ def test_get_reachable_positions_with_directions_relative_agent(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_move(controller):
-    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
+    start_position = {"x": -1.5, "y": 0.9009982347488403, "z": -1.5}
+
+    event = controller.reset(scene=TEST_SCENE, agentMode="arm", gridSize=0.25)
+
     assert_near(
-        point1={"x": -1.5, "y": 0.9009982347488403, "z": -1.5},
+        point1=start_position,
         point2=event.metadata["agent"]["position"],
     )
 
@@ -1631,10 +1634,44 @@ def test_manipulathor_move(controller):
         point2=event.metadata["agent"]["position"],
     )
 
+    event = controller.step(action="MoveAgent", ahead=-0.25, right=-0.15)
+    assert_near(
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
+    )
+
+    event = controller.step(action="MoveRight")
+    assert_near(
+        point1={"x": -1.75, "y": 0.9009982347488403, "z": -1.5},
+        point2=event.metadata["agent"]["position"],
+    )
+
+    event = controller.step(action="MoveLeft")
+    assert_near(
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
+    )
+
+    event = controller.step(action="MoveAhead")
+    assert_near(
+        point1={"x": -1.5, "y": 0.9009982347488403, "z": -1.75},
+        point2=event.metadata["agent"]["position"],
+    )
+
+    event = controller.step(action="MoveBack")
+    assert_near(
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
+    )
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_manipulathor_rotate(controller):
-    event = controller.reset(scene=TEST_SCENE, agentMode="arm")
+    event = controller.reset(
+        scene=TEST_SCENE,
+        agentMode="arm",
+        rotateStepDegrees=90
+    )
     assert_near(
         point1={"x": -0.0, "y": 180.0, "z": 0.0},
         point2=event.metadata["agent"]["rotation"],
@@ -1646,22 +1683,34 @@ def test_manipulathor_rotate(controller):
         point2=event.metadata["agent"]["rotation"],
     )
 
+    event = controller.step(action="RotateRight")
+    assert_near(
+        point1={"x": -0.0, "y": 330.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
+    event = controller.step(action="RotateLeft")
+    assert_near(
+        point1={"x": -0.0, "y": 240.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
+    event = controller.step(action="RotateRight", degrees=60)
+    assert_near(
+        point1={"x": -0.0, "y": 300.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
+    event = controller.step(action="RotateLeft", degrees=60)
+    assert_near(
+        point1={"x": -0.0, "y": 240.0, "z": 0.0},
+        point2=event.metadata["agent"]["rotation"],
+    )
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_unsupported_manipulathor(controller):
     controller.reset(agentMode="arm")
-    unsupported_actions = [
-        "MoveAhead",
-        "MoveBack",
-        "MoveLeft",
-        "MoveRight",
-        "RotateRight",
-        "RotateLeft",
-    ]
-
-    for action in unsupported_actions:
-        event = controller.step(action)
-        assert not event, action + " should have failed with agentMode=arm"
 
     event = controller.step(action="PickupObject", x=0.5, y=0.5)
     assert not event, "PickupObject(x, y) should have failed with agentMode=arm"

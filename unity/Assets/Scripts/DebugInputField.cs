@@ -306,7 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["agentMode"] = "locobot";
                         // action["gridSize"] = 0.25f;
                         // action["visibilityDistance"] = 1.0f;
-                        // action["rotateStepDegrees"] = 45;
+                        action["rotateStepDegrees"] = 45;
                         // action["agentControllerType"] = "stochastic";
                         // action["applyActionNoise"] = true;
                         // action["snapToGrid"] = false;
@@ -372,6 +372,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // am.Initialize(action);
                         break;
                     }
+
+                case "inite": {
+                        Dictionary<string, object> action = new Dictionary<string, object>{
+                            {"action", "Initialize"},
+                            {"agentMode", "arm"},
+                            {"agentControllerType", "mid-level"}
+                        };
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+
+                        var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var armTarget = GameObject.Find("IK_pos_rot_manipulator");
+                        armTarget.transform.Rotate(90f, 0f, 0f);
+
+                        var armJointToRotate = GameObject.Find("IK_pole_manipulator");
+                        armJointToRotate.transform.Rotate(0f, 0f, 90f);
+
+                        var armBase = GameObject.Find("robot_arm_rig_gripper");
+                        armBase.transform.Translate(0f, 0.27f, 0f);
+
+                        CurrentActiveController().ProcessControlCommand(
+                            new Dictionary<string, object>{
+                                {"action", "LookDown"}
+                        });
+
+                        break;
+                    }
+
+                case "parent": {
+                    Dictionary<string, object> action = new Dictionary<string, object>{
+                        {"action", "ParentObject"},
+                    };
+                    action["parentId"] = splitcommand[1];
+                    action["childId"] = splitcommand[2];
+
+                    CurrentActiveController().ProcessControlCommand(
+                        action
+                    );
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 
@@ -3018,32 +3058,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "mmlah": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveArmBase";
-                        action.disableRendering = false;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmBase";
+                        action["disableRendering"] = false;
 
                         if (splitcommand.Length > 1) {
-                            action.y = float.Parse(splitcommand[1]);
+                            action["y"] = float.Parse(splitcommand[1]);
 
                             if (splitcommand.Length > 2) {
-                                action.speed = float.Parse(splitcommand[2]);
+                                action["speed"] = float.Parse(splitcommand[2]);
                             }
                             if (splitcommand.Length > 3) {
-                                action.returnToStart = bool.Parse(splitcommand[3]);
+                                action["returnToStart"] = bool.Parse(splitcommand[3]);
                             }
 
                             if (splitcommand.Length > 4) {
-                                action.disableRendering = bool.Parse(splitcommand[4]);
+                                action["disableRendering"] = bool.Parse(splitcommand[4]);
                             }
 
                             if (splitcommand.Length > 5) {
-                                action.restrictMovement = bool.Parse(splitcommand[5]);
+                                action["restrictMovement"] = bool.Parse(splitcommand[5]);
                             }
                         } else {
-                            action.y = 0.9f;
-                            action.speed = 1.0f;
+                            action["y"] = 0.9f;
+                            action["speed"] = 1.0f;
                         }
-                        action.disableRendering = true;
+                        action["disableRendering"] = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
