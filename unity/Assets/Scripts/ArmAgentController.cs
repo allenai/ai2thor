@@ -226,19 +226,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void MoveAhead(
             float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            MoveAhead(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void MoveAhead(
-            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
@@ -255,19 +247,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void MoveBack(
             float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            MoveBack(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void MoveBack(
-            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
@@ -284,19 +268,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void MoveRight(
             float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            MoveRight(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void MoveRight(
-            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
@@ -313,19 +289,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void MoveLeft(
             float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            MoveLeft(moveMagnitude: moveMagnitude, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void MoveLeft(
-            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
@@ -342,16 +310,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateRight(
             float? degrees = null,
-            bool manualInteract = false,
-            bool forceAction = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            RotateRight(degrees: degrees, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void RotateRight(
-            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
             bool returnToStart = true,
@@ -370,16 +330,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateLeft(
             float? degrees = null,
-            bool manualInteract = false,
-            bool forceAction = false
-        ) {
-            // TODO: This is an ugly necessity until we refactor all
-            // of the agent controllers
-            RotateLeft(degrees: degrees, fixedDeltaTime: Time.fixedDeltaTime);
-        }
-
-        public void RotateLeft(
-            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
             bool returnToStart = true,

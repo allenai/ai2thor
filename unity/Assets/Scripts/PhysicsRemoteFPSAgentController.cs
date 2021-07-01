@@ -405,7 +405,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public virtual void RotateRight(
             float? degrees = null,
             bool manualInteract = false,
-            bool forceAction = false
+            bool forceAction = false,
+            float speed = 1.0f,              // TODO: Unused, remove when refactoring the controllers
+            bool waitForFixedUpdate = false, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,       // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true,    // TODO: Unused, remove when refactoring the controllers
+            float fixedDeltaTime = 0.02f     // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!degrees.HasValue) {
                 degrees = rotateStepDegrees;
@@ -434,7 +439,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public virtual void RotateLeft(
             float? degrees = null,
             bool manualInteract = false,
-            bool forceAction = false
+            bool forceAction = false,
+            float speed = 1.0f,              // TODO: Unused, remove when refactoring the controllers
+            bool waitForFixedUpdate = false, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,       // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true,    // TODO: Unused, remove when refactoring the controllers
+            float fixedDeltaTime = 0.02f     // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!degrees.HasValue) {
                 degrees = rotateStepDegrees;
@@ -1816,12 +1826,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1840,12 +1854,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1864,12 +1882,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
@@ -1888,12 +1910,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude < 0f) {
-                throw new InvalidOperationException("moveMagnitude but be > 0");
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
             }
 
             actionFinished(moveInDirection(
