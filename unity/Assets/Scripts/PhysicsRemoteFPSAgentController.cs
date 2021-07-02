@@ -1487,7 +1487,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             while (agentMovePQ.Count > 0 || !objectMoved) {
                 if (agentMovePQ.Count == 0) {
                     success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
-                    Physics.Simulate(0.04f);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
                     break;
                 } else {
                     PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController)agentMovePQ.First;
@@ -1496,13 +1496,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (!objectMoved && agentPriority < objectPriority) {
                         // Debug.Log("Object");
                         success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
-                        Physics.Simulate(0.04f);
+                        PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
                         objectMoved = true;
                     } else {
                         // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
                         success = nextAgent.moveInDirection(d, "", -1, false, false, agentsAndObjColliders);
-                        Physics.Simulate(0.04f);
+                        PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
                     }
                 }
                 if (!success) {
@@ -2448,7 +2448,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 rb.angularVelocity = rb.angularVelocity * 0.96f;
 
-                Physics.Simulate(0.04f);
+                PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
 #if UNITY_EDITOR
                 yield return null;
 #endif
@@ -2528,12 +2528,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // SetUpRotationBoxChecks();
             IsHandDefault = false;
 
-            Physics.Simulate(0.1f);
+            PhysicsSceneManager.PhysicsSimulateTHOR(0.1f);
             bool handObjectIsColliding = isHandObjectColliding(true);
             if (count != 0) {
                 for (int j = 0; handObjectIsColliding && j < 5; j++) {
                     AgentHand.transform.position = AgentHand.transform.position + 0.01f * aveCollisionsNormal;
-                    Physics.Simulate(0.1f);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(0.1f);
                     handObjectIsColliding = isHandObjectColliding(true);
                 }
             }
@@ -4780,7 +4780,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return null;
 
                 for (int i = 0; i < 100; i++) {
-                    Physics.Simulate(0.04f);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
 #if UNITY_EDITOR
                     yield return null;
 #endif

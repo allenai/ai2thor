@@ -40,6 +40,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected Vector3 lastLocalCameraPosition;
         [SerializeField] protected Quaternion lastLocalCameraRotation;
         public float autoResetTimeScale = 1.0f;
+        protected uint lastActionInitialPhysicsSimulateCount;
 
         protected float gridVisualizeY = 0.005f; // used to visualize reachable position grid, offset from floor
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
@@ -292,6 +293,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected virtual void actionFinished(bool success, AgentState newState, object actionReturn = null) {
             if (!this.IsProcessing) {
                 Debug.LogError("ActionFinished called with agentState not in processing ");
+            }
+
+            if (
+                (!Physics.autoSyncTransforms)
+                && lastActionInitialPhysicsSimulateCount == PhysicsSceneManager.PhysicsSimulateCallCount
+            ) {
+                Physics.SyncTransforms();
             }
 
             lastActionSuccess = success;
@@ -1813,7 +1821,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Once all those invocations have been converted to Dictionary<string, object>
         // this can be removed
         public void ProcessControlCommand(ServerAction serverAction) {
-
+            lastActionInitialPhysicsSimulateCount = PhysicsSceneManager.PhysicsSimulateCallCount;
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -1856,6 +1864,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+            lastActionInitialPhysicsSimulateCount = PhysicsSceneManager.PhysicsSimulateCallCount;
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();
@@ -3133,7 +3142,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 bool autoSim = Physics.autoSimulation;
                 Physics.autoSimulation = false;
                 for (int i = 0; i < 100; i++) {
-                    Physics.Simulate(0.02f);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(0.02f);
                 }
                 Physics.autoSimulation = autoSim;
             }

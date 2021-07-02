@@ -59,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
 
                 if (!Physics.autoSimulation) {
-                    Physics.Simulate(Time.fixedDeltaTime);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(Time.fixedDeltaTime);
                 }
 
                 yield return new WaitForEndOfFrame();
@@ -101,7 +101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 dumpPosition(wristCol);
 
                 if (!Physics.autoSimulation) {
-                    Physics.Simulate(Time.fixedDeltaTime);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(Time.fixedDeltaTime);
                 }
                 // animator.Update(Time.fixedDeltaTime);
 

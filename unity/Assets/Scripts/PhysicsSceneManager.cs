@@ -41,6 +41,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     public bool isSceneAtRest; // if any object in the scene has a non zero velocity, set to false
     public List<Rigidbody> rbsInScene = null; // list of all active rigidbodies in the scene
     public int AdvancePhysicsStepCount;
+    public static uint PhysicsSimulateCallCount;
 
     private void OnEnable() {
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
@@ -63,7 +64,13 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
     // Use this for initialization
     void Start() {
+        PhysicsSceneManager.PhysicsSimulateCallCount = 0;
         GatherAllRBsInScene();
+    }
+
+    public static void PhysicsSimulateTHOR(float deltaTime) {
+        Physics.Simulate(deltaTime);
+        PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
     private void GatherAllRBsInScene() {
