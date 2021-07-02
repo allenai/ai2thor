@@ -1683,8 +1683,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             try {
                 // default high level hand when teleporting
                 DefaultAgentHand();
-                ToggleArmColliders(arm: Arm, value: forceAction);
-                base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+                base.teleportFull(
+                    position: position,
+                    rotation: rotation,
+                    horizon: horizon,
+                    forceAction: forceAction
+                );
+
                 if (standing) {
                     stand();
                 } else {
@@ -1702,11 +1707,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         );
                     }
                     base.assertTeleportedNearGround(targetPosition: position);
-
-                    ToggleArmColliders(arm: Arm, value: false);
                 }
             } catch (InvalidOperationException e) {
-                ToggleArmColliders(arm: Arm, value: false);
                 if (wasStanding) {
                     stand();
                 } else {
