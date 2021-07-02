@@ -1924,6 +1924,23 @@ def test_invalid_arguments(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_drop_object(controller):
+    for action in ["DropHeldObject", "DropHandObject"]:
+        assert not controller.last_event.metadata["inventoryObjects"]
+        controller.step(
+            action="PickupObject",
+            objectId="SoapBottle|-00.84|+00.93|-03.76",
+            forceAction=True,
+        )
+        assert (
+            controller.last_event.metadata["inventoryObjects"][0]["objectId"]
+            == "SoapBottle|-00.84|+00.93|-03.76"
+        )
+        controller.step(action=action)
+        assert not controller.last_event.metadata["inventoryObjects"]
+
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_segmentation_colors(controller):
     event = controller.reset(renderSemanticSegmentation=True)
     fridge_color = event.object_id_to_color["Fridge"]
