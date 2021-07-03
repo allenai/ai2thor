@@ -2062,7 +2062,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
         }
 
-        Bounds newBoundingBox = new Bounds();
+        Bounds newBoundingBox = new Bounds(colliders[0].bounds.center, Vector3.zero);
         Vector3 minMeshXZ = colliders[0].bounds.center;
         Vector3 maxMeshXYZ = colliders[0].bounds.center;
 
