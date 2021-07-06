@@ -410,6 +410,7 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.x_display = None
+        self.initialized = False
 
         if x_display:
             self.x_display = x_display
@@ -674,6 +675,7 @@ class Controller(object):
         )
 
         self.scene = scene
+        self.initialized = True
         return self.last_event
 
     def random_initialize(
@@ -867,6 +869,8 @@ class Controller(object):
         return events
 
     def step(self, action=None, **action_args):
+        if self.initialized and self.last_event:
+            return self.last_event
 
         if type(action) is dict:
             action = copy.deepcopy(action)  # prevent changes from leaking
