@@ -869,8 +869,6 @@ class Controller(object):
         return events
 
     def step(self, action=None, **action_args):
-        if self.initialized and self.last_event:
-            return self.last_event
 
         if type(action) is dict:
             action = copy.deepcopy(action)  # prevent changes from leaking
@@ -879,6 +877,9 @@ class Controller(object):
 
         raise_for_failure = action_args.pop("raise_for_failure", False)
         action.update(action_args)
+
+        if self.initialized and self.last_event and action['action'] != "GetReachablePositions":
+            return self.last_event
 
         if self.headless:
             action["renderImage"] = False
