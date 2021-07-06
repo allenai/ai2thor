@@ -158,8 +158,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             tmpObjects.Add(fulcrum);
             tmpObjects.Add(wristProxy);
 
-            Quaternion updateTransformStartRotation = updateTransform.rotation;
-
             Func<Quaternion, Quaternion, Quaternion> directionFunc = (target, current) => target;
             Func<Quaternion, Quaternion, float> distanceFunc = (target, current) => Quaternion.Angle(current, target);
 
