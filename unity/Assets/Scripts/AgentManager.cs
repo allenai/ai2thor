@@ -522,7 +522,6 @@ public class AgentManager : MonoBehaviour {
         if (antiAliasing == "none") {
             postProcessLayer.enabled = false;
         } else {
-            Debug.Log("Happens");
             postProcessLayer.enabled = true;
             switch (antiAliasing) {
                 case "fxaa":
