@@ -600,6 +600,8 @@ class Controller(object):
         return scene
 
     def reset(self, scene=None, **init_params):
+        self.initialized = False
+
         if scene is None:
             scene = self.scene
 
