@@ -878,7 +878,7 @@ class Controller(object):
         raise_for_failure = action_args.pop("raise_for_failure", False)
         action.update(action_args)
 
-        if self.initialized and self.last_event and action['action'] in ["GetReachablePositions", "GetShortestPath", "GetShortestPathToPoint"]:
+        if self.initialized and self.last_event and (action['action'] not in ["GetReachablePositions", "GetShortestPath", "GetShortestPathToPoint"]):
             return self.last_event
 
         if self.headless:
