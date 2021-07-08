@@ -3201,7 +3201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
                 var cameraProps = getMapViewCameraProperties();
-                m_Camera.transform.rotation = (Quaternion)cameraProps["rotation"];
+                m_Camera.transform.rotation = Quaternion.Euler((Vector3)cameraProps["rotation"]);
                 m_Camera.transform.position = (Vector3)cameraProps["position"];
                 m_Camera.orthographic = (bool)cameraProps["orthographic"];
                 m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
@@ -3241,7 +3241,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             return new Dictionary<string, object>() {
                 ["position"] = new Vector3(midX, b.max.y + 5, midZ),
-                ["rotation"] = Quaternion.Euler(90f, 0f, 0f),
+                ["rotation"] = new Vector3(90, 0, 0),
                 ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
                 ["orthographic"] = true
             };
