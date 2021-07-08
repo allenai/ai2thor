@@ -3216,10 +3216,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
             StructureObject ceiling = null;
 
-            foreach (StructureObject structure in structureObjs) {
-                if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
-                    ceiling = structure;
-                    break;
+            if (structureObjs != null) {
+                foreach (StructureObject structure in structureObjs) {
+                    if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
+                        ceiling = structure;
+                        break;
+                    }
                 }
             }
 
