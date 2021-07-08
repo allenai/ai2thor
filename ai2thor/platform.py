@@ -123,7 +123,7 @@ class Linux64(BaseLinuxPlatform):
             if disp_screen.screen()["root_depth"] != 24:
                 errors.append(
                     "Display %s does not have a color depth of 24: %s"
-                    % (display_screen_str, disp_screen["root_depth"])
+                    % (display_screen_str, disp_screen.screen()["root_depth"])
                 )
         except (Xlib.error.DisplayNameError, Xlib.error.DisplayConnectionError) as e:
             errors.append(

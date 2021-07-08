@@ -20,6 +20,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+
+        /*
+        This function is identical to `MoveArm` except that rather than
+        giving a target position you instead give an "offset" w.r.t.
+        the arm's (i.e. wrist's) current location.
+
+        Thus if you want to increase the
+        arms x position (in world coordinates) by 0.1m you should
+        pass in `offset=Vector3(0.1f, 0f, 0f)` and `coordinateSpace="world"`.
+        If you wanted to move the arm 0.1m to the "right" from the agent's
+        perspective then you would pass in the same offset but set
+        `coordinateSpace="armBase"`. Note that this last movement is **not**
+        the same as passing `position=Vector3(0.1f, 0f, 0f)` to the `MoveArm`
+        action with `coordinateSpace="wrist"` as, if the wrist has been rotated,
+        right need not mean the same thing to the arm base as it does to the wrist.
+
+        Finally note that when `coordinateSpace="wrist"` then both `MoveArm` and
+        `MoveArmRelative` are identical.
+        */
+        public void MoveArmRelative(
+            Vector3 offset,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.moveArmRelative(
+                controller: this,
+                offset: offset,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement,
+                disableRendering: disableRendering
+            );
+        }
+
         public void MoveArm(
             Vector3 position,
             float speed = 1,
@@ -127,37 +168,128 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void MoveAhead(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=X, right=0).");
+        public override void MoveAhead(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=X).");
+        public override void MoveBack(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=0, right=-X).");
+        public override void MoveRight(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveBack(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public override void MoveLeft(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveAgent(
+                right: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
         }
 
-        public override void MoveRelative(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"MoveAgent\", ahead=-X, right=0).");
+        public override void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
-        public override void RotateRight(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=X).");
-        }
-
-        public override void RotateLeft(ServerAction action) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
-        }
-
-        // this is supported in base
-        public override void Rotate(Vector3 rotation) {
-            throw new InvalidOperationException("When using the arm, please call controller.step(action=\"RotateAgent\", degrees=-X).");
+        public override void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
         }
 
         public void RotateAgent(
@@ -192,31 +324,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        // currently not finished action. New logic needs to account for the
-        // hierarchy of rigidbodies of each arm joint and how to detect collision
-        // between a given arm joint an other arm joints.
-        public void RotateMidLevelHand(ServerAction action) {
+        /*
+        Rotates the wrist (in a relative fashion) given some input
+        pitch, yaw, and roll offsets. Easiest to see how this works by
+        using the editor debugging and shift+alt+(arrow keys or s/w).
+
+        Currently not a completely finished action. New logic is needed
+        to prevent self-collisions. In particular we need to
+        account for the hierarchy of rigidbodies of each arm joint and
+        determine how to detect collision between a given arm joint and other arm joints.
+        */
+        public void RotateWristRelative(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
             IK_Robot_Arm_Controller arm = getArm();
-            Quaternion target = new Quaternion();
 
-            // rotate around axis aliged x, y, z with magnitude based on vector3
-            if (action.degrees == 0) {
-                // use euler angles
-                target = Quaternion.Euler(action.rotation);
-            } else {
-                // rotate action.degrees about axis
-                target = Quaternion.AngleAxis(action.degrees, action.rotation);
-            }
-
-            arm.rotateHand(
+            arm.rotateWrist(
                 controller: this,
-                targetQuat: target,
-                degreesPerSecond: action.speed,
-                disableRendering: action.disableRendering,
-                fixedDeltaTime: action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: action.returnToStart
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
             );
         }
+
+        /*
+        Rotates the elbow (in a relative fashion) by some given
+        number of degrees. Easiest to see how this works by
+        using the editor debugging and shift+alt+(q/e).
+
+        Currently not a completely finished action. New logic is needed
+        to prevent self-collisions. In particular we need to
+        account for the hierarchy of rigidbodies of each arm joint and
+        determine how to detect collision between a given arm joint and other arm joints.
+        */
+        public void RotateElbowRelative(
+            float degrees,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateElbowRelative(
+                controller: this,
+                degrees: degrees,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
+        /*
+        Same as RotateElbowRelative but rotates the elbow to a given angle directly.
+        */
+        public void RotateElbow(
+            float degrees,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateElbow(
+                controller: this,
+                degrees: degrees,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
 
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the

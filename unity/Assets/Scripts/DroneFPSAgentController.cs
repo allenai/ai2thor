@@ -61,22 +61,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        public override void RotateRight(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
-            }
-
-            base.RotateRight(action);
+        public void MoveLeft(ServerAction action) {
+            moveCharacter(action, 270);
         }
 
-        public override void RotateLeft(ServerAction action) {
+        public void MoveRight(ServerAction action) {
+            moveCharacter(action, 90);
+        }
+
+        public void MoveAhead(ServerAction action) {
+            moveCharacter(action, 0);
+        }
+
+        public void MoveBack(ServerAction action) {
+            moveCharacter(action, 180);
+        }
+
+        public void MoveRelative(ServerAction action) {
+            var moveLocal = new Vector3(action.x, 0, action.z);
+            Vector3 moveWorldSpace = transform.rotation * moveLocal;
+            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
+            m_CharacterController.Move(moveWorldSpace);
+            actionFinished(true);
+        }
+
+        public void RotateRight(ServerAction action) {
             // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
             if (action.degrees == 0f) {
                 action.degrees = rotateStepDegrees;
             }
 
-            base.RotateLeft(action);
+            transform.Rotate(0, action.degrees, 0);
+            actionFinished(true);
+        }
+
+        public void RotateLeft(ServerAction action) {
+            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
+            if (action.degrees == 0f) {
+                action.degrees = rotateStepDegrees;
+            }
+
+            transform.Rotate(0, -action.degrees, 0);
+            actionFinished(true);
         }
 
         void FixedUpdate() {
