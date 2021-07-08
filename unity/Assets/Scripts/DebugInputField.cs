@@ -162,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SelectPlayerControl();
 
 #if !UNITY_EDITOR
-               HideHUD();
+            HideHUD();
 #endif
         }
 
@@ -2185,6 +2185,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         action.fillLiquid = "coffee";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                // map view props
+                case "mvp": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "GetMapViewCameraProperties"
+                        };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
