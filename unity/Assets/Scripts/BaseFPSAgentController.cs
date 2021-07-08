@@ -3184,9 +3184,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sync.StopSyncingForASecond = false;
                 }
 
-                foreach (StructureObject so in structureObjsList) {
-                    UpdateDisplayGameObject(so.gameObject, true);
-                }
+                // foreach (StructureObject so in structureObjsList) {
+                //     UpdateDisplayGameObject(so.gameObject, true);
+                // }
             } else {
                 // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
@@ -3205,9 +3205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.orthographic = (bool)cameraProps["orthographic"];
                 m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
 
-                foreach (StructureObject so in structureObjsList) {
-                    UpdateDisplayGameObject(so.gameObject, false);
-                }
+                // foreach (StructureObject so in structureObjsList) {
+                //     UpdateDisplayGameObject(so.gameObject, false);
+                // }
             }
             actionFinished(true);
         }
@@ -3217,6 +3217,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StructureObject ceiling = null;
 
             if (structureObjs != null) {
+                StructureObject ceilingStruct = null;
                 foreach (StructureObject structure in structureObjs) {
                     if (
                         structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling
@@ -3224,7 +3225,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ) {
                         ceiling = structure;
                         break;
+                    } else if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
+                        ceilingStruct = structure;
                     }
+                }
+
+                if (ceiling == null) {
+                    ceiling = ceilingStruct;
                 }
             }
 
