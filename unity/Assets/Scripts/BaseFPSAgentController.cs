@@ -3184,9 +3184,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sync.StopSyncingForASecond = false;
                 }
 
-                // foreach (StructureObject so in structureObjsList) {
-                //     UpdateDisplayGameObject(so.gameObject, true);
-                // }
+                foreach (StructureObject so in structureObjsList) {
+                    UpdateDisplayGameObject(so.gameObject, true);
+                }
             } else {
                 // stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
@@ -3205,9 +3205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.orthographic = (bool)cameraProps["orthographic"];
                 m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
 
-                // foreach (StructureObject so in structureObjsList) {
-                //     UpdateDisplayGameObject(so.gameObject, false);
-                // }
+                foreach (StructureObject so in structureObjsList) {
+                    UpdateDisplayGameObject(so.gameObject, false);
+                }
             }
             actionFinished(true);
         }
