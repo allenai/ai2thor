@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -404,42 +404,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void RotateRight(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
+        public virtual void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false,
+            float speed = 1.0f,              // TODO: Unused, remove when refactoring the controllers
+            bool waitForFixedUpdate = false, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,       // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true,    // TODO: Unused, remove when refactoring the controllers
+            float fixedDeltaTime = 0.02f     // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!degrees.HasValue) {
+                degrees = rotateStepDegrees;
+            } else if (degrees == 0f) {
+                throw new InvalidOperationException(
+                    "Cannot rotate by 0 degrees as this previously defaulted to rotating by a diferent amount."
+                );
             }
 
-            if (CheckIfAgentCanRotate("right", action.degrees) || action.forceAction) {
+            if (CheckIfAgentCanRotate("right", degrees.Value) || forceAction) {
 
-                base.RotateRight(action);
+                transform.Rotate(0, degrees.Value, 0);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
+                if (!manualInteract) {
                     DefaultAgentHand();
                 }
+
+                actionFinished(true);
             } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Right " + action.degrees + " degrees";
+                errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Right {degrees} degrees";
                 actionFinished(false);
             }
         }
 
-        public override void RotateLeft(ServerAction action) {
-            // if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
-            if (action.degrees == 0f) {
-                action.degrees = rotateStepDegrees;
+        public virtual void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false,
+            bool forceAction = false,
+            float speed = 1.0f,              // TODO: Unused, remove when refactoring the controllers
+            bool waitForFixedUpdate = false, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,       // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true,    // TODO: Unused, remove when refactoring the controllers
+            float fixedDeltaTime = 0.02f     // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!degrees.HasValue) {
+                degrees = rotateStepDegrees;
+            } else if (degrees == 0f) {
+                throw new InvalidOperationException(
+                    "Cannot rotate by 0 degrees as this previously defaulted to rotating by a diferent amount."
+                );
             }
 
-            if (CheckIfAgentCanRotate("left", action.degrees) || action.forceAction) {
-
-                base.RotateLeft(action);
+            if (CheckIfAgentCanRotate("left", degrees.Value) || forceAction) {
+                transform.Rotate(0, -degrees.Value, 0);
 
                 // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
+                if (!manualInteract) {
                     DefaultAgentHand();
                 }
+                
+                actionFinished(true);
             } else {
-                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees + " degrees";
+                errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
                 actionFinished(false);
             }
         }
@@ -1795,60 +1822,117 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return colliders;
         }
 
-        public override void MoveLeft(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public virtual void MoveLeft(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
+            }
+
             actionFinished(moveInDirection(
-                -1 * transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.right * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveRight(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public virtual void MoveRight(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
+            }
+
             actionFinished(moveInDirection(
-                transform.right * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.right * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveAhead(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public virtual void MoveAhead(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
+            }
+
             actionFinished(moveInDirection(
-                transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: transform.forward * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
-        public override void MoveBack(ServerAction action) {
-            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        public virtual void MoveBack(
+            float? moveMagnitude = null,
+            string objectId = "",
+            float maxAgentsDistance = -1f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            bool allowAgentsToIntersect = false,
+            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
+            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
+            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
+            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be > 0");
+            }
+
             actionFinished(moveInDirection(
-                -1 * transform.forward * action.moveMagnitude,
-                action.objectId,
-                action.maxAgentsDistance,
-                action.forceAction,
-                action.manualInteract,
-                action.allowAgentsToIntersect ? allAgentColliders() : null
+                direction: -transform.forward * moveMagnitude.Value,
+                objectId: objectId,
+                maxDistanceToObject: maxAgentsDistance,
+                forceAction: forceAction,
+                manualInteract: manualInteract,
+                ignoreColliders: allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
-
-#if UNITY_EDITOR
-        // for use in Editor to test the Reset function.
-        public void Reset(ServerAction action) {
-            physicsSceneManager.GetComponent<AgentManager>().Reset(action);
-        }
-#endif
 
         // a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
         public void NoOp() {
@@ -4731,7 +4815,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        // private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
+        // private IEnumerator checkDropHeldObjectAction(SimObjPhysics currentHandSimObj) 
         // {
         //     yield return null; // wait for two frames to pass
         //     yield return null;
@@ -4764,7 +4848,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     actionFinished(true);
         // }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
+        private IEnumerator checkDropHeldObjectActionFast(SimObjPhysics currentHandSimObj) {
             if (currentHandSimObj != null) {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
                 Physics.autoSimulation = false;
@@ -4786,81 +4870,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(ServerAction action) {
+        public void DropHeldObject(bool forceAction = false, bool autoSimulation = true) {
             // make sure something is actually in our hands
-            if (ItemInHand != null) {
-                // we do need this to check if the item is currently colliding with the agent, otherwise
-                // dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
+            if (ItemInHand == null) {
+                throw new InvalidOperationException("Nothing is in the agent's hand to drop!");
+            }
+
+            // we do need this to check if the item is currently colliding with the agent, otherwise
+            // dropping an object while it is inside the agent will cause it to shoot out weirdly
+            if (!forceAction && isHandObjectColliding(false)) {
+                throw new InvalidOperationException(
+                    $"{ItemInHand.transform.name} can't be dropped. " +
+                    "It must be clear of all other collision first, including the Agent."
+                );
+            }
+
+            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.useGravity = true;
+
+            // change collision detection mode while falling so that obejcts don't phase through colliders.
+            // this is reset to discrete on SimObjPhysics.cs's update 
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject topObject = GameObject.Find("Objects");
+            if (topObject != null) {
+                ItemInHand.transform.parent = topObject.transform;
+            } else {
+                ItemInHand.transform.parent = null;
+            }
+
+            DropContainedObjects(
+                target: ItemInHand.GetComponent<SimObjPhysics>(),
+                reparentContainedObjects: true,
+                forceKinematic: false
+            );
+
+            // if physics simulation has been paused by the PausePhysicsAutoSim() action,
+            // don't do any coroutine checks
+            if (!physicsSceneManager.physicsSimulationPaused) {
+                // this is true by default
+                if (autoSimulation) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                 } else {
-                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.constraints = RigidbodyConstraints.None;
-                    rb.useGravity = true;
-
-                    // change collision detection mode while falling so that obejcts don't phase through colliders.
-                    // this is reset to discrete on SimObjPhysics.cs's update 
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-
-                    GameObject topObject = GameObject.Find("Objects");
-                    if (topObject != null) {
-                        ItemInHand.transform.parent = topObject.transform;
-                    } else {
-                        ItemInHand.transform.parent = null;
-                    }
-
-                    DropContainedObjects(
-                        target: ItemInHand.GetComponent<SimObjPhysics>(),
-                        reparentContainedObjects: true,
-                        forceKinematic: false
-                    );
-
-                    // if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
-                    if (!physicsSceneManager.physicsSimulationPaused) {
-                        // this is true by default
-                        if (action.autoSimulation) {
-                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } else {
-                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
-                        }
-                    } else {
-                        actionFinished(true);
-                    }
-                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-                    ItemInHand = null;
-                    return;
+                    StartCoroutine(checkDropHeldObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                 }
             } else {
-                errorMessage = "nothing in hand to drop!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                actionFinished(true);
             }
+            ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+            ItemInHand = null;
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call DropHeldObject instead.", error: false)]
+        public void DropHandObject(bool forceAction = false, bool autoSimulation = true) {
+            DropHeldObject(forceAction: forceAction, autoSimulation: autoSimulation);
         }
 
         // by default will throw in the forward direction relative to the Agent's Camera
         // moveMagnitude, strength of throw, good values for an average throw are around 150-250
-        public void ThrowObject(ServerAction action) {
+        public void ThrowObject(float moveMagnitude, bool forceAction = false, bool autoSimulation = true) {
             if (ItemInHand == null) {
-                errorMessage = "Nothing in Hand to Throw!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Nothing in Hand to Throw!");
             }
 
             GameObject go = ItemInHand;
-            DropHandObject(action);
-            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
-            // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
-            // if (this.lastActionSuccess) {
-            Vector3 dir = m_Camera.transform.forward;
-            go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-            //}
+            DropHeldObject(forceAction: forceAction, autoSimulation: autoSimulation);
 
+            // Force is not applied because action success from DropObject
+            // starts a coroutine that waits for the object to be stationary
+            // to return lastActionSuccess == true that is not what we want
+            // for throwing an object, review why this was that way
+            Vector3 dir = m_Camera.transform.forward;
+            go.GetComponent<SimObjPhysics>().ApplyForce(dir, moveMagnitude);
         }
 
         // Hide and Seek helper function, makes overlap box at x,z coordinates

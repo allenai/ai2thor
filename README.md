@@ -67,7 +67,7 @@
 
 **🏡 Scenes.** 200+ custom built high-quality scenes. The scenes can be explored on our [demo](//ai2thor.allenai.org/demo) page. We are working on rapidly expanding the number of available scenes and domain randomization within each scene.
 
-**🪑 Objects.** 1500+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
+**🪑 Objects.** 2600+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
 
 **🤖 Agent Types.** Multi-agent support, a custom built LoCoBot agent, a Kinova 3 inspired robotic manipulation agent, and a drone agent.
 
