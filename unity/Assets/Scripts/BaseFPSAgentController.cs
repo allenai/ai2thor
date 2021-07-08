@@ -4220,14 +4220,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CreateHouseFromJson(ProceduralHouse house) {
-
-            Debug.Log("Start");
             var rooms = house.rooms.SelectMany(
                 room => house.rooms
             );
 
             var materials = ProceduralTools.GetMaterials();
-            Debug.Log("before mat array");
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
                     r => r.ceilings.Select(c => c.material).Concat(
@@ -4237,12 +4234,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         )
                 ).Concat(new List<string>() { house.procedural_parameters.ceiling_material })
             );
-            Debug.Log("After matarray " + string.Join(", ", materialIds.Select(id => $"'{id}'")));
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
-
-            Debug.Log("null?  " + (missingIds == null));
-            Debug.Log("Before check count " + missingIds.Count());
-            //Debug.Log("Before check " + string.Join(", ", missingIds.Select(id => $"'{id}'")));
             if (missingIds.Count() > 0) {
                 errorMessage = $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component.";
                 actionFinished(false);
