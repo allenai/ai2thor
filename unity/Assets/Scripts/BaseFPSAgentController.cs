@@ -3241,7 +3241,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float midZ = (b.max.z + b.min.z) / 2f;
 
             return new Dictionary<string, object>() {
-                ["position"] = new Vector3(midX, b.max.y + 5, midZ),
+                ["position"] = new Vector3(midX, b.max.y, midZ),
                 ["rotation"] = new Vector3(90, 0, 0),
                 ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
                 ["orthographic"] = true
