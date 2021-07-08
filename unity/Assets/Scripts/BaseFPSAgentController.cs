@@ -3218,7 +3218,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (structureObjs != null) {
                 foreach (StructureObject structure in structureObjs) {
-                    if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
+                    if (
+                        structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling
+                        && structure.gameObject.name == "Ceiling"
+                    ) {
                         ceiling = structure;
                         break;
                     }
