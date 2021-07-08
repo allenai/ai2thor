@@ -778,6 +778,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        //returns a <string, string[]> dict of object types and all cached materials used in the Material Randomizer logic
+        public void ReturnMaterials()
+        {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            actionFinished(true, colorChangeComponent.ReturnMaterials());
+        }
+
         /**
          * @inRoomTypes assumes all room types by default. Valid room types include
          * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
