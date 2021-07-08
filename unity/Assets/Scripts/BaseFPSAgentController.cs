@@ -3236,22 +3236,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Bounds b;
+            float yValue;
             if (ceiling != null) {
                 // There's a ceiling component in the room!
                 // Let's use it's bounds. (Likely iTHOR.)
                 b = ceiling.GetComponent<Renderer>().bounds;
+                yValue = b.min.y;
             } else {
                 // There's no component in the room!
                 // Let's use the bounds from every object. (Likely RoboTHOR.)
                 b = new Bounds();
                 b.min = agentManager.SceneBounds.min;
                 b.max = agentManager.SceneBounds.max;
+                yValue = b.max.y;
             }
             float midX = (b.max.x + b.min.x) / 2f;
             float midZ = (b.max.z + b.min.z) / 2f;
 
             return new Dictionary<string, object>() {
-                ["position"] = new Vector3(midX, b.min.y, midZ),
+                ["position"] = new Vector3(midX, yValue, midZ),
                 ["rotation"] = new Vector3(90, 0, 0),
                 ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
                 ["orthographic"] = true
