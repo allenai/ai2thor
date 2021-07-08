@@ -3160,7 +3160,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
-            StructureObject ceiling = null;
 
             foreach (StructureObject structure in structureObjs) {
                 switch (structure.WhatIsMyStructureObjectTag) {
