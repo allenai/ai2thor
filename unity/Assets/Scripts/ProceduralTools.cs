@@ -1223,7 +1223,7 @@ namespace Thor.Procedural {
                 if (wallExists) {
                     var p0p1 = wall.wall_0.p1 - wall.wall_0.p0;
 
-                    var doorLength = 1.0373f;
+                    var doorLength = 0.0f;
 
                     var p0p1_norm = p0p1.normalized;
                     var pos = wall.wall_0.p0 + p0p1_norm * (door.bounding_box.min.x + (doorLength / 2.0f)) + Vector3.up * door.bounding_box.min.y;//* (doorLength * 1.4f);
