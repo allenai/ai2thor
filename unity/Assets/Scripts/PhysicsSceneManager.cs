@@ -822,6 +822,48 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
+    protected static IEnumerator toStandardCoroutineIEnumerator(
+        IEnumerator<float?> enumerator
+    ) {
+        while (enumerator.MoveNext()) {
+            if (
+                (!enumerator.Current.HasValue)
+                || (enumerator.Current <= 0f)
+            ) {
+                yield return null;
+            } else {
+                yield return new WaitForFixedUpdate();
+            }
+        }
+    }
+
+    public static void StartPhysicsCoroutine(
+        MonoBehaviour startCoroutineUsing,
+        IEnumerator<float?> enumerator,
+        bool? autoSimulation = null
+    ) {
+        autoSimulation = autoSimulation.GetValueOrDefault(Physics.autoSimulation);
+
+        if (autoSimulation.Value) {
+            startCoroutineUsing.StartCoroutine(toStandardCoroutineIEnumerator(enumerator));
+            return;
+        }
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = false;
+        while (enumerator.MoveNext()) {
+            float? fixedDeltaTime = enumerator.Current;
+            if (!fixedDeltaTime.HasValue) {
+                fixedDeltaTime = Time.fixedDeltaTime;
+            }
+
+            if (fixedDeltaTime == 0f) {
+                Physics.SyncTransforms();
+            } else {
+                PhysicsSimulateTHOR(fixedDeltaTime.Value);
+            }
+        }
+        Physics.autoSimulation = previousAutoSimulate;
+    }
 
     // Immediately disable physics autosimulation
     public void PausePhysicsAutoSim() {

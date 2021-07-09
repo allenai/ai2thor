@@ -15,15 +15,20 @@ using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
+        // Dictionary<string, SimObjPhysics> expRoomObjectNameToSOPCache = new Dictionary<string, SimObjPhysics>();
+
         public static void emptyEnumerator(IEnumerator enumerator) {
-            while (enumerator.MoveNext()) {}
+            while (enumerator.MoveNext()) { }
         }
 
         public void WhichAvailableObjectsFitInAvailableContainers() {
-            StartCoroutine(whichAvailableObjectsFitInAvailableContainers());
+            PhysicsSceneManager.StartPhysicsCoroutine(
+                startCoroutineUsing: this,
+                enumerator: whichAvailableObjectsFitInAvailableContainers()
+            );
         }
 
-        public IEnumerator whichAvailableObjectsFitInAvailableContainers() {
+        public IEnumerator<float?> whichAvailableObjectsFitInAvailableContainers() {
             GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
             GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
 
@@ -59,12 +64,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rotation: null,
                     forceKinematic: true
                 )) {
+#if UNITY_EDITOR
                     Debug.Log($"{toCover.name} failed to place");
+#endif
                     deactivateSop(toCover);
                     continue;
                 }
 
-                yield return null;
+                yield return 0f;
 
                 Vector3 toCoverPos = toCover.transform.position;
 
@@ -106,7 +113,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             forceKinematic: true,
                             includeErrorMessage: true
                         )) {
+#if UNITY_EDITOR
                             Debug.Log($"{cover.name} failed to place: {errorMessage}");
+#endif
                             deactivateSop(cover);
                             return false;
                         }
@@ -118,6 +127,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             toCoverPos.z
                         );
 
+                        Physics.SyncTransforms();
+
                         Collider coverCollidingWith = UtilityFunctions.firstColliderObjectCollidingWith(
                             go: cover.gameObject
                         );
@@ -127,27 +138,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 return true;
                             }
                         }
+                        // else {
+                        //     Debug.Log($"{cover.name} colliding with {coverCollidingWith.transform.parent.name}");
+                        // }
                         return false;
                     };
 
-                    if (!tryScale(maxScale)) {
-                        yield return null;
-                        deactivateSop(cover);
-                        continue;
-                    }
-
-                    for (int i = 0; i <= 5; i++) {
-                        float newScale = (minScale + maxScale) / 2.0f;
-                        if (tryScale(newScale)) {
-                            maxScale = newScale;
-                        } else {
-                            minScale = newScale;
+                    if (tryScale(maxScale)) {
+                        for (int i = 0; i <= 5; i++) {
+                            float newScale = (minScale + maxScale) / 2.0f;
+                            if (tryScale(newScale)) {
+                                maxScale = newScale;
+                            } else {
+                                minScale = newScale;
+                            }
+                            yield return null;
                         }
-                        yield return null;
+#if UNITY_EDITOR
+                        Debug.Log($"{toCover.name} fits under {cover.name} at {maxScale} scale");
+#endif
+                        objNameToCoverNames[toCover.name][cover.name] = maxScale;
+                        numberFit += 1;
                     }
-                    Debug.Log($"{toCover.name} fits under {cover.name} at {maxScale} scale");
-                    objNameToCoverNames[toCover.name][cover.name] = maxScale;
-                    numberFit += 1;
 
                     emptyEnumerator(scaleObject(
                         scale: 1.0f / lastScale,
@@ -159,6 +171,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     deactivateSop(cover);
                 }
 
+#if UNITY_EDITOR
                 Debug.Log(
                     Newtonsoft.Json.JsonConvert.SerializeObject(
                         objNameToCoverNames,
@@ -169,14 +182,70 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     )
                 );
+#endif
 
                 deactivateSop(toCover);
 
+                yield return 0f;
                 break;
             }
 
-            actionFinished(true);
+            actionFinished(true, objNameToCoverNames);
         }
 
+        public void AvailableExpRoomObjects() {
+            GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
+            List<string> names = new List<string>();
+            foreach (Transform t in availableObjectsGameObject.transform) {
+                names.Add(t.gameObject.GetComponent<SimObjPhysics>().name);
+            }
+            actionFinished(true, names);
+        }
+
+        public void AvailableExpRoomContainers() {
+            GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
+            List<string> names = new List<string>();
+            foreach (Transform t in availableContainersGameObject.transform) {
+                names.Add(t.gameObject.GetComponent<SimObjPhysics>().name);
+            }
+            actionFinished(true, names);
+        }
+
+        public void ToggleExpRoomObject(string objectName, bool? enable = null) {
+            SimObjPhysics target = null;
+            GameObject topGameObject = null;
+            if (objectName.Contains("_Container_")) {
+                topGameObject = GameObject.Find("AvailableContainers");
+            } else {
+                topGameObject = GameObject.Find("AvailableObjects");
+            }
+            foreach (Transform t in topGameObject.transform) {
+                SimObjPhysics sop = t.gameObject.GetComponent<SimObjPhysics>();
+                if (sop.name == objectName) {
+                    target = sop;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = $"Could not find object with name {objectName}";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            if (!enable.HasValue) {
+                enable = !target.gameObject.activeSelf;
+            }
+
+            target.gameObject.SetActive(enable.Value);
+            if (enable.Value) {
+                target.ObjectID = target.name;
+                physicsSceneManager.AddToObjectsInScene(target);
+                actionFinished(true, target.ObjectID);
+            } else {
+                physicsSceneManager.RemoveFromObjectsInScene(target);
+                actionFinished(true);
+            }
+        }
     }
 }

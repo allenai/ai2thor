@@ -2034,7 +2034,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         transform.position = Vector3.zero;
         transform.eulerAngles = Vector3.zero;
 
-        if (!transform.Find("BoundingBox")) {
+        if (BoundingBox == null) {
             GameObject BoundingBox = new GameObject();
             BoundingBox.transform.parent = gameObject.transform;
             BoundingBox.transform.localPosition = Vector3.zero;
@@ -2042,7 +2042,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.transform.localScale = Vector3.one;
         }
 
-        BoundingBox = transform.Find("BoundingBox").gameObject;
         BoundingBox.transform.localScale = Vector3.one;// make sure to default existing BoundingBox to 1 as well
 
         // This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
@@ -2050,7 +2049,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
         // is not enabled.
         BoundingBox.tag = "Untagged";
-        BoundingBox.layer = 9;// layer 9 - SimObjInvisible
+        BoundingBox.layer = 9; // layer 9 - SimObjInvisible
+
+        if (!Physics.autoSyncTransforms) {
+            Physics.SyncTransforms();
+        }
 
         Collider[] colliders = transform.GetComponentsInChildren<Collider>().Where(
             c => c.enabled && !c.isTrigger
@@ -2068,7 +2071,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
         }
 
-        Bounds newBoundingBox = new Bounds();
+        Bounds newBoundingBox = new Bounds(
+            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+        );
         Vector3 minMeshXZ = colliders[0].bounds.center;
         Vector3 maxMeshXYZ = colliders[0].bounds.center;
 
@@ -2147,7 +2153,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         transform.position = transformSaver[0];
         transform.eulerAngles = transformSaver[1];
-
     }
 
 
