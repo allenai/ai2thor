@@ -128,6 +128,17 @@ public class CanOpen_Object : MonoBehaviour {
     }
 #endif
 
+    //sets the openness of a "rotation" based open/close object immediately without using tweening
+    //specifically used for pre-scene setup
+    public void SetOpennessImmediate(float openness = 1.0f) {
+        for (int i = 0; i < MovingParts.Length; i++) {
+            Vector3 newRot = new Vector3(openPositions[i].x, openPositions[i].y, openPositions[i].z) * openness;
+            MovingParts[i].transform.localRotation = Quaternion.Euler(newRot);
+        }
+
+        setIsOpen(openness: openness);
+    }
+
     public void Interact(float openness = 1.0f) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
