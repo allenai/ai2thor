@@ -293,4 +293,24 @@ public class ColorChanger : MonoBehaviour {
             }
         }
     }
+
+    public Dictionary<string, string[]> ReturnMaterials() {
+        Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
+
+        if (materials == null) {
+            cacheMaterials();
+        }
+
+        foreach (KeyValuePair<string, Material[]> sm in materials) {
+            List<string> materialNames = new List<string>();
+
+            foreach (Material m in sm.Value) {
+                materialNames.Add(m.name);
+            }
+
+            orSomething.Add(sm.Key, materialNames.ToArray());
+        }
+
+        return orSomething;
+    }
 }

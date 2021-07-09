@@ -747,6 +747,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     });
                     break;
 
+                case "returnMaterials":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "ReturnMaterials"
+                    });
+                    break;
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
