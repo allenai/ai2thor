@@ -50,18 +50,20 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Door {
+    public class Door : WallRectangularHole {
         public string id { get; set; }
         public Margin margin { get; set; }
         public string room_0 { get; set; }
         public string room_1 { get; set; }
-        public string wall_0_id { get; set; }
-        public string wall_1_id { get; set; }
+        public string wall_0 { get; set; }
+        public string wall_1 { get; set; }
         public BoundingBox bounding_box { get; set; }
 
         public List<VectorXZ> axes_xz { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
+
+        public bool open { get; set; }
         public string asset_id { get; set; }
     }
 
@@ -129,12 +131,14 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Window {
+    public class Window : WallRectangularHole {
         public string id { get; set; }
         public string room_0 { get; set; }
         public string room_1 { get; set; }
         public BoundingBox bounding_box { get; set; }
-        public string wall_id { get; set; }
+        public Margin margin { get; set; }
+        public string wall_0 { get; set; }
+        public string wall_1 { get; set; }
         public bool openable { get; set; }
         public List<VectorXZ> axes_xz { get; set; }
         public string type { get; set; }
@@ -210,16 +214,32 @@ namespace Thor.Procedural.Data {
     // {
 
     // }
+    public interface WallRectangularHole {
+
+        string id { get; set; }
+        string asset_id { get; set; }
+        string room_0 { get; set; }
+        string room_1 { get; set; }
+        string wall_0 { get; set; }
+        string wall_1 { get; set; }
+
+        BoundingBox bounding_box { get; set; }
+
+        Margin margin { get; set; }
+
+    }
 
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class Wall {
+        public string id;
         public float height;
         public Vector3 p0;
         public Vector3 p1;
         public float thickness;
         public bool empty;
+        public WallRectangularHole hole = null;
         public string materialId;
 
     }

@@ -463,7 +463,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!manualInteract) {
                     DefaultAgentHand();
                 }
-                
+
                 actionFinished(true);
             } else {
                 errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
@@ -3131,7 +3131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //generic spawn object in scene, no physics resoultion or bounds/collision check
         public void SpawnObjectInScene(HouseObject ho) {
-            var spawnedObj = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), ho);
+            var spawnedObj = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), ho);
             actionFinished(true);
         }
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
