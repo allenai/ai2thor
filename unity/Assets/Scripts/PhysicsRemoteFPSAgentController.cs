@@ -5524,6 +5524,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ));
         }
 
+        //helper action to set the openness of a "rotate" typed open/close object immediately (no tween over time)
+        public void OpenObjectImmediate(
+            string objectId,
+            float openness = 1.0f
+        ) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
+            actionFinished(true);
+        }
+
         public void OpenObject(
             string objectId,
             bool forceAction = false,
