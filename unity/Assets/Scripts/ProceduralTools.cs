@@ -1248,7 +1248,7 @@ namespace Thor.Procedural {
                 var go = new GameObject(lightParams.id);
                 go.transform.position = lightParams.position;
                 var light = go.AddComponent<Light>();
-                light.lightmapBakeType = LightmapBakeType.Realtime;
+                //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
                 light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
                 light.color = lightParams.rgb;
                 light.intensity = lightParams.intensity;
