@@ -3154,18 +3154,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        [ObsoleteAttribute(message: "This action is deprecated. Use GetMapViewCameraProperties with a third party camera instead.", error: false)]
         public void ToggleMapView() {
             SyncTransform[] syncInChildren;
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
             StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
-            StructureObject ceiling = null;
 
             foreach (StructureObject structure in structureObjs) {
                 switch (structure.WhatIsMyStructureObjectTag) {
                     case StructureObjectTag.Ceiling:
-                        ceiling = structure;
-                        goto case StructureObjectTag.LightFixture;
                     case StructureObjectTag.LightFixture:
                     case StructureObjectTag.CeilingLight:
                         structureObjsList.Add(structure);
@@ -3201,32 +3199,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
-                Bounds b;
-                if (ceiling != null) {
-                    // There's a ceiling component in the room!
-                    // Let's use it's bounds. (Likely iTHOR.)
-                    b = ceiling.GetComponent<Renderer>().bounds;
-                } else {
-                    // There's no component in the room!
-                    // Let's use the bounds from every object. (Likely RoboTHOR.)
-                    b = new Bounds();
-                    b.min = agentManager.SceneBounds.min;
-                    b.max = agentManager.SceneBounds.max;
-                }
-                float midX = (b.max.x + b.min.x) / 2.0f;
-                float midZ = (b.max.z + b.min.z) / 2.0f;
-                m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
-                m_Camera.transform.position = new Vector3(midX, b.max.y + 5, midZ);
-                m_Camera.orthographic = true;
+                var cameraProps = getMapViewCameraProperties();
+                m_Camera.transform.rotation = Quaternion.Euler((Vector3)cameraProps["rotation"]);
+                m_Camera.transform.position = (Vector3)cameraProps["position"];
+                m_Camera.orthographic = (bool)cameraProps["orthographic"];
+                m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
 
-                m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
-
-                cameraOrthSize = m_Camera.orthographicSize;
                 foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);
                 }
             }
             actionFinished(true);
+        }
+
+        protected Dictionary<string, object> getMapViewCameraProperties() {
+            StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+            StructureObject ceiling = null;
+
+            if (structureObjs != null) {
+                StructureObject ceilingStruct = null;
+                foreach (StructureObject structure in structureObjs) {
+                    if (
+                        structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling
+                        && structure.gameObject.name.ToLower().Contains("ceiling")
+                    ) {
+                        ceiling = structure;
+                        break;
+                    } else if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
+                        ceilingStruct = structure;
+                    }
+                }
+
+                if (ceiling == null) {
+                    ceiling = ceilingStruct;
+                }
+            }
+
+            Bounds b;
+            float yValue;
+            if (ceiling != null) {
+                // There's a ceiling component in the room!
+                // Let's use it's bounds. (Likely iTHOR.)
+                b = ceiling.GetComponent<Renderer>().bounds;
+                yValue = b.min.y;
+            } else {
+                // There's no component in the room!
+                // Let's use the bounds from every object. (Likely RoboTHOR.)
+                b = new Bounds();
+                b.min = agentManager.SceneBounds.min;
+                b.max = agentManager.SceneBounds.max;
+                yValue = b.max.y;
+            }
+            float midX = (b.max.x + b.min.x) / 2f;
+            float midZ = (b.max.z + b.min.z) / 2f;
+
+            // solves an edge case where the lowest point of the ceiling
+            // is actually below the floor :0
+            var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (sceneName == "FloorPlan309_physics") {
+                yValue = 2f;
+            }
+
+            return new Dictionary<string, object>() {
+                ["position"] = new Vector3(midX, yValue, midZ),
+                ["rotation"] = new Vector3(90, 0, 0),
+                ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
+                ["orthographic"] = true
+            };
+        }
+
+        public void GetMapViewCameraProperties() {
+            actionFinishedEmit(
+                success: true,
+                actionReturn: getMapViewCameraProperties()
+            );
         }
 
         /* 
