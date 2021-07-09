@@ -3253,6 +3253,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float midX = (b.max.x + b.min.x) / 2f;
             float midZ = (b.max.z + b.min.z) / 2f;
 
+            // solves an edge case where the lowest point of the ceiling
+            // is actually below the floor :0
+            var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (sceneName == "FloorPlan309_physics") {
+                yValue = 2f;
+            }
+
             return new Dictionary<string, object>() {
                 ["position"] = new Vector3(midX, yValue, midZ),
                 ["rotation"] = new Vector3(90, 0, 0),
