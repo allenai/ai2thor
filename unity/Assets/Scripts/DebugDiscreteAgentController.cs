@@ -151,7 +151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["action"] = "RotateRight";
                         }
 
-                        if ((string) action["action"] != "") {
+                        if ((string)action["action"] != "") {
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
 

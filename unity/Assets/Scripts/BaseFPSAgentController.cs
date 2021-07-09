@@ -2625,7 +2625,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance) {
+        public bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance) {
             bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
@@ -2678,7 +2678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visible;
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+        public bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {

@@ -163,9 +163,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
             Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
-                 t.rotation = newRotation;
-                 updateTransform.position = wristProxy.transform.position;
-                 updateTransform.rotation = newRotation;
+                t.rotation = newRotation;
+                updateTransform.position = wristProxy.transform.position;
+                updateTransform.rotation = newRotation;
             };
             Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
                 return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);

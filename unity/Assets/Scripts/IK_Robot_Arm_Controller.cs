@@ -579,7 +579,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 // with kinematic objects
                 Collider clone = Instantiate(
                     original: c,
-                    position:c.transform.position,
+                    position: c.transform.position,
                     rotation: c.transform.rotation,
                     parent: FourthJoint
                 );
@@ -589,7 +589,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 // The other set is used to interact with moveable objects
                 cols.Add(Instantiate(
                     original: c,
-                    position:c.transform.position,
+                    position: c.transform.position,
                     rotation: c.transform.rotation,
                     parent: FourthJoint
                 ));

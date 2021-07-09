@@ -400,17 +400,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "parent": {
-                    Dictionary<string, object> action = new Dictionary<string, object>{
+                        Dictionary<string, object> action = new Dictionary<string, object>{
                         {"action", "ParentObject"},
                     };
-                    action["parentId"] = splitcommand[1];
-                    action["childId"] = splitcommand[2];
+                        action["parentId"] = splitcommand[1];
+                        action["childId"] = splitcommand[2];
 
-                    CurrentActiveController().ProcessControlCommand(
-                        action
-                    );
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(
+                            action
+                        );
+                        break;
+                    }
 
                 case "expspawn": {
                         ServerAction action = new ServerAction();
@@ -3130,13 +3130,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "scale": {
-                        ServerAction action = new ServerAction();
-                        action.action = "ScaleObject";
-                        action.objectId = "Cup|-01.36|+00.78|+00.71";
-                        action.scale = 2.0f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ScaleObject";
+                        action["objectId"] = "Pot|-00.29|+01.13|-00.07";
+                        action["scale"] = 2.0f;
+                        action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {
-                            action.scale = float.Parse(splitcommand[1]);
+                            action["scale"] = float.Parse(splitcommand[1]);
+                        }
+                        if (splitcommand.Length > 2) {
+                            action["scaleOverSeconds"] = float.Parse(splitcommand[2]);
                         }
 
                         CurrentActiveController().ProcessControlCommand(action);

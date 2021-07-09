@@ -83,6 +83,9 @@ public static class UtilityFunctions {
 
         int layerMask = 1 << 8 | 1 << 10;
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
+            if (cc.isTrigger) {
+                continue;
+            }
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
                     return c;
@@ -90,7 +93,7 @@ public static class UtilityFunctions {
             }
         }
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
-            if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)) {
+            if (bc.isTrigger || ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks))) {
                 continue;
             }
             foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
@@ -100,6 +103,9 @@ public static class UtilityFunctions {
             }
         }
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
+            if (sc.isTrigger) {
+                continue;
+            }
             foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
                     return c;

@@ -22,7 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Quaternion orientation = new Quaternion();
     }
 
-    public class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
+    public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
         [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         bool transparentStructureObjectsHidden = false;
@@ -461,7 +461,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!manualInteract) {
                     DefaultAgentHand();
                 }
-                
+
                 actionFinished(true);
             } else {
                 errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
@@ -3424,59 +3424,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // change scale of sim object, this only works with sim objects not structures
-        public void ScaleObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
+        public void ScaleObject(
+            string objectId,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId, forceAction);
+
+            // neither objectId nor coordinates found an object
+            if (target == null) {
+                errorMessage = $"Object with ID {objectId} does not appear to be interactable.";
+                actionFinished(false);
+                return;
+            } else {
+                float scaleMultiplier = scale; // this can be something like 0.3 to shrink or 1.5 to grow
+                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
+            }
+        }
+
+        public void ScaleObject(
+            float x,
+            float y,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
             SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            // no target object specified, so instead try and use x/y screen coordinates
-            if (action.objectId == null) {
-                if (!screenToWorldTarget(
-                x: action.x,
-                y: action.y,
+            if (!screenToWorldTarget(
+                x: x,
+                y: y,
                 target: ref target,
-                forceAction: action.forceAction)) {
-                    // error message is set inside screenToWorldTarget
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                forceAction: forceAction)
+            ) {
+                // error message is set inside screenToWorldTarget
+                actionFinished(false, errorMessage);
+                return;
             }
 
             // neither objectId nor coordinates found an object
             if (target == null) {
-                errorMessage = "No target found";
+                errorMessage = $"Could not find interactable object at given (x,y)=({x},{y}) screen coordinates";
                 actionFinished(false);
                 return;
             } else {
-                float scaleMultiplier = action.scale; // this can be something like 0.3 to shrink or 1.5 to grow
-                StartCoroutine(scaleObject(gameObject.transform.localScale * action.scale, target));
+                float scaleMultiplier = scale; // this can be something like 0.3 to shrink or 1.5 to grow
+                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
             }
         }
 
-        private IEnumerator scaleObject(Vector3 targetScale, SimObjPhysics target) {
-            yield return new WaitForFixedUpdate();
+        private IEnumerator scaleObject(
+            float scale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
+            return scaleObject(
+                targetScale: this.transform.localScale * scale,
+                target: target,
+                scaleOverSeconds: scaleOverSeconds,
+                skipActionFinished: skipActionFinished
+            );
+        }
 
+        private IEnumerator scaleObject(
+            Vector3 targetScale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
             Vector3 originalScale = target.transform.localScale;
             float currentTime = 0.0f;
 
-            do {
-                target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
-                currentTime += Time.deltaTime;
-                yield return null;
-            } while (currentTime <= 1.0f);
+            if (scaleOverSeconds <= 0f) {
+                target.transform.localScale = targetScale;
+            } else {
+                yield return new WaitForFixedUpdate();
+                do {
+                    target.transform.localScale = Vector3.Lerp(
+                        originalScale,
+                        targetScale,
+                        currentTime / scaleOverSeconds
+                    );
+                    currentTime += Time.deltaTime;
+                    yield return null;
+                } while (currentTime <= scaleOverSeconds);
+            }
 
             // store reference to all children
             Transform[] children = new Transform[target.transform.childCount];
@@ -3495,7 +3535,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             target.ContextSetUpBoundingBox();
-            actionFinished(true);
+            if (!skipActionFinished) {
+                actionFinished(true);
+            }
         }
 
         // pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
@@ -3590,11 +3632,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (colliderHitIfSpawned == null) {
                 target.transform.position = finalPos;
 
+                Rigidbody rb = target.GetComponent<Rigidbody>();
+
+                if (forceKinematic) {
+                    rb.isKinematic = forceKinematic;
+                }
+
                 // Additional stuff we need to do if placing item that was in hand
                 if (wasInHand) {
 
-                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                    rb.isKinematic = forceKinematic;
                     rb.constraints = RigidbodyConstraints.None;
                     rb.useGravity = true;
 

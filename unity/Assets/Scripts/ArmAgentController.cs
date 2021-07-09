@@ -20,6 +20,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+        /*
+        Toggles the visibility of the magnet sphere at the end of the arm.
+        */
+        public void ToggleMagnetVisibility(bool? visible = null) {
+            MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
+            if (visible.HasValue) {
+                mr.enabled = visible.Value;
+            } else {
+                mr.enabled = !mr.enabled;
+            }
+            actionFinished(true);
+        }
 
         /*
         This function is identical to `MoveArm` except that rather than

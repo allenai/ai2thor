@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -312,10 +313,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
 
             // Initialize the bounds and encapsulate all active colliders in SimObject's array
-            Bounds newBB = new Bounds();
+            Bounds newBB = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
 
             foreach (KeyValuePair<Collider, LayerMask> kvp in cols) {
-                if (kvp.Key.gameObject != this.BoundingBox) {
+                if (!kvp.Key.isTrigger && kvp.Key.gameObject != this.BoundingBox) {
                     newBB.Encapsulate(kvp.Key.bounds);
                 }
             }
@@ -2048,7 +2052,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         BoundingBox.tag = "Untagged";
         BoundingBox.layer = 9;// layer 9 - SimObjInvisible
 
-        Collider[] colliders = transform.GetComponentsInChildren<Collider>();
+        Collider[] colliders = transform.GetComponentsInChildren<Collider>().Where(
+            c => c.enabled && !c.isTrigger
+        ).ToArray();
         MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
 
         // SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -2068,8 +2074,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         // Encapsulate all colliders
         foreach (Collider collider in colliders) {
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.min);
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.max);
+            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds);
         }
 
         // Encapsulate all mesh filters (used instead of mesh renderers because you can sample individual vertex ids with the filters)
