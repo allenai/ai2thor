@@ -1244,6 +1244,21 @@ namespace Thor.Procedural {
                 }
             }
 
+            foreach (var lightParams in house.procedural_parameters.lights) {
+                var go = new GameObject(lightParams.id);
+                go.transform.position = lightParams.position;
+                var light = go.AddComponent<Light>();
+                light.lightmapBakeType = LightmapBakeType.Realtime;
+                light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+                light.color = lightParams.rgb;
+                light.intensity = lightParams.intensity;
+                light.range = lightParams.range;
+                if (lightParams.shadow != null) {
+                    light.shadowStrength = lightParams.shadow.strength;
+                }
+
+            }
+
             buildNavMesh(floorGameObject, house.procedural_parameters.navmesh_voxel_size);
 
             RenderSettings.skybox = materialDb.getAsset(house.procedural_parameters.skybox_id);

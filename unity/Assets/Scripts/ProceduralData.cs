@@ -35,8 +35,17 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
         public float intensity { get; set; }
+        public float range { get; set; }
         public Color rgb { get; set; }
+        public ShadowParameters shadow = null;
         public string asset_id { get; set; }
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ShadowParameters {
+        public string type { get; set; }
+        public float strength { get; set; }
     }
 
     [Serializable]
