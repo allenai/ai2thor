@@ -3602,6 +3602,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 originalPos = target.transform.position;
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
             bool wasInHand = false;
             if (ItemInHand) {
                 if (ItemInHand.transform.gameObject == target.transform.gameObject) {
@@ -3625,6 +3629,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Check spawn area here            
             target.transform.position = finalPos;
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
             Collider colliderHitIfSpawned = UtilityFunctions.firstColliderObjectCollidingWith(
                 target.gameObject
             );

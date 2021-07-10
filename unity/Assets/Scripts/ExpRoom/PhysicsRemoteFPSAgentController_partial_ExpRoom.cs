@@ -15,7 +15,34 @@ using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
-        // Dictionary<string, SimObjPhysics> expRoomObjectNameToSOPCache = new Dictionary<string, SimObjPhysics>();
+        protected Dictionary<string, SimObjPhysics> cachedAvailableExpRoomObjectsDict = null;
+        protected Dictionary<string, SimObjPhysics> cachedAvailableExpRoomContainersDict = null;
+
+        public Dictionary<string, SimObjPhysics> availableExpRoomObjectsDict {
+            get {
+                if (cachedAvailableExpRoomObjectsDict == null) {
+                    cachedAvailableExpRoomObjectsDict = new Dictionary<string, SimObjPhysics>();
+                    foreach (Transform t in GameObject.Find("AvailableObjects").transform) {
+                        SimObjPhysics sop = t.gameObject.GetComponent<SimObjPhysics>();
+                        cachedAvailableExpRoomObjectsDict.Add(sop.name, sop);
+                    }
+                }
+                return cachedAvailableExpRoomObjectsDict;
+            }
+        }
+
+        public Dictionary<string, SimObjPhysics> availableExpRoomContainersDict {
+            get {
+                if (cachedAvailableExpRoomContainersDict == null) {
+                    cachedAvailableExpRoomContainersDict = new Dictionary<string, SimObjPhysics>();
+                    foreach (Transform t in GameObject.Find("AvailableContainers").transform) {
+                        SimObjPhysics sop = t.gameObject.GetComponent<SimObjPhysics>();
+                        cachedAvailableExpRoomContainersDict.Add(sop.name, sop);
+                    }
+                }
+                return cachedAvailableExpRoomContainersDict;
+            }
+        }
 
         public static void emptyEnumerator(IEnumerator enumerator) {
             while (enumerator.MoveNext()) { }
@@ -29,9 +56,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator<float?> whichContainersDoesAvailableObjectFitIn(string objectName) {
-            GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
-            GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
-
             Action<SimObjPhysics> activateSop = (sop) => {
                 sop.gameObject.SetActive(true);
                 sop.ObjectID = sop.name;
@@ -48,20 +72,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Dictionary<string, float> coverNameToScale = new Dictionary<string, float>();
 
-            SimObjPhysics toCover = null;
-            foreach (Transform toCoverTransform in availableObjectsGameObject.transform) {
-                SimObjPhysics sop = toCoverTransform.gameObject.GetComponent<SimObjPhysics>();
-                if (sop.name == objectName) {
-                    toCover = sop;
-                    break;
-                }
-            }
-
-            if (toCover == null) {
+            if (!availableExpRoomObjectsDict.ContainsKey(objectName)) {
                 errorMessage = $"Could not find object with name {objectName}";
                 actionFinished(false);
                 yield break;
             }
+
+            SimObjPhysics toCover = availableExpRoomObjectsDict[objectName];
 
             if (toCover.GetComponent<Break>()) {
                 toCover.GetComponent<Break>().Unbreakable = true;
@@ -86,8 +103,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 toCoverPos = toCover.transform.position;
 
             int numberFit = 0;
-            foreach (Transform coverTransform in availableContainersGameObject.transform) {
-                SimObjPhysics cover = coverTransform.gameObject.GetComponent<SimObjPhysics>();
+            foreach (
+                SimObjPhysics cover in availableExpRoomContainersDict.OrderBy(
+                        kvp => kvp.Key
+                    ).Select(kvp => kvp.Value)
+            ) {
                 if (cover.GetComponent<Break>()) {
                     cover.GetComponent<Break>().Unbreakable = true;
                 }
@@ -202,40 +222,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void AvailableExpRoomObjects() {
-            GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
-            List<string> names = new List<string>();
-            foreach (Transform t in availableObjectsGameObject.transform) {
-                names.Add(t.gameObject.GetComponent<SimObjPhysics>().name);
-            }
-            actionFinished(true, names);
+            actionFinished(true, availableExpRoomObjectsDict.Values.ToList());
         }
 
         public void AvailableExpRoomContainers() {
-            GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
-            List<string> names = new List<string>();
-            foreach (Transform t in availableContainersGameObject.transform) {
-                names.Add(t.gameObject.GetComponent<SimObjPhysics>().name);
-            }
-            actionFinished(true, names);
+            actionFinished(true, availableExpRoomContainersDict.Values.ToList());
         }
 
         public void ToggleExpRoomObject(string objectName, bool? enable = null) {
             SimObjPhysics target = null;
-            GameObject topGameObject = null;
-            if (objectName.Contains("_Container_")) {
-                topGameObject = GameObject.Find("AvailableContainers");
+            if (availableExpRoomObjectsDict.ContainsKey(objectName)) {
+                target = availableExpRoomObjectsDict[objectName];
+            } else if (availableExpRoomContainersDict.ContainsKey(objectName)) {
+                target = availableExpRoomContainersDict[objectName];
             } else {
-                topGameObject = GameObject.Find("AvailableObjects");
-            }
-            foreach (Transform t in topGameObject.transform) {
-                SimObjPhysics sop = t.gameObject.GetComponent<SimObjPhysics>();
-                if (sop.name == objectName) {
-                    target = sop;
-                    break;
-                }
-            }
-
-            if (target == null) {
                 errorMessage = $"Could not find object with name {objectName}";
                 actionFinishedEmit(false);
                 return;
