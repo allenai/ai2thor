@@ -222,11 +222,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void AvailableExpRoomObjects() {
-            actionFinished(true, availableExpRoomObjectsDict.Values.ToList());
+            actionFinished(true, availableExpRoomObjectsDict.Keys.ToList());
         }
 
         public void AvailableExpRoomContainers() {
-            actionFinished(true, availableExpRoomContainersDict.Values.ToList());
+            actionFinished(true, availableExpRoomContainersDict.Keys.ToList());
         }
 
         public void ToggleExpRoomObject(string objectName, bool? enable = null) {
