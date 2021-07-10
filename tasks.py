@@ -1153,6 +1153,10 @@ def poll_ci_build(context):
 
     pytest_missing = True
     for i in range(30):
+        if (time.time() - last_emit_time) > 120:
+            print(".", end="")
+            last_emit_time = time.time()
+
         s3_obj = pytest_s3_object(commit_id)
         s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
             s3_obj.bucket_name,
