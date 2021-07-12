@@ -306,11 +306,6 @@ public class MCSMain : MonoBehaviour {
         // Remove the ceiling from all intuitive physics and isometric scenes.
         this.ceiling.SetActive(!this.isPassiveScene);
 
-        // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
-        // TODO MCS-608 Remove substeps
-        if (this.isPassiveScene) {
-            this.agentController.substeps = 1;
-        }
 
         // Reset the floorProperties in case the previous scene was intuitivePhysics.
         if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
@@ -499,7 +494,6 @@ public class MCSMain : MonoBehaviour {
         }
         Vector3 roomHalfDimensions = roomDimensions * .5f;
         Vector3 wallHalfWidths = wallWidths * .5f;
-        this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
         this.wallLeft.transform.position = new Vector3(-roomHalfDimensions.x - wallHalfWidths.x,
             roomHalfDimensions.y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
@@ -1536,24 +1530,25 @@ public class MCSMain : MonoBehaviour {
         return objectsWereShown;
     }
 
-    public void UpdateOnPhysicsSubstep(int numberOfSubsteps) {
-        if (this.currentScene != null && this.currentScene.objects != null) {
+    public void UpdateOnPhysicsSubstep() {
+        if (this.currentScene != null && this.currentScene.objects != null) 
+        {
             // Loop over each configuration object in the scene and update if needed.
             this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
-                .ForEach(objectConfig => {
+                .ForEach(objectConfig => 
+                {
                     GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                     // If the object should move during this step, move it a little during each individual substep, so
                     // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
                     objectConfig.moves.Where(move => move.stepBegin <= this.lastStep &&
                         move.stepEnd >= this.lastStep && move.vector != null).ToList().ForEach((move) => {
                             gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
-                                move.vector.z) / (float)numberOfSubsteps);
+                                move.vector.z));
                         });
                     objectConfig.rotates.Where(rotate => rotate.stepBegin <= this.lastStep &&
                         rotate.stepEnd >= this.lastStep && rotate.vector != null).ToList().ForEach((rotate) => {
                             gameOrParentObject.transform.Rotate(
-                                new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z) /
-                                (float)numberOfSubsteps
+                                new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z)
                             );
                         });
                 });

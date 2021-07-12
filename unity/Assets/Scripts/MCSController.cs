@@ -40,15 +40,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float MAX_DISTANCE_ACROSS_ROOM = 14.15f;
 
     // The number of times to run Physics.Simulate after each action from the player is LOOPS * STEPS.
-    public static int PHYSICS_SIMULATION_LOOPS = 1;
     public static int PHYSICS_SIMULATION_STEPS = 5;
 
     public static int ROTATION_DEGREES = 10;
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
-
-    public int substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
     public int step = 0;
 
@@ -76,8 +73,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
     private bool inputWasRotateLook = false;
-
-    private int actionFrameCount;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -423,8 +418,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 controlCommand.action.Equals("LookUp") ||
                 controlCommand.action.Equals("LookDown");
 
-        this.actionFrameCount = 0; //for movement and rotation
-
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
 
@@ -565,21 +558,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public void SimulatePhysics() {
         if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
-            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 : this.substeps));
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep());
         }
 
         else {
             // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
-            this.SimulatePhysicsCompletely();
-            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(1);
+            this.SimulatePhysicsOnce();
+            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MCSPerformerManager)this.agentManager).FinalizeEmit();
-        }
-    }
-
-    private void SimulatePhysicsCompletely() {
-        for (int i = 0; i < this.substeps; ++i) {
-            this.SimulatePhysicsOnce();
         }
     }
 
@@ -587,22 +574,16 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //for movement
         if (this.inputWasMovement) {
             MatchAgentHeightToStructureBelow(false);
-            this.movementActionFinished = moveInDirection((this.movementActionData.direction / this.substeps),
+            this.movementActionFinished = moveInDirection((this.movementActionData.direction),
                     this.movementActionData.UniqueID,
                     this.movementActionData.maxDistanceToObject,
                     this.movementActionData.forceAction);
-            this.actionFrameCount++;
-            if (this.actionFrameCount == this.substeps) {
                 actionFinished(this.movementActionFinished);
-            }
         } //for rotation
         else if (this.inputWasRotateLook) {
             RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
-            this.actionFrameCount++;
-            if (this.actionFrameCount == this.substeps) {
-                actionFinished(true);
-            }
+            actionFinished(true);
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
@@ -613,27 +594,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         physicsFramesPerSecond = 1.0f / (MCSController.PHYSICS_SIMULATION_STEP_SECONDS * MCSController.PHYSICS_SIMULATION_STEPS);
     }
 
-    private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
+    private IEnumerator SimulatePhysicsSaveImagesIncreaseStep() {
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
-        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(this.substeps);
+        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
 
         // Wait for the end of frame after we run the physics simulation but before we save the images.
         yield return new WaitForEndOfFrame(); // Required for coroutine functions
 
         ((MCSPerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
-
-        int nextLoop = thisLoop - 1;
-
-        if (nextLoop > 0) {
-            // Continue the next loop: run the physics simulation, then save more images.
-            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(nextLoop));
-        }
-        else {
-            // Once finished, notify the AgentManager to send the action output metadata and images to the Python API.
-            ((MCSPerformerManager)this.agentManager).FinalizeEmit();
-        }
+        ((MCSPerformerManager)this.agentManager).FinalizeEmit();
     }
 
     public override void ThrowObject(ServerAction action) {
@@ -1009,7 +980,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 :
             distance.eulerAngles.x < minHorizon ? distance.eulerAngles.x + 360 : distance.eulerAngles.x;
 
-        Vector3 updatedRotation = new Vector3(horizonChange / this.substeps, 0, 0);
+        Vector3 updatedRotation = new Vector3(horizonChange, 0, 0);
         m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + updatedRotation);
     }
 
@@ -1022,7 +993,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 :
             distance.eulerAngles.y < -90 ? distance.eulerAngles.y + 360 : distance.eulerAngles.y;
 
-        Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
+        Vector3 updatedRotation = new Vector3(0, rotationChange, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
 }
