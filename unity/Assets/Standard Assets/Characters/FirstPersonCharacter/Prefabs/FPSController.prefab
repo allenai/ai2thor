@@ -111,6 +111,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InputFieldObj: {fileID: 0}
   PhysicsController: {fileID: 0}
+  StochasticController: {fileID: 0}
+  DroneController: {fileID: 0}
+  ArmController: {fileID: 0}
+  AManager: {fileID: 0}
   InputMode_Text: {fileID: 0}
 --- !u!114 &114000010621761404
 MonoBehaviour:
@@ -184,6 +188,7 @@ MonoBehaviour:
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
   agentState: 3
+  clearRandomizeMaterialsOnReset: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -206,7 +211,6 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 3e9ce1cb292fb6442984e83b779c6e72, type: 2}
   - {fileID: 2100000, guid: 7a57fbb1753fd1d40893e3d4e4c3a02b, type: 2}
   MyFaceMesh: {fileID: 0}
-  AdvancePhysicsStepCount: 0
   TargetCircles:
   - {fileID: 5816710041462207104, guid: 9215b98f2bb6741b8bafa00989578d49, type: 3}
   - {fileID: 6545476784750854561, guid: aca5ccb301c25451183fa2ae1deceeb9, type: 3}
@@ -277,6 +281,7 @@ MonoBehaviour:
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
   agentState: 3
+  clearRandomizeMaterialsOnReset: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -352,6 +357,7 @@ MonoBehaviour:
   IKArm: {fileID: 6541060884949338445}
   inHighFrictionArea: 0
   agentState: 3
+  clearRandomizeMaterialsOnReset: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -384,7 +390,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!114 &2789572543688112514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -425,6 +430,7 @@ MonoBehaviour:
   IKArm: {fileID: 6666846618789859528, guid: 6d6864c30f4f772439f94c8f5aff1ac7, type: 3}
   inHighFrictionArea: 0
   agentState: 3
+  clearRandomizeMaterialsOnReset: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -441,7 +447,6 @@ MonoBehaviour:
   ToSetActive: []
   ScreenFaces: []
   MyFaceMesh: {fileID: 0}
-  AdvancePhysicsStepCount: 0
   TargetCircles: []
 --- !u!1 &100002
 GameObject:
@@ -1305,7 +1310,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!1 &1813055551114532809
 GameObject:
   m_ObjectHideFlags: 0
@@ -3534,7 +3538,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!54 &2022692064970832281
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3551,19 +3554,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4705282414930597068
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4434878276163363485}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!1 &4537029108333365305
 GameObject:
   m_ObjectHideFlags: 0
@@ -4114,7 +4104,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!1 &5793172648910738765
 GameObject:
   m_ObjectHideFlags: 0
@@ -4206,7 +4195,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!1 &6662423986039695761
 GameObject:
   m_ObjectHideFlags: 0
@@ -4314,7 +4302,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4e8bce353c6416a9b9909b7243a135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CascadeCollisionEventsToParent: 1
 --- !u!1 &7242486390811569783
 GameObject:
   m_ObjectHideFlags: 0

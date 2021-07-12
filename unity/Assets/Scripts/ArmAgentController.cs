@@ -544,7 +544,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // debug for static arm collisions from collision listener
         public void DebugMidLevelArmCollisions() {
             IK_Robot_Arm_Controller arm = getArm();
-            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
+            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions().ToList();
             Debug.Log("Total current active static arm collisions: " + scs.Count);
             foreach (CollisionListener.StaticCollision sc in scs) {
                 Debug.Log("Arm static collision: " + sc.name);

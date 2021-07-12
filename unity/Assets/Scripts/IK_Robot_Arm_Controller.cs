@@ -94,6 +94,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         ArmBoxColliders = cleanedBoxes.ToArray();
+
+        // TODO: Currently explicitly ignoring all arm self collisions (for efficiency)!
+        var colliders = this.GetComponentsInChildren<Collider>();
+        foreach (Collider c0 in colliders) {
+            foreach (Collider c1 in colliders) {
+                Physics.IgnoreCollision(c0, c1);
+            }
+        }
     }
 
     // NOTE: removing this for now, will add back if functionality is required later
@@ -544,6 +552,29 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         controller.actionFinished(true, listOfSOP);
     }
 
+    private Dictionary<GameObject, Vector3> getGameObjectToMultipliedScale(
+        GameObject go,
+        Vector3 currentScale,
+        Dictionary<GameObject, Vector3> gameObjectToScale = null
+    ) {
+        if (gameObjectToScale == null) {
+            gameObjectToScale = new Dictionary<GameObject, Vector3>();
+        }
+
+        currentScale = Vector3.Scale(currentScale, go.transform.localScale);
+        gameObjectToScale[go] = currentScale;
+
+        foreach (Transform child in go.transform) {
+            getGameObjectToMultipliedScale(
+                go: child.gameObject,
+                currentScale: currentScale,
+                gameObjectToScale
+            );
+        }
+
+        return gameObjectToScale;
+    }
+
     public bool PickupObject(List<string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
@@ -557,6 +588,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 }
             }
 
+            Dictionary<GameObject, Vector3> gameObjectToMultipliedScale = getGameObjectToMultipliedScale(
+                go: sop.gameObject,
+                currentScale: new Vector3(1f, 1f, 1f)
+            );
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
@@ -583,20 +618,38 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                     rotation: c.transform.rotation,
                     parent: FourthJoint
                 );
+                clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
+
                 clone.isTrigger = true;
+                collisionListener.registerChild(clone);
                 cols.Add(clone);
 
                 // The other set is used to interact with moveable objects
-                cols.Add(Instantiate(
+                clone = Instantiate(
                     original: c,
                     position: c.transform.position,
                     rotation: c.transform.rotation,
                     parent: FourthJoint
-                ));
+                );
+                clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
+                cols.Add(clone);
 
                 // must disable the colliders on the held object so they 
                 // don't interact with anything
                 c.enabled = false;
+            }
+
+            // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
+            var colliders = this.GetComponentsInChildren<Collider>();
+            foreach (Collider c0 in colliders) {
+                foreach (Collider c1 in cols) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
+            }
+            foreach (Collider c0 in cols) {
+                foreach (Collider c1 in cols) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
             }
 
             pickedUp = true;

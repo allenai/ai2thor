@@ -54,7 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 target = new Vector3(0, targetY, 0);
             float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
             double epsilon = 1e-3;
-            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0) {
+            while (currentDistance > epsilon && !arm.collisionListener.ShouldHalt()) {
                 Vector3 direction = (target - arm.transform.localPosition).normalized;
                 arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
 
@@ -92,7 +92,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
             double epsilon = 1e-3;
             Debug.Log("Starting arm movement");
-            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0) {
+            while (currentDistance > epsilon && !arm.collisionListener.ShouldHalt()) {
                 Vector3 direction = (target - armTarget.transform.position).normalized;
                 armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
 
@@ -3129,11 +3129,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "expfit": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "WhichContainersDoesAvailableObjectFitIn";
+                        action["objectName"] = "AlarmClock_dd21c3db";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 case "scale": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ScaleObject";
-                        action["objectId"] = "Pot|-00.29|+01.13|-00.07";
-                        action["scale"] = 2.0f;
+                        action["objectId"] = "Box|+00.00|+01.33|-00.44";
+                        action["scale"] = 0.6746510624885559f;
+                        action["scaleOverSeconds"] = 0f;
                         action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {

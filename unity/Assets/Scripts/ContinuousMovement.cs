@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
+using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
@@ -225,7 +226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             T directionToTarget = getDirection(target, currentProperty);
 
-            while (currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
+            while (currentDistance > epsilon && !collisionListener.ShouldHalt()) {
                 previousProperty = getProp(moveTransform);
 
                 T next = nextProp(moveTransform, directionToTarget);
@@ -295,7 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string debugMessage = "";
             IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-            var staticCollisions = collisionListener.StaticCollisions();
+            var staticCollisions = collisionListener.StaticCollisions().ToList();
 
             if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
