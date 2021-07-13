@@ -7,6 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class CollisionListener : MonoBehaviour {
     public Dictionary<Collider, HashSet<Collider>> activeColliders = new Dictionary<Collider, HashSet<Collider>>();
+    public List<GameObject> doNotRegisterChildrenWithin = new List<GameObject>();
 
     public static bool useMassThreshold = false;
     public static float massThreshold;
@@ -15,21 +16,35 @@ public class CollisionListener : MonoBehaviour {
 
     void Start() {
         registerAllChildColliders();
-        if (this.GetComponentsInChildren<CollisionListener>().Length != 0) {
-            throw new InvalidOperationException(
-                "A CollisionListener should not be included as a component on a descendent of a GameObject that already has a CollisionListener component."
-            );
+        foreach (CollisionListener cl in this.GetComponentsInChildren<CollisionListener>()) {
+            if (cl.gameObject != this.gameObject) {
+#if UNITY_EDITOR
+                Debug.Log($"Offending CollisionListener: {cl.gameObject} a descendent of {this.gameObject}");
+#endif
+                throw new InvalidOperationException(
+                    "A CollisionListener should not be included as a component on a descendent of a GameObject that already has a CollisionListener component."
+                );
+            }
         }
     }
 
     public void registerAllChildColliders() {
+        HashSet<Collider> ignoredColliders = new HashSet<Collider>();
+        foreach (GameObject go in doNotRegisterChildrenWithin) {
+            foreach (Collider c in go.GetComponentsInChildren<Collider>()) {
+                ignoredColliders.Add(c);
+            }
+        }
+
         foreach (CollisionListenerChild clc in collisionListenerChildren) {
             clc.parent = null;
         }
         collisionListenerChildren.Clear();
 
         foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
-            registerChild(c);
+            if (!ignoredColliders.Contains(c)) {
+                registerChild(c);
+            }
         }
     }
 

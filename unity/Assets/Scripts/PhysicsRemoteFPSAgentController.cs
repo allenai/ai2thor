@@ -5880,10 +5880,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void HideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+        public void HideObject(string objectId, bool hideContained = true) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                if (hideContained && !ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                     foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, false);
                     }
@@ -5898,10 +5898,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void UnhideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+        public void UnhideObject(string objectId, bool unhideContained = true) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                if (unhideContained && !ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                     foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, true);
                     }

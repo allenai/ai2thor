@@ -67,6 +67,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         );
 
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
+        this.collisionListener.registerAllChildColliders();
 
         List<CapsuleCollider> armCaps = new List<CapsuleCollider>();
         List<BoxCollider> armBoxes = new List<BoxCollider>();
