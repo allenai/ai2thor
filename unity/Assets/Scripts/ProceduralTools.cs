@@ -1227,6 +1227,7 @@ namespace Thor.Procedural {
 
                     var p0p1_norm = p0p1.normalized;
                     var pos = wall.wall_0.p0 + p0p1_norm * (door.bounding_box.min.x + (doorLength / 2.0f)) + Vector3.up * door.bounding_box.min.y;//* (doorLength * 1.4f);
+                    // var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall_0.p1, p1 = wall.wall_0.p0 });
                     var rotY = getWallDegreesRotation(wall.wall_0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
 
