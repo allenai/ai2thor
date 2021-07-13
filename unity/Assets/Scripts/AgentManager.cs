@@ -17,6 +17,9 @@ using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
 using System.Linq;
+using UnityEngine.Rendering.PostProcessing;
+using UnityStandardAssets.ImageEffects;
+
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -497,12 +500,14 @@ public class AgentManager : MonoBehaviour {
         bool orthographic = false,
         float? orthographicSize = null,
         float? nearClippingPlane = null,
-        float? farClippingPlane = null
+        float? farClippingPlane = null,
+        string antiAliasing = "none"
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
 
-        GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
+        GameObject gameObject = GameObject.Instantiate(Resources.Load("ThirdPartyCameraTemplate")) as GameObject;
+        gameObject.name = "ThirdPartyCamera" + thirdPartyCameras.Count;
         gameObject.AddComponent(typeof(Camera));
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
@@ -510,6 +515,27 @@ public class AgentManager : MonoBehaviour {
         camera.cullingMask = ~(1 << 11);
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
+        }
+
+        antiAliasing = antiAliasing.ToLower();
+        PostProcessLayer postProcessLayer = gameObject.GetComponentInChildren<PostProcessLayer>();
+        if (antiAliasing == "none") {
+            postProcessLayer.enabled = false;
+        } else {
+            postProcessLayer.enabled = true;
+            switch (antiAliasing) {
+                case "fxaa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.FastApproximateAntialiasing;
+                    break;
+                case "smaa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
+                    break;
+                case "taa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
+                    break;
+                default:
+                    break;
+            }
         }
 
         thirdPartyCameras.Add(camera);
