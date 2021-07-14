@@ -41,6 +41,7 @@ public class AgentManager : MonoBehaviour {
     private bool renderNormalsImage;
     private bool renderFlowImage;
     private Socket sock = null;
+    [SerializeField]
     private List<Camera> thirdPartyCameras = new List<Camera>();
     private Color[] agentColors = new Color[] { Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey };
     public int actionDuration = 3;
@@ -53,7 +54,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -482,7 +483,6 @@ public class AgentManager : MonoBehaviour {
                 throw new ArgumentException($"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color.");
             }
         }
-
         this.activeAgent().actionFinished(success: true);
     }
 
@@ -508,7 +508,7 @@ public class AgentManager : MonoBehaviour {
 
         GameObject gameObject = GameObject.Instantiate(Resources.Load("ThirdPartyCameraTemplate")) as GameObject;
         gameObject.name = "ThirdPartyCamera" + thirdPartyCameras.Count;
-        gameObject.AddComponent(typeof(Camera));
+        //gameObject.AddComponent(typeof(Camera));
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image
@@ -566,6 +566,34 @@ public class AgentManager : MonoBehaviour {
             y: optionalVector3.y == null ? defaultsOnNull.y : (float)optionalVector3.y,
             z: optionalVector3.z == null ? defaultsOnNull.z : (float)optionalVector3.z
         );
+    }
+
+    //same as `GetCoordinateFromRaycast` for the main agent camera, but used with any ThirdPartyCamera in scene
+    public void CoordinateFromRaycastThirdPartyCamera(float x, float y, int thirdPartyCameraId = 0) {
+        // count is out of bounds
+        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
+            throw new ArgumentOutOfRangeException(
+                $"thirdPartyCameraId: {thirdPartyCameraId} (int: default=0) must in 0 <= thirdPartyCameraId < len(thirdPartyCameras)={thirdPartyCameras.Count}."
+            );
+        }
+
+        if (x < 0 || y < 0 || x > 1 || y > 1) {
+            throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
+        }
+
+        Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
+
+        Ray ray = thirdPartyCamera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
+        RaycastHit hit;
+        Physics.Raycast(
+            ray: ray,
+            hitInfo: out hit,
+            maxDistance: Mathf.Infinity,
+            layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
+            queryTriggerInteraction: QueryTriggerInteraction.Ignore
+        );
+
+        this.activeAgent().actionFinished(success: true, actionReturn: hit.point);
     }
 
     // Here, we don't want some dimensions set. For instance, set x, but not y.
