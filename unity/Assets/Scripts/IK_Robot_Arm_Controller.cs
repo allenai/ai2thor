@@ -379,23 +379,27 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false,
-        bool disableRendering = false
+        bool disableRendering = false,
+        bool normalizedY = true
     ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
-        // first check if the target position is within bounds of the agent's capsule center/height extents
-        // if not, actionFinished false with error message listing valid range defined by extents
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
-        Vector3 cc_center = cc.center;
-        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height / 2f, 0);
-        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); // this is halved to prevent arm clipping into floor
+        Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
 
-        // linear function that take height and adjusts targetY relative to min/max extents
-        float targetY = ((cc_maxY.y - cc_minY.y) * (height)) + cc_minY.y;
+        float maxY = capsuleWorldCenter.y + cc.height / 2f;
+        float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
 
-        Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
+        if (normalizedY) {
+            height = (maxY - minY) * height + minY;
+        }
 
+        if (height < minY || height > maxY) {
+            throw new ArgumentOutOfRangeException($"height={height} value must be in [{minY}, {maxY}].");
+        }
+
+        Vector3  target = new Vector3(this.transform.position.x, height, this.transform.position.z);
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.move(
                 controller: controller,
@@ -405,7 +409,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 unitsPerSecond: unitsPerSecond,
                 returnToStartPropIfFailed: returnToStartPositionIfFailed,
-                localPosition: true
+                localPosition: false
             )
         );
 
@@ -417,6 +421,35 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         } else {
             StartCoroutine(moveCall);
         }
+    }
+
+    public void moveArmBaseUp(
+        PhysicsRemoteFPSAgentController controller,
+        float distance,
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false,
+        bool disableRendering = false
+    ) {
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        collisionListener.Reset();
+
+        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
+        Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
+        float maxY = capsuleWorldCenter.y + cc.height / 2f;
+        float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
+        float targetY = capsuleWorldCenter.y + distance;
+        targetY = Mathf.Max(Mathf.Min(targetY, maxY), minY);
+
+        moveArmBase(
+            controller: controller,
+            height: targetY,
+            unitsPerSecond: unitsPerSecond,
+            fixedDeltaTime: fixedDeltaTime,
+            returnToStartPositionIfFailed: returnToStartPositionIfFailed,
+            disableRendering: disableRendering,
+            normalizedY: false
+        )
     }
 
     public void rotateWristAroundPoint(
