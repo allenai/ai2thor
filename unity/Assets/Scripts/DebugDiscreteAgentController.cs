@@ -187,6 +187,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["offset"] = localPos;
                                 //action["fixedDeltaTime"] = fixedDeltaTime;
                                 //action["speed"] = 0.1;
+                                action["returnToStart"] = false;
                             }
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }

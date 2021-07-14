@@ -15,7 +15,7 @@ public class ExpRoomEditor : EditorWindow {
     [MenuItem("ExpRoom/Add all pickupable prefabs to AvailableObjects")]
     static void AddPickupableToAvailableObjects() {
         GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
-        AddAllPrefabsToAsOnlyChildrenOfObject(
+        AddAllPrefabsAsOnlyChildrenOfObject(
             parent: availableObjectsGameObject,
             onlyPickupable: true,
             onlyReceptacles: false,
@@ -26,7 +26,7 @@ public class ExpRoomEditor : EditorWindow {
     [MenuItem("ExpRoom/Add all pickupable receptacle prefabs to AvailableContainers")]
     static void AddPickupableReceptaclesToAvailableContainers() {
         GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
-        AddAllPrefabsToAsOnlyChildrenOfObject(
+        AddAllPrefabsAsOnlyChildrenOfObject(
             parent: availableContainersGameObject,
             onlyPickupable: true,
             onlyReceptacles: true,
@@ -61,7 +61,7 @@ public class ExpRoomEditor : EditorWindow {
 
         if (GUILayout.Button("Find all pickupable")) {
             GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
-            sopAndPrefabTuples = AddAllPrefabsToAsOnlyChildrenOfObject(
+            sopAndPrefabTuples = AddAllPrefabsAsOnlyChildrenOfObject(
                 parent: availableObjectsGameObject,
                 onlyPickupable: true,
                 onlyReceptacles: false
@@ -88,6 +88,31 @@ public class ExpRoomEditor : EditorWindow {
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.EndScrollView();
+            }
+        }
+    }
+
+    public static void OpenBoxFlapsMore(SimObjPhysics sop) {
+        CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+        if (coo) {
+            for (int i = 0; i < coo.MovingParts.Length; i++) {
+                GameObject part = coo.MovingParts[i];
+                Vector3 openRot = coo.openPositions[i];
+                Vector3 closeRot = coo.closedPositions[i];
+
+                Quaternion openRotQ = Quaternion.Euler(openRot);
+                Quaternion closeRotQ = Quaternion.Euler(closeRot);
+
+                float angle = Quaternion.Angle(openRotQ, closeRotQ);
+                float newAngle = angle;
+                while (newAngle < 180f) {
+                     newAngle += 30f;
+                }
+                part.transform.rotation = Quaternion.Euler(
+                    (openRot - closeRot) * (newAngle / angle) + closeRot
+                );
+                // Debug.Log($"Open = {openRot}, closed = {closeRot}, Euler = {(openRot - closeRot) * (newAngle / angle) + openRot}");
+                Debug.Log($"Part = {part}, angle {angle}, new angle {newAngle}, true angle {Quaternion.Angle(openRotQ, part.transform.rotation)}");
             }
         }
     }
@@ -149,7 +174,7 @@ public class ExpRoomEditor : EditorWindow {
         ).ToArray();
     }
 
-    public static List<(SimObjPhysics, string)> AddAllPrefabsToAsOnlyChildrenOfObject(
+    public static List<(SimObjPhysics, string)> AddAllPrefabsAsOnlyChildrenOfObject(
         GameObject parent,
         bool onlyPickupable,
         bool onlyReceptacles,
@@ -165,10 +190,13 @@ public class ExpRoomEditor : EditorWindow {
                 go = (GameObject) AssetDatabase.LoadMainAssetAtPath(prefab);
                 SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
 
-                // if (sop != null && sop.Type.ToString() == "AlarmClock") {
-                if (sop != null) {    
+                // if (sop != null && sop.Type.ToString() == "Box" && sop.GetComponent<CanOpen_Object>()) {
+                if (sop != null) {
                     bool pickupable = sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-                    bool isReceptacle = Array.IndexOf(sop.SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 && sop.ReceptacleTriggerBoxes != null;
+                    bool isReceptacle = Array.IndexOf(
+                        sop.SecondaryProperties,
+                        SimObjSecondaryProperty.Receptacle
+                    ) > -1 && sop.ReceptacleTriggerBoxes != null;
                     if (
                         (pickupable || !onlyPickupable)
                         && (isReceptacle || !onlyReceptacles)
@@ -205,12 +233,11 @@ public class ExpRoomEditor : EditorWindow {
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
 
-
         // Note that you cannot (unfortunately) combine the two below loops into
         // a single loop as doing something like
-        // foreach (Transform child in parent.transform) {
-        //     DestroyImmediate(child.gameObject);
-        // }
+        //   foreach (Transform child in parent.transform) {
+        //       DestroyImmediate(child.gameObject);
+        //   }
         // Will actually miss a large number of children because the way that looping through
         // parent.transform works (deleting while iterating results in missing elements).
         List<GameObject> toDestroy = new List<GameObject>();
@@ -231,14 +258,21 @@ public class ExpRoomEditor : EditorWindow {
             string hash = CreateSHA256Hash(path).Substring(0, 8);
 
             GameObject go = (GameObject) PrefabUtility.InstantiatePrefab(sop.gameObject);
-            FixBoundingBox(go.GetComponent<SimObjPhysics>());
+
+            SimObjPhysics newSop = go.GetComponent<SimObjPhysics>();
+
+            if (onlyReceptacles && sop.Type.ToString() == "Box") {
+                OpenBoxFlapsMore(newSop);
+            }
+
+            FixBoundingBox(newSop);
 
             go.name = $"{sop.Type.ToString()}{tag}_{hash}";
             go.SetActive(false);
             go.transform.position = new Vector3(-5f, i * 0.05f, -5f);
             go.transform.parent = parent.transform;
 
-            sopAndPrefabTuples[i] = (go.GetComponent<SimObjPhysics>(), path);
+            sopAndPrefabTuples[i] = (newSop, path);
         }
 
         return sopAndPrefabTuples;
