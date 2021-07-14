@@ -1196,7 +1196,7 @@ namespace Thor.Procedural {
             //getTargetObject() and other things that use that dict
             //also add their rigidbodies to the list of all rigid body objects in scene
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            sceneManager.SetupScene();
+            sceneManager.SetupScene(false);
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
