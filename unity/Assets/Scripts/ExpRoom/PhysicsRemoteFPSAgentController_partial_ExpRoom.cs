@@ -221,6 +221,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, coverNameToScale);
         }
 
+        public void SetCollisionDetectionModeToContinuousSpeculative(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Rigidbody rb = target.GetComponent<Rigidbody>();
+            if (!rb) {
+                errorMessage = $"Could not find rigid body for {objectId}";
+                actionFinished(false);
+                return;
+            } else {
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                actionFinished(true, availableExpRoomContainersDict.Keys.ToList());
+            }
+        }
+
         public void AvailableExpRoomObjects() {
             actionFinished(true, availableExpRoomObjectsDict.Keys.ToList());
         }
@@ -254,6 +273,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 physicsSceneManager.RemoveFromObjectsInScene(target);
                 actionFinished(true);
             }
+        }
+
+        public void SetRigidbodyConstraints(
+            string objectId,
+            bool freezeX = false,
+            bool freezeY = false,
+            bool freezeZ = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find object with id " + objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Rigidbody rb = target.GetComponent<Rigidbody>();
+            rb.constraints = RigidbodyConstraints.None;
+
+            if (freezeX) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionX;
+            }
+
+            if (freezeY) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionY;
+            }
+
+            if (freezeZ) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionZ;
+            }
+
+            actionFinished(true);
         }
     }
 }
