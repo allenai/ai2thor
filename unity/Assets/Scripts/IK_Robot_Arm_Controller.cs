@@ -399,7 +399,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             throw new ArgumentOutOfRangeException($"height={height} value must be in [{minY}, {maxY}].");
         }
 
-        Vector3  target = new Vector3(this.transform.position.x, height, this.transform.position.z);
+        Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.move(
                 controller: controller,
@@ -438,7 +438,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
         float maxY = capsuleWorldCenter.y + cc.height / 2f;
         float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
-        float targetY = capsuleWorldCenter.y + distance;
+        float targetY = this.transform.position.y + distance;
         targetY = Mathf.Max(Mathf.Min(targetY, maxY), minY);
 
         moveArmBase(
@@ -449,7 +449,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             returnToStartPositionIfFailed: returnToStartPositionIfFailed,
             disableRendering: disableRendering,
             normalizedY: false
-        )
+        );
     }
 
     public void rotateWristAroundPoint(
