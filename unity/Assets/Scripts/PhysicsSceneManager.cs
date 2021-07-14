@@ -56,9 +56,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void SetupScene() {
+    public void SetupScene(bool genObjectID = true) {
         ObjectIdToSimObjPhysics.Clear();
-        GatherSimObjPhysInScene();
+        GatherSimObjPhysInScene(genObjectID);
         GatherAllRBsInScene();
     }
     // Use this for initialization
@@ -185,13 +185,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void GatherSimObjPhysInScene() {
+    public void GatherSimObjPhysInScene(bool genObjectID = true) {
         List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 
         allPhysObjects.AddRange(FindObjectsOfType<SimObjPhysics>());
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
         foreach (SimObjPhysics o in allPhysObjects) {
+            if(genObjectID)
             Generate_ObjectID(o);
 
             // debug in editor, make sure no two object share ids for some reason

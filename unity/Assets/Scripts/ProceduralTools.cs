@@ -511,8 +511,7 @@ namespace Thor.Procedural {
             bool globalVertexPositions = false,
             int layer = 8
         ) {
-            var wallGO = new GameObject($"Wall_{index}");
-
+            var wallGO = new GameObject(toCreate.id);
             wallGO.layer = layer;
 
             var meshF = wallGO.AddComponent<MeshFilter>();
@@ -696,7 +695,7 @@ namespace Thor.Procedural {
                 toCreate.hole
             );
 
-            setWallSimObjPhysics(wallGO, $"wall_{index}", visibilityPointsGO, boxC);
+            setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxC);
 
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
@@ -1114,11 +1113,11 @@ namespace Thor.Procedural {
             var wallsMaxY = wallPoints.Max(p => p.y);
             var wallsMaxHeight = walls.Max(w => w.height);
 
-            var floorGameObject = createSimObjPhysicsGameObject(name, position == null ? new Vector3(0, wallsMinY, 0) : position);
+            var floorGameObject = createSimObjPhysicsGameObject(house.id, position == null ? new Vector3(0, wallsMinY, 0) : position);
 
             for (int i = 0; i < house.rooms.Count(); i++) {
                 var room = house.rooms.ElementAt(i);
-                var subFloorGO = createSimObjPhysicsGameObject($"Floor_{i}");
+                var subFloorGO = createSimObjPhysicsGameObject(room.id);
                 var mesh = ProceduralTools.GenerateFloorMesh(room.floor_polygon);//ProceduralTools.GetPolygonMesh(room);
                 // mesh.subMeshCount
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
@@ -1196,7 +1195,7 @@ namespace Thor.Procedural {
             //getTargetObject() and other things that use that dict
             //also add their rigidbodies to the list of all rigid body objects in scene
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            sceneManager.SetupScene();
+            sceneManager.SetupScene(false);
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
