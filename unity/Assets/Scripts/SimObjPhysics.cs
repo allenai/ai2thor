@@ -225,10 +225,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
         }
 
-        Bounds bounding = cols[0].bounds;// initialize the bounds to return with our first collider
+        Bounds bounding = new Bounds(
+            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+        );
 
         foreach (Collider c in cols) {
-            if (c.enabled) {
+            if (c.enabled && !c.isTrigger) {
                 bounding.Encapsulate(c.bounds);
             }
         }
@@ -238,19 +241,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             childSimObject.SetParent(this.transform);
         }
 
-        // ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+        // ok now we have a bounds that encapsulates all the colliders of the object, EXCLUDING trigger colliders
         List<float[]> cornerPoints = new List<float[]>();
         float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
+            bounding.center.x + bounding.size.x / 2f,
+            bounding.center.x - bounding.size.x / 2f
         };
         float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
+            bounding.center.y + bounding.size.y / 2f,
+            bounding.center.y - bounding.size.y / 2f
         };
         float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
+            bounding.center.z + bounding.size.z / 2f,
+            bounding.center.z - bounding.size.z / 2f
         };
         foreach (float x in xs) {
             foreach (float y in ys) {
@@ -261,8 +264,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
         b.cornerPoints = cornerPoints.ToArray();
 
-        b.center = bounding.center;// also return the center of this bounding box in world coordinates
-        b.size = bounding.size;// also return the size in the x, y, z axes of the bounding box in world coordinates
+        b.center = bounding.center; // also return the center of this bounding box in world coordinates
+        b.size = bounding.size; // also return the size in the x, y, z axes of the bounding box in world coordinates
 
         return b;
 
