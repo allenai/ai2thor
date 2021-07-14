@@ -162,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SelectPlayerControl();
 
 #if !UNITY_EDITOR
-               HideHUD();
+            HideHUD();
 #endif
         }
 
@@ -1810,19 +1810,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // move ahead
                 case "ma": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveAhead";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveAhead";
 
                         if (splitcommand.Length > 1) {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else {
-                            action.moveMagnitude = 0.25f;
-                        }
-
-                        // action.manualInteract = true;
-
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
+                        } else { action["moveMagnitude"] = 0.25f; }
                         CurrentActiveController().ProcessControlCommand(action);
-                        // PhysicsController.CheckIfAgentCanMove(5.0f, 0);
                         break;
                     }
 
@@ -2044,11 +2038,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // rotate left
                 case "rl": {
-                        ServerAction action = new ServerAction();
-                        action.action = "RotateLeft";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateLeft";
+
 
                         if (splitcommand.Length > 1) {
-                            action.degrees = float.Parse(splitcommand[1]);
+                            action["degrees"] = float.Parse(splitcommand[1]);
                         }
 
                         // action.manualInteract = true;
@@ -2071,11 +2066,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // rotate right
                 case "rr": {
-                        ServerAction action = new ServerAction();
-                        action.action = "RotateRight";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateRight";
+
 
                         if (splitcommand.Length > 1) {
-                            action.degrees = float.Parse(splitcommand[1]);
+                            action["degrees"] = float.Parse(splitcommand[1]);
                         }
 
                         // action.manualInteract = true;
@@ -2213,6 +2209,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         action.fillLiquid = "coffee";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                // map view props
+                case "mvp": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "GetMapViewCameraProperties"
+                        };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2682,6 +2687,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             // action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
                         }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "openim": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenObjectImmediate";
+
+                        action["objectId"] = "Cabinet|-00.73|+02.02|-02.46";
+
+                        action["openness"] = 1f;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "closeim": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenObjectImmediate";
+
+                        action["objectId"] = "Cabinet|-00.73|+02.02|-02.46";
+
+                        action["openness"] = 0f;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
