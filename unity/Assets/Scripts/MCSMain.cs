@@ -310,11 +310,6 @@ public class MCSMain : MonoBehaviour {
         // Remove the ceiling from all intuitive physics and isometric scenes.
         this.ceiling.SetActive(!this.isPassiveScene);
 
-        // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
-        // TODO MCS-608 Remove substeps
-        if (this.isPassiveScene) {
-            this.agentController.substeps = 1;
-        }
 
         // Reset the floorProperties in case the previous scene was intuitivePhysics.
         if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
@@ -503,7 +498,6 @@ public class MCSMain : MonoBehaviour {
         }
         Vector3 roomHalfDimensions = roomDimensions * .5f;
         Vector3 wallHalfWidths = wallWidths * .5f;
-        this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
         this.wallLeft.transform.position = new Vector3(-roomHalfDimensions.x - wallHalfWidths.x,
             roomHalfDimensions.y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
@@ -798,7 +792,8 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
             this.AssignRigidbody(gameObject, objectConfig.mass > 0 ? objectConfig.mass : objectDefinition.mass,
-                objectConfig.kinematic || objectDefinition.kinematic, objectDefinition.centerMassAtBottom);
+                objectConfig.kinematic || objectDefinition.kinematic, objectDefinition.centerMassAtBottom,
+                objectConfig.centerOfMass);
             colliders = this.AssignColliders(gameObject, objectDefinition);
         }
 
@@ -910,7 +905,13 @@ public class MCSMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void AssignRigidbody(GameObject gameObject, float mass, bool kinematic, bool centerMassAtBottom) {
+    private void AssignRigidbody(
+        GameObject gameObject,
+        float mass,
+        bool kinematic,
+        bool centerMassAtBottom,
+        MCSConfigVector centerOfMass
+    ) {
         // Note that some prefabs may already have a Rigidbody component.
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         if (rigidbody == null) {
@@ -927,6 +928,9 @@ public class MCSMain : MonoBehaviour {
         }
         if (centerMassAtBottom) {
             rigidbody.centerOfMass = new Vector3(0, 0, 0);
+        }
+        if (centerOfMass != null) {
+            rigidbody.centerOfMass = new Vector3(centerOfMass.x, centerOfMass.y, centerOfMass.z);
         }
     }
 
@@ -1402,6 +1406,13 @@ public class MCSMain : MonoBehaviour {
 
         GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
 
+        Rigidbody rigidbody = objectConfig.GetRigidbody();
+
+        // Use 0.1 here because a lower value doesn't work correctly.
+        if (objectConfig.resetCenterOfMass && rigidbody.velocity.y > 0.1) {
+            rigidbody.ResetCenterOfMass();
+        }
+
         // Do the hides before the shows so any teleports work as expected.
         objectConfig.hides.Where(hide => hide.stepBegin == step).ToList().ForEach((hide) => {
             gameOrParentObject.SetActive(false);
@@ -1429,9 +1440,8 @@ public class MCSMain : MonoBehaviour {
         });
 
         objectConfig.togglePhysics.Where(toggle => toggle.stepBegin == step).ToList().ForEach((toggle) => {
-            Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
             if (rigidbody != null) {
-                this.AssignRigidbody(gameOrParentObject, rigidbody.mass, !rigidbody.isKinematic, false);
+                this.AssignRigidbody(rigidbody.gameObject, rigidbody.mass, !rigidbody.isKinematic, false, null);
             }
         });
 
@@ -1453,7 +1463,6 @@ public class MCSMain : MonoBehaviour {
 
         objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
             .ToList().ForEach((force) => {
-                Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
                     if (force.relative) {
                         rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
@@ -1465,7 +1474,6 @@ public class MCSMain : MonoBehaviour {
 
         objectConfig.torques.Where(torque => torque.stepBegin <= step && torque.stepEnd >= step &&
             torque.vector != null).ToList().ForEach((torque) => {
-                Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
                     rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
                 }
@@ -1476,7 +1484,7 @@ public class MCSMain : MonoBehaviour {
         objectConfig.ghosts.Where(ghost => ghost.stepBegin <= step && ghost.stepEnd >= step).ToList()
             .ForEach((ghost) => {
                 ghosted = true;
-                gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = true;
+                rigidbody.isKinematic = true;
                 gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
                     collider.enabled = false;
                 });
@@ -1485,7 +1493,7 @@ public class MCSMain : MonoBehaviour {
         // If this object's config has a "ghosts" element, assume that is should always be non-kinematic and have its
         // colliders enabled by default (whenever it's not ghosted).
         if (!ghosted && objectConfig.ghosts.Count > 0) {
-            gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = false;
+            rigidbody.isKinematic = false;
             gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
                 collider.enabled = true;
             });
@@ -1525,23 +1533,26 @@ public class MCSMain : MonoBehaviour {
         return objectsWereShown;
     }
 
-    public void UpdateOnPhysicsSubstep(int numberOfSubsteps) {
-        if (this.currentScene != null && this.currentScene.objects != null) {
+    public void UpdateOnPhysicsSubstep() {
+        if (this.currentScene != null && this.currentScene.objects != null) 
+        {
             // Loop over each configuration object in the scene and update if needed.
             this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
-                .ForEach(objectConfig => {
+                .ForEach(objectConfig => 
+                {
                     GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                     // If the object should move during this step, move it a little during each individual substep, so
                     // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
                     objectConfig.moves.Where(move => move.stepBegin <= this.lastStep &&
                         move.stepEnd >= this.lastStep && move.vector != null).ToList().ForEach((move) => {
                             gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
-                                move.vector.z) / (float)numberOfSubsteps);
+                                move.vector.z));
                         });
                     objectConfig.rotates.Where(rotate => rotate.stepBegin <= this.lastStep &&
                         rotate.stepEnd >= this.lastStep && rotate.vector != null).ToList().ForEach((rotate) => {
-                            gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y,
-                                rotate.vector.z) / (float)numberOfSubsteps);
+                            gameOrParentObject.transform.Rotate(
+                                new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z)
+                            );
                         });
                 });
         }
@@ -1623,9 +1634,12 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
     public List<MCSConfigMove> torques = new List<MCSConfigMove>();
     public List<MCSContainerOpenClose> openClose = new List<MCSContainerOpenClose>();
+    public MCSConfigVector centerOfMass = null;
+    public bool resetCenterOfMass = false;
 
     private GameObject gameObject;
     private GameObject parentObject;
+    private Rigidbody rigidbody;
 
     public GameObject GetGameObject() {
         return this.gameObject;
@@ -1633,6 +1647,11 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
 
     public void SetGameObject(GameObject gameObject) {
         this.gameObject = gameObject;
+        this.rigidbody = gameObject.GetComponent<Rigidbody>();
+    }
+
+    public Rigidbody GetRigidbody() {
+        return this.rigidbody;
     }
 
     public GameObject GetParentObject() {

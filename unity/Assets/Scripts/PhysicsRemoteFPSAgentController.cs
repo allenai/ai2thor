@@ -31,7 +31,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Used to expand agent capsule in collision checks for open/close actions
         protected const float ExpandAgentCapsuleBy = 0.1f;
         protected bool canMove = true;
-        protected string inputDirection;
         protected float serverActionMoveMagnitude;
 
 

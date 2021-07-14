@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7170012, g: 0.7306422, b: 0.7505908, a: 1}
+  m_IndirectSpecularColor: {r: 0.7040911, g: 0.71842074, b: 0.7375759, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2109,6 +2109,7 @@ MonoBehaviour:
   DroneBasket: {fileID: 1769782113}
   inHighFrictionArea: 0
   agentState: 3
+  showDebugCapsuleGizmos: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -2133,9 +2134,16 @@ MonoBehaviour:
   MyFaceMesh: {fileID: 497714281}
   AdvancePhysicsStepCount: 0
   TargetCircles: []
+  groundObjectsCollider: {fileID: 1125765178}
   substeps: 5
   step: 0
   fpsAgent: {fileID: 1752557969}
+--- !u!4 &506323130 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1752557968}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &513116322 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1762015268591634, guid: 5e9e851c0e142814dac026a256ba2ac0,
@@ -2467,6 +2475,51 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1752557968}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1125765176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1125765177}
+  - component: {fileID: 1125765178}
+  m_Layer: 10
+  m_Name: CapsuleColliderForObjectGroundCollisions
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1125765177
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125765176}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 506323130}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &1125765178
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125765176}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 2.8
+  m_Direction: 1
+  m_Center: {x: 0, y: -1, z: 0}
 --- !u!1 &1180321326
 GameObject:
   m_ObjectHideFlags: 0
@@ -3769,17 +3822,17 @@ PrefabInstance:
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Height
-      value: 1.3875
+      value: 1.23
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Radius
-      value: 0.25
+      value: 0.251
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Center.y
-      value: -0.4625
+      value: -0.33
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}

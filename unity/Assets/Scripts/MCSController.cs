@@ -7,9 +7,30 @@ using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
+
+    //Position y creates the pose
+    //Collider height is adjusted for each pose to prevent clipping inside the floor, allow traversal under structures, and allow ramp ascension
+    //Collider center shifts when the position y is changed for poses
+    //These collider numbers were derived from the agents y position on pose changes by hand. 
+    //In an orthographic perspective, the value were shifted until the collider's bottom most point was touching the ground when on a flat surface, 
+    //and the topmost point was touching the tip of the agents head.
     public static float STANDING_POSITION_Y = 0.762f;
+    public static float STANDING_COLLIDER_HEIGHT = 1.23f;
+    public static float STANDING_COLLIDER_CENTER = -0.33f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
+    public static float CRAWLING_COLLIDER_HEIGHT = 0.75f;
+    public static float CRAWLING_COLLIDER_CENTER = -0.05f;
     public static float LYING_POSITION_Y = 0.1f;
+    public static float LYING_COLLIDER_HEIGHT = 0.05f;
+    public static float LYING_COLLIDER_CENTER = 0.15f;
+    public static float CAPSULE_COLLIDER_RADIUS = 0.251f;
+
+    //This is an extra collider that slightly clips into the ground to ensure collision with objects of any size.
+    //When lying down, the radius increases to simulate the expansion of the body when horizontal
+    public CapsuleCollider groundObjectsCollider;
+    public static float GROUND_OBJECTS_COLLIDER_RADIUS = 0.5f;
+    public static float GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS = 0.675f;
+
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
@@ -19,15 +40,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float MAX_DISTANCE_ACROSS_ROOM = 14.15f;
 
     // The number of times to run Physics.Simulate after each action from the player is LOOPS * STEPS.
-    public static int PHYSICS_SIMULATION_LOOPS = 1;
     public static int PHYSICS_SIMULATION_STEPS = 5;
 
     public static int ROTATION_DEGREES = 10;
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
-
-    public int substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
     public int step = 0;
 
@@ -55,8 +73,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
     private bool inputWasRotateLook = false;
-
-    private int actionFrameCount;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -260,6 +276,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public void OnSceneChange() {
         pose = PlayerPose.STANDING;
+        CapsuleCollider cc = GetComponent<CapsuleCollider>();
+        cc.height = STANDING_COLLIDER_HEIGHT;
+        cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
+        cc.radius = CAPSULE_COLLIDER_RADIUS;
+        groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
     }
 
     public void MCSCloseObject(ServerAction action) {
@@ -396,8 +417,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 controlCommand.action.Equals("RotateRight") ||
                 controlCommand.action.Equals("LookUp") ||
                 controlCommand.action.Equals("LookDown");
-
-        this.actionFrameCount = 0; //for movement and rotation
 
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
@@ -539,21 +558,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public void SimulatePhysics() {
         if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
-            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 : this.substeps));
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep());
         }
 
         else {
             // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
-            this.SimulatePhysicsCompletely();
-            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(1);
+            this.SimulatePhysicsOnce();
+            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MCSPerformerManager)this.agentManager).FinalizeEmit();
-        }
-    }
-
-    private void SimulatePhysicsCompletely() {
-        for (int i = 0; i < this.substeps; ++i) {
-            this.SimulatePhysicsOnce();
         }
     }
 
@@ -561,22 +574,16 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //for movement
         if (this.inputWasMovement) {
             MatchAgentHeightToStructureBelow(false);
-            this.movementActionFinished = moveInDirection((this.movementActionData.direction / this.substeps),
+            this.movementActionFinished = moveInDirection((this.movementActionData.direction),
                     this.movementActionData.UniqueID,
                     this.movementActionData.maxDistanceToObject,
                     this.movementActionData.forceAction);
-            this.actionFrameCount++;
-            if (this.actionFrameCount == this.substeps) {
                 actionFinished(this.movementActionFinished);
-            }
         } //for rotation
         else if (this.inputWasRotateLook) {
             RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
-            this.actionFrameCount++;
-            if (this.actionFrameCount == this.substeps) {
-                actionFinished(true);
-            }
+            actionFinished(true);
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
@@ -587,27 +594,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         physicsFramesPerSecond = 1.0f / (MCSController.PHYSICS_SIMULATION_STEP_SECONDS * MCSController.PHYSICS_SIMULATION_STEPS);
     }
 
-    private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
+    private IEnumerator SimulatePhysicsSaveImagesIncreaseStep() {
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
-        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(this.substeps);
+        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
 
         // Wait for the end of frame after we run the physics simulation but before we save the images.
         yield return new WaitForEndOfFrame(); // Required for coroutine functions
 
         ((MCSPerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
-
-        int nextLoop = thisLoop - 1;
-
-        if (nextLoop > 0) {
-            // Continue the next loop: run the physics simulation, then save more images.
-            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(nextLoop));
-        }
-        else {
-            // Once finished, notify the AgentManager to send the action output metadata and images to the Python API.
-            ((MCSPerformerManager)this.agentManager).FinalizeEmit();
-        }
+        ((MCSPerformerManager)this.agentManager).FinalizeEmit();
     }
 
     public override void ThrowObject(ServerAction action) {
@@ -798,18 +795,38 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RaycastHit hit;
         LayerMask layerMask = ~(1 << 10);
 
+        float rayCastDistanceBuffer = pose == PlayerPose.LYING ? 0 : 0.2f; //this is needed for being below an angled incline structure
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) &&
-            hit.collider.tag == "SimObjPhysics" &&
-            hit.transform.GetComponent<StructureObject>() == null)
+        if (direction == Vector3.up && Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight)+rayCastDistanceBuffer, layerMask) &&
+            hit.collider.tag == "SimObjPhysics")
         {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
-            Debug.Log("Agent is Obstructed");
+            Debug.Log("Agent is Obstructed for a pose change by a structure above");
         } else {
             this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
-            this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            if(this.pose == PlayerPose.LYING)
+            {
+                cc.height = LYING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,LYING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS;
+            }
+            else if(this.pose == PlayerPose.CRAWLING)
+            {
+                cc.height = CRAWLING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,CRAWLING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
+            }
+
+            else
+            {
+                cc.height = STANDING_COLLIDER_HEIGHT;
+                cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
+                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
+
+            }
             //SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
@@ -865,7 +882,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
+        if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
             (hit.transform.GetComponent<StructureObject>() != null)) {
             //for pose changes on structures only
             if (poseChange)
@@ -887,9 +904,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         CapsuleCollider myCollider = GetComponent<CapsuleCollider>();
         float radius;
         Vector3 point1, point2;
+
+        //This method shoots a ray down from the agents head to find the highest point below the agent that is touching the ground and uses that point as the base of the overlap check
+        CapsuleCastInfoByShootingRayToFloor(out point1, out point2, out radius);
+        
         //Determine if we are colliding (or within skin width) of another object
-        GetCapsuleInfoForAgent(myCollider, m_CharacterController.skinWidth, transform.position, out radius, out point1, out point2);
-        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8);
+        Collider[] overlapColliders = Physics.OverlapCapsule(point1, point2, radius + (radius*0.5f), 1 << 8);
 
         //we divide by scale here because we are going to expand the scaled collider by this value
         float obstructionVsCollisionDifference = m_CharacterController.skinWidth / Mathf.Max(transform.localScale.x, transform.localScale.z);
@@ -907,7 +927,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 myCollider.radius -= obstructionVsCollisionDifference;
                 Vector3 newPos = transform.position;
                 if (overlap) {
-                    Vector3 shift = direction * (distance);
+                    Vector3 shift = direction * distance;
                     newPos += shift;
                     transform.position = newPos;
                 }
@@ -960,7 +980,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 :
             distance.eulerAngles.x < minHorizon ? distance.eulerAngles.x + 360 : distance.eulerAngles.x;
 
-        Vector3 updatedRotation = new Vector3(horizonChange / this.substeps, 0, 0);
+        Vector3 updatedRotation = new Vector3(horizonChange, 0, 0);
         m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + updatedRotation);
     }
 
@@ -973,7 +993,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 :
             distance.eulerAngles.y < -90 ? distance.eulerAngles.y + 360 : distance.eulerAngles.y;
 
-        Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
+        Vector3 updatedRotation = new Vector3(0, rotationChange, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
 }
