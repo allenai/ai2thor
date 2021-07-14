@@ -389,6 +389,7 @@ class Controller(object):
         download_only=False,
         include_private_scenes=False,
         server_class=None,
+        gpu_device=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -410,6 +411,10 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.x_display = None
+        self.gpu_device = gpu_device
+
+        if self.gpu_device and (type(self.gpu_device) is not int or self.gpu_device < 0):
+            raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
 
         if x_display:
             self.x_display = x_display
@@ -956,6 +961,9 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
+        
+        if self.gpu_device:
+            command += " -force-device-index %d" % self.gpu_device
 
         return shlex.split(command)
 
