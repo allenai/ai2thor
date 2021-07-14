@@ -630,6 +630,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.detectCollisions = false; // Disable detecting of collisions
+
             if (sop.IsOpenable) {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
 
@@ -668,9 +670,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
                 cols.Add(clone);
 
-                // must disable the colliders on the held object so they 
-                // don't interact with anything
-                c.enabled = false;
+                // OLD: must disable the colliders on the held object so they  don't interact with anything
+                // PROBLEM: turning off colliders like this causes bounding boxes to be wrongly updated
+                // NEW: We turn on rb.detectCollisions = false above
+                // c.enabled = false;
             }
 
             // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
@@ -715,10 +718,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 Destroy(c.gameObject);
             }
 
-            foreach (Collider c in sop.Key.MyColliders) {
-                // re-enable colliders since they were disabled during pickup
-                c.enabled = true;
-            }
+            // Colliders are no longer disabled on pickup, instead rb.detectCollisions is set to false
+            // Note that rb.detectCollisions is now set to true below.
+            // foreach (Collider c in sop.Key.MyColliders) {
+            //     // re-enable colliders since they were disabled during pickup
+            //     c.enabled = true;
+            // }
 
             if (sop.Key.IsOpenable) {
                 CanOpen_Object coj = sop.Key.gameObject.GetComponent<CanOpen_Object>();
@@ -733,6 +738,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 sop.Key.transform.parent = null;
             }
 
+            rb.detectCollisions = true;
             rb.WakeUp();
         }
 
