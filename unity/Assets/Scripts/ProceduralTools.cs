@@ -1214,32 +1214,37 @@ namespace Thor.Procedural {
             );
             Debug.Log("Count " + windowsAndDoors.Count() + string.Join(", ", windowsAndDoors.Select(w => w.asset_id)));
             var count = 0;
-            foreach (WallRectangularHole door in windowsAndDoors) {
-                var doorPrefab = assetMap.getAsset(door.asset_id);
+            foreach (WallRectangularHole holeCover in windowsAndDoors) {
+                var coverPrefab = assetMap.getAsset(holeCover.asset_id);
                 (Wall wall_0, Wall wall_1) wall;
-                var wallExists = doorsToWalls.TryGetValue(door.id, out wall);
+                var wallExists = doorsToWalls.TryGetValue(holeCover.id, out wall);
 
-                Debug.Log("i: " + count + " Asset id " + door.asset_id + " exists " + wallExists);
                 if (wallExists) {
                     var p0p1 = wall.wall_0.p1 - wall.wall_0.p0;
 
-                    var doorLength = 0.0f;
-
                     var p0p1_norm = p0p1.normalized;
-                    var pos = wall.wall_0.p0 + p0p1_norm * (door.bounding_box.min.x + (doorLength / 2.0f)) + Vector3.up * door.bounding_box.min.y;//* (doorLength * 1.4f);
-                    // var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall_0.p1, p1 = wall.wall_0.p0 });
-                    var rotY = getWallDegreesRotation(wall.wall_0);
+                    var pos = wall.wall_0.p0 + (p0p1_norm * holeCover.bounding_box.min.x) + Vector3.up * holeCover.bounding_box.min.y;
+                    var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall_0.p1, p1 = wall.wall_0.p0 });
+                    //var rotY = getWallDegreesRotation(wall.wall_0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
 
 
 
                     var go = spawnSimObjPrefab(
-                        doorPrefab,
-                        door.id,
+                        coverPrefab,
+                        holeCover.id,
                         pos,
                         rotation,
                         true
                     );
+
+                    if (holeCover.open) {
+                        var canOpen = go.GetComponentInChildren<CanOpen_Object>();
+                        if (canOpen != null) {
+                            canOpen.SetOpennessImmediate(1.0f);
+                        }
+                    }
+
                     count++;
                     tagObjectNavmesh(go, "Not Walkable");
                 }
