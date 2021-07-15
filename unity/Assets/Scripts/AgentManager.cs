@@ -769,30 +769,21 @@ public class AgentManager : MonoBehaviour {
 
     }
 
-    private byte[] captureScreenAsync(Camera camera) {
-        byte[] data = null;
+    private void captureScreenAsync(List<KeyValuePair<string, byte[]>> payload, string key, Camera camera) {
         RenderTexture tt = camera.targetTexture;
         RenderTexture.active = tt;
         camera.Render();
-        var rt = RenderTexture.GetTemporary(tt.width, tt.height, 0, tt.graphicsFormat, antiAliasing: tt.antiAliasing);
-        Graphics.Blit(tt, rt);
-        AsyncGPUReadback.Request(rt, 0, (request) =>
+        AsyncGPUReadback.Request(tt, 0, (request) =>
         {
             if (!request.hasError) {
-                //RenderTexture rt = this.primaryAgent.m_Camera.targetTexture; 
-                data = request.GetData<byte>().ToArray();
-                //Debug.Log("got data async data " + data.Length);
-                //var encodedData = ImageConversion.EncodeArrayToPNG(data, this.primaryAgent.m_Camera.targetTexture.graphicsFormat, (uint)rt.width, (uint)rt.height);
-                //File.WriteAllBytes("/tmp/out-" + counter + ".png", encodedData);
+                var data = request.GetData<byte>().ToArray();
+                payload.Add(new KeyValuePair<string, byte[]>(key, data));
             }
             else
             {
                 Debug.Log("Request error: " + request.hasError);
             }
-            RenderTexture.ReleaseTemporary(rt);
         });
-        AsyncGPUReadback.WaitAllRequests();
-        return data;
     }
 
     private byte[] captureScreen() {
@@ -809,7 +800,7 @@ public class AgentManager : MonoBehaviour {
 
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 #if PLATFORM_CLOUD_RENDERING
-        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreenAsync(camera)));
+        captureScreenAsync(payload, "image-thirdParty-camera", camera);
 #else
         RenderTexture.active = camera.activeTexture;
         camera.Render();
@@ -821,7 +812,7 @@ public class AgentManager : MonoBehaviour {
         if (this.renderImage) {
 
 #if PLATFORM_CLOUD_RENDERING
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreenAsync(agent.m_Camera)));
+            captureScreenAsync(payload, "image", agent.m_Camera);
 #else
             // XXX may not need this since we call render in captureScreenAsync
             if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
@@ -1009,6 +1000,7 @@ public class AgentManager : MonoBehaviour {
 
 
             // we don't need to render the agent's camera for the first agent
+            
             if (shouldRender) {
                 addImage(renderPayload, agent);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
@@ -1016,9 +1008,9 @@ public class AgentManager : MonoBehaviour {
                 addObjectImage(renderPayload, agent, ref metadata);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
-
                 metadata.thirdPartyCameras = cameraMetadata;
             }
+
             multiMeta.agents[i] = metadata;
             agent.ResetUpdateCounters();
         }
@@ -1106,10 +1098,11 @@ public class AgentManager : MonoBehaviour {
 #if !UNITY_WEBGL
             if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
+                form.AddField("metadata", serializeMetadataJson(multiMeta));
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
                 }
-                form.AddField("metadata", serializeMetadataJson(multiMeta));
                 form.AddField("token", robosimsClientToken);
 
 
@@ -1200,6 +1193,7 @@ public class AgentManager : MonoBehaviour {
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
