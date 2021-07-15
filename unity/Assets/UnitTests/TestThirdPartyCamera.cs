@@ -100,18 +100,7 @@ namespace Tests {
             action["thirdPartyCameraId"] = 0;
             yield return step(action);
 
-            result = false;
-
-            coord = (Vector3)actionReturn;
-
-            result = Mathf.Approximately(coord.x, 0.0f);
-            Assert.AreEqual(result, true);
-
-            result = Mathf.Approximately(coord.y, 0.0f);
-            Assert.AreEqual(result, true);
-
-            result = Mathf.Approximately(coord.z, 0.0f);
-            Assert.AreEqual(result, true);
+            Assert.Null(actionReturn);
         }
     }
 }

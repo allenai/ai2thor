@@ -584,15 +584,20 @@ public class AgentManager : MonoBehaviour {
 
         Ray ray = thirdPartyCamera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
         RaycastHit hit;
-        Physics.Raycast(
+
+        if (Physics.Raycast(
             ray: ray,
             hitInfo: out hit,
             maxDistance: Mathf.Infinity,
             layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
-            queryTriggerInteraction: QueryTriggerInteraction.Ignore
-        );
+            queryTriggerInteraction: QueryTriggerInteraction.Ignore)) {
+            this.activeAgent().actionFinished(success: true, actionReturn: hit.point);
 
-        this.activeAgent().actionFinished(success: true, actionReturn: hit.point);
+        } else
+            this.activeAgent().actionFinished(success: true, actionReturn: null);
+
+
+
     }
 
     // Here, we don't want some dimensions set. For instance, set x, but not y.
