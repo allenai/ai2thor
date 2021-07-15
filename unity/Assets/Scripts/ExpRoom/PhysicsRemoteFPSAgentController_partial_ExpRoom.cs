@@ -289,6 +289,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void ToggleObjectIsKinematic(string objectId, bool? isKinematic = null) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinished(false);
+                return;
+            }
+
+            Rigidbody rb = physicsSceneManager.ObjectIdToSimObjPhysics[objectId].GetComponent<Rigidbody>();
+            if (isKinematic.HasValue) {
+                rb.isKinematic = isKinematic.Value;
+            } else {
+                rb.isKinematic = !rb.isKinematic;
+            }
+            actionFinishedEmit(true);
+        }
+
         public void SetRigidbodyConstraints(
             string objectId,
             bool freezeX = false,

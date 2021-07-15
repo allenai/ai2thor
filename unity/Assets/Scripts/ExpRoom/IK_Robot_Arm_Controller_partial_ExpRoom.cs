@@ -15,7 +15,7 @@ using RandomExtensions;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
-    public bool AttachedObjectToArmWithFixedJoint(SimObjPhysics target) {
+    public bool AttachObjectToArmWithFixedJoint(SimObjPhysics target) {
         foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {
             if (fj.connectedBody.gameObject == target.gameObject) {
                 return true;
