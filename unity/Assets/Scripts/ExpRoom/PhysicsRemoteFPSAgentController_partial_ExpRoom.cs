@@ -48,14 +48,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             while (enumerator.MoveNext()) { }
         }
 
-        public void WhichContainersDoesAvailableObjectFitIn(string objectName) {
+        public void WhichContainersDoesAvailableObjectFitIn(
+            string objectName, int? thirdPartyCameraIndex = null
+        ) {
+            Camera camera = m_Camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+            }
             PhysicsSceneManager.StartPhysicsCoroutine(
                 startCoroutineUsing: this,
-                enumerator: whichContainersDoesAvailableObjectFitIn(objectName)
+                enumerator: whichContainersDoesAvailableObjectFitIn(
+                    objectName: objectName, visibilityCheckCamera: camera
+                )
             );
         }
 
-        public IEnumerator<float?> whichContainersDoesAvailableObjectFitIn(string objectName) {
+        public IEnumerator<float?> whichContainersDoesAvailableObjectFitIn(
+            string objectName,
+            Camera visibilityCheckCamera
+        ) {
             Action<SimObjPhysics> activateSop = (sop) => {
                 sop.gameObject.SetActive(true);
                 sop.ObjectID = sop.name;
@@ -151,27 +162,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float coverY = cover.transform.position.y;
-                    cover.transform.position = new Vector3(
-                        toCoverPos.x,
-                        coverY,
-                        toCoverPos.z
-                    );
+                    float toCoverHeight = toCover.BoundingBox.GetComponent<BoxCollider>().size.y;
+                    for (int i = 0; i < 4; i++) {
+                        cover.transform.position = new Vector3(
+                            toCoverPos.x,
+                            coverY + toCoverHeight * (i / 4f),
+                            toCoverPos.z
+                        );
 
-                    Physics.SyncTransforms();
+                        Physics.SyncTransforms();
 
-                    Collider coverCollidingWith = UtilityFunctions.firstColliderObjectCollidingWith(
-                        go: cover.gameObject
-                    );
-                    if (coverCollidingWith == null) {
-                        bool toCoverVisible = isSimObjVisible(m_Camera, toCover, 10f);
-                        if (!toCoverVisible) {
-                            return true;
+                        Collider coverCollidingWith = UtilityFunctions.firstColliderObjectCollidingWith(
+                            go: cover.gameObject
+                        );
+                        if (coverCollidingWith != null) {
+                            //Debug.Log($"{cover.name} colliding with {coverCollidingWith.transform.parent.name}");
+                            return false;
+                        }
+                        if (i == 0) {
+                            if (isSimObjVisible(visibilityCheckCamera, toCover, 10f)) {
+                                return false;
+                            }
                         }
                     }
-                    // else {
-                    //     Debug.Log($"{cover.name} colliding with {coverCollidingWith.transform.parent.name}");
-                    // }
-                    return false;
+                    return true;
                 };
 
                 if (tryScale(maxScale)) {
@@ -223,7 +237,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SetCollisionDetectionModeToContinuousSpeculative(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -282,7 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool freezeZ = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }

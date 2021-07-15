@@ -855,7 +855,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string tableId = objectId;
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -1073,7 +1073,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetUnreachableSilhouetteForObject(string objectId, float z) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -1297,7 +1297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected bool moveLiftedObjectHelper(string objectId, Vector3 relativeDir, float maxAgentsDistance = -1.0f) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 return false;
             }
             SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -1320,7 +1320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CollidersObjectCollidingWith(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -3550,7 +3550,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -3704,7 +3704,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }
@@ -7363,7 +7363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ApproxPercentScreenObjectOccupies(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinished(false);
                 return;
             }

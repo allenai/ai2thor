@@ -41,7 +41,7 @@ public class AgentManager : MonoBehaviour {
     private bool renderNormalsImage;
     private bool renderFlowImage;
     private Socket sock = null;
-    private List<Camera> thirdPartyCameras = new List<Camera>();
+    public List<Camera> thirdPartyCameras = new List<Camera>();
     private Color[] agentColors = new Color[] { Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey };
     public int actionDuration = 3;
     private BaseFPSAgentController primaryAgent;

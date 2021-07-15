@@ -152,6 +152,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         if ((string)action["action"] != "") {
+                            if (
+                                ((string)action["action"]).Contains("Move") && this.GetComponent<ArmAgentController>().enabled
+                            ) {
+                                action["returnToStart"] = false;
+                            }
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
 
@@ -186,7 +191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             if (localPos.magnitude != 0) {
                                 action["offset"] = localPos;
                                 //action["fixedDeltaTime"] = fixedDeltaTime;
-                                //action["speed"] = 0.1;
+                                action["speed"] = 0.1;
                                 action["returnToStart"] = false;
                             }
                             this.CurrentActiveController().ProcessControlCommand(action);

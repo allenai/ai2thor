@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class IK_Robot_Arm_Controller : MonoBehaviour {
+public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     private Transform armTarget;
     private Transform handCameraTransform;
 

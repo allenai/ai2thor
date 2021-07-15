@@ -8,7 +8,7 @@ using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class ArmAgentController : PhysicsRemoteFPSAgentController {
+    public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
         protected IK_Robot_Arm_Controller getArm() {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {
