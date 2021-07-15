@@ -1207,12 +1207,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "cfrtpc": {
+                case "cftpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         action["action"] = "CoordinateFromRaycastThirdPartyCamera";
-                        action["x"] = 0.5f;
-                        action["y"] = 0.5f;
+                        action["x"] = 0f;
+                        action["y"] = 0f;
                         action["thirdPartyCameraId"] = 0;
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

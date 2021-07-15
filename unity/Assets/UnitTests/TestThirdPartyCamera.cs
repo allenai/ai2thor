@@ -72,6 +72,7 @@ namespace Tests {
 
             action.Clear();
 
+            //test raycast when hitting something in scene
             action["action"] = "CoordinateFromRaycastThirdPartyCamera";
             action["x"] = 0.5f;
             action["y"] = 0.5f;
@@ -87,10 +88,30 @@ namespace Tests {
             result = Mathf.Approximately(coord.y, 0.0f);
             Assert.AreEqual(result, true);
 
-            Debug.Log(coord.z);
             result = Mathf.Approximately(coord.z, 2.472f);
             Assert.AreEqual(result, true);
 
+            action.Clear();
+
+            //test raycast when nothing hit
+            action["action"] = "CoordinateFromRaycastThirdPartyCamera";
+            action["x"] = 0f;
+            action["y"] = 0f;
+            action["thirdPartyCameraId"] = 0;
+            yield return step(action);
+
+            result = false;
+
+            coord = (Vector3)actionReturn;
+
+            result = Mathf.Approximately(coord.x, 0.0f);
+            Assert.AreEqual(result, true);
+
+            result = Mathf.Approximately(coord.y, 0.0f);
+            Assert.AreEqual(result, true);
+
+            result = Mathf.Approximately(coord.z, 0.0f);
+            Assert.AreEqual(result, true);
         }
     }
 }

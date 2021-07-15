@@ -508,7 +508,6 @@ public class AgentManager : MonoBehaviour {
 
         GameObject gameObject = GameObject.Instantiate(Resources.Load("ThirdPartyCameraTemplate")) as GameObject;
         gameObject.name = "ThirdPartyCamera" + thirdPartyCameras.Count;
-        //gameObject.AddComponent(typeof(Camera));
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image
