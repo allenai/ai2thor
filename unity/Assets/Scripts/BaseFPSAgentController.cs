@@ -2852,7 +2852,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // and any invisible agents.
             updateAllAgentCollidersForVisibilityCheck(false);
 
-            HashSet<(SimObjPhysics, bool)> sopsToTest = new HashSet<(SimObjPhysics, bool)>();
+            HashSet<(SimObjPhysics, bool, bool)> sopAndIncInvisibleAndOnlyRequireCloseTuples = new HashSet<(SimObjPhysics, bool, bool)>();
 
             // Find all nearby colliders corresponding to visible components and grab
             // their corresponding SimObjPhysics component
@@ -2863,7 +2863,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Collider c in collidersInView) {
                     SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
                     if (sop != null) {
-                        sopsToTest.Add((sop, false));
+                        sopAndIncInvisibleAndOnlyRequireCloseTuples.Add((sop, false, false));
                     }
                 }
             }
@@ -2878,7 +2878,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (c.tag == "Receptacle") {
                         SimObjPhysics sop = c.GetComponentInParent<SimObjPhysics>();
                         if (sop != null) {
-                            sopsToTest.Add((sop, false));
+                            sopAndIncInvisibleAndOnlyRequireCloseTuples.Add((sop, true, false));
                         }
                     }
                 }
@@ -2888,15 +2888,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // rigidbodies are set to not detect collisions
             if (Arm != null && Arm.gameObject.activeSelf) {
                 foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
-                    sopsToTest.Add((sop, true));
+                    sopAndIncInvisibleAndOnlyRequireCloseTuples.Add((sop, false, true));
                 }
             }
 
-            if (sopsToTest.Count != 0) {
-                foreach ((SimObjPhysics, bool) sopAndIsHeldTuple in sopsToTest) {
-                    SimObjPhysics sop = sopAndIsHeldTuple.Item1;
+            if (sopAndIncInvisibleAndOnlyRequireCloseTuples.Count != 0) {
+                foreach (
+                    (SimObjPhysics, bool, bool) sopIncInvisibleAndOnlyRequireClose in sopAndIncInvisibleAndOnlyRequireCloseTuples
+                ) {
+                    SimObjPhysics sop = sopIncInvisibleAndOnlyRequireClose.Item1;
+                    bool includeInvisible = sopIncInvisibleAndOnlyRequireClose.Item2;
                     float? onlyRequireClose = null;
-                    if (sopAndIsHeldTuple.Item2) {
+                    if (sopIncInvisibleAndOnlyRequireClose.Item3) {
                         // This is necessary as the objects held by the arm don't have active colliders
                         onlyRequireClose = 0.01f;
                     }
@@ -2911,7 +2914,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             foreach (Transform point in visPoints) {
                                 // if this particular point is in view...
                                 if (CheckIfVisibilityPointInViewport(
-                                    sop, point, agentCamera, false, onlyRequireClose: onlyRequireClose
+                                    sop, point, agentCamera, includeInvisible, onlyRequireClose: onlyRequireClose
                                 )) {
                                     visPointCount++;
 #if !UNITY_EDITOR
@@ -2975,17 +2978,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // ignored by the other raycast
             if (includeInvisible) {
                 if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask)) {
-                    
                     bool closeEnough = onlyRequireClose.HasValue && Mathf.Abs(distFromPointToCamera - hit.distance) <= onlyRequireClose.Value;
-                    if ((!closeEnough) && hit.transform != sop.transform) {
-                        result = false;
-                    } else {
+                    if (closeEnough || hit.transform == sop.transform) {
                         result = true;
                         sop.debugIsInteractable = true;
 
 #if UNITY_EDITOR
                         Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
 #endif
+                    } else {
+                        result = false;
                     }
                 }
             }
@@ -2994,9 +2996,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
             else {
                 if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
-
                     bool closeEnough = onlyRequireClose.HasValue && Mathf.Abs(distFromPointToCamera - hit.distance) <= onlyRequireClose.Value;
-                    if ((!closeEnough) && hit.transform != sop.transform) {
+                    if (closeEnough || hit.transform == sop.transform) {
+                        // if this line is drawn, then this visibility point is in camera frame and not occluded
+                        // might want to use this for a targeting check as well at some point....
+                        result = true;
+                        sop.debugIsInteractable = true;
+                    } else  {
                         // we didn't directly hit the sop we are checking for with this cast,
                         // check if it's because we hit something see-through
                         SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
@@ -3016,9 +3022,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             Array.Sort(hitDistances, hits);
 
                             foreach (RaycastHit h in hits) {
-
                                 closeEnough = onlyRequireClose.HasValue && Mathf.Abs(distFromPointToCamera - h.distance) <= onlyRequireClose.Value;
-                                if (h.transform == sop.transform) {
+                                if (closeEnough || h.transform == sop.transform) {
                                     // found the object we are looking for, great!
                                     result = true;
                                     break;
@@ -3032,11 +3037,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }
                             }
                         }
-                    } else {
-                        // if this line is drawn, then this visibility point is in camera frame and not occluded
-                        // might want to use this for a targeting check as well at some point....
-                        result = true;
-                        sop.debugIsInteractable = true;
                     }
 
 #if UNITY_EDITOR
