@@ -149,6 +149,7 @@ namespace Thor.Procedural.Data {
         public string wall_0 { get; set; }
         public string wall_1 { get; set; }
         public bool openable { get; set; }
+        public bool open { get; set; }
         public List<VectorXZ> axes_xz { get; set; }
         public string type { get; set; }
         public string asset_id { get; set; }
@@ -235,6 +236,8 @@ namespace Thor.Procedural.Data {
         BoundingBox bounding_box { get; set; }
 
         Margin margin { get; set; }
+
+        bool open { get; set; }
 
     }
 

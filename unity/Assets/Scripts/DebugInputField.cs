@@ -423,17 +423,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "parent": {
-                    Dictionary<string, object> action = new Dictionary<string, object>{
+                        Dictionary<string, object> action = new Dictionary<string, object>{
                         {"action", "ParentObject"},
                     };
-                    action["parentId"] = splitcommand[1];
-                    action["childId"] = splitcommand[2];
+                        action["parentId"] = splitcommand[1];
+                        action["childId"] = splitcommand[2];
 
-                    CurrentActiveController().ProcessControlCommand(
-                        action
-                    );
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(
+                            action
+                        );
+                        break;
+                    }
 
                 case "expspawn": {
                         ServerAction action = new ServerAction();
@@ -3556,6 +3556,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
                         action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
                         action["rotation"] = new AxisAngleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "bnm": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "BakeNavMesh";
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }

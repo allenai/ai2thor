@@ -512,6 +512,7 @@ namespace Thor.Procedural {
             int layer = 8
         ) {
             var wallGO = new GameObject(toCreate.id);
+
             wallGO.layer = layer;
 
             var meshF = wallGO.AddComponent<MeshFilter>();
@@ -1195,7 +1196,7 @@ namespace Thor.Procedural {
             //getTargetObject() and other things that use that dict
             //also add their rigidbodies to the list of all rigid body objects in scene
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            sceneManager.SetupScene(false);
+            sceneManager.SetupScene();
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
@@ -1260,6 +1261,7 @@ namespace Thor.Procedural {
                 light.range = lightParams.range;
                 if (lightParams.shadow != null) {
                     light.shadowStrength = lightParams.shadow.strength;
+                    light.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lightParams.shadow.type, ignoreCase: true);
                 }
 
             }
