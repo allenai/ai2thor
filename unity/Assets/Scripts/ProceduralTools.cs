@@ -129,7 +129,7 @@ namespace Thor.Procedural {
             float interval = 1 / 3.0f
         ) {
 
-            // TODO write function
+            // TODO Eli, write function
             return new List<Vector3>() { p0, p1, p2 };
         }
 
