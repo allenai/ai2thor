@@ -270,7 +270,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["snapToGrid"] = true;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
-                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -320,7 +320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["fieldOfView"] = 90;
                         action["gridSize"] = 0.25f;
-                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
                 case "inita": {
@@ -363,7 +363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.massThreshold = 10f;
 
 
-                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -1195,12 +1195,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "atpc": {
-                        AManager.AddThirdPartyCamera(
-                            position: Vector3.zero,
-                            rotation: Vector3.zero,
-                            orthographic: true,
-                            orthographicSize: 5
-                        );
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = Vector3.zero,
+                            ["rotation"] = Vector3.zero,
+                            ["orthographic"] = true,
+                            ["orthographicSize"] = 5,
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
 
@@ -1794,45 +1797,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // move backward
                 case "mb": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveBack";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveBack";
 
                         if (splitcommand.Length > 1) {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else {
-                            action.moveMagnitude = 0.25f;
-                        }
-
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
+                        } else { action["moveMagnitude"] = 0.25f; }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
                 // move left
                 case "ml": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveLeft";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveLeft";
 
                         if (splitcommand.Length > 1) {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else {
-                            action.moveMagnitude = 0.25f;
-                        }
-
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
+                        } else { action["moveMagnitude"] = 0.25f; }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
                 // move right
                 case "mr": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveRight";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveRight";
 
                         if (splitcommand.Length > 1) {
-                            action.moveMagnitude = float.Parse(splitcommand[1]);
-                        } else {
-                            action.moveMagnitude = 0.25f;
-                        }
-
+                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
+                        } else { action["moveMagnitude"] = 0.25f; }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
