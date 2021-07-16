@@ -567,39 +567,6 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
-    //same as `GetCoordinateFromRaycast` for the main agent camera, but used with any ThirdPartyCamera in scene
-    public void CoordinateFromRaycastThirdPartyCamera(float x, float y, int thirdPartyCameraId = 0) {
-        // count is out of bounds
-        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
-            throw new ArgumentOutOfRangeException(
-                $"thirdPartyCameraId: {thirdPartyCameraId} (int: default=0) must in 0 <= thirdPartyCameraId < len(thirdPartyCameras)={thirdPartyCameras.Count}."
-            );
-        }
-
-        if (x < 0 || y < 0 || x > 1 || y > 1) {
-            throw new ArgumentOutOfRangeException($"x and y must be in [0:1] not (x={x}, y={y}).");
-        }
-
-        Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
-
-        Ray ray = thirdPartyCamera.ViewportPointToRay(new Vector3(x, 1 - y, 0));
-        RaycastHit hit;
-
-        if (Physics.Raycast(
-            ray: ray,
-            hitInfo: out hit,
-            maxDistance: Mathf.Infinity,
-            layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
-            queryTriggerInteraction: QueryTriggerInteraction.Ignore)) {
-            this.activeAgent().actionFinished(success: true, actionReturn: hit.point);
-
-        } else
-            this.activeAgent().actionFinished(success: true, actionReturn: null);
-
-
-
-    }
-
     // Here, we don't want some dimensions set. For instance, set x, but not y.
     public class OptionalVector3 {
         public float? x = null;

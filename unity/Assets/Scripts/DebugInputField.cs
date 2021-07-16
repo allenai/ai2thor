@@ -1207,18 +1207,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "cftpc": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-
-                        action["action"] = "CoordinateFromRaycastThirdPartyCamera";
-                        action["x"] = 0f;
-                        action["y"] = 0f;
-                        action["thirdPartyCameraId"] = 0;
-
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-                        break;
-                    }
-
                 case "to": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";
