@@ -1195,13 +1195,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "atpc": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-
-                        action["action"] = "AddThirdPartyCamera";
-                        action["position"] = Vector3.zero;
-                        action["rotation"] = Vector3.zero;
-                        action["orthographic"] = true;
-                        action["orthographicSize"] = 5;
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = Vector3.zero,
+                            ["rotation"] = Vector3.zero,
+                            ["orthographic"] = true,
+                            ["orthographicSize"] = 5,
+                        };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
