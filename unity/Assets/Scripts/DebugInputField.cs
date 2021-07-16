@@ -396,6 +396,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
+                case "initpsynth": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
+                        if (splitcommand.Length == 2) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                        } else if (splitcommand.Length == 3) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 4) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
+                        }
+                        action["renderNormalsImage"] = true;
+                        action["renderDepthImage"] = true;
+                        action["renderSemanticSegmentation"] = true;
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderFlowImage"] = true;
+
+                        action["fieldOfView"] = 90f;
+                        action["snapToGrid"] = true;
+                        action["action"] = "Initialize";
+                        action["procedural"] = true;
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+
+
+                        break;
+
+                    }
                 case "inite": {
                         Dictionary<string, object> action = new Dictionary<string, object>{
                             {"action", "Initialize"},

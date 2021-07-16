@@ -779,8 +779,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //returns a <string, string[]> dict of object types and all cached materials used in the Material Randomizer logic
-        public void ReturnMaterials()
-        {
+        public void ReturnMaterials() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             actionFinished(true, colorChangeComponent.ReturnMaterials());
         }
@@ -4321,7 +4320,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Debug.Log("Before Procedural call");
             var floor = ProceduralTools.createHouse(
-                $"Floor",
                 house,
                 materials
             );

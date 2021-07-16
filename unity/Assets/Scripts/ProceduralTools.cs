@@ -118,14 +118,22 @@ namespace Thor.Procedural {
             return mesh;
         }
 
-        // public static IEnumerable<UnityEngine.Mesh> GetMultipleRectangleFloorMeshes(IEnumerable<RectangleRoom> rooms, float yOffset = 0.0f, bool generateBackFaces = false) {
-        //     return rooms.Select(
-        //         r =>
-        //             GetRectangleFloorMesh(new List<RectangleRoom>() { r }, yOffset, generateBackFaces)
-        //         );
+        //  private static IEnumerable<Vector3> GenerateTriangleVisibilityPoints(IEnumerable<Vector3> vertices) {
+        //     return Gene
         // }
 
-        public static Mesh GenerateFloorMesh(IEnumerable<Vector3> floorPolygon, float yOffset = 0.0f) {
+        private static IEnumerable<Vector3> GenerateTriangleVisibilityPoints(
+            Vector3 p0,
+            Vector3 p1,
+            Vector3 p2,
+            float interval = 1 / 3.0f
+        ) {
+
+            // TODO write function
+            return new List<Vector3>() { p0, p1, p2 };
+        }
+
+        private static Mesh GenerateFloorMesh(IEnumerable<Vector3> floorPolygon, float yOffset = 0.0f) {
 
             // Get indices for creating triangles
             var m_points = floorPolygon.Select(p => new Vector2(p.x, p.z)).ToArray();
@@ -345,6 +353,18 @@ namespace Thor.Procedural {
                 }
             }
             return visibilityPoints;
+        }
+
+        public static GameObject CreateVisibilityPointsGameObject(IEnumerable<Vector3> visibilityPoints) {
+            var visibilityPointsGO = new GameObject("VisibilityPoints");
+            var count = 0;
+            foreach (var point in visibilityPoints) {
+                var vp = new GameObject($"VisibilityPoint ({count})");
+                vp.transform.position = point;
+                vp.transform.parent = visibilityPointsGO.transform;
+                count++;
+            }
+            return visibilityPointsGO;
         }
 
         public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
@@ -867,11 +887,27 @@ namespace Thor.Procedural {
         }
 
         public static SimObjPhysics setRoomSimObjectPhysics(
+           GameObject floorGameObject,
+           string simObjId,
+           GameObject visibilityPoints,
+           GameObject receptacleTriggerBox,
+           Collider collider
+       ) {
+            return setRoomSimObjectPhysics(
+                floorGameObject,
+                simObjId,
+                visibilityPoints,
+                new GameObject[] { receptacleTriggerBox },
+                new Collider[] { collider }
+            );
+        }
+
+        public static SimObjPhysics setRoomSimObjectPhysics(
             GameObject floorGameObject,
             string simObjId,
             GameObject visibilityPoints,
-            GameObject receptacleTriggerBox,
-            Collider collider
+            GameObject[] receptacleTriggerBoxes = null,
+            Collider[] colliders = null
         ) {
             var boundingBox = new GameObject("BoundingBox");
             var bbCollider = boundingBox.AddComponent<BoxCollider>();
@@ -882,18 +918,25 @@ namespace Thor.Procedural {
             simObjPhysics.objectID = simObjId;
             simObjPhysics.ObjType = SimObjType.Floor;
             simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Static;
-            simObjPhysics.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+            var secondaryProperties = new SimObjSecondaryProperty[] { };
 
             simObjPhysics.BoundingBox = boundingBox;
 
             simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
 
-            simObjPhysics.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBox };
-            simObjPhysics.MyColliders = new Collider[] { collider };
+            simObjPhysics.ReceptacleTriggerBoxes = receptacleTriggerBoxes ?? Array.Empty<GameObject>();
+            simObjPhysics.MyColliders = colliders ?? Array.Empty<Collider>();
 
             simObjPhysics.transform.parent = floorGameObject.transform;
 
-            receptacleTriggerBox.AddComponent<Contains>();
+            if (receptacleTriggerBoxes != null) {
+                secondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+                foreach (var receptacleTriggerBox in receptacleTriggerBoxes) {
+                    receptacleTriggerBox.AddComponent<Contains>();
+                }
+            }
+            simObjPhysics.SecondaryProperties = secondaryProperties;
+
             return simObjPhysics;
         }
         public static GameObject createSimObjPhysicsGameObject(string name = "Floor", Vector3? position = null, string tag = "SimObjPhysics", int layer = 8) {
@@ -1092,7 +1135,6 @@ namespace Thor.Procedural {
         }
 
         public static GameObject createHouse(
-           string name,
            ProceduralHouse house,
            AssetMap<Material> materialDb,
            Vector3? position = null
@@ -1119,14 +1161,21 @@ namespace Thor.Procedural {
             for (int i = 0; i < house.rooms.Count(); i++) {
                 var room = house.rooms.ElementAt(i);
                 var subFloorGO = createSimObjPhysicsGameObject(room.id);
-                var mesh = ProceduralTools.GenerateFloorMesh(room.floor_polygon);//ProceduralTools.GetPolygonMesh(room);
+                var mesh = ProceduralTools.GenerateFloorMesh(room.floor_polygon);
+
+                // TODO: generate visibility points
+                var visibilityPointInterval = 1 / 3.0f;
+                var floorVisibilityPoints = Enumerable.Range(0, mesh.triangles.Length / 3)
+                .Select(triangleIndex => mesh.triangles.Skip(triangleIndex).Take(3).Select(vertexIndex => mesh.vertices[vertexIndex]))
+                .SelectMany(vertices => GenerateTriangleVisibilityPoints(vertices.ElementAt(0), vertices.ElementAt(1), vertices.ElementAt(2), visibilityPointInterval));
+                var visibilityPointsGO = CreateVisibilityPointsGameObject(floorVisibilityPoints);
+                ProceduralTools.setRoomSimObjectPhysics(subFloorGO, room.id, visibilityPointsGO);
+
                 // mesh.subMeshCount
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
                 meshRenderer.material = materialDb.getAsset(room.floor_material);
-
-                Debug.Log("After room " + room.id);
 
                 GameObject.Destroy(subFloorGO.GetComponent<Rigidbody>()); //these meshes dont need a rigidbody, only colliders
 
@@ -1156,7 +1205,12 @@ namespace Thor.Procedural {
                 rectangleFloor = floor
             };
 
+            // TODO Eli, comment this line below
             var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(roomCluster);
+
+            // TODO Eli, uncomment this
+            // var visibilityPoints = new GameObject("VisibilityPoints");
+
             visibilityPoints.transform.parent = floorGameObject.transform;
 
             // rooms.Select((room, index) => ProceduralTools.createFloorReceptacle(floorGameObject, room, receptacleHeight, $"{index}"));
@@ -1212,7 +1266,6 @@ namespace Thor.Procedural {
                         )
                     ).ToDictionary(d => d.door.id, d => (d.wall_0, d.wall_1)
             );
-            Debug.Log("Count " + windowsAndDoors.Count() + string.Join(", ", windowsAndDoors.Select(w => w.asset_id)));
             var count = 0;
             foreach (WallRectangularHole holeCover in windowsAndDoors) {
                 var coverPrefab = assetMap.getAsset(holeCover.asset_id);
