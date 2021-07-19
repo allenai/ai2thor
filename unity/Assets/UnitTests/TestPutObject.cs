@@ -49,11 +49,13 @@ namespace Tests {
 
             GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
 
+            Debug.Log(creditCard.transform.position.x);
+
             bool result = false;
             result = Mathf.Approximately(creditCard.transform.position.x, -0.1972949f);
             Assert.AreEqual(result, true);
 
-            result = Mathf.Approximately(creditCard.transform.position.y, 1.105045f);
+            result = Mathf.Approximately(creditCard.transform.position.y, 1.106945f);
             Assert.AreEqual(result, true);
 
             result = Mathf.Approximately(creditCard.transform.position.z, 0.7573217f);
@@ -105,7 +107,7 @@ namespace Tests {
             result = Mathf.Approximately(creditCard.transform.position.x, -0.4736856f);
             Assert.AreEqual(result, true);
 
-            result = Mathf.Approximately(creditCard.transform.position.y, 1.105045f);
+            result = Mathf.Approximately(creditCard.transform.position.y, 1.106945f);
             Assert.AreEqual(result, true);
 
             result = Mathf.Approximately(creditCard.transform.position.z, 0.7573217f);
