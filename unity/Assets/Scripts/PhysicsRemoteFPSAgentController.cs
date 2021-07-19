@@ -3445,7 +3445,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             } else {
-                float scaleMultiplier = scale; // this can be something like 0.3 to shrink or 1.5 to grow
                 StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
             }
         }
@@ -3475,7 +3474,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             } else {
-                float scaleMultiplier = scale; // this can be something like 0.3 to shrink or 1.5 to grow
                 StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
             }
         }

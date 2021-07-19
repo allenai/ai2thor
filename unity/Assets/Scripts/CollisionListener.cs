@@ -118,7 +118,7 @@ public class CollisionListener : MonoBehaviour {
     }
 
     private static bool debugCheckIfCollisionIsNonTrivial(Collider us, Collider them) {
-        Vector3 direction = new Vector3();
+        Vector3 direction;
         float distance = 0f;
         Physics.ComputePenetration(
             us,
