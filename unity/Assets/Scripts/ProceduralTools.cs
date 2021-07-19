@@ -128,15 +128,6 @@ namespace Thor.Procedural {
             Vector3 p2,
             float interval = 1 / 3.0f
         ) {
-            // Move this back down when you've fixed the problem
-            
-
-            // Remove this when you've fixed the fucking problem
-            // if (p0 != new Vector3(5f, 0f, 5f) || p1 != new Vector3(2.5f, 0f, 5f) || p2 != new Vector3(10f, 0f, 10f)) {
-            //     return trianglevPoints;
-            // }
-
-            Debug.Log("Now testing Vector3s " + p0 + ", " + p1 + ", " + p2);
             // Create Vector2 array from Vector3s, since y-axis is redundant
             Vector2[] tPoints = new Vector2[] {new Vector2(p0.x, p0.z), new Vector2(p1.x, p1.z), new Vector2(p2.x, p2.z)};
             Vector2 vPointLocalOrigin;
@@ -161,8 +152,6 @@ namespace Thor.Procedural {
                      largestAngle = Vector2.Angle(tPoints[2] - tPoints[1], tPoints[0] - tPoints[2]);
             }
 
-            Debug.Log(widestAngledPoint + " is the widest-angled point.");
-
             // Check if triangle is already right-angled, and if so, use it as the v-point origin
             if ( Mathf.Approximately(largestAngle, 90) ) {
                 Vector2[] rightTriangle1 = new Vector2[3];
@@ -185,45 +174,25 @@ namespace Thor.Procedural {
 
             // If triangle is not right-angled, find v-point origin with trigonometry
             else {
-                Debug.Log("Triangle is not right-angled!!!");
                 Vector2[] rightTriangle2 = new Vector2[3];
                 // float t;
 
                 // Enters here!!!
                 if ( Vector2.Equals(widestAngledPoint, tPoints[0]) ) {
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[0], tPoints[1], tPoints[2]);
-                    // t = (tPoints[0] - tPoints[2]).magnitude * Mathf.Sin( Mathf.Deg2Rad * ( 90 - Vector2.Angle(tPoints[0] - tPoints[2], tPoints[1] - tPoints[2]) ) );
-                    // vPointLocalOrigin = tPoints[2] + t * (tPoints[1] - tPoints[2]).normalized;
-                    // Debug.Log("The point that splits this into two right triangles is " + vPointLocalOrigin);
-                    // rightTriangle1 = new Vector2[] {tPoints[0], vPointLocalOrigin, tPoints[2]};
-                    // rightTriangle2 = new Vector2[] {tPoints[1], vPointLocalOrigin, tPoints[0]};
-                    // trianglevPoints2D = FindVPointsOnTriangle(rightTriangle1, interval, false);
-                    // trianglevPoints2D.AddRange( FindVPointsOnTriangle(rightTriangle2, interval, true) );
                 }
 
                 else if ( Vector2.Equals(widestAngledPoint, tPoints[1]) ) {
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[1], tPoints[2], tPoints[0]);
-                    // t = (tPoints[1] - tPoints[0]).magnitude * Mathf.Cos( Mathf.Deg2Rad * Vector2.Angle(tPoints[0] - tPoints[2], tPoints[1] - tPoints[0]) );
-                    // vPointLocalOrigin = tPoints[0] + t * tPoints[2].normalized;
-                    // rightTriangle1 = new Vector2[] {tPoints[1], vPointLocalOrigin, tPoints[0]};
-                    // rightTriangle2 = new Vector2[] {tPoints[2], vPointLocalOrigin, tPoints[1]};
-                    // trianglevPoints2D = FindVPointsOnTriangle(rightTriangle1, interval, false);
-                    // trianglevPoints2D.AddRange( FindVPointsOnTriangle(rightTriangle2, interval, true) );
                 }
 
                 else if ( Vector2.Equals(widestAngledPoint, tPoints[2]) ) {
                     Debug.Log("Hi bitch!");
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[2], tPoints[0], tPoints[1]);
-                    // t = (tPoints[2] - tPoints[1]).magnitude * Mathf.Cos( Mathf.Deg2Rad * Vector2.Angle(tPoints[1] - tPoints[0], tPoints[2] - tPoints[1]) );
-                    // vPointLocalOrigin = tPoints[1] + t * tPoints[0].normalized;
-                    // rightTriangle1 = new Vector2[] {tPoints[2], vPointLocalOrigin, tPoints[1]};
-                    // rightTriangle2 = new Vector2[] {tPoints[0], vPointLocalOrigin, tPoints[2]};
-                    // trianglevPoints2D = FindVPointsOnTriangle(rightTriangle1, interval, false);
-                    // trianglevPoints2D.AddRange( FindVPointsOnTriangle(rightTriangle2, interval, true) );
                 }
             }
 
-            //Convert Vector2 vPoints to Vector3 vPoints
+            // Convert Vector2 vPoints to Vector3 vPoints
             List<Vector3> trianglevPoints = new List<Vector3>();
             foreach (Vector2 vPoint2D in trianglevPoints2D) {
                 trianglevPoints.Add( new Vector3(vPoint2D.x, p0.y, vPoint2D.y) );
@@ -235,7 +204,6 @@ namespace Thor.Procedural {
                 List<Vector2> rightTriangleVPoints  = new List<Vector2>();
                 float sideLength = (a - c).magnitude * Mathf.Sin( Mathf.Deg2Rad * ( 90 - Vector2.Angle(a - c, b - c) ) );
                 vPointLocalOrigin = c + sideLength * (b - c).normalized;
-                Debug.Log("The point that splits this into two right triangles is " + vPointLocalOrigin);
                 Vector2[] rightTriangle1 = new Vector2[] {a, vPointLocalOrigin, c};
                 Vector2[] rightTriangle2 = new Vector2[] {b, vPointLocalOrigin, a};
                 rightTriangleVPoints = FindVPointsOnTriangle(rightTriangle1, false);
@@ -245,37 +213,23 @@ namespace Thor.Procedural {
 
             // Find all valid v-points along local grid
             List<Vector2> FindVPointsOnTriangle(Vector2[] rightTriangle, bool triangle2) {
-                // Debug.Log("I'm starting with the following triangle: " + rightTriangle[0] + ", " + rightTriangle[1] + ", " + rightTriangle[2]);
                 int startingX = triangle2 ? 1 : 0;
                 float xMax = (rightTriangle[0] - rightTriangle[1]).magnitude;
                 float yMax = (rightTriangle[2] - rightTriangle[1]).magnitude;
                 Vector2 xIncrement = interval * (rightTriangle[0] - rightTriangle[1]).normalized;
                 Vector2 yIncrement = interval * (rightTriangle[2] - rightTriangle[1]).normalized;
-                // Debug.Log($"xMax is {xMax}, yMax is {yMax}, xIncrement is {xIncrement}, and yIncrement is {yIncrement}");
                 List<Vector2> rightTriangleVPoints = new List<Vector2>();
                 Vector2 currentPoint;
 
-                //Check if each v-point is inside right triangle
+                // Check if each v-point is inside right triangle
                 for (int i = startingX; i * interval < xMax; i++) {
                     for (int j = 0; j * interval < yMax; j++) {
-                        // Debug.Log($"i is now {i}, j is now {j}, and rightTriangle[1] is " + rightTriangle[1]);
                         currentPoint = rightTriangle[1] + i * xIncrement + j * yIncrement;
                         if ( i == 0 || j == 0 || 360 - 1e-3 <=
                              Vector2.Angle(rightTriangle[0] - currentPoint, rightTriangle[1] - currentPoint) + 
                              Vector2.Angle(rightTriangle[1] - currentPoint, rightTriangle[2] - currentPoint) +
                              Vector2.Angle(rightTriangle[2] - currentPoint, rightTriangle[0] - currentPoint) ) {
                                 rightTriangleVPoints.Add(currentPoint);
-                                // Debug.Log(Vector2.Angle(rightTriangle[0] - currentPoint, rightTriangle[1] - currentPoint) + ", " + 
-                                //           Vector2.Angle(rightTriangle[1] - currentPoint, rightTriangle[2] - currentPoint) + ", and " +
-                                //           Vector2.Angle(rightTriangle[2] - currentPoint, rightTriangle[0] - currentPoint) +
-                                //           " are less than 360, so " + currentPoint + " has been added.");
-                                // Debug.Log("vPoint angle sum: " + Vector2.Angle(rightTriangle[1] - rightTriangle[0], rightTriangle[2] - rightTriangle[0]) + Vector2.Angle(rightTriangle[2] - rightTriangle[1], rightTriangle[0] - rightTriangle[1]) + Vector2.Angle(rightTriangle[0] - rightTriangle[2], rightTriangle[1] - rightTriangle[2]) );
-                            }
-                        else {
-                            // Debug.Log(Vector2.Angle(rightTriangle[0] - currentPoint, rightTriangle[1] - currentPoint) + ", " + 
-                            //               Vector2.Angle(rightTriangle[1] - currentPoint, rightTriangle[2] - currentPoint) + ", and " +
-                            //               Vector2.Angle(rightTriangle[2] - currentPoint, rightTriangle[0] - currentPoint) +
-                            //               " are more than 360, so " + currentPoint + $" has NOT been added. Also, {i} and {j} are not zero.");
                         }
                     }
                 }
@@ -290,7 +244,7 @@ namespace Thor.Procedural {
             var m_points = floorPolygon.Select(p => new Vector2(p.x, p.z)).ToArray();
 
             var triangleIndices = TriangulateVertices();
-            //Debug.Log("TriangleIndices has length of " + triangleIndices.Length);
+            // Debug.Log("TriangleIndices has length of " + triangleIndices.Length);
 
             // Get array of vertices for floor
             var floorVertices = m_points.Select(p => new Vector3(p.x, yOffset, p.y)).ToArray();
@@ -302,7 +256,7 @@ namespace Thor.Procedural {
             floor.RecalculateNormals();
             floor.RecalculateBounds();
 
-            //Get UVs for mesh's vertices
+            // Get UVs for mesh's vertices
             floor.uv = GenerateUVs();
             return floor;
 
