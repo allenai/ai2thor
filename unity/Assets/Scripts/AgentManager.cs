@@ -41,6 +41,7 @@ public class AgentManager : MonoBehaviour {
     private bool renderNormalsImage;
     private bool renderFlowImage;
     private Socket sock = null;
+    [SerializeField]
     public List<Camera> thirdPartyCameras = new List<Camera>();
     private Color[] agentColors = new Color[] { Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey };
     public int actionDuration = 3;
@@ -53,7 +54,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -482,7 +483,6 @@ public class AgentManager : MonoBehaviour {
                 throw new ArgumentException($"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color.");
             }
         }
-
         this.activeAgent().actionFinished(success: true);
     }
 
@@ -508,7 +508,6 @@ public class AgentManager : MonoBehaviour {
 
         GameObject gameObject = GameObject.Instantiate(Resources.Load("ThirdPartyCameraTemplate")) as GameObject;
         gameObject.name = "ThirdPartyCamera" + thirdPartyCameras.Count;
-        gameObject.AddComponent(typeof(Camera));
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image

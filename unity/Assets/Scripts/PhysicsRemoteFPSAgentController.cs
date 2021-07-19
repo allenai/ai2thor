@@ -1,4 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
+﻿// Copyright Allen Institute for Artificial Intelligence 2017
 
 using System;
 using System.Collections;
@@ -4797,7 +4797,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        // private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
+        // private IEnumerator checkDropHeldObjectAction(SimObjPhysics currentHandSimObj) 
         // {
         //     yield return null; // wait for two frames to pass
         //     yield return null;
@@ -4830,7 +4830,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     actionFinished(true);
         // }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
+        private IEnumerator checkDropHeldObjectActionFast(SimObjPhysics currentHandSimObj) {
             if (currentHandSimObj != null) {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
                 Physics.autoSimulation = false;
@@ -4852,81 +4852,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void DropHandObject(ServerAction action) {
+        public void DropHeldObject(bool forceAction = false, bool autoSimulation = true) {
             // make sure something is actually in our hands
-            if (ItemInHand != null) {
-                // we do need this to check if the item is currently colliding with the agent, otherwise
-                // dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
+            if (ItemInHand == null) {
+                throw new InvalidOperationException("Nothing is in the agent's hand to drop!");
+            }
+
+            // we do need this to check if the item is currently colliding with the agent, otherwise
+            // dropping an object while it is inside the agent will cause it to shoot out weirdly
+            if (!forceAction && isHandObjectColliding(false)) {
+                throw new InvalidOperationException(
+                    $"{ItemInHand.transform.name} can't be dropped. " +
+                    "It must be clear of all other collision first, including the Agent."
+                );
+            }
+
+            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.constraints = RigidbodyConstraints.None;
+            rb.useGravity = true;
+
+            // change collision detection mode while falling so that obejcts don't phase through colliders.
+            // this is reset to discrete on SimObjPhysics.cs's update 
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject topObject = GameObject.Find("Objects");
+            if (topObject != null) {
+                ItemInHand.transform.parent = topObject.transform;
+            } else {
+                ItemInHand.transform.parent = null;
+            }
+
+            DropContainedObjects(
+                target: ItemInHand.GetComponent<SimObjPhysics>(),
+                reparentContainedObjects: true,
+                forceKinematic: false
+            );
+
+            // if physics simulation has been paused by the PausePhysicsAutoSim() action,
+            // don't do any coroutine checks
+            if (!physicsSceneManager.physicsSimulationPaused) {
+                // this is true by default
+                if (autoSimulation) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                 } else {
-                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.constraints = RigidbodyConstraints.None;
-                    rb.useGravity = true;
-
-                    // change collision detection mode while falling so that obejcts don't phase through colliders.
-                    // this is reset to discrete on SimObjPhysics.cs's update 
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-
-                    GameObject topObject = GameObject.Find("Objects");
-                    if (topObject != null) {
-                        ItemInHand.transform.parent = topObject.transform;
-                    } else {
-                        ItemInHand.transform.parent = null;
-                    }
-
-                    DropContainedObjects(
-                        target: ItemInHand.GetComponent<SimObjPhysics>(),
-                        reparentContainedObjects: true,
-                        forceKinematic: false
-                    );
-
-                    // if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
-                    if (!physicsSceneManager.physicsSimulationPaused) {
-                        // this is true by default
-                        if (action.autoSimulation) {
-                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                        } else {
-                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
-                        }
-                    } else {
-                        actionFinished(true);
-                    }
-                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-                    ItemInHand = null;
-                    return;
+                    StartCoroutine(checkDropHeldObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                 }
             } else {
-                errorMessage = "nothing in hand to drop!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                actionFinished(true);
             }
+            ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+            ItemInHand = null;
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call DropHeldObject instead.", error: false)]
+        public void DropHandObject(bool forceAction = false, bool autoSimulation = true) {
+            DropHeldObject(forceAction: forceAction, autoSimulation: autoSimulation);
         }
 
         // by default will throw in the forward direction relative to the Agent's Camera
         // moveMagnitude, strength of throw, good values for an average throw are around 150-250
-        public void ThrowObject(ServerAction action) {
+        public void ThrowObject(float moveMagnitude, bool forceAction = false, bool autoSimulation = true) {
             if (ItemInHand == null) {
-                errorMessage = "Nothing in Hand to Throw!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                throw new InvalidOperationException("Nothing in Hand to Throw!");
             }
 
             GameObject go = ItemInHand;
-            DropHandObject(action);
-            // Force is not applied because action success from DropHandObject starts a coroutine that waits for the object to be stationary
-            // to return lastActionSuccess == true that is not what we want for throwing an object, review why this was that way
-            // if (this.lastActionSuccess) {
-            Vector3 dir = m_Camera.transform.forward;
-            go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-            //}
+            DropHeldObject(forceAction: forceAction, autoSimulation: autoSimulation);
 
+            // Force is not applied because action success from DropObject
+            // starts a coroutine that waits for the object to be stationary
+            // to return lastActionSuccess == true that is not what we want
+            // for throwing an object, review why this was that way
+            Vector3 dir = m_Camera.transform.forward;
+            go.GetComponent<SimObjPhysics>().ApplyForce(dir, moveMagnitude);
         }
 
         // Hide and Seek helper function, makes overlap box at x,z coordinates
@@ -5580,6 +5579,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 openness: openness,
                 markActionFinished: markActionFinished
             ));
+        }
+
+        //helper action to set the openness of a "rotate" typed open/close object immediately (no tween over time)
+        public void OpenObjectImmediate(
+            string objectId,
+            float openness = 1.0f
+        ) {
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
+            actionFinished(true);
         }
 
         public void OpenObject(
