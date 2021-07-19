@@ -15,6 +15,7 @@ public class JenkinsBuild
     static string[] EnabledScenes = FindEnabledEditorScenes();
     static string DEFAULT_BUILD_NAME = "MCS-AI2-THOR";
     static string DEFAULT_BUILD_DIR = "~/Desktop";
+    private static string DEFAULT_ADDRESSABLES_PROFILE = "Development";
 
     /// <summary>
     /// 
@@ -50,8 +51,10 @@ public class JenkinsBuild
 
         string buildName = args[0];
         string buildPath = args[1];
+        string addressesProfile = args[2];
 
         SwitchPlatform(BuildTargetGroup.Standalone, buildTarget);
+        SwitchAddressablesProfile(addressesProfile);
         BuildAddressablesContent();
         string fullPathAndName = buildPath + System.IO.Path.DirectorySeparatorChar + buildName + extension;
         BuildProject(EnabledScenes, fullPathAndName, buildTarget, BuildOptions.None);
@@ -66,23 +69,32 @@ public class JenkinsBuild
     /// <returns></returns>
     private static string[] GetExecuteMethodArguments()
     {
-        string[] returnedArgs = new string[] { DEFAULT_BUILD_NAME, DEFAULT_BUILD_DIR};
+        string[] returnedArgs = new string[] { DEFAULT_BUILD_NAME, DEFAULT_BUILD_DIR, DEFAULT_ADDRESSABLES_PROFILE};
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "-executeMethod")
             {
-                if (i + 3 <= args.Length)
+                if (i + 4 <= args.Length)
                 {
                     returnedArgs[0] = args[i + 2];
                     returnedArgs[1] = args[i + 3];
+                    returnedArgs[2] = args[i + 4];
+                    if (args[i + 4] == "prod" ) {
+                        returnedArgs[2] = "Remote";
+                    }
+                    else if (args[i + 4] != "dev") {
+                        System.Console.WriteLine("[JenkinsBuild] Addressables build environment invalid (found " + args[i + 4] + "looking for [prod/dev]); defaulting to dev.");
+                    }
+                    //else either invalid or dev; maintaining default of dev.
                     return returnedArgs;
                 }
                 else
                 {
-                    System.Console.WriteLine("[JenkinsBuild] Incorrect Parameters for -executeMethod Format: -executeMethod Build[PLATFORM] <app name> <output dir>");
+                    System.Console.WriteLine("[JenkinsBuild] Incorrect Parameters for -executeMethod Format: -executeMethod Build[PLATFORM] <app name> <output dir> [dev/prod]");
                     System.Console.WriteLine("[JenkinsBuild] Parameter 1: " + args[i + 2]);
                     System.Console.WriteLine("[JenkinsBuild] Parameter 2: " + args[i + 3]);
+                    System.Console.WriteLine("[JenkinsBuild] Parameter 3: " + args[i + 4]);
                     return null;
                 }
             }
@@ -118,6 +130,13 @@ public class JenkinsBuild
             System.Console.WriteLine("[JenkinsBuild] Unable to change Build Target to: " + buildTarget.ToString() + " Exiting...");
             return;
         }
+    }
+
+    private static void SwitchAddressablesProfile(string addressablesProfileName) {
+        AddressableAssetSettings addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
+        string id = addressableAssetSettings.profileSettings.GetProfileId(addressablesProfileName);
+        addressableAssetSettings.activeProfileId = id;
+        System.Console.WriteLine("[JenkinsBuild] Setting Addressable Profile To: " + addressableAssetSettings.activeProfileId);
     }
 
     private static void BuildAddressablesContent()
