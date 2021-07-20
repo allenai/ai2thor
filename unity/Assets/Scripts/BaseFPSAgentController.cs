@@ -100,7 +100,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
 
-                // The VisibilityCapsule will be set to either Tall or Bot 
+                // The VisibilityCapsule will be set to either Tall or Bot
                 // from the SetAgentMode call in BaseFPSAgentController's Initialize()
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
@@ -560,7 +560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 navmeshAgent.height = collider.height;
             }
 
-            // navmeshAgent.radius = 
+            // navmeshAgent.radius =
 
             if (action.gridSize <= 0 || action.gridSize > 5) {
                 errorMessage = "grid size must be in the range (0,5]";
@@ -1133,7 +1133,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 CheckIfItemBlocksAgentMovement(direction, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
                 CheckIfAgentCanMove(direction, ignoreColliders)) {
 
-                // only default hand if not manually interacting with things    
+                // only default hand if not manually interacting with things
                 if (!manualInteract) {
                     DefaultAgentHand();
                 }
@@ -1488,7 +1488,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ResetObjectFilter() {
             this.simObjFilter = null;
             // this could technically be a FastEmit action
-            // but could cause confusion since the result of this 
+            // but could cause confusion since the result of this
             // action should return all the objects. Resetting the filter
             // should cause all the objects to get returned, which FastEmit would not do.
             actionFinished(true);
@@ -1504,9 +1504,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             simObjFilter = filter.ToArray();
             // this could technically be a FastEmit action
-            // but could cause confusion since the result of this 
+            // but could cause confusion since the result of this
             // action should return a limited set of objects. Setting the filter
-            // should cause only the objects in the filter to get returned, 
+            // should cause only the objects in the filter to get returned,
             // which FastEmit would not do.
             actionFinished(true);
         }
@@ -2407,7 +2407,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion oldRotation = transform.rotation;
             float oldHorizon = m_Camera.transform.localEulerAngles.x;
 
-            // here we actually teleport 
+            // here we actually teleport
             transform.position = position;
             transform.localEulerAngles = new Vector3(0, rotation.y, 0);
             m_Camera.transform.localEulerAngles = new Vector3(horizon, 0, 0);
@@ -3054,6 +3054,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             AgentHand.transform.rotation = this.transform.rotation;
         }
 
+        // set random seed used by unity
+        public void SetRandomSeed(int seed) {
+            UnityEngine.Random.InitState(seed);
+            actionFinishedEmit(true);
+        }
+
         // randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(
             int randomSeed = 0,
@@ -3151,7 +3157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        // On demand public function for getting what sim objects are visible at that moment 
+        // On demand public function for getting what sim objects are visible at that moment
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
             var camera = this.GetComponentInChildren<Camera>();
             return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
@@ -3284,7 +3290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        /* 
+        /*
         Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
         function for more information.
 
@@ -3345,7 +3351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         If the objectIds (or objectTypes) parameter is non-null, then only objects with
         those ids (or types) will be returned.
-        
+
         ONLY ONE OF objectIds OR objectTypes IS ALLOWED TO BE NON-NULL.
 
         Returns a dictionary mapping object ids to a list of (x,z) coordinates corresponding
