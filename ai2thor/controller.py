@@ -412,9 +412,17 @@ class Controller(object):
         self.include_private_scenes = include_private_scenes
         self.x_display = None
         self.gpu_device = gpu_device
+        cuda_visible_devices = list(
+            map(int, filter(lambda y: y.isdigit(),
+            map(lambda x: x.strip(),
+                os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
+
+        if not self.gpu_device and cuda_visible_devices:
+            self.gpu_device = cuda_visible_devices[0]
 
         if self.gpu_device and (type(self.gpu_device) is not int or self.gpu_device < 0):
             raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
+
 
         if x_display:
             self.x_display = x_display
