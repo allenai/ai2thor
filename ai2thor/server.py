@@ -151,8 +151,9 @@ class Event:
 
     def __init__(self, metadata):
         self.metadata = MetadataWrapper(metadata)
-        for i in range(len(metadata["objects"])):
-            metadata["objects"][i] = ObjectMetadata(metadata["objects"][i])
+        if "objects" in metadata:
+            for i in range(len(metadata["objects"])):
+                metadata["objects"][i] = ObjectMetadata(metadata["objects"][i])
 
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
