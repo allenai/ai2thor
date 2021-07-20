@@ -133,8 +133,6 @@ namespace Thor.Procedural {
             Vector2 vPointLocalOrigin;
             List<Vector2> trianglevPoints2D = new List<Vector2>();
 
-            //trianglevPoints2D.Add( (tPoints[0] + tPoints[1] + tPoints[2]) / 3 );
-
             // Find triangle's largest angle, which we will either use as the local vPoint origin if it's exactly 90 degrees, or to find it  
             Vector2 widestAngledPoint = tPoints[0];
             float longestSideSquare = (tPoints[2] - tPoints[1]).sqrMagnitude;
@@ -244,7 +242,6 @@ namespace Thor.Procedural {
             var m_points = floorPolygon.Select(p => new Vector2(p.x, p.z)).ToArray();
 
             var triangleIndices = TriangulateVertices();
-            // Debug.Log("TriangleIndices has length of " + triangleIndices.Length);
 
             // Get array of vertices for floor
             var floorVertices = m_points.Select(p => new Vector3(p.x, yOffset, p.y)).ToArray();
