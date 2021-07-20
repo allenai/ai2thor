@@ -85,6 +85,26 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique
 
 
+class ObjectMetadata(dict):
+    def __getitem__(self, x):
+        # alias deprecated functionality
+        if x == "canChangeTempToHot":
+            if "canChangeTempToHot" not in self:
+                # maintains sideways compatibility
+                warnings.warn(
+                    'The key event.metadata["canChangeTempToHot"] is deprecated and has been remapped to event.metadata["isHeatSource"].'
+                )
+                x = "isHeatSource"
+        elif x == "canChangeTempToCold":
+            if "canChangeTempToCold" not in self:
+                # maintains sideways compatibility
+                warnings.warn(
+                    'The key event.metadata["canChangeTempToCold"] is deprecated and has been remapped to event.metadata["isColdSource"].'
+                )
+                x = "isColdSource"
+        return super().__getitem__(x)
+
+
 class MetadataWrapper(dict):
     def __getitem__(self, x):
         # alias deprecated functionality
@@ -131,6 +151,9 @@ class Event:
 
     def __init__(self, metadata):
         self.metadata = MetadataWrapper(metadata)
+        for i in range(len(metadata["objects"])):
+            metadata["objects"][i] = ObjectMetadata(metadata["objects"][i])
+
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 
