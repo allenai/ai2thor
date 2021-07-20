@@ -117,7 +117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // sets temperature decay for a single object.
         public void SetTemperatureDecayTime(string objectId, float decayTime) {
             if (decayTime < 0) {
-                throw new ArgumentOutOfRangeException("timeUntilRoomTemp must be >= 0. You gave " + decayTime);
+                throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
             }
             SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
             sop.SetHowManySecondsUntilRoomTemp(decayTime);
@@ -131,7 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             foreach (SimObjPhysics sop in simObjects) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
+                sop.SetHowManySecondsUntilRoomTemp(decayTime);
             }
             actionFinished(true);
         }
