@@ -2049,7 +2049,7 @@ def test_rotate_hand(controller):
     h2 = controller.step(action="RotateHeldObject", yaw=90).metadata["hand"]
 
     assert_near(h1["position"], h2["position"])
-    assert h2["rotation"]["y"] - h1["rotation"]["y"] == 90
+    assert h2["rotation"]["y"] - h1["rotation"]["y"] == -90
     assert h2["rotation"]["x"] == h1["rotation"]["x"]
     assert h2["rotation"]["z"] == h1["rotation"]["z"]
 
@@ -2083,8 +2083,8 @@ def test_rotate_hand(controller):
     assert_near(h1["position"], h2["position"])
     assert_near(h1["rotation"], dict(x=0, y=180, z=0))
 
-    # Unity will normalize the rotation, so x=90, y=270, and z=270 becomes x=90, y=0, z=0
-    assert_near(h2["rotation"], dict(x=90, y=0, z=0))
+    # Unity will normalize the rotation
+    assert_near(h2["rotation"], dict(x=90, y=180, z=0))
 
     # local rotation test
     controller.reset()
