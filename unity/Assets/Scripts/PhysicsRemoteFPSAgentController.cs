@@ -461,7 +461,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!manualInteract) {
                     DefaultAgentHand();
                 }
-                
+
                 actionFinished(true);
             } else {
                 errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
@@ -3065,7 +3065,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // NOTE: -roll is used so that rotating an object rightward is positive
             AgentHand.transform.Rotate(
-                new Vector3(pitch, yaw, -roll), Space.World
+                new Vector3(pitch, -yaw, -roll), Space.World
             );
             transform.rotation = agentRot;
 
@@ -3080,7 +3080,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // rotate the hand if there is an object in it
         public void RotateHandRelative(float x = 0, float y = 0, float z = 0) {
             // NOTE: -z is used for backwards compatibility.
-            RotateHeldObject(pitch: x, yaw: y, roll: -z);
+            RotateHeldObject(pitch: x, yaw: -y, roll: -z);
         }
 
         // action to return points from a grid that have an experiment receptacle below it
