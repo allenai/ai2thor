@@ -417,12 +417,16 @@ class Controller(object):
             map(lambda x: x.strip(),
                 os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
 
-        if not self.gpu_device and cuda_visible_devices:
+        if self.gpu_device:
+            if (type(self.gpu_device) is not int or self.gpu_device < 0):
+                raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
+            elif cuda_visible_devices:
+                if self.gpu_device >= len(cuda_visible_devices):
+                    raise ValueError("Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s" % (self.gpu_device, cuda_visible_devices))
+                else:
+                    self.gpu_device = cuda_visible_devices[self.gpu_device]
+        elif cuda_visible_devices:
             self.gpu_device = cuda_visible_devices[0]
-
-        if self.gpu_device and (type(self.gpu_device) is not int or self.gpu_device < 0):
-            raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
-
 
         if x_display:
             self.x_display = x_display
