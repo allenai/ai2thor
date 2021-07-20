@@ -62,44 +62,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        // get all sim objects of action.type, then sets their temperature decay timers to value
-        [ObsoleteAttribute(message: "This action is deprecated. Use SetTemperatureDecayTime instead.", error: false)]
-        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp = 0.0f) {
-            // get all objects of type passed by action
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
-            foreach (SimObjPhysics sop in simObjects) {
-                if (sop.Type.ToString() == objectType) {
-                    simObjectsOfType.Add(sop);
-                }
-            }
-            foreach (SimObjPhysics sop in simObjectsOfType) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
-            }
-            actionFinished(true);
-        }
-
-        // get all sim objects and globally set the room temp decay time for all of them
-        [ObsoleteAttribute(message: "This action is deprecated. Use SetTemperatureDecayTime instead.", error: false)]
-        public void SetGlobalRoomTempDecayTime(float TimeUntilRoomTemp = 0.0f) {
-            // get all objects 
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-            // use SetHowManySecondsUntilRoomTemp to set them all
-            foreach (SimObjPhysics sop in simObjects) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
-            }
-
-            actionFinished(true);
-        }
-
-        // sets whether this scene should allow objects to decay temperature to room temp over time or not
-        [ObsoleteAttribute(message: "This action is deprecated. Use EnableTemperatureDecay and DisableTemperatureDecay instead.", error: false)]
-        public void SetDecayTemperatureBool(bool allowDecayTemperature) {
-            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
-            actionFinished(true);
-        }
-
         public void EnableTemperatureDecay() {
             if (!physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature) {
                 physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = true;
