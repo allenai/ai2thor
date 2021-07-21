@@ -4357,7 +4357,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, metadata);
         }
 
-        public void Get3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
+        public void GetAsset3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
@@ -4434,7 +4434,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             var assetMap = ProceduralTools.getAssetMap();
-
             if (!assetMap.ContainsKey(assetId)) {
                 errorMessage = $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
                 actionFinished(false);

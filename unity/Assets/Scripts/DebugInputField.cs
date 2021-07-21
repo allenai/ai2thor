@@ -3663,7 +3663,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "g3d": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "Get3DGeometry";
+                        action["action"] = "GetAsset3DGeometry";
                         if (splitcommand.Length == 2) {
                             action["assetId"] = splitcommand[1];
 
