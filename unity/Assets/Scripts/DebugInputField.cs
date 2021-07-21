@@ -779,9 +779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     });
                     break;
 
-                case "returnMaterials":
+                case "getMaterials":
                     CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "ReturnMaterials"
+                        ["action"] = "GetMaterials"
                     });
                     break;
                 // This is dangerous because it will modify the underlying
