@@ -124,7 +124,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         rb.angularDrag += 0.01f;
 
 #if UNITY_EDITOR
-                        print(rb.transform.name + " is still in motion!");
+                        //print(rb.transform.name + " is still in motion!");
 #endif
                     } else {
                         // the velocities are small enough, assume object has come to rest and force this one to sleep
@@ -557,6 +557,10 @@ public class PhysicsSceneManager : MonoBehaviour {
             InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
             foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles) {
                 SimObjPhysics sopToPlaceInReceptacle = gameObjToPlaceInReceptacle.GetComponent<SimObjPhysics>();
+
+                if (staticPlacement) {
+                    sopToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
+                }
 
                 if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
                     HowManyCouldntSpawn--;

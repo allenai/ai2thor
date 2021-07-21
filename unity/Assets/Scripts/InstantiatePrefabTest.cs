@@ -487,7 +487,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
                 if (PlaceStationary == true) {
                     // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
-                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup || rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                         rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
                     }
 
