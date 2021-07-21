@@ -177,6 +177,10 @@ public class InstantiatePrefabTest : MonoBehaviour {
         // try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps) {
+            if(sop.Type == SimObjType.Plate)
+            {
+                print($"trying to place {sop.name} in {p.ParentSimObjPhys}");
+            }
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 return true;
             }
@@ -283,6 +287,11 @@ public class InstantiatePrefabTest : MonoBehaviour {
             oabb.enabled = true;
             Bounds b = oabb.bounds;
 
+            if(sop.Type == SimObjType.Plate)
+            {
+                print($"number of contained objs by {sop.name} is {sop.ContainedGameObjects().Count}");
+            }
+
             foreach (GameObject c in sop.ContainedGameObjects()) {
 
                 //grow the oabb to encapuslate any contained object colliders so check spawn area can account for more space occupied
@@ -333,7 +342,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                 Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); // was using rsp.point
                 BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+                DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
             }
@@ -388,10 +397,21 @@ public class InstantiatePrefabTest : MonoBehaviour {
         foreach (RotationAndDistanceValues quat in ToCheck) {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false)) {
-
+                
+                if(sop.Type == SimObjType.Plate)
+                {
+                    print($"placing {sop.name} at rsp point {rsp.Point}");
+                    print($"whta the hell is being added to rsp.Point: {rsp.ReceptacleBox.transform.up * (quat.distance + yoffset)}");
+                    print($"i'm sorry what is the quat.distancE?: {quat.distance}");
+                }
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
+
+                if(sop.Type == SimObjType.Plate)
+                {
+                    print($"{sop.name} position set to {sop.transform.position}");
+                }
 
                 //also reset the object's BoundingBox values at this point
                 oabb.center = oabb_original_center;
