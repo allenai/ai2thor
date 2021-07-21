@@ -294,7 +294,7 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
-    public Dictionary<string, string[]> ReturnMaterials() {
+    public Dictionary<string, string[]> GetMaterials() {
         Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
 
         if (materials == null) {

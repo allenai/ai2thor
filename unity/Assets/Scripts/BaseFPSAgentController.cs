@@ -779,9 +779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //returns a <string, string[]> dict of object types and all cached materials used in the Material Randomizer logic
-        public void ReturnMaterials() {
+        public void GetMaterials() {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-            actionFinished(true, colorChangeComponent.ReturnMaterials());
+            actionFinished(true, colorChangeComponent.GetMaterials());
         }
 
         /**
