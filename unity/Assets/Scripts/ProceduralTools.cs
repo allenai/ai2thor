@@ -1134,7 +1134,7 @@ namespace Thor.Procedural {
             };
         }
 
-        public static GameObject createHouse(
+        public static GameObject CreateHouse(
            ProceduralHouse house,
            AssetMap<Material> materialDb,
            Vector3? position = null
@@ -1335,14 +1335,16 @@ namespace Thor.Procedural {
             if (houseObject == null) {
                 return;
             }
+            var go = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), houseObject);
+            // Debug.Log("navmesh area for obj " + houseObject.asset_id + " area " + houseObject.navmesh_area + " bool " + (houseObject.navmesh_area != ""));
+            tagObjectNavmesh(go, "Not Walkable");
+
             if (houseObject.children != null) {
                 foreach (var child in houseObject.children) {
                     spawnObjectHierarchy(child);
                 }
             }
-            var go = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), houseObject);
-            // Debug.Log("navmesh area for obj " + houseObject.asset_id + " area " + houseObject.navmesh_area + " bool " + (houseObject.navmesh_area != ""));
-            tagObjectNavmesh(go, "Not Walkable");
+
         }
 
         public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable") {

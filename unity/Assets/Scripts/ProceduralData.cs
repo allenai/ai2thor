@@ -83,7 +83,7 @@ namespace Thor.Procedural.Data {
         public float receptacle_height { get; set; }
         public string skybox_id { get; set; }
         public string datetime { get; set; }
-        public List<LightParameters> lights { get; set; }
+        public List<LightParameters> lights { get; set; } = new List<LightParameters>();
 
         public string ceiling_material { get; set; }
         public float navmesh_voxel_size { get; set; }
@@ -203,11 +203,11 @@ namespace Thor.Procedural.Data {
     public class ProceduralHouse {
         public ProceduralParameters procedural_parameters { get; set; }
         public string id { get; set; }
-        public List<RoomHierarchy> rooms { get; set; }
-        public List<PolygonWall> walls { get; set; }
-        public List<Door> doors { get; set; }
-        public List<Window> windows { get; set; }
-        public List<HouseObject> objects { get; set; }
+        public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
+        public List<PolygonWall> walls { get; set; } = new List<PolygonWall>();
+        public List<Door> doors { get; set; } = new List<Door>();
+        public List<Window> windows { get; set; } = new List<Window>();
+        public List<HouseObject> objects { get; set; } = new List<HouseObject>();
         public Roof roof { get; set; }
     }
 

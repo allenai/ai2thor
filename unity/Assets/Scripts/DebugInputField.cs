@@ -3597,6 +3597,85 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
+                case "va": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnAsset";
+                        action["assetId"] = "Dining_Table_16_1";
+                        // action["skyboxColor"] = new Color(0, 0, 0, 1);
+
+                        if (splitcommand.Length == 2) {
+                            action["assetId"] = splitcommand[1];
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+
+                case "ra": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateObject";
+                        action["objectId"] = "asset_0";
+
+                        if (splitcommand.Length > 4) {
+                            action["angleAxisRotation"] = new AxisAngleRotation() {
+                                axis = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3])),
+                                degrees = float.Parse(splitcommand[4])
+                            };
+                        }
+                        if (splitcommand.Length == 6) {
+
+                            action["absolute"] = bool.Parse(splitcommand[5]);
+
+                        }
+
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "laoc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "LookAtObjectCenter";
+                        action["objectId"] = "asset_0";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "sky": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetSkybox";
+                        action["color"] = new Color(0, 0, 0, 1);
+                        if (splitcommand.Length == 5) {
+                            action["color"] = new Color(
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]),
+                                float.Parse(splitcommand[4])
+                            );
+
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+
+                case "g3d": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "Get3DGeometry";
+                        if (splitcommand.Length == 2) {
+                            action["assetId"] = splitcommand[1];
+
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        var geos = (List<Geometry3D>)CurrentActiveController().actionReturn as List<Geometry3D>;
+                        Debug.Log($"Geo count: {geos.Count}");
+                        var geo = geos.First();
+                        Debug.Log($"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}");
+                        break;
+                    }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

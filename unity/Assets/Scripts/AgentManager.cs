@@ -249,8 +249,8 @@ public class AgentManager : MonoBehaviour {
         //primary agent floating in space, then generates the house, then teleports the primary agent.
         //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
         //agents, which won't work if we initialize the agent(s) before the scene exists
-        if(!action.procedural)
-        StartCoroutine(addAgents(action));
+        if (!action.procedural)
+            StartCoroutine(addAgents(action));
 
     }
 
@@ -1921,6 +1921,23 @@ public class ServerAction {
 public class InitializeReturn {
     public float cameraNearPlane;
     public float cameraFarPlane;
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class Geometry3D {
+    public Vector3[] vertices;
+    public int[] triangleIndices;
+    public Vector2[] uvs;
+    public Vector3[] normals;
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class ObjectSphereBounds {
+    public string id;
+    public Vector3 worldSpaceCenter;
+    public float radius;
 }
 
 public enum ServerActionErrorCode {

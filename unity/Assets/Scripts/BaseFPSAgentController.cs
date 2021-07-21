@@ -187,6 +187,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
         protected Quaternion targetRotation;
 
+        protected Bounds objectBounds;
+
 #if UNITY_WEBGL
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
@@ -1919,7 +1921,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // which terminates the action immediately.
                 actionFinished(
                     success: false,
-                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
+                    errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}"
                 );
             } catch (Exception e) {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
@@ -4319,7 +4321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.createHouse(
+            var floor = ProceduralTools.CreateHouse(
                 house,
                 materials
             );
@@ -4353,6 +4355,185 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             ).ToList();
             actionFinished(true, metadata);
+        }
+
+        public void Get3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinished(false);
+                return;
+            }
+            var assetMap = ProceduralTools.getAssetMap();
+
+            if (!assetMap.ContainsKey(assetId)) {
+                errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
+                actionFinished(false);
+                return;
+            }
+
+            var asset = assetMap.getAsset(assetId);
+
+            var meshFilters = asset.GetComponentsInChildren<MeshFilter>();
+
+            var geoList = meshFilters.Select(meshFilter => {
+                var mesh = meshFilter.sharedMesh;
+                var geo = new Geometry3D() { vertices = mesh.vertices };
+                geo.triangleIndices = triangleIndices ? mesh.triangles : null;
+                geo.normals = normals ? mesh.normals : null;
+                geo.uvs = uvs ? mesh.uv : null;
+                return geo;
+            }).ToList();
+            actionFinished(true, geoList);
+        }
+
+        public void SpawnAsset(string assetId, string generatedId = "asset_0", Vector3? position = null) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinished(false);
+                return;
+            }
+            var assetMap = ProceduralTools.getAssetMap();
+
+            if (!assetMap.ContainsKey(assetId)) {
+                errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
+                actionFinished(false);
+                return;
+            }
+
+            var asset = assetMap.getAsset(assetId);
+
+            var spawned = GameObject.Instantiate(asset, position.GetValueOrDefault(Vector3.zero), Quaternion.identity);
+            spawned.name = generatedId;
+            spawned.isStatic = true;
+            foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
+                rigidBody.useGravity = false;
+                rigidBody.isKinematic = true;
+            }
+
+            var simObj = spawned.GetComponent<SimObjPhysics>();
+            if (simObj != null) {
+                simObj.objectID = spawned.name;
+            }
+
+            var bounds = GetObjectSphereBounds(spawned);
+
+            actionFinished(true, new ObjectSphereBounds() {
+                id = spawned.name,
+                worldSpaceCenter = bounds.center,
+                radius = bounds.extents.magnitude
+            });
+        }
+
+        public void GetAssetSphereBounds(string assetId) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinished(false);
+                return;
+            }
+            var assetMap = ProceduralTools.getAssetMap();
+
+            if (!assetMap.ContainsKey(assetId)) {
+                errorMessage = $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
+                actionFinished(false);
+                return;
+            }
+
+            var asset = assetMap.getAsset(assetId);
+
+            var bounds = GetObjectSphereBounds(asset);
+
+            actionFinished(true, new ObjectSphereBounds() {
+                id = assetId,
+                worldSpaceCenter = bounds.center,
+                radius = bounds.extents.magnitude
+            });
+        }
+
+        public void LookAtObjectCenter(string objectId = "asset_0", Color? skyboxColor = null, Vector3? position = null) {
+            var obj = GameObject.Find(objectId);
+            if (obj == null) {
+                errorMessage = $"Object does not exist in scene.";
+                actionFinished(false);
+                return;
+            }
+            LookAtObjectCenter(obj);
+
+            actionFinished(true, obj.name);
+        }
+
+        public void SetSkybox(string materialId) {
+            var materialDb = ProceduralTools.GetMaterials();
+            if (materialDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinished(false);
+                return;
+            }
+            RenderSettings.skybox = materialDb.getAsset(materialId);
+        }
+
+        public void SetSkybox(Color color) {
+            m_Camera.clearFlags = CameraClearFlags.SolidColor;
+            m_Camera.backgroundColor = color;
+            actionFinished(true);
+        }
+
+        private void LookAtObjectCenter(GameObject gameObject) {
+            var bounds = GetObjectSphereBounds(gameObject);
+            // objectBounds = bounds;
+            // var size = 2.0f * Mathf.Tan(m_Camera.fieldOfView / 2.0f) * bounds.extents.magnitude;
+            var radius = bounds.extents.magnitude;
+            var dist = radius / Mathf.Tan(m_Camera.fieldOfView / 2.0f);
+            m_CharacterController.transform.rotation = Quaternion.identity;
+            m_CharacterController.transform.position = bounds.center + Vector3.forward * (radius + dist);
+
+            m_Camera.transform.localPosition = Vector3.zero;
+            m_Camera.transform.LookAt(bounds.center, Vector3.up);
+        }
+
+        private Bounds GetObjectSphereBounds(GameObject gameObject) {
+            return gameObject.GetComponentsInChildren<MeshRenderer>()
+                .Select(renderer => renderer.bounds)
+                .Aggregate(new Bounds(), (allBounds, partBounds) => {
+                    allBounds.Encapsulate(partBounds);
+                    return allBounds;
+                });
+        }
+
+        public void RemoveObject(string objectId) {
+            var obj = GameObject.Find(objectId);
+            if (obj == null) {
+                errorMessage = $"Object does not exist in scene.";
+                actionFinished(false);
+                return;
+            }
+
+            Destroy(obj);
+            actionFinished(true);
+        }
+
+        public void RotateObject(AxisAngleRotation angleAxisRotation, string objectId = "asset_0", bool absolute = true) {
+            var obj = GameObject.Find(objectId);
+            if (obj == null) {
+                errorMessage = $"Object does not exist in scene.";
+                actionFinished(false);
+                return;
+            }
+            var bounds = GetObjectSphereBounds(obj);
+            //obj.transform.RotateAround()
+            var rot = Quaternion.AngleAxis(angleAxisRotation.degrees, angleAxisRotation.axis);
+            if (absolute) {
+                obj.transform.position = Vector3.zero;
+                obj.transform.rotation = Quaternion.identity;
+                obj.transform.RotateAround(bounds.center, angleAxisRotation.axis, angleAxisRotation.degrees);
+            } else {
+                obj.transform.RotateAround(bounds.center, angleAxisRotation.axis, angleAxisRotation.degrees);
+                //obj.transform.rotation = rot * obj.transform.rotation;
+            }
+
+            actionFinished(true);
         }
 
         public void BakeNavMesh() {
@@ -4427,6 +4608,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //         Gizmos.DrawWireCube(g.center, g.size);
             //     }
             // }
+
+
+            // Gizmos.color = Color.yellow;
+            // Gizmos.DrawWireSphere(objectBounds.center, objectBounds.extents.magnitude);
         }
 #endif
 
