@@ -3002,7 +3002,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // might want to use this for a targeting check as well at some point....
                         result = true;
                         sop.debugIsInteractable = true;
-                    } else  {
+                    } else {
                         // we didn't directly hit the sop we are checking for with this cast,
                         // check if it's because we hit something see-through
                         SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();

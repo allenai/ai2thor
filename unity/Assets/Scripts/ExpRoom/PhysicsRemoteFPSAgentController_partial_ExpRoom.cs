@@ -280,10 +280,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             target.gameObject.SetActive(enable.Value);
             if (enable.Value) {
+                foreach (Renderer r in target.GetComponentsInChildren<Renderer>()) {
+                    if (!r.enabled) {
+                        initiallyDisabledRenderers.Add(r.GetInstanceID());
+                    }
+                }
                 target.ObjectID = target.name;
                 physicsSceneManager.AddToObjectsInScene(target);
                 actionFinished(true, target.ObjectID);
             } else {
+                foreach (Renderer r in target.GetComponentsInChildren<Renderer>()) {
+                    if (initiallyDisabledRenderers.Contains(r.GetInstanceID())) {
+                        initiallyDisabledRenderers.Remove(r.GetInstanceID());
+                        r.enabled = false;
+                    } else {
+                        r.enabled = true;
+                    }
+                }
                 physicsSceneManager.RemoveFromObjectsInScene(target);
                 actionFinished(true);
             }
@@ -334,6 +347,357 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             actionFinished(true);
+        }
+
+
+        // action to return points from a grid that have an experiment receptacle below it
+        // creates a grid starting from the agent's current hand position and projects that grid
+        // forward relative to the agent
+        // grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
+        public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount) {
+            var agent = this.agentManager.agents[0];
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            // good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
+            // var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            actionFinished(true, ret);
+        }
+
+        // spawn receptacle object at array index <objectVariation> rotated to <y>
+        // on <receptacleObjectId> using position <position>
+        public void SpawnExperimentObjAtPoint(
+            string objectType,
+            string receptacleObjectId,
+            Vector3 position,
+            float rotation,
+            int objectVariation = 0
+        ) {
+            if (receptacleObjectId == null) {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            if (objectType == null) {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            // find the object in the scene, disregard visibility
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.objectID == receptacleObjectId) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "no receptacle object with id: " +
+                receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if (ersm.SpawnExperimentObjAtPoint(objectType, objectVariation, target, position, rotation)) {
+                actionFinished(true);
+            } else {
+                errorMessage = $"Experiment object could not be placed on {receptacleObjectId}";
+                actionFinished(false);
+            }
+        }
+
+        // spawn receptacle object at array index <objectVariation> rotated to <y>
+        // on <receptacleObjectId> using random seed <randomSeed>
+        public void SpawnExperimentObjAtRandom(
+            string objectType,
+            string receptacleObjectId,
+            float rotation,
+            int randomSeed,
+            int objectVariation = 0
+        ) {
+            if (receptacleObjectId == null) {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
+                actionFinished(false);
+                return;
+            }
+
+            if (objectType == null) {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            // find the object in the scene, disregard visibility
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.objectID == receptacleObjectId) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "no receptacle object with id: " +
+                receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if (ersm.SpawnExperimentObjAtRandom(objectType, objectVariation, randomSeed, target, rotation)) {
+                actionFinished(true);
+            } else {
+                errorMessage = "Experiment object could not be placed on " + receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        // specify a screen by objectId in exp room and change material to objectVariation
+        public void ChangeScreenMaterialExpRoom(string objectId, int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            if (objectId == null) {
+                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            // find the object in the scene, disregard visibility
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.objectID == objectId) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "no object with id: " +
+                objectId + " could be found during ChangeScreenMaterialExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenMaterial(target, objectVariation);
+            actionFinished(true);
+        }
+
+        // specify a screen in exp room by objectId and change material color to rgb
+        public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            // find the object in the scene, disregard visibility
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.objectID == objectId) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "no object with id: " +
+                objectId + " could not be found during ChangeScreenColorExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenColor(target, r, g, b);
+            actionFinished(true);
+        }
+
+        // change wall to material [variation]
+        public void ChangeWallMaterialExpRoom(int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallMaterial(objectVariation);
+            actionFinished(true);
+        }
+
+        // change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeWallColorExpRoom(float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallColor(r, g, b);
+            actionFinished(true);
+        }
+
+        // change floor to material [variation]
+        public void ChangeFloorMaterialExpRoom(int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorMaterial(objectVariation);
+            actionFinished(true);
+        }
+
+        // change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeFloorColorExpRoom(float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorColor(r, g, b);
+            actionFinished(true);
+        }
+
+        // change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
+        public void ChangeLightColorExpRoom(float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightColor(r, g, b);
+            actionFinished(true);
+        }
+
+        // change intensity of lights in exp room [0-5] these arent in like... lumens or anything
+        // just a relative intensity value
+        public void ChangeLightIntensityExpRoom(float intensity) {
+            // restrict this to [0-5]
+            if (intensity < 0 || intensity > 5) {
+                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightIntensity(intensity);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopMaterialExpRoom(int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopMaterial(objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopColorExpRoom(float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopColor(r, g, b);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegMaterialExpRoom(int objectVariation) {
+            // only 5 material options at the moment
+            if (objectVariation < 0 || objectVariation > 4) {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegMaterial(objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegColorExpRoom(float r, float g, float b) {
+            if (
+                r < 0 || r > 255 ||
+                g < 0 || g > 255 ||
+                b < 0 || b > 255
+            ) {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegColor(r, g, b);
+            actionFinished(true);
+        }
+
+        // returns valid spawn points for spawning an object on a receptacle in the experiment room
+        // checks if <objectId> at <y> rotation can spawn without falling off
+        // table <receptacleObjectId>
+        public void ReturnValidSpawnsExpRoom(string objectType, string receptacleObjectId, float rotation, int objectVariation = 0) {
+            if (receptacleObjectId == null) {
+                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            if (objectType == null) {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(receptacleObjectId)) {
+                errorMessage = $"Cannot find object with id {receptacleObjectId}.";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[receptacleObjectId];
+
+            // return all valid spawn coordinates
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            actionFinished(true, ersm.ReturnValidSpawns(objectType, objectVariation, target, rotation));
         }
     }
 }
