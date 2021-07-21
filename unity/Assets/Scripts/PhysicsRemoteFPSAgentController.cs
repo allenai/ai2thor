@@ -4708,7 +4708,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic
         ) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                // print("dropping contained objects");
                 GameObject topObject = null;
 
                 foreach (SimObjPhysics sop in target.ContainedObjectReferences) {

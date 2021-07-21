@@ -73,7 +73,6 @@ public class Break : MonoBehaviour {
             if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
                 GameObject objs = GameObject.Find("Objects");
                 foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
-                    print($"{go.name}");
                     go.transform.SetParent(objs.transform);
                     Rigidbody childrb = go.GetComponent<Rigidbody>();
                     rb.useGravity = true;
