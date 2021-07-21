@@ -486,6 +486,11 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 // set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
                 if (PlaceStationary == true) {
+                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
+                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                        rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+
                     // make object being placed kinematic true
                     sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
@@ -499,12 +504,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
                         PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
                         agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
-
-                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
-                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
-                        rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
-                    }
-
                 }
 
                 // place stationary false, let physics drop everything too
