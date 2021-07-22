@@ -882,7 +882,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 case "val":
                     if (useValMaterials.GetValueOrDefault(true) == false) {
-                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a train scene.");
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a val scene.");
                     }
                     useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
                     useValMaterials = useValMaterials.GetValueOrDefault(true);
@@ -891,7 +891,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 case "test":
                     if (useTestMaterials.GetValueOrDefault(true) == false) {
-                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a train scene.");
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a test scene.");
                     }
                     useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
                     useValMaterials = useValMaterials.GetValueOrDefault(false);
