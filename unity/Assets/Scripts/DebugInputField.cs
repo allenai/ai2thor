@@ -7,6 +7,9 @@ using System.Linq;
 using UnityEditor;
 using Newtonsoft.Json.Linq;
 using Thor.Procedural.Data;
+using Thor.Procedural;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -3674,6 +3677,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log($"Geo count: {geos.Count}");
                         var geo = geos.First();
                         Debug.Log($"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}");
+                        break;
+                    }
+
+                case "proc_mats": {
+                        var mats = ProceduralTools.GetMaterials();
+                        var matString = string.Join("\n", mats.Keys());
+                        Debug.Log(matString);
+
+                        //string destination = Application.persistentDataPath + "/save.dat";
+                        // FileStream f;
+
+                        StreamWriter f = new StreamWriter("mats.txt", append: false);
+
+                        f.WriteLine(matString);
+                        break;
+                    }
+                case "proc_prefabs": {
+                        var prefabs = ProceduralTools.GetPrefabs();
+                        var prefabsStr = string.Join("\n", prefabs.Keys());
+                        Debug.Log(prefabsStr);
+
+                        //string destination = Application.persistentDataPath + "/save.dat";
+                        // FileStream f;
+
+                        StreamWriter f = new StreamWriter("prefabs.txt", append: false);
+
+                        f.WriteLine(prefabsStr);
                         break;
                     }
             }

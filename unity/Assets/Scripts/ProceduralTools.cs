@@ -37,6 +37,11 @@ namespace Thor.Procedural {
         public int Count() {
             return assetMap.Count;
         }
+
+
+        public IEnumerable<string> Keys() {
+            return assetMap.Keys;
+        }
     }
 
     // TODO: Turn caller of procedural tools into an instance that has certain
@@ -72,7 +77,7 @@ namespace Thor.Procedural {
             var minPoint = new Vector3(oppositeCorners.Min(c => c.x), minY + yOffset, oppositeCorners.Min(c => c.z));
             var maxPoint = new Vector3(oppositeCorners.Max(c => c.x), minY + yOffset, oppositeCorners.Max(c => c.z));
 
-            return GetRectangleMesh(new BoundingBox() { min = minPoint, max = maxPoint });
+            return GetRectangleMesh(new BoundingBox() { min = minPoint, max = maxPoint }, generateBackFaces);
         }
 
         public static UnityEngine.Mesh GetRectangleMesh(BoundingBox box, bool generateBackFaces = false) {
@@ -98,15 +103,17 @@ namespace Thor.Procedural {
             };
 
             var uvs = new Vector2[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
-            var triangles = new List<int>() { 3, 2, 0, 2, 1, 0, 0, 1, 2, 0, 2, 3 };
+            var triangles = new List<int>() { 3, 2, 0, 2, 1, 0 };
             var normals = new Vector3[] { Vector3.up, Vector3.up, Vector3.up, Vector3.up };
 
             // TODO: this is not working for some reason, although it works with the walls
             if (generateBackFaces) {
+                triangles = triangles.Concat(triangles.AsEnumerable().Reverse()).ToList();
+
                 // vertices = vertices.Concat(vertices).ToArray();
                 // uvs = uvs.Concat(uvs).ToArray();
                 //triangles = triangles.Concat(triangles.AsEnumerable().Reverse()).ToArray();
-                triangles.AddRange(triangles.AsEnumerable().Reverse());
+                // triangles.AddRange(triangles.AsEnumerable().Reverse());
                 //normals = normals.Concat(normals).ToArray();
 
             }
@@ -118,10 +125,6 @@ namespace Thor.Procedural {
             return mesh;
         }
 
-        //  private static IEnumerable<Vector3> GenerateTriangleVisibilityPoints(IEnumerable<Vector3> vertices) {
-        //     return Gene
-        // }
-
         private static IEnumerable<Vector3> GenerateTriangleVisibilityPoints(
             Vector3 p0,
             Vector3 p1,
@@ -129,7 +132,7 @@ namespace Thor.Procedural {
             float interval = 1 / 3.0f
         ) {
             // Create Vector2 array from Vector3s, since y-axis is redundant
-            Vector2[] tPoints = new Vector2[] {new Vector2(p0.x, p0.z), new Vector2(p1.x, p1.z), new Vector2(p2.x, p2.z)};
+            Vector2[] tPoints = new Vector2[] { new Vector2(p0.x, p0.z), new Vector2(p1.x, p1.z), new Vector2(p2.x, p2.z) };
             Vector2 vPointLocalOrigin;
             List<Vector2> trianglevPoints2D = new List<Vector2>();
 
@@ -137,34 +140,30 @@ namespace Thor.Procedural {
             Vector2 widestAngledPoint = tPoints[0];
             float longestSideSquare = (tPoints[2] - tPoints[1]).sqrMagnitude;
             float largestAngle = Vector2.Angle(tPoints[0] - tPoints[2], tPoints[1] - tPoints[0]);
-            
+
             // Check tPoints[1]
-            if ( (tPoints[0] - tPoints[2]).sqrMagnitude >= longestSideSquare ) {
-                     widestAngledPoint = tPoints[1];
-                     largestAngle = Vector2.Angle(tPoints[1] - tPoints[0], tPoints[2] - tPoints[1]);
+            if ((tPoints[0] - tPoints[2]).sqrMagnitude >= longestSideSquare) {
+                widestAngledPoint = tPoints[1];
+                largestAngle = Vector2.Angle(tPoints[1] - tPoints[0], tPoints[2] - tPoints[1]);
             }
-            
+
             // Check tPoints[2]
-            if ( (tPoints[1] - tPoints[0]).sqrMagnitude >= longestSideSquare) {
-                     widestAngledPoint = tPoints[2];
-                     largestAngle = Vector2.Angle(tPoints[2] - tPoints[1], tPoints[0] - tPoints[2]);
+            if ((tPoints[1] - tPoints[0]).sqrMagnitude >= longestSideSquare) {
+                widestAngledPoint = tPoints[2];
+                largestAngle = Vector2.Angle(tPoints[2] - tPoints[1], tPoints[0] - tPoints[2]);
             }
 
             // Check if triangle is already right-angled, and if so, use it as the v-point origin
-            if ( Mathf.Approximately(largestAngle, 90) ) {
+            if (Mathf.Approximately(largestAngle, 90)) {
                 Vector2[] rightTriangle1 = new Vector2[3];
                 vPointLocalOrigin = widestAngledPoint;
 
-                if ( Vector2.Equals(widestAngledPoint, tPoints[0]) ) {
-                    rightTriangle1 = new Vector2[] {tPoints[2], tPoints[0], tPoints[1]};;
-                }
-                
-                else if ( Vector2.Equals(widestAngledPoint, tPoints[1]) ) {
-                    rightTriangle1 = new Vector2[] {tPoints[0], tPoints[1], tPoints[2]};
-                }
-                
-                else if ( Vector2.Equals(widestAngledPoint, tPoints[2]) ) {
-                    rightTriangle1 = new Vector2[] {tPoints[1], tPoints[2], tPoints[0]};
+                if (Vector2.Equals(widestAngledPoint, tPoints[0])) {
+                    rightTriangle1 = new Vector2[] { tPoints[2], tPoints[0], tPoints[1] }; ;
+                } else if (Vector2.Equals(widestAngledPoint, tPoints[1])) {
+                    rightTriangle1 = new Vector2[] { tPoints[0], tPoints[1], tPoints[2] };
+                } else if (Vector2.Equals(widestAngledPoint, tPoints[2])) {
+                    rightTriangle1 = new Vector2[] { tPoints[1], tPoints[2], tPoints[0] };
                 }
 
                 trianglevPoints2D = FindVPointsOnTriangle(rightTriangle1, false);
@@ -176,15 +175,11 @@ namespace Thor.Procedural {
                 // float t;
 
                 // Enters here!!!
-                if ( Vector2.Equals(widestAngledPoint, tPoints[0]) ) {
+                if (Vector2.Equals(widestAngledPoint, tPoints[0])) {
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[0], tPoints[1], tPoints[2]);
-                }
-
-                else if ( Vector2.Equals(widestAngledPoint, tPoints[1]) ) {
+                } else if (Vector2.Equals(widestAngledPoint, tPoints[1])) {
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[1], tPoints[2], tPoints[0]);
-                }
-
-                else if ( Vector2.Equals(widestAngledPoint, tPoints[2]) ) {
+                } else if (Vector2.Equals(widestAngledPoint, tPoints[2])) {
                     Debug.Log("Hi bitch!");
                     trianglevPoints2D = FindVPointLocalOrigin(tPoints[2], tPoints[0], tPoints[1]);
                 }
@@ -193,19 +188,19 @@ namespace Thor.Procedural {
             // Convert Vector2 vPoints to Vector3 vPoints
             List<Vector3> trianglevPoints = new List<Vector3>();
             foreach (Vector2 vPoint2D in trianglevPoints2D) {
-                trianglevPoints.Add( new Vector3(vPoint2D.x, p0.y, vPoint2D.y) );
+                trianglevPoints.Add(new Vector3(vPoint2D.x, p0.y, vPoint2D.y));
             }
 
             return trianglevPoints;
 
             List<Vector2> FindVPointLocalOrigin(Vector2 a, Vector2 b, Vector2 c) {
-                List<Vector2> rightTriangleVPoints  = new List<Vector2>();
-                float sideLength = (a - c).magnitude * Mathf.Sin( Mathf.Deg2Rad * ( 90 - Vector2.Angle(a - c, b - c) ) );
+                List<Vector2> rightTriangleVPoints = new List<Vector2>();
+                float sideLength = (a - c).magnitude * Mathf.Sin(Mathf.Deg2Rad * (90 - Vector2.Angle(a - c, b - c)));
                 vPointLocalOrigin = c + sideLength * (b - c).normalized;
-                Vector2[] rightTriangle1 = new Vector2[] {a, vPointLocalOrigin, c};
-                Vector2[] rightTriangle2 = new Vector2[] {b, vPointLocalOrigin, a};
+                Vector2[] rightTriangle1 = new Vector2[] { a, vPointLocalOrigin, c };
+                Vector2[] rightTriangle2 = new Vector2[] { b, vPointLocalOrigin, a };
                 rightTriangleVPoints = FindVPointsOnTriangle(rightTriangle1, false);
-                rightTriangleVPoints.AddRange( FindVPointsOnTriangle(rightTriangle2, true) );
+                rightTriangleVPoints.AddRange(FindVPointsOnTriangle(rightTriangle2, true));
                 return rightTriangleVPoints;
             }
 
@@ -223,11 +218,11 @@ namespace Thor.Procedural {
                 for (int i = startingX; i * interval < xMax; i++) {
                     for (int j = 0; j * interval < yMax; j++) {
                         currentPoint = rightTriangle[1] + i * xIncrement + j * yIncrement;
-                        if ( i == 0 || j == 0 || 360 - 1e-3 <=
-                             Vector2.Angle(rightTriangle[0] - currentPoint, rightTriangle[1] - currentPoint) + 
+                        if (i == 0 || j == 0 || 360 - 1e-3 <=
+                             Vector2.Angle(rightTriangle[0] - currentPoint, rightTriangle[1] - currentPoint) +
                              Vector2.Angle(rightTriangle[1] - currentPoint, rightTriangle[2] - currentPoint) +
-                             Vector2.Angle(rightTriangle[2] - currentPoint, rightTriangle[0] - currentPoint) ) {
-                                rightTriangleVPoints.Add(currentPoint);
+                             Vector2.Angle(rightTriangle[2] - currentPoint, rightTriangle[0] - currentPoint)) {
+                            rightTriangleVPoints.Add(currentPoint);
                         }
                     }
                 }
@@ -1025,6 +1020,7 @@ namespace Thor.Procedural {
             simObjPhysics.BoundingBox = boundingBox;
 
             simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
+            visibilityPoints.transform.parent = floorGameObject.transform;
 
             simObjPhysics.ReceptacleTriggerBoxes = receptacleTriggerBoxes ?? Array.Empty<GameObject>();
             simObjPhysics.MyColliders = colliders ?? Array.Empty<Collider>();
@@ -1271,7 +1267,7 @@ namespace Thor.Procedural {
                 // {
                 //     Debug.Log(mesh.vertices[mesh.triangles[j]] + ", " + mesh.vertices[mesh.triangles[j+1]] + ", " + mesh.vertices[mesh.triangles[j+2]]);
                 // }
-                
+
                 // floorVisPoints is equal to, for the range of numbers equal to triangle-count...
                 var floorVisibilityPoints = Enumerable.Range(0, mesh.triangles.Length / 3)
                 // Ex: "For triangle "0", skip "0" * 3 indices in "mesh.triangle" array to get the correct 3 elements, and use those to select the respective indices from the mesh
@@ -1333,7 +1329,7 @@ namespace Thor.Procedural {
             // generate ceiling
             if (ceilingMaterialId != "") {
                 var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
-                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, true);
+                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceiling_back_faces);
 
                 StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
                 so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;

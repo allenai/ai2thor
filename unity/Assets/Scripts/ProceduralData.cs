@@ -87,6 +87,7 @@ namespace Thor.Procedural.Data {
 
         public string ceiling_material { get; set; }
         public float navmesh_voxel_size { get; set; }
+        public bool ceiling_back_faces { get; set; }
     }
 
     [Serializable]
