@@ -159,7 +159,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
 
-    private void regenerateBoundingBoxes() {
+    private void syncBoundingBoxes(bool forceCacheReset = false) {
 
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
@@ -167,13 +167,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
-        if (this.boundingBoxCacheKey != null &&
-            (!this.IsOpenable || (this.IsOpen == this.boundingBoxCacheKey.IsOpen &&
-            Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f)) &&
-            (!this.IsSliceable || this.IsSliced == this.boundingBoxCacheKey.IsSliced) &&
-            (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken) &&
-            Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f &&
-            Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f) {
+        if (
+            (!forceCacheReset)
+            && this.boundingBoxCacheKey != null
+            && (
+                !this.IsOpenable || (
+                    this.IsOpen == this.boundingBoxCacheKey.IsOpen
+                    && Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f
+                )
+               )
+            && (!this.IsSliceable || this.IsSliced == this.boundingBoxCacheKey.IsSliced)
+            && (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken)
+            && Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f
+            && Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f
+        ) {
             return;
         }
         this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
@@ -374,14 +381,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
         get {
-            this.regenerateBoundingBoxes();
+            this.syncBoundingBoxes();
             return this.cachedAxisAlignedBoundingBox;
         }
     }
 
     public ObjectOrientedBoundingBox ObjectOrientedBoundingBox {
         get {
-            this.regenerateBoundingBoxes();
+            this.syncBoundingBoxes();
             return this.cachedObjectOrientedBoundingBox;
         }
     }
@@ -2031,7 +2038,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 #endif
 
     //[ContextMenu("Set Up Bounding Box")]
-    public void ContextSetUpBoundingBox() {
+    public void ContextSetUpBoundingBox(bool forceCacheReset = false) {
         Vector3[] transformSaver = new Vector3[] { transform.position, transform.eulerAngles };
 
         transform.position = Vector3.zero;
@@ -2156,6 +2163,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         transform.position = transformSaver[0];
         transform.eulerAngles = transformSaver[1];
+
+        if (forceCacheReset) {
+            this.syncBoundingBoxes(forceCacheReset: true);
+        }
     }
 
 

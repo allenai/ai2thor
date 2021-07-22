@@ -3194,7 +3194,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             autoSyncTransforms();
 
-            target.ContextSetUpBoundingBox();
+            target.ContextSetUpBoundingBox(forceCacheReset: true);
+
             if (!skipActionFinished) {
                 actionFinished(true);
             }
