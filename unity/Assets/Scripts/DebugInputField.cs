@@ -3177,6 +3177,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "closepoints": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PointOnObjectsCollidersClosestToPoint";
+                        action["objectId"] = "Dumbbell|+00.00|+00.90|+00.00";
+                        action["point"] = new Vector3(0f, 1000f, 0f);
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 case "mc": {
                         ServerAction action = new ServerAction();
                         action.action = "MoveContinuous";
