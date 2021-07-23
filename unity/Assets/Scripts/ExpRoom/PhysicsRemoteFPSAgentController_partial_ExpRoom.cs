@@ -361,7 +361,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             List<Vector3> closePoints = new List<Vector3>();
             foreach (Collider c in target.GetComponentsInChildren<Collider>()) {
-                closePoints.Add(c.ClosestPoint(point));
+                if (c.enabled && !c.isTrigger) {
+                    closePoints.Add(c.ClosestPoint(point));
+                }
             }
             closePoints.OrderBy(x => Vector3.Distance(point, x));
 #if UNITY_EDITOR
@@ -369,7 +371,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log($"{p} has dist {Vector3.Distance(p, point)}");
             }
 #endif
-            actionFinished(true, closePoints);
+            actionFinishedEmit(true, closePoints);
         }
 
         // action to return points from a grid that have an experiment receptacle below it
