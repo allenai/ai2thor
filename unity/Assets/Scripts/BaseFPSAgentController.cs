@@ -1623,10 +1623,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // can this object change others to hot?
-            objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
+            objMeta.isHeatSource = simObj.isHeatSource;
 
             // can this object change others to cold?
-            objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
+            objMeta.isColdSource = simObj.isColdSource;
 
             // placeholder for heatable objects -kettle, pot, pan
             // objMeta.abletocook = simObj.abletocook;

@@ -108,8 +108,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
-    public bool canChangeTempToHot;
-    public bool canChangeTempToCold;
+    public bool isHeatSource;
+    public bool isColdSource;
     private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
@@ -828,8 +828,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         this.IsDirtyable = this.GetComponent<Dirty>();
         this.IsCookable = this.GetComponent<CookObject>();
         this.IsSliceable = this.GetComponent<SliceObject>();
-        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
+        this.isHeatSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isHeatSource);
+        this.isColdSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isColdSource);
 
     }
 
