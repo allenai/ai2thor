@@ -349,6 +349,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void PointOnObjectsCollidersClosestToPoint(
+            string objectId, Vector3 point
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            List<Vector3> closePoints = new List<Vector3>();
+            foreach (Collider c in target.GetComponentsInChildren<Collider>()) {
+                closePoints.Add(c.ClosestPoint(point));
+            }
+            closePoints.OrderBy(x => Vector3.Distance(point, x));
+#if UNITY_EDITOR
+            foreach (Vector3 p in closePoints) {
+                Debug.Log($"{p} has dist {Vector3.Distance(p, point)}");
+            }
+#endif
+            actionFinished(true, closePoints);
+        }
 
         // action to return points from a grid that have an experiment receptacle below it
         // creates a grid starting from the agent's current hand position and projects that grid
