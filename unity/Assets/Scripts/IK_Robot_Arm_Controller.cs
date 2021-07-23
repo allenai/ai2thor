@@ -29,7 +29,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public Dictionary<SimObjPhysics, List<Collider>> heldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
+    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects = new Dictionary<SimObjPhysics, HashSet<Collider>>();
 
     // private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -643,7 +643,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // ok new plan, clone the "myColliders" of the sop and
             // then set them all to isTrigger = True
             // and parent them to the correct joint
-            List<Collider> cols = new List<Collider>();
+            HashSet<Collider> cols = new HashSet<Collider>();
 
             foreach (Collider c in sop.MyColliders) {
                 // One set of colliders are used to check collisions
@@ -708,7 +708,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public void DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
+        foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
@@ -847,8 +847,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         // there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> heldObjectIDs = new List<string>();
         if (heldObjects != null) {
-            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
-                heldObjectIDs.Add(sop.Key.objectID);
+            foreach (SimObjPhysics sop in heldObjects.Keys) {
+                heldObjectIDs.Add(sop.objectID);
             }
         }
 

@@ -374,6 +374,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, closePoints);
         }
 
+        public void ObjectsVisibleFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {
+            if (!maxDistance.HasValue) {
+              maxDistance = maxVisibleDistance;
+            }
+            actionFinishedEmit(true,
+              GetAllVisibleSimObjPhysicsDistance(
+                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null
+              ).Select(sop => sop.ObjectID).ToList()
+            );
+        }
+
         // action to return points from a grid that have an experiment receptacle below it
         // creates a grid starting from the agent's current hand position and projects that grid
         // forward relative to the agent
