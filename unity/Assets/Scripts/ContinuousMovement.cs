@@ -226,7 +226,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             T directionToTarget = getDirection(target, currentProperty);
 
-            while (currentDistance > epsilon && !collisionListener.ShouldHalt()) {
+            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
+            while (!collisionListener.ShouldHalt()) {
                 previousProperty = getProp(moveTransform);
 
                 T next = nextProp(moveTransform, directionToTarget);
@@ -236,8 +237,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if nextDistance is too large then it will overshoot, in this case we snap to the target
                 // this can happen if the speed it set high
                 if (
-                    nextDistance <= epsilon ||
-                    nextDistance > distanceMetric(target, getProp(moveTransform))
+                    nextDistance <= epsilon
+                    || nextDistance > distanceMetric(target, getProp(moveTransform))
                 ) {
                     setProp(moveTransform, target);
                 } else {
@@ -258,6 +259,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return new WaitForFixedUpdate();
 
                 currentDistance = distanceMetric(target, getProp(moveTransform));
+
+                if (currentDistance <= epsilon) {
+                    // This logic is a bit unintuitive but it ensures we run the
+                    // `setProp(moveTransform, target);` line above once we get within epsilon
+                    if (haveGottenWithinEpsilon) {
+                        break;
+                    } else {
+                        haveGottenWithinEpsilon = true;
+                    }
+                }
             }
 
             T resetProp = previousProperty;
