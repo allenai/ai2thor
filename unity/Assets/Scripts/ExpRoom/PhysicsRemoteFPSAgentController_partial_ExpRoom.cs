@@ -365,13 +365,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     closePoints.Add(c.ClosestPoint(point));
                 }
             }
-            closePoints.OrderBy(x => Vector3.Distance(point, x));
+            closePoints = closePoints.OrderBy(x => Vector3.Distance(point, x)).ToList();
 #if UNITY_EDITOR
             foreach (Vector3 p in closePoints) {
                 Debug.Log($"{p} has dist {Vector3.Distance(p, point)}");
             }
 #endif
             actionFinishedEmit(true, closePoints);
+        }
+
+        public void PointOnObjectsMeshClosestToPoint(
+            string objectId, Vector3 point
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            List<Vector3> points = new List<Vector3>();
+            foreach (MeshFilter mf in target.GetComponentsInChildren<MeshFilter>()) {
+                foreach (Vector3 v in mf.mesh.vertices) {
+                    points.Add(mf.transform.TransformPoint(v));
+                }
+            }
+            points = points.OrderBy(x => Vector3.Distance(point, x)).ToList();
+
+#if UNITY_EDITOR
+            foreach (Vector3 p in points) {
+                Debug.Log($"{p} has dist {Vector3.Distance(p, point)}");
+            }
+#endif
+            actionFinishedEmit(true, points);
         }
 
         public void ObjectsVisibleFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {

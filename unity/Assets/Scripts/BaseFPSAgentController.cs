@@ -1479,7 +1479,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new NullReferenceException("null SimObjPhysics passed to IsInteractable");
             }
 
-            return GetAllVisibleSimObjPhysics(agentCamera: this.m_Camera, maxDistance: this.maxVisibleDistance, filterSimObjs: new List<SimObjPhysics> { sop }).Length == 1;
+            return GetAllVisibleSimObjPhysics(camera: this.m_Camera, maxDistance: this.maxVisibleDistance, filterSimObjs: new List<SimObjPhysics> { sop }).Length == 1;
         }
 
         public virtual SimpleSimObj[] allSceneObjects() {
@@ -2786,15 +2786,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
-            Camera agentCamera,
+            Camera camera,
             float maxDistance,
             IEnumerable<SimObjPhysics> filterSimObjs = null
         ) {
 
             if (this.visibilityScheme == VisibilityScheme.Collider) {
-                return GetAllVisibleSimObjPhysicsCollider(agentCamera, maxDistance, filterSimObjs);
+                return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs);
             } else {
-                return GetAllVisibleSimObjPhysicsDistance(agentCamera, maxDistance, filterSimObjs);
+                return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs);
             }
         }
 
@@ -2820,7 +2820,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visible.ToArray();
         }
 
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs) {
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
 #if UNITY_EDITOR
@@ -2838,7 +2838,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            Vector3 agentCameraPos = agentCamera.transform.position;
+            Vector3 agentCameraPos = camera.transform.position;
 
             // get all sim objects in range around us that have colliders in layer 8 (visible), ignoring objects in the SimObjInvisible layer
             // this will make it so the receptacle trigger boxes don't occlude the objects within them.
@@ -2911,7 +2911,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             foreach (Transform point in visPoints) {
                                 // if this particular point is in view...
                                 if (CheckIfVisibilityPointInViewport(
-                                    sop, point, agentCamera, includeInvisible
+                                    sop, point, camera, includeInvisible
                                 )) {
                                     visPointCount++;
 #if !UNITY_EDITOR
