@@ -571,6 +571,11 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
+                    if(receptacleSop.ContainedGameObjects().Count > 0) {
+                        //this object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
+                        continue;
+                    }
+
                     // check if the target Receptacle is an ObjectSpecificReceptacle
                     // if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
                     // this is specifically for things like spawning a mug inside a coffee maker
