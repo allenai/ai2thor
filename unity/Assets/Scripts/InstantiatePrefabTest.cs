@@ -177,10 +177,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
         // try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps) {
-            if(sop.Type == SimObjType.Plate)
-            {
-                print($"trying to place {sop.name} in {p.ParentSimObjPhys}");
-            }
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 return true;
             }
@@ -275,40 +271,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
         // get the bounding box of the sim object we are trying to place
         BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
 
-        Vector3 oabb_original_center = new Vector3();
-        Vector3 oabb_original_size = new Vector3();
-
-        //store current bounds dimensions: center, size
-        oabb_original_center = oabb.center;
-        oabb_original_size = oabb.size;
-
-        if (sop.IsReceptacle) {
-            //make sure to enable BoundingBox boxcollider component otherwise BOUNDS IS ZERO
-            oabb.enabled = true;
-            Bounds b = oabb.bounds;
-
-            if(sop.Type == SimObjType.Plate)
-            {
-                print($"number of contained objs by {sop.name} is {sop.ContainedGameObjects().Count}");
-            }
-
-            foreach (GameObject c in sop.ContainedGameObjects()) {
-
-                //grow the oabb to encapuslate any contained object colliders so check spawn area can account for more space occupied
-                BoxCollider cBB = c.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
-                cBB.enabled = true;
-                b.Encapsulate(cBB.bounds);
-                cBB.enabled = false;
-            }
-
-            oabb.center = b.center;
-            oabb.size = b.size;
-
-            //reset this to disabled, will enable later in once rotations start to be checked
-            oabb.enabled = false;
-
-        }
-
         // zero out rotation and velocity/angular velocity, then match the target receptacle's rotation
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         Rigidbody sopRB = sop.GetComponent<Rigidbody>();
@@ -398,24 +360,9 @@ public class InstantiatePrefabTest : MonoBehaviour {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false)) {
                 
-                if(sop.Type == SimObjType.Plate)
-                {
-                    print($"placing {sop.name} at rsp point {rsp.Point}");
-                    print($"whta the hell is being added to rsp.Point: {rsp.ReceptacleBox.transform.up * (quat.distance + yoffset)}");
-                    print($"i'm sorry what is the quat.distancE?: {quat.distance}");
-                }
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
-
-                if(sop.Type == SimObjType.Plate)
-                {
-                    print($"{sop.name} position set to {sop.transform.position}");
-                }
-
-                //also reset the object's BoundingBox values at this point
-                oabb.center = oabb_original_center;
-                oabb.size = oabb_original_size;
 
                 // now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 // bits of it hanging out
@@ -524,17 +471,11 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 }
                 sop.isInAgentHand = false;// set agent hand flag
 
-                // #if UNITY_EDITOR
-                // Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                // #endif
-
                 return true;
             }
         }
 
-        // reset rotation, position, and bounding box original center and size if not able to be placed
-        oabb.center = oabb_original_center;
-        oabb.size = oabb_original_size;
+        // reset rotation, and position if not able to be placed
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;
         return false;
