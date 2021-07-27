@@ -75,9 +75,10 @@ public class Break : MonoBehaviour {
                 foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
                     go.transform.SetParent(objs.transform);
                     Rigidbody childrb = go.GetComponent<Rigidbody>();
-                    rb.useGravity = true;
-                    rb.constraints = RigidbodyConstraints.None;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    childrb.isKinematic = false;
+                    childrb.useGravity = true;
+                    childrb.constraints = RigidbodyConstraints.None;
+                    childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
             }
 
