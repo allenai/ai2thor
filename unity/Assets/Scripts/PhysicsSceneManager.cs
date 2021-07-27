@@ -173,6 +173,16 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
+    public void MakeBreakableAndSleep() {
+        foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+            if(sop.IsBreakable) {
+                sop.GetComponent<Rigidbody>().Sleep();
+                sop.GetComponentInChildren<Break>().Unbreakable = false;
+            }
+
+        }
+    }
+
     public void MakeAllObjectsMoveable() {
         foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
             // check if the sopType is something that can be hung
@@ -560,6 +570,10 @@ public class PhysicsSceneManager : MonoBehaviour {
 
                 if (staticPlacement) {
                     sopToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
+                }
+
+                if(sopToPlaceInReceptacle.IsBreakable) {
+                    sopToPlaceInReceptacle.GetComponent<Break>().Unbreakable = true;
                 }
 
                 if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
