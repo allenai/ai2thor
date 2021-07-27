@@ -3970,6 +3970,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void MakeAllObjectsUnbreakable() {
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            foreach (SimObjPhysics sop in simObjs) {
+                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                    sop.GetComponent<Break>().Unbreakable = true;
+                }
+            }
+            actionFinished(true);
+        }
+
         public void SetObjectPoses(ServerAction action) {
             // make sure objectPoses and also the Object Pose elements inside are initialized correctly
             if (action.objectPoses == null || action.objectPoses[0] == null) {

@@ -3147,7 +3147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
-            physicsSceneManager.MakeBreakableAndSleep();
+            //physicsSceneManager.MakeBreakableAndSleep();
             actionFinished(success);
         }
 
