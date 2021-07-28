@@ -17,6 +17,17 @@ namespace RandomExtensions {
             var u2 = r.NextDouble();
             var rand_std_normal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
             var rand_normal = mu + sigma * rand_std_normal;
+
+            // Very rarely, it is possible to have underflow or an infinity if u1/u1 = 0.
+            // In such a case, just return the mean.
+            if (
+                Double.IsNaN(rand_normal)
+                || Double.IsInfinity(rand_normal)
+                || Double.IsNegativeInfinity(rand_normal)
+            ) {
+                return mu;
+            }
+
             return rand_normal;
         }
     }
