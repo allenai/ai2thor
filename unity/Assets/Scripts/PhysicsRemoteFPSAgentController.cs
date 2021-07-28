@@ -3960,32 +3960,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            foreach (SimObjPhysics sop in simObjs) {
-                if (sop.Type.ToString() == objectType) {
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                        //look both in this object and children so things like Windows don't FREAK OUT
-                        sop.GetComponentInChildren<Break>().Unbreakable = true;
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.Type.ToString() == objectType) {
+                        if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                            //look both in this object and children so things like Windows don't FREAK OUT
+                            sop.GetComponentInChildren<Break>().Unbreakable = true;
+                        }
                     }
                 }
             }
+
             actionFinished(true);
         }
 
         public void MakeAllObjectsUnbreakable() {
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            foreach (SimObjPhysics sop in simObjs) {
-                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                    sop.GetComponentInChildren<Break>().Unbreakable = true;
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                        sop.GetComponentInChildren<Break>().Unbreakable = true;
+                    }
                 }
             }
+
             actionFinished(true);
         }
 
         public void MakeAllObjectsBreakable() {
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            foreach (SimObjPhysics sop in simObjs) {
-                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                    sop.GetComponentInChildren<Break>().Unbreakable = false;
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                        sop.GetComponentInChildren<Break>().Unbreakable = false;
+                    }
                 }
             }
             actionFinished(true);
