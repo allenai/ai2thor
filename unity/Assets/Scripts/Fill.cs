@@ -87,7 +87,7 @@ public class Fill : MonoBehaviour {
         if (whichLiquid == "coffee") {
             // coffee is hot!
             SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-            sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
+            sop.CurrentTemperature = Temperature.Hot;
             if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue()) {
                 sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
             }
