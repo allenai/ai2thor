@@ -459,8 +459,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Material> materials = new List<Material>();
             foreach (MeshRenderer mr in target.GetComponentsInChildren<MeshRenderer>()) {
                 List<Material> newMRMaterials = new List<Material>();
+                bool anyOpaque = false;
                 foreach (Material mat in mr.materials) {
                     if (mat.GetTag("RenderType", false) == "Opaque") {
+                        anyOpaque = true;
+                        break;
+                    }
+                }
+                foreach (Material mat in mr.materials) {
+                    if (!anyOpaque || mat.GetTag("RenderType", false) == "Opaque") {
                         newMRMaterials.Add(mat);
                         Vector4 col = mat.GetVector("_Color");
                         Vector4 emission = mat.GetVector("_EmissionColor");
@@ -508,9 +515,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             this.autoSyncTransforms();
-            // SimObjPhysics target = GameObject.Find("Pot_Container_5051783a").GetComponent<SimObjPhysics>();
+            // SimObjPhysics target = GameObject.Find("Bowl_Container_3f13e8d6").GetComponent<SimObjPhysics>();
             // SimObjPhysics toRemove = GameObject.Find("Bread_0c3f2827").GetComponent<SimObjPhysics>();
             // toRemove.syncBoundingBoxes(true);
+            // float[][] boxCorners = toRemove.AxisAlignedBoundingBox.cornerPoints;
 #endif
 
             GameObject planeGo = addClippingPlaneToObjectToExcludeBox(target, boxCorners);
