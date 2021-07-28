@@ -82,6 +82,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public AgentState agentState = AgentState.Emit;
 
+        // Use this instead of constructing a new System.Random() so that its
+        // seed can be globally set. Starts off completely random.
+        protected static System.Random systemRandom = new System.Random();
+
         public bool clearRandomizeMaterialsOnReset = false;
 
         // these object types can have a placeable surface mesh associated ith it
@@ -3057,6 +3061,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // set random seed used by unity
         public void SetRandomSeed(int seed) {
             UnityEngine.Random.InitState(seed);
+            systemRandom = new System.Random(seed);
             actionFinishedEmit(true);
         }
 
