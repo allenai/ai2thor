@@ -1714,6 +1714,16 @@ def test_unsupported_manipulathor(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_set_random_seed(controller):
+    orig_frame = controller.reset().frame
+    controller.step(action="SetRandomSeed", seed=41)
+    s41_frame = controller.step(action="RandomizeMaterials").frame
+    controller.step(action="SetRandomSeed", seed=42)
+    s42_frame = controller.step(action="RandomizeMaterials").frame
+
+    assert_images_far(s42_frame, s41_frame)
+    assert_images_far(s42_frame, orig_frame)
+    assert_images_far(s41_frame, orig_frame)
+
     f1_1 = controller.reset().frame
     f1_2 = controller.step(action="SetRandomSeed", seed=42).frame
     f1_3 = controller.step(action="RandomizeMaterials").frame
