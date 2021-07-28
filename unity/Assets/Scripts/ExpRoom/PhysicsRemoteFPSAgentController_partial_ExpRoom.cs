@@ -402,7 +402,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectsVisibleFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {
             if (!maxDistance.HasValue) {
-              maxDistance = maxVisibleDistance;
+                maxDistance = maxVisibleDistance;
             }
             actionFinishedEmit(true,
               GetAllVisibleSimObjPhysicsDistance(
@@ -510,7 +510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // toRemove.syncBoundingBoxes(true);
 #endif
 
-            addClippingPlaneToObjectToExcludeBox(target, toRemove.AxisAlignedBoundingBox.cornerPoints);
+            addClippingPlaneToObjectToExcludeBox(target, boxCorners);
             actionFinished(true);
         }
 
