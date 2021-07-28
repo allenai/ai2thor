@@ -99,6 +99,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallRight;
     private GameObject wallFront;
     private GameObject wallBack;
+    private bool adjustedStructuralObjects = false;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -245,7 +246,10 @@ public class MCSMain : MonoBehaviour {
 
         this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
                 this.currentScene.isometric);
-        this.AdjustRoomStructuralObjects();
+        if (!adjustedStructuralObjects) {
+            this.AdjustRoomStructuralObjects();
+            adjustedStructuralObjects = true;
+        }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
             Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
@@ -484,6 +488,65 @@ public class MCSMain : MonoBehaviour {
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
         }
+
+        if(currentScene.holes.Count > 0)
+        {
+            //hole config
+            int gridExpansionBuffer = 2; //this is so the floor goes slightly outside the wall boundries ensuring a hole near a wall does not show the skybox
+            int expandedFloorX = Mathf.RoundToInt(currentScene.roomDimensions.x) + gridExpansionBuffer;
+            int expandedFloorZ = Mathf.RoundToInt(currentScene.roomDimensions.z) + gridExpansionBuffer;
+            int startingFloorSectionX = Mathf.RoundToInt(-expandedFloorX) / 2;
+            int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
+            int posX = startingFloorSectionX;
+            int posZ = startingFloorSectionZ;
+            int posY = -3; //lowers the transform y
+            int floorDepth = 6; //expands the y scale creating floor height
+            int floorDimensions = 1;
+            int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
+                * (expandedFloorZ + (Mathf.RoundToInt(currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
+
+            //prepare floor for cloning
+            Vector3 originalScale = this.floor.transform.localScale;
+            this.floor.isStatic = false;
+            this.floor.transform.localScale = new Vector3(floorDimensions, floorDepth, floorDimensions);
+
+            GameObject floors = new GameObject();
+            floors.name = "Floors";
+            floors.transform.position = Vector3.zero;
+            floors.transform.parent = GameObject.Find("Structure").transform;
+
+            for(int i = 0; i<numOfFloorSections; i++) {
+                bool holeDrop = false;
+                foreach(MCSHolesConfig hole in currentScene.holes) {
+                    if(posX == hole.x && posZ == hole.z) {
+                        holeDrop = true;
+                        break;
+                    }
+                    else 
+                        holeDrop = false;
+                }
+                //clone the floor
+                GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
+                floorSection.name = "floor" + i;
+                floorSection.transform.parent = floors.transform;
+                floorSection.isStatic = true;
+                SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
+                simObj.objectID = "floor" + i;
+
+                posX+=floorDimensions;
+                if(posX > -startingFloorSectionX) {
+                    posX = startingFloorSectionX;
+                    posZ+=floorDimensions;
+                }
+            }
+            //reset floor that was used to clone the grid
+            this.floor.transform.localScale = originalScale;
+            this.floor.transform.position = new Vector3(0, -floorDepth, 0);
+            this.floor.isStatic = true;
+            
+        }
+        //end hole config
+        
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
@@ -1804,6 +1867,13 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
+    public List<MCSHolesConfig> holes;
+}
+
+[Serializable]
+public class MCSHolesConfig {
+    public int x;
+    public int z;
 }
 
 [Serializable]

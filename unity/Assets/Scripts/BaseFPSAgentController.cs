@@ -312,10 +312,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
 		{
+            /*
 			if (!this.IsProcessing)
 			{
 				Debug.LogError ("ActionFinished called with agentState not in processing ");
-			}
+			}*/
 
             lastActionSuccess = success;
 			this.agentState = newState;
