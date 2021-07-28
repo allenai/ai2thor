@@ -489,7 +489,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             GameObject planeGo = addClippingPlaneToObject(target);
-            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
             actionFinished(true, toReturn);
@@ -514,7 +514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
             GameObject planeGo = addClippingPlaneToObjectToExcludeBox(target, boxCorners);
-            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
             actionFinished(true, toReturn);
@@ -536,8 +536,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject planeGo = clipPlane.gameObject;
-            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
-            toReturn["enabled"] = enabled.Value;
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            toReturn["enabled"] = clipPlane.shouldClip;
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
             actionFinishedEmit(true, toReturn);
@@ -571,7 +571,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject planeGo = clipPlane.gameObject;
-            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
             toReturn["enabled"] = enabled.Value;
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
