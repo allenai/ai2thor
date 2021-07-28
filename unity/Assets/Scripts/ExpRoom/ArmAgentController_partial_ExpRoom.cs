@@ -19,7 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void AttachObjectToArmWithFixedJoint(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];

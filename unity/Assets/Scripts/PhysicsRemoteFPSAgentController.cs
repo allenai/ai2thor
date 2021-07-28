@@ -856,7 +856,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -1074,7 +1074,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetUnreachableSilhouetteForObject(string objectId, float z) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             if (z <= 0.0f) {
@@ -1321,7 +1321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void CollidersObjectCollidingWith(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             List<string> collidingWithNames = new List<string>();
@@ -3212,7 +3212,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -3366,7 +3366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -7034,7 +7034,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ApproxPercentScreenObjectOccupies(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];

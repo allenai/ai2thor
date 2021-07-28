@@ -238,7 +238,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SetCollisionDetectionModeToContinuousSpeculative(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -305,7 +305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ToggleObjectIsKinematic(string objectId, bool? isKinematic = null) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -326,7 +326,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -354,7 +354,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -379,7 +379,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -416,7 +416,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -482,14 +482,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void AddClippingPlaneToObject(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            addClippingPlaneToObject(target);
-            actionFinished(true);
+            GameObject planeGo = addClippingPlaneToObject(target);
+            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            toReturn["position"] = planeGo.transform.position;
+            toReturn["normal"] = planeGo.transform.up;
+            actionFinished(true, toReturn);
         }
 
         public void AddClippingPlaneToObjectToExcludeBox(
@@ -497,7 +500,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -510,8 +513,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // toRemove.syncBoundingBoxes(true);
 #endif
 
-            addClippingPlaneToObjectToExcludeBox(target, boxCorners);
-            actionFinished(true);
+            GameObject planeGo = addClippingPlaneToObjectToExcludeBox(target, boxCorners);
+            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            toReturn["position"] = planeGo.transform.position;
+            toReturn["normal"] = planeGo.transform.up;
+            actionFinished(true, toReturn);
+        }
+
+        public void GetClippingPlane(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Ronja.ClippingPlane clipPlane = target.GetComponentInChildren<Ronja.ClippingPlane>();
+            if (clipPlane == null) {
+                errorMessage = $"Object with id {objectId} does not have a clipping plane associated with it.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            GameObject planeGo = clipPlane.gameObject;
+            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            toReturn["enabled"] = enabled.Value;
+            toReturn["position"] = planeGo.transform.position;
+            toReturn["normal"] = planeGo.transform.up;
+            actionFinishedEmit(true, toReturn);
         }
 
         public void ToggleClippingPlane(
@@ -519,7 +548,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -535,8 +564,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 enabled = !clipPlane.shouldClip;
             }
 
-            clipPlane.shouldClip = enabled.Value;
-            actionFinished(true);
+            bool changed = false;
+            if (enabled.Value != clipPlane.shouldClip) {
+                changed = true;
+                clipPlane.shouldClip = enabled.Value;
+            }
+
+            GameObject planeGo = clipPlane.gameObject;
+            Dictionary<string, Vector3> toReturn = Dictionary<string, Vector3>();
+            toReturn["enabled"] = enabled.Value;
+            toReturn["position"] = planeGo.transform.position;
+            toReturn["normal"] = planeGo.transform.up;
+            if (changed) {
+                actionFinished(true, toReturn);
+            } else {
+                actionFinishedEmit(true, toReturn);
+            }
         }
 
         protected List<Vector3> cornersOfBounds(Bounds b) {
