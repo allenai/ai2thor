@@ -59,14 +59,14 @@ New metadata values have been added to represent new state changes:
 - **canFillWithLiquid**
 - **isFilledWithLiquid**
 - **dirtyable**
-- \*\*temperature
+- **isDirty**
 - **cookable**
 - **isCooked**
 - **sliceable**
 - **isSliced**
 - **canBeUsedUp**
 - **isUsedUp**
-- **objectTemperature**
+- **temperature**
 - **isHeatSource**
 - **isColdSource**
 - **salientMaterials**
