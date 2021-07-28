@@ -159,7 +159,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
 
-    private void syncBoundingBoxes(bool forceCacheReset = false) {
+    public void syncBoundingBoxes(bool forceCacheReset = false) {
 
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
