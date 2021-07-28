@@ -1387,7 +1387,7 @@ public class ObjectMetadata {
                          //
                          // temperature placeholder values, might get more specific later with degrees but for now just track these three states
     public enum Temperature { RoomTemp, Hot, Cold };
-    public string ObjectTemperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
+    public string temperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
                                     //
     public bool isHeatSource;// can change other object temp to hot
     public bool isColdSource;// can change other object temp to cool
