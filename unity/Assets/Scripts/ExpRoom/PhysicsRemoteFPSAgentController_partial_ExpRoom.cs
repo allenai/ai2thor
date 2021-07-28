@@ -635,18 +635,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (MeshFilter mf in target.GetComponentsInChildren<MeshFilter>()) {
                 Mesh m = mf.mesh;
 
-                Bounds localBoundsToExclude = new Bounds(inf, -inf);
-                foreach (Vector3 c in cornersOfBounds(boundsOfInputBox)) {
-                    localBoundsToExclude.Encapsulate(mf.transform.InverseTransformPoint(c));
-                }
-                Bounds localMeshVertsToExclude = new Bounds(inf, -inf);
                 for (int i = 0; i < m.vertices.Length; i++) {
-                    if (localBoundsToExclude.Contains(m.vertices[i])) {
-                        localMeshVertsToExclude.Encapsulate(m.vertices[i]);
+                    Vector3 v = mf.transform.TransformPoint(m.vertices[i]);
+                    if (boundsOfInputBox.Contains(v)) {
+                        boundsOfVerticesToExclude.Encapsulate(v);
                     }
-                }
-                foreach (Vector3 c in cornersOfBounds(localMeshVertsToExclude)) {
-                    boundsOfVerticesToExclude.Encapsulate(mf.transform.TransformPoint(c));
                 }
             }
 
