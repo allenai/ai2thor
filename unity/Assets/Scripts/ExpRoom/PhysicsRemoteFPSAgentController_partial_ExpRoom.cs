@@ -486,7 +486,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return clipPlaneGo;
         }
 
-        public void AddClippingPlaneToObject(string objectId) {
+        public void AddClippingPlaneToObject(
+            string objectId,
+            Vector3? position = null,
+            Vector3? normal = null
+        ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -496,7 +500,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             GameObject planeGo = addClippingPlaneToObject(target);
+
+            if (position.HasValue) {
+                planeGo.transform.position = position.Value;
+            }
+
+            if (normal.HasValue) {
+                planeGo.transform.up = Vector3.Normalize(normal.Value);
+            }
+
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            toReturn["enabled"] = planeGo.GetComponentInChildren<Ronja.ClippingPlane>().shouldClip;
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
             actionFinished(true, toReturn);
@@ -523,9 +537,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject planeGo = addClippingPlaneToObjectToExcludeBox(target, boxCorners);
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            toReturn["enabled"] = planeGo.GetComponentInChildren<Ronja.ClippingPlane>().shouldClip;
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
-            actionFinished(true, toReturn);
+            if (!(bool)toReturn["enabled"]) {
+                errorMessage = (
+                    "Clipping plane was placed on object but is disabled as the"+
+                    " input bounding box contained no points on the object's mesh."
+                );
+                actionFinished(false, toReturn);
+            } else {
+                actionFinished(true, toReturn);
+            }
         }
 
         public void GetClippingPlane(string objectId) {
@@ -632,6 +655,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Bounds boundsOfVerticesToExclude = new Bounds(inf, -inf);
+            bool anythingEncapsulated = false;
             foreach (MeshFilter mf in target.GetComponentsInChildren<MeshFilter>()) {
                 Mesh m = mf.mesh;
 
@@ -641,6 +665,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         boundsOfVerticesToExclude.Encapsulate(v);
                     }
                 }
+            }
+
+            if (anythingEncapsulated) {
+                clipPlaneGo.GetComponent<Ronja.ClippingPlane>().shouldClip = false;
+                return clipPlaneGo;
+            } else {
+                clipPlaneGo.GetComponent<Ronja.ClippingPlane>().shouldClip = true;
             }
 
             Vector3 startPos = target.transform.position;
