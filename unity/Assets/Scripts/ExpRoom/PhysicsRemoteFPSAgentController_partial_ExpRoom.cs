@@ -662,12 +662,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 for (int i = 0; i < m.vertices.Length; i++) {
                     Vector3 v = mf.transform.TransformPoint(m.vertices[i]);
                     if (boundsOfInputBox.Contains(v)) {
+                        anythingEncapsulated = true;
                         boundsOfVerticesToExclude.Encapsulate(v);
                     }
                 }
             }
 
-            if (anythingEncapsulated) {
+            if (!anythingEncapsulated) {
                 clipPlaneGo.GetComponent<Ronja.ClippingPlane>().shouldClip = false;
                 return clipPlaneGo;
             } else {
