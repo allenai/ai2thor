@@ -28,7 +28,7 @@ Shader "ronja/ClippingPlane"{
 		//fullforwardshadows makes sure unity adds the shadow passes the shader might need
 		//vertex:vert makes the shader use vert as a vertex shader function
         
-		#pragma surface surf Standard fullforwardshadows
+		#pragma surface surf Standard addshadow
 		#pragma target 3.0
         #include "UnityPBSLighting.cginc"
         #pragma exclude_renderers gles
