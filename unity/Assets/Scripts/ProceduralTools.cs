@@ -821,7 +821,8 @@ namespace Thor.Procedural {
             meshRenderer.material.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
 
             var prev_p0p1 = previous.p1 - previous.p0;
-            meshRenderer.material.mainTextureOffset = new Vector2((prev_p0p1.magnitude / toCreate.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / toCreate.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+
+            meshRenderer.material.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
             //}
 
             return wallGO;
