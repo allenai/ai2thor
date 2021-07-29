@@ -489,7 +489,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void AddClippingPlaneToObject(
             string objectId,
             Vector3? position = null,
-            Vector3? normal = null
+            Vector3? normal = null,
+            bool? enabled = null
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
@@ -509,8 +510,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 planeGo.transform.up = Vector3.Normalize(normal.Value);
             }
 
+            Ronja.ClippingPlane clipPlane = planeGo.GetComponent<Ronja.ClippingPlane>();
+            if (enabled.HasValue) {
+                clipPlane.shouldClip = enabled.Value;
+            }
+
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
-            toReturn["enabled"] = planeGo.GetComponentInChildren<Ronja.ClippingPlane>().shouldClip;
+            toReturn["enabled"] = clipPlane.shouldClip;
             toReturn["position"] = planeGo.transform.position;
             toReturn["normal"] = planeGo.transform.up;
             actionFinished(true, toReturn);
