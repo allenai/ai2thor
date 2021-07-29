@@ -123,6 +123,9 @@ namespace Thor.Procedural.Data {
         public float thickness { get; set; }
         public string material { get; set; }
         public bool empty { get; set; }
+
+        public float material_tiling_x_divisor = 1.0f;
+        public float material_tiling_y_divisor = 1.0f;
     }
 
     [Serializable]
@@ -254,6 +257,9 @@ namespace Thor.Procedural.Data {
         public bool empty;
         public WallRectangularHole hole = null;
         public string materialId;
+
+        public float material_tiling_x_divisor = 1.0f;
+        public float material_tiling_y_divisor = 1.0f;
 
     }
 

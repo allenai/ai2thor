@@ -818,6 +818,10 @@ namespace Thor.Procedural {
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
             meshRenderer.material = materialDb.getAsset(toCreate.materialId);
+            meshRenderer.material.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
+
+            var prev_p0p1 = previous.p1 - previous.p0;
+            meshRenderer.material.mainTextureOffset = new Vector2((prev_p0p1.magnitude / toCreate.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / toCreate.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
             //}
 
             return wallGO;
@@ -1210,7 +1214,9 @@ namespace Thor.Procedural {
                 p1 = polygons.ElementAt(1),
                 height = maxY - p0.y,
                 materialId = wall.material,
-                empty = wall.empty
+                empty = wall.empty,
+                material_tiling_x_divisor = wall.material_tiling_x_divisor,
+                material_tiling_y_divisor = wall.material_tiling_y_divisor
             };
         }
 
@@ -1228,7 +1234,9 @@ namespace Thor.Procedural {
                 height = maxY - p0.y,
                 materialId = wall.material,
                 empty = wall.empty,
-                hole = hole
+                hole = hole,
+                material_tiling_x_divisor = wall.material_tiling_x_divisor,
+                material_tiling_y_divisor = wall.material_tiling_y_divisor
             };
         }
 
@@ -1247,6 +1255,45 @@ namespace Thor.Procedural {
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall_0, hole), (hole.wall_1, hole) })
                 .ToDictionary(pair => pair.Item1, pair => pair.Item2);
             //house.doors.SelectMany(door => new List<string>() { door.wall_0, door.wall_1 });
+
+            var roomMap = house.rooms.ToDictionary(r => r.id, r => r.floor_polygon.Select((p, i) => (p, i)));
+
+            //var m = house.rooms.Select(r => r.floor_polygon.Select((p, i) => (p, i)));
+
+            // var wallsByRoom = house.walls
+            // .GroupBy(w => w.room_id)
+            // .ToDictionary(g => g.Key, g => g.Select(w => polygonWallToSimpleWall(w, holes)))
+            // .Select(
+            //     pair => {
+            //         var roomWalls = pair.Value.ToList();
+            //         var result = new List<Wall>(roomWalls.Count);
+
+            //         foreach (var (p, i) in roomMap[pair.Key]) {
+
+            //             var min = Mathf.Infinity;
+            //             var selected = 0;
+            //             var wallIndex = 0;
+            //             foreach (var w in roomWalls) {
+            //                 var sqrMag = Vector3.SqrMagnitude(p - w.p0);
+            //                 if (sqrMag < min) {
+            //                     min = sqrMag;
+            //                     selected = wallIndex;
+            //                 }
+            //                 wallIndex++;
+            //             }
+            //             Debug.Log("Res " + i + " count " + result.Count + " id " + roomWalls[selected].id);
+            //             // if (i < result.Count) {
+            //             result.Add(roomWalls[selected]);
+
+            //             roomWalls.RemoveAt(selected);
+            //             // }
+            //         }
+            //         return (pair.Key, result);
+            //     }
+            // );
+
+            //.Select(pair => roomMap[pair.Key]);
+
             var walls = house.walls.Select(w => polygonWallToSimpleWall(w, holes));
 
             var wallPoints = walls.SelectMany(w => new List<Vector3>() { w.p0, w.p1 });
@@ -1343,6 +1390,11 @@ namespace Thor.Procedural {
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
             var index = 0;
+
+            // foreach (var (id, wallsInRooms) in wallsByRoom) {
+            //     ProceduralTools.createWalls(wallsInRooms, materialDb, $"Structure_{index}");
+            //     index++;
+            // }
 
             var wallGO = ProceduralTools.createWalls(walls, materialDb, $"Structure_{index}");
 
