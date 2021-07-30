@@ -322,7 +322,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             bool freezeX = false,
             bool freezeY = false,
-            bool freezeZ = false
+            bool freezeZ = false,
+            bool freezeXRotation = false,
+            bool freezeYRotation = false,
+            bool freezeZRotation = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
@@ -337,13 +340,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (freezeX) {
                 rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionX;
             }
-
             if (freezeY) {
                 rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionY;
             }
-
             if (freezeZ) {
                 rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionZ;
+            }
+
+            if (freezeXRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationX;
+            }
+            if (freezeYRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY;
+            }
+            if (freezeZRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
             }
 
             actionFinished(true);
