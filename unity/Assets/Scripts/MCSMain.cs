@@ -69,6 +69,8 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_RIGHT_POSITION_X = 5.25f;
     private static float WALL_SCALE_Y = 3.0f;
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
+    private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
+    private static float WALL_WIDTH = .5f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -144,7 +146,7 @@ public class MCSMain : MonoBehaviour {
                 this.defaultSceneFile : this.currentScene.name);
             this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
                 MCSMain.LATEST_SCENE_VERSION);
-            ChangeCurrentScene(this.currentScene);
+            //ChangeCurrentScene(this.currentScene);
         }
 
         // We should always have debug logs enabled in debug builds.
@@ -246,10 +248,8 @@ public class MCSMain : MonoBehaviour {
 
         this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
                 this.currentScene.isometric);
-        if (!adjustedStructuralObjects) {
-            this.AdjustRoomStructuralObjects();
-            adjustedStructuralObjects = true;
-        }
+
+        this.AdjustRoomStructuralObjects();
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
             Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
@@ -399,8 +399,7 @@ public class MCSMain : MonoBehaviour {
             this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
         } else {
-            float wallWidth = .5f;
-            SetRoomInternalSize(currentScene.roomDimensions, wallWidth);
+            SetRoomInternalSize(currentScene.roomDimensions, WALL_WIDTH);
 
             if (this.currentScene.performerStart == null) {
                 this.currentScene.performerStart = new MCSConfigTransform();
@@ -489,12 +488,18 @@ public class MCSMain : MonoBehaviour {
                 0, 0, 0);
         }
 
-        if(currentScene.holes.Count > 0)
+        
+        GameObject oldFloors = GameObject.Find("Floors");
+        if(oldFloors!=null)
+            Destroy(oldFloors);
+        if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
+            this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
+        if(this.currentScene.holes != null && this.currentScene.holes.Count > 0)
         {
             //hole config
             int gridExpansionBuffer = 2; //this is so the floor goes slightly outside the wall boundries ensuring a hole near a wall does not show the skybox
-            int expandedFloorX = Mathf.RoundToInt(currentScene.roomDimensions.x) + gridExpansionBuffer;
-            int expandedFloorZ = Mathf.RoundToInt(currentScene.roomDimensions.z) + gridExpansionBuffer;
+            int expandedFloorX = Mathf.RoundToInt(this.currentScene.roomDimensions.x) + gridExpansionBuffer;
+            int expandedFloorZ = Mathf.RoundToInt(this.currentScene.roomDimensions.z) + gridExpansionBuffer;
             int startingFloorSectionX = Mathf.RoundToInt(-expandedFloorX) / 2;
             int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
             int posX = startingFloorSectionX;
@@ -502,8 +507,8 @@ public class MCSMain : MonoBehaviour {
             int posY = -3; //lowers the transform y
             int floorDepth = 6; //expands the y scale creating floor height
             int floorDimensions = 1;
-            int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
-                * (expandedFloorZ + (Mathf.RoundToInt(currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
+            int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
+                * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
 
             //prepare floor for cloning
             Vector3 originalScale = this.floor.transform.localScale;
@@ -517,7 +522,7 @@ public class MCSMain : MonoBehaviour {
 
             for(int i = 0; i<numOfFloorSections; i++) {
                 bool holeDrop = false;
-                foreach(MCSHolesConfig hole in currentScene.holes) {
+                foreach(MCSHolesConfig hole in this.currentScene.holes) {
                     if(posX == hole.x && posZ == hole.z) {
                         holeDrop = true;
                         break;
@@ -546,8 +551,12 @@ public class MCSMain : MonoBehaviour {
             
         }
         //end hole config
+        else {
+            this.floor.transform.position = DEFAULT_FLOOR_POSITION;
+            this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
+                FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
+        }
         
-
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
     }
@@ -1867,7 +1876,7 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
-    public List<MCSHolesConfig> holes;
+    public List<MCSHolesConfig> holes = new List<MCSHolesConfig>();
 }
 
 [Serializable]
