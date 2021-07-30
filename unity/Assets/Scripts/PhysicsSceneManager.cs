@@ -209,7 +209,6 @@ public class PhysicsSceneManager : MonoBehaviour
 		foreach(SimObjPhysics o in allPhysObjects)
 		{
 			Generate_ObjectID(o);
-				
 			///debug in editor, make sure no two object share ids for some reason
 			#if UNITY_EDITOR
 			if (CheckForDuplicateObjectIDs(o) && !(o.name.Contains("floor")))

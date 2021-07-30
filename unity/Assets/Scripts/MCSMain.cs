@@ -101,7 +101,6 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallRight;
     private GameObject wallFront;
     private GameObject wallBack;
-    private bool adjustedStructuralObjects = false;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -146,7 +145,6 @@ public class MCSMain : MonoBehaviour {
                 this.defaultSceneFile : this.currentScene.name);
             this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
                 MCSMain.LATEST_SCENE_VERSION);
-            //ChangeCurrentScene(this.currentScene);
         }
 
         // We should always have debug logs enabled in debug builds.
