@@ -492,6 +492,7 @@ public class MCSMain : MonoBehaviour {
             Destroy(oldFloors);
         if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
             this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
+        this.floor.SetActive(true);
         if(this.currentScene.holes != null && this.currentScene.holes.Count > 0)
         {
             //hole config
