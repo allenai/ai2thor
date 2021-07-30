@@ -509,7 +509,6 @@ public class MCSMain : MonoBehaviour {
                 * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
 
             //prepare floor for cloning
-            Vector3 originalScale = this.floor.transform.localScale;
             this.floor.isStatic = false;
             this.floor.transform.localScale = new Vector3(floorDimensions, floorDepth, floorDimensions);
 
@@ -542,17 +541,18 @@ public class MCSMain : MonoBehaviour {
                     posZ+=floorDimensions;
                 }
             }
+
             //reset floor that was used to clone the grid
-            this.floor.transform.localScale = originalScale;
-            this.floor.transform.position = new Vector3(0, -floorDepth, 0);
+            this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
+                MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
             this.floor.isStatic = true;
-            
+            this.floor.SetActive(false);
         }
         //end hole config
         else {
-            this.floor.transform.position = DEFAULT_FLOOR_POSITION;
+            this.floor.SetActive(true);
             this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
-                FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
+                MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
         }
         
         this.lastStep = -1;
@@ -1874,7 +1874,7 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
-    public List<MCSHolesConfig> holes = new List<MCSHolesConfig>();
+    public List<MCSHolesConfig> holes;
 }
 
 [Serializable]
