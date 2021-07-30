@@ -305,34 +305,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
-        {
+		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
+		{
             actionFinished(success, AgentState.Emit, actionReturn);
-        }
+		}
 
-        protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
-        {
-            if (!this.IsProcessing)
-            {
-                Debug.LogError ("ActionFinished called with agentState not in processing ");
-            }
+		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
+		{
+			if (!this.IsProcessing)
+			{
+				Debug.LogError ("ActionFinished called with agentState not in processing ");
+			}
 
             lastActionSuccess = success;
-            this.agentState = newState;
-            this.actionReturn = new InitializeReturn {
+			this.agentState = newState;
+			this.actionReturn = new InitializeReturn {
                 cameraNearPlane = this.m_Camera.nearClipPlane,
                 cameraFarPlane = this.m_Camera.farClipPlane
             };
-            actionCounter = 0;
-            targetTeleport = Vector3.zero;
+			actionCounter = 0;
+			targetTeleport = Vector3.zero;
             Debug.Log("Last Action Status = " + this.lastActionStatus);
         }
 
-        public virtual void actionFinished(bool success, System.Object actionReturn=null) 
-        {
+		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
+		{
             actionFinished(success, AgentState.ActionComplete, actionReturn);
             this.resumePhysics();
-        }
+		}
 
         protected virtual void resumePhysics() {}
 
