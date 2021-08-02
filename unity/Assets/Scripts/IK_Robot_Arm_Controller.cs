@@ -6,6 +6,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class IK_Robot_Arm_Controller : MonoBehaviour {
     private Transform armTarget;
+    private Transform fingerLeft;
+    private Transform fingerRight;
     private Transform handCameraTransform;
 
     [SerializeField]
@@ -54,6 +56,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             .Find("robot_arm_FK_IK_rig")
             .Find("IK_rig")
             .Find("IK_pos_rot_manipulator");
+
+        fingerLeft = FourthJoint.transform
+            .Find("robot_arm_5_jnt")
+            .Find("robot_finger_l_1_jnt");
+
+        fingerRight = FourthJoint.transform
+            .Find("robot_arm_5_jnt")
+            .Find("robot_finger_r_1_jnt");
 
         // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
@@ -228,14 +238,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
-    protected IEnumerator resetArmTargetPositionRotationAsLastStep(IEnumerator steps) {
+    protected IEnumerator resetArmTargetPositionAsLastStep(IEnumerator steps) {
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
-        Vector3 pos = handCameraTransform.transform.position;
-        Quaternion rot = handCameraTransform.transform.rotation;
-        armTarget.position = pos;
-        armTarget.rotation = rot;
+        armTarget.position = handCameraTransform.transform.position;
     }
 
 
@@ -339,7 +346,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        IEnumerator moveCall = resetArmTargetPositionAsLastStep(
             ContinuousMovement.move(
                 controller,
                 collisionListener,
@@ -387,17 +394,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
         Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
 
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
-                ContinuousMovement.move(
-                controller: controller,
-                collisionListener: collisionListener,
-                moveTransform: this.transform,
-                targetPosition: target,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                unitsPerSecond: unitsPerSecond,
-                returnToStartPropIfFailed: returnToStartPositionIfFailed,
-                localPosition: true
-            )
+        IEnumerator moveCall = ContinuousMovement.move(
+            controller: controller,
+            collisionListener: collisionListener,
+            moveTransform: this.transform,
+            targetPosition: target,
+            fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            unitsPerSecond: unitsPerSecond,
+            returnToStartPropIfFailed: returnToStartPositionIfFailed,
+            localPosition: true
         );
 
         if (disableRendering) {
@@ -410,39 +415,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
-    public void rotateWristAroundPoint(
-        PhysicsRemoteFPSAgentController controller,
-        Vector3 rotatePoint,
-        Quaternion rotation,
-        float degreesPerSecond,
-        bool disableRendering = false,
-        float fixedDeltaTime = 0.02f,
-        bool returnToStartPositionIfFailed = false
-    ) {
-        collisionListener.Reset();
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
-            ContinuousMovement.rotateAroundPoint(
-                controller: controller,
-                collisionListener: collisionListener,
-                updateTransform: armTarget.transform,
-                rotatePoint: rotatePoint,
-                targetRotation: rotation,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                degreesPerSecond: degreesPerSecond,
-                returnToStartPropIfFailed: returnToStartPositionIfFailed
-            )
-        );
-
-        if (disableRendering) {
-            controller.unrollSimulatePhysics(
-                rotate,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(rotate);
-        }
-    }
-
     public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
@@ -452,16 +424,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
-            ContinuousMovement.rotate(
-                controller,
-                collisionListener,
-                armTarget.transform,
-                armTarget.transform.rotation * rotation,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                degreesPerSecond,
-                returnToStartPositionIfFailed
-            )
+        IEnumerator rotate = ContinuousMovement.rotate(
+            controller,
+            collisionListener,
+            armTarget.transform,
+            armTarget.transform.rotation * rotation,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            degreesPerSecond,
+            returnToStartPositionIfFailed
         );
 
         if (disableRendering) {
@@ -485,16 +455,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         collisionListener.Reset();
         GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
-            ContinuousMovement.rotate(
-                controller,
-                collisionListener,
-                poleManipulator.transform,
-                poleManipulator.transform.rotation * rotation,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                degreesPerSecond,
-                returnToStartPositionIfFailed
-            )
+        IEnumerator rotate = ContinuousMovement.rotate(
+            controller,
+            collisionListener,
+            poleManipulator.transform,
+            poleManipulator.transform.rotation * rotation,
+            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            degreesPerSecond,
+            returnToStartPositionIfFailed
         );
 
         if (disableRendering) {
@@ -525,6 +493,85 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             returnToStartPositionIfFailed: returnToStartPositionIfFailed
         );
     }
+
+    // open hand
+public void openHand(
+    // Select component of class (or sub-class of) PhysicsRemoteFPSAgentController
+    PhysicsRemoteFPSAgentController controller,
+    // Number of degrees that moving parts rotate at
+    float degrees,
+    // Coefficient of rate that moving parts rotate at
+    float speed = 1.0f,
+    // Do not render any intermediate frames between start and end of action (this saves time)
+    bool disableRendering = false,
+    // Time interval between physics updates
+    float fixedDeltaTime = 0.02f,
+    // Determines if all moving parts should return to their pre-action transforms if they fail
+    bool returnToStartPositionIfFailed = false
+) {
+
+    // Start listening for new collisions from any listener from hereon out
+    collisionListener.Reset();
+
+    // Declare target-quaternions for both gripper-fingers
+    Quaternion targetQuatLeft, targetQuatRight = new Quaternion();
+
+    // Either rotate a specific number of degrees along the fingers' local y-axes, or open exactly 90 degrees each if no degree is provided
+    if (degrees == 0) {
+        // Initialize target-quaternions as precisely 90 degrees outward from the fingers' local-zero rotations along their local y-axes
+        targetQuatLeft = Quaternion.Euler(fingerLeft.eulerAngles - fingerLeft.localEulerAngles + new Vector3(0, -90, 0));
+        targetQuatRight = Quaternion.Euler(fingerRight.eulerAngles - fingerRight.localEulerAngles + new Vector3(0, 90, 0));
+    } else {
+        // Rotate action.degrees outward along fingers' local y-axes
+        targetQuatLeft = fingerLeft.rotation * Quaternion.AngleAxis(degrees, new Vector3(0, -1, 0));
+        targetQuatRight = fingerRight.rotation * Quaternion.AngleAxis(degrees, new Vector3(0, 1, 0));
+    }
+
+    // Coroutine for moving left finger continuously
+    IEnumerator rotateLeftFinger = ContinuousMovement.rotate(
+        // The agent's PhysicsRemoteFPSAgentController (which in the case of arm manipulation will always be the subclass ArmAgentController)
+        controller,
+        // The FPSController's collision listener, defined as the parent of this IK_Robot_Arm_Controller's script GameObject
+        collisionListener,
+        // Transform belonging to moving object
+        fingerLeft.transform,
+        // Target-rotation of moving object
+        targetQuatLeft,
+        // Amount of time to run coroutine before each yield return, which by default is the time between physics-updates
+        // (If disableRendering is enabled, ???)
+        disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+        // Number of radians that the moving object covers every second, which has been set to 1 by openHand (i.e. 180/pi = 57.2958 degrees/second)
+        radiansPerSecond: speed,
+        // If the moving object collides with something, revert the transformation back to its initial transform (false by default)
+        returnToStartPositionIfFailed
+    );
+
+    // Coroutine for moving right finger continuously
+    IEnumerator rotateRightFinger = ContinuousMovement.rotate(
+        controller,
+        collisionListener,
+        fingerRight.transform,
+        targetQuatRight,
+        disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+        radiansPerSecond: speed,
+        returnToStartPositionIfFailed
+    );
+
+
+    if (disableRendering) {
+        controller.unrollSimulatePhysics(
+            rotateLeftFinger,
+            fixedDeltaTime
+        );
+        controller.unrollSimulatePhysics(
+            rotateRightFinger,
+            fixedDeltaTime
+        );
+    } else {
+        StartCoroutine(rotateLeftFinger);
+        StartCoroutine(rotateRightFinger);
+    }
+}
 
     public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {
         return magnetSphereComp.CurrentlyContainedSimObjectsByID();
@@ -760,7 +807,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         meta.heldObjects = heldObjectIDs;
-        meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
+        meta.handSphereCenter = transform.TransformPoint(magnetSphere.center);
         meta.handSphereRadius = magnetSphere.radius;
         meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;

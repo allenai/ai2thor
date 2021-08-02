@@ -53,10 +53,16 @@ public class CollisionListener : MonoBehaviour {
         }
     }
 
+    // Reset (all???) Collision Listeners
+    // ("bool?" is just a nullable boolean)
     public void Reset(bool? notifyParent = null) {
+        //  Reset HashSet (unordered list) of colliders
         activeColliders.Clear();
+        //  If "Cascade Collision Events to Parent" is checked, and it's not the top of the hierarchy...
         if (notifyParent.GetValueOrDefault(this.CascadeCollisionEventsToParent) && this.transform.parent != null) {
+            //  For every single Collision Listener in the hierarchy...
             foreach (var listener in this.transform.parent.GetComponentsInParent<CollisionListener>()) {
+                // Reset notifyParent to be null
                 listener.Reset(notifyParent);
             }
         }

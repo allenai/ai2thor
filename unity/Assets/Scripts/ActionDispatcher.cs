@@ -244,52 +244,52 @@ public static class ActionDispatcher {
         return methodDispatchTable[action];
     }
 
-    public static MethodInfo getDispatchMethod(Type targetType, DynamicServerAction dynamicServerAction) {
+public static MethodInfo getDispatchMethod(Type targetType, DynamicServerAction dynamicServerAction) {
 
-        List<MethodInfo> actionMethods = getCandidateMethods(targetType, dynamicServerAction.action);
-        MethodInfo matchedMethod = null;
-        int bestMatchCount = -1; // we do this so that 
+    List<MethodInfo> actionMethods = getCandidateMethods(targetType, dynamicServerAction.action);
+    MethodInfo matchedMethod = null;
+    int bestMatchCount = -1; // we do this so that 
 
-        // This is where the the actual matching occurs.  The matching is done strictly based on
-        // variable names.  In the future, this could be modified to include type information from
-        // the inbound JSON object by mapping JSON types to csharp primitive types 
-        // (i.e. number -> [short, float, int], bool -> bool, string -> string, dict -> object, list -> list)
-        foreach (var method in actionMethods) {
-            int matchCount = 0;
-            ParameterInfo[] mParams = method.GetParameters();
+    // This is where the the actual matching occurs.  The matching is done strictly based on
+    // variable names.  In the future, this could be modified to include type information from
+    // the inbound JSON object by mapping JSON types to csharp primitive types 
+    // (i.e. number -> [short, float, int], bool -> bool, string -> string, dict -> object, list -> list)
+    foreach (var method in actionMethods) {
+        int matchCount = 0;
+        ParameterInfo[] mParams = method.GetParameters();
 
-            // mixing a ServerAction action with non-server action creates an ambiguous situation
-            // if one parameter is missing from the overloaded method its not clear whether the caller
-            // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
-            // variant
-            if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
-                throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
-            }
+        // mixing a ServerAction action with non-server action creates an ambiguous situation
+        // if one parameter is missing from the overloaded method its not clear whether the caller
+        // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
+        // variant
+        if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
+            throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+        }
 
-            // default to ServerAction method
-            // this is also necessary, to allow Initialize to be
-            // called in the AgentManager and an Agent, since we
-            // pass a ServerAction through
-            if (matchedMethod == null && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
-                matchedMethod = method;
-            } else {
-                foreach (var p in method.GetParameters()) {
-                    if (dynamicServerAction.ContainsKey(p.Name)) {
-                        matchCount++;
-                    }
+        // default to ServerAction method
+        // this is also necessary, to allow Initialize to be
+        // called in the AgentManager and an Agent, since we
+        // pass a ServerAction through
+        if (matchedMethod == null && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
+            matchedMethod = method;
+        } else {
+            foreach (var p in method.GetParameters()) {
+                if (dynamicServerAction.ContainsKey(p.Name)) {
+                    matchCount++;
                 }
-            }
-
-            // preference is given to the method that matches all parameters for a method
-            // even if another method has the same matchCount (but has more parameters)
-            if (matchCount > bestMatchCount) {
-                bestMatchCount = matchCount;
-                matchedMethod = method;
             }
         }
 
-        return matchedMethod;
+        // preference is given to the method that matches all parameters for a method
+        // even if another method has the same matchCount (but has more parameters)
+        if (matchCount > bestMatchCount) {
+            bestMatchCount = matchCount;
+            matchedMethod = method;
+        }
     }
+
+    return matchedMethod;
+}
 
     public static IEnumerable<MethodInfo> getMatchingMethodOverwrites(Type targetType, DynamicServerAction dynamicServerAction) {
         return getCandidateMethods(targetType, dynamicServerAction.action)
@@ -372,6 +372,13 @@ public static class ActionDispatcher {
         if (missingArguments != null) {
             throw new MissingArgumentsActionException(missingArguments);
         }
+
+        Debug.Log("The arguments are " + arguments.Length + " params in length.");
+        foreach (object param in arguments) {
+            Debug.Log(param.ToString() + " is a parameter");
+        }
+
+        Debug.Log("Step A");
         method.Invoke(target, arguments);
     }
 }

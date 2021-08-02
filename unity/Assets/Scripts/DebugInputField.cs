@@ -59,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
 
                 if (!Physics.autoSimulation) {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(Time.fixedDeltaTime);
+                    Physics.Simulate(Time.fixedDeltaTime);
                 }
 
                 yield return new WaitForEndOfFrame();
@@ -101,7 +101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 dumpPosition(wristCol);
 
                 if (!Physics.autoSimulation) {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(Time.fixedDeltaTime);
+                    Physics.Simulate(Time.fixedDeltaTime);
                 }
                 // animator.Update(Time.fixedDeltaTime);
 
@@ -270,7 +270,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["snapToGrid"] = true;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -320,7 +320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["fieldOfView"] = 90;
                         action["gridSize"] = 0.25f;
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
                 case "inita": {
@@ -363,7 +363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.massThreshold = 10f;
 
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -1195,15 +1195,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "atpc": {
-                        Dictionary<string, object> action = new Dictionary<string, object>() {
-                            ["action"] = "AddThirdPartyCamera",
-                            ["position"] = Vector3.zero,
-                            ["rotation"] = Vector3.zero,
-                            ["orthographic"] = true,
-                            ["orthographicSize"] = 5,
-                        };
-
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        AManager.AddThirdPartyCamera(
+                            position: Vector3.zero,
+                            rotation: Vector3.zero,
+                            orthographic: true,
+                            orthographicSize: 5
+                        );
                         break;
                     }
 
@@ -1797,36 +1794,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // move backward
                 case "mb": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MoveBack";
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveBack";
 
                         if (splitcommand.Length > 1) {
-                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        } else {
+                            action.moveMagnitude = 0.25f;
+                        }
+
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
                 // move left
                 case "ml": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MoveLeft";
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveLeft";
 
                         if (splitcommand.Length > 1) {
-                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        } else {
+                            action.moveMagnitude = 0.25f;
+                        }
+
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
                 // move right
                 case "mr": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MoveRight";
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveRight";
 
                         if (splitcommand.Length > 1) {
-                            action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        } else {
+                            action.moveMagnitude = 0.25f;
+                        }
+
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2054,6 +2060,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.degrees = float.Parse(splitcommand[1]);
                         }
 
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                // open hand
+                case "oh": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "OpenHand";
+                        if (splitcommand.Length > 1) {
+                            action["degrees"] = splitcommand[1];
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -3267,14 +3284,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "smlhr": {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetHandSphereRadius";
-
-                        if (splitcommand.Length == 2) {
-                            action.radius = float.Parse(splitcommand[1]);
-                        }
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetHandSphereRadius";
+                        action["radius"] = splitcommand[1];
                         CurrentActiveController().ProcessControlCommand(action);
-
                         break;
                     }
             }
