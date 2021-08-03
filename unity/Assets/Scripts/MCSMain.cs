@@ -71,6 +71,8 @@ public class MCSMain : MonoBehaviour {
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
     private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
     private static float WALL_WIDTH = .5f;
+    private static int FLOOR_DEPTH = 6;
+    private static int FLOOR_DIMENSIONS = 1;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -281,6 +283,7 @@ public class MCSMain : MonoBehaviour {
     // Custom Private Methods
 
     private void AdjustRoomStructuralObjects() {
+        this.floor.SetActive(true);
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -503,15 +506,13 @@ public class MCSMain : MonoBehaviour {
             int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
             int posX = startingFloorSectionX;
             int posZ = startingFloorSectionZ;
-            int posY = -3; //lowers the transform y
-            int floorDepth = 6; //expands the y scale creating floor height
-            int floorDimensions = 1;
+            int posY = -MCSMain.FLOOR_DEPTH/2; //lowers the transform y
             int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
                 * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
 
             //prepare floor for cloning
             this.floor.isStatic = false;
-            this.floor.transform.localScale = new Vector3(floorDimensions, floorDepth, floorDimensions);
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
 
             GameObject floors = new GameObject();
             floors.name = "Floors";
@@ -525,8 +526,6 @@ public class MCSMain : MonoBehaviour {
                         holeDrop = true;
                         break;
                     }
-                    else 
-                        holeDrop = false;
                 }
                 //clone the floor
                 GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
@@ -536,10 +535,10 @@ public class MCSMain : MonoBehaviour {
                 SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
                 simObj.objectID = "floor" + i;
 
-                posX+=floorDimensions;
+                posX += MCSMain.FLOOR_DIMENSIONS;
                 if(posX > -startingFloorSectionX) {
                     posX = startingFloorSectionX;
-                    posZ+=floorDimensions;
+                    posZ += MCSMain.FLOOR_DIMENSIONS;
                 }
             }
 
@@ -551,7 +550,6 @@ public class MCSMain : MonoBehaviour {
         }
         //end hole config
         else {
-            this.floor.SetActive(true);
             this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
                 MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
         }
