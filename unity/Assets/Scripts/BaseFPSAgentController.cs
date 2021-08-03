@@ -2507,7 +2507,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Arm != null && Arm.gameObject.activeSelf) {
                     if (this.IsVisible) {
                         foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
-                            collidersToNotDisable.Add(c);
+                            if (!c.isTrigger) {
+                                collidersToNotDisable.Add(c);
+                            }
                         }
                     } else {
                         foreach (HashSet<Collider> hsc in Arm.heldObjects.Values) {
