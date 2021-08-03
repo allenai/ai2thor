@@ -209,7 +209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
                     } else if (armRotateMode) {
-                        var actionName = "RotateWristAroundHeldObject";
+                        var actionName = "RotateWristRelative";
                         float rotateMag = 30f;
                         float pitch = 0f;
                         float yaw = 0f;

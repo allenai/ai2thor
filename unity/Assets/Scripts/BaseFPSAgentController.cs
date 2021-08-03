@@ -2546,11 +2546,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
-                // or for any objects held by the arm
+                // or for any objects held by the arm. We do disable trigger colliders though.
                 foreach (var arm in Arms.Values) {
                     if (this.IsVisible && arm.gameObject.activeSelf) {
                         foreach (Collider c in arm.gameObject.GetComponentsInChildren<Collider>()) {
-                            collidersToNotDisable.Add(c);
+                            if (!c.isTrigger) {
+                                collidersToNotDisable.Add(c);
+                            }
                         }
                     } else {
                         foreach (HashSet<Collider> hsc in arm.heldObjects.Values) {
