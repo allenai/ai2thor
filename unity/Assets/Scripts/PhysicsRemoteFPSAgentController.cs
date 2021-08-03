@@ -1701,7 +1701,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (isHandObjectColliding(ignoreAgent: true)) {
                         throw new InvalidOperationException("Cannot teleport due to hand object collision.");
                     }
-                    if (Arm != null && Arm.IsArmColliding()) {
+                    if (Arms.Count != 0 && Arms.Values.Select(a => a.IsArmColliding()).Any()) {
                         throw new InvalidOperationException(
                             "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
                         );

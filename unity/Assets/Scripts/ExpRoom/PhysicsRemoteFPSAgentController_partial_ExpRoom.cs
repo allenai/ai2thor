@@ -559,7 +559,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["normal"] = planeGo.transform.up;
             if (!(bool)toReturn["enabled"]) {
                 errorMessage = (
-                    "Clipping plane was placed on object but is disabled as the"+
+                    "Clipping plane was placed on object but is disabled as the" +
                     " input bounding box contained no points on the object's mesh."
                 );
                 actionFinished(false, toReturn);

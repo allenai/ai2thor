@@ -9,15 +9,42 @@ using UnityEngine.AI;
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
-        protected IK_Robot_Arm_Controller getArm() {
-            IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm == null) {
+        protected IK_Robot_Arm_Controller getArm(bool right = true) {
+            IK_Robot_Arm_Controller[] arms = GetComponentsInChildren<IK_Robot_Arm_Controller>();
+            if (arms == null || arms.Length == 0) {
                 throw new InvalidOperationException(
                     "Agent does not have kinematic arm or is not enabled.\n" +
                     $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
                 );
             }
-            return arm;
+            if (arms.Length > 2) {
+                throw new Exception($"Too many arms {arms.Length}");
+            }
+            if (arms.Length == 1) {
+                return arms[0];
+            }
+            Vector3 p0 = arms[0].transform.position;
+            Vector3 p1 = arms[1].transform.position;
+            float r0 = Vector3.Dot(this.transform.right, p0 - this.transform.position);
+            float r1 = Vector3.Dot(this.transform.right, p1 - this.transform.position);
+            int rightInd = r0 >= r1 ? 0 : 1;
+
+            if (right) {
+                return arms[rightInd];
+            } else {
+                return arms[1 - rightInd];
+            }
+        }
+
+        protected IK_Robot_Arm_Controller[] getArms() {
+            IK_Robot_Arm_Controller[] arms = GetComponentsInChildren<IK_Robot_Arm_Controller>();
+            if (arms == null || arms.Length == 0) {
+                throw new InvalidOperationException(
+                    "Agent does not have kinematic arm or is not enabled.\n" +
+                    $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
+                );
+            }
+            return arms;
         }
 
         /*
@@ -58,9 +85,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             string coordinateSpace = "armBase",
             bool restrictMovement = false,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.moveArmRelative(
                 controller: this,
                 offset: offset,
@@ -80,9 +108,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             string coordinateSpace = "armBase",
             bool restrictMovement = false,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.moveArmTarget(
                 controller: this,
                 target: position,
@@ -116,9 +145,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
 
             if (arm.heldObjects.Count == 1) {
                 SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
@@ -130,7 +160,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     speed: speed,
                     fixedDeltaTime: fixedDeltaTime,
                     returnToStart: returnToStart,
-                    disableRendering: disableRendering
+                    disableRendering: disableRendering,
+                    right: right
                 );
             } else {
                 actionFinished(
@@ -155,9 +186,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
 
             arm.rotateWristAroundPoint(
                 controller: this,
@@ -173,8 +205,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
         // enabled because it is a successful "attempt" to pickup something
-        public void PickupObject(List<string> objectIdCandidates = null) {
-            IK_Robot_Arm_Controller arm = getArm();
+        public void PickupObject(
+            List<string> objectIdCandidates = null,
+            bool right = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
         }
 
@@ -190,8 +225,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void ReleaseObject() {
-            IK_Robot_Arm_Controller arm = getArm();
+        public void ReleaseObject(bool right = true) {
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.DropObject();
 
             // TODO: only return after object(s) dropped have finished moving
@@ -201,14 +236,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
-        public void SetHandSphereRadius(float radius) {
+        public void SetHandSphereRadius(float radius, bool right = true) {
             if (radius < 0.04f || radius > 0.5f) {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
                 );
             }
 
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.SetHandSphereRadius(radius);
             actionFinished(true);
         }
@@ -428,9 +463,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
 
             arm.rotateWrist(
                 controller: this,
@@ -457,9 +493,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
 
             arm.rotateElbowRelative(
                 controller: this,
@@ -479,9 +516,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
 
             arm.rotateElbow(
                 controller: this,
@@ -503,14 +541,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true,
-            bool normalizedY = true
+            bool normalizedY = true,
+            bool right = true
         ) {
             if (normalizedY && (y < 0f || y > 1f)) {
                 // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
                 throw new ArgumentOutOfRangeException($"y={y} value must be in [0, 1] when normalizedY=true.");
             }
 
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.moveArmBase(
                 controller: this,
                 height: y,
@@ -527,9 +566,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
-            IK_Robot_Arm_Controller arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
@@ -545,21 +585,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool right = true
         ) {
             MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
-                disableRendering: disableRendering
+                disableRendering: disableRendering,
+                right: right
             );
         }
 
 #if UNITY_EDITOR
         // debug for static arm collisions from collision listener
-        public void GetMidLevelArmCollisions() {
-            IK_Robot_Arm_Controller arm = getArm();
+        public void GetMidLevelArmCollisions(bool right = true) {
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
             if (collisionListener != null) {
                 List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
@@ -579,8 +621,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // debug for static arm collisions from collision listener
-        public void DebugMidLevelArmCollisions() {
-            IK_Robot_Arm_Controller arm = getArm();
+        public void DebugMidLevelArmCollisions(bool right = true) {
+            IK_Robot_Arm_Controller arm = getArm(right: right);
             List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions().ToList();
             Debug.Log("Total current active static arm collisions: " + scs.Count);
             foreach (CollisionListener.StaticCollision sc in scs) {

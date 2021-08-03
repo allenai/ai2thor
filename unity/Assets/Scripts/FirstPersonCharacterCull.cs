@@ -26,7 +26,7 @@ public class FirstPersonCharacterCull : MonoBehaviour {
     public MeshRenderer[] DroneRenderers;
 
     public void SwitchRenderersToHide(string mode) {
-        if (mode == "default" || mode == "arm") {
+        if (mode == "default" || mode.StartsWith("arm")) {
             RenderersToHide = TallRenderers;
         } else if (mode == "locobot") {
             RenderersToHide = BotRenderers;

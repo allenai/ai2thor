@@ -214,8 +214,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
-            var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
+            var arms = controller.GetComponentsInChildren<IK_Robot_Arm_Controller>();
+            var ikSolvers = arms.Select(a => a.gameObject.GetComponentInChildren<FK_IK_Solver>());
 
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
@@ -246,7 +246,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // this will be a NOOP for Rotate/Move/Height actions
-                ikSolver.ManipulateArm();
+                foreach (var ikSolver in ikSolvers) {
+                    ikSolver.ManipulateArm();
+                }
 
                 if (!Physics.autoSimulation) {
                     if (fixedDeltaTime == 0f) {
@@ -285,7 +287,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // we call this one more time in the event that the arm collided and was reset
-            ikSolver.ManipulateArm();
+            foreach (var ikSolver in ikSolvers) {
+                ikSolver.ManipulateArm();
+            }
             if (!Physics.autoSimulation) {
                 if (fixedDeltaTime == 0f) {
                     Physics.SyncTransforms();
@@ -305,8 +309,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             bool actionSuccess = true;
             string debugMessage = "";
-            IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
             var staticCollisions = collisionListener.StaticCollisions().ToList();
 
             if (staticCollisions.Count > 0) {

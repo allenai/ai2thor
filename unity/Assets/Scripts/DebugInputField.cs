@@ -86,7 +86,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var animator = arm.gameObject.GetComponent<Animator>();
             // animator.enabled = false;
             Debug.Log("My name is " + arm.name);
-            var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+            var armTarget = arm.transform.Find("robot_arm_FK_IK_rig/IK_rig/IK_pos_rot_manipulator");
             var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
             Vector3 target = arm.transform.TransformPoint(targetArmBase);
             float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
@@ -376,24 +376,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "inite": {
                         Dictionary<string, object> action = new Dictionary<string, object>{
                             {"action", "Initialize"},
-                            {"agentMode", "arm"},
+                            {"agentMode", "arm-both"},
                             {"agentControllerType", "mid-level"}
                         };
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
 
-                        var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
-                        var armTarget = GameObject.Find("IK_pos_rot_manipulator");
-                        armTarget.transform.Rotate(90f, 0f, 0f);
+                        foreach (string k in ArmController.Arms.Keys) {
+                            var arm = ArmController.Arms[k];
+                            var armTarget = arm.transform.Find("robot_arm_FK_IK_rig/IK_rig/IK_pos_rot_manipulator");
+                            armTarget.Rotate(90f, 0f, 0f);
 
-                        var armJointToRotate = GameObject.Find("IK_pole_manipulator");
-                        armJointToRotate.transform.Rotate(0f, 0f, 90f);
+                            var armJointToRotate = arm.transform.Find(
+                                "robot_arm_FK_IK_rig/IK_rig/IK_pole_intermediate/IK_pole_manipulator"
+                            );
+                            if (k == "right") {
+                                armJointToRotate.Rotate(0f, 0f, 90f);
+                            } else {
+                                armJointToRotate.Rotate(0f, 0f, -90f);
+                            }
 
-                        var armBase = GameObject.Find("robot_arm_rig_gripper");
-                        armBase.transform.Translate(0f, 0.27f, 0f);
+                            arm.transform.Translate(0f, 0.27f, 0f);
+                        }
 
                         CurrentActiveController().ProcessControlCommand(
-                            new Dictionary<string, object>{
-                                {"action", "LookDown"}
+                             new Dictionary<string, object>{
+                                 {"action", "LookDown"}
                         });
 
                         break;
@@ -891,7 +898,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 case "posarm1": {
                         var arm = PhysicsController.GetComponentInChildren<IK_Robot_Arm_Controller>();
-                        var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+                        var armTarget = arm.transform.Find("robot_arm_FK_IK_rig/IK_rig/IK_pos_rot_manipulator");
                         armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
                         break;
                     }
@@ -3179,9 +3186,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 case "closepoints": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "PointOnObjectsCollidersClosestToPoint";
-                        action["objectId"] = "Dumbbell|+00.00|+00.90|+00.00";
-                        action["point"] = new Vector3(0f, 1000f, 0f);
+                        //action["action"] = "PointOnObjectsCollidersClosestToPoint";
+                        action["action"] = "PointOnObjectsMeshClosestToPoint";
+                        //action["objectId"] = "Bread|-00.54|+00.90|+00.00";
+                        action["objectId"] = "Pot|+00.00|+00.90|+00.00";
+                        action["point"] = new Vector3(0f, 1.9f, 0f);
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

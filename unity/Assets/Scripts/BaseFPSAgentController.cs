@@ -69,7 +69,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
         public GameObject DroneBasket;// reference to the drone's basket object
-        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         public int fixedUpdateCount { get; protected set; }
@@ -84,6 +83,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public AgentState agentState = AgentState.Emit;
 
         public bool clearRandomizeMaterialsOnReset = false;
+
+        public static readonly string[] AllowedAgentModes = {
+             "default", "locobot", "drone",
+             "arm", "arm-left", "arm-right", "arm-both"
+        };
 
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
@@ -100,6 +104,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             set {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
+
+                GameObject armBaseLeft = this.transform.Find(
+                    "TallVisibilityCapsule/agent_grp/agent_body_left"
+                ).gameObject;
+                GameObject armBaseRight = this.transform.Find(
+                    "TallVisibilityCapsule/agent_grp/agent_body_right"
+                ).gameObject;
+
+                armBaseLeft.SetActive(Arms.ContainsKey("left"));
+                armBaseRight.SetActive(Arms.Values.Count == 0 || Arms.ContainsKey("right"));
 
                 // The VisibilityCapsule will be set to either Tall or Bot 
                 // from the SetAgentMode call in BaseFPSAgentController's Initialize()
@@ -196,7 +210,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
         // Arm
-        protected IK_Robot_Arm_Controller Arm;
+        public Dictionary<string, IK_Robot_Arm_Controller> Arms = new Dictionary<string, IK_Robot_Arm_Controller>();
 
         private PhysicsSceneManager _physicsSceneManager = null;
         // use as reference to the PhysicsSceneManager object
@@ -492,11 +506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Initialize(ServerAction action) {
-            if (action.agentMode.ToLower() == "default" ||
-               action.agentMode.ToLower() == "locobot" ||
-               action.agentMode.ToLower() == "drone" ||
-               action.agentMode.ToLower() == "arm"
-               ) {
+            if (AllowedAgentModes.Contains(action.agentMode.ToLower())) {
                 // set agent mode to Default, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
             } else {
@@ -603,7 +613,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             // determine if we are in Tall or Bot mode (or other modes as we go on)
-            if (whichMode == "default" || whichMode == "arm") {
+            if (whichMode == "default" || whichMode.StartsWith("arm")) {
                 // toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
 
@@ -631,17 +641,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
 
                 // enable arm component
-                if (whichMode == "arm") {
+                if (whichMode.StartsWith("arm")) {
                     Debug.Log("initializing arm");
-                    IKArm.SetActive(true);
-                    Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-                    var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
-                    Vector3 pos = armTarget.transform.localPosition;
-                    pos.z = 0.4f; // pulls the arm in from being fully extended
-                    armTarget.transform.localPosition = pos;
-                    var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
-                    Debug.Log("running manipulate arm");
-                    ikSolver.ManipulateArm();
+
+                    IK_Robot_Arm_Controller[] arms = GetComponentsInChildren<IK_Robot_Arm_Controller>(
+                        includeInactive: true
+                    );
+                    Vector3 p0 = arms[0].transform.position;
+                    Vector3 p1 = arms[1].transform.position;
+                    float r0 = Vector3.Dot(this.transform.right, p0 - this.transform.position);
+                    float r1 = Vector3.Dot(this.transform.right, p1 - this.transform.position);
+                    int rightInd = r0 >= r1 ? 0 : 1;
+                    IK_Robot_Arm_Controller rightArm = arms[rightInd];
+                    IK_Robot_Arm_Controller leftArm = arms[1 - rightInd];
+
+                    string suffix = whichMode.Substring(3);
+                    List<(string, IK_Robot_Arm_Controller)> armsToInit = new List<(string, IK_Robot_Arm_Controller)>();
+                    if (suffix == "" || suffix == "-right" || suffix == "-both") {
+                        armsToInit.Add(("right", rightArm));
+                    }
+                    if (suffix == "-left" || suffix == "-both") {
+                        armsToInit.Add(("left", leftArm));
+                    }
+                    foreach ((string, IK_Robot_Arm_Controller) sideAndArm in armsToInit) {
+                        IK_Robot_Arm_Controller arm = sideAndArm.Item2;
+                        arm.gameObject.SetActive(true);
+                        Arms[sideAndArm.Item1] = arm;
+                        var armTarget = arm.transform.Find("robot_arm_FK_IK_rig/IK_rig/IK_pos_rot_manipulator");
+                        Vector3 pos = armTarget.transform.localPosition;
+                        pos.z = 0.4f; // pulls the arm in from being fully extended
+                        armTarget.transform.localPosition = pos;
+                        var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
+                        Debug.Log("running manipulate arm");
+                        ikSolver.ManipulateArm();
+                    }
                 }
             } else if (whichMode == "locobot") {
                 // toggle FirstPersonCharacterCull
@@ -1770,8 +1803,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: remove from base.
             // ARM
-            if (Arm != null) {
-                metaMessage.arm = Arm.GenerateMetadata();
+            if (Arms.Count == 1) {
+                if (Arms.ContainsKey("right")) {
+                    metaMessage.arm = Arms["right"].GenerateMetadata();
+                } else {
+                    metaMessage.arm = Arms["left"].GenerateMetadata();
+                }
+            } else if (Arms.Count == 2) {
+                metaMessage.arm = null;
+                Dictionary<string, ArmMetadata> armMeta = new Dictionary<string, ArmMetadata>();
+                armMeta["right"] = Arms["right"].GenerateMetadata();
+                armMeta["left"] = Arms["left"].GenerateMetadata();
+                metaMessage.arms = armMeta;
             }
 
             // EXTRAS
@@ -2504,13 +2547,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
                 // or for any objects held by the arm
-                if (Arm != null && Arm.gameObject.activeSelf) {
-                    if (this.IsVisible) {
-                        foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
+                foreach (var arm in Arms.Values) {
+                    if (this.IsVisible && arm.gameObject.activeSelf) {
+                        foreach (Collider c in arm.gameObject.GetComponentsInChildren<Collider>()) {
                             collidersToNotDisable.Add(c);
                         }
                     } else {
-                        foreach (HashSet<Collider> hsc in Arm.heldObjects.Values) {
+                        foreach (HashSet<Collider> hsc in arm.heldObjects.Values) {
                             foreach (Collider c in hsc) {
                                 collidersToNotDisable.Add(c);
                             }
@@ -2890,8 +2933,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // We have to explicitly add the items held by the arm as their
             // rigidbodies are set to not detect collisions
-            if (Arm != null && Arm.gameObject.activeSelf) {
-                foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
+            foreach (var arm in Arms.Values.Where(a => a.gameObject.activeSelf)) {
+                foreach (SimObjPhysics sop in arm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
             }
@@ -2970,7 +3013,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 mask = (1 << 8) | (1 << 10);
             }
 
-            bool isSopHeldByArm = Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
+            List<Dictionary<SimObjPhysics, HashSet<Collider>>> listOfRelevantHeldObjectsDict = Arms.Values.Where(
+                a => a.heldObjects.ContainsKey(sop)
+            ).Select(a => a.heldObjects).ToList();
+
+            Dictionary<SimObjPhysics, HashSet<Collider>> relevantHeldObjectsDict = null;
+            if (listOfRelevantHeldObjectsDict.Count != 0) {
+                relevantHeldObjectsDict = listOfRelevantHeldObjectsDict[0];
+            }
+            // FirstOrDefault(new Dictionary<SimObjPhysics, HashSet<Collider>>());
+            bool isSopHeldByArm = relevantHeldObjectsDict != null;
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -2978,7 +3030,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                        || (isSopHeldByArm && relevantHeldObjectsDict[sop].Contains(hit.collider))
                     ) {
                         result = true;
                         sop.debugIsInteractable = true;
@@ -2997,7 +3049,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
                     if (
                         hit.transform == sop.transform
-                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                        || (isSopHeldByArm && relevantHeldObjectsDict[sop].Contains(hit.collider))
                     ) {
                         // if this line is drawn, then this visibility point is in camera frame and not occluded
                         // might want to use this for a targeting check as well at some point....
@@ -3030,7 +3082,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             foreach (RaycastHit h in hits) {
                                 if (
                                     h.transform == sop.transform
-                                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                    || (isSopHeldByArm && relevantHeldObjectsDict[sop].Contains(hit.collider))
                                 ) {
                                     // found the object we are looking for, great!
                                     result = true;

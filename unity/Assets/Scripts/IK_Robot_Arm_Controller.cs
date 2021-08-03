@@ -50,10 +50,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     public CollisionListener collisionListener;
 
     void Start() {
-        armTarget = this.transform
-            .Find("robot_arm_FK_IK_rig")
-            .Find("IK_rig")
-            .Find("IK_pos_rot_manipulator");
+        armTarget = this.transform.Find("robot_arm_FK_IK_rig/IK_rig/IK_pos_rot_manipulator");
 
         // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
@@ -525,7 +522,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        GameObject poleManipulator = this.transform.Find(
+            "robot_arm_FK_IK_rig/IK_rig/IK_pole_intermediate/IK_pole_manipulator"
+        ).gameObject;
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
         IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.rotate(
@@ -557,7 +556,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false
     ) {
-        GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
+        GameObject poleManipulator = this.transform.Find(
+            "robot_arm_FK_IK_rig/IK_rig/IK_pole_intermediate/IK_pole_manipulator"
+        ).gameObject;
         rotateElbowRelative(
             controller: controller,
             degrees: (degrees - poleManipulator.transform.eulerAngles.z),

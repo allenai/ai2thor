@@ -186,7 +186,7 @@ public class AgentManager : MonoBehaviour {
                 SetUpDroneController(action);
             }
 
-        } else if (action.agentMode.ToLower() == "arm") {
+        } else if (action.agentMode.ToLower().StartsWith("arm")) {
 
             if (action.agentControllerType == "") {
                 action.agentControllerType = "mid-level";
@@ -298,9 +298,6 @@ public class AgentManager : MonoBehaviour {
         primaryAgent.agentManager = this;
         // primaryAgent.actionComplete = true;
         this.agents.Add(primaryAgent);
-
-        var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
-        handObj.gameObject.SetActive(true);
     }
 
     // on initialization of agentMode = "arm" and agentControllerType = "mid-level"
@@ -1575,6 +1572,7 @@ public struct MetadataWrapper {
     public AgentMetadata agent;
     public HandMetadata heldObjectPose;
     public ArmMetadata arm;
+    public Dictionary<string, ArmMetadata> arms;
     public float fov;
     public Vector3 cameraPosition;
     public float cameraOrthSize;

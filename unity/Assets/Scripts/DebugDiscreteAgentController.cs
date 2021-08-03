@@ -13,6 +13,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ArmAgentController ArmController = null;
         public AgentManager AManager = null;
         private InputField inputField;
+        private bool usingRightArm = true;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -164,6 +165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var actionName = "MoveArmRelative";
                         var localPos = new Vector3(0, 0, 0);
                         float ArmMoveMagnitude = 0.05f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
                         if (Input.GetKeyDown(KeyCode.W)) {
                             localPos.y += ArmMoveMagnitude;
@@ -177,17 +179,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             localPos.x -= ArmMoveMagnitude;
                         } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
                             localPos.x += ArmMoveMagnitude;
+                        } else if (Input.GetKeyDown(KeyCode.V)) {
+                            actionName = "MoveArmBaseUp";
+                            action["distance"] = 0.1f;
+                        } else if (Input.GetKeyDown(KeyCode.B)) {
+                            actionName = "MoveArmBaseDown";
+                            action["distance"] = 0.1f;
                         } else if (Input.GetKeyDown(KeyCode.P)) {
                             actionName = "PickupObject";
                         } else if (Input.GetKeyDown(KeyCode.D)) {
                             actionName = "ReleaseObject";
+                        } else if (Input.GetKeyDown(KeyCode.T)) {
+                            actionName = "";
+                            usingRightArm = !usingRightArm;
+                            Debug.Log($"Changing which arm is being controlled (right={usingRightArm})");
                         } else {
                             actionName = "";
                         }
 
                         if (actionName != "") {
-                            Dictionary<string, object> action = new Dictionary<string, object>();
                             action["action"] = actionName;
+                            action["right"] = usingRightArm;
                             if (localPos.magnitude != 0) {
                                 action["offset"] = localPos;
                                 //action["fixedDeltaTime"] = fixedDeltaTime;
@@ -197,7 +209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
                     } else if (armRotateMode) {
-                        var actionName = "RotateWristRelative";
+                        var actionName = "RotateWristAroundHeldObject";
                         float rotateMag = 30f;
                         float pitch = 0f;
                         float yaw = 0f;
@@ -219,6 +231,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else if (Input.GetKeyDown(KeyCode.E)) {
                             actionName = "RotateElbowRelative";
                             degrees += rotateMag;
+                        } else if (Input.GetKeyDown(KeyCode.T)) {
+                            actionName = "";
+                            usingRightArm = !usingRightArm;
+                            Debug.Log($"Changing which arm is being controlled (right={usingRightArm})");
                         } else if (Input.GetKeyDown(KeyCode.Q)) {
                             // Why Q/E rather than A/D? Because apparently
                             // shift+alt+A is a Unity shortcut and Unity
@@ -233,7 +249,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (actionName != "") {
                             Dictionary<string, object> action = new Dictionary<string, object>();
                             action["action"] = actionName;
-                            if (actionName == "RotateWristRelative") {
+                            action["right"] = usingRightArm;
+                            if (actionName.Contains("RotateWrist")) {
                                 action["pitch"] = pitch;
                                 action["yaw"] = yaw;
                                 action["roll"] = roll;

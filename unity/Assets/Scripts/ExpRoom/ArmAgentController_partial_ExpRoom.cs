@@ -16,7 +16,7 @@ using RandomExtensions;
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
 
-        public void AttachObjectToArmWithFixedJoint(string objectId) {
+        public void AttachObjectToArmWithFixedJoint(string objectId, bool right = true) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -24,11 +24,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            actionFinished(getArm().AttachObjectToArmWithFixedJoint(target));
+            actionFinished(getArm(right: right).AttachObjectToArmWithFixedJoint(target));
         }
 
-        public void BreakFixedJoints() {
-            actionFinished(getArm().BreakFixedJoints());
+        public void BreakFixedJoints(bool right = true) {
+            actionFinished(getArm(right: right).BreakFixedJoints());
         }
 
     }
