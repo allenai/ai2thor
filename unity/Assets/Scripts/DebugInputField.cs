@@ -1207,6 +1207,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "ovftpc": {
+                    Dictionary<string, object> action = new Dictionary<string, object>{
+                        {"action", "ObjectsVisibleFromThirdPartyCamera"},
+                    };
+                    action["thirdPartyCameraIndex"] = 0;
+
+                    CurrentActiveController().ProcessControlCommand(
+                        action
+                    );
+                    break;
+                }
+
                 case "cftpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 

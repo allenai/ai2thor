@@ -3157,6 +3157,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
         }
 
+        //check visibility by distance from specific camera (third party camera)
+        public void ObjectsVisibleFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {
+            if(!maxDistance.HasValue) {
+                maxDistance = maxVisibleDistance;
+            }
+
+            actionFinishedEmit(true, 
+                GetAllVisibleSimObjPhysicsDistance(agentManager.thirdPartyCameras[thirdPartyCameraIndex],
+                maxDistance.Value,
+                null).Select(sop => sop.ObjectID).ToList()
+            );
+        }
+
         // not sure what this does, maybe delete?
         public void SetTopLevelView(bool topView = false) {
             inTopLevelView = topView;
