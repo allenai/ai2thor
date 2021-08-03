@@ -3213,6 +3213,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.position = (Vector3)cameraProps["position"];
                 m_Camera.orthographic = (bool)cameraProps["orthographic"];
                 m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
+                cameraOrthSize = m_Camera.orthographicSize;
 
                 foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);
