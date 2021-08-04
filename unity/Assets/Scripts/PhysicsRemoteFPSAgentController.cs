@@ -1575,10 +1575,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
                         objBounds.Encapsulate(r.bounds);
@@ -6286,10 +6284,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
-            Bounds objectBounds = new Bounds(
-                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objectBounds = UtilityFunctions.CreateEmptyBounds();
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
                 objectBounds.Encapsulate(vp.position);
@@ -6592,10 +6587,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Vector3 p in positions) {
                 b.Encapsulate(p);
             }
@@ -6854,10 +6846,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var oldRotation = sop.transform.rotation;
 
             sop.transform.rotation = Quaternion.identity;
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     b.Encapsulate(r.bounds);
@@ -7301,10 +7290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -7336,10 +7322,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -7739,7 +7722,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = action.objectVariation;
             Vector3[] reachablePositions = getReachablePositions();
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -7760,10 +7743,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
-            Bounds objBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                 objBounds.Encapsulate(r.bounds);
             }
@@ -7941,7 +7921,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             };
             int numObjectVariations = 3;
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -7975,10 +7955,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                     offset += 1.0f;
 
-                    Bounds objBounds = new Bounds(
-                        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                    );
+                    Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                     foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                         objBounds.Encapsulate(r.bounds);
                     }

@@ -8,7 +8,16 @@ using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using System.Reflection;
+
 public static class UtilityFunctions {
+
+    public static Bounds CreateEmptyBounds() {
+        Bounds b = new Bounds();
+        Vector3 inf = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+        b.SetMinMax(min: inf, max: -inf);
+        return b;
+    }
+
     private static IEnumerable<int[]> Combinations(int m, int n) {
         // Enumerate all possible m-size combinations of [0, 1, ..., n-1] array
         // in lexicographic order (first [0, 1, 2, ..., m-1]).

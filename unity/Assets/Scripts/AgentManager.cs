@@ -64,10 +64,7 @@ public class AgentManager : MonoBehaviour {
     public const float MIN_FOV = 0;
 
 
-    public Bounds sceneBounds = new Bounds(
-        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-    );
+    public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
     public Bounds SceneBounds {
         get {
             if (sceneBounds.min.x == float.PositiveInfinity) {
@@ -343,10 +340,7 @@ public class AgentManager : MonoBehaviour {
 
     public void ResetSceneBounds() {
         // Recording initially disabled renderers and scene bounds
-        sceneBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        sceneBounds = UtilityFunctions.CreateEmptyBounds();
         foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
             if (r.enabled) {
                 sceneBounds.Encapsulate(r.bounds);
