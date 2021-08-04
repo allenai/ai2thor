@@ -501,11 +501,8 @@ public class MCSMain : MonoBehaviour {
             (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
             CreateHolesAndApplyFloorTextures();
         }
-        else {
-            this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
-                MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
-        }
         
+        agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
     }
@@ -525,7 +522,6 @@ public class MCSMain : MonoBehaviour {
 
         //prepare floor for cloning
         this.floor.isStatic = false;
-        this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
         GameObject floors = new GameObject();
         floors.name = "Floors";
         floors.transform.position = Vector3.zero;
@@ -561,6 +557,7 @@ public class MCSMain : MonoBehaviour {
 
             //clone the floor
             GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
+            floorSection.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
             if(changeFloorMaterial) 
                 AssignMaterial(floorSection, material); 
             floorSection.name = "floor" + i;
