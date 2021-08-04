@@ -173,16 +173,6 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    // public void MakeBreakableAndSleep() {
-    //     foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-    //         if(sop.IsBreakable) {
-    //             sop.GetComponent<Rigidbody>().Sleep();
-    //             sop.GetComponentInChildren<Break>().Unbreakable = false;
-    //         }
-
-    //     }
-    // }
-
     public void MakeAllObjectsMoveable() {
         foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
             // check if the sopType is something that can be hung
@@ -585,8 +575,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
-                    if(receptacleSop.ContainedGameObjects().Count > 0) {
-                        //this object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
+                    if(receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
+                        //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
                         continue;
                     }
 

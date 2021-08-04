@@ -69,7 +69,7 @@ public class Break : MonoBehaviour {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-            //befor disabling things, if this object is a receptacle, unparent all objects contained
+            //before disabling things, if this object is a receptacle, unparent all objects contained
             if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
                 GameObject objs = GameObject.Find("Objects");
                 foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {

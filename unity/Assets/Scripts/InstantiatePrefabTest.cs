@@ -364,6 +364,11 @@ public class InstantiatePrefabTest : MonoBehaviour {
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
 
+                //ensure transforms are synced
+                if (!Physics.autoSyncTransforms) {
+                    Physics.SyncTransforms();
+                }
+
                 // now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 // bits of it hanging out
 
@@ -432,8 +437,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                 // set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-                if (PlaceStationary == true) {
-                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
+                if (PlaceStationary) {
+                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will since we are placing stationary
                     if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup || rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                         rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
                     }
