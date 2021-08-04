@@ -124,7 +124,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         rb.angularDrag += 0.01f;
 
 #if UNITY_EDITOR
-                        print(rb.transform.name + " is still in motion!");
+                        //print(rb.transform.name + " is still in motion!");
 #endif
                     } else {
                         // the velocities are small enough, assume object has come to rest and force this one to sleep
@@ -558,6 +558,14 @@ public class PhysicsSceneManager : MonoBehaviour {
             foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles) {
                 SimObjPhysics sopToPlaceInReceptacle = gameObjToPlaceInReceptacle.GetComponent<SimObjPhysics>();
 
+                if (staticPlacement) {
+                    sopToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
+                }
+
+                // if(sopToPlaceInReceptacle.IsBreakable) {
+                //     sopToPlaceInReceptacle.GetComponent<Break>().Unbreakable = true;
+                // }
+
                 if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
                     HowManyCouldntSpawn--;
                     continue;
@@ -566,6 +574,11 @@ public class PhysicsSceneManager : MonoBehaviour {
                 bool spawned = false;
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
+
+                    if(receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
+                        //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
+                        continue;
+                    }
 
                     // check if the target Receptacle is an ObjectSpecificReceptacle
                     // if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
