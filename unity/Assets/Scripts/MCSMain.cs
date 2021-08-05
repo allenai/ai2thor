@@ -73,6 +73,7 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_WIDTH = .5f;
     private static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
+    private static int FLOOR_LOWERED_HEIGHT = -100;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -283,7 +284,6 @@ public class MCSMain : MonoBehaviour {
     // Custom Private Methods
 
     private void AdjustRoomStructuralObjects() {
-        this.floor.SetActive(true);
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -495,7 +495,7 @@ public class MCSMain : MonoBehaviour {
             Destroy(oldFloors);
         if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
             this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
-        this.floor.transform.localPosition = new Vector3(0, -0.25f, 0);
+        this.floor.transform.localPosition = DEFAULT_FLOOR_POSITION; //resets the floor position to the default
         
         if((this.currentScene.holes != null && this.currentScene.holes.Count > 0) || 
             (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
@@ -574,7 +574,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         this.floor.isStatic = true;
-        this.floor.transform.localPosition = new Vector3(0,-100, 0);
+        this.floor.transform.localPosition = new Vector3(0, MCSMain.FLOOR_LOWERED_HEIGHT, 0); //this moves the floor below the important elements in the scene
         agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
