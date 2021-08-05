@@ -2685,6 +2685,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Transform[] visPoints = sop.VisibilityPoints;
                 int visPointCount = 0;
 
+                //check for apple here
+
                 foreach (Transform point in visPoints) {
                     bool outsidePlane = false;
                     for (int i = 0; i < planes.Length; i++) {
@@ -2745,6 +2747,73 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visible;
         }
 
+        private bool isSimObjVisibleFromCamera(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+            bool visible = false;
+            // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                int visPointCount = 0;
+
+                foreach (Transform point in visPoints) {
+                    bool outsidePlane = false;
+                    for (int i = 0; i < planes.Length; i++) {
+                        if (!planes[i].GetSide(point.position)) {
+                            outsidePlane = true;
+                            break;
+                        }
+                    }
+
+                    if (outsidePlane) {
+                        continue;
+                    }
+
+
+                    float xdelta = Math.Abs(camera.transform.position.x - point.position.x);
+                    if (xdelta > maxDistance) {
+                        continue;
+                    }
+
+                    float zdelta = Math.Abs(camera.transform.position.z - point.position.z);
+                    if (zdelta > maxDistance) {
+                        continue;
+                    }
+
+                    // if the object is too far above the Agent, skip
+                    float ydelta = point.position.y - camera.transform.position.y;
+                    if (ydelta > maxDistance) {
+                        continue;
+                    }
+
+                    double distance = Math.Sqrt((xdelta * xdelta) + (zdelta * zdelta));
+                    if (distance > maxDistance) {
+                        continue;
+                    }
+
+                    // if this particular point is in view...
+                    if (CheckIfVisibilityPointRaycast(sop, point, camera, false) ||
+                        CheckIfVisibilityPointRaycast(sop, point, camera, true)) {
+                        visPointCount++;
+#if !UNITY_EDITOR
+                        // If we're in the unity editor then don't break on finding a visible
+                        // point as we want to draw lines to each visible point.
+                        break;
+#endif
+                    }
+                }
+
+                // if we see at least one vis point, the object is "visible"
+                if (visPointCount > 0) {
+#if UNITY_EDITOR
+                    sop.debugIsVisible = true;
+#endif
+                    visible = true;
+                }
+            } else {
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+            }
+            return visible;
+        }
+
         // pass in forceVisible bool to force grab all objects of type sim obj
         // if not, gather all visible sim objects maxVisibleDistance away from camera view
         public SimObjPhysics[] VisibleSimObjs(bool forceVisible = false) {
@@ -2776,7 +2845,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<SimObjPhysics> visible = new List<SimObjPhysics>();
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(agentCamera);
             foreach (var sop in filterSimObjs) {
+                //print($"filterSimObjs includes: {sop}");
                 if (isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes)) {
+                    print(sop.objectID + " is visible");
+                    visible.Add(sop);
+                }
+            }
+            return visible.ToArray();
+        }
+
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsDistanceFromCamera(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs) {
+            if (filterSimObjs == null) {
+                filterSimObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
+            }
+
+            List<SimObjPhysics> visible = new List<SimObjPhysics>();
+            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
+            foreach (var sop in filterSimObjs) {
+                //print($"filterSimObjs includes: {sop}");
+                if (isSimObjVisibleFromCamera(camera, sop, this.maxVisibleDistance, planes)) {
+                    #if UNITY_EDITOR
+                    print(sop.objectID + " is visible from camera");
+                    #endif
                     visible.Add(sop);
                 }
             }
@@ -3163,8 +3253,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxDistance = maxVisibleDistance;
             }
 
+            // foreach (string s in GetAllVisibleSimObjPhysicsDistanceFromCamera(agentManager.thirdPartyCameras[thirdPartyCameraIndex],
+            //     maxDistance.Value,
+            //     null).Select(sop => sop.ObjectID).ToList()) {
+            //         print(s);
+            //     }
+            
             actionFinishedEmit(true, 
-                GetAllVisibleSimObjPhysicsDistance(agentManager.thirdPartyCameras[thirdPartyCameraIndex],
+                GetAllVisibleSimObjPhysicsDistanceFromCamera(agentManager.thirdPartyCameras[thirdPartyCameraIndex],
                 maxDistance.Value,
                 null).Select(sop => sop.ObjectID).ToList()
             );

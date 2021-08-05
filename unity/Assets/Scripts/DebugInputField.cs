@@ -1198,10 +1198,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         action["action"] = "AddThirdPartyCamera";
-                        action["position"] = Vector3.zero;
-                        action["rotation"] = Vector3.zero;
-                        action["orthographic"] = true;
-                        action["orthographicSize"] = 5;
+                        action["position"] = new Vector3(-1.5f, 1.9999999046325683f, -2.0f);
+                        action["rotation"] = new Vector3(45f, 45f, 0f);
+                        //action["fieldOfView"] = 120;
+                        //action["orthographicSize"] = 5;
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
