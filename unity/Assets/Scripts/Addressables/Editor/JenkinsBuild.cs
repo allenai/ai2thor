@@ -5,6 +5,7 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 /// <summary>
@@ -15,7 +16,7 @@ public class JenkinsBuild
     static string[] EnabledScenes = FindEnabledEditorScenes();
     static string DEFAULT_BUILD_NAME = "MCS-AI2-THOR";
     static string DEFAULT_BUILD_DIR = "~/Desktop";
-    private static string DEFAULT_ADDRESSABLES_PROFILE = "Development";
+    static string DEFAULT_ADDRESSABLES_PROFILE = "Development";
 
     /// <summary>
     /// 
@@ -65,6 +66,7 @@ public class JenkinsBuild
     /// -executeMethod JenkinsBuild.BuildLinux
     /// MCS-AI2-THOR
     /// ai2thor/unity/Builds/Linux
+    /// dev
     /// </summary>
     /// <returns></returns>
     private static string[] GetExecuteMethodArguments()
@@ -173,5 +175,24 @@ public class JenkinsBuild
         {
             System.Console.WriteLine("[JenkinsBuild] Build Failed: Time:" + buildSummary.totalTime + " Total Errors:" + buildSummary.totalErrors);
         }
+    }
+
+    [PostProcessBuild]
+    public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
+    {
+        var bucketEnv = GetExecuteMethodArguments()[2];
+        var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
+        var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
+        var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(pathToBuiltProject);
+        var configFileText = File.ReadAllText(targetDir + "/settings.json");
+        
+        if(bucketEnv == "prod") {
+            configFileText = configFileText.Replace(devBucket, prodBucket);
+        }
+        else if(bucketEnv == "dev") {
+            configFileText = configFileText.Replace(prodBucket, devBucket);
+        }
+
+        File.WriteAllText(targetDir + "/settings.json", configFileText);
     }
 }
