@@ -147,12 +147,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
+            string coordinateSpace = "wrist",
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true,
             bool right = true
         ) {
             IK_Robot_Arm_Controller arm = getArm(right: right);
+
+            Vector3? pointRotation = null;
+            switch (coordinateSpace) {
+                case "world":
+                    // world space, can be used to move directly toward positions
+                    // returned by sim objects
+                    pointRotation = Vector3.zero;
+                    break;
+                case "wrist":
+                    // space relative to base of the wrist, where the camera is
+                    pointRotation = arm.HandCameraRotation().eulerAngles;
+                    break;
+                case "armBase":
+                    // space relative to the root of the arm, joint 1
+                    pointRotation = this.transform.rotation.eulerAngles;
+                    break;
+                default:
+                    throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
+            }
 
             if (arm.heldObjects.Count == 1) {
                 SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
@@ -162,6 +182,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yaw: yaw,
                     roll: roll,
                     speed: speed,
+                    pointRotation: pointRotation,
                     fixedDeltaTime: fixedDeltaTime,
                     returnToStart: returnToStart,
                     disableRendering: disableRendering,
@@ -184,6 +205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         */
         public void RotateWristAroundPoint(
             Vector3 point,
+            Vector3? pointRotation = null,
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
@@ -198,6 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             arm.rotateWristAroundPoint(
                 controller: this,
                 rotatePoint: point,
+                initialRotationOfPoint: pointRotation,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,

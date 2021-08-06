@@ -244,6 +244,10 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         armTarget.rotation = rot;
     }
 
+    public Quaternion HandCameraRotation() {
+        return handCameraTransform.rotation;
+    }
+
 
     /*
     See the documentation of the `MoveArmRelative` function
@@ -454,6 +458,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         Vector3 rotatePoint,
         Quaternion rotation,
         float degreesPerSecond,
+        Vector3? initialRotationOfPoint = null,
         bool disableRendering = false,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false
@@ -466,6 +471,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 updateTransform: armTarget.transform,
                 rotatePoint: rotatePoint,
                 targetRotation: rotation,
+                initialRotationOfPoint: initialRotationOfPoint,
                 fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 degreesPerSecond: degreesPerSecond,
                 returnToStartPropIfFailed: returnToStartPositionIfFailed

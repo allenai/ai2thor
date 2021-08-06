@@ -132,6 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion targetRotation,
             float fixedDeltaTime,
             float degreesPerSecond,
+            Vector3? initialRotationOfPoint = null,
             bool returnToStartPropIfFailed = false
         ) {
             bool teleport = (degreesPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
@@ -147,7 +148,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject fulcrum = new GameObject();
             fulcrum.transform.position = rotatePoint;
-            fulcrum.transform.rotation = updateTransform.rotation;
+            fulcrum.transform.rotation = Quaternion.Euler(
+                initialRotationOfPoint.GetValueOrDefault(updateTransform.rotation.eulerAngles)
+            );
             targetRotation = fulcrum.transform.rotation * targetRotation;
 
             GameObject wristProxy = new GameObject();
@@ -166,7 +169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
                 t.rotation = newRotation;
                 updateTransform.position = wristProxy.transform.position;
-                updateTransform.rotation = newRotation;
+                updateTransform.rotation = wristProxy.transform.rotation;
             };
             Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
                 return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
