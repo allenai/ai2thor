@@ -15,7 +15,11 @@ using RandomExtensions;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
-    public bool AttachObjectToArmWithFixedJoint(SimObjPhysics target) {
+    public bool AttachObjectToArmWithFixedJoint(
+        SimObjPhysics target,
+        float breakForce,
+        float breakTorque
+    ) {
         foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {
             if (fj.connectedBody.gameObject == target.gameObject) {
                 return true;
@@ -25,10 +29,21 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         FixedJoint newFj = magnetSphere.gameObject.AddComponent(typeof(FixedJoint)) as FixedJoint;
 
         newFj.connectedBody = target.GetComponent<Rigidbody>();
-        newFj.breakForce = float.PositiveInfinity;
-        newFj.breakTorque = float.PositiveInfinity;
+        newFj.breakForce = breakForce;
+        newFj.breakTorque = breakTorque;
         newFj.enableCollision = false;
         return true;
+    }
+
+    public bool IsObjectAttachedWithFixedJoint(
+        SimObjPhysics target
+    ) {
+        foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {
+            if (fj.connectedBody.gameObject == target.gameObject) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool BreakFixedJoints() {

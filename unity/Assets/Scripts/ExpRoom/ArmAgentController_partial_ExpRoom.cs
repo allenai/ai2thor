@@ -16,7 +16,12 @@ using RandomExtensions;
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
 
-        public void AttachObjectToArmWithFixedJoint(string objectId, bool right = true) {
+        public void AttachObjectToArmWithFixedJoint(
+            string objectId,
+            float breakForce = float.PositiveInfinity,
+            float breakTorque = float.PositiveInfinity,
+            bool right = true
+        ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -24,7 +29,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            actionFinished(getArm(right: right).AttachObjectToArmWithFixedJoint(target));
+            actionFinished(
+                getArm(right: right).AttachObjectToArmWithFixedJoint(
+                    target, breakForce: breakForce, breakTorque: breakTorque
+                )
+            );
+        }
+
+        public void IsObjectAttachedWithFixedJoint(string objectId, bool right = true) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            actionFinished(true, getArm(right: right).IsObjectAttachedWithFixedJoint(target));
         }
 
         public void BreakFixedJoints(bool right = true) {
