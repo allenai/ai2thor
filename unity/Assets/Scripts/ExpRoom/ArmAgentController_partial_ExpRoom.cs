@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            actionFinished(
+            actionFinishedEmit(
                 getArm(right: right).AttachObjectToArmWithFixedJoint(
                     target, breakForce: breakForce, breakTorque: breakTorque
                 )
@@ -44,11 +44,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            actionFinished(true, getArm(right: right).IsObjectAttachedWithFixedJoint(target));
+            actionFinishedEmit(true, getArm(right: right).IsObjectAttachedWithFixedJoint(target));
         }
 
         public void BreakFixedJoints(bool right = true) {
-            actionFinished(getArm(right: right).BreakFixedJoints());
+            actionFinishedEmit(getArm(right: right).BreakFixedJoints());
         }
 
     }
