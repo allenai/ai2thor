@@ -55,7 +55,7 @@ public class JenkinsBuild
         string addressesProfile = args[2];
 
         SwitchPlatform(BuildTargetGroup.Standalone, buildTarget);
-        SwitchAddressablesProfile(addressesProfile);
+        //SwitchAddressablesProfile(addressesProfile);
         BuildAddressablesContent();
         string fullPathAndName = buildPath + System.IO.Path.DirectorySeparatorChar + buildName + extension;
         BuildProject(EnabledScenes, fullPathAndName, buildTarget, BuildOptions.None);
@@ -82,13 +82,7 @@ public class JenkinsBuild
                     returnedArgs[0] = args[i + 2];
                     returnedArgs[1] = args[i + 3];
                     returnedArgs[2] = args[i + 4];
-                    if (args[i + 4] == "prod" ) {
-                        returnedArgs[2] = "Remote";
-                    }
-                    else if (args[i + 4] != "dev") {
-                        System.Console.WriteLine("[JenkinsBuild] Addressables build environment invalid (found " + args[i + 4] + "looking for [prod/dev]); defaulting to dev.");
-                    }
-                    //else either invalid or dev; maintaining default of dev.
+                    
                     return returnedArgs;
                 }
                 else
@@ -183,14 +177,21 @@ public class JenkinsBuild
         var bucketEnv = GetExecuteMethodArguments()[2];
         var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
         var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
+        var localhost = "http://localhost";
         var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(pathToBuiltProject);
         var configFileText = File.ReadAllText(targetDir + "/settings.json");
         
         if(bucketEnv == "prod") {
             configFileText = configFileText.Replace(devBucket, prodBucket);
+            configFileText = configFileText.Replace(localhost, prodBucket);
         }
         else if(bucketEnv == "dev") {
             configFileText = configFileText.Replace(prodBucket, devBucket);
+            configFileText = configFileText.Replace(localhost, devBucket);
+        }
+        else if(bucketEnv == "local") {
+            configFileText = configFileText.Replace(prodBucket, localhost);
+            configFileText = configFileText.Replace(devBucket, localhost);
         }
 
         File.WriteAllText(targetDir + "/settings.json", configFileText);
