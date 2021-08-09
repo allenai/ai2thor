@@ -663,15 +663,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             GameObject clipPlaneGo = addClippingPlaneToObject(target);
 
-            Vector3 inf = new Vector3(
-                float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity
-            );
-            Bounds boundsOfInputBox = new Bounds(inf, -inf);
+            Bounds boundsOfInputBox = UtilityFunctions.CreateEmptyBounds();
             foreach (Vector3 bc in boxCorners) {
                 boundsOfInputBox.Encapsulate(bc);
             }
 
-            Bounds boundsOfVerticesToExclude = new Bounds(inf, -inf);
+            Bounds boundsOfVerticesToExclude = UtilityFunctions.CreateEmptyBounds();
             bool anythingEncapsulated = false;
             foreach (MeshFilter mf in target.GetComponentsInChildren<MeshFilter>()) {
                 Mesh m = mf.mesh;

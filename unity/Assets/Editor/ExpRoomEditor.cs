@@ -131,10 +131,7 @@ public class ExpRoomEditor : EditorWindow {
 
         Physics.SyncTransforms();
 
-        Bounds objBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
         foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
             if (c.enabled && !c.isTrigger) {
                 objBounds.Encapsulate(c.bounds);

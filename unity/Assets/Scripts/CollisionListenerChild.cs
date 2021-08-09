@@ -29,7 +29,7 @@ public class CollisionListenerChild : MonoBehaviour {
 
     public void OnTriggerStay(Collider col) {
 #if UNITY_EDITOR
-        if (!parent.activeColliders.ContainsKey(col)) {
+        if (!parent.externalColliderToInternalCollisions.ContainsKey(col)) {
             if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
                 Debug.Log("got collision stay with " + col.gameObject.name + " this" + this.gameObject.name);
             }
@@ -42,7 +42,7 @@ public class CollisionListenerChild : MonoBehaviour {
 
     public void OnTriggerEnter(Collider col) {
 #if UNITY_EDITOR
-        if (!parent.activeColliders.ContainsKey(col)) {
+        if (!parent.externalColliderToInternalCollisions.ContainsKey(col)) {
             if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
                 Debug.Log("got collision enter with " + col.gameObject.name + " this" + this.gameObject.name);
             }

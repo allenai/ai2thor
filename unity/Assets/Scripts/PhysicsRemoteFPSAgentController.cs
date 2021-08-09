@@ -62,36 +62,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        // get all sim objets of action.type, then sets their temperature decay timers to value
-        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp = 0.0f) {
-            // get all objects of type passed by action
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
-
-            foreach (SimObjPhysics sop in simObjects) {
-                if (sop.Type.ToString() == objectType) {
-                    simObjectsOfType.Add(sop);
-                }
+        public void EnableTemperatureDecay() {
+            if (!physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature) {
+                physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = true;
             }
-            // use SetHowManySecondsUntilRoomTemp to set them all
-            foreach (SimObjPhysics sop in simObjectsOfType) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
-            }
-
             actionFinished(true);
         }
 
-        // get all sim objects and globally set the room temp decay time for all of them
-        public void SetGlobalRoomTempDecayTime(float TimeUntilRoomTemp = 0.0f) {
-            // get all objects 
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-            // use SetHowManySecondsUntilRoomTemp to set them all
-            foreach (SimObjPhysics sop in simObjects) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
+        public void DisableTemperatureDecay() {
+            if (physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature) {
+                physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = false;
             }
+            actionFinished(true);
+        }
 
+        // sets temperature decay for a single object.
+        public void SetTemperatureDecayTime(string objectId, float decayTime) {
+            if (decayTime < 0) {
+                throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
+            }
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            sop.SetHowManySecondsUntilRoomTemp(decayTime);
+            actionFinished(true);
+        }
+
+        // globally sets temperature decay for all objects.
+        public void SetTemperatureDecayTime(float decayTime) {
+            if (decayTime < 0) {
+                throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
+            }
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            foreach (SimObjPhysics sop in simObjects) {
+                sop.SetHowManySecondsUntilRoomTemp(decayTime);
+            }
             actionFinished(true);
         }
 
@@ -125,12 +128,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             errorMessage = "object with ObjectID: " + objectId + ", could not be found in this scene";
             actionFinished(false);
             return;
-        }
-
-        // sets whether this scene should allow objects to decay temperature to room temp over time or not
-        public void SetDecayTemperatureBool(bool allowDecayTemperature) {
-            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
-            actionFinished(true);
         }
 
         private void LateUpdate() {
@@ -1575,10 +1572,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
                         objBounds.Encapsulate(r.bounds);
@@ -3679,10 +3674,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            foreach (SimObjPhysics sop in simObjs) {
-                if (sop.Type.ToString() == objectType) {
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.Type.ToString() == objectType) {
+                        if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                            //look both in this object and children so things like Windows don't FREAK OUT
+                            sop.GetComponentInChildren<Break>().Unbreakable = true;
+                        }
+                    }
+                }
+            }
+
+            actionFinished(true);
+        }
+
+        public void MakeAllObjectsUnbreakable() {
+            UpdateBreakabilityOfAllObjects(true);
+
+        }
+
+        public void MakeAllObjectsBreakable() {
+            UpdateBreakabilityOfAllObjects(false);
+        }
+
+        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                        sop.GetComponent<Break>().Unbreakable = true;
+                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
                     }
                 }
             }
@@ -4424,7 +4444,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic
         ) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                // print("dropping contained objects");
                 GameObject topObject = null;
 
                 foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
@@ -6286,10 +6305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
-            Bounds objectBounds = new Bounds(
-                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objectBounds = UtilityFunctions.CreateEmptyBounds();
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
                 objectBounds.Encapsulate(vp.position);
@@ -6592,10 +6608,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Vector3 p in positions) {
                 b.Encapsulate(p);
             }
@@ -6854,10 +6867,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var oldRotation = sop.transform.rotation;
 
             sop.transform.rotation = Quaternion.identity;
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     b.Encapsulate(r.bounds);
@@ -7301,10 +7311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -7336,10 +7343,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -7739,7 +7743,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = action.objectVariation;
             Vector3[] reachablePositions = getReachablePositions();
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -7760,10 +7764,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
-            Bounds objBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                 objBounds.Encapsulate(r.bounds);
             }
@@ -7941,7 +7942,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             };
             int numObjectVariations = 3;
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -7975,10 +7976,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                     offset += 1.0f;
 
-                    Bounds objBounds = new Bounds(
-                        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                    );
+                    Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                     foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                         objBounds.Encapsulate(r.bounds);
                     }

@@ -109,8 +109,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
-    public bool canChangeTempToHot;
-    public bool canChangeTempToCold;
+    public bool isHeatSource;
+    public bool isColdSource;
     private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
@@ -232,15 +232,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
         }
 
-        Bounds bounding = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
-
+        Bounds bounding = UtilityFunctions.CreateEmptyBounds();
         foreach (Collider c in cols) {
             if (c.enabled && !c.isTrigger) {
                 bounding.Encapsulate(c.bounds);
             }
+        }
+        foreach (Transform visPoint in this.VisibilityPoints) {
+            bounding.Encapsulate(visPoint.position);
         }
 
         // reparent child simobjects
@@ -303,38 +302,40 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             this.transform.position = Vector3.zero;
             this.transform.rotation = Quaternion.identity;
-            Physics.SyncTransforms();
-
-            // Get all colliders on the sop, excluding colliders if they are not enabled 
-            // List<Collider> cols = new List<Collider>();
-            List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
-            // save the state of all the layers prior to modifying
-            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
-                if (c.enabled) {
-                    cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
-                }
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
             }
 
+            // Get all colliders on the sop, excluding colliders if they are not enabled
+            List<(Collider, LayerMask)> cols = new List<(Collider, LayerMask)>();
+            var nonInteractiveLayer = LayerMask.NameToLayer("NonInteractive");
             foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
+                    // save the state of all the layers prior to modifying
+                    cols.Add((c, c.transform.gameObject.layer));
+
                     // move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
-                    c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
+                    c.transform.gameObject.layer = nonInteractiveLayer;
                 }
             }
 
-            // Initialize the bounds and encapsulate all active colliders in SimObject's array
-            Bounds newBB = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            // Initialize the new bounds
+            Bounds newBB = UtilityFunctions.CreateEmptyBounds();
 
-            foreach (KeyValuePair<Collider, LayerMask> kvp in cols) {
-                if (!kvp.Key.isTrigger && kvp.Key.gameObject != this.BoundingBox) {
-                    newBB.Encapsulate(kvp.Key.bounds);
+            // Encapsulate all active colliders in SimObject's array
+            foreach ((Collider, LayerMask) colAndLayerMask in cols) {
+                Collider c = colAndLayerMask.Item1;
+                if (!c.isTrigger && c.gameObject != this.BoundingBox) {
+                    newBB.Encapsulate(c.bounds);
                 }
+            }
+            // Encapsulate all visilibity points of the SimObject array
+            foreach (Transform visPoint in this.VisibilityPoints) {
+                newBB.Encapsulate(visPoint.position);
             }
 
             // Update SimObject's BoundingBox collider to match new bounds
+            this.BoundingBox.transform.localPosition = Vector3.zero;
             this.BoundingBox.transform.rotation = Quaternion.identity;
             this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
             this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
@@ -342,11 +343,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Revert SimObject back to its initial transform
             this.transform.position = cachedPosition;
             this.transform.rotation = cachedRotation;
-            Physics.SyncTransforms();
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
 
             // Re-enable colliders, moving them back to their original layer
-            foreach (KeyValuePair<Collider, LayerMask> kvp in cols) {
-                kvp.Key.transform.gameObject.layer = kvp.Value;
+            foreach ((Collider, LayerMask) colAndLayerMask in cols) {
+                colAndLayerMask.Item1.transform.gameObject.layer = colAndLayerMask.Item2;
 
             }
 
@@ -842,8 +845,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         this.IsDirtyable = this.GetComponent<Dirty>();
         this.IsCookable = this.GetComponent<CookObject>();
         this.IsSliceable = this.GetComponent<SliceObject>();
-        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
+        this.isHeatSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isHeatSource);
+        this.isColdSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isColdSource);
 
     }
 
@@ -2081,10 +2084,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
         }
 
-        Bounds newBoundingBox = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        Bounds newBoundingBox = UtilityFunctions.CreateEmptyBounds();
         Vector3 minMeshXZ = colliders[0].bounds.center;
         Vector3 maxMeshXYZ = colliders[0].bounds.center;
 

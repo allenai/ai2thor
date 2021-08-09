@@ -64,10 +64,7 @@ public class AgentManager : MonoBehaviour {
     public const float MIN_FOV = 0;
 
 
-    public Bounds sceneBounds = new Bounds(
-        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-    );
+    public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
     public Bounds SceneBounds {
         get {
             if (sceneBounds.min.x == float.PositiveInfinity) {
@@ -340,10 +337,7 @@ public class AgentManager : MonoBehaviour {
 
     public void ResetSceneBounds() {
         // Recording initially disabled renderers and scene bounds
-        sceneBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        sceneBounds = UtilityFunctions.CreateEmptyBounds();
         foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
             if (r.enabled) {
                 sceneBounds.Encapsulate(r.bounds);
@@ -1386,9 +1380,9 @@ public class ObjectMetadata {
     public enum Temperature { RoomTemp, Hot, Cold };
     public string ObjectTemperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
                                     //
-    public bool canChangeTempToHot;// can change other object temp to hot
-    public bool canChangeTempToCold;// can change other object temp to cool
-                                    //
+    public bool isHeatSource;// can change other object temp to hot
+    public bool isColdSource;// can change other object temp to cool
+                             //
     public bool sliceable;// can this be sliced in some way?
     public bool isSliced;// currently sliced?
     ///
