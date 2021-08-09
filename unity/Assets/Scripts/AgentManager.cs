@@ -1349,69 +1349,121 @@ public class ObjectMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
+
     // public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
     public bool visible;
-    public bool obstructed; // if true, object is obstructed by something and actions cannot be performed on it. This means an object behind glass will be obstructed=True and visible=True
+
+    // If true, object is obstructed by something and actions cannot be performed on it.
+    // This means an object behind glass will be obstructed=True and visible=True
+    public bool obstructed;
+
+    // is this object a receptacle?
     public bool receptacle;
-    ///
-    // note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
-    public bool toggleable;// is this object able to be toggled on/off directly?
 
-    // note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
-    public bool isToggled;// is this object currently on or off? true is on
-    ///
+    // note: some objects are not themselves toggleable, because they must be toggled
+    // on/off via another sim object (stove knob -> stove burner)
+    // is this object able to be toggled on/off directly?
+    public bool toggleable;
+
+    // note some objects can still return the istoggle value even if they cannot directly
+    // be toggled on off (stove burner -> stove knob)
+    // is this object currently on or off? true is on
+    public bool isToggled;
+
+    // can this object be broken?
     public bool breakable;
-    public bool isBroken;// is this object broken?
-    ///
-    public bool canFillWithLiquid;// objects filled with liquids
-    public bool isFilledWithLiquid;// is this object filled with some liquid? - similar to 'depletable' but this is for liquids
-    public string fillLiquid; // coffee, wine, water
-    ///
-    public bool dirtyable;// can toggle object state dirty/clean
-    public bool isDirty;// is this object in a dirty or clean state?
-    ///
-    public bool canBeUsedUp;// for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+
+    // is this object broken?
+    public bool isBroken;
+
+    // objects filled with liquids
+    public bool canFillWithLiquid;
+
+    // is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+    public bool isFilledWithLiquid;
+
+    // coffee, wine, water
+    public string fillLiquid;
+
+    // can toggle object state dirty/clean
+    public bool dirtyable;
+
+    // is this object in a dirty or clean state?
+    public bool isDirty;
+
+    // for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc)
+    // - specifically not for liquids.
+    public bool canBeUsedUp;
+
+    // is this object currently used up?
     public bool isUsedUp;
-    ///
-    public bool cookable;// can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
-    public bool isCooked;// is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
-                         // ///
-                         // public bool abletocook;// can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
-                         // public bool isabletocook;// object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
-                         //
-                         // temperature placeholder values, might get more specific later with degrees but for now just track these three states
-    public enum Temperature { RoomTemp, Hot, Cold };
-    public string ObjectTemperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
-                                    //
-    public bool isHeatSource;// can change other object temp to hot
-    public bool isColdSource;// can change other object temp to cool
-                             //
-    public bool sliceable;// can this be sliced in some way?
-    public bool isSliced;// currently sliced?
-    ///
+
+    // can this object be turned to a cooked state? object should not be able to toggle
+    // back to uncooked state with contextual interactions, only a direct action
+    public bool cookable;
+
+    // is it cooked right now? - context sensitive objects might set this
+    // automatically like Toaster/Microwave/Pots/Pans if isHeated = true
+    // temperature placeholder values, might get more specific later
+    // with degrees but for now just track these three states
+    public bool isCooked;
+
+    // return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
+    public string temperature;
+
+    // can change other object temp to hot
+    public bool isHeatSource;
+
+    // can change other object temp to cool
+    public bool isColdSource;
+
+    // can this be sliced in some way?
+    public bool sliceable;
+
+    // currently sliced?
+    public bool isSliced;
+
+    // can this object be opened?
     public bool openable;
+
+    // is this object currently opened?
     public bool isOpen;
-    public float openness; // if the object is openable, what is the current openness? It's a normalized percentage from [0:1]
-    ///
+
+    // if the object is openable, what is the current openness? It's a normalized value from [0:1]
+    public float openness;
+
+    // can this object be picked up?
     public bool pickupable;
-    public bool isPickedUp;// if the pickupable object is actively being held by the agent
-    public bool moveable;// if the object is moveable, able to be pushed/affected by physics but is too big to pick up
 
-    public float mass;// mass is only for moveable and pickupable objects
+    // if the pickupable object is actively being held by the agent
+    public bool isPickedUp;
 
-    // salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
-    public enum ObjectSalientMaterial { Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic, Leather } // salient materials that make up an object (ie: cell phone - metal, glass)
+    // if the object is moveable, able to be pushed/affected by physics but is too big to pick up
+    public bool moveable;
 
-    public string[] salientMaterials; // salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
-    ///
+    // mass is only for moveable and pickupable objects
+    public float mass;
+
+    // Salient materials that this object is made of as strings (see enum above).
+    // This is only for objects that are Pickupable or Moveable
+    public string[] salientMaterials;
+
     public string[] receptacleObjectIds;
-    public float distance;// dintance fromm object's transform to agent transform
-    public String objectType;
+
+    // distance from object's transform to agent transform
+    public float distance;
+
+    // what type of object is this?
+    public string objectType;
+
+    // uuid of the object
     public string objectId;
-    // public string parentReceptacle;
+
     public string[] parentReceptacles;
-    // public float currentTime;
-    public bool isMoving;// true if this game object currently has a non-zero velocity
+
+    // true if this game object currently has a non-zero velocity
+    public bool isMoving;
+
     public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
 
@@ -1958,21 +2010,43 @@ public enum VisibilityScheme {
     Distance
 }
 
+public enum Temperature {
+    RoomTemp,
+    Hot,
+    Cold
+};
 
+// Salient materials are only for pickupable and moveable objects,
+// for now static only objects do not report material back since we have to assign them manually
+// They are the materials that make up an object (ie: cell phone - metal, glass).
+public enum SalientObjectMaterial {
+    Metal,
+    Wood,
+    Plastic,
+    Glass,
+    Ceramic,
+    Stone,
+    Fabric,
+    Rubber,
+    Food,
+    Paper,
+    Wax,
+    Soap,
+    Sponge,
+    Organic,
+    Leather
+};
 
 [Serializable]
 public class ControllerInitialization {
     public Dictionary<string, TypedVariable> variableInitializations;
 }
 
-
 [Serializable]
 public class TypedVariable {
     public string type;
     public object value;
 }
-
-
 
 public class ShouldSerializeContractResolver : DefaultContractResolver {
     public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();

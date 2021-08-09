@@ -66,7 +66,7 @@ New metadata values have been added to represent new state changes:
 - **isSliced**
 - **canBeUsedUp**
 - **isUsedUp**
-- **objectTemperature**
+- **temperature**
 - **isHeatSource**
 - **isColdSource**
 - **salientMaterials**
