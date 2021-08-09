@@ -883,7 +883,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 case "val":
                     if (useValMaterials.GetValueOrDefault(true) == false) {
-                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a train scene.");
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useValMaterials=false inside of a val scene.");
                     }
                     useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
                     useValMaterials = useValMaterials.GetValueOrDefault(true);
@@ -892,7 +892,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 case "test":
                     if (useTestMaterials.GetValueOrDefault(true) == false) {
-                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a train scene.");
+                        throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTestMaterials=false inside of a test scene.");
                     }
                     useTrainMaterials = useTrainMaterials.GetValueOrDefault(false);
                     useValMaterials = useValMaterials.GetValueOrDefault(false);
@@ -1624,10 +1624,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // can this object change others to hot?
-            objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
+            objMeta.isHeatSource = simObj.isHeatSource;
 
             // can this object change others to cold?
-            objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
+            objMeta.isColdSource = simObj.isColdSource;
 
             // placeholder for heatable objects -kettle, pot, pan
             // objMeta.abletocook = simObj.abletocook;
@@ -3198,7 +3198,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
-
             actionFinished(success);
         }
 
@@ -3264,6 +3263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.position = (Vector3)cameraProps["position"];
                 m_Camera.orthographic = (bool)cameraProps["orthographic"];
                 m_Camera.orthographicSize = (float)cameraProps["orthographicSize"];
+                cameraOrthSize = m_Camera.orthographicSize;
 
                 foreach (StructureObject so in structureObjsList) {
                     UpdateDisplayGameObject(so.gameObject, false);

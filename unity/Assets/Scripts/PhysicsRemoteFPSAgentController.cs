@@ -62,36 +62,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        // get all sim objets of action.type, then sets their temperature decay timers to value
-        public void SetRoomTempDecayTimeForType(string objectType, float TimeUntilRoomTemp = 0.0f) {
-            // get all objects of type passed by action
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
-
-            foreach (SimObjPhysics sop in simObjects) {
-                if (sop.Type.ToString() == objectType) {
-                    simObjectsOfType.Add(sop);
-                }
+        public void EnableTemperatureDecay() {
+            if (!physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature) {
+                physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = true;
             }
-            // use SetHowManySecondsUntilRoomTemp to set them all
-            foreach (SimObjPhysics sop in simObjectsOfType) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
-            }
-
             actionFinished(true);
         }
 
-        // get all sim objects and globally set the room temp decay time for all of them
-        public void SetGlobalRoomTempDecayTime(float TimeUntilRoomTemp = 0.0f) {
-            // get all objects 
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-            // use SetHowManySecondsUntilRoomTemp to set them all
-            foreach (SimObjPhysics sop in simObjects) {
-                sop.SetHowManySecondsUntilRoomTemp(TimeUntilRoomTemp);
+        public void DisableTemperatureDecay() {
+            if (physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature) {
+                physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = false;
             }
+            actionFinished(true);
+        }
 
+        // sets temperature decay for a single object.
+        public void SetTemperatureDecayTime(string objectId, float decayTime) {
+            if (decayTime < 0) {
+                throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
+            }
+            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            sop.SetHowManySecondsUntilRoomTemp(decayTime);
+            actionFinished(true);
+        }
+
+        // globally sets temperature decay for all objects.
+        public void SetTemperatureDecayTime(float decayTime) {
+            if (decayTime < 0) {
+                throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
+            }
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            foreach (SimObjPhysics sop in simObjects) {
+                sop.SetHowManySecondsUntilRoomTemp(decayTime);
+            }
             actionFinished(true);
         }
 
@@ -125,12 +128,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             errorMessage = "object with ObjectID: " + objectId + ", could not be found in this scene";
             actionFinished(false);
             return;
-        }
-
-        // sets whether this scene should allow objects to decay temperature to room temp over time or not
-        public void SetDecayTemperatureBool(bool allowDecayTemperature) {
-            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
-            actionFinished(true);
         }
 
         private void LateUpdate() {
@@ -3677,10 +3674,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            foreach (SimObjPhysics sop in simObjs) {
-                if (sop.Type.ToString() == objectType) {
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.Type.ToString() == objectType) {
+                        if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                            //look both in this object and children so things like Windows don't FREAK OUT
+                            sop.GetComponentInChildren<Break>().Unbreakable = true;
+                        }
+                    }
+                }
+            }
+
+            actionFinished(true);
+        }
+
+        public void MakeAllObjectsUnbreakable() {
+            UpdateBreakabilityOfAllObjects(true);
+
+        }
+
+        public void MakeAllObjectsBreakable() {
+            UpdateBreakabilityOfAllObjects(false);
+        }
+
+        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            if(simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                        sop.GetComponent<Break>().Unbreakable = true;
+                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
                     }
                 }
             }
@@ -4422,7 +4444,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic
         ) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                // print("dropping contained objects");
                 GameObject topObject = null;
 
                 foreach (SimObjPhysics sop in target.ContainedObjectReferences) {

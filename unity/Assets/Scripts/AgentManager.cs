@@ -1383,9 +1383,9 @@ public class ObjectMetadata {
     public enum Temperature { RoomTemp, Hot, Cold };
     public string ObjectTemperature;// return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
                                     //
-    public bool canChangeTempToHot;// can change other object temp to hot
-    public bool canChangeTempToCold;// can change other object temp to cool
-                                    //
+    public bool isHeatSource;// can change other object temp to hot
+    public bool isColdSource;// can change other object temp to cool
+                             //
     public bool sliceable;// can this be sliced in some way?
     public bool isSliced;// currently sliced?
     ///
