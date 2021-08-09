@@ -1645,7 +1645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // object temperature to string
-            objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
+            objMeta.temperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.IsPickupable;
             objMeta.isPickedUp = simObj.isPickedUp;// returns true for if this object is currently being held by the agent
