@@ -146,8 +146,6 @@ public class JenkinsBuild
         AddressableAssetSettings addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
         System.Console.WriteLine("[JenkinsBuild] Addressables Build Path: " + 
             addressableAssetSettings.RemoteCatalogBuildPath.GetValue(addressableAssetSettings));
-        System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + 
-            addressableAssetSettings.RemoteCatalogLoadPath.GetValue(addressableAssetSettings));
         System.Console.WriteLine("[JenkinsBuild] Addressables Active Data Builder: " +
             AddressableAssetSettingsDefaultObject.Settings.DataBuilders[AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilderIndex].name);
 
@@ -180,20 +178,25 @@ public class JenkinsBuild
         var localhost = "http://localhost";
         var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(pathToBuiltProject);
         var configFileText = File.ReadAllText(targetDir + "/settings.json");
+        var selectedBucket = "";
         
         if(bucketEnv == "prod") {
-            configFileText = configFileText.Replace(devBucket, prodBucket);
-            configFileText = configFileText.Replace(localhost, prodBucket);
+            selectedBucket = prodBucket;
+            configFileText = configFileText.Replace(devBucket, selectedBucket);
+            configFileText = configFileText.Replace(localhost, selectedBucket);
         }
         else if(bucketEnv == "dev") {
-            configFileText = configFileText.Replace(prodBucket, devBucket);
-            configFileText = configFileText.Replace(localhost, devBucket);
+            selectedBucket = devBucket;
+            configFileText = configFileText.Replace(prodBucket, selectedBucket);
+            configFileText = configFileText.Replace(localhost, selectedBucket);
         }
         else if(bucketEnv == "local") {
-            configFileText = configFileText.Replace(prodBucket, localhost);
-            configFileText = configFileText.Replace(devBucket, localhost);
+            selectedBucket = localhost;
+            configFileText = configFileText.Replace(prodBucket, selectedBucket);
+            configFileText = configFileText.Replace(devBucket, selectedBucket);
         }
 
         File.WriteAllText(targetDir + "/settings.json", configFileText);
+        System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + selectedBucket);
     }
 }
