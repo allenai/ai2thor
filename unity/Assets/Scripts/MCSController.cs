@@ -884,7 +884,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         //raycast to traverse structures at anything <= 45 degree angle incline
         if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().isSeesaw))) {
+            ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().IsSeesaw))) {
             hit.rigidbody.AddForceAtPosition(Vector3.down * GRAVITY_FORCE * GetComponent<Rigidbody>().mass, hit.point);
             //for pose changes on structures only
             if (poseChange)

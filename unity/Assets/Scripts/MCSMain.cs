@@ -1153,11 +1153,10 @@ public class MCSMain : MonoBehaviour {
 
 
         if(seesaw) {
-            ai2thorPhysicsScript.isSeesaw = true;
+            ai2thorPhysicsScript.IsSeesaw = true;
             Physics.IgnoreCollision(agentController.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
             gameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionX |  RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
             if(objectConfig.shows[0].scale.z > MCSMain.SEESAW_MAX_DEPTH && !objectConfig.kinematic) {
-                //anything greater t han this max depth will cause rigibody collider overlaps
                 gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, MCSMain.SEESAW_MAX_DEPTH * 0.01f);
             }
         }
