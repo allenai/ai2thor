@@ -306,7 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
             float internalNoise = applyActionNoise ? (float)systemRandom.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-            return moveMagnitude + noise + (float) internalNoise;
+            return moveMagnitude + noise + (float)internalNoise;
         }
 
         protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {

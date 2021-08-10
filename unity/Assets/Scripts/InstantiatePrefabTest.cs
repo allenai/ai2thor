@@ -67,10 +67,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             }
         }
 
-        Bounds objBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
         foreach (Renderer r in candidates[variation - 1].GetComponentsInChildren<Renderer>()) {
             if (r.enabled) {
                 objBounds.Encapsulate(r.bounds);

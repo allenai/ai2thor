@@ -54,7 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 target = new Vector3(0, targetY, 0);
             float currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
             double epsilon = 1e-3;
-            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0) {
+            while (currentDistance > epsilon && !arm.collisionListener.ShouldHalt()) {
                 Vector3 direction = (target - arm.transform.localPosition).normalized;
                 arm.transform.localPosition += direction * 1.0f * Time.fixedDeltaTime;
 
@@ -92,7 +92,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
             double epsilon = 1e-3;
             Debug.Log("Starting arm movement");
-            while (currentDistance > epsilon && arm.collisionListener.StaticCollisions().Count == 0) {
+            while (currentDistance > epsilon && !arm.collisionListener.ShouldHalt()) {
                 Vector3 direction = (target - armTarget.transform.position).normalized;
                 armTarget.transform.position += direction * 1.0f * Time.fixedDeltaTime;
 
@@ -400,17 +400,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "parent": {
-                    Dictionary<string, object> action = new Dictionary<string, object>{
+                        Dictionary<string, object> action = new Dictionary<string, object>{
                         {"action", "ParentObject"},
                     };
-                    action["parentId"] = splitcommand[1];
-                    action["childId"] = splitcommand[2];
+                        action["parentId"] = splitcommand[1];
+                        action["childId"] = splitcommand[2];
 
-                    CurrentActiveController().ProcessControlCommand(
-                        action
-                    );
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(
+                            action
+                        );
+                        break;
+                    }
 
                 case "expspawn": {
                         ServerAction action = new ServerAction();
@@ -3152,15 +3152,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "expfit": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "WhichContainersDoesAvailableObjectFitIn";
+                        action["objectName"] = "AlarmClock_dd21c3db";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 case "scale": {
-                        ServerAction action = new ServerAction();
-                        action.action = "ScaleObject";
-                        action.objectId = "Cup|-01.36|+00.78|+00.71";
-                        action.scale = 2.0f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ScaleObject";
+                        action["objectId"] = "Box|+00.00|+01.33|-00.44";
+                        action["scale"] = 0.6746510624885559f;
+                        action["scaleOverSeconds"] = 0f;
+                        action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {
-                            action.scale = float.Parse(splitcommand[1]);
+                            action["scale"] = float.Parse(splitcommand[1]);
                         }
+                        if (splitcommand.Length > 2) {
+                            action["scaleOverSeconds"] = float.Parse(splitcommand[2]);
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "closepoints": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PointOnObjectsCollidersClosestToPoint";
+                        action["objectId"] = "Dumbbell|+00.00|+00.90|+00.00";
+                        action["point"] = new Vector3(0f, 1000f, 0f);
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

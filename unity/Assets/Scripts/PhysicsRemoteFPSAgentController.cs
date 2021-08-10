@@ -22,7 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Quaternion orientation = new Quaternion();
     }
 
-    public class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
+    public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
         [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         bool transparentStructureObjectsHidden = false;
@@ -852,8 +852,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string tableId = objectId;
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -1070,8 +1070,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetUnreachableSilhouetteForObject(string objectId, float z) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
             if (z <= 0.0f) {
@@ -1294,7 +1294,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected bool moveLiftedObjectHelper(string objectId, Vector3 relativeDir, float maxAgentsDistance = -1.0f) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
+                errorMessage = $"Cannot find object with id {objectId}.";
                 return false;
             }
             SimObjPhysics objectToMove = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -1317,8 +1317,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CollidersObjectCollidingWith(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
             List<string> collidingWithNames = new List<string>();
@@ -1572,10 +1572,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     return;
                 }
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
                         objBounds.Encapsulate(r.bounds);
@@ -3080,400 +3078,98 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RotateHeldObject(pitch: x, yaw: y, roll: -z);
         }
 
-        // action to return points from a grid that have an experiment receptacle below it
-        // creates a grid starting from the agent's current hand position and projects that grid
-        // forward relative to the agent
-        // grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
-        public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount) {
-            var agent = this.agentManager.agents[0];
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            // good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
-            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
-            // var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
-            actionFinished(true, ret);
-        }
-
-        // spawn receptacle object at array index <objectVariation> rotated to <y>
-        // on <receptacleObjectId> using position <position>
-        public void SpawnExperimentObjAtPoint(ServerAction action) {
-            if (action.receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
-                actionFinished(false);
-                return;
-            }
-
-            if (action.objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == action.receptacleObjectId) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                errorMessage = "no receptacle object with id: " +
-                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y)) {
-                actionFinished(true);
-            } else {
-                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
-        }
-
-        // spawn receptacle object at array index <objectVariation> rotated to <y>
-        // on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentObjAtRandom(ServerAction action) {
-            if (action.receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
-                actionFinished(false);
-                return;
-            }
-
-            if (action.objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == action.receptacleObjectId) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                errorMessage = "no receptacle object with id: " +
-                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y)) {
-                actionFinished(true);
-            } else {
-                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
-        }
-
-        // specify a screen by objectId in exp room and change material to objectVariation
-        public void ChangeScreenMaterialExpRoom(string objectId, int objectVariation) {
-            // only 5 material options at the moment
-            if (objectVariation < 0 || objectVariation > 4) {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            if (objectId == null) {
-                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == objectId) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                errorMessage = "no object with id: " +
-                objectId + " could be found during ChangeScreenMaterialExpRoom";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeScreenMaterial(target, objectVariation);
-            actionFinished(true);
-        }
-
-        // specify a screen in exp room by objectId and change material color to rgb
-        public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b) {
-            if (
-            r < 0 || r > 255 ||
-            g < 0 || g > 255 ||
-            b < 0 || b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == objectId) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                errorMessage = "no object with id: " +
-                objectId + " could not be found during ChangeScreenColorExpRoom";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeScreenColor(target, r, g, b);
-            actionFinished(true);
-        }
-
-        // change wall to material [variation]       
-        public void ChangeWallMaterialExpRoom(int objectVariation) {
-            // only 5 material options at the moment
-            if (objectVariation < 0 || objectVariation > 4) {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeWallMaterial(objectVariation);
-            actionFinished(true);
-        }
-
-        // change wall color to rgb (0-255, 0-255, 0-255)
-        public void ChangeWallColorExpRoom(ServerAction action) {
-            if (
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeWallColor(action.r, action.g, action.b);
-            actionFinished(true);
-        }
-
-        // change floor to material [variation]
-        public void ChangeFloorMaterialExpRoom(ServerAction action) {
-            // only 5 material options at the moment
-            if (action.objectVariation < 0 || action.objectVariation > 4) {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeFloorMaterial(action.objectVariation);
-            actionFinished(true);
-        }
-
-        // change wall color to rgb (0-255, 0-255, 0-255)
-        public void ChangeFloorColorExpRoom(ServerAction action) {
-            if (
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeFloorColor(action.r, action.g, action.b);
-            actionFinished(true);
-        }
-
-        // change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
-        public void ChangeLightColorExpRoom(ServerAction action) {
-            if (
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightColor(action.r, action.g, action.b);
-            actionFinished(true);
-        }
-
-        // change intensity of lights in exp room [0-5] these arent in like... lumens or anything
-        // just a relative intensity value
-        public void ChangeLightIntensityExpRoom(float intensity) {
-            // restrict this to [0-5]
-            if (intensity < 0 || intensity > 5) {
-                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightIntensity(intensity);
-            actionFinished(true);
-        }
-
-        public void ChangeTableTopMaterialExpRoom(ServerAction action) {
-            // only 5 material options at the moment
-            if (action.objectVariation < 0 || action.objectVariation > 4) {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableTopMaterial(action.objectVariation);
-            actionFinished(true);
-        }
-
-        public void ChangeTableTopColorExpRoom(ServerAction action) {
-            if (
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableTopColor(action.r, action.g, action.b);
-            actionFinished(true);
-        }
-
-        public void ChangeTableLegMaterialExpRoom(ServerAction action) {
-            // only 5 material options at the moment
-            if (action.objectVariation < 0 || action.objectVariation > 4) {
-                errorMessage = "please use objectVariation [0, 4] inclusive";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableLegMaterial(action.objectVariation);
-            actionFinished(true);
-        }
-
-        public void ChangeTableLegColorExpRoom(ServerAction action) {
-            if (
-            action.r < 0 || action.r > 255 ||
-            action.g < 0 || action.g > 255 ||
-            action.b < 0 || action.b > 255) {
-                errorMessage = "rgb values must be [0-255]";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeTableLegColor(action.r, action.g, action.b);
-            actionFinished(true);
-        }
-
-        // returns valid spawn points for spawning an object on a receptacle in the experiment room
-        // checks if <action.objectId> at <action.y> rotation can spawn without falling off 
-        // table <receptacleObjectId>
-        public void ReturnValidSpawnsExpRoom(ServerAction action) {
-            if (action.receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
-                actionFinished(false);
-                return;
-            }
-
-            if (action.objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            // find the object in the scene, disregard visibility
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if (sop.objectID == action.receptacleObjectId) {
-                    target = sop;
-                }
-            }
-
-            if (target == null) {
-                errorMessage = "no receptacle object with id: " +
-                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
-                actionFinished(false);
-                return;
-            }
-
-            // return all valid spawn coordinates
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
-        }
-
         // change scale of sim object, this only works with sim objects not structures
-        public void ScaleObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
+        public void ScaleObject(
+            string objectId,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId, forceAction);
+
+            // neither objectId nor coordinates found an object
+            if (target == null) {
+                errorMessage = $"Object with ID {objectId} does not appear to be interactable.";
+                actionFinished(false);
+                return;
+            } else {
+                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
+            }
+        }
+
+        public void ScaleObject(
+            float x,
+            float y,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
             SimObjPhysics target = null;
-            if (action.forceAction) {
-                action.forceVisible = true;
-            }
-            // no target object specified, so instead try and use x/y screen coordinates
-            if (action.objectId == null) {
-                if (!screenToWorldTarget(
-                x: action.x,
-                y: action.y,
+            if (!screenToWorldTarget(
+                x: x,
+                y: y,
                 target: ref target,
-                forceAction: action.forceAction)) {
-                    // error message is set inside screenToWorldTarget
-                    actionFinished(false, errorMessage);
-                    return;
-                }
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                forceAction: forceAction)
+            ) {
+                // error message is set inside screenToWorldTarget
+                actionFinished(false, errorMessage);
+                return;
             }
 
             // neither objectId nor coordinates found an object
             if (target == null) {
-                errorMessage = "No target found";
+                errorMessage = $"Could not find interactable object at given (x,y)=({x},{y}) screen coordinates";
                 actionFinished(false);
                 return;
             } else {
-                float scaleMultiplier = action.scale; // this can be something like 0.3 to shrink or 1.5 to grow
-                StartCoroutine(scaleObject(gameObject.transform.localScale * action.scale, target));
+                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
             }
         }
 
-        private IEnumerator scaleObject(Vector3 targetScale, SimObjPhysics target) {
-            yield return new WaitForFixedUpdate();
+        private IEnumerator scaleObject(
+            float scale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
+            return scaleObject(
+                targetScale: this.transform.localScale * scale,
+                target: target,
+                scaleOverSeconds: scaleOverSeconds,
+                skipActionFinished: skipActionFinished
+            );
+        }
 
+        private IEnumerator scaleObject(
+            Vector3 targetScale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
             Vector3 originalScale = target.transform.localScale;
             float currentTime = 0.0f;
 
-            do {
-                target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
-                currentTime += Time.deltaTime;
-                yield return null;
-            } while (currentTime <= 1.0f);
+            if (scaleOverSeconds <= 0f) {
+                target.transform.localScale = targetScale;
+            } else {
+                yield return new WaitForFixedUpdate();
+                do {
+                    target.transform.localScale = Vector3.Lerp(
+                        originalScale,
+                        targetScale,
+                        currentTime / scaleOverSeconds
+                    );
+                    currentTime += Time.deltaTime;
+                    yield return null;
+                } while (currentTime <= scaleOverSeconds);
+            }
 
             // store reference to all children
             Transform[] children = new Transform[target.transform.childCount];
@@ -3491,8 +3187,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 t.SetParent(target.transform);
             }
 
-            target.ContextSetUpBoundingBox();
-            actionFinished(true);
+            autoSyncTransforms();
+
+            target.ContextSetUpBoundingBox(forceCacheReset: true);
+
+            if (!skipActionFinished) {
+                actionFinished(true);
+            }
         }
 
         // pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
@@ -3505,8 +3206,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -3557,6 +3258,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 originalPos = target.transform.position;
             target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
 
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
             bool wasInHand = false;
             if (ItemInHand) {
                 if (ItemInHand.transform.gameObject == target.transform.gameObject) {
@@ -3580,6 +3285,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Check spawn area here            
             target.transform.position = finalPos;
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
             Collider colliderHitIfSpawned = UtilityFunctions.firstColliderObjectCollidingWith(
                 target.gameObject
             );
@@ -3587,11 +3297,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (colliderHitIfSpawned == null) {
                 target.transform.position = finalPos;
 
+                Rigidbody rb = target.GetComponent<Rigidbody>();
+
+                if (forceKinematic) {
+                    rb.isKinematic = forceKinematic;
+                }
+
                 // Additional stuff we need to do if placing item that was in hand
                 if (wasInHand) {
 
-                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                    rb.isKinematic = forceKinematic;
                     rb.constraints = RigidbodyConstraints.None;
                     rb.useGravity = true;
 
@@ -3646,8 +3360,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceKinematic = false
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -5855,10 +5569,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void HideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+        public void HideObject(string objectId, bool hideContained = true) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                if (hideContained && !ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                     foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, false);
                     }
@@ -5873,10 +5587,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void UnhideObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+        public void UnhideObject(string objectId, bool unhideContained = true) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                if (unhideContained && !ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
                     foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, true);
                     }
@@ -6582,10 +6296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Don't want to consider all positions in the scene, just those from which the object
             // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
             // which is then used to filter the set of all reachable positions to just those plausible positions.
-            Bounds objectBounds = new Bounds(
-                center: new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                size: new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objectBounds = UtilityFunctions.CreateEmptyBounds();
             objectBounds.Encapsulate(theObject.transform.position);
             foreach (Transform vp in theObject.VisibilityPoints) {
                 objectBounds.Encapsulate(vp.position);
@@ -6888,10 +6599,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Vector3 p in positions) {
                 b.Encapsulate(p);
             }
@@ -7150,10 +6858,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var oldRotation = sop.transform.rotation;
 
             sop.transform.rotation = Quaternion.identity;
-            Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     b.Encapsulate(r.bounds);
@@ -7328,8 +7033,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ApproxPercentScreenObjectOccupies(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find object with id " + objectId;
-                actionFinished(false);
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
                 return;
             }
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
@@ -7586,10 +7291,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics so = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -7621,10 +7323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
-                Bounds objBounds = new Bounds(
-                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                );
+                Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                 bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -8024,7 +7723,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = action.objectVariation;
             Vector3[] reachablePositions = getReachablePositions();
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -8045,10 +7744,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
-            Bounds objBounds = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
+            Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
             foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                 objBounds.Encapsulate(r.bounds);
             }
@@ -8226,7 +7922,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             };
             int numObjectVariations = 3;
 
-            Bounds b = new Bounds();
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
             b.min = agentManager.SceneBounds.min;
             b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
@@ -8260,10 +7956,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                     offset += 1.0f;
 
-                    Bounds objBounds = new Bounds(
-                        new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                        new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-                    );
+                    Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
                     foreach (Renderer r in objForBounds.GetComponentsInChildren<Renderer>()) {
                         objBounds.Encapsulate(r.bounds);
                     }
