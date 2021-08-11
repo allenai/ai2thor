@@ -3209,25 +3209,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "rc": {
-                        dynamic action = new JObject();
-                        action.action = "RotateContinuous";
-                        if (splitcommand.Length > 2) {
-                            action.degrees = float.Parse(splitcommand[1]);
+                        // dynamic action = new JObject();
+                        // action.action = "RotateContinuous";
+                        // if (splitcommand.Length > 2) {
+                        //     action.degrees = float.Parse(splitcommand[1]);
 
-                            if (splitcommand.Length >= 3) {
-                                action.speed = float.Parse(splitcommand[2]);
-                            }
+                        //     if (splitcommand.Length >= 3) {
+                        //         action.speed = float.Parse(splitcommand[2]);
+                        //     }
 
-                            if (splitcommand.Length >= 4) {
-                                action.disableRendering = bool.Parse(splitcommand[3]);
-                            }
+                        //     if (splitcommand.Length >= 4) {
+                        //         action.disableRendering = bool.Parse(splitcommand[3]);
+                        //     }
 
-                            if (splitcommand.Length >= 5) {
-                                action.returnToStart = bool.Parse(splitcommand[4]);
-                            }
-                        }
+                        //     if (splitcommand.Length >= 5) {
+                        //         action.returnToStart = bool.Parse(splitcommand[4]);
+                        //     }
+                        // }
 
-                        CurrentActiveController().ProcessControlCommand(action);
+                        // CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 

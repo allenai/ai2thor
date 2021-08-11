@@ -56,13 +56,13 @@ namespace MessagePack.Resolvers {
             #if ENABLE_IL2CPP && !UNITY_WEBGL 
             MessagePack.Resolvers.ThorIL2CPPGeneratedResolver.Instance,
             #endif 
-            #if !ENABLE_IL2CPP 
-            DynamicEnumResolver.Instance, // Try Enum
-            DynamicGenericResolver.Instance, // Try Array, Tuple, Collection, Enum(Generic Fallback)
-            DynamicUnionResolver.Instance, // Try Union(Interface)
-            DynamicObjectResolver.Instance, // Try Object
-            DynamicContractlessObjectResolver.Instance // Serializes keys as strings
-            #endif
+            // #if !ENABLE_IL2CPP 
+            // DynamicEnumResolver.Instance, // Try Enum
+            // DynamicGenericResolver.Instance, // Try Array, Tuple, Collection, Enum(Generic Fallback)
+            // DynamicUnionResolver.Instance, // Try Union(Interface)
+            // DynamicObjectResolver.Instance, // Try Object
+            // DynamicContractlessObjectResolver.Instance // Serializes keys as strings
+            // #endif
         };
 
         static ThorContractlessStandardResolver() {
