@@ -92,9 +92,9 @@ public class CanOpen_Object : MonoBehaviour {
     void Update() {
         // test if it can open without Agent Command - Debug Purposes
 #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Equals)) {
-            Interact();
-        }
+        // if (Input.GetKeyDown(KeyCode.Equals)) {
+        //     Interact();
+        // }
 #endif
     }
 
