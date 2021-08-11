@@ -1207,6 +1207,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "objVisible": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "ProportionOfObjectVisible";
+                        action["objectId"] = "Pot|-01.22|+00.90|-02.36";
+                        action["thirdPartyCameraIndex"] = 0;
+                        //action["fieldOfView"] = 120;
+                        //action["orthographicSize"] = 5;
+
+                        CurrentActiveController().ProcessControlCommand(action);                        
+                        break;
+                }
+
                 case "ovftpc": {
                     Dictionary<string, object> action = new Dictionary<string, object>{
                         {"action", "ObjectsVisibleFromThirdPartyCamera"},

@@ -3266,6 +3266,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void ProportionOfObjectVisible(
+            string objectId, int? thirdPartyCameraIndex = null
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            float propVisible = 0f;
+            if (target.VisibilityPoints != null && target.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = target.VisibilityPoints;
+                int visPointCount = 0;
+
+                Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
+                foreach (Transform point in visPoints) {
+                    // if this particular point is in view...
+                    if (CheckIfVisibilityPointInViewport(
+                        target, point, camera, false
+                    )) {
+                        visPointCount++;
+                    }
+                }
+
+                propVisible = visPointCount / (1.0f * visPoints.Length);
+            }
+
+            actionFinishedEmit(true, propVisible);
+        }
+        
         // not sure what this does, maybe delete?
         public void SetTopLevelView(bool topView = false) {
             inTopLevelView = topView;
