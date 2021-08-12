@@ -131,6 +131,8 @@ public class AgentManager : MonoBehaviour {
         physicsSceneManager.UnpausePhysicsAutoSim();
         primaryAgent.SetAgentMode("default");
 #endif
+        //FOR VR PLEASE HAVE PHYSICS GOING BY DEFAULT THIS IS FINE ITS COOL DONT WORRY ABOUT IT
+        physicsSceneManager.UnpausePhysicsAutoSim();
 
         StartCoroutine(EmitFrame());
     }
