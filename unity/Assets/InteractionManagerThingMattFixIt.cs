@@ -29,10 +29,8 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
             ttm.thingToMove.transform.position = ttm.isOpen ? ttm.closePosition : ttm.openPosition;
         }
         if (ttm.shouldRotate) {
-            ttm.thingToMove.transform.rotation = (
-                ttm.shouldRotate
-                ? Quaternion.Euler(ttm.closeRotation)
-                : Quaternion.Euler(ttm.openRotation)
+            ttm.thingToMove.transform.rotation = Quaternion.Euler(
+                ttm.shouldRotate ? ttm.closeRotation : ttm.openRotation
             );
         }
         ttm.isOpen = !ttm.isOpen;
@@ -47,6 +45,7 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
         ) {
             ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
             toggleOpen(ttm: ttm);
+            ttm.thingToMove.SetActive(false);
         }
 
         if (
@@ -55,6 +54,7 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
         ) {
             ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
             toggleOpen(ttm: ttm);
+            ttm.thingToMove.SetActive(false);
         }
     }
 }
