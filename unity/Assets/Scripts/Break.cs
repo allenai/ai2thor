@@ -49,15 +49,15 @@ public class Break : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
 #if UNITY_EDITOR
-        if (gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-            Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
-        }
+        // if (gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+        //     Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
+        // }
 
-        if (gameObject.GetComponent<Dirty>()) {
-            if (DirtyPrefabToSwapTo == null) {
-                Debug.LogError(gameObject.name + " is missing a DirtyPrefabToSpawnTo!");
-            }
-        }
+        // if (gameObject.GetComponent<Dirty>()) {
+        //     if (DirtyPrefabToSwapTo == null) {
+        //         Debug.LogError(gameObject.name + " is missing a DirtyPrefabToSpawnTo!");
+        //     }
+        //}
 #endif
 
         CurrentImpulseThreshold = ImpulseThreshold;
@@ -70,17 +70,17 @@ public class Break : MonoBehaviour {
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
             //before disabling things, if this object is a receptacle, unparent all objects contained
-            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
-                GameObject objs = GameObject.Find("Objects");
-                foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
-                    go.transform.SetParent(objs.transform);
-                    Rigidbody childrb = go.GetComponent<Rigidbody>();
-                    childrb.isKinematic = false;
-                    childrb.useGravity = true;
-                    childrb.constraints = RigidbodyConstraints.None;
-                    childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                }
-            }
+            // if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
+            //     GameObject objs = GameObject.Find("Objects");
+            //     foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
+            //         go.transform.SetParent(objs.transform);
+            //         Rigidbody childrb = go.GetComponent<Rigidbody>();
+            //         childrb.isKinematic = false;
+            //         childrb.useGravity = true;
+            //         childrb.constraints = RigidbodyConstraints.None;
+            //         childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            //     }
+            // }
 
             // turn off everything except the top object
             foreach (Transform t in gameObject.transform) {
@@ -93,12 +93,12 @@ public class Break : MonoBehaviour {
             // if gameObject.GetComponent<Dirty>() - first check to make sure if this object can become dirty
             // if object is dirty - probably get this from the "Dirty" component to keep everything nice and self contained
             // PrefabToSwapTo = DirtyPrefabToSwapTo
-            if (gameObject.GetComponent<Dirty>()) {
-                // if the object is not clean, swap to the dirty prefab
-                if (gameObject.GetComponent<Dirty>().IsDirty()) {
-                    PrefabToSwapTo = DirtyPrefabToSwapTo;
-                }
-            }
+            // if (gameObject.GetComponent<Dirty>()) {
+            //     // if the object is not clean, swap to the dirty prefab
+            //     if (gameObject.GetComponent<Dirty>().IsDirty()) {
+            //         PrefabToSwapTo = DirtyPrefabToSwapTo;
+            //     }
+            // }
 
             GameObject resultObject = Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
             broken = true;
@@ -114,17 +114,17 @@ public class Break : MonoBehaviour {
 
             // if this object breaking is an egg, set rotation for the EggCracked object
             // quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
-            if (resultObject.GetComponent<SimObjPhysics>()) {
-                if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked) {
-                    resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
-                    PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                    psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
+            // if (resultObject.GetComponent<SimObjPhysics>()) {
+            //     if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked) {
+            //         resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
+            //         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            //         psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
 
-                    Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
-                    resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                    resultrb.isKinematic = false;
-                }
-            }
+            //         Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
+            //         resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            //         resultrb.isKinematic = false;
+            //     }
+            // }
 
             // it's broken, make sure that it cant trigger this call again
             readytobreak = false;
@@ -140,9 +140,9 @@ public class Break : MonoBehaviour {
             }
 
             // if the object can be toggled on/off, if it is on, turn it off since it is now broken
-            if (gameObject.GetComponent<CanToggleOnOff>()) {
-                gameObject.GetComponent<CanToggleOnOff>().isOn = false;
-            }
+            // if (gameObject.GetComponent<CanToggleOnOff>()) {
+            //     gameObject.GetComponent<CanToggleOnOff>().isOn = false;
+            // }
 
             broken = true;
             // it's broken, make sure that it cant trigger this call again
@@ -155,12 +155,12 @@ public class Break : MonoBehaviour {
             BreakForDecalType(collision);
         }
 
-        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
-        if (primaryAgent.imageSynthesis) {
-            if (primaryAgent.imageSynthesis.enabled) {
-                primaryAgent.imageSynthesis.OnSceneChange();
-            }
-        }
+        // BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        // if (primaryAgent.imageSynthesis) {
+        //     if (primaryAgent.imageSynthesis.enabled) {
+        //         primaryAgent.imageSynthesis.OnSceneChange();
+        //     }
+        // }
     }
 
     // Override for Decal behavior
@@ -182,19 +182,19 @@ public class Break : MonoBehaviour {
         // }
 
         // if the other collider hit is on the list of things that shouldn't cause this object to break, return and do nothing
-        if (col.transform.GetComponentInParent<SimObjPhysics>()) {
-            if (TooSmalOrSoftToBreakOtherObjects.Contains(col.transform.GetComponentInParent<SimObjPhysics>().Type)) {
-                return;
-            }
-        }
+        // if (col.transform.GetComponentInParent<SimObjPhysics>()) {
+        //     if (TooSmalOrSoftToBreakOtherObjects.Contains(col.transform.GetComponentInParent<SimObjPhysics>().Type)) {
+        //         return;
+        //     }
+        // }
 
         // ImpulseForce.Add(col.impulse.magnitude);
-        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
-            if (readytobreak) {
-                readytobreak = false;
-                BreakObject(col);
-            }
-        }
+        // if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+        //     if (readytobreak) {
+        //         readytobreak = false;
+        //         BreakObject(col);
+        //     }
+        // }
     }
 
     // change the ImpulseThreshold to higher if we are in a high friction zone, to simulate throwing an object at a "soft" object requiring
