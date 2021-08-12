@@ -39,7 +39,7 @@ public class RoomChangeManager : MonoBehaviour
             if(hit.transform.GetComponent<ChangeRoom>())
             {
                 ChangeRoom c = hit.transform.GetComponent<ChangeRoom>();
-                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Additive);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Single);
             }
         }
 
@@ -48,7 +48,7 @@ public class RoomChangeManager : MonoBehaviour
             if(hit.transform.GetComponent<ChangeRoom>())
             {
                 ChangeRoom c = hit.transform.GetComponent<ChangeRoom>();
-                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Additive);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Single);
             }
         }
     }
