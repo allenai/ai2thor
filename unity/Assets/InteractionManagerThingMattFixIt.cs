@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.SceneManagement;
 
 public class InteractionManagerThingMattFixIt : MonoBehaviour {
 
@@ -40,22 +39,12 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
     private void doTheThing(InputAction.CallbackContext context) {
         RaycastHit hit;
 
-        if(leftHand.GetCurrentRaycastHit(out hit))
-        {
-            if(hit.transform.GetComponent<ChangeRoom>())
-            {
-                ChangeRoom c = hit.transform.GetComponent<ChangeRoom>();
-                UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan201_vr", LoadSceneMode.Single);
-            }
-        }
-
         if (
             leftHand.GetCurrentRaycastHit(out hit)
             && hit.transform.GetComponent<ThingToMove>()
         ) {
             ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
             toggleOpen(ttm: ttm);
-            ttm.thingToMove.SetActive(false);
         }
 
         if (
@@ -64,7 +53,6 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
         ) {
             ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
             toggleOpen(ttm: ttm);
-            ttm.thingToMove.SetActive(false);
         }
     }
 }
