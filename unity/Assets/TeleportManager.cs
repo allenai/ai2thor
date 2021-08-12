@@ -52,14 +52,13 @@ public class TeleportManager : MonoBehaviour
         TeleportRequest req = new TeleportRequest()
         {
             destinationPosition = hit.point,
-            //destinationRotation = ,
-            //matchOrientation = ,
-            //requestTime = ,
         };
 
         provider.QueueTeleportRequest(req);
         teleportRay.enabled = false;
         _teleRayActive = false;
+        grabRay.enabled = true;
+
     }
 
     private void OnTeleportActivate(InputAction.CallbackContext context)
