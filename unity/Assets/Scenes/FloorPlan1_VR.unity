@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7163139, g: 0.7353969, b: 0.7534365, a: 1}
+  m_IndirectSpecularColor: {r: 0.7170012, g: 0.7306422, b: 0.7505908, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -646,7 +646,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 5943
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -10981,6 +10981,7 @@ GameObject:
   - component: {fileID: 429703685}
   - component: {fileID: 429703684}
   - component: {fileID: 429703687}
+  - component: {fileID: 429703688}
   m_Layer: 0
   m_Name: Locomotion System
   m_TagString: Untagged
@@ -11087,6 +11088,22 @@ MonoBehaviour:
   teleportRay: {fileID: 501804743}
   grabRay: {fileID: 1811765559}
   provider: {fileID: 429703685}
+--- !u!114 &429703688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 429703682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b8738fdc97c2db4abbd3652513ba2a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  leftHand: {fileID: 1811765559}
+  rightHand: {fileID: 124933912}
 --- !u!1 &438886347
 GameObject:
   m_ObjectHideFlags: 0
@@ -38153,6 +38170,7 @@ GameObject:
   - component: {fileID: 1556043205}
   - component: {fileID: 1556043206}
   - component: {fileID: 1556043207}
+  - component: {fileID: 1556043208}
   m_Layer: 8
   m_Name: Door
   m_TagString: Structure
@@ -38265,6 +38283,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhatIsMyStructureObjectTag: 9
+--- !u!114 &1556043208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556043201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d20e983c8a8d90d4987c64e7743665f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1556779380
 GameObject:
   m_ObjectHideFlags: 0
@@ -45679,6 +45709,7 @@ GameObject:
   - component: {fileID: 1909575343}
   - component: {fileID: 1909575344}
   - component: {fileID: 1909575345}
+  - component: {fileID: 1909575346}
   m_Layer: 8
   m_Name: Door
   m_TagString: Structure
@@ -45791,6 +45822,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhatIsMyStructureObjectTag: 9
+--- !u!114 &1909575346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909575339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d20e983c8a8d90d4987c64e7743665f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1909616384
 GameObject:
   m_ObjectHideFlags: 0
