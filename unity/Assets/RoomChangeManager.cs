@@ -38,7 +38,8 @@ public class RoomChangeManager : MonoBehaviour
         {
             if(hit.transform.GetComponent<ChangeRoom>())
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan2_physics", LoadSceneMode.Additive);
+                ChangeRoom c = hit.transform.GetComponent<ChangeRoom>();
+                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Additive);
             }
         }
 
@@ -46,7 +47,8 @@ public class RoomChangeManager : MonoBehaviour
         {
             if(hit.transform.GetComponent<ChangeRoom>())
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan2_physics", LoadSceneMode.Additive);
+                ChangeRoom c = hit.transform.GetComponent<ChangeRoom>();
+                UnityEngine.SceneManagement.SceneManager.LoadScene(c.SceneToChangeTo, LoadSceneMode.Additive);
             }
         }
     }
