@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
-public class InteractionManagerThingMattFixIt : MonoBehaviour
-{
+public class InteractionManagerThingMattFixIt : MonoBehaviour {
+
     [SerializeField] private InputActionAsset actionAsset;
     [SerializeField] XRRayInteractor leftHand;
     [SerializeField] XRRayInteractor rightHand;
+
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         var leftHand = actionAsset.FindActionMap("XRI LeftHand").FindAction("Select");//maybe activate?
         leftHand.Enable();
         leftHand.performed += doTheThing;
@@ -22,31 +22,39 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
+    void Update() { }
+
+    private void toggleOpen(ThingToMove ttm) {
+        if (ttm.shouldMove) {
+            ttm.thingToMove.transform.position = ttm.isOpen ? ttm.closePosition : ttm.openPosition;
+        }
+        if (ttm.shouldRotate) {
+            ttm.thingToMove.transform.rotation = (
+                ttm.shouldRotate
+                ? Quaternion.Euler(ttm.closeRotation)
+                : Quaternion.Euler(ttm.openRotation)
+            );
+        }
+        ttm.isOpen = !ttm.isOpen;
     }
 
-    private void doTheThing(InputAction.CallbackContext context)
-    {
+    private void doTheThing(InputAction.CallbackContext context) {
         RaycastHit hit;
 
-        if(leftHand.GetCurrentRaycastHit(out hit))
-        {
-            if(hit.transform.GetComponent<ThingToMove>())
-            {
-                ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
-                //ttm.thingToMove.transform.rotate..do something
-            }
+        if (
+            leftHand.GetCurrentRaycastHit(out hit)
+            && hit.transform.GetComponent<ThingToMove>()
+        ) {
+            ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
+            toggleOpen(ttm: ttm);
         }
 
-        if(rightHand.GetCurrentRaycastHit(out hit))
-        {
-            if(hit.transform.GetComponent<ThingToMove>())
-            {
-                ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
-                //do the thing
-            }
+        if (
+            rightHand.GetCurrentRaycastHit(out hit)
+            && hit.transform.GetComponent<ThingToMove>()
+        ) {
+            ThingToMove ttm = hit.transform.GetComponent<ThingToMove>();
+            toggleOpen(ttm: ttm);
         }
     }
 }
