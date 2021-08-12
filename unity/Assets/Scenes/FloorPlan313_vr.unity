@@ -242,7 +242,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 25259898}
   m_LocalRotation: {x: -0.000062040875, y: 0.000011775146, z: 0.00009618921, w: 1}
-  m_LocalPosition: {x: 1.5368384, y: 1.6517363, z: 0.6919759}
+  m_LocalPosition: {x: 1.537, y: 1.655, z: 0.692}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6807095801372673608}
@@ -8256,6 +8256,7 @@ GameObject:
   - component: {fileID: 1130920223}
   - component: {fileID: 1130920222}
   - component: {fileID: 1130920221}
+  - component: {fileID: 1130920225}
   m_Layer: 0
   m_Name: Locomotion System
   m_TagString: Untagged
@@ -8362,6 +8363,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Timeout: 10
   m_XRRig: {fileID: 1251039099}
+--- !u!114 &1130920225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130920219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b8738fdc97c2db4abbd3652513ba2a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  leftHand: {fileID: 1727920897}
+  rightHand: {fileID: 1936603708}
 --- !u!1 &1138054193
 GameObject:
   m_ObjectHideFlags: 0
@@ -24717,6 +24734,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4178782453854797}
   - component: {fileID: 54761004288047621}
+  - component: {fileID: 1966052124741298}
   m_Layer: 8
   m_Name: DeskLamp_8ce860c4
   m_TagString: SimObjPhysics
@@ -24724,6 +24742,83 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 64
   m_IsActive: 1
+--- !u!114 &1966052124741298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966052124741297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad34abafad169848a38072baa96cdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_InteractionManager: {fileID: 722557263}
+  m_Colliders: []
+  m_InteractionLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_OnFirstHoverEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnHoverEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnHoverExited:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnLastHoverExited:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnSelectEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnSelectExited:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnSelectCanceled:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnActivate:
+    m_PersistentCalls:
+      m_Calls: []
+  m_OnDeactivate:
+    m_PersistentCalls:
+      m_Calls: []
+  m_CustomReticle: {fileID: 0}
+  m_AttachTransform: {fileID: 0}
+  m_AttachEaseInTime: 0.15
+  m_MovementType: 1
+  m_TrackPosition: 1
+  m_SmoothPosition: 0
+  m_SmoothPositionAmount: 5
+  m_TightenPosition: 0.5
+  m_TrackRotation: 1
+  m_SmoothRotation: 0
+  m_SmoothRotationAmount: 5
+  m_TightenRotation: 0.5
+  m_ThrowOnDetach: 1
+  m_ThrowSmoothingDuration: 0.25
+  m_ThrowSmoothingCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_ThrowVelocityScale: 1.5
+  m_ThrowAngularVelocityScale: 1
+  m_GravityOnDetach: 0
+  m_RetainTransformParent: 1
 --- !u!1 &1966690577780833
 GameObject:
   m_ObjectHideFlags: 0
@@ -25449,7 +25544,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1403376325083698}
   m_LocalRotation: {x: -0.00014805445, y: 0.87582725, z: 0.0000947074, w: 0.48262474}
-  m_LocalPosition: {x: 1.4888767, y: 1.394004, z: 0.03499713}
+  m_LocalPosition: {x: 1.476, y: 1.406, z: 0.052}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4194453087743344}
@@ -32876,7 +32971,7 @@ Rigidbody:
   m_Drag: 0.3
   m_AngularDrag: 0.1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
