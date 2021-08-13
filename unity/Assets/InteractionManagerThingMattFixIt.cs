@@ -30,7 +30,7 @@ public class InteractionManagerThingMattFixIt : MonoBehaviour {
         }
         if (ttm.shouldRotate) {
             ttm.thingToMove.transform.rotation = Quaternion.Euler(
-                ttm.shouldRotate ? ttm.closeRotation : ttm.openRotation
+                ttm.isOpen ? ttm.closeRotation : ttm.openRotation
             );
         }
         ttm.isOpen = !ttm.isOpen;
