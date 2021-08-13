@@ -1303,7 +1303,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["putNearXY"] = bool.Parse(splitcommand[1]);
                         }
                         // set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        // action["placeStationary"] = true; 
+                        // action["placeStationary"] = true;
                         action["x"] = 0.5f;
                         action["y"] = 0.5f;
                         // set this true to ignore Placement Restrictions
@@ -1572,7 +1572,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         action.action = "CreateObjectAtLocation";
 
-                        action.randomizeObjectAppearance = false;// pick randomly from available or not?                  
+                        action.randomizeObjectAppearance = false;// pick randomly from available or not?
                         action.objectVariation = 1; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2087,7 +2087,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                // manual pickup object- test hand                
+                // manual pickup object- test hand
                 case "pum": {
                         ServerAction action = new ServerAction();
                         action.action = "PickupObject";
@@ -2325,7 +2325,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 // move hand backward. relative to agent's facing
-                // pass in move magnitude or default is 0.25 units               
+                // pass in move magnitude or default is 0.25 units
                 case "mhb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandBack";

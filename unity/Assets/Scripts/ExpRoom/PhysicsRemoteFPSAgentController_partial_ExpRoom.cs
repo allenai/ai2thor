@@ -725,6 +725,66 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return clipPlaneGo;
         }
 
+        public void DuplicateObject(string objectId, bool disableCollisions = false) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics toDuplicate = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            GameObject duplicateGo = GameObject.Instantiate(toDuplicate.gameObject);
+            duplicateGo.transform.parent = toDuplicate.transform.parent;
+            SimObjPhysics duplicate = duplicateGo.GetComponent<SimObjPhysics>();
+            int index = 0;
+            while (true) {
+                string candidateId = $"{duplicate.Type.ToString()}|clone|{index}";
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(candidateId)) {
+                    duplicateGo.name = candidateId;
+                    duplicate.ObjectID = candidateId;
+                    break;
+                }
+                index++;
+            }
+
+            physicsSceneManager.AddToObjectsInScene(duplicate);
+            if (disableCollisions) {
+                disableCollisionsBetweenObjects(toDuplicate, duplicate);
+            }
+            actionFinished(true, duplicate.ObjectID);
+        }
+
+        private void disableCollisionsBetweenObjects(
+            SimObjPhysics sop0, SimObjPhysics sop1
+        ) {
+            foreach (Collider c0 in sop0.GetComponentsInChildren<Collider>()) {
+                foreach (Collider c1 in sop1.GetComponentsInChildren<Collider>()) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
+            }
+        }
+
+        public void DisableCollisionsBetweenObjects(
+            string objectId0, string objectId1
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId0)) {
+                errorMessage = $"Cannot find object with id {objectId0}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics t0 = physicsSceneManager.ObjectIdToSimObjPhysics[objectId0];
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId1)) {
+                errorMessage = $"Cannot find object with id {objectId1}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics t1 = physicsSceneManager.ObjectIdToSimObjPhysics[objectId1];
+
+            disableCollisionsBetweenObjects(t0, t1);
+            actionFinished(true);
+        }
+
         // action to return points from a grid that have an experiment receptacle below it
         // creates a grid starting from the agent's current hand position and projects that grid
         // forward relative to the agent

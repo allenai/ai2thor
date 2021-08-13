@@ -6040,22 +6040,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected static void Shuffle<T>(System.Random rng, T[] array) {
-            // Taken from https://stackoverflow.com/questions/108819/best-way-to-randomize-an-array-with-net
-            int n = array.Length;
-            while (n > 1) {
-                int k = rng.Next(n--);
-                T temp = array[n];
-                array[n] = array[k];
-                array[k] = temp;
-            }
-        }
-
         protected int xzManhattanDistance(Vector3 p0, Vector3 p1, float gridSize) {
             return (Math.Abs(Convert.ToInt32((p0.x - p1.x) / gridSize)) +
                 Math.Abs(Convert.ToInt32((p0.z - p1.z) / gridSize)));
         }
 
+        // hide and seek action.
         public void ExhaustiveSearchForItem(ServerAction action) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
@@ -6078,7 +6068,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.gameObject.SetActive(false);
             }
 
-            Shuffle(new System.Random(action.randomSeed), positions);
+            // NOTE: this doesn't use systemRandom
+            positions.Shuffle_(seed: action.randomSeed);
 
             SimplePriorityQueue<Vector3> pq = new SimplePriorityQueue<Vector3>();
             Vector3 agentPos = transform.position;
@@ -6906,10 +6897,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Could not get bounds of object with type " + objectType;
             }
 
-            System.Random rnd = new System.Random();
-            Vector3[] shuffledCurrentlyReachable = candidatePositions.OrderBy(x => rnd.Next()).ToArray();
+            Vector3[] shuffledCurrentlyReachable = candidatePositions.OrderBy(x => systemRandom.Next()).ToArray();
             float[] rotations = { 0f, 90f, 180f, 270f };
-            float[] shuffledRotations = rotations.OrderBy(x => rnd.Next()).ToArray();
+            float[] shuffledRotations = rotations.OrderBy(x => systemRandom.Next()).ToArray();
             SimObjPhysics objectCreated = null;
             foreach (Vector3 position in shuffledCurrentlyReachable) {
                 float y = b.extents.y + getFloorY(position.x, position.y, position.z) + 0.01f;
@@ -7211,8 +7201,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        // hide and seek action
         public void RandomizeHideSeekObjects(int randomSeed, float removeProb) {
-            System.Random rnd = new System.Random(randomSeed);
+            // NOTE: this does not use systemRandom
+            var rnd = new System.Random(randomSeed);
 
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
@@ -7273,29 +7265,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // @pOpen is the probability of opening an openable object.
         // @randOpenness specifies if the openness for each opened object should be random, between 0% : 100%, or always 100%.
         public void RandomlyOpenCloseObjects(
-                int? randomSeed = null,
                 bool simplifyPhysics = false,
                 float pOpen = 0.5f,
                 bool randOpenness = true
         ) {
-            System.Random rnd;
-            System.Random rndOpenness;
-            if (randomSeed == null) {
-                // truly random!
-                rnd = new System.Random();
-                rndOpenness = new System.Random();
-            } else {
-                rnd = new System.Random((int)randomSeed);
-                rndOpenness = new System.Random(((int)randomSeed) + 42);
-            }
-
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (so.GetComponent<CanOpen_Object>()) {
                     // randomly opens an object to a random openness
-                    if (rnd.NextDouble() < pOpen) {
+                    if (UnityEngine.Random.value < pOpen) {
                         openObject(
                             target: so,
-                            openness: randOpenness ? (float)rndOpenness.NextDouble() : 1,
+                            openness: randOpenness ? UnityEngine.Random.value : 1,
                             forceAction: true,
                             simplifyPhysics: simplifyPhysics,
                             markActionFinished: false

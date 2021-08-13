@@ -536,6 +536,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
 
+            // NOTE: for backwards compatibility with InitialRandomSpawn, this does not use BaseFPSAgentController.systemRandom.
+            // InitialRandomSpawn is going to be deprecated soon.
             System.Random rng = new System.Random(seed);
             gameObjsToPlaceInReceptacles.AddRange(unduplicatedSimObjects);
             gameObjsToPlaceInReceptacles.Shuffle_(rng);
