@@ -1541,6 +1541,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
                 ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
+                if (meta.toggleable) {
+                    SimObjPhysics[] controlled = simObj.GetComponent<CanToggleOnOff>().ReturnControlledSimObjects();
+                    List<string> controlledList = new List<string>();
+                    foreach (SimObjPhysics csop in controlled) {
+                        controlledList.Add(csop.objectID);
+                    }
+                    meta.controlledObjects = controlledList.ToArray();
+                }
                 if (meta.receptacle) {
 
                     List<string> containedObjectsAsID = new List<String>();

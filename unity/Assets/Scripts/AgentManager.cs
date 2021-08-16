@@ -1459,7 +1459,11 @@ public class ObjectMetadata {
     // uuid of the object
     public string objectId;
 
+    //report back what receptacles contain this object
     public string[] parentReceptacles;
+
+    //if this is a toggleable object, report back what objects this also toggles (light switch, stove, etc.)
+    public string[] controlledObjects;
 
     // true if this game object currently has a non-zero velocity
     public bool isMoving;
