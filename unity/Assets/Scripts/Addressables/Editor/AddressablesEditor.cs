@@ -130,6 +130,23 @@ public class AddressablesEditor
 
         return (sourceDir, targetDir);
     }
+    
+    public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
+        string sourceDir = null;
+        string targetDir = null;
+
+        if (target == BuildTarget.StandaloneLinux64) {
+            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), LINUX_CACHED_DIR);
+            string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
+            targetDir = Path.Combine(dataDir, LINUX_STREAMING_DIR);
+        }
+        else if (target == BuildTarget.StandaloneOSX) {
+            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
+            targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
+        }
+        
+        return (sourceDir, targetDir);
+    }
 
     private static void CopyFilesRecursively(string sourceDir, string targetDir)
     {

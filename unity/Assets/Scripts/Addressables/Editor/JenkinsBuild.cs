@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -55,7 +56,7 @@ public class JenkinsBuild
         string addressesProfile = args[2];
 
         SwitchPlatform(BuildTargetGroup.Standalone, buildTarget);
-        //SwitchAddressablesProfile(addressesProfile);
+        SwitchAddressablesProfile(addressesProfile);
         BuildAddressablesContent();
         string fullPathAndName = buildPath + System.IO.Path.DirectorySeparatorChar + buildName + extension;
         BuildProject(EnabledScenes, fullPathAndName, buildTarget, BuildOptions.None);
@@ -176,9 +177,11 @@ public class JenkinsBuild
         var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
         var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
         var localhost = "http://localhost";
-        var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(pathToBuiltProject);
+
+        var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(target, pathToBuiltProject);
+        if (targetDir == null) throw new NullReferenceException("The target path for the streaming asset settings was not found.");
         var configFileText = File.ReadAllText(targetDir + "/settings.json");
-        var selectedBucket = "";
+        var selectedBucket = devBucket;
         
         if(bucketEnv == "prod") {
             selectedBucket = prodBucket;
