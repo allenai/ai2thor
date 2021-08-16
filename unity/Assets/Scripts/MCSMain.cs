@@ -73,6 +73,7 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_WIDTH = .5f;
     private static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
+    private static int FLOOR_LOWERED_HEIGHT = -100;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -283,7 +284,6 @@ public class MCSMain : MonoBehaviour {
     // Custom Private Methods
 
     private void AdjustRoomStructuralObjects() {
-        this.floor.SetActive(true);
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -495,65 +495,86 @@ public class MCSMain : MonoBehaviour {
             Destroy(oldFloors);
         if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
             this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
-        this.floor.SetActive(true);
-        if(this.currentScene.holes != null && this.currentScene.holes.Count > 0)
-        {
-            //hole config
-            int gridExpansionBuffer = 2; //this is so the floor goes slightly outside the wall boundries ensuring a hole near a wall does not show the skybox
-            int expandedFloorX = Mathf.RoundToInt(this.currentScene.roomDimensions.x) + gridExpansionBuffer;
-            int expandedFloorZ = Mathf.RoundToInt(this.currentScene.roomDimensions.z) + gridExpansionBuffer;
-            int startingFloorSectionX = Mathf.RoundToInt(-expandedFloorX) / 2;
-            int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
-            int posX = startingFloorSectionX;
-            int posZ = startingFloorSectionZ;
-            int posY = -MCSMain.FLOOR_DEPTH/2; //lowers the transform y
-            int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
-                * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
+        this.floor.transform.localPosition = DEFAULT_FLOOR_POSITION; //resets the floor position to the default
+        
+        if((this.currentScene.holes != null && this.currentScene.holes.Count > 0) || 
+            (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
+            CreateHolesAndApplyFloorTextures();
+        }
+        
+        agentController.agentManager.ResetSceneBounds();
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+    }
 
-            //prepare floor for cloning
-            this.floor.isStatic = false;
-            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
+    private void CreateHolesAndApplyFloorTextures() {
+        //hole config
+        int gridExpansionBuffer = 2; //this is so the floor goes slightly outside the wall boundries ensuring a hole near a wall does not show the skybox
+        int expandedFloorX = Mathf.RoundToInt(this.currentScene.roomDimensions.x) + gridExpansionBuffer;
+        int expandedFloorZ = Mathf.RoundToInt(this.currentScene.roomDimensions.z) + gridExpansionBuffer;
+        int startingFloorSectionX = Mathf.RoundToInt(-expandedFloorX) / 2;
+        int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
+        int posX = startingFloorSectionX;
+        int posZ = startingFloorSectionZ;
+        int posY = -MCSMain.FLOOR_DEPTH/2;
+        int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
+            * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
 
-            GameObject floors = new GameObject();
-            floors.name = "Floors";
-            floors.transform.position = Vector3.zero;
-            floors.transform.parent = GameObject.Find("Structure").transform;
+        //prepare floor for cloning
+        this.floor.isStatic = false;
+        GameObject floors = new GameObject();
+        floors.name = "Floors";
+        floors.transform.position = Vector3.zero;
+        floors.transform.parent = GameObject.Find("Structure").transform;
 
-            for(int i = 0; i<numOfFloorSections; i++) {
-                bool holeDrop = false;
-                foreach(MCSHolesConfig hole in this.currentScene.holes) {
+        bool createHoles = this.currentScene.holes != null && this.currentScene.holes.Count > 0;
+        bool applyTextures = this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0;
+
+        for(int i = 0; i<numOfFloorSections; i++) {
+            bool holeDrop = false;
+            if(createHoles) {
+                foreach(MCSFloorHolesAndTexturesXZConfig hole in this.currentScene.holes) {
                     if(posX == hole.x && posZ == hole.z) {
                         holeDrop = true;
                         break;
                     }
                 }
-                //clone the floor
-                GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
-                floorSection.name = "floor" + i;
-                floorSection.transform.parent = floors.transform;
-                floorSection.isStatic = true;
-                SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
-                simObj.objectID = "floor" + i;
+            }
 
-                posX += MCSMain.FLOOR_DIMENSIONS;
-                if(posX > -startingFloorSectionX) {
-                    posX = startingFloorSectionX;
-                    posZ += MCSMain.FLOOR_DIMENSIONS;
+            string material = "";
+            bool changeFloorMaterial = false;
+            if(applyTextures) {
+                for(int j = 0; j<this.currentScene.floorTextures.Count && !changeFloorMaterial; j++) {
+                    foreach(MCSFloorHolesAndTexturesXZConfig position in this.currentScene.floorTextures[j].positions) {
+                        if (posX == position.x && posZ == position.z) {
+                            material = this.currentScene.floorTextures[j].material;
+                            changeFloorMaterial = true;
+                            break;
+                        }
+                    }
                 }
             }
 
-            //reset floor that was used to clone the grid
-            this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
-                MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
-            this.floor.isStatic = true;
-            this.floor.SetActive(false);
-        }
-        //end hole config
-        else {
-            this.floor.transform.localScale = new Vector3(this.currentScene.roomDimensions.x + WALL_WIDTH * 2,
-                MCSMain.FLOOR_SCALE_Y, this.currentScene.roomDimensions.z + WALL_WIDTH * 2);
+            //clone the floor
+            GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
+            floorSection.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
+            if(changeFloorMaterial) 
+                AssignMaterial(floorSection, material); 
+            floorSection.name = "floor" + i;
+            floorSection.transform.parent = floors.transform;
+            floorSection.isStatic = true;
+            SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
+            simObj.objectID = "floor" + i;
+
+            posX += MCSMain.FLOOR_DIMENSIONS;
+            if(posX > -startingFloorSectionX) {
+                posX = startingFloorSectionX;
+                posZ += MCSMain.FLOOR_DIMENSIONS;
+            }
         }
 
+        this.floor.isStatic = true;
+        this.floor.transform.localPosition = new Vector3(0, MCSMain.FLOOR_LOWERED_HEIGHT, 0); //this moves the floor below the important elements in the scene
         agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
@@ -1873,14 +1894,23 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
-    public List<MCSHolesConfig> holes;
+    public List<MCSFloorHolesAndTexturesXZConfig> holes;
+    public List<MCSConfigFloorTextures> floorTextures;
 }
 
 [Serializable]
-public class MCSHolesConfig {
+public class MCSFloorHolesAndTexturesXZConfig {
     public int x;
     public int z;
 }
+
+
+[Serializable]
+public class MCSConfigFloorTextures {
+    public string material;
+    public List<MCSFloorHolesAndTexturesXZConfig> positions;
+}
+
 
 [Serializable]
 public class MCSConfigWallMaterials {
