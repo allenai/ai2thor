@@ -21,7 +21,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
     public Quaternion receptacleRotation;
 
-    private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
+    private float yoffset = 0.0055f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
 
