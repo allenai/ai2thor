@@ -102,7 +102,7 @@ public class AddressablesEditor
     [PostProcessBuild]
     public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
     {
-        var (sourceDir, targetDir) = GetBuildAssetsDirectories(pathToBuiltProject);
+        var (sourceDir, targetDir) = GetBuildAssetsDirectories(target, pathToBuiltProject);
 
         #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
             // Do not copy default addressables if newly generated addressables were detected
@@ -113,24 +113,6 @@ public class AddressablesEditor
         #endif
     }
 
-    public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(string pathToBuiltProject) {
-        string sourceDir = null;
-        string targetDir = null;
-
-        #if UNITY_STANDALONE_LINUX
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), LINUX_CACHED_DIR);
-            string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
-            targetDir = Path.Combine(dataDir, LINUX_STREAMING_DIR);
-        #endif
-
-        #if UNITY_STANDALONE_OSX
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
-            targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
-        #endif
-
-        return (sourceDir, targetDir);
-    }
-    
     public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
         string sourceDir = null;
         string targetDir = null;
