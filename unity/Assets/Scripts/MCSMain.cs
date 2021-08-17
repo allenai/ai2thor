@@ -1901,7 +1901,6 @@ public class MCSConfigScene {
     public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
     public bool isometric;
-
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
     public List<MCSConfigGameObject> objects = new List<MCSConfigGameObject>();
