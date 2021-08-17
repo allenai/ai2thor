@@ -46,6 +46,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
+    public static float GRAVITY_FORCE = 9.81f;
 
     public int step = 0;
 
@@ -883,7 +884,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         //raycast to traverse structures at anything <= 45 degree angle incline
         if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            (hit.transform.GetComponent<StructureObject>() != null)) {
+            ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().isSeesaw))) {
+            hit.rigidbody.AddForceAtPosition(Vector3.down * GRAVITY_FORCE * GetComponent<Rigidbody>().mass, hit.point);
             //for pose changes on structures only
             if (poseChange)
                 return hit.point.y;

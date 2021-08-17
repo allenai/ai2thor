@@ -1,0 +1,78 @@
+{
+    "name": "Seesaw",
+    "ceilingMaterial": "AI2-THOR/Materials/Metals/Brass 1",
+    "floorMaterial": "AI2-THOR/Materials/Wood/WhiteWood",
+    "wallMaterial": "AI2-THOR/Materials/Metals/Brass 1",
+    "seesawScene": true,
+    "performerStart": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      }
+    },
+    "objects": [
+      {
+        "id": "seesaw",
+        "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/wood_1x1"],
+        "type": "cube",
+        "physics": "true",
+        "seesaw": true,
+        "moveable": true,
+        "mass": 1,
+        "shows": [
+          {
+            "stepBegin": 0,
+            "scale": {
+              "x": 0.2,
+              "y": 3,
+              "z": 100
+            },
+            "rotation": {
+              "x": 73,
+              "y": 180,
+              "z": 0
+            },
+            "position": {
+              "x": 0,
+              "y": 0.468,
+              "z": 0.3
+            }
+          }
+        ]
+      },
+      {
+          "id": "seesaw_pivot",
+          "materials": ["AI2-THOR/Materials/Metals/Brass 1"],
+          "type": "cube",
+          "seesaw": true,
+          "kinematic": true,
+          "moveable": true,
+          "mass": 1,
+          "shows": [
+            {
+              "stepBegin": 0,
+              "scale": {
+                "x": 0.75,
+                "y": 0.2,
+                "z": 0.5
+              },
+              "rotation": {
+                "x": 90,
+                "y": 180,
+                "z": 0
+              },
+              "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+              }
+            }
+          ]
+      }]
+  }

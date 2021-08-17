@@ -111,6 +111,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsSliceable;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
+    public bool isSeesaw;
+    public bool isSeesawPivot;
     private Vector3 boundingBoxCachePosition;
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
