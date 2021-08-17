@@ -29,7 +29,7 @@ public class Fill : MonoBehaviour {
         return currentlyFilledWith;
     }
 
-    void Start() {
+    void Awake() {
 #if UNITY_EDITOR
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
             Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
