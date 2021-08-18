@@ -23,7 +23,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool disableCollistionWithPickupObject = false;
         void Start() {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-            PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
+            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            agentManager.SetUpPhysicsController();
+            PhysicsController = (PhysicsRemoteFPSAgentController)agentManager.PrimaryAgent;
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;

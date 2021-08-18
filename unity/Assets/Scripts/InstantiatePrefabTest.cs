@@ -20,9 +20,12 @@ public class InstantiatePrefabTest : MonoBehaviour {
     private float yoffset = 0.005f; // y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
+    private AgentManager agentManager;
 
     // Use this for initialization
     void Start() {
+        
+        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
         // m_Started = true;
     }
 
@@ -119,7 +122,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             if (!ignoreChecks) {
                 if (UtilityFunctions.isObjectColliding(
                     prefab,
-                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseFPSAgentController>() select agent.gameObject))
+                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseAgentComponent>() select agent.gameObject))
                 ) {
                     Debug.Log("On spawning object the area was not clear despite CheckSpawnArea saying it was.");
                     prefab.SetActive(false);
@@ -221,8 +224,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
-                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
-                if (primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop)) {
+                PhysicsRemoteFPSAgentController primaryAgent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
+                if (primaryAgent.objectIsOnScreen(sop)) {
                     return true;
                 }
             }
@@ -443,7 +446,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        PhysicsRemoteFPSAgentController agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
                         agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
 
@@ -466,7 +469,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        PhysicsRemoteFPSAgentController agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
                         agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
@@ -589,7 +592,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         if (hitColliders.Length > 0) {
             // filter out any AgentTriggerBoxes because those should be ignored now
             foreach (Collider c in hitColliders) {
-                if (c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+                if (c.isTrigger && c.GetComponentInParent<BaseAgentComponent>()) {
                     continue;
                 } else {
                     return c;

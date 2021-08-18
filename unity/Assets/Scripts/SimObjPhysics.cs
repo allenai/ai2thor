@@ -110,6 +110,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsSliceable;
     public bool canChangeTempToHot;
     public bool canChangeTempToCold;
+    public AgentManager agentManager;
     private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
@@ -616,18 +617,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     void OnCollisionEnter(Collision col) {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
-        DroneFPSAgentController droneController;
 
-        if (GameObject.Find("FPSController")) {
-            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
-        } else {
-            Debug.LogError("No FPSController in scene!");
+        if (agentManager.PrimaryAgent.GetType() != typeof(DroneFPSAgentController)) {
             return;
         }
 
-        if (!droneController.enabled) {
-            return;
-        }
+        DroneFPSAgentController droneController = agentManager.PrimaryAgent as DroneFPSAgentController;
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
@@ -864,6 +859,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
+        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
         // end debug setup stuff
 

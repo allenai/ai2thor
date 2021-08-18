@@ -221,7 +221,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         // generate grid of potential spawn points
         // GetSpawnCoordinatesAboveReceptacle
         List<Vector3> spawnCoordinates = new List<Vector3>();
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
+        PhysicsRemoteFPSAgentController fpsAgent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
         spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
 
         List<Vector3> returnCoordinates = new List<Vector3>();
@@ -291,7 +291,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         // apply rotation to object, default quaternion.identity
         spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
 
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
+        PhysicsRemoteFPSAgentController fpsAgent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
         if (fpsAgent.placeObjectAtPoint(toSpawn, point)) {
             // we set success to true, if one of the corners doesn't fit on the table
             // this will be switched to false and will be returned at the end
@@ -350,7 +350,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         }
 
         List<Vector3> spawnCoordinates = new List<Vector3>();
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
+        PhysicsRemoteFPSAgentController fpsAgent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
         spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
         spawnCoordinates.Shuffle_(seed);
 
