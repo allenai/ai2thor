@@ -1,13 +1,79 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class CollisionListener : MonoBehaviour {
-    // references to the joints of the mid level arm
-    [SerializeField]
-    private bool CascadeCollisionEventsToParent = true;
+    public Dictionary<Collider, HashSet<Collider>> externalColliderToInternalCollisions = new Dictionary<Collider, HashSet<Collider>>();
+    public List<GameObject> doNotRegisterChildrenWithin = new List<GameObject>();
+
+    public static bool useMassThreshold = false;
+    public static float massThreshold;
+
+    private HashSet<CollisionListenerChild> collisionListenerChildren = new HashSet<CollisionListenerChild>();
+
+    void Start() {
+        registerAllChildColliders();
+        foreach (CollisionListener cl in this.GetComponentsInChildren<CollisionListener>()) {
+            if (cl.gameObject != this.gameObject) {
+#if UNITY_EDITOR
+                Debug.Log($"Offending CollisionListener: {cl.gameObject} a descendent of {this.gameObject}");
+#endif
+                throw new InvalidOperationException(
+                    "A CollisionListener should not be included as a component on a descendent of a GameObject that already has a CollisionListener component."
+                );
+            }
+        }
+    }
+
+    public void registerAllChildColliders() {
+        HashSet<Collider> ignoredColliders = new HashSet<Collider>();
+        foreach (GameObject go in doNotRegisterChildrenWithin) {
+            foreach (Collider c in go.GetComponentsInChildren<Collider>()) {
+                ignoredColliders.Add(c);
+            }
+        }
+
+        foreach (CollisionListenerChild clc in collisionListenerChildren) {
+            clc.parent = null;
+        }
+        collisionListenerChildren.Clear();
+
+        foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+            if (!ignoredColliders.Contains(c)) {
+                registerChild(c);
+            }
+        }
+    }
+
+    public void registerChild(Collider c) {
+        if (c.enabled && c.isTrigger) {
+            CollisionListenerChild clc = c.gameObject.GetComponent<CollisionListenerChild>();
+            if (clc == null) {
+                clc = c.gameObject.AddComponent<CollisionListenerChild>();
+            }
+            registerChild(clc);
+        }
+    }
+
+    public void registerChild(CollisionListenerChild clc) {
+        clc.parent = this;
+        collisionListenerChildren.Add(clc);
+    }
+
+    public void deregisterChild(Collider c) {
+        deregisterChild(c.gameObject.GetComponent<CollisionListenerChild>());
+    }
+
+    public void deregisterChild(CollisionListenerChild clc) {
+        if (clc != null) {
+            clc.parent = null;
+            collisionListenerChildren.Remove(clc);
+        }
+    }
+
     // track what was hit while arm was moving
     public class StaticCollision {
         public GameObject gameObject;
@@ -30,126 +96,96 @@ public class CollisionListener : MonoBehaviour {
         }
     }
 
-    private HashSet<Collider> activeColliders = new HashSet<Collider>();
-    public static bool useMassThreshold = false;
+    public void RegisterCollision(Collider internalCollider, Collider externalCollider) {
+        if (!externalColliderToInternalCollisions.ContainsKey(externalCollider)) {
+            externalColliderToInternalCollisions[externalCollider] = new HashSet<Collider>();
+        }
+        externalColliderToInternalCollisions[externalCollider].Add(internalCollider);
+    }
 
-    public static float massThreshold;
+    public void DeregisterCollision(Collider internalCollider, Collider externalCollider) {
+        if (externalColliderToInternalCollisions.ContainsKey(externalCollider)) {
+            externalColliderToInternalCollisions[externalCollider].Remove(internalCollider);
 
-    public void RegisterCollision(Collider col, bool notifyParent = true) {
-        activeColliders.Add(col);
-        if (notifyParent && this.transform.parent != null) {
-            foreach (var listener in this.transform.parent.GetComponentsInParent<CollisionListener>()) {
-                listener.RegisterCollision(col, notifyParent);
+            if (externalColliderToInternalCollisions[externalCollider].Count == 0) {
+                externalColliderToInternalCollisions.Remove(externalCollider);
             }
         }
     }
 
-    public void DeregisterCollision(Collider col, bool notifyParent = true) {
-        activeColliders.Remove(col);
-        if (notifyParent && this.transform.parent != null) {
-            foreach (var listener in this.transform.parent.GetComponentsInParent<CollisionListener>()) {
-                listener.DeregisterCollision(col, notifyParent);
-            }
-        }
+    public void Reset() {
+        externalColliderToInternalCollisions.Clear();
     }
 
-    public void Reset(bool? notifyParent = null) {
-        activeColliders.Clear();
-        if (notifyParent.GetValueOrDefault(this.CascadeCollisionEventsToParent) && this.transform.parent != null) {
-            foreach (var listener in this.transform.parent.GetComponentsInParent<CollisionListener>()) {
-                listener.Reset(notifyParent);
-            }
-        }
+    private static bool debugCheckIfCollisionIsNonTrivial(
+        Collider internalCollider, Collider externalCollider
+    ) {
+        Vector3 direction;
+        float distance = 0f;
+        Physics.ComputePenetration(
+            internalCollider,
+            internalCollider.transform.position,
+            internalCollider.transform.rotation,
+            externalCollider,
+            externalCollider.transform.position,
+            externalCollider.transform.rotation,
+            out direction,
+            out distance
+        );
+        Debug.Log($"Us: {internalCollider.transform.gameObject}, Them: {externalCollider.gameObject}");
+        Debug.Log($"Distance: {distance}, direction: {direction.ToString("F4")}");
+        return distance > 0.001f;
     }
 
-    public void OnTriggerExit(Collider col) {
-        DeregisterCollision(col, CascadeCollisionEventsToParent);
-    }
-
-    public void OnTriggerStay(Collider col) {
-#if UNITY_EDITOR
-        if (!activeColliders.Contains(col)) {
-            if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
-                Debug.Log("got collision stay with " + col.gameObject.name + " this" + this.gameObject.name);
-            }
-        }
-#endif
-        this.
-        RegisterCollision(col, CascadeCollisionEventsToParent);
-    }
-
-    public void OnTriggerEnter(Collider col) {
-#if UNITY_EDITOR
-        if (!activeColliders.Contains(col)) {
-            if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
-                Debug.Log("got collision enter with " + col.gameObject.name + " this" + this.gameObject.name);
-            }
-        }
-#endif
-        // Debug.Log("got collision with " + col.gameObject.name + " this" + this.gameObject.name);
-        RegisterCollision(col, CascadeCollisionEventsToParent);
-    }
-
-    private static StaticCollision ColliderToStaticCollision(Collider col) {
+    private static StaticCollision ColliderToStaticCollision(Collider collider) {
         StaticCollision sc = null;
-        if (col.GetComponentInParent<SimObjPhysics>()) {
-            // only detect collisions with non-trigger colliders detected
-            if (!col.isTrigger) {
+        if (!collider.isTrigger) { // only detect collisions with non-trigger colliders detected
+            if (collider.GetComponentInParent<SimObjPhysics>()) {
+
                 // how does this handle nested sim objects? maybe it's fine?
-                SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
+                SimObjPhysics sop = collider.GetComponentInParent<SimObjPhysics>();
                 if (sop.PrimaryProperty == SimObjPrimaryProperty.Static) {
-
-
                     // #if UNITY_EDITOR
                     // Debug.Log("Collided with static sim obj " + sop.name);
                     // #endif
                     sc = new StaticCollision();
                     sc.simObjPhysics = sop;
-                    sc.gameObject = col.gameObject;
+                    sc.gameObject = collider.gameObject;
 
-                }
-
-                // if instead it is a moveable or pickupable sim object
-                else if (useMassThreshold) {
+                } else if (useMassThreshold) {
                     // if a moveable or pickupable object is too heavy for the arm to move
                     // flag it as a static collision so the arm will stop
                     if (sop.Mass > massThreshold) {
                         sc = new StaticCollision();
                         sc.simObjPhysics = sop;
-                        sc.gameObject = col.gameObject;
+                        sc.gameObject = collider.gameObject;
                     }
                 }
-            }
-        }
-
-            // also check if the collider hit was a structure?
-            else if (col.gameObject.CompareTag("Structure")) {
-            // only detect collisions with non-trigger colliders detected
-            if (!col.isTrigger) {
+            } else if (collider.gameObject.CompareTag("Structure")) {
                 sc = new StaticCollision();
-                sc.gameObject = col.gameObject;
+                sc.gameObject = collider.gameObject;
             }
         }
         return sc;
     }
 
-    public static List<StaticCollision> StaticCollisions(IEnumerable<Collider> colliders) {
-        var staticCols = new List<StaticCollision>();
-        foreach (var col in colliders) {
-            var staticCollision = ColliderToStaticCollision(col);
+    public static IEnumerable<StaticCollision> StaticCollisions(
+        IEnumerable<Collider> colliders
+    ) {
+        foreach (Collider c in colliders) {
+            var staticCollision = ColliderToStaticCollision(collider: c);
             if (staticCollision != null) {
-                staticCols.Add(staticCollision);
+                yield return staticCollision;
             }
         }
-        return staticCols;
     }
 
-    public List<StaticCollision> StaticCollisions() {
-        return StaticCollisions(this.activeColliders);
+    public IEnumerable<StaticCollision> StaticCollisions() {
+        return StaticCollisions(this.externalColliderToInternalCollisions.Keys);
     }
 
     public bool ShouldHalt() {
-        return StaticCollisions().Count > 0;
+        return StaticCollisions().GetEnumerator().MoveNext();
     }
 
 }

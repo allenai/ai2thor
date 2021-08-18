@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
+using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
@@ -163,9 +164,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
             Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
-                 t.rotation = newRotation;
-                 updateTransform.position = wristProxy.transform.position;
-                 updateTransform.rotation = newRotation;
+                t.rotation = newRotation;
+                updateTransform.position = wristProxy.transform.position;
+                updateTransform.rotation = newRotation;
             };
             Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
                 return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
@@ -225,7 +226,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             T directionToTarget = getDirection(target, currentProperty);
 
-            while (currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
+            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
+            while (!collisionListener.ShouldHalt()) {
                 previousProperty = getProp(moveTransform);
 
                 T next = nextProp(moveTransform, directionToTarget);
@@ -235,8 +237,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if nextDistance is too large then it will overshoot, in this case we snap to the target
                 // this can happen if the speed it set high
                 if (
-                    nextDistance <= epsilon ||
-                    nextDistance > distanceMetric(target, getProp(moveTransform))
+                    nextDistance <= epsilon
+                    || nextDistance > distanceMetric(target, getProp(moveTransform))
                 ) {
                     setProp(moveTransform, target);
                 } else {
@@ -257,6 +259,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return new WaitForFixedUpdate();
 
                 currentDistance = distanceMetric(target, getProp(moveTransform));
+
+                if (currentDistance <= epsilon) {
+                    // This logic is a bit unintuitive but it ensures we run the
+                    // `setProp(moveTransform, target);` line above once we get within epsilon
+                    if (haveGottenWithinEpsilon) {
+                        break;
+                    } else {
+                        haveGottenWithinEpsilon = true;
+                    }
+                }
             }
 
             T resetProp = previousProperty;
@@ -295,7 +307,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string debugMessage = "";
             IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-            var staticCollisions = collisionListener.StaticCollisions();
+            var staticCollisions = collisionListener.StaticCollisions().ToList();
 
             if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];

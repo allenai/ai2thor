@@ -29,7 +29,7 @@ public class Fill : MonoBehaviour {
         return currentlyFilledWith;
     }
 
-    void Start() {
+    void Awake() {
 #if UNITY_EDITOR
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
             Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
@@ -87,7 +87,7 @@ public class Fill : MonoBehaviour {
         if (whichLiquid == "coffee") {
             // coffee is hot!
             SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-            sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
+            sop.CurrentTemperature = Temperature.Hot;
             if (sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue()) {
                 sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
             }

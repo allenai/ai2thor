@@ -7,10 +7,11 @@ using RandomExtensions;
 using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public class ArmAgentController : PhysicsRemoteFPSAgentController {
+        
+    public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
         public ArmAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
         }
-        
+
         protected IK_Robot_Arm_Controller getArm() {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {
@@ -22,6 +23,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+        /*
+        Toggles the visibility of the magnet sphere at the end of the arm.
+        */
+        public void ToggleMagnetVisibility(bool? visible = null) {
+            MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
+            if (visible.HasValue) {
+                mr.enabled = visible.Value;
+            } else {
+                mr.enabled = !mr.enabled;
+            }
+            actionFinished(true);
+        }
 
         /*
         This function is identical to `MoveArm` except that rather than
@@ -492,10 +505,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool normalizedY = true
         ) {
-            if (y < 0 || y > 1) {
-                throw new ArgumentOutOfRangeException($"y={y} value must be [0, 1.0].");
+            if (normalizedY && (y < 0f || y > 1f)) {
+                // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
+                throw new ArgumentOutOfRangeException($"y={y} value must be in [0, 1] when normalizedY=true.");
             }
 
             IK_Robot_Arm_Controller arm = getArm();
@@ -505,6 +520,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 unitsPerSecond: speed,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
                 returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering,
+                normalizedY: normalizedY
+            );
+        }
+
+        public void MoveArmBaseUp(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.moveArmBaseUp(
+                controller: this,
+                distance: distance,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+        public void MoveArmBaseDown(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveArmBaseUp(
+                distance: -distance,
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
                 disableRendering: disableRendering
             );
         }
@@ -534,7 +584,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // debug for static arm collisions from collision listener
         public void DebugMidLevelArmCollisions() {
             IK_Robot_Arm_Controller arm = getArm();
-            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
+            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions().ToList();
             Debug.Log("Total current active static arm collisions: " + scs.Count);
             foreach (CollisionListener.StaticCollision sc in scs) {
                 Debug.Log("Arm static collision: " + sc.name);

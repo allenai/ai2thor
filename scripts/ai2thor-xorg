@@ -11,10 +11,14 @@ import signal
 
 # Turning off automatic black formatting for this script as it breaks quotes.
 # fmt: off
-
+from typing import List
 
 PID_FILE = "/var/run/ai2thor-xorg.pid"
 CONFIG_FILE = "/tmp/ai2thor-xorg.conf"
+
+DEFAULT_HEIGHT = 768
+DEFAULT_WIDTH = 1024
+
 
 def process_alive(pid):
     """
@@ -53,6 +57,7 @@ def find_devices(excluded_device_ids):
 
     return devices
 
+
 def pci_records():
     records = []
     command = shlex.split("lspci -vmm")
@@ -75,8 +80,8 @@ def read_pid():
     else:
         return None
 
-def start(display, excluded_device_ids):
 
+def start(display: str, excluded_device_ids: List[int], width: int, height: int):
     pid = read_pid()
 
     if pid and process_alive(pid):
@@ -84,7 +89,7 @@ def start(display, excluded_device_ids):
         sys.exit(1)
 
     with open(CONFIG_FILE, "w") as f:
-        f.write(generate_xorg_conf(excluded_device_ids))
+        f.write(generate_xorg_conf(excluded_device_ids, width=width, height=height))
 
     log_file = "/var/log/ai2thor-xorg.%s.log" % display
     error_log_file = "/var/log/ai2thor-xorg-error.%s.log" % display
@@ -92,7 +97,6 @@ def start(display, excluded_device_ids):
         "Xorg -quiet -maxclients 1024 -noreset +extension GLX +extension RANDR +extension RENDER -logfile %s -config %s :%s"
         % (log_file, CONFIG_FILE, display)
     )
-
 
     pid = None
     with open(error_log_file, "w") as error_log_f:
@@ -111,14 +115,16 @@ def start(display, excluded_device_ids):
         with open(error_log_file, "r") as f:
             print(f.read())
 
-def print_config(excluded_device_ids):
-    print(generate_xorg_conf(excluded_device_ids))
+
+def print_config(excluded_device_ids: List[int], width: int, height: int):
+    print(generate_xorg_conf(excluded_device_ids, width=width, height=height))
+
 
 def stop():
     pid = read_pid()
     if pid and process_alive(pid):
         os.kill(pid, signal.SIGTERM)
-   
+
         for i in range(10):
             time.sleep(0.2)
             if not process_alive(pid):
@@ -126,8 +132,9 @@ def stop():
                 break
 
 
-def generate_xorg_conf(excluded_device_ids):
-
+def generate_xorg_conf(
+        excluded_device_ids: List[int], width: int, height: int
+):
     devices = find_devices(excluded_device_ids)
 
     xorg_conf = []
@@ -154,14 +161,14 @@ Section "Screen"
     Option         "AllowEmptyInitialConfiguration" "True"
     SubSection     "Display"
         Depth       24
-        Virtual 1024 768
+        Virtual {width} {height}
     EndSubSection
 EndSection
 """
     screen_records = []
     for i, bus_id in enumerate(devices):
         xorg_conf.append(device_section.format(device_id=i, bus_id=bus_id))
-        xorg_conf.append(screen_section.format(device_id=i, screen_id=i))
+        xorg_conf.append(screen_section.format(device_id=i, screen_id=i, width=width, height=height))
         screen_records.append(
             'Screen {screen_id} "Screen{screen_id}" 0 0'.format(screen_id=i)
         )
@@ -173,8 +180,10 @@ EndSection
     output = "\n".join(xorg_conf)
     return output
 
-if __name__ == "__main__":
 
+# fmt: on
+
+if __name__ == "__main__":
     if os.geteuid() != 0:
         print("Error: ai2thor-xorg must be run as root or launched with sudo")
         sys.exit(1)
@@ -184,13 +193,48 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exclude-device", help="exclude a specific GPU device", action="append", type=int, default=[])
-    parser.add_argument("command", help="command to be executed", choices=["start", "stop", "print-config"])
-    parser.add_argument("display", help="display to be used", nargs="?", type=int, default=0)
+    parser.add_argument(
+        "--exclude-device",
+        help="exclude a specific GPU device",
+        action="append",
+        type=int,
+        default=[],
+    )
+    parser.add_argument(
+        "--width",
+        help="width of the screen to start (should be greater than the maximum"
+        f" width of any ai2thor instance you will start) [default: {DEFAULT_WIDTH}]",
+        type=int,
+        default=DEFAULT_WIDTH,
+    )
+    parser.add_argument(
+        "--height",
+        help="height of the screen to start (should be greater than the maximum"
+        f" height of any ai2thor instance you will start) [default: {DEFAULT_HEIGHT}]",
+        type=int,
+        default=DEFAULT_HEIGHT,
+    )
+    parser.add_argument(
+        "command",
+        help="command to be executed",
+        choices=["start", "stop", "print-config"],
+    )
+    parser.add_argument(
+        "display", help="display to be used", nargs="?", type=int, default=0
+    )
     args = parser.parse_args()
     if args.command == "start":
-        start(args.display, args.exclude_device)
+        start(
+            display=args.display,
+            excluded_device_ids=args.exclude_device,
+            height=args.height,
+            width=args.width,
+        )
     elif args.command == "stop":
         stop()
     elif args.command == "print-config":
-        print_config(args.exclude_device)
+        print_config(
+            excluded_device_ids=args.exclude_device,
+            width=args.width,
+            height=args.height,
+        )

@@ -69,6 +69,19 @@ public class Break : MonoBehaviour {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
+            //before disabling things, if this object is a receptacle, unparent all objects contained
+            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
+                GameObject objs = GameObject.Find("Objects");
+                foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
+                    go.transform.SetParent(objs.transform);
+                    Rigidbody childrb = go.GetComponent<Rigidbody>();
+                    childrb.isKinematic = false;
+                    childrb.useGravity = true;
+                    childrb.constraints = RigidbodyConstraints.None;
+                    childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+            }
+
             // turn off everything except the top object
             foreach (Transform t in gameObject.transform) {
                 t.gameObject.SetActive(false);

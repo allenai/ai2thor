@@ -28,7 +28,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public BaseFPSAgentController agent;
         public DroneObjectLauncher DroneObjectLauncher;
         
-        void Update() {
+        void LateUpdate() {
             if (this.agent == null) {
                 return;
             }

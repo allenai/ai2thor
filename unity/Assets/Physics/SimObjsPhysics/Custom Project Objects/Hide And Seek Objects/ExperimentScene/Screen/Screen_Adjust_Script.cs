@@ -365,12 +365,9 @@ public class Screen_Adjust_Script : MonoBehaviour
 
     Bounds newSheetBounds(BoxCollider collider, Transform p1, Transform p2)
     {
-        Bounds newBounds = new Bounds();
-
-        newBounds.center = (p1.position + p2.position) / 2;
+        Bounds newBounds = UtilityFunctions.CreateEmptyBounds();
         newBounds.Encapsulate(p1.position);
         newBounds.Encapsulate(p2.position);
-
         return newBounds;
     }
 
