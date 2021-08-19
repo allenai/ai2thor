@@ -123,11 +123,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        // sets whether this scene should allow objects to decay temperature to room temp over time or not
-        public void SetDecayTemperatureBool(bool allowDecayTemperature) {
-            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = allowDecayTemperature;
-            actionFinished(true);
-        }
 
         public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
