@@ -56,7 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
             }
             PhysicsSceneManager.StartPhysicsCoroutine(
-                startCoroutineUsing: this,
+                startCoroutineUsing: this.baseAgentComponent,
                 enumerator: whichContainersDoesAvailableObjectFitIn(
                     objectName: objectName, visibilityCheckCamera: camera
                 )
