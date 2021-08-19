@@ -37,6 +37,7 @@ public class AddressablesUtil : MonoBehaviour
         cachingAddressablesBuild = MCSUtil.HasArg(CACHING_ARG);
         if (cachingAddressablesBuild)
         {
+            System.Console.WriteLine("Starting caching process");
             ClearAllAddressablesCache(() => CacheAllAddressables());         
         }
     }
@@ -92,7 +93,7 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void ClearAllAddressablesCache(Action completedAction = null)
     {
-        Debug.Log("Clearing Addressables...");
+        System.Console.WriteLine("Clearing Addressables...");
         StartCoroutine(ClearAllCoroutine(completedAction));
     }
 
@@ -117,7 +118,7 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void CacheAllAddressables(Action completedAction = null)
     {
-        Debug.Log("Caching Addressables...");
+        System.Console.WriteLine("Caching Addressables...");
         StartCoroutine(DownloadAllCoroutine(completedAction));
     }
 
@@ -129,7 +130,7 @@ public class AddressablesUtil : MonoBehaviour
 
         if (cachingAddressablesBuild)
         {
-            Debug.Log("Addressables Cached!");
+            System.Console.WriteLine("Addressables Cached!");
             MCSUtil.CloseApplication();
         }
 
@@ -140,7 +141,7 @@ public class AddressablesUtil : MonoBehaviour
     {
         var locs = GetAllAddressablesLocations();
         foreach (var location in locs)
-            Debug.Log("Will download : " + location.InternalId);
+            System.Console.WriteLine("Will download : " + location.InternalId);
         return Addressables.LoadAssetsAsync<IAssetBundleResource>(locs, null, true);
     }
 
