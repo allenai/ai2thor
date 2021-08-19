@@ -964,10 +964,6 @@ def ci_build(context):
             )
 
             private_scene_options = [False]
-            if build["branch"] == "erick/challenge2021":
-                os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
-            elif build["branch"] == "erick/challenge2021-eval":
-                private_scene_options = [False, True]
 
             procs = []
             for include_private_scenes in private_scene_options:
