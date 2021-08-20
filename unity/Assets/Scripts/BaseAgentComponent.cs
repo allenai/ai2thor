@@ -25,7 +25,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
+        
+        [HideInInspector]
         public BaseFPSAgentController agent;
+        
         public DroneObjectLauncher DroneObjectLauncher;
         
         void LateUpdate() {
