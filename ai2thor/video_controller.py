@@ -375,30 +375,3 @@ class VideoController(Controller):
                 self.saved_frames.append(rgb)
             success, image = vidcap.read()
             i += 1
-
-    def exportVideo(self, path):
-        """Merges all the saved frames into a .mp4 video and saves it to `path`"""
-        if self.saved_frames:
-            path = path if path[:-4] == '.mp4' else path + '.mp4'
-            if os.path.exists(path):
-                os.remove(path)
-            print((self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
-            video = cv2.VideoWriter(
-                path,
-                cv2.VideoWriter_fourcc(*'DIVX'),
-                30,
-                (self.saved_frames[0].shape[1], self.saved_frames[0].shape[0])
-            )
-            for i, frame in enumerate(self.saved_frames):
-                print('|', end='')
-                # assumes that the frames are RGB images. CV2 uses BGR.
-                video.write(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            cv2.destroyAllWindows()
-            video.release()
-            print('done')
-
-with VideoController() as vc:
-    vc.play(vc.MoveAhead())
-    vc.wait(5)
-    vc.play(vc.MoveAhead())
-    vc.exportVideo('thor.mp4')
