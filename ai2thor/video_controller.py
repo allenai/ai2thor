@@ -18,7 +18,6 @@ from PIL import Image
 import math
 from math import erf, sqrt
 
-
 class VideoController(Controller):
     def __init__(
         self,
@@ -27,28 +26,18 @@ class VideoController(Controller):
         cam_fov=60,
         **controller_kwargs,
     ):
-        super().__init__(continuous=True, **controller_kwargs)
-        self.step(
-            action="AddThirdPartyCamera",
-            rotation=initial_camera_rotation,
-            position=initial_camera_position,
-            fieldOfView=initial_camera_fov,
-        )
-
         self.saved_frames = []
         self.ceiling_off = False
         self.initial_cam_rot = cam_rot.copy()
         self.initial_cam_pos = cam_pos.copy()
         self.initial_cam_fov = cam_fov
 
-    def reset(self, scene=None, **init_params):
-        """Changes the scene and adds a new third party camera to the initial position."""
-        super().reset(scene, **init_params)
+        super().__init__(continuous=True, **controller_kwargs)
         self.step(
             action="AddThirdPartyCamera",
-            rotation=self.initial_cam_rot,
-            position=self.initial_cam_pos,
-            fieldOfView=self.initial_cam_fov,
+            rotation=cam_rot.copy(),
+            position=cam_pos.copy(),
+            fieldOfView=cam_fov,
         )
 
     def play(self, *action_generators):
@@ -386,3 +375,30 @@ class VideoController(Controller):
                 self.saved_frames.append(rgb)
             success, image = vidcap.read()
             i += 1
+
+    def exportVideo(self, path):
+        """Merges all the saved frames into a .mp4 video and saves it to `path`"""
+        if self.saved_frames:
+            path = path if path[:-4] == '.mp4' else path + '.mp4'
+            if os.path.exists(path):
+                os.remove(path)
+            print((self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
+            video = cv2.VideoWriter(
+                path,
+                cv2.VideoWriter_fourcc(*'DIVX'),
+                30,
+                (self.saved_frames[0].shape[1], self.saved_frames[0].shape[0])
+            )
+            for i, frame in enumerate(self.saved_frames):
+                print('|', end='')
+                # assumes that the frames are RGB images. CV2 uses BGR.
+                video.write(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            cv2.destroyAllWindows()
+            video.release()
+            print('done')
+
+with VideoController() as vc:
+    vc.play(vc.MoveAhead())
+    vc.wait(5)
+    vc.play(vc.MoveAhead())
+    vc.exportVideo('thor.mp4')
