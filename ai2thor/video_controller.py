@@ -18,7 +18,6 @@ from PIL import Image
 import math
 from math import erf, sqrt
 
-
 class VideoController(Controller):
     def __init__(
         self,
