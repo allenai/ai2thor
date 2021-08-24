@@ -214,9 +214,9 @@ public class PhysicsSceneManager : MonoBehaviour {
             AddToObjectsInScene(o);
         }
 
-        BaseFPSAgentController fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>();
-        if (fpsController.imageSynthesis != null) {
-            fpsController.imageSynthesis.OnSceneChange();
+        BaseAgentComponent fpsController = GameObject.FindObjectOfType<BaseAgentComponent>();
+        if (fpsController.agent != null && fpsController.agent.imageSynthesis != null ) {
+            fpsController.agent.imageSynthesis.OnSceneChange();
         }
     }
 

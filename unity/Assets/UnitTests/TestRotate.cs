@@ -17,7 +17,7 @@ namespace Tests {
             action["snapToGrid"] = true;
             yield return step(action);
 
-            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
+            BaseFPSAgentController agent = agentManager.PrimaryAgent;
             agent.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
 
             action.Clear();
