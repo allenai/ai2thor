@@ -18,6 +18,7 @@ from PIL import Image
 import math
 from math import erf, sqrt
 
+
 class VideoController(Controller):
     def __init__(
         self,
@@ -26,18 +27,29 @@ class VideoController(Controller):
         cam_fov=60,
         **controller_kwargs,
     ):
+        super().__init__(continuous=True, **controller_kwargs)
+
         self.saved_frames = []
         self.ceiling_off = False
         self.initial_cam_rot = cam_rot.copy()
         self.initial_cam_pos = cam_pos.copy()
         self.initial_cam_fov = cam_fov
 
-        super().__init__(continuous=True, **controller_kwargs)
         self.step(
             action="AddThirdPartyCamera",
-            rotation=cam_rot.copy(),
-            position=cam_pos.copy(),
-            fieldOfView=cam_fov,
+            rotation=self.initial_cam_rot,
+            position=self.initial_cam_pos,
+            fieldOfView=self.initial_cam_fov,
+        )
+
+    def reset(self, scene=None, **init_params):
+        """Changes the scene and adds a new third party camera to the initial position."""
+        super().reset(scene, **init_params)
+        return self.step(
+            action="AddThirdPartyCamera",
+            rotation=self.initial_cam_rot,
+            position=self.initial_cam_pos,
+            fieldOfView=self.initial_cam_fov,
         )
 
     def play(self, *action_generators):
@@ -375,3 +387,9 @@ class VideoController(Controller):
                 self.saved_frames.append(rgb)
             success, image = vidcap.read()
             i += 1
+
+with VideoController() as vc:
+    vc.play(vc.MoveAhead())
+    vc.wait(5)
+    vc.play(vc.MoveAhead())
+    vc.export_video('thor.mp4')
