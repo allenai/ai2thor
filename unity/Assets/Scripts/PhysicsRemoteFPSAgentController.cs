@@ -4249,7 +4249,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //if receptacle can open, check that it's open before placing. Can't place objects in something that is closed!
 
             if (targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-                if (!targetReceptacle.GetComponent<CanOpen_Object>().isOpen) {
+                CanOpen_Object canOpenObject = targetReceptacle.GetComponent<CanOpen_Object>();
+                if (canOpenObject != null && !canOpenObject.isOpen) {
                     errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
                     Debug.Log(errorMessage);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);

@@ -74,6 +74,7 @@ public class MCSMain : MonoBehaviour {
     private static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
     private static int FLOOR_LOWERED_HEIGHT = -100;
+    private static float SEESAW_MAX_DEPTH = 0.035f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -257,6 +258,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         GameObject controller = GameObject.Find("FPSController");
+        controller.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        controller.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
@@ -859,9 +862,9 @@ public class MCSMain : MonoBehaviour {
         bool openable = objectConfig.openable || objectDefinition.openable;
         bool pickupable = objectConfig.pickupable || objectDefinition.pickupable;
         bool receptacle = objectConfig.receptacle || objectDefinition.receptacle;
-
+        bool seesaw = objectConfig.seesaw || objectDefinition.seesaw;
         bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle || objectConfig.physics ||
-            objectDefinition.physics;
+            objectDefinition.physics || seesaw;
 
         if (objectConfig.structure) {
             // Add the AI2-THOR Structure script with specific properties.
@@ -903,7 +906,7 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add the AI2-THOR SimObjPhysics script with specific properties.
             this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, visibilityPoints,
-                moveable, openable, pickupable, receptacle);
+                moveable, openable, pickupable, receptacle, seesaw);
         }
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
@@ -1033,7 +1036,8 @@ public class MCSMain : MonoBehaviour {
         bool moveable,
         bool openable,
         bool pickupable,
-        bool receptacle
+        bool receptacle,
+        bool seesaw
     ) {
         gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
 
@@ -1144,6 +1148,16 @@ public class MCSMain : MonoBehaviour {
                     ai2thorCanOpenObjectScript.Interact();
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
+            }
+        }
+
+
+        if(seesaw) {
+            ai2thorPhysicsScript.IsSeesaw = true;
+            Physics.IgnoreCollision(agentController.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
+            gameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionX |  RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+            if(objectConfig.shows[0].scale.z > MCSMain.SEESAW_MAX_DEPTH && !objectConfig.kinematic) {
+                gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, MCSMain.SEESAW_MAX_DEPTH * 0.01f);
             }
         }
 
@@ -1666,6 +1680,7 @@ public class MCSConfigAbstractObject {
     public bool physics;
     public bool pickupable;
     public bool receptacle;
+    public bool seesaw;
     public bool stacking;
     public List<string> materials = new List<string>();
     public List<string> salientMaterials = new List<string>();
@@ -1886,7 +1901,6 @@ public class MCSConfigScene {
     public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
     public bool isometric;
-
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
     public List<MCSConfigGameObject> objects = new List<MCSConfigGameObject>();

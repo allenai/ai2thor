@@ -14,7 +14,9 @@ public class StructureObject : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        MCSController agent = FindObjectOfType<MCSController>();
+        if(agent!=null)
+            Physics.IgnoreCollision(agent.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
     }
 
     // Update is called once per frame

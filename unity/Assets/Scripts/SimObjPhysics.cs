@@ -109,6 +109,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
+    //IsSeesaw locks the XZ position and YZ rotation of the rigidbody. It ignores collisions with the agents ground collider.
+    //For seesaw pivot points, enable IsSeesaw and set that object to kinematic so that it ignores agent ground collider collisions but will not move.
+    public bool IsSeesaw;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
     private Vector3 boundingBoxCachePosition;
