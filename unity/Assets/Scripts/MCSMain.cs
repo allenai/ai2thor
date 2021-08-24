@@ -1680,8 +1680,8 @@ public class MCSConfigAbstractObject {
     public bool physics;
     public bool pickupable;
     public bool receptacle;
-    public bool stacking;
     public bool seesaw;
+    public bool stacking;
     public List<string> materials = new List<string>();
     public List<string> salientMaterials = new List<string>();
     public MCSConfigPhysicsProperties physicsProperties;

@@ -282,7 +282,7 @@ For playback:
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, `ObjectMetadataFromSimObjPhysics`
   - Added `virtual` to functions: `CloseObject`, `DropHandObject`, `OpenObject`, `PickupObject`, `PullObject`, `PushObject`, `PutObject`, `ResetAgentHandPosition`, `ThrowObject`, `ToggleObject`
   - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
-  - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful.
+  - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful; fixed an issue with placing held objects inside openble receptacles.
   - Added the `FindClosestPoint` function.
   - In `ApplyForceObject` and `PickupObject`, use `FindClosestPoint` to decide whether an object is obstructed or just out-of-reach.
   - Added `lastActionStatus` to Move actions, as well as to `DropHandObject`, `PickupObject`, and `PutObject` to help indicate success or reason for failure
@@ -310,6 +310,8 @@ For playback:
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.
+- `Scripts/StructureObject`:
+  - In `Start`, ignore collisions of the agent and the structure.
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
