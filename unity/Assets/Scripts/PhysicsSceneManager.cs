@@ -393,8 +393,9 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (placeStationary) {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     copy.GetComponent<Rigidbody>().isKinematic = true;
+                } else {
+                    copy.GetComponent<Rigidbody>().isKinematic = false;
                 }
-                // copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
         SetupScene();
