@@ -515,6 +515,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            if (action.cameraNearPlane > 0) {
+                m_Camera.nearClipPlane = action.cameraNearPlane;
+            }
+
+            if (action.cameraFarPlane > 0) {
+                m_Camera.farClipPlane = action.cameraFarPlane;
+            }
+
             if (action.timeScale > 0) {
                 if (Time.timeScale != action.timeScale) {
                     Time.timeScale = action.timeScale;
