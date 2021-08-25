@@ -964,10 +964,6 @@ def ci_build(context):
             )
 
             private_scene_options = [False]
-            if build["branch"] == "erick/challenge2021":
-                os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
-            elif build["branch"] == "erick/challenge2021-eval":
-                private_scene_options = [False, True]
 
             procs = []
             for include_private_scenes in private_scene_options:
@@ -1126,7 +1122,7 @@ def poll_ci_build(context):
         missing = False
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
-        if (time.time() - last_emit_time) > 540:
+        if (time.time() - last_emit_time) > 120:
             print(".", end="")
             last_emit_time = time.time()
 
@@ -1153,14 +1149,18 @@ def poll_ci_build(context):
 
     pytest_missing = True
     for i in range(30):
+        if (time.time() - last_emit_time) > 120:
+            print(".", end="")
+            last_emit_time = time.time()
+
         s3_obj = pytest_s3_object(commit_id)
         s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
             s3_obj.bucket_name,
             s3_obj.key,
         )
-        print("pytest url %s" % s3_pytest_url)
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
+            print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
             print(pytest_result["stdout"])  # print so that it appears in travis log

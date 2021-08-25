@@ -41,7 +41,7 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
 
                 // ignore any sim objects that shouldn't be added to the CurrentlyContains list
                 if (PropertiesToIgnore.Contains(sop.PrimaryProperty)) {
-                    return;
+                    continue;
                 }
 
                 // populate list of sim objects inside sphere by objectID

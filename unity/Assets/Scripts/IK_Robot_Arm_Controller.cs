@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class IK_Robot_Arm_Controller : MonoBehaviour {
+public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     private Transform armTarget;
     private Transform handCameraTransform;
 
@@ -29,7 +29,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public Dictionary<SimObjPhysics, List<Collider>> heldObjects = new Dictionary<SimObjPhysics, List<Collider>>();
+    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects = new Dictionary<SimObjPhysics, HashSet<Collider>>();
 
     // private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -67,6 +67,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         );
 
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
+        this.collisionListener.registerAllChildColliders();
 
         List<CapsuleCollider> armCaps = new List<CapsuleCollider>();
         List<BoxCollider> armBoxes = new List<BoxCollider>();
@@ -94,6 +95,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
 
         ArmBoxColliders = cleanedBoxes.ToArray();
+
+        // TODO: Currently explicitly ignoring all arm self collisions (for efficiency)!
+        var colliders = this.GetComponentsInChildren<Collider>();
+        foreach (Collider c0 in colliders) {
+            foreach (Collider c1 in colliders) {
+                Physics.IgnoreCollision(c0, c1);
+            }
+        }
     }
 
     // NOTE: removing this for now, will add back if functionality is required later
@@ -228,11 +237,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
-    protected IEnumerator resetArmTargetPositionAsLastStep(IEnumerator steps) {
+    protected IEnumerator resetArmTargetPositionRotationAsLastStep(IEnumerator steps) {
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
-        armTarget.position = handCameraTransform.transform.position;
+        Vector3 pos = handCameraTransform.transform.position;
+        Quaternion rot = handCameraTransform.transform.rotation;
+        armTarget.position = pos;
+        armTarget.rotation = rot;
     }
 
 
@@ -336,7 +348,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
-        IEnumerator moveCall = resetArmTargetPositionAsLastStep(
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.move(
                 controller,
                 collisionListener,
@@ -367,32 +379,38 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false,
-        bool disableRendering = false
+        bool disableRendering = false,
+        bool normalizedY = true
     ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
-        // first check if the target position is within bounds of the agent's capsule center/height extents
-        // if not, actionFinished false with error message listing valid range defined by extents
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
-        Vector3 cc_center = cc.center;
-        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height / 2f, 0);
-        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height / 2f) / 2f, 0); // this is halved to prevent arm clipping into floor
+        Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
 
-        // linear function that take height and adjusts targetY relative to min/max extents
-        float targetY = ((cc_maxY.y - cc_minY.y) * (height)) + cc_minY.y;
+        float maxY = capsuleWorldCenter.y + cc.height / 2f;
+        float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
 
-        Vector3 target = new Vector3(this.transform.localPosition.x, targetY, 0);
+        if (normalizedY) {
+            height = (maxY - minY) * height + minY;
+        }
 
-        IEnumerator moveCall = ContinuousMovement.move(
-            controller: controller,
-            collisionListener: collisionListener,
-            moveTransform: this.transform,
-            targetPosition: target,
-            fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            unitsPerSecond: unitsPerSecond,
-            returnToStartPropIfFailed: returnToStartPositionIfFailed,
-            localPosition: true
+        if (height < minY || height > maxY) {
+            throw new ArgumentOutOfRangeException($"height={height} value must be in [{minY}, {maxY}].");
+        }
+
+        Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.move(
+                controller: controller,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: target,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond: unitsPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed,
+                localPosition: false
+            )
         );
 
         if (disableRendering) {
@@ -405,6 +423,68 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
+    public void moveArmBaseUp(
+        PhysicsRemoteFPSAgentController controller,
+        float distance,
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false,
+        bool disableRendering = false
+    ) {
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        collisionListener.Reset();
+
+        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
+        Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
+        float maxY = capsuleWorldCenter.y + cc.height / 2f;
+        float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
+        float targetY = this.transform.position.y + distance;
+        targetY = Mathf.Max(Mathf.Min(targetY, maxY), minY);
+
+        moveArmBase(
+            controller: controller,
+            height: targetY,
+            unitsPerSecond: unitsPerSecond,
+            fixedDeltaTime: fixedDeltaTime,
+            returnToStartPositionIfFailed: returnToStartPositionIfFailed,
+            disableRendering: disableRendering,
+            normalizedY: false
+        );
+    }
+
+    public void rotateWristAroundPoint(
+        PhysicsRemoteFPSAgentController controller,
+        Vector3 rotatePoint,
+        Quaternion rotation,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false
+    ) {
+        collisionListener.Reset();
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotateAroundPoint(
+                controller: controller,
+                collisionListener: collisionListener,
+                updateTransform: armTarget.transform,
+                rotatePoint: rotatePoint,
+                targetRotation: rotation,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond: degreesPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed
+            )
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                rotate,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(rotate);
+        }
+    }
+
     public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
@@ -414,14 +494,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        IEnumerator rotate = ContinuousMovement.rotate(
-            controller,
-            collisionListener,
-            armTarget.transform,
-            armTarget.transform.rotation * rotation,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            degreesPerSecond,
-            returnToStartPositionIfFailed
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotate(
+                controller,
+                collisionListener,
+                armTarget.transform,
+                armTarget.transform.rotation * rotation,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond,
+                returnToStartPositionIfFailed
+            )
         );
 
         if (disableRendering) {
@@ -445,14 +527,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         collisionListener.Reset();
         GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
-        IEnumerator rotate = ContinuousMovement.rotate(
-            controller,
-            collisionListener,
-            poleManipulator.transform,
-            poleManipulator.transform.rotation * rotation,
-            disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            degreesPerSecond,
-            returnToStartPositionIfFailed
+        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.rotate(
+                controller,
+                collisionListener,
+                poleManipulator.transform,
+                poleManipulator.transform.rotation * rotation,
+                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                degreesPerSecond,
+                returnToStartPositionIfFailed
+            )
         );
 
         if (disableRendering) {
@@ -502,6 +586,29 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         controller.actionFinished(true, listOfSOP);
     }
 
+    private Dictionary<GameObject, Vector3> getGameObjectToMultipliedScale(
+        GameObject go,
+        Vector3 currentScale,
+        Dictionary<GameObject, Vector3> gameObjectToScale = null
+    ) {
+        if (gameObjectToScale == null) {
+            gameObjectToScale = new Dictionary<GameObject, Vector3>();
+        }
+
+        currentScale = Vector3.Scale(currentScale, go.transform.localScale);
+        gameObjectToScale[go] = currentScale;
+
+        foreach (Transform child in go.transform) {
+            getGameObjectToMultipliedScale(
+                go: child.gameObject,
+                currentScale: currentScale,
+                gameObjectToScale
+            );
+        }
+
+        return gameObjectToScale;
+    }
+
     public bool PickupObject(List<string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
@@ -515,10 +622,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 }
             }
 
+            Dictionary<GameObject, Vector3> gameObjectToMultipliedScale = getGameObjectToMultipliedScale(
+                go: sop.gameObject,
+                currentScale: new Vector3(1f, 1f, 1f)
+            );
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.detectCollisions = false; // Disable detecting of collisions
+
             if (sop.IsOpenable) {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
 
@@ -530,31 +643,50 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
             // ok new plan, clone the "myColliders" of the sop and
             // then set them all to isTrigger = True
             // and parent them to the correct joint
-            List<Collider> cols = new List<Collider>();
+            HashSet<Collider> cols = new HashSet<Collider>();
 
             foreach (Collider c in sop.MyColliders) {
                 // One set of colliders are used to check collisions
                 // with kinematic objects
                 Collider clone = Instantiate(
                     original: c,
-                    position:c.transform.position,
+                    position: c.transform.position,
                     rotation: c.transform.rotation,
                     parent: FourthJoint
                 );
+                clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
+
                 clone.isTrigger = true;
+                collisionListener.registerChild(clone);
                 cols.Add(clone);
 
                 // The other set is used to interact with moveable objects
-                cols.Add(Instantiate(
+                clone = Instantiate(
                     original: c,
-                    position:c.transform.position,
+                    position: c.transform.position,
                     rotation: c.transform.rotation,
                     parent: FourthJoint
-                ));
+                );
+                clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
+                cols.Add(clone);
 
-                // must disable the colliders on the held object so they 
-                // don't interact with anything
-                c.enabled = false;
+                // OLD: must disable the colliders on the held object so they  don't interact with anything
+                // PROBLEM: turning off colliders like this causes bounding boxes to be wrongly updated
+                // NEW: We turn on rb.detectCollisions = false above
+                // c.enabled = false;
+            }
+
+            // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
+            var colliders = this.GetComponentsInChildren<Collider>();
+            foreach (Collider c0 in colliders) {
+                foreach (Collider c1 in cols) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
+            }
+            foreach (Collider c0 in cols) {
+                foreach (Collider c1 in cols) {
+                    Physics.IgnoreCollision(c0, c1);
+                }
             }
 
             pickedUp = true;
@@ -576,7 +708,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public void DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
+        foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
@@ -586,10 +718,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 Destroy(c.gameObject);
             }
 
-            foreach (Collider c in sop.Key.MyColliders) {
-                // re-enable colliders since they were disabled during pickup
-                c.enabled = true;
-            }
+            // Colliders are no longer disabled on pickup, instead rb.detectCollisions is set to false
+            // Note that rb.detectCollisions is now set to true below.
+            // foreach (Collider c in sop.Key.MyColliders) {
+            //     // re-enable colliders since they were disabled during pickup
+            //     c.enabled = true;
+            // }
 
             if (sop.Key.IsOpenable) {
                 CanOpen_Object coj = sop.Key.gameObject.GetComponent<CanOpen_Object>();
@@ -604,6 +738,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
                 sop.Key.transform.parent = null;
             }
 
+            rb.detectCollisions = true;
             rb.WakeUp();
         }
 
@@ -712,13 +847,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour {
         // there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> heldObjectIDs = new List<string>();
         if (heldObjects != null) {
-            foreach (KeyValuePair<SimObjPhysics, List<Collider>> sop in heldObjects) {
-                heldObjectIDs.Add(sop.Key.objectID);
+            foreach (SimObjPhysics sop in heldObjects.Keys) {
+                heldObjectIDs.Add(sop.objectID);
             }
         }
 
         meta.heldObjects = heldObjectIDs;
-        meta.handSphereCenter = transform.TransformPoint(magnetSphere.center);
+        meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
         meta.handSphereRadius = magnetSphere.radius;
         meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;

@@ -112,7 +112,14 @@ public static class ActionDispatcher {
 
     private static MethodInfo[] getMethods(Type targetType) {
         if (!methodCache.ContainsKey(targetType)) {
-            methodCache[targetType] = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            var methods = new List<MethodInfo>();
+            foreach (MethodInfo mi in targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
+                if (mi.ReturnType == typeof(void)) {
+                    methods.Add(mi);
+                }
+            }
+
+            methodCache[targetType] = methods.ToArray();
         }
         return methodCache[targetType];
     }
@@ -181,8 +188,7 @@ public static class ActionDispatcher {
             }
 
             foreach (MethodInfo mi in getMethods(targetType)) {
-                if (mi.ReturnType != typeof(void) || mi.Name != action) {
-                    // We only allow dispatching to public void methods
+                if (mi.Name != action) {
                     continue;
                 }
                 bool replaced = false;

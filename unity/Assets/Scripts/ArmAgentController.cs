@@ -8,7 +8,7 @@ using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class ArmAgentController : PhysicsRemoteFPSAgentController {
+    public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
         protected IK_Robot_Arm_Controller getArm() {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {
@@ -20,6 +20,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+        /*
+        Toggles the visibility of the magnet sphere at the end of the arm.
+        */
+        public void ToggleMagnetVisibility(bool? visible = null) {
+            MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
+            if (visible.HasValue) {
+                mr.enabled = visible.Value;
+            } else {
+                mr.enabled = !mr.enabled;
+            }
+            actionFinished(true);
+        }
 
         /*
         This function is identical to `MoveArm` except that rather than
@@ -80,6 +92,81 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 coordinateSpace: coordinateSpace,
                 restrictTargetPosition: restrictMovement,
                 disableRendering: disableRendering
+            );
+        }
+
+        /*
+        Let's say you wanted the agent to be able to rotate the object it's
+        holding so that it could get multiple views of the object. You
+        could do this by using the RotateWristRelative action but the downside
+        of using that function is that object will be translated as the
+        wrist rotates. This RotateWristAroundHeldObject action gets around this
+        problem by allowing you to specify how much you'd like the object to
+        rotate by and then figuring out how to translate/rotate the wrist so
+        that the object rotates while staying fixed in space.
+
+        Note that the object may stil be translated if the specified rotation
+        of the object is not feasible given the arm's DOF and length/joint
+        constraints.
+        */
+        public void RotateWristAroundHeldObject(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            if (arm.heldObjects.Count == 1) {
+                SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
+                RotateWristAroundPoint(
+                    point: sop.gameObject.transform.position,
+                    pitch: pitch,
+                    yaw: yaw,
+                    roll: roll,
+                    speed: speed,
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStart: returnToStart,
+                    disableRendering: disableRendering
+                );
+            } else {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Cannot RotateWristAroundHeldObject when holding" +
+                        $" != 1 objects, currently holding {arm.heldObjects.Count} objects."
+                );
+            }
+
+        }
+
+        /*
+        Rotates and translates the wrist so that its position
+        stays fixed relative some given point as that point
+        rotates some given amount.
+        */
+        public void RotateWristAroundPoint(
+            Vector3 point,
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateWristAroundPoint(
+                controller: this,
+                rotatePoint: point,
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
             );
         }
 
@@ -415,10 +502,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true
+            bool disableRendering = true,
+            bool normalizedY = true
         ) {
-            if (y < 0 || y > 1) {
-                throw new ArgumentOutOfRangeException($"y={y} value must be [0, 1.0].");
+            if (normalizedY && (y < 0f || y > 1f)) {
+                // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
+                throw new ArgumentOutOfRangeException($"y={y} value must be in [0, 1] when normalizedY=true.");
             }
 
             IK_Robot_Arm_Controller arm = getArm();
@@ -428,6 +517,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 unitsPerSecond: speed,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
                 returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering,
+                normalizedY: normalizedY
+            );
+        }
+
+        public void MoveArmBaseUp(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            arm.moveArmBaseUp(
+                controller: this,
+                distance: distance,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+        public void MoveArmBaseDown(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveArmBaseUp(
+                distance: -distance,
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
                 disableRendering: disableRendering
             );
         }
@@ -457,7 +581,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // debug for static arm collisions from collision listener
         public void DebugMidLevelArmCollisions() {
             IK_Robot_Arm_Controller arm = getArm();
-            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions();
+            List<CollisionListener.StaticCollision> scs = arm.collisionListener.StaticCollisions().ToList();
             Debug.Log("Total current active static arm collisions: " + scs.Count);
             foreach (CollisionListener.StaticCollision sc in scs) {
                 Debug.Log("Arm static collision: " + sc.name);
