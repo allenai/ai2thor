@@ -1568,7 +1568,7 @@ namespace Thor.Procedural {
             for (int i = 0; i < guids.Length; i++) {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
                 GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-                if (asset != null) {
+                if (asset != null && asset.GetComponent<SimObjPhysics>()) {
                     assets.Add(asset);
                 }
             }
