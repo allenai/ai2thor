@@ -139,7 +139,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         public int fixedUpdateCount;
-        public int updateCount;
+        public int lateUpdateCount;
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
@@ -4314,7 +4314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetUpdateCounters() {
             this.fixedUpdateCount = 0;
-            this.updateCount = 0;
+            this.lateUpdateCount = 0;
         }
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {

@@ -901,7 +901,7 @@ public class AgentManager : MonoBehaviour {
             MetadataWrapper metadata = agent.generateMetadataWrapper();
             metadata.agentId = i;
             metadata.fixedUpdateCount = agent.fixedUpdateCount;
-            metadata.updateCount = agent.updateCount;
+            metadata.lateUpdateCount = agent.lateUpdateCount;
 
 
             // we don't need to render the agent's camera for the first agent
@@ -1226,7 +1226,7 @@ public class MultiAgentMetadata {
     public int activeAgentId;
     public int sequenceId;
     public int fixedUpdateCount;
-    public int updateCount;
+    public int lateUpdateCount;
 }
 
 [Serializable]
@@ -1610,7 +1610,7 @@ public struct MetadataWrapper {
     public List<Vector3> visibleRange;
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
-    public int updateCount;
+    public int lateUpdateCount;
     public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
