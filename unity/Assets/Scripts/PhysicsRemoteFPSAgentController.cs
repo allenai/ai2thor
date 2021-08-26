@@ -47,10 +47,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return AgentHand.transform.position;
         }
 
-        public float WhatIsAgentsMaxVisibleDistance() {
-            return maxVisibleDistance;
-        }
-
         public GameObject WhatAmIHolding() {
             return ItemInHand;
         }
@@ -248,35 +244,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
         }
 
-        // use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
-        public bool CheckIfPointIsInViewport(Vector3 point) {
-            Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
-
-            float ViewPointRangeHigh = 1.0f;
-            float ViewPointRangeLow = 0.0f;
-
-            if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance // is in front of camera and within range of visibility sphere
-                &&
-                viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow // within x bounds of viewport
-                &&
-                viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) // within y bounds of viewport
-            {
-                RaycastHit hit;
-
-                updateAllAgentCollidersForVisibilityCheck(false);
-
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) // reduce distance by slight offset
-                {
-                    updateAllAgentCollidersForVisibilityCheck(true);
-                    return false;
-                } else {
-                    updateAllAgentCollidersForVisibilityCheck(true);
-                    return true;
-                }
-            }
-            return false;
-        }
 
         // checks if a float is a multiple of 0.1f
         private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
@@ -3556,7 +3523,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
                 List<ReceptacleSpawnPoint> rsps = new List<ReceptacleSpawnPoint>();
 
-                rsps = sop.ReturnMySpawnPoints(false);
+                rsps = sop.ReturnMySpawnPoints();
                 List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
                 bool constraintsUsed = false;// only set rsps to editedRsps if constraints were passed in
 
@@ -4239,7 +4206,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // ok we are holding something, time to try and place it
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             // set degreeIncrement to 90 for placing held objects to check for vertical angles
-            List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
+            List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent ? this : null);
             if (randomSeed != 0 || putNearXY) {
                 List<KeyValuePair<ReceptacleSpawnPoint, float>> distSpawnPoints = new List<KeyValuePair<ReceptacleSpawnPoint, float>>();
 

@@ -593,16 +593,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
-    private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
+    private void FindMySpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
             Contains containsScript = rtb.GetComponent<Contains>();
-            temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            temp.AddRange(containsScript.GetValidSpawnPoints(agent));
         }
 
-        if (ReturnPointsCloseToAgent) {
-            GameObject agent = GameObject.Find("FPSController");
-
+        if (agent != null) {
             temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
                 return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
             });
@@ -623,8 +621,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
-    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
-        FindMySpawnPoints(ReturnPointsCloseToAgent);
+    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
+        FindMySpawnPoints(agent);
         return MySpawnPoints;
     }
 

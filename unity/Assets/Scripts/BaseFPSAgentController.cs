@@ -280,6 +280,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public System.Object actionReturn;
         protected Vector3 standingLocalCameraPosition;
         protected Vector3 crouchingLocalCameraPosition;
+
         public float maxVisibleDistance = 1.5f; // changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
         protected float[,,] flatSurfacesOnGrid = new float[0, 0, 0];
         protected float[,] distances = new float[0, 0];
@@ -4307,6 +4308,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 inHighFrictionArea = false;
             }
+        }
+        
+        // use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
+        public bool CheckIfPointIsInViewport(Vector3 point) {
+            Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
+
+            float ViewPointRangeHigh = 1.0f;
+            float ViewPointRangeLow = 0.0f;
+
+            if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance // is in front of camera and within range of visibility sphere
+                &&
+                viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow // within x bounds of viewport
+                &&
+                viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) // within y bounds of viewport
+            {
+                RaycastHit hit;
+
+                updateAllAgentCollidersForVisibilityCheck(false);
+
+                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
+                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) // reduce distance by slight offset
+                {
+                    updateAllAgentCollidersForVisibilityCheck(true);
+                    return false;
+                } else {
+                    updateAllAgentCollidersForVisibilityCheck(true);
+                    return true;
+                }
+            }
+            return false;
         }
 
 

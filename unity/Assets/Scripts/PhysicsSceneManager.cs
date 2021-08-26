@@ -634,7 +634,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         }
                     }
 
-                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints(false);
+                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints();
 
                     // first shuffle the list so it's random
                     targetReceptacleSpawnPoints.Shuffle_(rng);
