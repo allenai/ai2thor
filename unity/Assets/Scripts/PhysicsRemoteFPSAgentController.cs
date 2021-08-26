@@ -4579,6 +4579,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     StartCoroutine(checkDropHeldObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                 }
             } else {
+                DefaultAgentHand();
                 actionFinished(true);
             }
             ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
