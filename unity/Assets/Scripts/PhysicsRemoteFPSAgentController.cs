@@ -2111,16 +2111,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target = getSimObjectFromId(action.objectId);
             }
 
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         target = sop;
-            //     }
-            // }
-            // print(target.objectID);
-            // print(target.isInteractable);
-
             if (target == null) {
                 errorMessage = "No valid target!";
                 Debug.Log(errorMessage);
@@ -3085,14 +3075,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float scaleOverSeconds = 1.0f,
             bool forceAction = false
         ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
 
             // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = getInteractableSimObjectFromId(objectId, forceAction);
+            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
 
             // neither objectId nor coordinates found an object
             if (target == null) {
@@ -4108,14 +4093,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
             // if object is in the scene and visible, assign it to 'target'
-            targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
+            targetReceptacle = getTargetObject(objectId: objectId, forceAction: forceAction);
 
             placeHeldObject(
                 targetReceptacle: targetReceptacle,
@@ -4945,14 +4924,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
 
@@ -5068,14 +5041,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = null;
             bool forceVisible = forceAction;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
             // if object is in the scene and visible, assign it to 'target'
-            target = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceVisible);
+            target = getTargetObject(objectId: objectId, forceAction: forceAction);
+
             if (!target) {
 
                 // target not found in currently visible objects, report not found
@@ -5313,8 +5281,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
-        // object ID of an object in this receptacle
+        // XXX: This will return contained objects, but should not be used. Likely depracate this later
         public void Contains(ServerAction action) {
             if (action.objectId == null) {
                 errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
@@ -5322,7 +5289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+            SimObjPhysics target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
 
             if (target) {
                 List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
@@ -8098,14 +8065,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             // we found it!
@@ -8160,14 +8121,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             // we found it!
@@ -8232,14 +8187,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8288,14 +8237,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8345,14 +8288,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (action.fillLiquid == null) {
@@ -8408,14 +8345,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8466,14 +8397,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getTargetObject(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {

@@ -1671,10 +1671,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
 
-            objMeta.obstructed = !isVisible;// if object is not interactable, it means it is obstructed
+            objMeta.obstructedByTransparentObject = !simObj.isInteractable;// object is not interactable. It may still be visible, but occluded by some transparent object (glass)
 
             objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
-
 
             objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
 
@@ -2019,6 +2018,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // target not found!
             if (target == null) {
                 throw new NullReferenceException("Target object not found within the specified visibility.");
+            }
+            
+            if(!target.isInteractable && !forceAction) {
+                throw new NullReferenceException("Target object is visible but not interactable. It is likely obstructed by some clear object like glass.");
             }
 
             return target;
@@ -2969,6 +2972,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool includeInvisible
         ) {
             bool result = false;
+            sop.isInteractable = false;
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
@@ -2995,11 +2999,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
                     ) {
                         result = true;
-                        sop.debugIsInteractable = true;
+                        sop.isInteractable = true;
 #if UNITY_EDITOR
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
 #endif
                     } else {
+                        sop.isInteractable = false;
                         result = false;
                     }
                 }
@@ -3016,7 +3021,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // if this line is drawn, then this visibility point is in camera frame and not occluded
                         // might want to use this for a targeting check as well at some point....
                         result = true;
-                        sop.debugIsInteractable = true;
+                        sop.isInteractable = true;
                     } else {
                         // we didn't directly hit the sop we are checking for with this cast,
                         // check if it's because we hit something see-through
@@ -3047,6 +3052,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
                                 ) {
                                     // found the object we are looking for, great!
+                                    //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
+                                    sop.isInteractable = false;
                                     result = true;
                                     break;
                                 } else {
