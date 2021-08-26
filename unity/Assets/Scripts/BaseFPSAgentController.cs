@@ -138,8 +138,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ImageSynthesis imageSynthesis;
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
-        public int fixedUpdateCount;
-        public int lateUpdateCount;
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
@@ -164,13 +162,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public const float DefaultAllowedErrorInShortestPath = 0.0001f;
 
-        public BaseFPSAgentController(BaseAgentComponent baseAgentComponent) {
+        public BaseFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) {
+            this.baseAgentComponent = baseAgentComponent;
+            this.baseAgentComponent.agent = this;
+            this.agentManager = agentManager;
 
             // character controller parameters
             this.m_WalkSpeed = 2;
             this.m_RunSpeed = 10;
             this.m_GravityMultiplier = 2;
-            this.baseAgentComponent = baseAgentComponent;
             this.m_Camera = this.gameObject.GetComponentInChildren<Camera>();
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
@@ -184,7 +184,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HideAllAgentRenderers();
 
 
-            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
@@ -219,7 +218,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             set {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
-                Debug.Log("making agent ivisible ****" + value);
 
                 // The VisibilityCapsule will be set to either Tall or Bot
                 // from the SetAgentMode call in BaseFPSAgentController's Initialize()
@@ -4312,13 +4310,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void ResetUpdateCounters() {
-            this.fixedUpdateCount = 0;
-            this.lateUpdateCount = 0;
-        }
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
-            this.fixedUpdateCount = ContinuousMovement.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 enumerator,
                 fixedDeltaTime
             );

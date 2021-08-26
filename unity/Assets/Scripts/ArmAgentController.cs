@@ -9,7 +9,7 @@ using UnityEngine.AI;
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
-        public ArmAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
         protected IK_Robot_Arm_Controller getArm() {

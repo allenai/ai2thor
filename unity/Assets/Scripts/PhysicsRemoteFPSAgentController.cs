@@ -26,7 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         bool transparentStructureObjectsHidden = false;
         // face swap stuff here
 
-        public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
         // change visibility check to use this distance when looking down

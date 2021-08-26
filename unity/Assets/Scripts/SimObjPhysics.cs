@@ -51,6 +51,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool debugIsInteractable = false;
     public bool isInAgentHand = false;
 
+    public DroneFPSAgentController droneFPSAgent;
+
     // these collider references are used for switching physics materials for all colliders on this object
     [Header("Non - Trigger Colliders of this object")]
     public Collider[] MyColliders = null;
@@ -109,7 +111,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
-    public AgentManager agentManager;
     public bool isHeatSource;
     public bool isColdSource;
     private BoundingBoxCacheKey boundingBoxCacheKey;
@@ -635,18 +636,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
 
-        if (agentManager.PrimaryAgent.GetType() != typeof(DroneFPSAgentController)) {
+        if (droneFPSAgent == null){
             return;
         }
-
-        DroneFPSAgentController droneController = agentManager.PrimaryAgent as DroneFPSAgentController;
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -662,9 +661,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -876,8 +875,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
         // end debug setup stuff
 
         OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];

@@ -276,9 +276,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
-        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent}) as BaseFPSAgentController;
-        agentComponent.agent = agent;
-        agent.agentManager = this;
+        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent, this}) as BaseFPSAgentController;
         this.agents.Add(agent);
         return agent;
     }
@@ -900,9 +898,6 @@ public class AgentManager : MonoBehaviour {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
             metadata.agentId = i;
-            metadata.fixedUpdateCount = agent.fixedUpdateCount;
-            metadata.lateUpdateCount = agent.lateUpdateCount;
-
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -916,7 +911,6 @@ public class AgentManager : MonoBehaviour {
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents[i] = metadata;
-            agent.ResetUpdateCounters();
         }
 
         if (shouldRender) {
@@ -1225,8 +1219,6 @@ public class MultiAgentMetadata {
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public int activeAgentId;
     public int sequenceId;
-    public int fixedUpdateCount;
-    public int lateUpdateCount;
 }
 
 [Serializable]
@@ -1610,8 +1602,6 @@ public struct MetadataWrapper {
     public List<Vector3> visibleRange;
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
-    public int lateUpdateCount;
-    public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
 #if ENABLE_IL2CPP

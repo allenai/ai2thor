@@ -19,7 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public float fixupdateCnt = 0f;
         // Update is called once per frame
         
-        public DroneFPSAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) { }
+        public DroneFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) { }
         
 
         protected override void resumePhysics() {
@@ -454,7 +454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Launch(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z) {
             Vector3 LaunchAngle = new Vector3(x, y, z);
-            DroneObjectLauncher.Launch(moveMagnitude, LaunchAngle, objectName, objectRandom);
+            DroneObjectLauncher.Launch(this, moveMagnitude, LaunchAngle, objectName, objectRandom);
         }
 
         public void MoveLauncher(Vector3 position) {

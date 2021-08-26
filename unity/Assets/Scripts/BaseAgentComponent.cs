@@ -36,7 +36,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            this.agent.lateUpdateCount++;
 
 #if UNITY_WEBGL
                 // For object highlight shader to properly work, all visible objects should be populated not conditioned
@@ -55,7 +54,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         void FixedUpdate() {
             if (this.agent != null) {
-                this.agent.fixedUpdateCount++;
                 this.agent.FixedUpdate();
             }
         }

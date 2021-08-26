@@ -22,7 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
         
-        public StochasticRemoteFPSAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        public StochasticRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
         public new void Initialize(ServerAction action) {
