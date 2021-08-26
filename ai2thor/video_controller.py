@@ -6,7 +6,7 @@ with VideoController() as vc:
     vc.play(vc.MoveAhead())
     vc.wait(5)
     vc.play(vc.MoveAhead())
-    vc.exportVideo('thor.mp4')
+    vc.export_video('thor.mp4')
 Known issues:
 - Multi agent rotations don't work (since TeleportFull breaks when passing in an AgentID)
 """
@@ -27,7 +27,6 @@ class VideoController(Controller):
         cam_fov=60,
         **controller_kwargs,
     ):
-        super().__init__(continuous=True, **controller_kwargs)
 
         self.saved_frames = []
         self.ceiling_off = False
@@ -35,6 +34,7 @@ class VideoController(Controller):
         self.initial_cam_pos = cam_pos.copy()
         self.initial_cam_fov = cam_fov
 
+        super().__init__(continuous=True, **controller_kwargs)
         self.step(
             action="AddThirdPartyCamera",
             rotation=self.initial_cam_rot,
@@ -387,9 +387,3 @@ class VideoController(Controller):
                 self.saved_frames.append(rgb)
             success, image = vidcap.read()
             i += 1
-
-with VideoController() as vc:
-    vc.play(vc.MoveAhead())
-    vc.wait(5)
-    vc.play(vc.MoveAhead())
-    vc.export_video('thor.mp4')
