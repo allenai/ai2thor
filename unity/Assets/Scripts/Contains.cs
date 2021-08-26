@@ -30,7 +30,6 @@ public class Contains : MonoBehaviour {
 
     // this is an object reference to the sim object that is linked to this receptacle box
     public GameObject myParent = null;
-    private AgentManager agentManager;
 
     // can use this list to filter out certain objects with properties, currently unused
     // private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
@@ -60,7 +59,6 @@ public class Contains : MonoBehaviour {
             Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
         }
 #endif
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
     }
 
     // Update is called once per frame
