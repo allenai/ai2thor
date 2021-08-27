@@ -775,7 +775,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtPoint(objectType, objectVariation, target, position, rotation)) {
+            if (ersm.SpawnExperimentObjAtPoint(this, objectType, objectVariation, target, position, rotation)) {
                 actionFinished(true);
             } else {
                 errorMessage = $"Experiment object could not be placed on {receptacleObjectId}";
@@ -820,7 +820,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtRandom(objectType, objectVariation, randomSeed, target, rotation)) {
+            if (ersm.SpawnExperimentObjAtRandom(this, objectType, objectVariation, randomSeed, target, rotation)) {
                 actionFinished(true);
             } else {
                 errorMessage = "Experiment object could not be placed on " + receptacleObjectId;
@@ -1072,7 +1072,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // return all valid spawn coordinates
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(objectType, objectVariation, target, rotation));
+            actionFinished(true, ersm.ReturnValidSpawns(this, objectType, objectVariation, target, rotation));
         }
     }
 }
