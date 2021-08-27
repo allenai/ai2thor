@@ -1355,7 +1355,7 @@ public class ObjectMetadata {
 
     // If true, object is obstructed by something and actions cannot be performed on it unless forced.
     // This means an object behind glass will be obstructed=True and visible=True
-    public bool obstructedByTransparentObject;
+    public bool isInteractable;
 
     // is this object a receptacle?
     public bool receptacle;

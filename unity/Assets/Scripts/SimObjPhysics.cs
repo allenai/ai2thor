@@ -1089,7 +1089,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         // interactable drawn in magenta
-        if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>()) {
+        if (isInteractable && gameObject.GetComponentInChildren<MeshFilter>()) {
             MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);

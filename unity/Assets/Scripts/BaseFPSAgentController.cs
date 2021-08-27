@@ -1671,7 +1671,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
 
-            objMeta.obstructedByTransparentObject = !simObj.isInteractable;// object is not interactable. It may still be visible, but occluded by some transparent object (glass)
+            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
+            //note using forceAction=True will ignore the isInteractable requirement
+            objMeta.isInteractable = simObj.isInteractable;
 
             objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
 
