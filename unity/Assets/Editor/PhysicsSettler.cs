@@ -107,7 +107,7 @@ class PhysicsSettler {
                 Physics.autoSimulation = cachedAutoSimulation;
                 active = false;
             } else {
-                Physics.Simulate(0.01f);
+                PhysicsSceneManager.PhysicsSimulateTHOR(0.01f);
             }
         }
     }

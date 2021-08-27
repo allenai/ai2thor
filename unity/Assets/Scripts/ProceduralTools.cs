@@ -1597,7 +1597,7 @@ namespace Thor.Procedural {
             rb.isKinematic = true;
 
             //ensure bounding boxes for spawned object are defaulted correctly so placeNewObjectAtPoint doesn't FREAK OUT
-            toSpawn.RegenerateBoundingBoxes();
+            toSpawn.syncBoundingBoxes(true);
 
             var success = false;
 
@@ -1678,7 +1678,7 @@ namespace Thor.Procedural {
             rb.isKinematic = true;
 
             //ensure bounding boxes for spawned object are defaulted correctly so placeNewObjectAtPoint doesn't FREAK OUT
-            toSpawn.RegenerateBoundingBoxes();
+            toSpawn.syncBoundingBoxes(true);
 
             var success = false;
 

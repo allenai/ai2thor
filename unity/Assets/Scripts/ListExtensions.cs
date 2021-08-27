@@ -44,6 +44,7 @@ public static class ListExtensions {
     }
 
     public static IList<T> Shuffle_<T>(this IList<T> list, int seed) {
+        // NOTE: this doesn't use systemRandom
         return list.Shuffle_(new System.Random(seed));
     }
 

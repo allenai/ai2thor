@@ -128,10 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (thrust.magnitude > 0.0001 && Time.timeScale != 0) {
                 if (dronePositionRandomNoiseSigma > 0) {
-                    var random = new System.Random();
-                    var noiseX = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
-                    var noiseY = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
-                    var noiseZ = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseX = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseY = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseZ = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
                     Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
                     m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
                 } else {
@@ -214,10 +213,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             // can this object change others to hot?
-            objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
+            objMeta.isHeatSource = simObj.isHeatSource;
 
             // can this object change others to cold?
-            objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
+            objMeta.isColdSource = simObj.isColdSource;
 
             objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
@@ -230,7 +229,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // object temperature to string
-            objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
+            objMeta.temperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;// can this object be picked up?
             objMeta.isPickedUp = simObj.isPickedUp;// returns true for if this object is currently being held by the agent
@@ -315,7 +314,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // use get reachable positions, get two positions, one in front of the other
         public Vector3[] SeekTwoPos(Vector3[] shuffledCurrentlyReachable) {
             Vector3[] output = new Vector3[2];
-            System.Random rnd = new System.Random();
             List<float> y_candidates = new List<float>(new float[] { 1.0f, 1.25f, 1.5f });
             foreach (Vector3 p in shuffledCurrentlyReachable) {
                 foreach (Vector3 p2 in shuffledCurrentlyReachable) {
@@ -324,7 +322,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // if(Mathf.Abs(p.x-p2.x) < 0.5*Mathf.Abs(p.z-p2.z)){
                             // if(Mathf.Abs(p.x-p2.x) == 0){
                             if (Mathf.Abs(p.x - p2.x) <= 0.5) {
-                                float y = y_candidates.OrderBy(x => rnd.Next()).ToArray()[0];
+                                float y = y_candidates.OrderBy(x => systemRandom.Next()).ToArray()[0];
                                 output[0] = new Vector3(p.x, 1.0f, p.z);
                                 output[1] = new Vector3(p2.x, y, p2.z);
                                 return output;
@@ -357,8 +355,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void FlyRandomStart(float y) {
-            System.Random rnd = new System.Random();
-            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
+            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => systemRandom.Next()).ToArray();
             Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
 
             var thrust_dt_drone = Random_output[0];
@@ -371,7 +368,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // move drone and launcher to some start position
-        // using the 'position' variable name is an artificat from using ServerAction.position for the thrust_dt
+        // using the 'position' variable name is an artifact from using ServerAction.position for the thrust_dt
         public void FlyAssignStart(Vector3 position, float x, float y, float z) {
             // drone uses action.position
             Vector3 thrust_dt = position;

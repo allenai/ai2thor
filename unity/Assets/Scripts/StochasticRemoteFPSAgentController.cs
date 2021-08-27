@@ -88,8 +88,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (xzMag > 1e-5f) {
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
                 if (this.applyActionNoise) {
-                    var random = new System.Random();
-                    var rotateNoise = (float) random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    var rotateNoise = (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
                 }
 
@@ -306,14 +305,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
-            System.Random random = new System.Random();
-            float internalNoise = applyActionNoise ? (float) random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-            return moveMagnitude + noise + (float) internalNoise;
+            float internalNoise = applyActionNoise ? (float)systemRandom.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
+            return moveMagnitude + noise + (float)internalNoise;
         }
 
         protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
-            System.Random random = new System.Random();
-            float internalNoise = applyActionNoise ? (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
+            float internalNoise = applyActionNoise ? (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
             return rotation.y + noise + (float)internalNoise;
         }
     }

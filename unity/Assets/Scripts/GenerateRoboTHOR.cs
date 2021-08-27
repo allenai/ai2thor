@@ -44,7 +44,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected Transform floorParent;
     protected Transform structure;
 
-    protected float[] validStartingAgentRotations = new float[] {0, 90, 180, 270};
+    protected float[] validStartingAgentRotations = new float[] { 0, 90, 180, 270 };
     protected string[] validOrientations = new string[] {
         "left", "right", "top", "bottom"
     };
@@ -335,7 +335,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
             position: new Vector3(
                 x: wallCenterX,
                 y: 1.298f,
-                z: wallCenterZ + (float) (zWalls + boundaryPadding * 2) / 2
+                z: wallCenterZ + (float)(zWalls + boundaryPadding * 2) / 2
             ),
             rotation: Quaternion.identity
         ) as GameObject;
@@ -352,7 +352,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
             position: new Vector3(
                 x: wallCenterX,
                 y: 1.298f,
-                z: wallCenterZ - (float) (zWalls + boundaryPadding * 2) / 2
+                z: wallCenterZ - (float)(zWalls + boundaryPadding * 2) / 2
             ),
             rotation: Quaternion.Euler(0, 180, 0)
         ) as GameObject;
@@ -367,7 +367,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
             original: outerWallPrefab,
             parent: floorParent,
             position: new Vector3(
-                x: wallCenterX - (float) (xWalls + boundaryPadding * 2) / 2,
+                x: wallCenterX - (float)(xWalls + boundaryPadding * 2) / 2,
                 y: 1.298f,
                 z: wallCenterZ
             ),
@@ -384,7 +384,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
             original: outerWallPrefab,
             parent: floorParent,
             position: new Vector3(
-                x: wallCenterX + (float) (xWalls + boundaryPadding * 2) / 2,
+                x: wallCenterX + (float)(xWalls + boundaryPadding * 2) / 2,
                 y: 1.298f,
                 z: wallCenterZ
             ),
@@ -398,8 +398,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
     }
 
     protected void PlaceCeilings() {
-        int xCeilings = (int) Math.Ceiling((xWalls + 2 * boundaryPadding) / ceilingSizeX);
-        int zCeilings = (int) Math.Ceiling((zWalls + 2 * boundaryPadding) / ceilingSizeZ);
+        int xCeilings = (int)Math.Ceiling((xWalls + 2 * boundaryPadding) / ceilingSizeX);
+        int zCeilings = (int)Math.Ceiling((zWalls + 2 * boundaryPadding) / ceilingSizeZ);
 
         for (int x = 0; x < xCeilings; x++) {
             for (int z = 0; z < zCeilings; z++) {
@@ -408,9 +408,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
                     original: ceilingPrefab,
                     parent: structure,
                     position: new Vector3(
-                        x: ceilingCenterX + ceilingSizeX * (x - (float) xCeilings / 2) + ceilingSizeX / 2,
+                        x: ceilingCenterX + ceilingSizeX * (x - (float)xCeilings / 2) + ceilingSizeX / 2,
                         y: ceilingCenterY,
-                        z: ceilingCenterZ + ceilingSizeZ * (z - (float) zCeilings / 2) + ceilingSizeZ / 2
+                        z: ceilingCenterZ + ceilingSizeZ * (z - (float)zCeilings / 2) + ceilingSizeZ / 2
                     ),
                     rotation: Quaternion.identity
                 );
@@ -464,9 +464,9 @@ public class GenerateRoboTHOR : MonoBehaviour {
                     original: floorPrefab,
                     parent: floorParent,
                     position: new Vector3(
-                        x: wallCenterX + (x - (float) (xWalls + boundaryPadding * 2) / 2) + 0.5f,
+                        x: wallCenterX + (x - (float)(xWalls + boundaryPadding * 2) / 2) + 0.5f,
                         y: 0,
-                        z: wallCenterZ + (z - (float) (zWalls + boundaryPadding * 2) / 2) + 0.5f
+                        z: wallCenterZ + (z - (float)(zWalls + boundaryPadding * 2) / 2) + 0.5f
                     ),
                     rotation: Quaternion.identity
                 );
@@ -474,14 +474,14 @@ public class GenerateRoboTHOR : MonoBehaviour {
         }
         AddOuterWalls();
 
-        #if UNITY_EDITOR
-            // Only necessary because Initialize can be called within the
-            // editor without calling Reset(). However, this is not supported
-            // from the Python API.
-            for (int i = wallParent.childCount - 1; i >= 0; i--) {
-                Destroy(wallParent.GetChild(i).gameObject);
-            }
-        #endif
+#if UNITY_EDITOR
+        // Only necessary because Initialize can be called within the
+        // editor without calling Reset(). However, this is not supported
+        // from the Python API.
+        for (int i = wallParent.childCount - 1; i >= 0; i--) {
+            Destroy(wallParent.GetChild(i).gameObject);
+        }
+#endif
 
         wallCells = new WallCell[xWalls, zWalls];
         cellsVisited = 0;
@@ -491,10 +491,10 @@ public class GenerateRoboTHOR : MonoBehaviour {
             for (int z = 0; z < zWalls; z++) {
                 wallCells[x, z] = new WallCell(
                     visited: false,
-                    left: x == 0 ? (bool?) null : true,
-                    top: z == 0 ? (bool?) null : true,
-                    bottom: z == zWalls - 1 ? (bool?) null : true,
-                    right: x == xWalls - 1 ? (bool?) null : true
+                    left: x == 0 ? (bool?)null : true,
+                    top: z == 0 ? (bool?)null : true,
+                    bottom: z == zWalls - 1 ? (bool?)null : true,
+                    right: x == xWalls - 1 ? (bool?)null : true
                 );
             }
         }
