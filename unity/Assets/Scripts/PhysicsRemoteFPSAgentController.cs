@@ -5039,7 +5039,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private void toggleObject(string objectId, bool toggleOn, bool forceAction) {
             SimObjPhysics target = null;
-            bool forceVisible = forceAction;
 
             // if object is in the scene and visible, assign it to 'target'
             target = getTargetObject(objectId: objectId, forceAction: forceAction);
