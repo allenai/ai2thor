@@ -130,6 +130,24 @@ public class JenkinsBuild
     }
 
     private static void SwitchAddressablesProfile(string addressablesProfileName) {
+        string profileName = addressablesProfileName;
+        if(profileName.ToLower() == "prod" || profileName.ToLower() == "production" || profileName.ToLower() == "remote") {
+            Debug.Log("Switching profile " + profileName + " to Remote");
+            profileName = "Remote";
+        }
+        if(profileName.ToLower() == "dev" || profileName == "development") {
+            Debug.Log("Switching profile " + profileName + " to Development");
+            profileName = "Development";
+        }
+        if(profileName == "default") {
+            Debug.Log("Switching profile " + profileName + " to Default");
+            profileName = "Default";
+        }
+        if(profileName != "Default" && profileName != "Development" && profileName != "Remote") {
+            Debug.Log("Switching profile " + profileName + " to Development because it doesn't exist");
+            profileName = DEFAULT_ADDRESSABLES_PROFILE;
+        }
+        Debug.Log("Loading profile " + profileName + " from the Addressable Asset Settings");
         AddressableAssetSettings addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
         string id = addressableAssetSettings.profileSettings.GetProfileId(addressablesProfileName);
         addressableAssetSettings.activeProfileId = id;
@@ -183,17 +201,17 @@ public class JenkinsBuild
         var configFileText = File.ReadAllText(targetDir + "/settings.json");
         var selectedBucket = devBucket;
         
-        if(bucketEnv == "prod") {
+        if(bucketEnv.ToLower() == "prod" || bucketEnv.ToLower() == "production" || bucketEnv.ToLower() == "remote") {
             selectedBucket = prodBucket;
             configFileText = configFileText.Replace(devBucket, selectedBucket);
             configFileText = configFileText.Replace(localhost, selectedBucket);
         }
-        else if(bucketEnv == "dev") {
+        else if(bucketEnv.ToLower() == "dev" || bucketEnv.ToLower() == "development") {
             selectedBucket = devBucket;
             configFileText = configFileText.Replace(prodBucket, selectedBucket);
             configFileText = configFileText.Replace(localhost, selectedBucket);
         }
-        else if(bucketEnv == "local") {
+        else if(bucketEnv.ToLower() == "default") {
             selectedBucket = localhost;
             configFileText = configFileText.Replace(prodBucket, selectedBucket);
             configFileText = configFileText.Replace(devBucket, selectedBucket);
