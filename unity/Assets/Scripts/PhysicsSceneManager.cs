@@ -57,6 +57,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public void SetupScene(bool genObjectID = true) {
+        Debug.Log("------- Setup Scene called " + genObjectID);
         ObjectIdToSimObjPhysics.Clear();
         GatherSimObjPhysInScene(genObjectID);
         GatherAllRBsInScene();

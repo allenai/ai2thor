@@ -1745,6 +1745,8 @@ public class ServerAction {
     public int thirdPartyCameraId;
     public float y;
     public float fieldOfView;
+    public float cameraNearPlane;
+    public float cameraFarPlane;
     public float x;
     public float z;
     public float pushAngle;

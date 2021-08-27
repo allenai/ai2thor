@@ -35,10 +35,11 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
         public float intensity { get; set; }
+        public float indirect_multiplier { get; set; }
         public float range { get; set; }
-        public Color rgb { get; set; }
+        public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
-        public string asset_id { get; set; }
+        public string object_id { get; set; }
     }
 
     [Serializable]
@@ -46,6 +47,21 @@ namespace Thor.Procedural.Data {
     public class ShadowParameters {
         public string type { get; set; }
         public float strength { get; set; }
+
+        public float normal_bias { get; set; }
+        public float bias { get; set; }
+        public float near_plane { get; set; }
+        public string resolution { get; set; }
+
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class SerializableColor {
+        public float r { get; set; }
+        public float g { get; set; }
+        public float b { get; set; }
+        public float a { get; set; }
     }
 
     [Serializable]
@@ -83,7 +99,7 @@ namespace Thor.Procedural.Data {
         public float receptacle_height { get; set; }
         public string skybox_id { get; set; }
         public string datetime { get; set; }
-        public List<LightParameters> lights { get; set; } = new List<LightParameters>();
+        public List<LightParameters> lights { get; set; }
 
         public string ceiling_material { get; set; }
         public float navmesh_voxel_size { get; set; }
@@ -164,6 +180,16 @@ namespace Thor.Procedural.Data {
     public class AxisAngleRotation {
         public Vector3 axis;
         public float degrees;
+
+        public static AxisAngleRotation fromQuaternion(Quaternion quat) {
+            var r = new AxisAngleRotation();
+            quat.ToAngleAxis(out r.degrees, out r.axis);
+            return r;
+        }
+
+        public Quaternion toQuaternion() {
+            return Quaternion.AngleAxis(degrees, axis);
+        }
     }
 
     [Serializable]
