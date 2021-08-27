@@ -100,6 +100,7 @@ public class ProceduralRoomEditor : MonoBehaviour
             
             
             if (this.namedSimObjects != null) {
+                var assetDb = ProceduralTools.getAssetMap();
                 this.loadedHouse.objects = this.namedSimObjects.Select(obj => {
                     Vector3 axis;
                     float degrees; 
@@ -111,7 +112,10 @@ public class ProceduralRoomEditor : MonoBehaviour
                     if (didHit) {
                         room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
                     }
-                    Debug.Log(" processing " + obj.assetId);
+                    Debug.Log("Processing " + obj.assetId + " ...");
+                    if (!assetDb.ContainsKey(obj.assetId)) {
+                        Debug.LogError($"Asset '{obj.assetId}' not in AssetLibrary, so it won't be able to be loaded as part of a procedural scene. Save the asset and rebuild asset library.");
+                    }
                     return new HouseObject(){
                         id = obj.id,
                         position = obj.simObj.transform.position,

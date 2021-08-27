@@ -1440,7 +1440,7 @@ namespace Thor.Procedural {
             }
             // var modifier = gameObject.AddComponent<NavMeshModifier>();
             modifier.overrideArea = true;
-            Debug.Log("navmesh area " + navMeshAreaName);
+            // Debug.Log("navmesh area " + navMeshAreaName);
             modifier.area = NavMesh.GetAreaFromName(navMeshAreaName);
         }
 
