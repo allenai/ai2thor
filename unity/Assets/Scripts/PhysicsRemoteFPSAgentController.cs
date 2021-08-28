@@ -16,28 +16,21 @@ using UnityStandardAssets.Utility;
 using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
     public class OrientedPoint {
         public Vector3 position = new Vector3();
         public Quaternion orientation = new Quaternion();
     }
 
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
-        [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         bool transparentStructureObjectsHidden = false;
         // face swap stuff here
-        public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
-        public MeshRenderer MyFaceMesh;
-        public GameObject[] TargetCircles = null;
+
+        public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
 
         // change visibility check to use this distance when looking down
         // protected float DownwardViewDistance = 2.0f;
-
-        // Use this for initialization
-        public override void Start() {
-            base.Start();
-        }
 
         // forceVisible is true to activate, false to deactivate
         public void ToggleHideAndSeekObjects(bool forceVisible = false) {
@@ -52,10 +45,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public Vector3 AgentHandLocation() {
             return AgentHand.transform.position;
-        }
-
-        public float WhatIsAgentsMaxVisibleDistance() {
-            return maxVisibleDistance;
         }
 
         public GameObject WhatAmIHolding() {
@@ -130,25 +119,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        private void LateUpdate() {
-            // make sure this happens in late update so all physics related checks are done ahead of time
-            // this is also mostly for in editor, the array of visible sim objects is found via server actions
-            // using VisibleSimObjs(action), so be aware of that.
-
-#if UNITY_WEBGL
-                // For object highlight shader to properly work, all visible objects should be populated not conditioned
-                // on the objectid of a completed action
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-#endif
-
-            // editor
-#if UNITY_EDITOR
-            if (this.agentState == AgentState.ActionComplete) {
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-
-            }
-#endif
-        }
 
         public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
@@ -274,35 +244,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
         }
 
-        // use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
-        public bool CheckIfPointIsInViewport(Vector3 point) {
-            Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
-
-            float ViewPointRangeHigh = 1.0f;
-            float ViewPointRangeLow = 0.0f;
-
-            if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance // is in front of camera and within range of visibility sphere
-                &&
-                viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow // within x bounds of viewport
-                &&
-                viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) // within y bounds of viewport
-            {
-                RaycastHit hit;
-
-                updateAllAgentCollidersForVisibilityCheck(false);
-
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) // reduce distance by slight offset
-                {
-                    updateAllAgentCollidersForVisibilityCheck(true);
-                    return false;
-                } else {
-                    updateAllAgentCollidersForVisibilityCheck(true);
-                    return true;
-                }
-            }
-            return false;
-        }
 
         // checks if a float is a multiple of 0.1f
         private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
@@ -789,11 +730,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.parent = null;
                 }
 
-                DropContainedObjects(
-                    target: sop,
-                    reparentContainedObjects: true,
-                    forceKinematic: forceKinematic
-                );
+                sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
                 sop.isInAgentHand = false;
                 ItemInHand = null;
             }
@@ -3037,11 +2974,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // if this is rotated too much, drop any contained object if held item is a receptacle
             if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
-                DropContainedObjects(
-                    target: ItemInHand.GetComponent<SimObjPhysics>(),
-                    reparentContainedObjects: true,
-                    forceKinematic: false
-                );
+               ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false); 
             }
 
             actionFinished(true);
@@ -3320,11 +3253,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ItemInHand.transform.parent = null;
                     }
 
-                    DropContainedObjects(
-                        target: target,
-                        reparentContainedObjects: true,
-                        forceKinematic: forceKinematic
-                    );
+                    target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
                     target.isInAgentHand = false;
                     ItemInHand = null;
 
@@ -3520,7 +3449,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             // instantiate a target circle
-            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity);
+            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity) as GameObject;
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
@@ -3582,7 +3511,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
                 List<ReceptacleSpawnPoint> rsps = new List<ReceptacleSpawnPoint>();
 
-                rsps = sop.ReturnMySpawnPoints(false);
+                rsps = sop.ReturnMySpawnPoints();
                 List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
                 bool constraintsUsed = false;// only set rsps to editedRsps if constraints were passed in
 
@@ -3631,7 +3560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // only place in viewport
                 if (!action.anywhere) {
-                    if (ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
+                    if (ipt.PlaceObjectReceptacleInViewport(this, rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
                         // make sure target circle is within viewport
                         succesfulSpawn = true;
                         break;
@@ -3649,7 +3578,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (succesfulSpawn) {
                 // if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
-                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().PrimaryAgent;
                 if (primaryAgent.imageSynthesis) {
                     if (primaryAgent.imageSynthesis.enabled) {
                         primaryAgent.imageSynthesis.OnSceneChange();
@@ -4265,7 +4194,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // ok we are holding something, time to try and place it
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             // set degreeIncrement to 90 for placing held objects to check for vertical angles
-            List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
+            List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent ? this : null);
             if (randomSeed != 0 || putNearXY) {
                 List<KeyValuePair<ReceptacleSpawnPoint, float>> distSpawnPoints = new List<KeyValuePair<ReceptacleSpawnPoint, float>>();
 
@@ -4381,11 +4310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
                 ItemInHand = null;
-                DropContainedObjects(
-                    target: target,
-                    reparentContainedObjects: true,
-                    forceKinematic: false
-                );
+                target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                 throw new InvalidOperationException("Picking up object would cause it to collide and clip into something!");
             }
 
@@ -4438,44 +4363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void DropContainedObjects(
-            SimObjPhysics target,
-            bool reparentContainedObjects,
-            bool forceKinematic
-        ) {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                GameObject topObject = null;
 
-                foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
-                    // for every object that is contained by this object turn off
-                    // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.isInAgentHand = false; // Agent hand flag
-
-                    if (reparentContainedObjects) {
-                        if (topObject == null) {
-                            topObject = GameObject.Find("Objects");
-                        }
-                        sop.transform.SetParent(topObject.transform);
-                    }
-
-                    Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    rb.isKinematic = forceKinematic;
-                    if (!forceKinematic) {
-                        rb.useGravity = true;
-                        rb.constraints = RigidbodyConstraints.None;
-                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                    }
-
-                }
-                target.ClearContainedObjectReferences();
-            }
-        }
-
-        public void DropContainedObjectsStationary(SimObjPhysics target) {
-            DropContainedObjects(target: target, reparentContainedObjects: false, forceKinematic: true);
-            return;
-        }
 
         // private IEnumerator checkDropHeldObjectAction(SimObjPhysics currentHandSimObj) 
         // {
@@ -4562,12 +4450,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 ItemInHand.transform.parent = null;
             }
-
-            DropContainedObjects(
-                target: ItemInHand.GetComponent<SimObjPhysics>(),
-                reparentContainedObjects: true,
-                forceKinematic: false
-            );
+            ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
 
             // if physics simulation has been paused by the PausePhysicsAutoSim() action,
             // don't do any coroutine checks
@@ -7321,7 +7204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetVolumeOfAllObjects() {
             List<string> objectIds = new List<string>();
             List<float> volumes = new List<float>();
-            foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
                 Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
@@ -7849,7 +7732,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             if (positions == null || positions.Length == 0) {
                 List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
-                foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                     if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                         toReEnable.Add(sop);
                         sop.gameObject.SetActive(false);
@@ -7863,7 +7746,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
-            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                     objectsOfType.Add(sop);
                     sop.gameObject.SetActive(false);
@@ -8180,11 +8063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // if the target is also a Receptacle, drop contained objects first
                         if (targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                             // drop contained objects as well
-                            DropContainedObjects(
-                                target: targetsop,
-                                reparentContainedObjects: true,
-                                forceKinematic: false
-                            );
+                            targetsop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                         }
 
                         targetsop.isInAgentHand = false;

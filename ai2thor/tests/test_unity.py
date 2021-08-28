@@ -101,14 +101,13 @@ def teleport_to_base_location(controller: Controller):
 
 
 def setup_function(function):
-    for c in [_fifo_controller, _wsgi_controller, _stochastic_controller]:
+    for c in fifo_wsgi_stoch:
         reset_controller(c)
 
 
 def teardown_module(module):
-    _wsgi_controller.stop()
-    _fifo_controller.stop()
-    _stochastic_controller.stop()
+    for c in fifo_wsgi_stoch:
+        c.stop()
 
 
 def assert_near(point1, point2, error_message=""):

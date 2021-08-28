@@ -14,7 +14,6 @@ using UnityStandardAssets.Utility;
 using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
     public class StochasticRemoteFPSAgentController : BaseFPSAgentController {
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
@@ -22,6 +21,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float rotateGaussianMu = 0.0f;
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
+        
+        public StochasticRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
 
         public new void Initialize(ServerAction action) {
             this.applyActionNoise = action.applyActionNoise;
