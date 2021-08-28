@@ -383,6 +383,42 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         return null;
     }
+    public void DropContainedObjectsStationary() {
+        this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
+    }
+    
+    public void DropContainedObjects(
+        bool reparentContainedObjects,
+        bool forceKinematic
+    ) {
+        if (this.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            GameObject topObject = null;
+
+            foreach (SimObjPhysics sop in this.ContainedObjectReferences) {
+                // for every object that is contained by this object turn off
+                // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                sop.transform.Find("Colliders").gameObject.SetActive(true);
+                sop.isInAgentHand = false; // Agent hand flag
+
+                if (reparentContainedObjects) {
+                    if (topObject == null) {
+                        topObject = GameObject.Find("Objects");
+                    }
+                    sop.transform.SetParent(topObject.transform);
+                }
+
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = forceKinematic;
+                if (!forceKinematic) {
+                    rb.useGravity = true;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+
+            }
+            this.ClearContainedObjectReferences();
+        }
+    }
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
         get {

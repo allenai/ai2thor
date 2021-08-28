@@ -20,19 +20,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
     private float yoffset = 0.005f; // y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
-    private AgentManager agentManager;
-
-    // Use this for initialization
-    void Start() {
-        
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-        // m_Started = true;
-    }
-
-    // Update is called once per frame
-    void Update() {
-
-    }
 
     // spawn an object from the Array of prefabs. Used to spawn from a specific set of Prefabs
     // used for Hide and Seek stuff
@@ -192,7 +179,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     // same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
 
-    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
+    public bool PlaceObjectReceptacleInViewport(PhysicsRemoteFPSAgentController agent, List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
 
         if (rsps == null) {
 #if UNITY_EDITOR
@@ -221,8 +208,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
-                PhysicsRemoteFPSAgentController primaryAgent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
-                if (primaryAgent.objectIsOnScreen(sop)) {
+                if (agent.objectIsOnScreen(sop)) {
                     return true;
                 }
             }
@@ -248,6 +234,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             rotation = r;
         }
     }
+    
 
     public bool PlaceObject(
         SimObjPhysics sop,
@@ -453,8 +440,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
-                        agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
+                        sop.DropContainedObjectsStationary(); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
                 }
 
@@ -470,8 +456,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
-                        agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
+                        sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
                 sop.isInAgentHand = false;// set agent hand flag

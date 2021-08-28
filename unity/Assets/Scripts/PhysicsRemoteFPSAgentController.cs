@@ -730,11 +730,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.parent = null;
                 }
 
-                DropContainedObjects(
-                    target: sop,
-                    reparentContainedObjects: true,
-                    forceKinematic: forceKinematic
-                );
+                sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
                 sop.isInAgentHand = false;
                 ItemInHand = null;
             }
@@ -2978,11 +2974,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // if this is rotated too much, drop any contained object if held item is a receptacle
             if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
-                DropContainedObjects(
-                    target: ItemInHand.GetComponent<SimObjPhysics>(),
-                    reparentContainedObjects: true,
-                    forceKinematic: false
-                );
+               ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false); 
             }
 
             actionFinished(true);
@@ -3261,11 +3253,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ItemInHand.transform.parent = null;
                     }
 
-                    DropContainedObjects(
-                        target: target,
-                        reparentContainedObjects: true,
-                        forceKinematic: forceKinematic
-                    );
+                    target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
                     target.isInAgentHand = false;
                     ItemInHand = null;
 
@@ -3572,7 +3560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // only place in viewport
                 if (!action.anywhere) {
-                    if (ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
+                    if (ipt.PlaceObjectReceptacleInViewport(this, rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true)) {
                         // make sure target circle is within viewport
                         succesfulSpawn = true;
                         break;
@@ -4322,11 +4310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
                 ItemInHand = null;
-                DropContainedObjects(
-                    target: target,
-                    reparentContainedObjects: true,
-                    forceKinematic: false
-                );
+                target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                 throw new InvalidOperationException("Picking up object would cause it to collide and clip into something!");
             }
 
@@ -4379,44 +4363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void DropContainedObjects(
-            SimObjPhysics target,
-            bool reparentContainedObjects,
-            bool forceKinematic
-        ) {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                GameObject topObject = null;
 
-                foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
-                    // for every object that is contained by this object turn off
-                    // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.isInAgentHand = false; // Agent hand flag
-
-                    if (reparentContainedObjects) {
-                        if (topObject == null) {
-                            topObject = GameObject.Find("Objects");
-                        }
-                        sop.transform.SetParent(topObject.transform);
-                    }
-
-                    Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    rb.isKinematic = forceKinematic;
-                    if (!forceKinematic) {
-                        rb.useGravity = true;
-                        rb.constraints = RigidbodyConstraints.None;
-                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                    }
-
-                }
-                target.ClearContainedObjectReferences();
-            }
-        }
-
-        public void DropContainedObjectsStationary(SimObjPhysics target) {
-            DropContainedObjects(target: target, reparentContainedObjects: false, forceKinematic: true);
-            return;
-        }
 
         // private IEnumerator checkDropHeldObjectAction(SimObjPhysics currentHandSimObj) 
         // {
@@ -4503,12 +4450,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 ItemInHand.transform.parent = null;
             }
-
-            DropContainedObjects(
-                target: ItemInHand.GetComponent<SimObjPhysics>(),
-                reparentContainedObjects: true,
-                forceKinematic: false
-            );
+            ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
 
             // if physics simulation has been paused by the PausePhysicsAutoSim() action,
             // don't do any coroutine checks
@@ -8120,11 +8062,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // if the target is also a Receptacle, drop contained objects first
                         if (targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                             // drop contained objects as well
-                            DropContainedObjects(
-                                target: targetsop,
-                                reparentContainedObjects: true,
-                                forceKinematic: false
-                            );
+                            targetsop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                         }
 
                         targetsop.isInAgentHand = false;
