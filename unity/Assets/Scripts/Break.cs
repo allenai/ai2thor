@@ -155,7 +155,7 @@ public class Break : MonoBehaviour {
             BreakForDecalType(collision);
         }
 
-        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().PrimaryAgent;
         if (primaryAgent.imageSynthesis) {
             if (primaryAgent.imageSynthesis.enabled) {
                 primaryAgent.imageSynthesis.OnSceneChange();
@@ -189,7 +189,7 @@ public class Break : MonoBehaviour {
         }
 
         // ImpulseForce.Add(col.impulse.magnitude);
-        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<BaseAgentComponent>()) {
             if (readytobreak) {
                 readytobreak = false;
                 BreakObject(col);
