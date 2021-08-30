@@ -115,8 +115,8 @@ class Linux64(BaseLinuxPlatform):
                         display_screen_str,
                         width,
                         height,
-                        disp_screen["width_in_pixels"],
-                        disp_screen["height_in_pixels"],
+                        disp_screen.screen()["width_in_pixels"],
+                        disp_screen.screen()["height_in_pixels"],
                     )
                 )
 
