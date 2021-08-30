@@ -7,10 +7,6 @@ using System;
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugDiscreteAgentController : MonoBehaviour {
         public GameObject InputFieldObj = null;
-        public PhysicsRemoteFPSAgentController PhysicsController = null;
-        public StochasticRemoteFPSAgentController StochasticController = null;
-        public DroneFPSAgentController DroneController = null;
-        public ArmAgentController ArmController = null;
         public AgentManager AManager = null;
         private InputField inputField;
 
@@ -21,11 +17,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             inputField = InputFieldObj.GetComponent<InputField>();
 
-            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-            PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-            StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
-            DroneController = fpsController.GetComponent<DroneFPSAgentController>();
-            ArmController = fpsController.GetComponent<ArmAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
             Cursor.visible = true;
@@ -40,16 +31,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         BaseFPSAgentController CurrentActiveController() {
-            if (PhysicsController.enabled) {
-                return PhysicsController;
-            } else if (StochasticController.enabled) {
-                return StochasticController;
-            } else if (DroneController.enabled) {
-                return DroneController;
-            } else if (ArmController.enabled) {
-                return ArmController;
-            }
-            throw new InvalidOperationException("No controller is active!");
+            return AManager.PrimaryAgent;
         }
 
         public void OnEnable() {
@@ -153,7 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if ((string)action["action"] != "") {
                             if (
-                                ((string)action["action"]).Contains("Move") && this.GetComponent<ArmAgentController>().enabled
+                                ((string)action["action"]).Contains("Move") && CurrentActiveController().GetType() == typeof(ArmAgentController)
                             ) {
                                 action["returnToStart"] = false;
                             }
