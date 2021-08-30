@@ -4,7 +4,9 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using Newtonsoft.Json.Linq;
+#if UNITY_EDITOR
 using EasyButtons.Editor;
+#endif
 using EasyButtons;
 using System;
 using Thor.Procedural;
@@ -78,9 +80,11 @@ public class ProceduralRoomEditor : MonoBehaviour
 
      [Button]
     public void ReloadScene() {
+#if UNITY_EDITOR        
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
        
         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);
+#endif        
     }
 
 

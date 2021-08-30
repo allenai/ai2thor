@@ -1571,6 +1571,7 @@ namespace Thor.Procedural {
         }
 
         public static GameObject spawnObjectInReceptacle(
+            PhysicsRemoteFPSAgentController agent,
             AssetMap<GameObject> goDb,
             string prefabName,
             string objectId,
@@ -1580,8 +1581,6 @@ namespace Thor.Procedural {
             var go = goDb.getAsset(prefabName);
             //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
-            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
@@ -1602,7 +1601,7 @@ namespace Thor.Procedural {
             var success = false;
 
             Debug.Log("---- placeNewObjectAtPoint check");
-            if (fpsAgent.placeNewObjectAtPoint(toSpawn, position)) {
+            if (agent.placeNewObjectAtPoint(toSpawn, position)) {
                 success = true;
                 List<Vector3> corners = GetCorners(toSpawn);
                 //this only attempts to check the first ReceptacleTriggerBox of the receptacle, does not handle multiple receptacle boxes
@@ -1651,6 +1650,7 @@ namespace Thor.Procedural {
 
         //will attempt to spawn prefabName at random free position in receptacle
         public static GameObject spawnObjectInReceptacleRandomly(
+            PhysicsRemoteFPSAgentController agent,
             AssetMap<GameObject> goDb,
             string prefabName,
             string objectId,
@@ -1661,8 +1661,6 @@ namespace Thor.Procedural {
             var pos = spawnCoordinates.Shuffle_().First();
             //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
-            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            var fpsAgent = agentManager.agents[0].GetComponent<PhysicsRemoteFPSAgentController>();
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
@@ -1685,7 +1683,7 @@ namespace Thor.Procedural {
             for (int i = 0; i < spawnCoordinates.Count; i++) {
                 //place object at the given point, this also checks the spawn area to see if its clear
                 //if not clear, it will return false
-                var canPlace = fpsAgent.placeNewObjectAtPoint(toSpawn, spawnCoordinates[i]);
+                var canPlace = agent.placeNewObjectAtPoint(toSpawn, spawnCoordinates[i]);
                 if (canPlace) {
                     success = true;
                     List<Vector3> corners = GetCorners(toSpawn);
