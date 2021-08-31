@@ -169,21 +169,16 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-                // set up stochastic controller
-                SetUpStochasticController(action);
-            } else {
-                SetUpStochasticController(action);
-            }
+            } 
+            // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
+            SetUpLocobotController(action);
+            
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-
-                // ok now set up drone controller
-                SetUpDroneController(action);
-            } else {
-                SetUpDroneController(action);
-            }
+            } 
+            SetUpDroneController(action);
 
         } else if (action.agentMode.ToLower() == "arm") {
 
@@ -249,6 +244,14 @@ public class AgentManager : MonoBehaviour {
         print("start addAgents");
         StartCoroutine(addAgents(action));
 
+    }
+    
+    private void SetUpLocobotController(ServerAction action) {
+        this.agents.Clear();
+        // force snapToGrid to be false since we are stochastic
+        action.snapToGrid = false;
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
     }
 
     private void SetUpStochasticController(ServerAction action) {
