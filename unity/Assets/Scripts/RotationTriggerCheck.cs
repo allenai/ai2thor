@@ -5,17 +5,13 @@ using UnityEngine;
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class RotationTriggerCheck : MonoBehaviour {
         public bool isColliding = false;
-        public GameObject ItemInHand;
         public PhysicsRemoteFPSAgentController AgentRef;
         // Use this for initialization
+        private AgentManager agentManager;
         void Start() {
-            AgentRef = gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>();
+            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
         }
 
-        // Update is called once per frame
-        void Update() {
-            ItemInHand = AgentRef.WhatAmIHolding();
-        }
 
         private void FixedUpdate() {
             isColliding = false;
@@ -25,10 +21,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
             // print(other.name);
             //(other.GetComponentInParent<SimObjPhysics>().name);
-            if (ItemInHand != null) {
+            var agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
+            var itemInHand = agent.WhatAmIHolding();
+            if (itemInHand != null) {
                 // if the item is a sim object....
                 if (other.GetComponentInParent<SimObjPhysics>()) {
-                    if (other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name) {
+                    if (other.GetComponentInParent<SimObjPhysics>().name != itemInHand.name) {
                         if (other.GetComponent<Collider>()) {
                             if (!other.GetComponent<Collider>().isTrigger) {
                                 isColliding = true;

@@ -16,7 +16,7 @@ public class FirstPersonCharacterCull : MonoBehaviour {
     }
 
     public MeshRenderer[] RenderersToHide; // Mesh renderer that you want this script's camera to cull
-    public PhysicsRemoteFPSAgentController FPSController;
+    public BaseAgentComponent FPSController;
 
     // references to renderers for when Agent is in Tall mode
     public MeshRenderer[] TallRenderers;
@@ -38,10 +38,12 @@ public class FirstPersonCharacterCull : MonoBehaviour {
     void OnPreRender() // Just before this camera starts to render...
     {
         if (!StopCullingThingsForASecond) {
+
             if (
                 FPSController != null
+                && FPSController.agent != null
                 && (RenderersToHide != null || RenderersToHide.Length != 0)
-                && FPSController.IsVisible
+                && FPSController.agent.IsVisible
             ) { // only do this if visibility capsule has been toggled on
                 foreach (MeshRenderer mr in RenderersToHide) {
                     mr.enabled = false; // Turn off renderer
@@ -56,8 +58,9 @@ public class FirstPersonCharacterCull : MonoBehaviour {
         if (!StopCullingThingsForASecond) {
             if (
                 FPSController != null
+                && FPSController.agent != null
                 && (RenderersToHide != null || RenderersToHide.Length != 0)
-                && FPSController.IsVisible
+                && FPSController.agent.IsVisible
             ) { // only do this if visibility capsule is toggled on
 
                 foreach (MeshRenderer mr in RenderersToHide) {

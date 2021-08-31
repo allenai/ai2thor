@@ -7,8 +7,11 @@ using RandomExtensions;
 using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
+        
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
+        public ArmAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        }
+
         protected IK_Robot_Arm_Controller getArm() {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {

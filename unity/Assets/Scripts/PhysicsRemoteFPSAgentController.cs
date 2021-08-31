@@ -16,28 +16,21 @@ using UnityStandardAssets.Utility;
 using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
     public class OrientedPoint {
         public Vector3 position = new Vector3();
         public Quaternion orientation = new Quaternion();
     }
 
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
-        [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         bool transparentStructureObjectsHidden = false;
         // face swap stuff here
-        public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
-        public MeshRenderer MyFaceMesh;
-        public GameObject[] TargetCircles = null;
+
+        public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        }
 
         // change visibility check to use this distance when looking down
         // protected float DownwardViewDistance = 2.0f;
-
-        // Use this for initialization
-        public override void Start() {
-            base.Start();
-        }
 
         // forceVisible is true to activate, false to deactivate
         public void ToggleHideAndSeekObjects(bool forceVisible = false) {
@@ -130,25 +123,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        private void LateUpdate() {
-            // make sure this happens in late update so all physics related checks are done ahead of time
-            // this is also mostly for in editor, the array of visible sim objects is found via server actions
-            // using VisibleSimObjs(action), so be aware of that.
-
-#if UNITY_WEBGL
-                // For object highlight shader to properly work, all visible objects should be populated not conditioned
-                // on the objectid of a completed action
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-#endif
-
-            // editor
-#if UNITY_EDITOR
-            if (this.agentState == AgentState.ActionComplete) {
-                VisibleSimObjPhysics = VisibleSimObjs(false);
-
-            }
-#endif
-        }
 
         public override ObjectMetadata[] generateObjectMetadata() {
             return base.generateObjectMetadata();
@@ -3520,7 +3494,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             // instantiate a target circle
-            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity);
+            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity) as GameObject;
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
@@ -3649,7 +3623,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (succesfulSpawn) {
                 // if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
-                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().PrimaryAgent;
                 if (primaryAgent.imageSynthesis) {
                     if (primaryAgent.imageSynthesis.enabled) {
                         primaryAgent.imageSynthesis.OnSceneChange();
@@ -7321,7 +7295,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetVolumeOfAllObjects() {
             List<string> objectIds = new List<string>();
             List<float> volumes = new List<float>();
-            foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 Quaternion oldRotation = so.transform.rotation;
                 so.transform.rotation = Quaternion.identity;
                 Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
@@ -7849,7 +7823,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             if (positions == null || positions.Length == 0) {
                 List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
-                foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                     if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                         toReEnable.Add(sop);
                         sop.gameObject.SetActive(false);
@@ -7863,7 +7837,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
-            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.Type.ToString().ToLower() == objectType.ToLower()) {
                     objectsOfType.Add(sop);
                     sop.gameObject.SetActive(false);
