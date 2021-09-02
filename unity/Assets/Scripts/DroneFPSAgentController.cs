@@ -145,7 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metadata based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
             objMeta.isCaught = this.GetComponent<DroneFPSAgentController>().isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;

@@ -164,8 +164,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metaWrapper;
         }
 
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
-            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible, isInteractable);
         }
 
         // change the radius of the agent's capsule on the char controller component, and the capsule collider component
@@ -5992,8 +5992,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // Debug.Log(Vector3.Distance(tmp, transform.position));
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) {
                         // if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false) ||
-                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true)) {
+                        if ((CheckIfVisibilityPointInViewport(sop, point, m_Camera, false) |
+                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true)).visible) {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
                         }
@@ -6979,7 +6979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Transform point in sop.VisibilityPoints) {
                     Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
 
-                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false).visible) {
                         minX = Math.Min(viewPoint.x, minX);
                         maxX = Math.Max(viewPoint.x, maxX);
                         minY = Math.Min(viewPoint.y, minY);
