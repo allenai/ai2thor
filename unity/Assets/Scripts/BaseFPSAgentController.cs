@@ -4440,6 +4440,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var bounds = GetObjectSphereBounds(spawned);
 
+           
+            if (this.imageSynthesis) {
+                if (this.imageSynthesis.enabled) {
+                    this.imageSynthesis.OnSceneChange();
+                }
+            }
+
             actionFinished(true, new ObjectSphereBounds() {
                 id = spawned.name,
                 worldSpaceCenter = bounds.center,
