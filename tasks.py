@@ -3439,6 +3439,8 @@ def install_unity_editor(context, version=None, changeset=None):
     unity_hub_path = None
     if sys.platform.startswith("linux"):
         unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
+    elif sys.platform.startswith("darwin"):
+        unity_hub_path = "/Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub --"
     else:
         raise Exception("UnityHub CLI not supported")
 
@@ -3454,7 +3456,13 @@ def install_unity_editor(context, version=None, changeset=None):
     if changeset:
         command += " --changeset %s" % changeset
 
-    command += " -m mac-mono -m linux-il2cpp -m webgl"
+    platform_modules = dict(
+        linux=["mac-mono", "linux-il2cpp", "webgl"],
+        darwin=["mac-il2cpp", "linux-il2cpp", "linux-mono", "webgl"],
+    )
+    for m in platform_modules[sys.platform]:
+        command += " -m %s" % m
+
 
     subprocess.check_call(command, shell=True)
 
