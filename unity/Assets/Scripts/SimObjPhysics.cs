@@ -51,6 +51,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 #endif
     public bool isInAgentHand = false;
 
+    public DroneFPSAgentController droneFPSAgent;
+
     // these collider references are used for switching physics materials for all colliders on this object
     [Header("Non - Trigger Colliders of this object")]
     public Collider[] MyColliders = null;
@@ -381,6 +383,42 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         return null;
     }
+    public void DropContainedObjectsStationary() {
+        this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
+    }
+    
+    public void DropContainedObjects(
+        bool reparentContainedObjects,
+        bool forceKinematic
+    ) {
+        if (this.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            GameObject topObject = null;
+
+            foreach (SimObjPhysics sop in this.ContainedObjectReferences) {
+                // for every object that is contained by this object turn off
+                // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                sop.transform.Find("Colliders").gameObject.SetActive(true);
+                sop.isInAgentHand = false; // Agent hand flag
+
+                if (reparentContainedObjects) {
+                    if (topObject == null) {
+                        topObject = GameObject.Find("Objects");
+                    }
+                    sop.transform.SetParent(topObject.transform);
+                }
+
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = forceKinematic;
+                if (!forceKinematic) {
+                    rb.useGravity = true;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+
+            }
+            this.ClearContainedObjectReferences();
+        }
+    }
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
         get {
@@ -591,16 +629,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
-    private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
+    private void FindMySpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
             Contains containsScript = rtb.GetComponent<Contains>();
-            temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            temp.AddRange(containsScript.GetValidSpawnPoints(agent));
         }
 
-        if (ReturnPointsCloseToAgent) {
-            GameObject agent = GameObject.Find("FPSController");
-
+        if (agent != null) {
             temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
                 return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
             });
@@ -621,8 +657,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
-    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
-        FindMySpawnPoints(ReturnPointsCloseToAgent);
+    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
+        FindMySpawnPoints(agent);
         return MySpawnPoints;
     }
 
@@ -633,25 +669,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     void OnCollisionEnter(Collision col) {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
-        DroneFPSAgentController droneController;
 
-        if (GameObject.Find("FPSController")) {
-            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
-        } else {
-            Debug.LogError("No FPSController in scene!");
-            return;
-        }
-
-        if (!droneController.enabled) {
+        if (droneFPSAgent == null){
             return;
         }
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -667,9 +695,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -881,7 +909,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
-
         // end debug setup stuff
 
         OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];

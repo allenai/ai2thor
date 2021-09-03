@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public class DroneObjectLauncher : MonoBehaviour {
     [SerializeField] public GameObject[] prefabsToLaunch;
 
     // keep track of what objects were launched already
-    public List<SimObjPhysics> launch_object = new List<SimObjPhysics>();
+    private HashSet<SimObjPhysics> launch_object = new HashSet<SimObjPhysics>();
 
     // Use this for initialization
     void Start() {
@@ -20,16 +21,7 @@ public class DroneObjectLauncher : MonoBehaviour {
     }
 
     public bool HasLaunch(SimObjPhysics obj) {
-        if (launch_object.Count > 0) {
-            foreach (SimObjPhysics go in launch_object) {
-                if (go == obj) {
-                    return true;
-                }
-            }
-            return false;
-        } else {
-            return false;
-        }
+        return launch_object.Contains(obj);
     }
 
     public GameObject GetGameObject(string objectType, bool randomize, int variation) {
@@ -56,7 +48,7 @@ public class DroneObjectLauncher : MonoBehaviour {
         return candidates[variation];
     }
 
-    public void Launch(float magnitude, Vector3 direction, string objectName, bool randomize) {
+    public void Launch(DroneFPSAgentController agent, float magnitude, Vector3 direction, string objectName, bool randomize) {
 
         GameObject toLaunch = GetGameObject(objectName, randomize, 0);
         GameObject fireaway = Instantiate(toLaunch, this.transform.position, this.transform.rotation);
@@ -70,7 +62,9 @@ public class DroneObjectLauncher : MonoBehaviour {
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.isKinematic = false;
         rb.AddForce(direction * magnitude);
+        SimObjPhysics simObjPhysics = fireaway.GetComponent<SimObjPhysics>();
+        simObjPhysics.droneFPSAgent = agent;
 
-        launch_object.Add(fireaway.GetComponent<SimObjPhysics>());
+        launch_object.Add(simObjPhysics);
     }
 }
