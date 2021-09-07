@@ -28,7 +28,13 @@ Note that while installing and/or launching Unity, you may get an error about `l
 
 ### Assets
 
-Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Resources/MCS/UnityAssetStore/`.
+CACI employees and subcontractors: Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Addressables/MCS/UnityAssetStore/`.
+
+Non-CACI employees: Please continue with the rest of these instructions.
+
+### Logging
+
+To enable debug logging in your Unity builds, open the Player Settings (Edit->Project Settings, then click on the Player tab), then add ENABLE_DEBUG_LOGS to "Scripting Define Symbols" under "Other Settings" (please note that each symbol in the list should be separated by a semicolon), and hit ENTER to ensure that Unity saved your change.
 
 ## Run
 
@@ -43,7 +49,7 @@ If you want to run an MCS Scene in the Unity Editor:
   - The Project window shows the files in the current project.
   - The Console window shows the logs and errors.
 
-3. To successfully run an MCS Scene, copy a JSON scene configuration file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes/) folder, or identify a JSON file in the folder to use (like `playroom.json`).
+3. To successfully run an MCS Scene, copy a JSON scene configuration file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the [`unity/Assets/Addressables/MCS/Scenes/`](./unity/Assets/Addressables/MCS/Scenes/) folder, or identify a JSON file in the folder to use (like `playroom.json`).
 
 4. Click on the `MCS` Game Object in the Hierarchy window. Then, in the Inspector Window, under the `MCS Main (Script)` component, enter the name of your selected JSON file in the `"Default Scene File"` property WITHOUT the `.json` extension.
 
@@ -113,12 +119,12 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 - [`unity/Assets/Scripts/MachineCommonSenseController.cs`](./unity/Assets/Scripts/MachineCommonSenseController.cs)  A custom subclass extending AI2-THOR's [PhysicsRemoteFPSAgentController](./unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs) that handles player actions and state.
 - [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles the communication between the Python API and the Unity Scene.
 - [`unity/Assets/Scripts/MachineCommonSenseSceneManager.cs`](./unity/Assets/Scripts/MachineCommonSenseSceneManager.cs)  A custom subclass extending AI2-THOR's [PhysicsSceneManager](./unity/Assets/Scripts/PhysicsSceneManager.cs) that handles scene state.
-- [`unity/Assets/Resources/MCS/`](./unity/Assets/Resources/MCS)  Folder containing all MCS runtime resources.
-- [`unity/Assets/Resources/MCS/ai2thor_object_registry.json`](./unity/Assets/Resources/MCS/ai2thor_object_registry.json)  Config file containing the MCS Scene's specific Game Objects borrowed from the AI2-THOR framework that may be loaded at runtime. 
-- [`unity/Assets/Resources/MCS/mcs_object_registry.json`](./unity/Assets/Resources/MCS/mcs_object_registry.json)  Config file containing the MCS Scene's specific custom Game Objects that may be loaded at runtime. 
-- [`unity/Assets/Resources/MCS/primitive_object_registry.json`](./unity/Assets/Resources/MCS/primitive_object_registry.json)  Config file containing the MCS Scene's Unity Primitive Game Objects that may be loaded at runtime. 
-- [`unity/Assets/Resources/MCS/Materials/`](./unity/Assets/Resources/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Resources` folder to access at runtime.
-- [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes)  Folder containing sample scene config files (see [Run](#run)).
+- [`unity/Assets/Addressables/MCS/`](./unity/Assets/Addressables/MCS)  Folder containing all MCS runtime resources.
+- [`unity/Assets/Addressables/MCS/ai2thor_object_registry.json`](./unity/Assets/Addressables/MCS/ai2thor_object_registry.json)  Config file containing the MCS Scene's specific Game Objects borrowed from the AI2-THOR framework that may be loaded at runtime. 
+- [`unity/Assets/Addressables/MCS/mcs_object_registry.json`](./unity/Assets/Addressables/MCS/mcs_object_registry.json)  Config file containing the MCS Scene's specific custom Game Objects that may be loaded at runtime. 
+- [`unity/Assets/Addressables/MCS/primitive_object_registry.json`](./unity/Assets/Addressables/MCS/primitive_object_registry.json)  Config file containing the MCS Scene's Unity Primitive Game Objects that may be loaded at runtime. 
+- [`unity/Assets/Addressables/MCS/Materials/`](./unity/Assets/Addressables/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Addressables` folder to access at runtime.
+- [`unity/Assets/Addressables/MCS/Scenes/`](./unity/Assets/Addressables/MCS/Scenes)  Folder containing sample scene config files (see [Run](#run)).
 
 ## Differences from AI2-THOR Scenes
 
@@ -171,10 +177,16 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 
 ## Adding an Object to the MCS Scene
 
-1. Create a Unity Prefab and save it in the `unity/Assets/Resources/MCS/` folder.
+Simple Workflow:
+1. Create a Unity Prefab and save it in the `unity/Assets/Addressables/MCS/` folder.
 2. Add the relevant scripts and subcomponents to it (see the section below).
-3. Add it to the `unity/Assets/Resources/MCS/mcs_object_registry.json` file with a unique ID and a path to the prefab.
-4. Rebuild the Unity application.
+3. Add it to the `unity/Assets/Addressables/MCS/mcs_object_registry.json` file with a unique ID and a path to the prefab.
+4. While the object is selected, the check the box at the top of the inspector window to mark object as addressable.
+5. Build the updated Addressables bundle.
+6. Rebuild the Unity application.
+
+For a more detailed walkthrough how adding objects:
+https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2280161285/Adding+Content+To+Addressables
 
 ## Modifying a Prefab to Work in the MCS Scene
 
@@ -274,7 +286,7 @@ For playback:
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, `ObjectMetadataFromSimObjPhysics`
   - Added `virtual` to functions: `CloseObject`, `DropHandObject`, `OpenObject`, `PickupObject`, `PullObject`, `PushObject`, `PutObject`, `ResetAgentHandPosition`, `ThrowObject`, `ToggleObject`
   - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
-  - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful.
+  - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful; fixed an issue with placing held objects inside openble receptacles.
   - Added the `FindClosestPoint` function.
   - In `ApplyForceObject` and `PickupObject`, use `FindClosestPoint` to decide whether an object is obstructed or just out-of-reach.
   - Added `lastActionStatus` to Move actions, as well as to `DropHandObject`, `PickupObject`, and `PutObject` to help indicate success or reason for failure
@@ -298,9 +310,12 @@ For playback:
   - Changed the `Start` function to `public` so we can call it from our scripts
   - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
   - In `FindMySpawnPoints`, ignore receptacle trigger boxes of stacking receptacles that are currently positioned higher than the receptacle itself (in case the receptacle is rotated).
+  - Added `IsSeesaw` property. It locks the XZ position - YZ rotation of the rigidbody and ignores collisions with the agents ground collider. For seesaw pivot points, enable `IsSeesaw` and set that object to `kinematic` so it ignores agent ground collider collisions while not moving
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.
+- `Scripts/StructureObject`:
+  - In `Start`, ignore collisions of the agent and the structure.
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
@@ -316,7 +331,13 @@ For playback:
   - Added property `guidForColors` and way to update it (`UpdateGuidForColors`). This is used to create random colors for object masks in `OnSceneChange`
 - `ImageSynthesis/Shaders/Depth`:
   - Changed the `frag` function to return pixels based on the camera's far clipping pane
+  - In `BaseFPSAgentController` added a 45 degree angle check for ramp ascension and descension that occurs when the agents collider is obstructed by a structure. If a capsule cast the size of the agents collider shot 45 degrees up from the base of the agent is not obstrucuted, then the agent can move sucesfully.
+  - In `BaseFPSAgentController` changed capusle cast obstruction checks to use a point detected by a sphere-casted shot from the center of agent directly below as the bottom base of capsule cast checks rather than the base of the agent's collider. This results in higher accruacy and avoids clipping into the floor
 
 ## Assets
 
 - Soccer ball prefab from Ahmet Gencoglu: https://assetstore.unity.com/packages/3d/low-polygon-soccer-ball-84382
+
+## Acknowledgements
+
+This material is based upon work supported by the Defense Advanced Research Projects Agency (DARPA) and Naval Information Warfare Center, Pacific (NIWC Pacific) under Contract No. N6600119C4030. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the DARPA or NIWC Pacific.

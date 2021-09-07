@@ -7,7 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
-    private static string PATH_PREFIX = "MCS/";
+    private static string PATH_PREFIX = "Assets/Addressables/MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
@@ -69,6 +69,12 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_RIGHT_POSITION_X = 5.25f;
     private static float WALL_SCALE_Y = 3.0f;
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
+    private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
+    private static float WALL_WIDTH = .5f;
+    private static int FLOOR_DEPTH = 6;
+    private static int FLOOR_DIMENSIONS = 1;
+    private static int FLOOR_LOWERED_HEIGHT = -100;
+    private static float SEESAW_MAX_DEPTH = 0.035f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
@@ -101,7 +107,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath);
+        TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
@@ -143,7 +149,6 @@ public class MCSMain : MonoBehaviour {
                 this.defaultSceneFile : this.currentScene.name);
             this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
                 MCSMain.LATEST_SCENE_VERSION);
-            ChangeCurrentScene(this.currentScene);
         }
 
         // We should always have debug logs enabled in debug builds.
@@ -218,8 +223,12 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
-                Destroy(gameOrParentObject);
+                if (!AddressablesUtil.Instance.IsAddressableObject(gameOrParentObject))
+                {
+                    Destroy(gameOrParentObject);
+                }
             });
+            AddressablesUtil.Instance.ReleaseAddressableGameObjects();
             //The way we use materials creates a bunch of instances.  This should clear them out after 
             //we clean up the objects.
             Resources.UnloadUnusedAssets();
@@ -241,6 +250,7 @@ public class MCSMain : MonoBehaviour {
 
         this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
                 this.currentScene.isometric);
+
         this.AdjustRoomStructuralObjects();
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -248,6 +258,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         GameObject controller = GameObject.Find("FPSController");
+        controller.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        controller.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
@@ -304,12 +316,18 @@ public class MCSMain : MonoBehaviour {
             myDefaultWallMaterial);
 
         // Remove the ceiling from all intuitive physics and isometric scenes.
-        this.ceiling.SetActive(!(this.currentScene.intuitivePhysics || this.currentScene.observation ||
-                this.currentScene.isometric));
+        this.ceiling.SetActive(!this.isPassiveScene);
 
-        // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
-        if (this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric) {
-            this.agentController.substeps = 1;
+
+        // Reset the floorProperties in case the previous scene was intuitivePhysics.
+        if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
+            this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+            this.currentScene.floorProperties.enable = true;
+            this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_DEFAULT;
+            this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_DEFAULT;
+            this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+            this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+            this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         }
 
         // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
@@ -385,8 +403,7 @@ public class MCSMain : MonoBehaviour {
             this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
         } else {
-            float wallWidth = .5f;
-            SetRoomInternalSize(currentScene.roomDimensions, wallWidth);
+            SetRoomInternalSize(currentScene.roomDimensions, WALL_WIDTH);
 
             if (this.currentScene.performerStart == null) {
                 this.currentScene.performerStart = new MCSConfigTransform();
@@ -419,7 +436,7 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.LIGHT_Z_POSITION_SCREENSHOT);
         } else {
             // Intuitive physics and isometric scenes don't have ceilings.
-            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
+            if (!this.isPassiveScene) {
                 AssignMaterial(this.ceiling, ceilingMaterial);
             }
 
@@ -475,6 +492,93 @@ public class MCSMain : MonoBehaviour {
                 0, 0, 0);
         }
 
+        
+        GameObject oldFloors = GameObject.Find("Floors");
+        if(oldFloors!=null)
+            Destroy(oldFloors);
+        if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
+            this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
+        this.floor.transform.localPosition = DEFAULT_FLOOR_POSITION; //resets the floor position to the default
+        
+        if((this.currentScene.holes != null && this.currentScene.holes.Count > 0) || 
+            (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
+            CreateHolesAndApplyFloorTextures();
+        }
+        
+        agentController.agentManager.ResetSceneBounds();
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+    }
+
+    private void CreateHolesAndApplyFloorTextures() {
+        //hole config
+        int gridExpansionBuffer = 2; //this is so the floor goes slightly outside the wall boundries ensuring a hole near a wall does not show the skybox
+        int expandedFloorX = Mathf.RoundToInt(this.currentScene.roomDimensions.x) + gridExpansionBuffer;
+        int expandedFloorZ = Mathf.RoundToInt(this.currentScene.roomDimensions.z) + gridExpansionBuffer;
+        int startingFloorSectionX = Mathf.RoundToInt(-expandedFloorX) / 2;
+        int startingFloorSectionZ = Mathf.RoundToInt(-expandedFloorZ) / 2;
+        int posX = startingFloorSectionX;
+        int posZ = startingFloorSectionZ;
+        int posY = -MCSMain.FLOOR_DEPTH/2;
+        int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
+            * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
+
+        //prepare floor for cloning
+        this.floor.isStatic = false;
+        GameObject floors = new GameObject();
+        floors.name = "Floors";
+        floors.transform.position = Vector3.zero;
+        floors.transform.parent = GameObject.Find("Structure").transform;
+
+        bool createHoles = this.currentScene.holes != null && this.currentScene.holes.Count > 0;
+        bool applyTextures = this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0;
+
+        for(int i = 0; i<numOfFloorSections; i++) {
+            bool holeDrop = false;
+            if(createHoles) {
+                foreach(MCSFloorHolesAndTexturesXZConfig hole in this.currentScene.holes) {
+                    if(posX == hole.x && posZ == hole.z) {
+                        holeDrop = true;
+                        break;
+                    }
+                }
+            }
+
+            string material = "";
+            bool changeFloorMaterial = false;
+            if(applyTextures) {
+                for(int j = 0; j<this.currentScene.floorTextures.Count && !changeFloorMaterial; j++) {
+                    foreach(MCSFloorHolesAndTexturesXZConfig position in this.currentScene.floorTextures[j].positions) {
+                        if (posX == position.x && posZ == position.z) {
+                            material = this.currentScene.floorTextures[j].material;
+                            changeFloorMaterial = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            //clone the floor
+            GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
+            floorSection.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
+            if(changeFloorMaterial) 
+                AssignMaterial(floorSection, material); 
+            floorSection.name = "floor" + i;
+            floorSection.transform.parent = floors.transform;
+            floorSection.isStatic = true;
+            SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
+            simObj.objectID = "floor" + i;
+
+            posX += MCSMain.FLOOR_DIMENSIONS;
+            if(posX > -startingFloorSectionX) {
+                posX = startingFloorSectionX;
+                posZ += MCSMain.FLOOR_DIMENSIONS;
+            }
+        }
+
+        this.floor.isStatic = true;
+        this.floor.transform.localPosition = new Vector3(0, MCSMain.FLOOR_LOWERED_HEIGHT, 0); //this moves the floor below the important elements in the scene
+        agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
     }
@@ -488,7 +592,6 @@ public class MCSMain : MonoBehaviour {
         }
         Vector3 roomHalfDimensions = roomDimensions * .5f;
         Vector3 wallHalfWidths = wallWidths * .5f;
-        this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
         this.wallLeft.transform.position = new Vector3(-roomHalfDimensions.x - wallHalfWidths.x,
             roomHalfDimensions.y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
@@ -515,7 +618,6 @@ public class MCSMain : MonoBehaviour {
         this.ceiling.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
             MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
         this.ceiling.transform.position = new Vector3(0, roomDimensions.y + wallHalfWidths.y, 0);
-        agentController.agentManager.ResetSceneBounds();
     }
 
     private Collider AssignBoundingBox(
@@ -663,7 +765,8 @@ public class MCSMain : MonoBehaviour {
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
-                    Material material = Resources.Load<Material>(MCSMain.PATH_PREFIX + filename);
+
+                    Material material = AddressablesUtil.Instance.InstantiateAddressable<Material>(MCSMain.PATH_PREFIX + filename + ".mat");
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -759,9 +862,9 @@ public class MCSMain : MonoBehaviour {
         bool openable = objectConfig.openable || objectDefinition.openable;
         bool pickupable = objectConfig.pickupable || objectDefinition.pickupable;
         bool receptacle = objectConfig.receptacle || objectDefinition.receptacle;
-
+        bool seesaw = objectConfig.seesaw || objectDefinition.seesaw;
         bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle || objectConfig.physics ||
-            objectDefinition.physics;
+            objectDefinition.physics || seesaw;
 
         if (objectConfig.structure) {
             // Add the AI2-THOR Structure script with specific properties.
@@ -782,7 +885,8 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
             this.AssignRigidbody(gameObject, objectConfig.mass > 0 ? objectConfig.mass : objectDefinition.mass,
-                objectConfig.kinematic || objectDefinition.kinematic, objectDefinition.centerMassAtBottom);
+                objectConfig.kinematic || objectDefinition.kinematic, objectDefinition.centerMassAtBottom,
+                objectConfig.centerOfMass);
             colliders = this.AssignColliders(gameObject, objectDefinition);
         }
 
@@ -802,7 +906,7 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add the AI2-THOR SimObjPhysics script with specific properties.
             this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, visibilityPoints,
-                moveable, openable, pickupable, receptacle);
+                moveable, openable, pickupable, receptacle, seesaw);
         }
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
@@ -894,7 +998,13 @@ public class MCSMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void AssignRigidbody(GameObject gameObject, float mass, bool kinematic, bool centerMassAtBottom) {
+    private void AssignRigidbody(
+        GameObject gameObject,
+        float mass,
+        bool kinematic,
+        bool centerMassAtBottom,
+        MCSConfigVector centerOfMass
+    ) {
         // Note that some prefabs may already have a Rigidbody component.
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         if (rigidbody == null) {
@@ -912,6 +1022,9 @@ public class MCSMain : MonoBehaviour {
         if (centerMassAtBottom) {
             rigidbody.centerOfMass = new Vector3(0, 0, 0);
         }
+        if (centerOfMass != null) {
+            rigidbody.centerOfMass = new Vector3(centerOfMass.x, centerOfMass.y, centerOfMass.z);
+        }
     }
 
     private void AssignSimObjPhysicsScript(
@@ -923,7 +1036,8 @@ public class MCSMain : MonoBehaviour {
         bool moveable,
         bool openable,
         bool pickupable,
-        bool receptacle
+        bool receptacle,
+        bool seesaw
     ) {
         gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
 
@@ -1037,6 +1151,16 @@ public class MCSMain : MonoBehaviour {
             }
         }
 
+
+        if(seesaw) {
+            ai2thorPhysicsScript.IsSeesaw = true;
+            Physics.IgnoreCollision(agentController.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
+            gameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionX |  RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+            if(objectConfig.shows[0].scale.z > MCSMain.SEESAW_MAX_DEPTH && !objectConfig.kinematic) {
+                gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, MCSMain.SEESAW_MAX_DEPTH * 0.01f);
+            }
+        }
+
         if (visibilityPoints.Length > 0) {
             ai2thorPhysicsScript.VisibilityPoints = visibilityPoints;
         }
@@ -1144,9 +1268,7 @@ public class MCSMain : MonoBehaviour {
         MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
             this.currentScene.version);
         string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
-
-        GameObject gameObject = Instantiate(Resources.Load(MCSMain.PATH_PREFIX + resourceFile, typeof(GameObject))) as GameObject;
-
+        GameObject gameObject = AddressablesUtil.Instance.InstantiateAddressableGameObject(MCSMain.PATH_PREFIX + resourceFile + ".prefab");
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
@@ -1163,7 +1285,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>(MCSMain.PATH_PREFIX +
+                    AnimationClip clip = AddressablesUtil.Instance.InstantiateAddressable<AnimationClip>(MCSMain.PATH_PREFIX +
                         animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
@@ -1184,8 +1306,7 @@ public class MCSMain : MonoBehaviour {
                     animator = gameObject.AddComponent<Animator>();
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
-                RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
+                RuntimeAnimatorController animatorController = AddressablesUtil.Instance.InstantiateAddressable<RuntimeAnimatorController>(MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
@@ -1233,7 +1354,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private void InitializeGameObject(MCSConfigGameObject objectConfig) {
-        try {
+        //try {
             GameObject gameObject = CreateGameObject(objectConfig);
             objectConfig.SetGameObject(gameObject);
             if (gameObject != null) {
@@ -1241,13 +1362,14 @@ public class MCSMain : MonoBehaviour {
                 // Hide the object until the frame defined in MachineCommonSenseConfigGameObject.shows
                 (parentObject ?? gameObject).SetActive(false);
             }
-        } catch (Exception e) {
-            Debug.LogError("MCS: " + e);
-        }
+        //} catch (Exception e) {
+        //    Debug.LogError("MCS: " + e);
+        //    Debug.LogError(objectConfig.id);
+        //}
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
-        TextAsset objectRegistryFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + filePath);
+        TextAsset objectRegistryFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + filePath + ".json");
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         MCSConfigObjectRegistry objectRegistry = JsonUtility
@@ -1388,6 +1510,13 @@ public class MCSMain : MonoBehaviour {
 
         GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
 
+        Rigidbody rigidbody = objectConfig.GetRigidbody();
+
+        // Use 0.1 here because a lower value doesn't work correctly.
+        if (objectConfig.resetCenterOfMass && rigidbody.velocity.y > 0.1) {
+            rigidbody.ResetCenterOfMass();
+        }
+
         // Do the hides before the shows so any teleports work as expected.
         objectConfig.hides.Where(hide => hide.stepBegin == step).ToList().ForEach((hide) => {
             gameOrParentObject.SetActive(false);
@@ -1415,9 +1544,8 @@ public class MCSMain : MonoBehaviour {
         });
 
         objectConfig.togglePhysics.Where(toggle => toggle.stepBegin == step).ToList().ForEach((toggle) => {
-            Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
             if (rigidbody != null) {
-                this.AssignRigidbody(gameOrParentObject, rigidbody.mass, !rigidbody.isKinematic, false);
+                this.AssignRigidbody(rigidbody.gameObject, rigidbody.mass, !rigidbody.isKinematic, false, null);
             }
         });
 
@@ -1439,7 +1567,6 @@ public class MCSMain : MonoBehaviour {
 
         objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
             .ToList().ForEach((force) => {
-                Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
                     if (force.relative) {
                         rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
@@ -1451,7 +1578,6 @@ public class MCSMain : MonoBehaviour {
 
         objectConfig.torques.Where(torque => torque.stepBegin <= step && torque.stepEnd >= step &&
             torque.vector != null).ToList().ForEach((torque) => {
-                Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
                     rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
                 }
@@ -1462,7 +1588,7 @@ public class MCSMain : MonoBehaviour {
         objectConfig.ghosts.Where(ghost => ghost.stepBegin <= step && ghost.stepEnd >= step).ToList()
             .ForEach((ghost) => {
                 ghosted = true;
-                gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = true;
+                rigidbody.isKinematic = true;
                 gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
                     collider.enabled = false;
                 });
@@ -1471,7 +1597,7 @@ public class MCSMain : MonoBehaviour {
         // If this object's config has a "ghosts" element, assume that is should always be non-kinematic and have its
         // colliders enabled by default (whenever it's not ghosted).
         if (!ghosted && objectConfig.ghosts.Count > 0) {
-            gameOrParentObject.GetComponentInChildren<Rigidbody>().isKinematic = false;
+            rigidbody.isKinematic = false;
             gameOrParentObject.GetComponentInChildren<SimObjPhysics>().MyColliders.ToList().ForEach((collider) => {
                 collider.enabled = true;
             });
@@ -1511,23 +1637,26 @@ public class MCSMain : MonoBehaviour {
         return objectsWereShown;
     }
 
-    public void UpdateOnPhysicsSubstep(int numberOfSubsteps) {
-        if (this.currentScene != null && this.currentScene.objects != null) {
+    public void UpdateOnPhysicsSubstep() {
+        if (this.currentScene != null && this.currentScene.objects != null) 
+        {
             // Loop over each configuration object in the scene and update if needed.
             this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
-                .ForEach(objectConfig => {
+                .ForEach(objectConfig => 
+                {
                     GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                     // If the object should move during this step, move it a little during each individual substep, so
                     // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
                     objectConfig.moves.Where(move => move.stepBegin <= this.lastStep &&
                         move.stepEnd >= this.lastStep && move.vector != null).ToList().ForEach((move) => {
                             gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
-                                move.vector.z) / (float)numberOfSubsteps);
+                                move.vector.z));
                         });
                     objectConfig.rotates.Where(rotate => rotate.stepBegin <= this.lastStep &&
                         rotate.stepEnd >= this.lastStep && rotate.vector != null).ToList().ForEach((rotate) => {
-                            gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y,
-                                rotate.vector.z) / (float)numberOfSubsteps);
+                            gameOrParentObject.transform.Rotate(
+                                new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z)
+                            );
                         });
                 });
         }
@@ -1551,6 +1680,7 @@ public class MCSConfigAbstractObject {
     public bool physics;
     public bool pickupable;
     public bool receptacle;
+    public bool seesaw;
     public bool stacking;
     public List<string> materials = new List<string>();
     public List<string> salientMaterials = new List<string>();
@@ -1609,9 +1739,12 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
     public List<MCSConfigMove> torques = new List<MCSConfigMove>();
     public List<MCSContainerOpenClose> openClose = new List<MCSContainerOpenClose>();
+    public MCSConfigVector centerOfMass = null;
+    public bool resetCenterOfMass = false;
 
     private GameObject gameObject;
     private GameObject parentObject;
+    private Rigidbody rigidbody;
 
     public GameObject GetGameObject() {
         return this.gameObject;
@@ -1619,6 +1752,11 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
 
     public void SetGameObject(GameObject gameObject) {
         this.gameObject = gameObject;
+        this.rigidbody = gameObject.GetComponent<Rigidbody>();
+    }
+
+    public Rigidbody GetRigidbody() {
+        return this.rigidbody;
     }
 
     public GameObject GetParentObject() {
@@ -1763,7 +1901,6 @@ public class MCSConfigScene {
     public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
     public bool isometric;
-
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
     public List<MCSConfigGameObject> objects = new List<MCSConfigGameObject>();
@@ -1771,7 +1908,23 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
+    public List<MCSFloorHolesAndTexturesXZConfig> holes;
+    public List<MCSConfigFloorTextures> floorTextures;
 }
+
+[Serializable]
+public class MCSFloorHolesAndTexturesXZConfig {
+    public int x;
+    public int z;
+}
+
+
+[Serializable]
+public class MCSConfigFloorTextures {
+    public string material;
+    public List<MCSFloorHolesAndTexturesXZConfig> positions;
+}
+
 
 [Serializable]
 public class MCSConfigWallMaterials {

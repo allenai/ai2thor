@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7170012, g: 0.7306422, b: 0.7505908, a: 1}
+  m_IndirectSpecularColor: {r: 0.7040911, g: 0.71842074, b: 0.7375759, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2109,6 +2109,7 @@ MonoBehaviour:
   DroneBasket: {fileID: 1769782113}
   inHighFrictionArea: 0
   agentState: 3
+  showDebugCapsuleGizmos: 0
   agentManager: {fileID: 0}
   m_Camera: {fileID: 0}
   cameraOrthSize: 0
@@ -2133,9 +2134,15 @@ MonoBehaviour:
   MyFaceMesh: {fileID: 497714281}
   AdvancePhysicsStepCount: 0
   TargetCircles: []
-  substeps: 5
+  groundObjectsCollider: {fileID: 1125765178}
   step: 0
   fpsAgent: {fileID: 1752557969}
+--- !u!4 &506323130 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1752557968}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &513116322 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1762015268591634, guid: 5e9e851c0e142814dac026a256ba2ac0,
@@ -2440,6 +2447,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
@@ -2467,6 +2475,51 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1752557968}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1125765176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1125765177}
+  - component: {fileID: 1125765178}
+  m_Layer: 10
+  m_Name: CapsuleColliderForObjectGroundCollisions
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1125765177
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125765176}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 506323130}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &1125765178
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125765176}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 2.8
+  m_Direction: 1
+  m_Center: {x: 0, y: -1, z: 0}
 --- !u!1 &1180321326
 GameObject:
   m_ObjectHideFlags: 0
@@ -2507,6 +2560,10 @@ PrefabInstance:
     - target: {fileID: 196425745, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 196425746, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -24.999939
       objectReference: {fileID: 0}
     - target: {fileID: 431395055, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2884,6 +2941,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
@@ -3094,6 +3152,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
@@ -3274,6 +3333,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
@@ -3524,7 +3584,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Constraints
-      value: 0
+      value: 126
       objectReference: {fileID: 0}
     - target: {fileID: 5400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_IsKinematic
@@ -3765,17 +3825,17 @@ PrefabInstance:
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Height
-      value: 1.3875
+      value: 1.23
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Radius
-      value: 0.25
+      value: 0.251
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Center.y
-      value: -0.4625
+      value: -0.33
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
@@ -3834,6 +3894,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
+      propertyPath: newSceneFile
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
       propertyPath: WalkMagnitude
       value: 0.5
       objectReference: {fileID: 0}
@@ -3885,6 +3950,11 @@ PrefabInstance:
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: moveOrPickupObjectImageCoords.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4418338491248638955, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
@@ -4213,6 +4283,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
@@ -4243,6 +4314,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1891392285}
+  - component: {fileID: 1891392286}
   - component: {fileID: 1891392284}
   m_Layer: 0
   m_Name: MCS
@@ -4272,6 +4344,7 @@ MonoBehaviour:
   defaultCeilingMaterial: AI2-THOR/Materials/Walls/Drywall
   defaultFloorMaterial: AI2-THOR/Materials/Fabrics/CarpetWhite 3
   defaultWallsMaterial: AI2-THOR/Materials/Walls/DrywallBeige
+  isPassiveScene: 0
 --- !u!4 &1891392285
 Transform:
   m_ObjectHideFlags: 0
@@ -4286,6 +4359,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1891392286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891392283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8283cdd81f6c4d44abde6adf766911b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1945212739
 GameObject:
   m_ObjectHideFlags: 0
@@ -4481,6 +4566,7 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
+  IsSeesaw: 0
   canChangeTempToHot: 0
   canChangeTempToCold: 0
   ContainedObjectReferences: []
