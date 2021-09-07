@@ -2,17 +2,17 @@
 <h3 align="center"><i>A Near Photo-Realistic Interactable Framework for Embodied AI Agents</i></h3>
 
 <p align="center">
+    <a href="//travis-ci.org/allenai/ai2thor" target="_blank">
+        <img src="https://travis-ci.org/allenai/ai2thor.svg?branch=main">
+    </a>
     <a href="//github.com/allenai/ai2thor/releases">
         <img alt="GitHub release" src="https://img.shields.io/github/release/allenai/ai2thor.svg">
-    </a>
-    <a href="//github.com/allenai/ai2thor/blob/main/LICENSE">
-        <img alt="License" src="https://img.shields.io/github/license/allenai/ai2thor.svg?color=blue">
     </a>
     <a href="//ai2thor.allenai.org/" target="_blank">
         <img alt="Documentation" src="https://img.shields.io/website/https/ai2thor.allenai.org?down_color=red&down_message=offline&up_message=online">
     </a>
-    <a href="//pypi.org/project/ai2thor/" target="_blank">
-        <img src="https://img.shields.io/badge/python-3.5+-blue">
+    <a href="//github.com/allenai/ai2thor/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/allenai/ai2thor.svg?color=blue">
     </a>
     <a href="//arxiv.org/abs/1712.05474" target="_blank">
         <img src="https://img.shields.io/badge/arXiv-1712.05474-<COLOR>">
@@ -20,8 +20,8 @@
     <a href="//www.youtube.com/watch?v=KcELPpdN770" target="_blank">
         <img src="https://img.shields.io/badge/video-YouTube-red">
     </a>
-    <a href="//travis-ci.org/allenai/ai2thor" target="_blank">
-        <img src="https://travis-ci.org/allenai/ai2thor.svg?branch=main">
+    <a href="//pepy.tech/project/ai2thor" target="_blank">
+        <img alt="Downloads" src="https://pepy.tech/badge/ai2thor">
     </a>
 </p>
 
@@ -67,7 +67,7 @@
 
 **🏡 Scenes.** 200+ custom built high-quality scenes. The scenes can be explored on our [demo](//ai2thor.allenai.org/demo) page. We are working on rapidly expanding the number of available scenes and domain randomization within each scene.
 
-**🪑 Objects.** 1500+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
+**🪑 Objects.** 2600+ custom designed household objects across 100+ object types. Each object is heavily annotated, which allows for near-realistic physics interaction.
 
 **🤖 Agent Types.** Multi-agent support, a custom built LoCoBot agent, a Kinova 3 inspired robotic manipulation agent, and a drone agent.
 

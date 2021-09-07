@@ -23,6 +23,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     public GameObject[] ManipulatorReceptacles;
     public GameObject[] ManipulatorBooks;
     public bool AllowDecayTemperature = true; // if true, temperature of sim objects decays to Room Temp over time
+    public AgentManager agentManager;
 
     // public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 #if UNITY_EDITOR
@@ -39,10 +40,15 @@ public class PhysicsSceneManager : MonoBehaviour {
     // this is used to report if the scene is at rest in metadata, and also to automatically resume Physics Autosimulation if
     // physics simulation was paused
     public bool isSceneAtRest; // if any object in the scene has a non zero velocity, set to false
-    public List<Rigidbody> rbsInScene = null; // list of all active rigidbodies in the scene
+    public HashSet<Rigidbody> rbsInScene = new HashSet<Rigidbody>(); // list of all active rigidbodies in the scene
     public int AdvancePhysicsStepCount;
+    public static uint PhysicsSimulateCallCount;
 
     private void OnEnable() {
+        // must do this here instead of Start() since OnEnable gets triggered prior to Start
+        // when the component is enabled.
+        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
         SetupScene();
 
@@ -63,13 +69,19 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
     // Use this for initialization
     void Start() {
+        PhysicsSceneManager.PhysicsSimulateCallCount = 0;
         GatherAllRBsInScene();
+    }
+
+    public static void PhysicsSimulateTHOR(float deltaTime) {
+        Physics.Simulate(deltaTime);
+        PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
     private void GatherAllRBsInScene() {
         // cache all rigidbodies that are in the scene by default
         // NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
-        rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
+        rbsInScene = new HashSet<Rigidbody>(FindObjectsOfType<Rigidbody>());
     }
 
     // disabling LateUpdate to experiment with determinism
@@ -117,7 +129,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         rb.angularDrag += 0.01f;
 
 #if UNITY_EDITOR
-                        print(rb.transform.name + " is still in motion!");
+                        //print(rb.transform.name + " is still in motion!");
 #endif
                     } else {
                         // the velocities are small enough, assume object has come to rest and force this one to sleep
@@ -207,9 +219,10 @@ public class PhysicsSceneManager : MonoBehaviour {
             AddToObjectsInScene(o);
         }
 
-        BaseFPSAgentController fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>();
-        if (fpsController.imageSynthesis != null) {
-            fpsController.imageSynthesis.OnSceneChange();
+        foreach (var agent in this.agentManager.agents) {
+            if (agent.imageSynthesis != null) {
+                agent.imageSynthesis.OnSceneChange();
+            }
         }
     }
 
@@ -386,8 +399,9 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (placeStationary) {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     copy.GetComponent<Rigidbody>().isKinematic = true;
+                } else {
+                    copy.GetComponent<Rigidbody>().isKinematic = false;
                 }
-                // copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
         SetupScene();
@@ -529,6 +543,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
 
+            // NOTE: for backwards compatibility with InitialRandomSpawn, this does not use BaseFPSAgentController.systemRandom.
+            // InitialRandomSpawn is going to be deprecated soon.
             System.Random rng = new System.Random(seed);
             gameObjsToPlaceInReceptacles.AddRange(unduplicatedSimObjects);
             gameObjsToPlaceInReceptacles.Shuffle_(rng);
@@ -551,6 +567,14 @@ public class PhysicsSceneManager : MonoBehaviour {
             foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles) {
                 SimObjPhysics sopToPlaceInReceptacle = gameObjToPlaceInReceptacle.GetComponent<SimObjPhysics>();
 
+                if (staticPlacement) {
+                    sopToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
+                }
+
+                // if(sopToPlaceInReceptacle.IsBreakable) {
+                //     sopToPlaceInReceptacle.GetComponent<Break>().Unbreakable = true;
+                // }
+
                 if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
                     HowManyCouldntSpawn--;
                     continue;
@@ -559,6 +583,11 @@ public class PhysicsSceneManager : MonoBehaviour {
                 bool spawned = false;
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
+
+                    if(receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
+                        //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
+                        continue;
+                    }
 
                     // check if the target Receptacle is an ObjectSpecificReceptacle
                     // if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
@@ -612,7 +641,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         }
                     }
 
-                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints(false);
+                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints();
 
                     // first shuffle the list so it's random
                     targetReceptacleSpawnPoints.Shuffle_(rng);
@@ -815,6 +844,48 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
+    protected static IEnumerator toStandardCoroutineIEnumerator(
+        IEnumerator<float?> enumerator
+    ) {
+        while (enumerator.MoveNext()) {
+            if (
+                (!enumerator.Current.HasValue)
+                || (enumerator.Current <= 0f)
+            ) {
+                yield return null;
+            } else {
+                yield return new WaitForFixedUpdate();
+            }
+        }
+    }
+
+    public static void StartPhysicsCoroutine(
+        MonoBehaviour startCoroutineUsing,
+        IEnumerator<float?> enumerator,
+        bool? autoSimulation = null
+    ) {
+        autoSimulation = autoSimulation.GetValueOrDefault(Physics.autoSimulation);
+
+        if (autoSimulation.Value) {
+            startCoroutineUsing.StartCoroutine(toStandardCoroutineIEnumerator(enumerator));
+            return;
+        }
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = false;
+        while (enumerator.MoveNext()) {
+            float? fixedDeltaTime = enumerator.Current;
+            if (!fixedDeltaTime.HasValue) {
+                fixedDeltaTime = Time.fixedDeltaTime;
+            }
+
+            if (fixedDeltaTime == 0f) {
+                Physics.SyncTransforms();
+            } else {
+                PhysicsSimulateTHOR(fixedDeltaTime.Value);
+            }
+        }
+        Physics.autoSimulation = previousAutoSimulate;
+    }
 
     // Immediately disable physics autosimulation
     public void PausePhysicsAutoSim() {
@@ -825,11 +896,13 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     // manually advance the physics timestep 
     public void AdvancePhysicsStep(
-            float timeStep = 0.02f,
-            float? simSeconds = null,
-            bool allowAutoSimulation = false
-        ) {
-
+        float timeStep = 0.02f,
+        float? simSeconds = null,
+        bool allowAutoSimulation = false
+    ) {
+        if (timeStep <= 0f && simSeconds.GetValueOrDefault(0f) > 0f) {
+            throw new InvalidOperationException($"timestep must be > 0");
+        }
         bool oldPhysicsAutoSim = Physics.autoSimulation;
         Physics.autoSimulation = false;
 

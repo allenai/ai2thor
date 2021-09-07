@@ -69,6 +69,19 @@ public class Break : MonoBehaviour {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
+            //before disabling things, if this object is a receptacle, unparent all objects contained
+            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
+                GameObject objs = GameObject.Find("Objects");
+                foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
+                    go.transform.SetParent(objs.transform);
+                    Rigidbody childrb = go.GetComponent<Rigidbody>();
+                    childrb.isKinematic = false;
+                    childrb.useGravity = true;
+                    childrb.constraints = RigidbodyConstraints.None;
+                    childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+            }
+
             // turn off everything except the top object
             foreach (Transform t in gameObject.transform) {
                 t.gameObject.SetActive(false);
@@ -142,7 +155,7 @@ public class Break : MonoBehaviour {
             BreakForDecalType(collision);
         }
 
-        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().PrimaryAgent;
         if (primaryAgent.imageSynthesis) {
             if (primaryAgent.imageSynthesis.enabled) {
                 primaryAgent.imageSynthesis.OnSceneChange();
@@ -176,7 +189,7 @@ public class Break : MonoBehaviour {
         }
 
         // ImpulseForce.Add(col.impulse.magnitude);
-        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<BaseAgentComponent>()) {
             if (readytobreak) {
                 readytobreak = false;
                 BreakObject(col);

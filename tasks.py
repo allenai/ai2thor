@@ -125,8 +125,8 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
     # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
-        % (_unity_path(), build_name, project_path, build_target_map.get(arch, arch), arch)
+        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -975,10 +975,6 @@ def ci_build(context):
             )
 
             private_scene_options = [False]
-            if build["branch"] == "erick/challenge2021":
-                os.environ["INCLUDE_PRIVATE_SCENES"] = "true"
-            elif build["branch"] == "erick/challenge2021-eval":
-                private_scene_options = [False, True]
 
             procs = []
             for include_private_scenes in private_scene_options:
@@ -1166,7 +1162,7 @@ def poll_ci_build(context):
         missing = False
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
-        if (time.time() - last_emit_time) > 540:
+        if (time.time() - last_emit_time) > 120:
             print(".", end="")
             last_emit_time = time.time()
 
@@ -1189,18 +1185,22 @@ def poll_ci_build(context):
         commit_build = ai2thor.build.Build(plat, commit_id, False)
         if not commit_build.exists():
             print("Build log url: %s" % commit_build.log_url)
-            raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
+            raise Exception("Failed to build %s for commit: %s " % (plat.name(), commit_id))
 
     pytest_missing = True
     for i in range(30):
+        if (time.time() - last_emit_time) > 120:
+            print(".", end="")
+            last_emit_time = time.time()
+
         s3_obj = pytest_s3_object(commit_id)
         s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
             s3_obj.bucket_name,
             s3_obj.key,
         )
-        print("pytest url %s" % s3_pytest_url)
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
+            print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
             print(pytest_result["stdout"])  # print so that it appears in travis log
@@ -3474,6 +3474,84 @@ def format_py(context):
         "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
     )
 
+
+@task
+def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")):
+    import stat
+    import requests
+
+    if not sys.platform.startswith("linux"):
+        raise Exception("Installation only support for Linux")
+    
+    res = requests.get("https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage")
+    res.raise_for_status()
+    os.makedirs(target_dir, exist_ok=True)
+
+    target_path = os.path.join(target_dir, "UnityHub.AppImage")
+
+    tmp_path = target_path + ".tmp-" + str(os.getpid())
+    with open(tmp_path, "wb") as f:
+        f.write(res.content)
+
+    if os.path.isfile(target_path):
+        os.unlink(target_path)
+
+    os.rename(tmp_path, target_path)
+    os.chmod(target_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  | stat.S_IROTH | stat.S_IXOTH)
+    print("Installed UnityHub at %s" % target_path)
+
+
+@task
+def install_unity_editor(context, version=None, changeset=None):
+    import yaml
+    import re
+    unity_hub_path = None
+    if sys.platform.startswith("linux"):
+        unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
+    elif sys.platform.startswith("darwin"):
+        unity_hub_path = "/Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub --"
+    else:
+        raise Exception("UnityHub CLI not supported")
+
+    if version is None:
+        with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
+            project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
+        m = re.match(r'^([^\s]+)\s+\(([a-zAZ0-9]+)\)', project_version["m_EditorVersionWithRevision"])
+
+        assert m, "Could not extract version/changeset from %s" % project_version["m_EditorVersionWithRevision"]
+        version = m.group(1)
+        changeset = m.group(2)
+    command = "%s --headless install --version %s" % (unity_hub_path, version) 
+    if changeset:
+        command += " --changeset %s" % changeset
+
+    platform_modules = dict(
+        linux=["mac-mono", "linux-il2cpp", "webgl"],
+        darwin=["mac-il2cpp", "linux-il2cpp", "linux-mono", "webgl"],
+    )
+    for m in platform_modules[sys.platform]:
+        command += " -m %s" % m
+
+
+    subprocess.check_call(command, shell=True)
+
+@task
+def generate_unity_alf(context):
+    # generates Unity License Acitivation file for use 
+    # with manual activation https://docs.unity3d.com/Manual/ManualActivationGuide.html
+
+    alf_path = "Unity_v%s.alf" % _unity_version()
+    subprocess.run("%s -batchmode -createManualActivationFile" % _unity_path(), shell=True)
+    assert os.path.isfile(alf_path), "ALF not found at %s" % alf_path
+
+    print("ALF created at %s. Activate license at: https://license.unity3d.com/manual" % alf_path)
+   
+@task
+def activate_unity_license(context, ulf_path):
+
+    assert os.path.isfile(ulf_path), "License file '%s' not found" % ulf_path
+
+    subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
 @task
 def test_utf(context):

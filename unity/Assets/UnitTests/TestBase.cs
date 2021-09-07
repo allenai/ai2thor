@@ -15,6 +15,7 @@ namespace Tests {
         protected int sequenceId = 0;
         protected bool lastActionSuccess;
         protected string error;
+        protected object actionReturn;
 
         public IEnumerator step(Dictionary<string, object> action) {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
@@ -23,6 +24,7 @@ namespace Tests {
             yield return new WaitForEndOfFrame();
             var agent = agentManager.GetActiveAgent();
             lastActionSuccess = agent.lastActionSuccess;
+            actionReturn = agent.actionReturn;
             error = agent.errorMessage;
             sequenceId++;
         }
@@ -36,6 +38,10 @@ namespace Tests {
                 { "action", "Initialize"}
             };
             yield return step(action);
+        }
+
+        protected AgentManager agentManager {
+            get => GameObject.FindObjectOfType<AgentManager>();
         }
 
         [SetUp]

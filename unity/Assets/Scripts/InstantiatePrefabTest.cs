@@ -21,16 +21,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
 
-    // Use this for initialization
-    void Start() {
-        // m_Started = true;
-    }
-
-    // Update is called once per frame
-    void Update() {
-
-    }
-
     // spawn an object from the Array of prefabs. Used to spawn from a specific set of Prefabs
     // used for Hide and Seek stuff
     public SimObjPhysics Spawn(string prefabType, string objectId, Vector3 position) {
@@ -67,10 +57,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             }
         }
 
-        Bounds objBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
+        Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
         foreach (Renderer r in candidates[variation - 1].GetComponentsInChildren<Renderer>()) {
             if (r.enabled) {
                 objBounds.Encapsulate(r.bounds);
@@ -119,7 +106,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             if (!ignoreChecks) {
                 if (UtilityFunctions.isObjectColliding(
                     prefab,
-                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseFPSAgentController>() select agent.gameObject))
+                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseAgentComponent>() select agent.gameObject))
                 ) {
                     Debug.Log("On spawning object the area was not clear despite CheckSpawnArea saying it was.");
                     prefab.SetActive(false);
@@ -192,7 +179,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     // same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
 
-    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
+    public bool PlaceObjectReceptacleInViewport(PhysicsRemoteFPSAgentController agent, List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
 
         if (rsps == null) {
 #if UNITY_EDITOR
@@ -221,8 +208,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
-                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
-                if (primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop)) {
+                if (agent.objectIsOnScreen(sop)) {
                     return true;
                 }
             }
@@ -248,6 +234,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             rotation = r;
         }
     }
+    
 
     public bool PlaceObject(
         SimObjPhysics sop,
@@ -304,7 +291,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                 Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); // was using rsp.point
                 BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+                DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
             }
@@ -359,10 +346,15 @@ public class InstantiatePrefabTest : MonoBehaviour {
         foreach (RotationAndDistanceValues quat in ToCheck) {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false)) {
-
+                
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
+
+                //ensure transforms are synced
+                if (!Physics.autoSyncTransforms) {
+                    Physics.SyncTransforms();
+                }
 
                 // now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 // bits of it hanging out
@@ -432,7 +424,12 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                 // set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-                if (PlaceStationary == true) {
+                if (PlaceStationary) {
+                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will since we are placing stationary
+                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup || rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
+                        rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+
                     // make object being placed kinematic true
                     sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
@@ -443,15 +440,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                        agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
+                        sop.DropContainedObjectsStationary(); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
-
-                    // if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
-                    if (rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
-                        rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
-                    }
-
                 }
 
                 // place stationary false, let physics drop everything too
@@ -466,22 +456,16 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                        agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
+                        sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
                 sop.isInAgentHand = false;// set agent hand flag
-
-                // #if UNITY_EDITOR
-                // Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                // #endif
 
                 return true;
             }
         }
 
-        // reset rotation if no valid spawns found
-        // oh now we couldn't spawn it, all the spawn areas were not clear
+        // reset rotation, and position if not able to be placed
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;
         return false;
@@ -589,7 +573,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         if (hitColliders.Length > 0) {
             // filter out any AgentTriggerBoxes because those should be ignored now
             foreach (Collider c in hitColliders) {
-                if (c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
+                if (c.isTrigger && c.GetComponentInParent<BaseAgentComponent>()) {
                     continue;
                 } else {
                     return c;

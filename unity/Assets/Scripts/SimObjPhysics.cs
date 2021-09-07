@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -50,6 +51,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool debugIsInteractable = false;
     public bool isInAgentHand = false;
 
+    public DroneFPSAgentController droneFPSAgent;
+
     // these collider references are used for switching physics materials for all colliders on this object
     [Header("Non - Trigger Colliders of this object")]
     public Collider[] MyColliders = null;
@@ -65,7 +68,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private float RBoriginalAngularDrag;
 
     [Header("Salient Materials")] // if this object is moveable or pickupable, set these up
-    public ObjectMetadata.ObjectSalientMaterial[] salientMaterials;
+    public SalientObjectMaterial[] salientMaterials;
 
     private PhysicsMaterialValues[] OriginalPhysicsMaterialValuesForAllMyColliders = null;
 
@@ -75,7 +78,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
     // keep track of this object's current temperature (abstracted to three states, RoomTemp/Hot/Cold)
-    public ObjectMetadata.Temperature CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+    public Temperature CurrentTemperature = Temperature.RoomTemp;
 
     // value for how long it should take this object to get back to room temperature from hot/cold
     public float HowManySecondsUntilRoomTemp = 10f;
@@ -108,8 +111,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
-    public bool canChangeTempToHot;
-    public bool canChangeTempToCold;
+    public bool isHeatSource;
+    public bool isColdSource;
     private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
@@ -158,7 +161,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
 
-    private void regenerateBoundingBoxes() {
+    public void syncBoundingBoxes(bool forceCacheReset = false) {
 
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
@@ -166,13 +169,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // position and rotation will vary slightly due to floating point errors
         // so we use a very small epsilon value for comparison instead of 
         // checking equality
-        if (this.boundingBoxCacheKey != null &&
-            (!this.IsOpenable || (this.IsOpen == this.boundingBoxCacheKey.IsOpen &&
-            Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f)) &&
-            (!this.IsSliceable || this.IsSliced == this.boundingBoxCacheKey.IsSliced) &&
-            (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken) &&
-            Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f &&
-            Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f) {
+        if (
+            (!forceCacheReset)
+            && this.boundingBoxCacheKey != null
+            && (
+                !this.IsOpenable || (
+                    this.IsOpen == this.boundingBoxCacheKey.IsOpen
+                    && Math.Abs(this.openness - this.boundingBoxCacheKey.openness) < .0001f
+                )
+               )
+            && (!this.IsSliceable || this.IsSliced == this.boundingBoxCacheKey.IsSliced)
+            && (!this.IsBreakable || this.IsBroken == this.boundingBoxCacheKey.IsBroken)
+            && Quaternion.Angle(rotation, this.boundingBoxCacheKey.rotation) < 0.0001f
+            && Vector3.Distance(position, this.boundingBoxCacheKey.position) < 0.0001f
+        ) {
             return;
         }
         this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
@@ -224,12 +234,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
         }
 
-        Bounds bounding = cols[0].bounds;// initialize the bounds to return with our first collider
-
+        Bounds bounding = UtilityFunctions.CreateEmptyBounds();
         foreach (Collider c in cols) {
-            if (c.enabled) {
+            if (c.enabled && !c.isTrigger) {
                 bounding.Encapsulate(c.bounds);
             }
+        }
+        foreach (Transform visPoint in this.VisibilityPoints) {
+            bounding.Encapsulate(visPoint.position);
         }
 
         // reparent child simobjects
@@ -237,19 +249,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             childSimObject.SetParent(this.transform);
         }
 
-        // ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+        // ok now we have a bounds that encapsulates all the colliders of the object, EXCLUDING trigger colliders
         List<float[]> cornerPoints = new List<float[]>();
         float[] xs = new float[]{
-            bounding.center.x + bounding.size.x/2f,
-            bounding.center.x - bounding.size.x/2f
+            bounding.center.x + bounding.size.x / 2f,
+            bounding.center.x - bounding.size.x / 2f
         };
         float[] ys = new float[]{
-            bounding.center.y + bounding.size.y/2f,
-            bounding.center.y - bounding.size.y/2f
+            bounding.center.y + bounding.size.y / 2f,
+            bounding.center.y - bounding.size.y / 2f
         };
         float[] zs = new float[]{
-            bounding.center.z + bounding.size.z/2f,
-            bounding.center.z - bounding.size.z/2f
+            bounding.center.z + bounding.size.z / 2f,
+            bounding.center.z - bounding.size.z / 2f
         };
         foreach (float x in xs) {
             foreach (float y in ys) {
@@ -260,8 +272,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
         b.cornerPoints = cornerPoints.ToArray();
 
-        b.center = bounding.center;// also return the center of this bounding box in world coordinates
-        b.size = bounding.size;// also return the size in the x, y, z axes of the bounding box in world coordinates
+        b.center = bounding.center; // also return the center of this bounding box in world coordinates
+        b.size = bounding.size; // also return the size in the x, y, z axes of the bounding box in world coordinates
 
         return b;
 
@@ -292,35 +304,40 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             this.transform.position = Vector3.zero;
             this.transform.rotation = Quaternion.identity;
-            Physics.SyncTransforms();
-
-            // Get all colliders on the sop, excluding colliders if they are not enabled 
-            // List<Collider> cols = new List<Collider>();
-            List<KeyValuePair<Collider, LayerMask>> cols = new List<KeyValuePair<Collider, LayerMask>>();
-            // save the state of all the layers prior to modifying
-            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
-                if (c.enabled) {
-                    cols.Add(new KeyValuePair<Collider, LayerMask>(c, c.transform.gameObject.layer));
-                }
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
             }
 
+            // Get all colliders on the sop, excluding colliders if they are not enabled
+            List<(Collider, LayerMask)> cols = new List<(Collider, LayerMask)>();
+            var nonInteractiveLayer = LayerMask.NameToLayer("NonInteractive");
             foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
+                    // save the state of all the layers prior to modifying
+                    cols.Add((c, c.transform.gameObject.layer));
+
                     // move these colliders to the NonInteractive layer so upon teleporting to the origin, nothing is disturbed
-                    c.transform.gameObject.layer = LayerMask.NameToLayer("NonInteractive");
+                    c.transform.gameObject.layer = nonInteractiveLayer;
                 }
             }
 
-            // Initialize the bounds and encapsulate all active colliders in SimObject's array
-            Bounds newBB = new Bounds();
+            // Initialize the new bounds
+            Bounds newBB = UtilityFunctions.CreateEmptyBounds();
 
-            foreach (KeyValuePair<Collider, LayerMask> kvp in cols) {
-                if (kvp.Key.gameObject != this.BoundingBox) {
-                    newBB.Encapsulate(kvp.Key.bounds);
+            // Encapsulate all active colliders in SimObject's array
+            foreach ((Collider, LayerMask) colAndLayerMask in cols) {
+                Collider c = colAndLayerMask.Item1;
+                if (!c.isTrigger && c.gameObject != this.BoundingBox) {
+                    newBB.Encapsulate(c.bounds);
                 }
+            }
+            // Encapsulate all visilibity points of the SimObject array
+            foreach (Transform visPoint in this.VisibilityPoints) {
+                newBB.Encapsulate(visPoint.position);
             }
 
             // Update SimObject's BoundingBox collider to match new bounds
+            this.BoundingBox.transform.localPosition = Vector3.zero;
             this.BoundingBox.transform.rotation = Quaternion.identity;
             this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
             this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
@@ -328,11 +345,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Revert SimObject back to its initial transform
             this.transform.position = cachedPosition;
             this.transform.rotation = cachedRotation;
-            Physics.SyncTransforms();
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
 
             // Re-enable colliders, moving them back to their original layer
-            foreach (KeyValuePair<Collider, LayerMask> kvp in cols) {
-                kvp.Key.transform.gameObject.layer = kvp.Value;
+            foreach ((Collider, LayerMask) colAndLayerMask in cols) {
+                colAndLayerMask.Item1.transform.gameObject.layer = colAndLayerMask.Item2;
 
             }
 
@@ -364,17 +383,53 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         return null;
     }
+    public void DropContainedObjectsStationary() {
+        this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
+    }
+    
+    public void DropContainedObjects(
+        bool reparentContainedObjects,
+        bool forceKinematic
+    ) {
+        if (this.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            GameObject topObject = null;
+
+            foreach (SimObjPhysics sop in this.ContainedObjectReferences) {
+                // for every object that is contained by this object turn off
+                // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                sop.transform.Find("Colliders").gameObject.SetActive(true);
+                sop.isInAgentHand = false; // Agent hand flag
+
+                if (reparentContainedObjects) {
+                    if (topObject == null) {
+                        topObject = GameObject.Find("Objects");
+                    }
+                    sop.transform.SetParent(topObject.transform);
+                }
+
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = forceKinematic;
+                if (!forceKinematic) {
+                    rb.useGravity = true;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+
+            }
+            this.ClearContainedObjectReferences();
+        }
+    }
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
         get {
-            this.regenerateBoundingBoxes();
+            this.syncBoundingBoxes();
             return this.cachedAxisAlignedBoundingBox;
         }
     }
 
     public ObjectOrientedBoundingBox ObjectOrientedBoundingBox {
         get {
-            this.regenerateBoundingBoxes();
+            this.syncBoundingBoxes();
             return this.cachedObjectOrientedBoundingBox;
         }
     }
@@ -568,22 +623,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     /// end placeholder stuff
 
     // return temperature enum here
-    public ObjectMetadata.Temperature CurrentObjTemp {
+    public Temperature CurrentObjTemp {
         get {
             return CurrentTemperature;
         }
     }
 
-    private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
+    private void FindMySpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
             Contains containsScript = rtb.GetComponent<Contains>();
-            temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            temp.AddRange(containsScript.GetValidSpawnPoints(agent));
         }
 
-        if (ReturnPointsCloseToAgent) {
-            GameObject agent = GameObject.Find("FPSController");
-
+        if (agent != null) {
             temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
                 return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
             });
@@ -604,8 +657,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
-    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
-        FindMySpawnPoints(ReturnPointsCloseToAgent);
+    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
+        FindMySpawnPoints(agent);
         return MySpawnPoints;
     }
 
@@ -616,25 +669,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     void OnCollisionEnter(Collision col) {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
-        DroneFPSAgentController droneController;
 
-        if (GameObject.Find("FPSController")) {
-            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
-        } else {
-            Debug.LogError("No FPSController in scene!");
-            return;
-        }
-
-        if (!droneController.enabled) {
+        if (droneFPSAgent == null){
             return;
         }
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -650,9 +695,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -828,8 +873,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         this.IsDirtyable = this.GetComponent<Dirty>();
         this.IsCookable = this.GetComponent<CookObject>();
         this.IsSliceable = this.GetComponent<SliceObject>();
-        this.canChangeTempToHot = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
-        this.canChangeTempToCold = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
+        this.isHeatSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isHeatSource);
+        this.isColdSource = DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.isColdSource);
 
     }
 
@@ -864,7 +909,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
-
         // end debug setup stuff
 
         OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
@@ -913,10 +957,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         if (sceneManager.AllowDecayTemperature)// only do this if the scene is initialized to use Temperature decay over time
         {
             // if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
-            if (CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true) {
+            if (CurrentTemperature != Temperature.RoomTemp && StartRoomTempTimer == true) {
                 HowManySecondsUntilRoomTemp -= Time.deltaTime;
                 if (HowManySecondsUntilRoomTemp < 0) {
-                    CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+                    CurrentTemperature = Temperature.RoomTemp;
                     HowManySecondsUntilRoomTemp = TimerResetValue;
                 }
             }
@@ -2024,13 +2068,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 #endif
 
     //[ContextMenu("Set Up Bounding Box")]
-    public void ContextSetUpBoundingBox() {
+    public void ContextSetUpBoundingBox(bool forceCacheReset = false) {
         Vector3[] transformSaver = new Vector3[] { transform.position, transform.eulerAngles };
 
         transform.position = Vector3.zero;
         transform.eulerAngles = Vector3.zero;
 
-        if (!transform.Find("BoundingBox")) {
+        if (BoundingBox == null) {
             GameObject BoundingBox = new GameObject();
             BoundingBox.transform.parent = gameObject.transform;
             BoundingBox.transform.localPosition = Vector3.zero;
@@ -2038,7 +2082,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.transform.localScale = Vector3.one;
         }
 
-        BoundingBox = transform.Find("BoundingBox").gameObject;
         BoundingBox.transform.localScale = Vector3.one;// make sure to default existing BoundingBox to 1 as well
 
         // This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
@@ -2046,9 +2089,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
         // is not enabled.
         BoundingBox.tag = "Untagged";
-        BoundingBox.layer = 9;// layer 9 - SimObjInvisible
+        BoundingBox.layer = 9; // layer 9 - SimObjInvisible
 
-        Collider[] colliders = transform.GetComponentsInChildren<Collider>();
+        if (!Physics.autoSyncTransforms) {
+            Physics.SyncTransforms();
+        }
+
+        Collider[] colliders = transform.GetComponentsInChildren<Collider>().Where(
+            c => c.enabled && !c.isTrigger
+        ).ToArray();
         MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
 
         // SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -2062,14 +2111,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
         }
 
-        Bounds newBoundingBox = new Bounds();
+        Bounds newBoundingBox = UtilityFunctions.CreateEmptyBounds();
         Vector3 minMeshXZ = colliders[0].bounds.center;
         Vector3 maxMeshXYZ = colliders[0].bounds.center;
 
         // Encapsulate all colliders
         foreach (Collider collider in colliders) {
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.min);
-            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.max);
+            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds);
         }
 
         // Encapsulate all mesh filters (used instead of mesh renderers because you can sample individual vertex ids with the filters)
@@ -2143,6 +2191,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         transform.position = transformSaver[0];
         transform.eulerAngles = transformSaver[1];
 
+        if (forceCacheReset) {
+            this.syncBoundingBoxes(forceCacheReset: true);
+        }
     }
 
 

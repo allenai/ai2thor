@@ -131,6 +131,7 @@ class Event:
 
     def __init__(self, metadata):
         self.metadata = MetadataWrapper(metadata)
+
         self.screen_width = metadata["screenWidth"]
         self.screen_height = metadata["screenHeight"]
 

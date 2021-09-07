@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
-
+using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
@@ -29,24 +29,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float radiansPerSecond,
             bool returnToStartPropIfFailed = false
         ) {
+            bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
             float degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
+
+            Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
+            Action<Transform, Quaternion> setRotFunc = (t, target) => t.rotation = target;
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+
+            if (teleport) {
+                nextRotFunc = (t, target) => target;
+            }
+
             return updateTransformPropertyFixedUpdate(
-                controller,
-                collisionListener,
-                moveTransform,
-                targetRotation,
-                // Get
-                (t) => t.rotation,
-                //  Set
-                (t, target) => t.rotation = target,
-                // Next
-                (t, target) => Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond),
+                controller: controller,
+                collisionListener: collisionListener,
+                moveTransform: moveTransform,
+                target: targetRotation,
+                getProp: getRotFunc,
+                setProp: setRotFunc,
+                nextProp: nextRotFunc,
                 // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
-                (target, current) => target,
+                getDirection: (target, current) => target,
                 // Distance Metric
-                (target, current) => Quaternion.Angle(current, target),
-                fixedDeltaTime,
-                returnToStartPropIfFailed
+                distanceMetric: (target, current) => Quaternion.Angle(current, target),
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStartPropIfFailed: returnToStartPropIfFailed,
+                epsilon: 1e-3
             );
         }
 
@@ -60,35 +69,131 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStartPropIfFailed = false,
             bool localPosition = false
         ) {
+            bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
-                    controller,
-                    collisionListener,
-                    moveTransform,
-                    targetPosition,
-                    get,
-                    set,
-                    next,
-                    (target, current) => (target - current).normalized,
-                    (target, current) => Vector3.SqrMagnitude(target - current),
-                    fixedDeltaTime,
-                    returnToStartPropIfFailed
+                    controller: controller,
+                    collisionListener: collisionListener,
+                    moveTransform: moveTransform,
+                    target: targetPosition,
+                    getProp: get,
+                    setProp: set,
+                    nextProp: next,
+                    getDirection: (target, current) => (target - current).normalized,
+                    distanceMetric: (target, current) => Vector3.SqrMagnitude(target - current),
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStartPropIfFailed: returnToStartPropIfFailed,
+                    epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
             );
 
+            Func<Transform, Vector3> getPosFunc;
+            Action<Transform, Vector3> setPosFunc;
+            Func<Transform, Vector3, Vector3> nextPosFunc;
             if (localPosition) {
-                return moveClosure(
-                    (t) => t.localPosition,
-                    (t, pos) => t.localPosition = pos,
-                    (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime
-                );
+                getPosFunc = (t) => t.localPosition;
+                setPosFunc = (t, pos) => t.localPosition = pos;
+                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
             } else {
-
-                return moveClosure(
-                    (t) => t.position,
-                    (t, pos) => t.position = pos,
-                    (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime
-                );
+                getPosFunc = (t) => t.position;
+                setPosFunc = (t, pos) => t.position = pos;
+                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
             }
+
+            if (teleport) {
+                nextPosFunc = (t, direction) => targetPosition;
+            }
+
+            return moveClosure(
+                getPosFunc,
+                setPosFunc,
+                nextPosFunc
+            );
+        }
+
+        protected static IEnumerator finallyDestroyGameObjects(
+            List<GameObject> gameObjectsToDestroy,
+            IEnumerator steps
+        ) {
+            while (steps.MoveNext()) {
+                yield return steps.Current;
+            }
+
+            foreach (GameObject go in gameObjectsToDestroy) {
+                GameObject.Destroy(go);
+            }
+        }
+
+        public static IEnumerator rotateAroundPoint(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform updateTransform,
+            Vector3 rotatePoint,
+            Quaternion targetRotation,
+            float fixedDeltaTime,
+            float degreesPerSecond,
+            bool returnToStartPropIfFailed = false
+        ) {
+            bool teleport = (degreesPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
+            // To figure out how to translate/rotate the undateTransform
+            // we just create two proxy game object that represent the
+            // transforms of objects sitting at the updateTransform
+            // position (fulcrum) and the rotatePoint (wristProxy). The
+            // wristProxy transform is a child of the fulcrum transform.
+            // As we rotate the fulcrum transform we thus figure out how the
+            // updateTransform should be updated by looking at how the
+            // wristProxy transform has changed.
+
+            GameObject fulcrum = new GameObject();
+            fulcrum.transform.position = rotatePoint;
+            fulcrum.transform.rotation = updateTransform.rotation;
+            targetRotation = fulcrum.transform.rotation * targetRotation;
+
+            GameObject wristProxy = new GameObject();
+            wristProxy.transform.parent = fulcrum.transform;
+            wristProxy.transform.position = updateTransform.position;
+            wristProxy.transform.rotation = updateTransform.rotation;
+
+            List<GameObject> tmpObjects = new List<GameObject>();
+            tmpObjects.Add(fulcrum);
+            tmpObjects.Add(wristProxy);
+
+            Func<Quaternion, Quaternion, Quaternion> directionFunc = (target, current) => target;
+            Func<Quaternion, Quaternion, float> distanceFunc = (target, current) => Quaternion.Angle(current, target);
+
+            Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
+            Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
+                t.rotation = newRotation;
+                updateTransform.position = wristProxy.transform.position;
+                updateTransform.rotation = newRotation;
+            };
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
+                return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+            };
+
+            if (teleport) {
+                nextRotFunc = (t, direction) => targetRotation;
+            }
+
+            return finallyDestroyGameObjects(
+                gameObjectsToDestroy: tmpObjects,
+                steps: updateTransformPropertyFixedUpdate(
+                    controller: controller,
+                    collisionListener: collisionListener,
+                    moveTransform: fulcrum.transform,
+                    target: targetRotation,
+                    getProp: getRotFunc,
+                    setProp: setRotFunc,
+                    nextProp: nextRotFunc,
+                    getDirection: directionFunc,
+                    distanceMetric: distanceFunc,
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStartPropIfFailed: returnToStartPropIfFailed,
+                    epsilon: 1e-3
+                )
+            );
+
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
@@ -99,13 +204,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<Transform, T> getProp,
             Action<Transform, T> setProp,
             Func<Transform, T, T> nextProp,
-
             // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
             Func<T, T, T> getDirection,
             Func<T, T, float> distanceMetric,
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
-            double epsilon = 1e-3
+            double epsilon
         ) {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
@@ -122,7 +226,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             T directionToTarget = getDirection(target, currentProperty);
 
-            while (currentDistance > epsilon && collisionListener.StaticCollisions().Count == 0) {
+            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
+            while (!collisionListener.ShouldHalt()) {
                 previousProperty = getProp(moveTransform);
 
                 T next = nextProp(moveTransform, directionToTarget);
@@ -132,8 +237,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if nextDistance is too large then it will overshoot, in this case we snap to the target
                 // this can happen if the speed it set high
                 if (
-                    nextDistance <= epsilon ||
-                    nextDistance > distanceMetric(target, getProp(moveTransform))
+                    nextDistance <= epsilon
+                    || nextDistance > distanceMetric(target, getProp(moveTransform))
                 ) {
                     setProp(moveTransform, target);
                 } else {
@@ -144,12 +249,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ikSolver.ManipulateArm();
 
                 if (!Physics.autoSimulation) {
-                    Physics.Simulate(fixedDeltaTime);
+                    if (fixedDeltaTime == 0f) {
+                        Physics.SyncTransforms();
+                    } else {
+                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                    }
                 }
 
                 yield return new WaitForFixedUpdate();
 
                 currentDistance = distanceMetric(target, getProp(moveTransform));
+
+                if (currentDistance <= epsilon) {
+                    // This logic is a bit unintuitive but it ensures we run the
+                    // `setProp(moveTransform, target);` line above once we get within epsilon
+                    if (haveGottenWithinEpsilon) {
+                        break;
+                    } else {
+                        haveGottenWithinEpsilon = true;
+                    }
+                }
             }
 
             T resetProp = previousProperty;
@@ -168,7 +287,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // we call this one more time in the event that the arm collided and was reset
             ikSolver.ManipulateArm();
             if (!Physics.autoSimulation) {
-                Physics.Simulate(fixedDeltaTime);
+                if (fixedDeltaTime == 0f) {
+                    Physics.SyncTransforms();
+                } else {
+                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                }
             }
         }
 
@@ -184,7 +307,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string debugMessage = "";
             IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-            var staticCollisions = collisionListener.StaticCollisions();
+            var staticCollisions = collisionListener.StaticCollisions().ToList();
 
             if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
