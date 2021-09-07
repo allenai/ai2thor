@@ -92,7 +92,7 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void ClearAllAddressablesCache(Action completedAction = null)
     {
-        Debug.Log("Clearing Addressables...");
+        Debug.Log("MCS: Clearing Addressables...");
         StartCoroutine(ClearAllCoroutine(completedAction));
     }
 
@@ -117,31 +117,47 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     public void CacheAllAddressables(Action completedAction = null)
     {
-        Debug.Log("Caching Addressables...");
+        Debug.Log("MCS: Caching Addressables...");
         StartCoroutine(DownloadAllCoroutine(completedAction));
     }
 
     private IEnumerator DownloadAllCoroutine(Action completedAction = null)
     {
         yield return Addressables.InitializeAsync();
-        var handle = CacheAllAddressablesHandle().WaitForCompletion();
-        yield return handle;
+        IList<IAssetBundleResource> result = CacheAllAddressablesFromBundleResource();
+        yield return result;
 
         if (cachingAddressablesBuild)
         {
-            Debug.Log("Addressables Cached!");
+            Debug.Log("MCS: Addressables Cached!");
             MCSUtil.CloseApplication();
         }
 
         completedAction?.Invoke();
     }
 
-    private AsyncOperationHandle<IList<IAssetBundleResource>> CacheAllAddressablesHandle()
+    private IList<IAssetBundleResource> CacheAllAddressablesFromBundleResource()
     {
-        var locs = GetAllAddressablesLocations();
-        foreach (var location in locs)
-            Debug.Log("Will download : " + location.InternalId);
-        return Addressables.LoadAssetsAsync<IAssetBundleResource>(locs, null, true);
+        List<IResourceLocation> locs = GetAllAddressablesLocations();
+        foreach (IResourceLocation loc in locs) {
+            Debug.Log("MCS: Will download Addressable Asset Bundle Resource Location " + loc.InternalId);
+            // Try loading addressables from one Resource Location at a time, and only return if it works (doesn't error).
+            List<IResourceLocation> oneLoc = new List<IResourceLocation>() { loc };
+            try {
+                AsyncOperationHandle<IList<IAssetBundleResource>> handle = Addressables.LoadAssetsAsync<IAssetBundleResource>(oneLoc, null, true);
+                IList<IAssetBundleResource> result = handle.WaitForCompletion();
+                if(handle.Status == AsyncOperationStatus.Succeeded) {
+                    Debug.Log("MCS: Return from " + loc.InternalId);
+                    return result;
+                }
+            }
+            // Please note: sometimes the handle will fail but catch its own exception (ignoring this catch block).
+            // Use the properties on the handle itself, like Status and OperationException, to investigate.
+            catch (Exception e) {
+                Debug.Log("MCS: Addressable Asset Bundle Resource Location " + loc.InternalId + " failed to load");
+            }
+        }
+        throw new Exception("MCS: Each Addressable Asset Bundle Resource Location failed to load!");
     }
 
     private List<IResourceLocation> GetAllAddressablesLocations()

@@ -32,6 +32,10 @@ CACI employees and subcontractors: Checkout the [MCS private GitHub repository](
 
 Non-CACI employees: Please continue with the rest of these instructions.
 
+### Logging
+
+To enable debug logging in your Unity builds, open the Player Settings (Edit->Project Settings, then click on the Player tab), then add ENABLE_DEBUG_LOGS to "Scripting Define Symbols" under "Other Settings" (please note that each symbol in the list should be separated by a semicolon), and hit ENTER to ensure that Unity saved your change.
+
 ## Run
 
 If you want to run an MCS Scene in the Unity Editor:
