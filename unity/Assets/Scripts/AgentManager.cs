@@ -634,7 +634,7 @@ public class AgentManager : MonoBehaviour {
         UpdateAgentColor(agent, agentColors[this.agents.Count]);
         
 #if PLATFORM_CLOUD_RENDERING
-        clone.m_Camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.targetTexture.width, this.primaryAgent.m_Camera.targetTexture.height);
+        agent.m_Camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.targetTexture.width, this.primaryAgent.m_Camera.targetTexture.height);
 #endif 
         agent.ProcessControlCommand(action.dynamicServerAction);
     }
