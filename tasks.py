@@ -114,6 +114,15 @@ def _unity_path():
     return unity_path
 
 
+def _import_assets(unity_path, build_name, build_target):
+    project_path = os.path.join(os.getcwd(), unity_path)
+    command = (
+        "%s -quit -batchmode -logFile %s/%s-import.log -projectpath %s -buildTarget %s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, build_target)
+    )
+
+    subprocess.check_call(command, shell=True)
+
 def _build(unity_path, arch, build_dir, build_name, env={}):
     import yaml
 
@@ -1070,7 +1079,7 @@ def ci_build(context):
 
 
 @task
-def build_cloudrendering(context):
+def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
@@ -1080,15 +1089,22 @@ def build_cloudrendering(context):
     commit_id = git_commit_id()
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
+    print("build name %s" % build_name)
+    shutil.rmtree("unity/builds/%s" % build_name, ignore_errors=True)
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
+    generate_msgpack_resolver(context)
+    # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
+    # the clang compile
+    _import_assets(unity_path, build_name, arch)
     _build(unity_path, arch, build_dir, build_name, {})
-    archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)
-    build_pip_commit(context)
-    push_pip_commit(context)
-    generate_pypi_index(context)
+    if push_build:
+        archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)
+        build_pip_commit(context)
+        push_pip_commit(context)
+        generate_pypi_index(context)
 
 
 @task
