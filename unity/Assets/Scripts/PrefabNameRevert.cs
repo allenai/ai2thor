@@ -1,48 +1,51 @@
-﻿using UnityEngine;
-using UnityEditor;
-using System.Collections.Generic;
- 
-public class PrefabNameRevert
-{
-    [MenuItem("Prefab/RevertName")]
-    static void RevertPrefabNames()
+﻿#if UNITY_EDITOR
+    using UnityEngine;
+    using UnityEditor;
+    using System.Collections.Generic;
+    
+    public class PrefabNameRevert
     {
-        RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.OnlyUserModifiable));
-    }
-
-    public static string GetPrefabAssetName(GameObject prefab)
-    {
-            var thing = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
-            return thing.name;
-    }
- 
-    public static void RemoveNameModification(UnityEngine.Object aObj)
-    {
-        var mods = new List<PropertyModification>(PrefabUtility.GetPropertyModifications(aObj));
-        for (int i = 0; i < mods.Count; i++)
+        [MenuItem("Prefab/RevertName")]
+        static void RevertPrefabNames()
         {
-            if (mods[i].propertyPath == "m_Name")
-                mods.RemoveAt(i);
+            RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.OnlyUserModifiable));
         }
-        PrefabUtility.SetPropertyModifications(aObj, mods.ToArray());
-    }
-    public static void RevertAllNames(Object[] aObjects)
-    {
-        var items = new List<Object>();
-        foreach (var item in aObjects)
+
+        public static string GetPrefabAssetName(GameObject prefab)
         {
-            var prefab = PrefabUtility.GetCorrespondingObjectFromOriginalSource(item);
-            if (prefab != null)
+                var thing = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
+                return thing.name;
+        }
+    
+        public static void RemoveNameModification(UnityEngine.Object aObj)
+        {
+            var mods = new List<PropertyModification>(PrefabUtility.GetPropertyModifications(aObj));
+            for (int i = 0; i < mods.Count; i++)
             {
-                Undo.RecordObject(item, "Revert perfab name");
-                item.name = prefab.name;
-                items.Add(item);
+                if (mods[i].propertyPath == "m_Name")
+                    mods.RemoveAt(i);
+            }
+            PrefabUtility.SetPropertyModifications(aObj, mods.ToArray());
+        }
+        public static void RevertAllNames(Object[] aObjects)
+        {
+            var items = new List<Object>();
+            foreach (var item in aObjects)
+            {
+                var prefab = PrefabUtility.GetCorrespondingObjectFromOriginalSource(item);
+                if (prefab != null)
+                {
+                    Undo.RecordObject(item, "Revert perfab name");
+                    item.name = prefab.name;
+                    items.Add(item);
+                }
+            }
+            Undo.FlushUndoRecordObjects();
+            foreach (var item in items)
+            {
+                RemoveNameModification(item);
             }
         }
-        Undo.FlushUndoRecordObjects();
-        foreach (var item in items)
-        {
-            RemoveNameModification(item);
-        }
+
     }
-}
+#endif
