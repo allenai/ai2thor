@@ -56,7 +56,7 @@ public class ProceduralRoomEditor : MonoBehaviour
                 var simobjs = root.transform.GetComponentsInChildren<SimObjPhysics>();
                 
                 this.namedSimObjects = simobjs
-                    .Where(s => s.GetComponentInParent<SimObjPhysics>() == null)
+                    .Where(s => s.transform.parent.GetComponentInParent<SimObjPhysics>() == null)
                     .GroupBy(s => s.Type)
                     .SelectMany(objsOfType => objsOfType.Select((simObj, index) => new NamedSimObj {
                         assetId = simObj.gameObject.name.Split('(')[0].TrimEnd(),
