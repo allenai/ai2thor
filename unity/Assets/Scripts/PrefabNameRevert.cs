@@ -10,7 +10,7 @@ public class PrefabNameRevert
         RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.OnlyUserModifiable));
     }
 
-    static string GetPrefabAssetName(GameObject prefab)
+    public static string GetPrefabAssetName(GameObject prefab)
     {
             var thing = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
             return thing.name;
