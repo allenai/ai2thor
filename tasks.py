@@ -1729,16 +1729,27 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 @task
 def benchmark(
     ctx,
-    screen_width=600,
-    screen_height=600,
+    width=600,
+    height=600,
     editor_mode=False,
     out="benchmark.json",
     verbose=False,
     local_build=False,
+    number_samples=100,
+    gridSize=0.25,
+    scenes=None,
+    house_json_path=None,
+    procedural=False,
+    teleport_random_before_actions=False,
     commit_id=ai2thor.build.COMMIT_ID,
 ):
     import ai2thor.controller
     import random
+    import platform
+    from pprint import pprint
+
+    import os
+    curr = os.path.dirname(os.path.abspath(__file__))
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
     rotate_actions = ["RotateRight", "RotateLeft"]
@@ -1766,6 +1777,57 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
+    if house_json_path:
+        procedural = True
+
+    def telerport_to_random_reachable(env):
+
+        if house_json_path:
+            print(" path {}/{}".format(curr, house_json_path))
+            with open(house_json_path, "r") as f:
+                house = json.load(f)
+                dict(
+                    action="CreateHouseFromJson",
+                    house=house
+                )
+
+
+        # evt = env.step(
+        #     dict(
+        #         action="TeleportFull",
+        #         x=3,
+        #         y=1,
+        #         z=3,
+        #         rotation=dict(x=0, y=90, z=0),
+        #         horizon=0.0,
+        #         standing=True
+        #     )
+        # )
+
+        evt = env.step(action="GetReachablePositions")
+
+        # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+
+        print("-- GetReachablePositionsReturn: {}, message: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+
+        reachable_pos = evt.metadata["actionReturn"]
+
+        # print(evt.metadata["actionReturn"])
+        pos = random.choice(reachable_pos)
+        rot = random.choice([0, 90, 180, 270])
+
+        evt = env.step(
+            dict(
+                action="TeleportFull",
+                x=pos['x'],
+                y=pos['y'],
+                z=pos['z'],
+                rotation=dict(x=0, y=rot, z=0),
+                horizon=0.0,
+                standing=True
+            )
+        )
+
     args = {}
     if editor_mode:
         args["port"] = 8200
@@ -1775,8 +1837,13 @@ def benchmark(
     else:
         args["commit_id"] = commit_id
 
+    args["procedural"] = procedural
+    args['width'] = width
+    args['height'] = height
+    args['gridSize'] = gridSize
+
     env = ai2thor.controller.Controller(
-        width=screen_width, height=screen_height, **args
+        **args
     )
 
     # Kitchens:       FloorPlan1 - FloorPlan30
@@ -1785,24 +1852,34 @@ def benchmark(
     # Bathrooms:      FloorPLan401 - FloorPlan430
 
     room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430)]
+    if scenes:
+        scene_list = scenes.split(",")
+    else:
+        scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range in room_ranges]
+    #if scenes:
 
-    benchmark_map = {"scenes": {}}
+    # inv_args = locals()
+    # del inv_args['ctx']
+    # inv_args['platform'] =platform.system()
+
+    benchmark_map = {"scenes": {}, "params": {**args, "platform": platform.system()}}
     total_average_ft = 0
     scene_count = 0
     print("Start loop")
-    for room_range in room_ranges:
-        for i in range(room_range[0], room_range[1]):
-            scene = "FloorPlan{}_physics".format(i)
+    for scene in scene_list:
+            # scene = "FloorPlan{}_physics".format(i)
             scene_benchmark = {}
             if verbose:
                 print("Loading scene {}".format(scene))
-            # env.reset(scene)
-            env.step(dict(action="Initialize", gridSize=0.25))
+            env.reset(scene)
+
+            # env.step(dict(action="Initialize", gridSize=0.25))
 
             if verbose:
                 print("------ {}".format(scene))
 
-            sample_number = 100
+            # initial_teleport(env)
+            sample_number = number_samples
             action_tuples = [
                 ("move", move_actions, sample_number),
                 ("rotate", rotate_actions, sample_number),
@@ -1811,6 +1888,7 @@ def benchmark(
             ]
             scene_average_fr = 0
             for action_name, actions, n in action_tuples:
+                telerport_to_random_reachable(env)
                 ft = benchmark_actions(env, action_name, actions, n)
                 scene_benchmark[action_name] = ft
                 scene_average_fr += ft
