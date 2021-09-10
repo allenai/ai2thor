@@ -4533,8 +4533,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public static VisibilityCheck operator |(VisibilityCheck a, VisibilityCheck b) {
             VisibilityCheck c = new VisibilityCheck();
-            c.interactable = a.interactable | b.interactable;
-            c.visible = a.visible | b.visible;
+            c.interactable = a.interactable || b.interactable;
+            c.visible = a.visible || b.visible;
             return c;
         }
     }
