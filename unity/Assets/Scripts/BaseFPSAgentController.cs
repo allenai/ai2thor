@@ -2031,7 +2031,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        protected SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
+        protected SimObjPhysics getTargetObjectFromId(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
@@ -2039,7 +2039,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             SimObjPhysics sop = getSimObjectFromId(objectId);
             if (sop == null) {
-                throw new NullReferenceException("Object with id'" + objectId + "' is null");
+                throw new NullReferenceException($"Object with id '{objectId}' is null");
             }
             
             SimObjPhysics[] interactable;
@@ -2059,7 +2059,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
+        protected SimObjPhysics getTargetObjectFromId(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
@@ -2883,8 +2883,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs, out SimObjPhysics[] interactable) {
-            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
-            List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
+            HashSet<SimObjPhysics> currentlyVisibleItems = new HashSet<SimObjPhysics>();
+            HashSet<SimObjPhysics> interactableItems = new HashSet<SimObjPhysics>();
 
 #if UNITY_EDITOR
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics) {
@@ -3008,10 +3008,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             updateAllAgentCollidersForVisibilityCheck(true);
 
             // populate array of visible items in order by distance
-            interactableItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            interactable = interactableItems.ToArray();
-            return currentlyVisibleItems.ToArray();
+            List<SimObjPhysics> currentlyVisibleItemsToList = currentlyVisibleItems.ToList();
+            List<SimObjPhysics> interactableItemsToList = interactableItems.ToList();
+
+            interactableItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            currentlyVisibleItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            
+            interactable = interactableItemsToList.ToArray();
+            return currentlyVisibleItemsToList.ToArray();
         }
 
         // check if the visibility point on a sim object, sop, is within the viewport
@@ -3613,20 +3617,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Invalid object type '" + objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
-        }
-
-        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceVisible = false) {
-            SimObjPhysics sop = getSimObjectFromId(objectId);
-            if (sop == null) {
-                errorMessage = "Object with id '" + objectId + "' is null";
-                return null;
-            }
-
-            if (forceVisible || IsInteractable(sop)) {
-                return sop;
-            }
-
-            return null;
         }
 
         protected SimObjPhysics getSimObjectFromId(string objectId) {
