@@ -36,9 +36,6 @@ public class FK_IK_Solver : MonoBehaviour {
             IKPole.parent.position = IKTarget.position;
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
 
-            // OLD
-            // if ((IKTarget.position - armShoulder.position).magnitude <= bone2Length + bone3Length)
-            // NEW
             // Check if manipulator location is reachable by arm, with 1e-5 bias towards hyperextension when comparing values, to account for rounding errors
             if ((IKTarget.position - armShoulder.position).magnitude + 1e-5 < bone2Length + bone3Length) {
                 // Define variables to optimize logic
@@ -69,16 +66,6 @@ public class FK_IK_Solver : MonoBehaviour {
                 overlapParameter = FindParameter(p3x, p3y, p3z, overlapA, overlapB, overlapC, overlapD);
                 hintProjection = new Vector3(p3x + overlapA * overlapParameter, p3y + overlapB * overlapParameter, p3z + overlapC * overlapParameter);
                 elbowPosition = overlapCenter + overlapRadius * (hintProjection - overlapCenter).normalized;
-                // if (float.IsNaN(elbowPosition.x) || float.IsNaN(elbowPosition.y) || float.IsNaN(elbowPosition.z))
-                //{
-                //    Debug.Log("Somehow, Unity thinks " + (IKTarget.position - armShoulder.position).sqrMagnitude + " ≈ " + Mathf.Pow(bone2Length + bone3Length, 2) + " is " + Mathf.Approximately((IKTarget.position - armShoulder.position).sqrMagnitude, Mathf.Pow(bone2Length + bone3Length, 2)));
-                //    Debug.Log(overlapCenter + " plus " + overlapRadius + " times " + (hintProjection - overlapCenter).normalized);
-                //    Debug.Log("overlapRadius is " + overlapRadius + " because " + (Mathf.Pow(bone2Length, 2) - (overlapCenter - armShoulder.position).sqrMagnitude) + " cannot be square-rooted, maybe...");
-                //    Debug.Log("Okay, now " + (Mathf.Pow(bone2Length, 2) - (overlapCenter - armShoulder.position).sqrMagnitude) + " cannot be square-rooted because " + Mathf.Pow(bone2Length, 2) + " minus " + (overlapCenter - armShoulder.position).sqrMagnitude + " is negative.");
-                //    Debug.Log("The reason for this is because the hypotenuse (shoulder-to-elbow-length), " + bone2Length + ", is shorter than the adjacent (shoulder-to-overlap-center distance), " + (overlapCenter - armShoulder.position).magnitude);
-                //    Debug.Log("This doesn't break the hyperextension rules (I think) because " + (bone2Length + bone3Length) + " is still greather than " + (IKTarget.position - armShoulder.position).magnitude);
-                //    Debug.Log("Overlap-center minus elbow-position: (" + (overlapCenter.x - armElbow.position.x) + ", " + (overlapCenter.y - armElbow.position.y) + ", " + (overlapCenter.z - armElbow.position.z) + ")");
-                //}
 
                 // Move joint transforms to calculated positions
                 armElbow.position = elbowPosition;
