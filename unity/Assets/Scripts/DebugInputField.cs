@@ -378,7 +378,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var armJointToRotate = GameObject.Find("IK_pole_manipulator");
                         armJointToRotate.transform.Rotate(0f, 0f, 90f);
-
                         var armBase = GameObject.Find("robot_arm_rig_gripper");
                         armBase.transform.Translate(0f, 0.27f, 0f);
 
@@ -386,6 +385,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             new Dictionary<string, object>{
                                 {"action", "LookDown"}
                         });
+
+                        break;
+                    }
+
+                case "inits": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        //action["agentControllerType"] = "stretch";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                         break;
                     }

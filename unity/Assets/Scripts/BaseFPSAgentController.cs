@@ -67,9 +67,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TallVisCap;
         }
 
+        public GameObject IKArm {
+            get => this.baseAgentComponent.IKArm;
+        }
+
         public GameObject BotVisCap {
             get => this.baseAgentComponent.BotVisCap;
+        }
 
+        public GameObject StretchVisCap {
+            get => this.baseAgentComponent.StretchVisCap;
+        }
+
+        public GameObject StretchArm {
+            get => this.baseAgentComponent.StretchArm;
         }
 
         public GameObject DroneVisCap {
@@ -82,10 +93,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject DroneBasket {
             get => this.baseAgentComponent.DroneBasket;
-        }
-
-        public GameObject IKArm {
-            get => this.baseAgentComponent.IKArm;
         }
         
         // reference to prefab for activiting the cracked camera effect via CameraCrack()
@@ -219,7 +226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             set {
                 // first default all Vis capsules of all modes to not enabled
                 HideAllAgentRenderers();
-                Debug.Log("making agent ivisible ****" + value);
+                Debug.Log("making agent invisible ****" + value);
 
                 // The VisibilityCapsule will be set to either Tall or Bot
                 // from the SetAgentMode call in BaseFPSAgentController's Initialize()
@@ -315,6 +322,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Arm
         protected IK_Robot_Arm_Controller Arm;
+        protected Stretch_Robot_Arm_Controller SArm;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         // use as reference to the PhysicsSceneManager object
@@ -347,6 +355,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     r.enabled = false;
                 }
             }
+
+            foreach (Renderer r in StretchVisCap.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    r.enabled = false;
+                }
+            }
         }
 
         public void actionFinishedEmit(bool success, object actionReturn = null) {
@@ -372,8 +386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");
-            Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"lastAction: '{this.lastAction}'");            Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -557,12 +570,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (action.agentMode.ToLower() == "default" ||
                action.agentMode.ToLower() == "locobot" ||
                action.agentMode.ToLower() == "drone" ||
-               action.agentMode.ToLower() == "arm"
+               action.agentMode.ToLower() == "arm" ||
+               action.agentMode.ToLower() == "stretch"
                ) {
-                // set agent mode to Default, Bot or Drone accordingly
+                // set agent mode to Default, Bot, Drone, or Stretch accordingly
                 SetAgentMode(action.agentMode);
             } else {
-                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone' or 'hand'";
+                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone' or 'arm' or 'stretch'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -765,7 +779,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // drone also needs to toggle on the drone basket
                 DroneBasket.SetActive(true);
+            } else if (whichMode == "stretch") {
+                fpcc.SwitchRenderersToHide(whichMode);
+
+                VisibilityCapsule = StretchVisCap;
+                m_CharacterController.center = new Vector3(0, -0.225f, 0);
+                m_CharacterController.radius = 0.17f;
+                m_CharacterController.height = 1.4f;
+
+                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+                cc.center = m_CharacterController.center;
+                cc.radius = m_CharacterController.radius;
+                cc.height = m_CharacterController.height;
+
+                m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+                m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+
+                // camera position
+                m_Camera.transform.localPosition = new Vector3(0, 0.35f, 0.17f);
+
+                // camera FOV
+                m_Camera.fieldOfView = 60f;
+
+                // set camera stand/crouch local positions for Tall mode
+                standingLocalCameraPosition = m_Camera.transform.localPosition;
+                crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+                // limit camera from looking too far down
+                this.maxDownwardLookAngle = 90f;
+                this.maxUpwardLookAngle = 25f;
+
+                // enable stretch arm component
+                if (whichMode == "stretch") {
+                    Debug.Log("initializing arm");
+                    StretchArm.SetActive(true);
+                    SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                    var armTarget = SArm.transform.Find("stretch_robot_pos_rot_manipulator");
+                    Vector3 pos = armTarget.transform.localPosition;
+                    pos.z = 0.0f; // pulls the arm in to be fully contracted
+                    armTarget.transform.localPosition = pos;
+                    var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
+                    Debug.Log("running manipulate stretch arm");
+                    StretchSolver.ManipulateStretchArm();
+                }
             }
+
         }
 
         public IEnumerator checkInitializeAgentLocationAction() {
