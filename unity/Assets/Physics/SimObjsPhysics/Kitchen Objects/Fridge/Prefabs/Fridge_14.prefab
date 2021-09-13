@@ -219,6 +219,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1051384680772700
 GameObject:
   m_ObjectHideFlags: 0
@@ -416,6 +417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1080259599147078
 GameObject:
   m_ObjectHideFlags: 0
@@ -625,6 +627,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1142668475029950
 GameObject:
   m_ObjectHideFlags: 0
@@ -773,7 +776,7 @@ Transform:
   m_GameObject: {fileID: 1254149251887060}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_LocalScale: {x: 0.7328769, y: 0.8375736, z: 0.8375736}
   m_Children:
   - {fileID: 4486892171814244}
   - {fileID: 4739793351708360}
@@ -1252,6 +1255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1442879872891090
 GameObject:
   m_ObjectHideFlags: 0
@@ -1770,6 +1774,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1715268850393938
 GameObject:
   m_ObjectHideFlags: 0
@@ -2340,6 +2345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1923947237916310}
+  occupied: 0
 --- !u!1 &1901851071116484
 GameObject:
   m_ObjectHideFlags: 0
@@ -2428,7 +2434,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1923947237916310}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.534, y: 0, z: -1.554}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4653552959928866}
@@ -2527,8 +2533,8 @@ MonoBehaviour:
   - {fileID: 1048200814993134}
   - {fileID: 1134256230979386}
   - {fileID: 1667524608322624}
-  debugIsVisible: 0
-  debugIsInteractable: 0
+  isVisible: 0
+  isInteractable: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -2545,21 +2551,7 @@ MonoBehaviour:
   numFloorHit: 0
   numStructureHit: 0
   lastVelocity: 0
-  IsReceptacle: 0
-  IsPickupable: 0
-  IsMoveable: 0
-  isStatic: 0
-  IsToggleable: 0
-  IsOpenable: 0
-  IsBreakable: 0
-  IsFillable: 0
-  IsDirtyable: 0
-  IsCookable: 0
-  IsSliceable: 0
-  isHeatSource: 0
-  isColdSource: 0
   ContainedObjectReferences: []
-  CurrentlyContains: []
 --- !u!114 &114366631129697754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2582,12 +2574,13 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  triggerEnabled: 1
-  currentOpenness: 1
+  openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  isCurrentlyResetting: 1
+  canReset: 1
   movementType: 1
+  OpenBoundingBox: {fileID: 3350280064178439475}
+  ClosedBoundingBox: {fileID: 1342450535729476}
 --- !u!1 &1929599158349968
 GameObject:
   m_ObjectHideFlags: 0
@@ -2777,11 +2770,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
-      propertyPath: m_RootOrder
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.009
       objectReference: {fileID: 0}
@@ -2797,11 +2785,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.0000001872535
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -2814,6 +2797,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.0000001872535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
