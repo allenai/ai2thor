@@ -215,6 +215,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var previousProperty = originalProperty;
 
             var arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+#if UNITY_EDITOR
+	    Debug.Log("ContinuousMovement arm ->");
+	    Debug.Log(arm);
+#endif
             var ikSolver = arm.gameObject.GetComponentInChildren<FK_IK_Solver>();
 
             // commenting out the WaitForEndOfFrame here since we shoudn't need 

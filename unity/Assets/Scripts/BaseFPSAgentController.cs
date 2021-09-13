@@ -2047,6 +2047,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // TargetInvocationException is called whenever an action
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
+#if UNITY_EDITOR
+		Debug.Log("Caught target invocation exception");
+		Debug.Log(e);
+		Debug.Log(e.InnerException.Message);
+#endif
                 actionFinished(
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}"
