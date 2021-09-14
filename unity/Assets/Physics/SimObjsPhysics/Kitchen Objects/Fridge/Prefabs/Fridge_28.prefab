@@ -197,7 +197,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4695504278079258
 Transform:
@@ -387,7 +387,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4979782712732036
 Transform:
@@ -937,10 +937,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectID: 
+  objectID: Fridge|-00.31|+00.00|-00.65
   Type: 18
   PrimaryProperty: 1
-  SecondaryProperties: 07000000080000000d000000
+  SecondaryProperties: 0700000008000000
   BoundingBox: {fileID: 1748106103600504}
   VisibilityPoints:
   - {fileID: 4192935770175372}
@@ -988,8 +988,8 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1361873527899766}
   - {fileID: 1980851331911490}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -1006,7 +1006,21 @@ MonoBehaviour:
   numFloorHit: 0
   numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!114 &114214720084617302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1029,13 +1043,12 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  triggerEnabled: 1
+  currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  canReset: 1
+  isCurrentlyResetting: 1
   movementType: 1
-  OpenBoundingBox: {fileID: 3825375935023456136}
-  ClosedBoundingBox: {fileID: 1748106103600504}
 --- !u!1 &1288097437692706
 GameObject:
   m_ObjectHideFlags: 0
@@ -1053,7 +1066,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4195204561565654
 Transform:
@@ -1197,7 +1210,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4436863984594622
 Transform:
@@ -1502,8 +1515,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1361873527899766}
   m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.70710784}
-  m_LocalPosition: {x: -0.02001056, y: 1.1277912, z: 0}
-  m_LocalScale: {x: 0.93048763, y: 0.86145175, z: 0.33017313}
+  m_LocalPosition: {x: -0.02001056, y: 1.2241061, z: 0}
+  m_LocalScale: {x: 0.93048763, y: 0.9350209, z: 0.33017313}
   m_Children: []
   m_Father: {fileID: 4625443465530620}
   m_RootOrder: 0
@@ -1535,7 +1548,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1275617353400528}
-  occupied: 0
 --- !u!1 &1380175359352272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1643,7 +1655,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4411330250964422
 Transform:
@@ -1654,7 +1666,7 @@ Transform:
   m_GameObject: {fileID: 1423823481257632}
   m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.70710784}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8004195, y: 0.8004195, z: 0.8004195}
+  m_LocalScale: {x: 0.8004195, y: 0.86877644, z: 0.8004195}
   m_Children:
   - {fileID: 4465787965911892}
   - {fileID: 4195204561565654}
@@ -2125,7 +2137,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4465787965911892
 Transform:
@@ -2254,7 +2266,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4490039935312266
 Transform:
@@ -2407,7 +2419,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748106103600504}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -2425,8 +2437,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.6338002, y: 1.6510569, z: 1.093302}
-  m_Center: {x: -0.008650392, y: 0.8249863, z: 0}
+  m_Size: {x: 0.6338002, y: 1.7846705, z: 1.093302}
+  m_Center: {x: -0.008650392, y: 0.8917931, z: 0}
 --- !u!1 &1758934832158490
 GameObject:
   m_ObjectHideFlags: 0
@@ -2503,7 +2515,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4672870725271802
 Transform:
@@ -2819,8 +2831,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1980851331911490}
   m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.70710784}
-  m_LocalPosition: {x: -0.02001056, y: 1.314, z: 0}
-  m_LocalScale: {x: 0.93048996, y: 0.86144996, z: 0.33017}
+  m_LocalPosition: {x: -0.02001056, y: 1.4262174, z: 0}
+  m_LocalScale: {x: 0.93048996, y: 0.935019, z: 0.33017}
   m_Children: []
   m_Father: {fileID: 4625443465530620}
   m_RootOrder: 1
@@ -2852,7 +2864,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1275617353400528}
-  occupied: 0
 --- !u!1 &3825375935023456136
 GameObject:
   m_ObjectHideFlags: 0
@@ -2911,6 +2922,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.003
       objectReference: {fileID: 0}
@@ -2926,6 +2942,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.0000001872535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -2938,16 +2959,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.0000001872535
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}

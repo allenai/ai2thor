@@ -66,7 +66,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4783479896722680
 Transform:
@@ -294,7 +294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectID: 
+  objectID: Fridge|-00.32|00.00|+03.60
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 07000000080000000d000000
@@ -348,8 +348,8 @@ MonoBehaviour:
   - {fileID: 1484182060160206}
   - {fileID: 1838177538469688}
   - {fileID: 1616393775586376}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -366,7 +366,21 @@ MonoBehaviour:
   numFloorHit: 0
   numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!114 &114904245255943604
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -389,13 +403,12 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  triggerEnabled: 1
+  currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  canReset: 1
+  isCurrentlyResetting: 1
   movementType: 1
-  OpenBoundingBox: {fileID: 6769937583576390523}
-  ClosedBoundingBox: {fileID: 1727471963560974}
 --- !u!1 &1062418048853084
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,7 +455,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4823652235995044
 Transform:
@@ -678,7 +691,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4471360735117448
 Transform:
@@ -1041,7 +1054,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1056347022811844}
-  occupied: 0
 --- !u!1 &1382460355389002
 GameObject:
   m_ObjectHideFlags: 0
@@ -1300,7 +1312,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4650253996057516
 Transform:
@@ -1448,7 +1460,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1056347022811844}
-  occupied: 0
 --- !u!1 &1504266201438678
 GameObject:
   m_ObjectHideFlags: 0
@@ -1628,7 +1639,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1056347022811844}
-  occupied: 0
 --- !u!1 &1625372370557318
 GameObject:
   m_ObjectHideFlags: 0
@@ -2099,7 +2109,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4889444867893932
 Transform:
@@ -2198,7 +2208,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4375732153264240
 Transform:
@@ -2356,7 +2366,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1056347022811844}
-  occupied: 0
 --- !u!1 &1842525804128212
 GameObject:
   m_ObjectHideFlags: 0
@@ -2850,6 +2859,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.008
       objectReference: {fileID: 0}
@@ -2865,6 +2879,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.0000001872535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -2877,16 +2896,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.0000001872535
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}

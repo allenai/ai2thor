@@ -313,8 +313,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.17486604, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 0.17486604, z: 0.3094965}
+  m_Center: {x: 5.5501855e-16, y: 0, z: 0.24326183}
 --- !u!114 &114735629386398998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -329,7 +329,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1224566405962816}
-  occupied: 0
 --- !u!1 &1070316915242154
 GameObject:
   m_ObjectHideFlags: 0
@@ -623,7 +622,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4388370888518494
 Transform:
@@ -852,7 +851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectID: 
+  objectID: Fridge|-01.76|+00.00|+00.01
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 07000000080000000d000000
@@ -907,8 +906,8 @@ MonoBehaviour:
   - {fileID: 1361769104131878}
   - {fileID: 1945624544270124}
   - {fileID: 1068094737777806}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -925,7 +924,21 @@ MonoBehaviour:
   numFloorHit: 0
   numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!114 &114455024051643658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -948,13 +961,12 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  triggerEnabled: 1
+  currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  canReset: 1
+  isCurrentlyResetting: 1
   movementType: 1
-  OpenBoundingBox: {fileID: 4620784002591036300}
-  ClosedBoundingBox: {fileID: 1231460638992488}
 --- !u!1 &1225251944354934
 GameObject:
   m_ObjectHideFlags: 0
@@ -1075,7 +1087,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4730544340955290
 Transform:
@@ -1322,7 +1334,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4210216736068562
 Transform:
@@ -1453,8 +1465,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.17486604, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 0.17486605, z: 0.63755935}
+  m_Center: {x: 3.895936e-16, y: 0, z: 0.08176396}
 --- !u!114 &114082018595112212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1469,7 +1481,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1224566405962816}
-  occupied: 0
 --- !u!1 &1375598705642968
 GameObject:
   m_ObjectHideFlags: 0
@@ -1982,8 +1993,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.17486604, z: 0.6221798}
-  m_Center: {x: -1.0830947e-15, y: 0.412567, z: -0.18891032}
+  m_Size: {x: 1, y: 0.17486604, z: 0.34317857}
+  m_Center: {x: -2.9689987e-16, y: 0.412567, z: -0.0494095}
 --- !u!114 &114103889184242116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1998,7 +2009,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1224566405962816}
-  occupied: 0
 --- !u!1 &1701856825804044
 GameObject:
   m_ObjectHideFlags: 0
@@ -2045,7 +2055,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4847299740856626
 Transform:
@@ -2323,7 +2333,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 12
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &4930507786606042
 Transform:
@@ -2523,7 +2533,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1224566405962816}
-  occupied: 0
 --- !u!1 &1880708331432360
 GameObject:
   m_ObjectHideFlags: 0
@@ -2687,8 +2696,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.17486604, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 0.17486604, z: 0.55248547}
+  m_Center: {x: 4.759998e-16, y: 0, z: 0.1382076}
 --- !u!114 &114490810609963806
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2703,7 +2712,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1224566405962816}
-  occupied: 0
 --- !u!1 &1965397069624578
 GameObject:
   m_ObjectHideFlags: 0
@@ -2822,6 +2830,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.2375
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.007
       objectReference: {fileID: 0}
@@ -2834,6 +2852,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 0.022
+      objectReference: {fileID: 0}
+    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.0000001872535
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
@@ -2852,16 +2875,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.0000001872535
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
@@ -2874,11 +2887,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5376431395650311469, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.2375
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
