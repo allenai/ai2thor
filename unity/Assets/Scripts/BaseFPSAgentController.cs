@@ -4361,10 +4361,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var metadata = new Dictionary<string, Dictionary<string, object>>();
             foreach (GameObject p in assetDb.prefabs) {
-                if (p.GetComponent<SimObjPhysics>() == null) {
-                    continue;
-                }
-
                 var simObj = p.GetComponent<SimObjPhysics>();
                 var bb = simObj.AxisAlignedBoundingBox;
 
