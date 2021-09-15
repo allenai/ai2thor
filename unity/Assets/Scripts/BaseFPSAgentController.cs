@@ -320,7 +320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 		}
 #endif
 
-        // Arm
+        // Arms
         protected IK_Robot_Arm_Controller Arm;
         protected Stretch_Robot_Arm_Controller SArm;
 
@@ -811,7 +811,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // enable stretch arm component
                 if (whichMode == "stretch") {
-                    Debug.Log("initializing arm");
+                    Debug.Log("initializing stretch arm");
                     StretchArm.SetActive(true);
                     SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
                     var armTarget = SArm.transform.Find("stretch_robot_pos_rot_manipulator");
@@ -1898,8 +1898,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: remove from base.
             // ARM
-            if (Arm != null || SArm != null) {
+            if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
+            }
+            else if (SArm != null) {
+                metaMessage.arm = SArm.GenerateMetadata();
             }
 
             // EXTRAS
@@ -2599,7 +2602,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
                 // or for any objects held by the arm
-                if ((Arm != null || SArm != null) && Arm.gameObject.activeSelf) {
+                // Standard IK arm
+                if (Arm != null && Arm.gameObject.activeSelf) {
                     if (this.IsVisible) {
                         foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
                             if (!c.isTrigger) {
@@ -2608,6 +2612,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     } else {
                         foreach (HashSet<Collider> hsc in Arm.heldObjects.Values) {
+                            foreach (Collider c in hsc) {
+                                collidersToNotDisable.Add(c);
+                            }
+                        }
+                    }
+                }
+
+                // Stretch arm
+                else if (SArm != null && SArm.gameObject.activeSelf) {
+                    if (this.IsVisible) {
+                        foreach (Collider c in SArm.gameObject.GetComponentsInChildren<Collider>()) {
+                            if (!c.isTrigger) {
+                                collidersToNotDisable.Add(c);
+                            }
+                        }
+                    } else {
+                        foreach (HashSet<Collider> hsc in SArm.heldObjects.Values) {
                             foreach (Collider c in hsc) {
                                 collidersToNotDisable.Add(c);
                             }
@@ -2987,8 +3008,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // We have to explicitly add the items held by the arm as their
             // rigidbodies are set to not detect collisions
-            if ((Arm != null || SArm != null) && Arm.gameObject.activeSelf) {
+            if (Arm != null && Arm.gameObject.activeSelf) {
                 foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
+                    sopAndIncInvisibleTuples.Add((sop, false));
+                }
+            }
+            else if (SArm != null && SArm.gameObject.activeSelf) {
+                foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
             }
@@ -3067,7 +3093,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 mask = (1 << 8) | (1 << 10);
             }
 
-            bool isSopHeldByArm = (Arm != null || SArm != null) && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
+            bool isSopHeldByArm = ( Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop) ) ||
+                                  ( SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop) );
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -3075,7 +3102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                     ) {
                         result = true;
                         sop.debugIsInteractable = true;
@@ -3127,7 +3154,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             foreach (RaycastHit h in hits) {
                                 if (
                                     h.transform == sop.transform
-                                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                    || (Arm != null && isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                    || (SArm != null && isSopHeldByArm && SArm.heldObjects[sop].Contains(hit.collider))
                                 ) {
                                     // found the object we are looking for, great!
                                     result = true;
