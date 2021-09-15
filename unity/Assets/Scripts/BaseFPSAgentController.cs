@@ -1898,7 +1898,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: remove from base.
             // ARM
-            if (Arm != null) {
+            if (Arm != null || SArm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
             }
 
@@ -2599,7 +2599,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
                 // or for any objects held by the arm
-                if (Arm != null && Arm.gameObject.activeSelf) {
+                if ((Arm != null || SArm != null) && Arm.gameObject.activeSelf) {
                     if (this.IsVisible) {
                         foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
                             if (!c.isTrigger) {
@@ -2987,7 +2987,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // We have to explicitly add the items held by the arm as their
             // rigidbodies are set to not detect collisions
-            if (Arm != null && Arm.gameObject.activeSelf) {
+            if ((Arm != null || SArm != null) && Arm.gameObject.activeSelf) {
                 foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
@@ -3067,7 +3067,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 mask = (1 << 8) | (1 << 10);
             }
 
-            bool isSopHeldByArm = Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
+            bool isSopHeldByArm = (Arm != null || SArm != null) && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
