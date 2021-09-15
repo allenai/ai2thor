@@ -672,7 +672,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             if (i == 1) {
                 joint = joint.Find("stretch_robot_lift");
             }
-            else if (i < 7) {
+            else if (i <= 6) {
                 joint = joint.Find("stretch_robot_arm_" + (i-1) );
             }
             else {
