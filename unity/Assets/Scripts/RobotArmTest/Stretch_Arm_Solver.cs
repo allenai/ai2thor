@@ -5,7 +5,7 @@ using UnityEngine;
 public class Stretch_Arm_Solver : MonoBehaviour {
     public Transform armRoot, armTarget;
     Transform arm1, arm2, arm3, arm4, arm5, wrist1;
-    float liftHeightInitialLocalOffset = 0.164384f, armHeight, armExtensionLength; 
+    float liftInitialLocalHeightOffset = 0.164384f, armHeight, armExtensionLength; 
 
     #if UNITY_EDITOR
         void Update() {
@@ -48,9 +48,9 @@ public class Stretch_Arm_Solver : MonoBehaviour {
         }
 
         //Move Arm Base height
-        armRoot.localPosition = new Vector3(armRoot.localPosition.x, armHeight + liftHeightInitialLocalOffset, armRoot.localPosition.z);
+        armRoot.localPosition = new Vector3(armRoot.localPosition.x, armHeight + liftInitialLocalHeightOffset, armRoot.localPosition.z);
 
-        //Extend each part of arm by one-quarter of extension length, in z-direction
+        //Extend each part of arm by one-quarter of extension length, in local z-direction
         arm2.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300028f);
         arm3.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300049f);
         arm4.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300025f);
