@@ -303,6 +303,7 @@ For playback:
   - In `isAgentCapsuleCollidingWith`, added expandBy parameter.
   - Added `isAgentOnTopOfObject` function to check for obstructions when opening objects that slide out (like drawers).
   - Change the layer of the `ItemInHand` to `SimObjInvisible` when picked up and to `SimObjVisible` when put/dropped/thrown.
+  - Reorganized `PlaceHeldObject`, `OpenObject`, and `CloseObject` to return the most relevant action status.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
