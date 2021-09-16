@@ -286,7 +286,7 @@ GameObject:
   - component: {fileID: 5543646116120180033}
   - component: {fileID: 5543646116120180032}
   m_Layer: 8
-  m_Name: thorkea_book_ai2_1
+  m_Name: thorkea_book_ai2_1_v
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -300,7 +300,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5543646116120180035}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.933, y: 0, z: -2.22}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2134149790845257431}
@@ -323,7 +323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Book|+00.00|+00.00|+00.00
+  objectID: 
   Type: 77
   PrimaryProperty: 1
   SecondaryProperties: 
@@ -335,8 +335,8 @@ MonoBehaviour:
   - {fileID: 4381685735377379622}
   - {fileID: 9069706602294809877}
   ReceptacleTriggerBoxes: []
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 5543646116089855174}
@@ -346,11 +346,29 @@ MonoBehaviour:
   HFrbdrag: 0
   HFrbangulardrag: 0
   salientMaterials: 09000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &5543646116120180032
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -479,10 +497,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5543646116120180158}
     m_Modifications:
-    - target: {fileID: 5868464265209072147, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
+    - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
         type: 3}
-      propertyPath: m_Name
-      value: mesh
+      propertyPath: m_RootOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
         type: 3}
@@ -501,6 +519,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -516,16 +539,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
         type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5868464265209042483, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
-        type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
@@ -538,6 +551,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5868464265209072147, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc,
+        type: 3}
+      propertyPath: m_Name
+      value: mesh
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9c5c4fbe9f7d5bf41aff0d6cf0b36fdc, type: 3}
