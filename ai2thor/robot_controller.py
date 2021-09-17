@@ -109,9 +109,10 @@ class Controller(object):
         events = []
         for i, agent_metadata in enumerate(payload["metadata"]["agents"]):
             event = Event(agent_metadata)
-            image_mapping = dict(
-                image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
-                image_depth=lambda x: event.add_image_depth_robot(
+            image_mapping = {
+                'image':lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
+                'image-thirdParty-camera': lambda x: event.add_third_party_camera_image(x),
+                'image_depth':lambda x: event.add_image_depth_robot(
                     x,
                     self.depth_format,
                     camera_near_plane=self.camera_near_plane,
@@ -119,7 +120,7 @@ class Controller(object):
                     flip_y=False,
                     dtype=np.float64,
                 ),
-            )
+            }
             for key in image_mapping.keys():
                 if key in payload and len(payload[key]) > i:
                     image_mapping[key](payload[key][i])
