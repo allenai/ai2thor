@@ -3,6 +3,7 @@ import msgpack
 import numpy as np
 import requests
 import cv2
+import warnings
 from pprint import pprint
 import shutil
 import copy
@@ -112,16 +113,22 @@ class Controller(object):
             image_mapping = {
                 'image':lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
                 'image-thirdParty-camera': lambda x: event.add_third_party_camera_image(x),
+                'image_thirdParty_depth': lambda x: event.add_third_party_image_depth_robot(x, dtype=np.float64, flip_y=False, depth_format=self.depth_format),
                 'image_depth':lambda x: event.add_image_depth_robot(
                     x,
                     self.depth_format,
                     camera_near_plane=self.camera_near_plane,
                     camera_far_plane=self.camera_far_plane,
+                    depth_width=agent_metadata['depthWidth'],
+                    depth_height=agent_metadata['depthHeight'],
                     flip_y=False,
                     dtype=np.float64,
                 ),
             }
             for key in image_mapping.keys():
+                if key == 'image_depth' and agent_metadata['depthWidth'] != agent_metadata['screenWidth']:
+                    warnings.warn("Depth and RGB images are not the same resolutions")
+
                 if key in payload and len(payload[key]) > i:
                     image_mapping[key](payload[key][i])
             events.append(event)
