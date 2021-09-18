@@ -551,31 +551,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionReturn: reachablePositions
             );
         }
-        
-        protected virtual void SetAgentMode() {
-            VisibilityCapsule = TallVisCap;
-            m_CharacterController.center = new Vector3(0, 0, 0);
-            m_CharacterController.radius = 0.2f;
-            m_CharacterController.height = 1.8f;
 
-            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-            cc.center = m_CharacterController.center;
-            cc.radius = m_CharacterController.radius;
-            cc.height = m_CharacterController.height;
-
-            m_Camera.GetComponent<PostProcessVolume>().enabled = false;
-            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
-
-            // camera position
-            m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
-
-            // camera FOV
-            m_Camera.fieldOfView = 90f;
-
-            // set camera stand/crouch local positions for Tall mode
-            standingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0); // bigger y offset if tall
-        }
+	protected abstract void SetAgentMode();
 
         public void Initialize(ServerAction action) {
             this.SetAgentMode();

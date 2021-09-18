@@ -130,9 +130,9 @@ def test_stochastic_controller(stochastic_controller):
     stochastic_controller.reset(TEST_SCENE)
     assert stochastic_controller.last_event.metadata["lastActionSuccess"]
 
-def test_stochastic_mismatch():
+def test_stochastic_mismatch(fifo_controller):
     try:
-        c = build_controller(agentControllerType="stochastic", agentMode="default")
+        c = fifo_controller.reset(agentControllerType="stochastic", agentMode="default")
     except RuntimeError as e:
         error_message = str(e)
     assert error_message and error_message.startswith("Invalid combination of agentControllerType=stochastic and agentMode=default")
@@ -816,7 +816,7 @@ def test_action_dispatch(fifo_controller):
 def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
     event = fifo_controller.step(
         dict(action="TestActionDispatchFindAmbiguous"),
-        typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
+        typeName="UnityStandardAssets.Characters.FirstPerson.LocobotFPSAgentController",
     )
 
     known_ambig = sorted(
@@ -867,7 +867,7 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
 def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
     event = fifo_controller.step(
         dict(action="TestActionDispatchFindConflicts"),
-        typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
+        typeName="UnityStandardAssets.Characters.FirstPerson.LocobotFPSAgentController",
     )
     known_conflicts = {
         "TestActionDispatchConflict": ["param22"],
