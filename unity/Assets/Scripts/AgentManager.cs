@@ -162,7 +162,8 @@ public class AgentManager : MonoBehaviour {
             // if stochastic, set up stochastic controller
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
-                SetUpStochasticController(action);
+                primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
+		return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
@@ -190,7 +191,7 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level") {
                 var error = "'arm' mode must use either low-level or mid-level controller.";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             } else if (action.agentControllerType.ToLower() == "mid-level") {
                 // set up physics controller
@@ -206,14 +207,14 @@ public class AgentManager : MonoBehaviour {
                     } else {
                         var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
                         Debug.Log(error);
-                        primaryAgent.actionFinished(false, error);
+                        primaryAgent.actionFinished(success: false, errorMessage: error);
                         return;
                     }
                 }
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
         }
@@ -252,14 +253,6 @@ public class AgentManager : MonoBehaviour {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
-    }
-
-    private void SetUpStochasticController(ServerAction action) {
-        this.agents.Clear();
-        // force snapToGrid to be false since we are stochastic
-        action.snapToGrid = false;
-        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(StochasticRemoteFPSAgentController), baseAgentComponent);
     }
 
     private void SetUpDroneController(ServerAction action) {

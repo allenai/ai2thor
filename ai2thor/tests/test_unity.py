@@ -47,7 +47,7 @@ def build_controller(**args):
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
-_stochastic_controller = build_controller(agentControllerType="stochastic")
+_stochastic_controller = build_controller(agentControllerType="stochastic", agentMode="stochastic")
 
 
 def skip_reset(controller):
@@ -129,6 +129,13 @@ def assert_images_far(image1, image2, min_mean_pixel_diff=10):
 def test_stochastic_controller(stochastic_controller):
     stochastic_controller.reset(TEST_SCENE)
     assert stochastic_controller.last_event.metadata["lastActionSuccess"]
+
+def test_stochastic_mismatch():
+    try:
+        c = build_controller(agentControllerType="stochastic", agentMode="default")
+    except RuntimeError as e:
+        error_message = str(e)
+    assert error_message and error_message.startswith("Invalid combination of agentControllerType=stochastic and agentMode=default")
 
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
