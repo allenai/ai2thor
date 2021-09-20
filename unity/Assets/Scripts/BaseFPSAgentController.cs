@@ -2031,7 +2031,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        protected SimObjPhysics getTargetObjectFromId(string objectId, bool forceAction = false) {
+        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
@@ -2059,7 +2059,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        protected SimObjPhysics getTargetObjectFromId(float x, float y, bool forceAction) {
+        protected SimObjPhysics getInteractableSimObjectFromId(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
