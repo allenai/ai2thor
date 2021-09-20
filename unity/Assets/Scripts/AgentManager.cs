@@ -186,6 +186,21 @@ public class AgentManager : MonoBehaviour {
             }
         } else if (action.agentMode.ToLower() == "stretch") {
                 SetUpStretchController(action);
+
+                action.autoSimulation = false;
+                physicsSceneManager.MakeAllObjectsMoveable();
+
+                if (action.massThreshold.HasValue) {
+                    if (action.massThreshold.Value > 0.0) {
+                        SetUpMassThreshold(action.massThreshold.Value);
+                    } else {
+                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
+                        Debug.Log(error);
+                        primaryAgent.actionFinished(false, error);
+                        return;
+                    }
+                }
+
         } else if (action.agentMode.ToLower() == "arm") {
 
             if (action.agentControllerType == "") {
