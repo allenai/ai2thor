@@ -785,52 +785,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.014, y: 0.013, z: 0.0055402145}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &1107781466644635770
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1293373217814438787}
-  - component: {fileID: 4283616759240449819}
-  m_Layer: 0
-  m_Name: stretch_robot_arm_rig
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1293373217814438787
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1107781466644635770}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.08304518, y: -0.1629765, z: 0.27876768}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 4688288424284159259}
-  m_Father: {fileID: 122036717755888525}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!114 &4283616759240449819
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1107781466644635770}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c643ab140e21e74d91888e53d9f7d68, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  armRoot: {fileID: 8123973135422157483}
-  armTarget: {fileID: 4688288424284159259}
 --- !u!1 &1232956010429446575
 GameObject:
   m_ObjectHideFlags: 0
@@ -2650,7 +2604,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4364422909097050487}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.08307103, y: 0.16438401, z: -0.27870628}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 5074205692650900099}
@@ -4414,15 +4368,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7207280906714838609}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.14370626, y: -0.8425995, z: 0.10084772}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1293373217814438787}
+  - {fileID: 4688288424284159259}
   - {fileID: 8123973135422157483}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!114 &5606275403011028521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4931,7 +4885,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7520574703389591332}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.25471014, y: 0, z: 0}
+  m_LocalPosition: {x: 0.25471014, y: 0.000000057220458, z: -0.0000004005432}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3625500477817799791}
@@ -4939,7 +4893,7 @@ Transform:
   - {fileID: 2110469286017710747}
   m_Father: {fileID: 8123973135422157483}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4222892800556901834
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -5785,6 +5739,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4688288424284159259}
+  - component: {fileID: 453350900335986334}
   m_Layer: 0
   m_Name: stretch_robot_pos_rot_manipulator
   m_TagString: Untagged
@@ -5803,9 +5758,23 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1293373217814438787}
+  m_Father: {fileID: 122036717755888525}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &453350900335986334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8465040412298583700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c643ab140e21e74d91888e53d9f7d68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  armRoot: {fileID: 8123973135422157483}
+  armTarget: {fileID: 4688288424284159259}
 --- !u!1 &8484656314935655839
 GameObject:
   m_ObjectHideFlags: 0
