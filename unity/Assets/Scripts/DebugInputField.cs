@@ -401,6 +401,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                
+                case "stretchtest": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
 
                 case "parent": {
                         Dictionary<string, object> action = new Dictionary<string, object>{

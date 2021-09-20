@@ -285,7 +285,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
         bool returnToStart = false,
-        string coordinateSpace = "arm",
+        string coordinateSpace = "armBase",
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
