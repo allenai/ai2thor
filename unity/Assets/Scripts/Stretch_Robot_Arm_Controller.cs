@@ -50,7 +50,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     public CollisionListener collisionListener;
 
     void Start() {
-        armTarget = this.transform.Find("stretch_robot_pos_rot_manipulator");
+        armTarget = this.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
 
         // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "stretch_robot_wrist_2");
