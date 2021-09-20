@@ -4359,22 +4359,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            var metadata = assetDb.prefabs.Where(p => p.GetComponent<SimObjPhysics>() != null).Select(
-                p => {
-                    var simObj = p.GetComponent<SimObjPhysics>();
-                    var bb = simObj.AxisAlignedBoundingBox;
-                    return new AssetMetadata() {
-                        id = simObj.gameObject.name,
-                        type = simObj.Type.ToString(),
-                        primaryProperty = simObj.PrimaryProperty.ToString(),
-                        secondaryProperties = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
-                        boundingBox = new BoundingBox() {
-                            min = bb.center - bb.size / 2.0f,
-                            max = bb.center + bb.size / 2.0f
-                        }
-                    };
+            var metadata = new Dictionary<string, Dictionary<string, object>>();
+            foreach (GameObject p in assetDb.prefabs) {
+                if (p.GetComponent<SimObjPhysics>() == null) {
+                    continue;
                 }
-            ).ToList();
+
+                var simObj = p.GetComponent<SimObjPhysics>();
+                var bb = simObj.AxisAlignedBoundingBox;
+
+                // TODO: no objects should have duplicate names.
+                if (metadata.ContainsKey(simObj.gameObject.name)) {
+                    continue;
+                }
+
+                metadata.Add(simObj.gameObject.name, new Dictionary<string, object>() {
+                    ["objectType"] = simObj.Type.ToString(),
+                    ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
+                    ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
+                    ["boundingBox"] = new BoundingBox() {
+                        min = bb.center - bb.size / 2.0f,
+                        max = bb.center + bb.size / 2.0f
+                    }
+                });
+            }
+
             actionFinished(true, metadata);
         }
 
