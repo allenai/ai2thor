@@ -814,7 +814,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log("initializing stretch arm");
                     StretchArm.SetActive(true);
                     SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
-                    var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
+                    var armTarget = SArm.transform.Find("stretch_robot_pos_rot_manipulator");
                     Vector3 pos = armTarget.transform.localPosition;
                     pos.z = 0.0f; // pulls the arm in to be fully contracted
                     armTarget.transform.localPosition = pos;
