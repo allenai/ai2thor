@@ -47,6 +47,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     //private const float extendedArmLength = 0.8065f;
 
+    [SerializeField]
+    private Vector3 WristToManipulator = new Vector3 (0, -0.1322263f, 0);
+
     public CollisionListener collisionListener;
 
     void Start() {
@@ -227,7 +230,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
-        Vector3 pos = handCameraTransform.transform.position;
+        Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
         Quaternion rot = handCameraTransform.transform.rotation;
         armTarget.position = pos;
         armTarget.rotation = rot;
@@ -244,7 +247,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         float unitsPerSecond,
         float fixedDeltaTime = 0.02f,
         bool returnToStart = false,
-        string coordinateSpace = "arm",
+        string coordinateSpace = "armBase",
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
@@ -293,9 +296,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         collisionListener.Reset();
 
         Stretch_Robot_Arm_Controller arm = this;
-
         // Move arm based on hand space or arm origin space
         Vector3 targetWorldPos;
+
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
@@ -308,7 +311,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 break;
             case "armBase":
                 // space relative to the root of the arm, joint 1
-                targetWorldPos = arm.transform.TransformPoint(target);
+                targetWorldPos = arm.transform.Find("stretch_robot_arm_rig").transform.TransformPoint(target);
                 break;
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
