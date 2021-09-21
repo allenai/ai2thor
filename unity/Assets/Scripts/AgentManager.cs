@@ -129,7 +129,7 @@ public class AgentManager : MonoBehaviour {
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
-        primaryAgent.SetAgentMode("default");
+        primaryAgent.InitializeBody("default");
 #endif
 
         StartCoroutine(EmitFrame());

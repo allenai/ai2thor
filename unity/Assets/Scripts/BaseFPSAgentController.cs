@@ -220,7 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 HideAllAgentRenderers();
 
                 // The VisibilityCapsule will be set to either Tall or Bot
-                // from the SetAgentMode call in BaseFPSAgentController's Initialize()
+                // from the InitializeBody call in BaseFPSAgentController's Initialize()
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
                 }
@@ -552,17 +552,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-	protected abstract void SetAgentMode();
+        protected abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
-            this.SetAgentMode();
+            this.InitializeBody();
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (action.gridSize == 0) {
                 action.gridSize = 0.25f;
             }
 
-            // note: this overrides the default FOV values set in SetAgentMode()
+            // note: this overrides the default FOV values set in InitializeBody()
             if (action.fieldOfView > 0 && action.fieldOfView < 180) {
                 m_Camera.fieldOfView = action.fieldOfView;
             } else if (action.fieldOfView < 0 || action.fieldOfView >= 180) {
