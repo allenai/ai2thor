@@ -310,6 +310,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
         // Move arm based on hand space or arm origin space
         Vector3 targetWorldPos;
+
+        Debug.Log("targetWorldPos, BEFORE " + coordinateSpace + " changes it: (" + target.x + ", " + target.y + ", " + target.z + ")");
+
         switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
@@ -322,7 +325,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 break;
             case "armBase":
                 // space relative to the root of the arm, joint 1
-                targetWorldPos = arm.transform.TransformPoint(target);
+                targetWorldPos = arm.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(target);
                 break;
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
@@ -347,6 +350,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder."
             );
         }
+
+        Debug.Log("targetWorldPos, AFTER: " + targetWorldPos.x + ", " + targetWorldPos.y + ", " + targetWorldPos.z);
 
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.move(
