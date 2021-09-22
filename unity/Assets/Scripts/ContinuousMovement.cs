@@ -222,9 +222,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ikArm = null;
                 ikArmSolver = null;
                 stretchArm = controller.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
-                Debug.Log("This is the stretchArm: " + stretchArm.name);
+                //Debug.Log("This is the stretchArm: " + stretchArm.name);
                 stretchArmSolver = stretchArm.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
-                Debug.Log("This is the stretchArmSolver: " + stretchArmSolver.name);
+                //Debug.Log("This is the stretchArmSolver: " + stretchArmSolver.name);
             }
 
             else {
