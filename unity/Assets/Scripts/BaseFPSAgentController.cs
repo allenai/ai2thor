@@ -190,11 +190,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
 
-
             agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
-            this.GetComponent<NavMeshAgent>().enabled = false;
+            this.GetComponentInChildren<NavMeshAgent>().enabled = false;
 
             // Recording initially disabled renderers and scene bounds
             // then setting up sceneBounds based on encapsulating all renderers
@@ -629,12 +628,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxVisibleDistance = action.visibilityDistance;
             }
 
-            var navmeshAgent = this.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            var navmeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             var collider = this.GetComponent<CapsuleCollider>();
 
             if (collider != null && navmeshAgent != null) {
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
+                navmeshAgent.transform.localPosition = new Vector3(navmeshAgent.transform.localPosition.x, navmeshAgent.transform.localPosition.y, collider.center.z);
             }
 
             // navmeshAgent.radius =
@@ -4267,7 +4267,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = true;
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
@@ -4286,7 +4286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!targetWasHit) {
                     errorMessage = $"No point on NavMesh near {targetPosition}.";
                 }
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
 
@@ -4304,7 +4304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +
                     $" closest navmesh position {targetHit.position.ToString("F3")}).";
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
 
@@ -4323,7 +4323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
                     $" and {targetHit.position.ToString("F3")} using the NavMesh.";
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return false;
             }
         }
