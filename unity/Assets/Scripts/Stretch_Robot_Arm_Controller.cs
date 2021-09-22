@@ -673,13 +673,13 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         // Assign joint metadata to remaining joints, which all have identical hierarchies
         for (int i = 1; i <= 8; i++) {
             if (i == 1) {
-                joint = joint.Find("stretch_robot_lift");
+                joint = joint.Find("stretch_robot_lift_jnt");
             }
             else if (i <= 6) {
-                joint = joint.Find("stretch_robot_arm_" + (i-1) );
+                joint = joint.Find("stretch_robot_arm_" + (i-1) + "_jnt");
             }
             else {
-                joint = joint.Find("stretch_robot_wrist_" + (i-6) );
+                joint = joint.Find("stretch_robot_wrist_" + (i-6) + "_jnt");
             }
 
 
