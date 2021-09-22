@@ -783,7 +783,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = StretchVisCap;
-                m_CharacterController.center = new Vector3(0, -0.225f, 0);
+                m_CharacterController.center = new Vector3(0, -0.225f, -0.1247f);
                 m_CharacterController.radius = 0.17f;
                 m_CharacterController.height = 1.4f;
 

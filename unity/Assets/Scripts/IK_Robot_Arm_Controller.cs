@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
-    private Transform armTarget;
-    private Transform handCameraTransform;
+    [SerializeField]
+    private Transform armTarget, handCameraTransform, FirstJoint, FinalJoint;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -18,13 +18,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController;
-
-    // references to the joints of the mid level arm
-    [SerializeField]
-    private Transform FirstJoint = null;
-
-    [SerializeField]
-    private Transform FinalJoint = null;
 
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
@@ -50,14 +43,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     public CollisionListener collisionListener;
 
     void Start() {
-        armTarget = this.transform
-            .Find("robot_arm_FK_IK_rig")
-            .Find("IK_rig")
-            .Find("IK_pos_rot_manipulator");
-
-        // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
-        handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
-
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
         this.originToShoulderLength = Vector3.Distance(
             this.transform.FirstChildOrDefault(
