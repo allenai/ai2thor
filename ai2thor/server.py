@@ -379,7 +379,7 @@ class Event:
     def add_image(self, image_data, **kwargs):
         self.frame = read_buffer_image(
             image_data, self.screen_width, self.screen_height, **kwargs
-        )
+        )[:, :, :3] # CloudRendering returns 4 channels instead of 3
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
