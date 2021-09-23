@@ -402,9 +402,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 
-                case "stretchtest": {
+                case "stretchtest1": {
                         List<string> commands = new List<string>();
-                        commands.Add("run move_stretch_arm");
+                        commands.Add("run move_stretch_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                
+                case "stretchtest3": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_3");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest4": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_4");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest5": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_5");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                case "stretchtest6": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_6");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                case "stretchtest7": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_7");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                case "stretchtest8": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_8");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                case "iktest": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm");
                         //commands.Add("debugarmjoints");
                         StartCoroutine(ExecuteBatch(commands));
                         break;
@@ -886,6 +946,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log("last joint position");
                         Vector3 rrpos = armmeta.joints[armmeta.joints.Length - 1].rootRelativePosition;
                         Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
+                        break;
+                    }
+
+                case "debugstretcharmjoints": {
+                        var arm = CurrentActiveController().GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                        ArmMetadata armmeta = arm.GenerateMetadata();
+                        foreach (JointMetadata jm in armmeta.joints) {
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            // Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                        }
                         break;
                     }
 
