@@ -292,7 +292,6 @@ namespace Thor.Procedural {
         //public enum WallType
 
 #if UNITY_EDITOR
-
         [UnityEditor.MenuItem("Procedural/Build Asset Database")]
         public static void BuildAssetDB() {
             var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
