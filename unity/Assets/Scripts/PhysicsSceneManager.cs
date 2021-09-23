@@ -456,6 +456,20 @@ public class PhysicsSceneManager : MonoBehaviour {
         var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
 #endif
 
+        //instead of pre-assigning these arrays at editor-time, instead grab all
+        //sim objects in the scene at runtime to try and reposition
+        SimObjPhysics[] simObjsInScene = GameObject.FindObjectsOfType<SimObjPhysics>();
+        List<GameObject> simObjsInSceneToGameObjectList = new List<GameObject>();
+        foreach (SimObjPhysics sop in simObjsInScene) {
+            if (sop.IsPickupable) {
+                simObjsInSceneToGameObjectList.Add(sop.gameObject);
+            }
+        }
+
+        //assing all pickupable objects to both RequiredObjects and SpawnedObjects for parity
+        RequiredObjects = simObjsInSceneToGameObjectList;
+        SpawnedObjects = simObjsInSceneToGameObjectList;
+
         if (RequiredObjects.Count == 0) {
 #if UNITY_EDITOR
             Debug.Log("No objects in Required Objects array, please add them in editor");
