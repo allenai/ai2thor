@@ -22,8 +22,8 @@ public class Stretch_Arm_Solver : MonoBehaviour {
         wrist1 = arm5.GetChild(0);
 
         //Set height from target input, checking for overextension
-        if (armTarget.localPosition.y < 0) {
-            armHeight = 0;
+        if (armTarget.localPosition.y < -0.056) {
+            armHeight = -0.056f;
         }
 
         else if (armTarget.localPosition.y > 1.045f) {
