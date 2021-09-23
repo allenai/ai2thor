@@ -8,7 +8,10 @@ using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using System.Reflection;
-
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 public static class UtilityFunctions {
 
     public static Bounds CreateEmptyBounds() {
@@ -257,4 +260,40 @@ public static class UtilityFunctions {
 
         return corners;
     }
+
+#if UNITY_EDITOR
+    [MenuItem("SimObjectPhysics/Toggle Off PlaceableSurface Material")]
+    private static void ToggleOffPlaceableSurface() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
+            var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
+
+            foreach (MeshRenderer m in meshes)
+            {
+                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+                    m.enabled = false;
+                }
+            }
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+        }
+    }
+
+    [MenuItem("SimObjectPhysics/Toggle On PlaceableSurface Material")]
+    private static void ToggleOnPlaceableSurface() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
+            var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
+
+            foreach (MeshRenderer m in meshes)
+            {
+                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+                    m.enabled = true;
+                }
+            }
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+
+        }
+    }
+
+#endif
 }
