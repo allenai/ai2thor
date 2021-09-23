@@ -1310,12 +1310,15 @@ def test_get_interactable_poses(controller):
         pose["standing"] == event.metadata["agent"]["isStanding"]
     ), "Agent's isStanding is off!"
 
-    # potato should be inside of the fridge (and, thus, non interactable)
     potatoId = next(
         obj["objectId"]
         for obj in controller.last_event.metadata["objects"]
         if obj["objectType"] == "Potato"
     )
+    event = controller.step(action="PickupObject", objectId=potatoId, forceAction=True)
+    # potato should be inside of the fridge (and, thus, non interactable)
+    event = controller.step(action="PutObject", objectId=fridge["objectId"], forceAction=True)
+
     event = controller.step("GetInteractablePoses", objectId=potatoId)
     assert (
         len(event.metadata["actionReturn"]) == 0
