@@ -54,7 +54,7 @@ public class Stretch_Arm_Solver : MonoBehaviour {
         arm2.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300028f);
         arm3.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300049f);
         arm4.localPosition = new Vector3 (0, 0, armExtensionLength / 4 + 0.01300025f);
-        arm5.localPosition = new Vector3 (0, 0, armExtensionLength / 4 - 0.0150049f);
+        arm5.localPosition = new Vector3 (0, 0, armExtensionLength / 4 - 0.0117463f);
 
         //Adjust rotation
         wrist1.eulerAngles = new Vector3 (0, armTarget.eulerAngles.y, 0);

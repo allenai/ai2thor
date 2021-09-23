@@ -6,7 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
-    private Transform armTarget, handCameraTransform, FirstJoint, FinalJoint = null;
+    private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint = null;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -673,20 +673,16 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             // ROOT-JOINT RELATIVE POSITION
             // Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
-            jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
+            jointMeta.rootRelativePosition = armBase.InverseTransformPoint(joint.position);
 
             // WORLD RELATIVE ROTATION
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = joint.GetChild(0).rotation;
+            currentRotation = joint.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-
-                // Debug.Log(joint.name + "'s euler-angles of " + joint.GetChild(0).eulerAngles + " resulted in Quaternion " + Quaternion.Euler(joint.GetChild(0).eulerAngles) + " which should either be the same as or a corrected version of " + joint.GetChild(0).rotation);
                 jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             } else {
-                // Debug.Log(joint.name + "'s world-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -701,7 +697,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             } else {
-                // Debug.Log(joint.name + "'s root-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -722,7 +717,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
                 } else {
-                    // Debug.Log(joint.name + "'s parent-rotation of " + currentRotation + " is EVILLLLL!");
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
             } else {
