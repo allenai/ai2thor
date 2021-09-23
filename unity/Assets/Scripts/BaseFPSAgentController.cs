@@ -796,7 +796,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
                 // camera position
-                m_Camera.transform.localPosition = new Vector3(0, 0.35f, 0.0453f);
+                m_Camera.transform.localPosition = new Vector3(0, 0.35f, 0.17f);
 
                 // camera FOV
                 m_Camera.fieldOfView = 60f;
