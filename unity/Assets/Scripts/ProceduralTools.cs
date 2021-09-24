@@ -1491,8 +1491,48 @@ namespace Thor.Procedural {
         public static List<GameObject> FindPrefabsInAssets() {
             var assets = new List<GameObject>();
             string[] guids = AssetDatabase.FindAssets("t:prefab");
+
+            // these assets crash Unity when opening them
+            var skipAssetNames = new HashSet<string>();
+            skipAssetNames.Add("ButterKnife");
+            skipAssetNames.Add("RoundTable");
+            skipAssetNames.Add("Fork");
+            skipAssetNames.Add("GarbageCan 1");
+            skipAssetNames.Add("GarbageCan");
+            skipAssetNames.Add("GarbageCan5");
+            skipAssetNames.Add("GarbageCan_bagged");
+            skipAssetNames.Add("Knife_3");
+            skipAssetNames.Add("Lettuce");
+            skipAssetNames.Add("Mug");
+            skipAssetNames.Add("Pan");
+            skipAssetNames.Add("Potato");
+            skipAssetNames.Add("Spoon");
+            skipAssetNames.Add("StoveBurner");
+            skipAssetNames.Add("RangeStyle1_RangeBig");
+            skipAssetNames.Add("RangeStyle4_RangeSmall");
+            skipAssetNames.Add("StoveKnob2");
+            skipAssetNames.Add("Tomato");
+
+            // these assets don't break Unity, but shouldn't be used
+            skipAssetNames.Add("thorkea_book_ai2_4_DONOTUSE");
+            skipAssetNames.Add("thorkea_pillow_ai2_1_donotuse");
+            skipAssetNames.Add("thorkea_pillow_ai2_2_donotuse");
+
             for (int i = 0; i < guids.Length; i++) {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+                string assetName = assetPath.Substring(
+                    assetPath.LastIndexOf("/") + 1,
+                    assetPath.Length - (assetPath.LastIndexOf("/") + 1) - ".prefab".Length
+                );
+
+                // skip all these prefabs
+                if (
+                    assetPath.Contains("SceneSetupPrefabs")
+                    || skipAssetNames.Contains(assetName)
+                ) {
+                    continue;
+                }
+
                 GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (asset != null && asset.GetComponent<SimObjPhysics>()) {
                     assets.Add(asset);
