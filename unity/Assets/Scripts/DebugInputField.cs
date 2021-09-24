@@ -954,8 +954,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
                             Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
-                            // Debug.Log(jm.name + " rotation: " + jm.rotation);
                             Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
                         }
                         break;
                     }
@@ -964,10 +966,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
-                            Debug.Log(jm.name);
-                            Debug.Log(jm.rotation);
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
                         }
-
                         break;
                     }
 

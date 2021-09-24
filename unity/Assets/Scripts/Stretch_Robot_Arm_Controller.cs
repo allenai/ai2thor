@@ -645,6 +645,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
+        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -662,11 +663,12 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 joint = joint.Find("stretch_robot_wrist_" + (i-6) + "_jnt");
             }
 
-
             JointMetadata jointMeta = new JointMetadata();
 
             // JOINT NAME
             jointMeta.name = joint.name;
+
+            // POSITIONS //
 
             // WORLD RELATIVE POSITION
             jointMeta.position = joint.position;
@@ -675,8 +677,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             // Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
             jointMeta.rootRelativePosition = armBase.InverseTransformPoint(joint.position);
 
+            // ROTATIONS //
+            surrogateChild.transform.rotation = joint.rotation;
+
             // WORLD RELATIVE ROTATION
-            currentRotation = joint.rotation;
+            currentRotation = surrogateChild.transform.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -687,10 +692,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             }
 
             // ROOT-JOINT RELATIVE ROTATION
-            // Root-forward and agent-forward are always the same
-
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles));
+            //Grab rotation of current joint's angler relative to root joint
+            surrogateChild.transform.SetParent(armBase);
+            currentRotation = surrogateChild.transform.localRotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -704,29 +708,26 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             if (i != 1) {
                 parentJoint = joint.parent;
 
-                // Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
-                currentRotation = Quaternion.Euler(
-                    parentJoint.GetChild(0).InverseTransformDirection(
-                        joint.GetChild(0).eulerAngles
-                    )
-                );
+                // Grab rotation of current joint's angler relative to parent joint's angler
+                surrogateChild.transform.SetParent(parentJoint);
+                currentRotation = surrogateChild.transform.localRotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
-                    // Convert parent-relative rotation to angle-axis notation
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
                 } else {
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
             } else {
-                // Special case for robot_arm_1_jnt because it has no parent-joint
+                // Special case for stretch_robot_lift_jnt because it has no parent-joint
                 jointMeta.localRotation = jointMeta.rootRelativeRotation;
             }
 
             joints.Add(jointMeta);
         }
 
+        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm

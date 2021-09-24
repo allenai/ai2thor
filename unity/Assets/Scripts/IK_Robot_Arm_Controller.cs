@@ -6,7 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
-    private Transform armTarget, handCameraTransform, FirstJoint, FinalJoint;
+    private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -746,6 +746,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
+        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -760,6 +761,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // JOINT NAME
             jointMeta.name = joint.name;
 
+            // POSITIONS //
+
             // WORLD RELATIVE POSITION
             jointMeta.position = joint.position;
 
@@ -767,9 +770,12 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
-            // WORLD RELATIVE ROTATION
+            // ROTATIONS //
             // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = joint.GetChild(0).rotation;
+            surrogateChild.transform.rotation = joint.GetChild(0).rotation;
+
+            // WORLD RELATIVE ROTATION
+            currentRotation = surrogateChild.transform.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -783,8 +789,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // ROOT-JOINT RELATIVE ROTATION
             // Root-forward and agent-forward are always the same
 
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles));
+            //Grab rotation of current joint's angler relative to root joint
+            surrogateChild.transform.SetParent(armBase);
+            currentRotation = surrogateChild.transform.localRotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -798,16 +805,12 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             if (i != 1) {
                 parentJoint = joint.parent;
 
-                // Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
-                currentRotation = Quaternion.Euler(
-                    parentJoint.GetChild(0).InverseTransformDirection(
-                        joint.GetChild(0).eulerAngles
-                    )
-                );
-
+                // Grab rotation of current joint's angler relative to parent joint's angler
+                surrogateChild.transform.SetParent(parentJoint.GetChild(0));
+                currentRotation = surrogateChild.transform.localRotation;
+                
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
-                    // Convert parent-relative rotation to angle-axis notation
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
                 } else {
@@ -821,6 +824,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             joints.Add(jointMeta);
         }
 
+        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
