@@ -13,6 +13,7 @@ import json
 import copy
 import logging
 import math
+import numbers
 import time
 import random
 import shlex
@@ -417,8 +418,10 @@ class Controller(object):
             map(lambda x: x.strip(),
                 os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
 
-        if self.gpu_device:
-            if (type(self.gpu_device) is not int or self.gpu_device < 0):
+        if self.gpu_device is not None:
+
+            # numbers.Integral works for numpy.int32/64 and Python int
+            if (not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0):
                 raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
             elif cuda_visible_devices:
                 if self.gpu_device >= len(cuda_visible_devices):
