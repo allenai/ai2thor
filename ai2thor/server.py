@@ -302,6 +302,13 @@ class Event:
 
         return depth_image_float
 
+    def add_third_party_camera_image_robot(self, third_party_image_data, width, height):
+        self.third_party_camera_frames.append(
+            read_buffer_image(
+                third_party_image_data, width, height
+            )
+        )
+
     def add_third_party_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
         multiplier = 1.0
         camera_far_plane = kwargs.pop("camera_far_plane", 1)
