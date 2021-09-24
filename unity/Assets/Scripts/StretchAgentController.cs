@@ -425,9 +425,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public void RotateWristRelative(
-            float pitch = 0f,
             float yaw = 0f,
-            float roll = 0f,
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
@@ -437,7 +435,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             arm.rotateWrist(
                 controller: this,
-                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                rotation: Quaternion.Euler(0, yaw, 0),
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
