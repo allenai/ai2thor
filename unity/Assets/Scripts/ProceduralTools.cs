@@ -1513,6 +1513,11 @@ namespace Thor.Procedural {
             skipAssetNames.Add("StoveKnob2");
             skipAssetNames.Add("Tomato");
 
+            // these assets don't break Unity, but shouldn't be used
+            skipAssetNames.Add("thorkea_book_ai2_4_DONOTUSE");
+            skipAssetNames.Add("thorkea_pillow_ai2_1_donotuse");
+            skipAssetNames.Add("thorkea_pillow_ai2_2_donotuse");
+
             for (int i = 0; i < guids.Length; i++) {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
                 string assetName = assetPath.Substring(
