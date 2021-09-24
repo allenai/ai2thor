@@ -4354,9 +4354,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetAssetDatabase() {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
 
             var metadata = new Dictionary<string, Dictionary<string, object>>();
@@ -4417,19 +4418,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, geoList);
         }
 
-        public void SpawnAsset(string assetId, string generatedId = "asset_0", Vector3? position = null) {
+        public void SpawnAsset(string assetId, string generatedId, Vector3? position = null) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(success: false, errorMessage: "ProceduralAssetDatabase not in scene.");
             }
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                );
             }
 
             var asset = assetMap.getAsset(assetId);
@@ -4449,7 +4449,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var bounds = GetObjectSphereBounds(spawned);
 
-           
             if (this.imageSynthesis) {
                 if (this.imageSynthesis.enabled) {
                     this.imageSynthesis.OnSceneChange();
@@ -4466,21 +4465,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetAssetSphereBounds(string assetId) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
             var assetMap = ProceduralTools.getAssetMap();
             if (!assetMap.ContainsKey(assetId)) {
-                errorMessage = $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                );
             }
 
             var asset = assetMap.getAsset(assetId);
-
             var bounds = GetObjectSphereBounds(asset);
-
             actionFinished(true, new ObjectSphereBounds() {
                 id = assetId,
                 worldSpaceCenter = bounds.center,
@@ -4488,24 +4487,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             });
         }
 
-        public void LookAtObjectCenter(string objectId = "asset_0", Color? skyboxColor = null, Vector3? position = null) {
+        public void LookAtObjectCenter(string objectId, Color? skyboxColor = null, Vector3? position = null) {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
-                errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "Object does not exist in scene."
+                );
             }
             LookAtObjectCenter(obj);
-
             actionFinished(true, obj.name);
         }
 
         public void SetSkybox(string materialId) {
             var materialDb = ProceduralTools.GetMaterials();
             if (materialDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
             RenderSettings.skybox = materialDb.getAsset(materialId);
         }
@@ -4575,19 +4575,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`.");
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`."
+                );
             }
             navmesh.BuildNavMesh();
             actionFinished(true);
         }
 
         public void OnTriggerStay(Collider other) {
-            if (other.CompareTag("HighFriction")) {
-                inHighFrictionArea = true;
-            } else {
-                inHighFrictionArea = false;
-            }
+            inHighFrictionArea = other.CompareTag("HighFriction");
         }
         
         // use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
@@ -4598,18 +4596,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float ViewPointRangeLow = 0.0f;
 
             if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance // is in front of camera and within range of visibility sphere
-                &&
-                viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow // within x bounds of viewport
-                &&
-                viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) // within y bounds of viewport
-            {
+                && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow // within x bounds of viewport
+                && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow // within y bounds of viewport
+            ) {
                 RaycastHit hit;
 
                 updateAllAgentCollidersForVisibilityCheck(false);
 
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) // reduce distance by slight offset
-                {
+                if (
+                    Physics.Raycast(
+                        m_Camera.transform.position,
+                        point - m_Camera.transform.position,
+                        out hit,
+                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, // reduce distance by slight offset
+                        (1 << 8) | (1 << 10)
+                    )
+                ) {
                     updateAllAgentCollidersForVisibilityCheck(true);
                     return false;
                 } else {
@@ -4619,8 +4621,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return false;
         }
-
-
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             ContinuousMovement.unrollSimulatePhysics(
