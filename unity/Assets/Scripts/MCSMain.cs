@@ -1549,7 +1549,7 @@ public class MCSMain : MonoBehaviour {
             }
         });
 
-        objectConfig.resizes.Where(resize => resize.stepBegin <= step && resize.stepEnd >= step && resize.size != null)
+        objectConfig.resizes.Where(resize => resize.size != null && WithinInterval(resize, step))
             .ToList().ForEach((resize) => {
                 // Set the scale on the game object, not on the parent object.
                 GameObject gameObject = objectConfig.GetGameObject();
@@ -1565,7 +1565,7 @@ public class MCSMain : MonoBehaviour {
                     teleport.position.z);
             });
 
-        objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
+        objectConfig.forces.Where(force => force.vector != null && WithinInterval(force, step))
             .ToList().ForEach((force) => {
                 if (rigidbody != null) {
                     if (force.relative) {
@@ -1576,8 +1576,8 @@ public class MCSMain : MonoBehaviour {
                 }
             });
 
-        objectConfig.torques.Where(torque => torque.stepBegin <= step && torque.stepEnd >= step &&
-            torque.vector != null).ToList().ForEach((torque) => {
+        objectConfig.torques.Where(torque => torque.vector != null && WithinInterval(torque, step))
+            .ToList().ForEach((torque) => {
                 if (rigidbody != null) {
                     rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
                 }
@@ -1585,7 +1585,7 @@ public class MCSMain : MonoBehaviour {
 
         // Ghosting an object will make it temporarily intangible: disable its colliders and the effects of physics.
         bool ghosted = false;
-        objectConfig.ghosts.Where(ghost => ghost.stepBegin <= step && ghost.stepEnd >= step).ToList()
+        objectConfig.ghosts.Where(ghost => WithinInterval(ghost, step)).ToList()
             .ForEach((ghost) => {
                 ghosted = true;
                 rigidbody.isKinematic = true;
@@ -1605,7 +1605,7 @@ public class MCSMain : MonoBehaviour {
 
         // Shrouding an object will make it temporarily invisible.
         bool shrouded = false;
-        objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
+        objectConfig.shrouds.Where(shroud => WithinInterval(shroud, step)).ToList()
             .ForEach((shroud) => {
                 shrouded = true;
                 gameOrParentObject.GetComponentInChildren<Renderer>().enabled = false;
@@ -1637,6 +1637,16 @@ public class MCSMain : MonoBehaviour {
         return objectsWereShown;
     }
 
+    private bool WithinInterval(MCSConfigStepBeginEnd action, int step) {
+        if(!action.repeat) {
+            return action.stepBegin <= step && action.stepEnd >= step;
+        }
+        int difference = action.stepEnd - action.stepBegin;
+        int interval = difference + action.stepWait;
+        int normalized = ((step - action.stepBegin) % interval);
+        return normalized >= 0 && normalized <= difference;
+    }
+
     public void UpdateOnPhysicsSubstep() {
         if (this.currentScene != null && this.currentScene.objects != null) 
         {
@@ -1647,13 +1657,13 @@ public class MCSMain : MonoBehaviour {
                     GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                     // If the object should move during this step, move it a little during each individual substep, so
                     // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
-                    objectConfig.moves.Where(move => move.stepBegin <= this.lastStep &&
-                        move.stepEnd >= this.lastStep && move.vector != null).ToList().ForEach((move) => {
+                    objectConfig.moves.Where(move => move.vector != null && WithinInterval(move, this.lastStep))
+                        .ToList().ForEach((move) => {
                             gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
                                 move.vector.z));
                         });
-                    objectConfig.rotates.Where(rotate => rotate.stepBegin <= this.lastStep &&
-                        rotate.stepEnd >= this.lastStep && rotate.vector != null).ToList().ForEach((rotate) => {
+                    objectConfig.rotates.Where(rotate => rotate.vector != null && WithinInterval(rotate, this.lastStep))
+                        .ToList().ForEach((rotate) => {
                             gameOrParentObject.transform.Rotate(
                                 new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z)
                             );
@@ -1865,7 +1875,9 @@ public class MCSConfigStepBegin {
 
 [Serializable]
 public class MCSConfigStepBeginEnd : MCSConfigStepBegin {
+    public bool repeat = false;
     public int stepEnd;
+    public int stepWait = 0;
 }
 
 [Serializable]
