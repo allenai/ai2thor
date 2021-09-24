@@ -4608,7 +4608,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         point - m_Camera.transform.position,
                         out hit,
                         Vector3.Distance(m_Camera.transform.position, point) - 0.01f, // reduce distance by slight offset
-                        (1 << 8) | (1 << 10)
+                        LayerMask.GetMask("SimObjVisible", "Agent")
                     )
                 ) {
                     updateAllAgentCollidersForVisibilityCheck(true);
