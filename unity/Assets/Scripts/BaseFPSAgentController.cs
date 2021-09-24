@@ -4576,7 +4576,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (navmesh == null) {
                 actionFinished(
                     success: false,
-                    errorMessage: "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`."
+                    errorMessage: "No NavMeshSurface component found, make sure scene was procedurally created by `CreateHouseFromJson`."
                 );
             }
             navmesh.BuildNavMesh();
