@@ -4320,33 +4320,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void CreateHouseFromJson(ProceduralHouse house) {
-            var rooms = house.rooms.SelectMany(
-                room => house.rooms
+        public void CreateHouse(ProceduralHouse json) {
+            var rooms = json.rooms.SelectMany(
+                room => json.rooms
             );
 
             var materials = ProceduralTools.GetMaterials();
             var materialIds = new HashSet<string>(
-                house.rooms.SelectMany(
+                json.rooms.SelectMany(
                     r => r.ceilings.Select(c => c.material).Concat(
                                 new List<string>() { r.floor_material })
                         .Concat(
-                            house.walls.Select(w => w.material)
+                            json.walls.Select(w => w.material)
                         )
-                ).Concat(new List<string>() { house.procedural_parameters.ceiling_material })
+                ).Concat(new List<string>() { json.procedural_parameters.ceiling_material })
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
             if (missingIds.Count() > 0) {
-                errorMessage = $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component."
+                );
             }
             Debug.Log("Before Procedural call");
             var floor = ProceduralTools.CreateHouse(
-                house,
+                json,
                 materials
             );
-
 
             actionFinished(true);
         }
