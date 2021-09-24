@@ -4391,16 +4391,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetAsset3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(success: false, errorMessage: "ProceduralAssetDatabase not in scene.");
             }
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                );
             }
 
             var asset = assetMap.getAsset(assetId);
