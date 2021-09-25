@@ -198,7 +198,7 @@ class OSXIntel64(BasePlatform):
 
 
 class CloudRendering(BaseLinuxPlatform):
-    enabled = False
+    enabled = True
 
     @classmethod
     def dependency_instructions(cls, request):
