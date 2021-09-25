@@ -1586,7 +1586,7 @@ def test_get_coordinate_from_raycast(controller):
     query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {"x": -0.5968407392501831, "y": 1.5759981870651245, "z": -1.0484200716018677},
+        {"x": -0.6037374, "y": 1.5759981870651245, "z": -1.05186844},
     )
 
 
