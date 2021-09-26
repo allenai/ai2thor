@@ -114,11 +114,20 @@ def _unity_path():
     return unity_path
 
 
-def _import_assets(unity_path, build_name, build_target):
+def _initialize_cloudrendering(unity_path):
     project_path = os.path.join(os.getcwd(), unity_path)
     command = (
-        "%s -quit -batchmode -logFile %s/%s-import.log -projectpath %s -buildTarget %s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, build_target)
+        "%s -quit -batchmode -logFile %s/thor-InitializeCloudRendering-import.log -projectpath %s -buildTarget Standalone Build.InitializeCloudRendering"
+        % (_unity_path(), os.getcwd(), project_path)
+    )
+
+    subprocess.check_call(command, shell=True)
+
+def _import_assets(unity_path, build_target):
+    project_path = os.path.join(os.getcwd(), unity_path)
+    command = (
+        "%s -quit -batchmode -logFile %s/thor-%s-import.log -projectpath %s -buildTarget %s"
+        % (_unity_path(), os.getcwd(), build_target, project_path, build_target)
     )
 
     subprocess.check_call(command, shell=True)
@@ -1112,9 +1121,10 @@ def build_cloudrendering(context, push_build=False):
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
     generate_msgpack_resolver(context)
+    _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
     # the clang compile
-    _import_assets(unity_path, build_name, arch)
+    _import_assets(unity_path, arch)
     _build(unity_path, arch, build_dir, build_name, {})
     if push_build:
         archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)

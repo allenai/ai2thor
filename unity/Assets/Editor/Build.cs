@@ -9,6 +9,10 @@ using UnityEngine.Rendering;
 using UnityEditor.Build.Reporting;
 
 public class Build {
+
+    // Since CloudRendering uses a different version of Unity (2020.2) vs production (2019.4), GraphicsSettings and ProjectSettings
+    // must be copied over from the Standalone platform.  As well, continuing to use this ensures that settings made for 
+    // the Standalone platform get used for CloudRendering
     static void InitializeCloudRendering() {
         PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.CloudRendering, PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone));
         var graphicsTiers = new List<GraphicsTier>(){GraphicsTier.Tier1, GraphicsTier.Tier2, GraphicsTier.Tier3};
