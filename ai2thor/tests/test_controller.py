@@ -224,6 +224,7 @@ def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
     )
     mocker.patch("ai2thor.controller.ai2thor.platform.Linux64.validate", fake_validate)
     mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
+    mocker.patch("ai2thor.platform.Linux64.enabled", False)
 
     fake_commit_id = "1234567TEST"
     c = controller(commit_id=fake_commit_id)
