@@ -4,9 +4,23 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Rendering;
+using UnityEngine.Rendering;
 using UnityEditor.Build.Reporting;
 
 public class Build {
+    static void InitializeCloudRendering() {
+        PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.CloudRendering, PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone));
+        var graphicsTiers = new List<GraphicsTier>(){GraphicsTier.Tier1, GraphicsTier.Tier2, GraphicsTier.Tier3};
+        foreach (var graphicsTier in graphicsTiers) {
+            EditorGraphicsSettings.SetTierSettings(
+                BuildTargetGroup.CloudRendering,
+                graphicsTier,
+                EditorGraphicsSettings.GetTierSettings(BuildTargetGroup.Standalone, graphicsTier)
+            );
+        }
+    }
+
     static void OSXIntel64() {
         build(GetBuildName(),  BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
     }
