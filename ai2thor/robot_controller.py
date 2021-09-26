@@ -110,10 +110,26 @@ class Controller(object):
         events = []
         for i, agent_metadata in enumerate(payload["metadata"]["agents"]):
             event = Event(agent_metadata)
+
+            third_party_width = event.screen_width
+            third_party_height = event.screen_height
+            third_party_depth_width = event.screen_width
+            third_party_depth_height = event.screen_height
+            if 'thirdPartyCameras' in agent_metadata and \
+                len(agent_metadata['thirdPartyCameras']) > 0 and \
+                'screenWidth' in agent_metadata['thirdPartyCameras'][0] and \
+                'screenHeight' in agent_metadata['thirdPartyCameras'][0]:
+                third_party_width = agent_metadata['thirdPartyCameras'][0]['screenWidth']
+                third_party_height = agent_metadata['thirdPartyCameras'][0]['screenHeight']
+                third_party_depth_width = agent_metadata['thirdPartyCameras'][0]['depthWidth']
+                third_party_depth_height = agent_metadata['thirdPartyCameras'][0]['depthHeight']
+
+
+
             image_mapping = {
                 'image':lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
-                'image-thirdParty-camera': lambda x: event.add_third_party_camera_image(x),
-                'image_thirdParty_depth': lambda x: event.add_third_party_image_depth_robot(x, dtype=np.float64, flip_y=False, depth_format=self.depth_format),
+                'image-thirdParty-camera': lambda x: event.add_third_party_camera_image_robot(x, third_party_width, third_party_height),
+                'image_thirdParty_depth': lambda x: event.add_third_party_image_depth_robot(x, dtype=np.float64, flip_y=False, depth_format=self.depth_format, depth_width=third_party_depth_width, depth_height=third_party_depth_height),
                 'image_depth':lambda x: event.add_image_depth_robot(
                     x,
                     self.depth_format,
