@@ -117,7 +117,7 @@ def _unity_path():
 def _initialize_cloudrendering(unity_path):
     project_path = os.path.join(os.getcwd(), unity_path)
     command = (
-        "%s -quit -batchmode -logFile %s/thor-InitializeCloudRendering-import.log -projectpath %s -buildTarget Standalone Build.InitializeCloudRendering"
+        "%s -quit -batchmode -logFile %s/thor-InitializeCloudRendering-import.log -projectpath %s -buildTarget Standalone -executeMethod Build.InitializeCloudRendering"
         % (_unity_path(), os.getcwd(), project_path)
     )
 
