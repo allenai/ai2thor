@@ -19,6 +19,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
 
+    //Distance from joint containing gripper camera to armTarget
+    private Vector3 WristToManipulator = new Vector3 (0, -0.09872628f, 0);
+
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
@@ -39,9 +42,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     // private float originToShoulderLength = 0f;
 
     //private const float extendedArmLength = 0.8065f;
-
-    [SerializeField]
-    private Vector3 WristToManipulator = new Vector3 (0, -0.1322263f, 0);
 
     public CollisionListener collisionListener;
 
