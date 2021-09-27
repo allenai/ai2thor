@@ -231,7 +231,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         bool restrictTargetPosition = false,
         bool disableRendering = false
     ) {
-
         Vector3 offsetWorldPos;
         switch (coordinateSpace) {
             case "world":
@@ -241,11 +240,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 break;
             case "wrist":
                 // space relative to base of the wrist, where the camera is
-                offsetWorldPos = handCameraTransform.TransformPoint(offset) - handCameraTransform.TransformPoint(Vector3.zero);
+                offsetWorldPos = handCameraTransform.TransformPoint(offset) - handCameraTransform.position + WristToManipulator;
                 break;
             case "armBase":
                 // space relative to the root of the arm, joint 1
-                offsetWorldPos = this.transform.TransformPoint(offset) - this.transform.TransformPoint(Vector3.zero);
+                offsetWorldPos = this.transform.TransformPoint(offset) - this.transform.position;
                 break;
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
@@ -287,11 +286,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 break;
             case "wrist":
                 // space relative to base of the wrist, where the camera is
-                targetWorldPos = handCameraTransform.TransformPoint(target);
+                targetWorldPos = handCameraTransform.TransformPoint(target) + WristToManipulator;
                 break;
             case "armBase":
                 // space relative to the root of the arm, joint 1
-                targetWorldPos = arm.transform.Find("stretch_robot_arm_rig").transform.TransformPoint(target);
+                targetWorldPos = armBase.transform.TransformPoint(target);
                 break;
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
