@@ -114,6 +114,17 @@ def _unity_path():
     return unity_path
 
 
+def _remove_system_plugins():
+    # Under Unity >= 2021.2.0, the following libraries are provided by Unity
+    # so they must be removed to avoid conflicting.  Under Unity < 2021.2.0,
+    # they are required for Messagepack to function
+     
+    for filename in ["System.Buffers.dll", "System.Memory.dll", "System.Threading.Tasks.Extensions.dll"]:
+        path = os.path.join("unity/Assets/Plugins", filename)
+        if os.path.isfile(path):
+            print("removing %s" % path)
+            os.unlink(path)
+
 def _initialize_cloudrendering(unity_path):
     project_path = os.path.join(os.getcwd(), unity_path)
     command = (
@@ -1089,6 +1100,9 @@ def ci_build(context):
 
 @task
 def install_cloudrendering_engine(context):
+    global _unity_version
+    _unity_version = lambda: "2021.1.7f1"
+    #_unity_version = lambda: "2021.2.0b11"
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
@@ -1108,7 +1122,7 @@ def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
-    _unity_version = lambda: "2020.3.18f1"
+    _unity_version = lambda: "2021.2.0b11"
 
     arch = "CloudRendering"
     commit_id = git_commit_id()
@@ -1120,6 +1134,7 @@ def build_cloudrendering(context, push_build=False):
     build_path = build_dir + ".zip"
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
+    _remove_system_plugins()
     generate_msgpack_resolver(context)
     _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
