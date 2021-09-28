@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -29,6 +30,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 physicsSceneManager.physicsSimulationPaused = false;
                 this.hasFixedUpdateHappened = false;
             }
+        }
+
+        protected override void InitializeBody() {
+            VisibilityCapsule = DroneVisCap;
+            m_CharacterController.center = new Vector3(0, 0, 0);
+            m_CharacterController.radius = 0.2f;
+            m_CharacterController.height = 0.0f;
+
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.center = m_CharacterController.center;
+            cc.radius = m_CharacterController.radius;
+            cc.height = m_CharacterController.height;
+
+            m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
+
+            // camera position set forward a bit for drone
+            m_Camera.transform.localPosition = new Vector3(0, 0, 0.2f);
+
+            // camera FOV for drone
+            m_Camera.fieldOfView = 150f;
+
+            // default camera stand/crouch for drone mode since drone doesn't stand or crouch
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+            // drone also needs to toggle on the drone basket
+            DroneBasket.SetActive(true);
         }
 
 
