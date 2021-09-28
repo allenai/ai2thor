@@ -1722,16 +1722,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                // Force pickup object
-                case "fpu": {
-                        ServerAction action = new ServerAction();
-                        action.action = "PickupObject";
-                        action.objectId = splitcommand[1];
-                        action.forceAction = true;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-
                 // Get objects in box
                 case "oib": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2060,6 +2050,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                // Force pickup object
+                case "fpu": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickupObject";
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        }
+                        action["forceAction"] = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 // pickup using screen coordinates
                 case "puxy": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
