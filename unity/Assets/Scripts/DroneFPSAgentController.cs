@@ -145,7 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metadata based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
             objMeta.isCaught = this.GetComponent<DroneFPSAgentController>().isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;
@@ -210,6 +210,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+
+
             // can this object change others to hot?
             objMeta.isHeatSource = simObj.isHeatSource;
 
@@ -239,10 +241,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // TODO: using the isVisible flag on the object causes weird problems
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
-
-            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
-            //note using forceAction=True will ignore the isInteractable requirement
-            objMeta.isInteractable = isInteractable;
 
             objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
 

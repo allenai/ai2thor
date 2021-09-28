@@ -47,8 +47,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [Header("State information Bools here")]
 #if UNITY_EDITOR
     public bool debugIsVisible = false;
-    public bool debugIsInteractable = false;
 #endif
+    public bool debugIsInteractable = false;
     public bool isInAgentHand = false;
 
     // these collider references are used for switching physics materials for all colliders on this object
@@ -925,6 +925,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
     // Update is called once per frame
     void Update() {
+        debugIsInteractable = false;
+
         if (sceneManager.AllowDecayTemperature)// only do this if the scene is initialized to use Temperature decay over time
         {
             // if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
@@ -947,6 +949,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
         }
+    }
+    private void FixedUpdate() {
+        // isInteractable = false;
     }
 
     // used for throwing the sim object, or anything that requires adding force for some reason
@@ -1088,7 +1093,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         // interactable drawn in magenta
-        if (debugIsInteractable && gameObject.GetComponentInChildren<MeshFilter>()) {
+        if (debugIsInteractable == true && gameObject.GetComponentInChildren<MeshFilter>()) {
             MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);

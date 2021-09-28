@@ -180,7 +180,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return false;
                         }
                         if (i == 0) {
-                            if (isSimObjVisible(visibilityCheckCamera, toCover, 10f).visible) {
+                            if (isSimObjVisible(visibilityCheckCamera, toCover, 10f)) {
                                 return false;
                             }
                         }
@@ -415,11 +415,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!maxDistance.HasValue) {
                 maxDistance = maxVisibleDistance;
             }
-
-            SimObjPhysics[] interactable;
             actionFinishedEmit(true,
               GetAllVisibleSimObjPhysicsDistance(
-                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null, out interactable
+                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null
               ).Select(sop => sop.ObjectID).ToList()
             );
         }
@@ -443,8 +441,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
                 foreach (Transform point in visPoints) {
                     // if this particular point is in view...
-                    
-                    if (CheckIfVisibilityPointInViewport(target, point, camera, false).visible) {
+                    if (CheckIfVisibilityPointInViewport(
+                        target, point, camera, false
+                    )) {
                         visPointCount++;
                     }
                 }

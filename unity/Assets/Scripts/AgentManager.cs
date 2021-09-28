@@ -1353,9 +1353,9 @@ public class ObjectMetadata {
     // public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
     public bool visible;
 
-    // If true, object is obstructed by something and actions cannot be performed on it unless forced.
+    // If true, object is obstructed by something and actions cannot be performed on it.
     // This means an object behind glass will be obstructed=True and visible=True
-    public bool isInteractable;
+    public bool obstructed;
 
     // is this object a receptacle?
     public bool receptacle;

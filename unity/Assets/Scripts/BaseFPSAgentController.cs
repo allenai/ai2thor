@@ -1524,14 +1524,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            SimObjPhysics[] interactable;
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>(GetAllVisibleSimObjPhysics(
                 this.m_Camera,
                 this.maxVisibleDistance,
-                out interactable,
                 this.simObjFilter));
-
-            HashSet<SimObjPhysics> interactableSimObjsHash = new HashSet<SimObjPhysics>(interactable);
 
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
@@ -1544,7 +1540,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
-                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj), interactableSimObjsHash.Contains(simObj));
+                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
                 if (meta.toggleable) {
                     SimObjPhysics[] controlled = simObj.GetComponent<CanToggleOnOff>().ReturnControlledSimObjects();
                     List<string> controlledList = new List<string>();
@@ -1581,7 +1577,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metatada based on sim object's properties
-        public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+        public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
@@ -1675,11 +1671,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
 
-            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
-            //note using forceAction=True will ignore the isInteractable requirement
-            objMeta.isInteractable = isInteractable;
+            objMeta.obstructed = !isVisible;// if object is not interactable, it means it is obstructed
 
             objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
+
 
             objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
 
@@ -2012,35 +2007,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses objectId parameter to return the sim object that it target.
         // The action is halted if the objectId does not appear in the scene.
-        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceAction = false) {
+        protected SimObjPhysics getTargetObject(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
             }
-            
-            SimObjPhysics sop = getSimObjectFromId(objectId);
-            if (sop == null) {
-                throw new NullReferenceException($"Object with id '{objectId}' is null");
-            }
-            
-            SimObjPhysics[] interactable;
-            bool visible = GetAllVisibleSimObjPhysics(camera: this.m_Camera, maxDistance: this.maxVisibleDistance, out interactable, filterSimObjs: new List<SimObjPhysics> { sop }).Length == 1;
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
 
             // target not found!
-            if (!visible && !forceAction) {
+            if (target == null) {
                 throw new NullReferenceException("Target object not found within the specified visibility.");
             }
-            
-            if(interactable.Length == 0 && !forceAction) {
-                throw new NullReferenceException("Target object is visible but not interactable. It is likely obstructed by some clear object like glass.");
-            }
 
-            return sop;
+            return target;
         }
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        protected SimObjPhysics getInteractableSimObjectFromId(float x, float y, bool forceAction) {
+        protected SimObjPhysics getTargetObject(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
@@ -2682,11 +2668,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance) {
-            VisibilityCheck visCheck = new VisibilityCheck();
+        public bool isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance) {
+            bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
+                int visPointCount = 0;
 
                 float maxDistanceSquared = maxDistance * maxDistance;
                 foreach (Transform point in visPoints) {
@@ -2712,8 +2699,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     // if this particular point is in view...
-                    visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, sop.IsReceptacle);
-                    if (visCheck.visible && visCheck.interactable){
+                    if (CheckIfVisibilityPointInViewport(sop, point, camera, sop.IsReceptacle)) {
+                        visPointCount++;
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
@@ -2723,21 +2710,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // if we see at least one vis point, the object is "visible"
+                if (visPointCount > 0) {
 #if UNITY_EDITOR
-                sop.debugIsVisible = visCheck.visible;
-                sop.debugIsInteractable = visCheck.interactable;
+                    sop.debugIsVisible = true;
 #endif
+                    visible = true;
+                }
             } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
             }
-            return visCheck;
+            return visible;
         }
 
-        public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+        public bool isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+            bool visible = false;
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-            VisibilityCheck visCheck = new VisibilityCheck();
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
+                int visPointCount = 0;
+
                 float maxDistanceSquared = maxDistance * maxDistance;
                 foreach (Transform point in visPoints) {
                     bool outsidePlane = false;
@@ -2775,9 +2766,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     // if this particular point is in view...
-                    visCheck |= (CheckIfVisibilityPointRaycast(sop, point, camera, false) | CheckIfVisibilityPointRaycast(sop, point, camera, true));
-                    if (visCheck.visible && visCheck.interactable){
-                        
+                    if (CheckIfVisibilityPointRaycast(sop, point, camera, false) ||
+                        CheckIfVisibilityPointRaycast(sop, point, camera, true)) {
+                        visPointCount++;
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
@@ -2787,14 +2778,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // if we see at least one vis point, the object is "visible"
+                if (visPointCount > 0) {
 #if UNITY_EDITOR
-                sop.debugIsVisible = visCheck.visible;
-                sop.debugIsInteractable = visCheck.interactable;
-#endif                
+                    sop.debugIsVisible = true;
+#endif
+                    visible = true;
+                }
             } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
             }
-            return visCheck;
+            return visible;
         }
 
         // pass in forceVisible bool to force grab all objects of type sim obj
@@ -2811,25 +2804,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxDistance,
             IEnumerable<SimObjPhysics> filterSimObjs = null
         ) {
-            SimObjPhysics[] interactable;
 
             if (this.visibilityScheme == VisibilityScheme.Collider) {
-                return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs, out interactable);
+                return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs);
             } else {
-                return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
-            }
-        }
-        protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
-            Camera camera,
-            float maxDistance,
-            out SimObjPhysics[] interactable,
-            IEnumerable<SimObjPhysics> filterSimObjs = null
-        ) {
-
-            if (this.visibilityScheme == VisibilityScheme.Collider) {
-                return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs, out interactable);
-            } else {
-                return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
+                return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs);
             }
         }
 
@@ -2839,39 +2818,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // range and is visibile outside of the range, it will get reported as invisible
         // by the new scheme, but visible in the current scheme.
         protected SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(
-            Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs, out SimObjPhysics[] interactable
+            Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs
         ) {
             if (filterSimObjs == null) {
                 filterSimObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
             }
 
             List<SimObjPhysics> visible = new List<SimObjPhysics>();
-            List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
             foreach (var sop in filterSimObjs) {
-                VisibilityCheck visCheck = isSimObjVisible(camera, sop, this.maxVisibleDistance, planes);
-                if (visCheck.visible) {
+                if (isSimObjVisible(camera, sop, this.maxVisibleDistance, planes)) {
                     visible.Add(sop);
                 }
-
-                if (visCheck.interactable) {
-                    interactableItems.Add(sop);
-                }
             }
-
-            interactable = interactableItems.ToArray();
             return visible.ToArray();
         }
 
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs, out SimObjPhysics[] interactable) {
-            HashSet<SimObjPhysics> currentlyVisibleItems = new HashSet<SimObjPhysics>();
-            HashSet<SimObjPhysics> interactableItems = new HashSet<SimObjPhysics>();
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs) {
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
 #if UNITY_EDITOR
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics) {
                 // Set all objects to not be visible
                 pair.Value.debugIsVisible = false;
-                pair.Value.debugIsInteractable = false;
             }
 #endif
 
@@ -2879,7 +2848,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (filterSimObjs != null) {
                 filter = new HashSet<SimObjPhysics>(filterSimObjs);
                 if (filter.Count == 0) {
-                    interactable = interactableItems.ToArray();
                     return currentlyVisibleItems.ToArray();
                 }
             }
@@ -2952,13 +2920,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
                         if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                             Transform[] visPoints = sop.VisibilityPoints;
-                            VisibilityCheck visCheck = new VisibilityCheck();
+                            int visPointCount = 0;
 
                             foreach (Transform point in visPoints) {
                                 // if this particular point is in view...
-                                // if we see at least one vis point, the object is "visible"
-                                visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, includeInvisible);
-                                if (visCheck.visible && visCheck.interactable) {
+                                if (CheckIfVisibilityPointInViewport(
+                                    sop, point, camera, includeInvisible
+                                )) {
+                                    visPointCount++;
 #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
@@ -2967,16 +2936,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }
                             }
 
+                            // if we see at least one vis point, the object is "visible"
+                            if (visPointCount > 0) {
 #if UNITY_EDITOR
-                            sop.debugIsVisible = visCheck.visible;
-                            sop.debugIsInteractable = visCheck.interactable;
-#endif                
-                            if (visCheck.visible && !currentlyVisibleItems.Contains(sop)) {
-                                currentlyVisibleItems.Add(sop);
-                            }
-
-                            if (visCheck.interactable && !interactableItems.Contains(sop)) {
-                                interactableItems.Add(sop);
+                                sop.debugIsVisible = true;
+#endif
+                                if (!currentlyVisibleItems.Contains(sop)) {
+                                    currentlyVisibleItems.Add(sop);
+                                }
                             }
                         } else {
                             Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
@@ -2989,25 +2956,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             updateAllAgentCollidersForVisibilityCheck(true);
 
             // populate array of visible items in order by distance
-            List<SimObjPhysics> currentlyVisibleItemsToList = currentlyVisibleItems.ToList();
-            List<SimObjPhysics> interactableItemsToList = interactableItems.ToList();
-
-            interactableItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            currentlyVisibleItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            
-            interactable = interactableItemsToList.ToArray();
-            return currentlyVisibleItemsToList.ToArray();
+            currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            return currentlyVisibleItems.ToArray();
         }
 
         // check if the visibility point on a sim object, sop, is within the viewport
         // has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected VisibilityCheck CheckIfVisibilityPointRaycast(
+        protected bool CheckIfVisibilityPointRaycast(
             SimObjPhysics sop,
             Transform point,
             Camera camera,
             bool includeInvisible
         ) {
-            VisibilityCheck visCheck = new VisibilityCheck();
+            bool result = false;
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
@@ -3033,12 +2994,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         hit.transform == sop.transform
                         || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
                     ) {
-                        visCheck.visible = true;
-                        visCheck.interactable = true;
+                        result = true;
+                        sop.debugIsInteractable = true;
 #if UNITY_EDITOR
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
 #endif
-                    } 
+                    } else {
+                        result = false;
+                    }
                 }
             }
 
@@ -3052,8 +3015,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ) {
                         // if this line is drawn, then this visibility point is in camera frame and not occluded
                         // might want to use this for a targeting check as well at some point....
-                        visCheck.visible = true;
-                        visCheck.interactable = true;
+                        result = true;
+                        sop.debugIsInteractable = true;
                     } else {
                         // we didn't directly hit the sop we are checking for with this cast,
                         // check if it's because we hit something see-through
@@ -3084,9 +3047,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
                                 ) {
                                     // found the object we are looking for, great!
-                                    //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
-                                    visCheck.visible = true;
-                                    visCheck.interactable = false;
+                                    result = true;
                                     break;
                                 } else {
                                     // Didn't find it, continue on only if the hit object was translucent
@@ -3101,23 +3062,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
 #if UNITY_EDITOR
-                    if (visCheck.visible) {
+                    if (result) {
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
                     }
 #endif
                 }
             }
 
-            return visCheck;
+            return result;
         }
 
-        protected VisibilityCheck CheckIfVisibilityPointInViewport(
+        protected bool CheckIfVisibilityPointInViewport(
             SimObjPhysics sop,
             Transform point,
             Camera camera,
             bool includeInvisible
         ) {
-            VisibilityCheck visCheck = new VisibilityCheck();
+            bool result = false;
 
             Vector3 viewPoint = camera.WorldToViewportPoint(point.position);
 
@@ -3130,16 +3091,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 &&
                 viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) // within y bounds of viewport
             {
-                visCheck = CheckIfVisibilityPointRaycast(sop, point, camera, includeInvisible);
+                result = CheckIfVisibilityPointRaycast(sop, point, camera, includeInvisible);
             }
 
 #if UNITY_EDITOR
-            if (visCheck.visible) {
+            if (result == true) {
                 Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
             }
 #endif
 
-            return visCheck;
+            return result;
         }
 
         public void DefaultAgentHand() {
@@ -3598,6 +3559,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Invalid object type '" + objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
+        }
+
+        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceVisible = false) {
+            SimObjPhysics sop = getSimObjectFromId(objectId);
+            if (sop == null) {
+                errorMessage = "Object with id '" + objectId + "' is null";
+                return null;
+            }
+
+            if (forceVisible || IsInteractable(sop)) {
+                return sop;
+            }
+
+            return null;
         }
 
         protected SimObjPhysics getSimObjectFromId(string objectId) {
@@ -4452,17 +4427,4 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, conflicts);
         }
     }
-    
-    public class VisibilityCheck {
-        public bool visible;
-        public bool interactable;
-
-        public static VisibilityCheck operator |(VisibilityCheck a, VisibilityCheck b) {
-            VisibilityCheck c = new VisibilityCheck();
-            c.interactable = a.interactable || b.interactable;
-            c.visible = a.visible || b.visible;
-            return c;
-        }
-    }
-    
 }
