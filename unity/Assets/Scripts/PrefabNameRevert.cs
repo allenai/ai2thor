@@ -13,8 +13,7 @@
 
         public static string GetPrefabAssetName(GameObject prefab)
         {
-                var thing = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
-                return thing.name;
+            return PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab).name;
         }
     
         public static void RemoveNameModification(UnityEngine.Object aObj)

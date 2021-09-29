@@ -284,6 +284,8 @@ namespace Thor.Procedural.Data {
         public WallRectangularHole hole = null;
         public string materialId;
 
+        public string room_id;
+
         public float material_tiling_x_divisor = 1.0f;
         public float material_tiling_y_divisor = 1.0f;
 

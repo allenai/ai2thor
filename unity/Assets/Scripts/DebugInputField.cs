@@ -385,6 +385,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["fieldOfView"] = 90f;
                         action["snapToGrid"] = true;
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderSemanticSegmentation"] = true;
                         action["action"] = "Initialize";
                         action["procedural"] = true;
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));

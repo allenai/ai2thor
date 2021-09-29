@@ -814,6 +814,7 @@ namespace Thor.Procedural {
             );
 
             setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxC);
+            ProceduralTools.setFloorProperties(wallGO, toCreate);
 
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
@@ -1010,6 +1011,19 @@ namespace Thor.Procedural {
             return roomProps;
         }
 
+         public static WallProperties setFloorProperties(GameObject gameObject, Wall wall) {
+            var wallProps = gameObject.AddComponent<WallProperties>();
+            wallProps.RoomId = wall.room_id;
+            return wallProps;
+        }
+
+         public static ConnectionProperties setConnectionProperties(GameObject gameObject, WallRectangularHole hole) {
+            var holeProps = gameObject.AddComponent<ConnectionProperties>();
+            holeProps.OpenFromRoomId = hole.room_0;
+            holeProps.OpenToRoomId = hole.room_1;
+            return holeProps;
+        }
+
         public static SimObjPhysics setRoomSimObjectPhysics(
             GameObject floorGameObject,
             string simObjId,
@@ -1109,23 +1123,6 @@ namespace Thor.Procedural {
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
 
-        private static Wall polygonWallToSimpleWall(PolygonWall wall) {
-            //wall.polygon.
-            var polygons = wall.polygon.OrderBy(p => p.y);
-            var maxY = wall.polygon.Max(p => p.y);
-            var p0 = polygons.ElementAt(0);
-            return new Wall() {
-                id = wall.id,
-                p0 = polygons.ElementAt(0),
-                p1 = polygons.ElementAt(1),
-                height = maxY - p0.y,
-                materialId = wall.material,
-                empty = wall.empty,
-                material_tiling_x_divisor = wall.material_tiling_x_divisor,
-                material_tiling_y_divisor = wall.material_tiling_y_divisor
-            };
-        }
-
         private static Wall polygonWallToSimpleWall(PolygonWall wall, Dictionary<string, WallRectangularHole> holes) {
             //wall.polygon.
             var polygons = wall.polygon.OrderBy(p => p.y);
@@ -1140,6 +1137,7 @@ namespace Thor.Procedural {
                 height = maxY - p0.y,
                 materialId = wall.material,
                 empty = wall.empty,
+                room_id = wall.room_id,
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
                 material_tiling_y_divisor = wall.material_tiling_y_divisor
@@ -1148,6 +1146,10 @@ namespace Thor.Procedural {
 
         public static string DefaultFloorRootObjectName => "Floor";
         public static string DefaultRootStructureObjectName => "Structure";
+
+        public static string DefaultRootWallsObjectName => "Walls";
+
+        public static string  DefaultCeilingRootObjectName => "Ceiling";
 
         public static string DefaultLightingRootName => "ProceduralLighting";
         public static string DefaultObjectsRootName => "Objects";
@@ -1285,19 +1287,7 @@ namespace Thor.Procedural {
             var collider = ProceduralTools.createFloorCollider(floorGameObject, roomCluster, floorColliderThickness);
 
 
-            // generate ceiling
-            if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
-                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceiling_back_faces);
-
-                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
-                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
-
-                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
-                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
-
-                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
-            }
+            
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
@@ -1310,10 +1300,26 @@ namespace Thor.Procedural {
 
             var structureGO = new GameObject(DefaultRootStructureObjectName);
 
-            var wallsGO = ProceduralTools.createWalls(walls, materialDb, $"Structure");
+            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName);
 
             floorGameObject.transform.parent = structureGO.transform;
             wallsGO.transform.parent = structureGO.transform;
+
+            // generate ceiling
+            if (ceilingMaterialId != "") {
+                var ceilingGameObject = createSimObjPhysicsGameObject(DefaultCeilingRootObjectName, new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceiling_back_faces);
+
+                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
+                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
+
+                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
+                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+
+                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
+
+               ceilingGameObject.transform.parent = structureGO.transform;
+            }
 
             foreach (var obj in house.objects) {
                 // var go = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), obj);
@@ -1366,6 +1372,8 @@ namespace Thor.Procedural {
                         rotation,
                         true
                     );
+
+                    setConnectionProperties(go, holeCover);
 
                     if (holeCover.open) {
                         var canOpen = go.GetComponentInChildren<CanOpen_Object>();
