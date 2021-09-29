@@ -1528,7 +1528,7 @@ namespace Thor.Procedural {
 
                 // skip all these prefabs
                 if (
-                    assetPath.Contains("SceneSetupPrefabs")
+                    assetPath.Contains("Scene Setup Prefabs") || assetPath.Contains("Entryway Objects")
                     || skipAssetNames.Contains(assetName)
                 ) {
                     continue;
