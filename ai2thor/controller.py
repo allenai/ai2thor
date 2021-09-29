@@ -21,7 +21,8 @@ import subprocess
 import shutil
 import re
 import os
-import platform
+from platform import system  as platform_system
+from platform import architecture  as platform_architecture
 import uuid
 from functools import lru_cache
 
@@ -391,6 +392,7 @@ class Controller(object):
         include_private_scenes=False,
         server_class=None,
         gpu_device=None,
+        platform=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -456,11 +458,11 @@ class Controller(object):
                 )
             )
 
-        if server_class is None and platform.system() == "Windows":
+        if server_class is None and platform_system() == "Windows":
             self.server_class = ai2thor.wsgi_server.WsgiServer
         elif (
             isinstance(server_class, ai2thor.fifo_server.FifoServer)
-            and platform.system() == "Windows"
+            and platform_system() == "Windows"
         ):
             raise ValueError("server_class=FifoServer cannot be used on Windows.")
         elif server_class is None:
@@ -482,7 +484,7 @@ class Controller(object):
         elif local_executable_path:
             self._build = ai2thor.build.ExternalBuild(local_executable_path)
         else:
-            self._build = self.find_build(local_build, commit_id, branch)
+            self._build = self.find_build(local_build, commit_id, branch, platform)
 
         self._build.download()
 
@@ -1112,9 +1114,9 @@ class Controller(object):
 
         return commits
 
-    def find_build(self, local_build, commit_id, branch):
+    def find_build(self, local_build, commit_id, branch, platform):
         releases_dir = self.releases_dir
-        if platform.architecture()[0] != "64bit":
+        if platform_architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
         if branch:
             commits = self._branch_commits(branch)
@@ -1133,19 +1135,27 @@ class Controller(object):
             ] + commits  # we add the commits to the list to allow the ci_build to succeed
 
         request = ai2thor.platform.Request(
-            platform.system(), self.width, self.height, self.x_display, self.headless
+            platform_system(), self.width, self.height, self.x_display, self.headless
         )
-        builds = self.find_platform_builds(request, commits, releases_dir, local_build)
+
+
+        if platform is None:
+            candidate_platforms = ai2thor.platform.select_platforms(request)
+        else:
+            candidate_platforms = [platform]
+
+        builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
         if not builds:
+            platforms_message = ",".join(map(lambda p: p.name(), candidate_platforms))
             if commit_id:
                 raise ValueError(
-                    "Invalid commit_id: %s - no build exists for arch=%s"
-                    % (commit_id, platform.system())
+                    "Invalid commit_id: %s - no build exists for arch=%s platforms=%s"
+                    % (commit_id, platform_system(), platforms_message)
                 )
             else:
                 raise Exception(
-                    "No build exists for arch=%s and commits: %s"
-                    % (platform.system(), ", ".join(map(lambda x: x[:8], commits)))
+                    "No build exists for arch=%s platforms=%s and commits: %s"
+                    % (platform_system(), platforms_message, ", ".join(map(lambda x: x[:8], commits)))
                 )
 
         # select the first build + platform that succeeds
@@ -1175,8 +1185,7 @@ class Controller(object):
             error_messages.append(message)
         raise Exception("\n".join(error_messages))
 
-    def find_platform_builds(self, request, commits, releases_dir, local_build):
-        candidate_platforms = ai2thor.platform.select_platforms(request)
+    def find_platform_builds(self, candidate_platforms, request, commits, releases_dir, local_build):
         builds = []
         for plat in candidate_platforms:
             for commit_id in commits:
