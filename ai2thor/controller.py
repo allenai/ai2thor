@@ -1138,9 +1138,10 @@ class Controller(object):
             platform_system(), self.width, self.height, self.x_display, self.headless
         )
 
-        candidate_platforms = ai2thor.platform.select_platforms(request)
 
-        if platform is not None:
+        if platform is None:
+            candidate_platforms = ai2thor.platform.select_platforms(request)
+        else:
             candidate_platforms = [platform]
 
         builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
