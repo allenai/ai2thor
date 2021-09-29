@@ -4447,7 +4447,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (simObj != null) {
                 simObj.objectID = spawned.name;
             }
-            physicsSceneManager.ObjectIdToSimObjPhysics.Add(simObj.objectID, simObj);
+
+            // some spawned assets have nested SimObjPhysics components,
+            // meaning multiple objects beyond simObj may be updated
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
             var bounds = GetObjectSphereBounds(spawned);
 
