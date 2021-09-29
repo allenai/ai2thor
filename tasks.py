@@ -1783,7 +1783,7 @@ def benchmark(
     def telerport_to_random_reachable(env):
 
         if house_json_path:
-            print(" path {}/{}".format(curr, house_json_path))
+            print("Loading house from path: '{}'. cwd: '{}'".format(house_json_path, curr))
             with open(house_json_path, "r") as f:
                 house = json.load(f)
                 dict(
