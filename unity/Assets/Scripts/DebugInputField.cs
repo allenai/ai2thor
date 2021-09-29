@@ -3716,8 +3716,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // used to show what's currently visible on the top left of the screen
         void OnGUI() {
-            if (PhysicsController.VisibleSimObjPhysics != null && this.controlMode != ControlMode.MINIMAL_FPS) {
-                if (PhysicsController.VisibleSimObjPhysics.Length > 10) {
+            if (CurrentActiveController().VisibleSimObjPhysics != null && this.controlMode != ControlMode.MINIMAL_FPS) {
+                if (CurrentActiveController().VisibleSimObjPhysics.Length > 10) {
                     int horzIndex = -1;
                     GUILayout.BeginHorizontal();
                     foreach (SimObjPhysics o in PhysicsController.VisibleSimObjPhysics) {
@@ -3735,7 +3735,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
                     // int position_number = 0;
-                    foreach (SimObjPhysics o in PhysicsController.VisibleSimObjPhysics) {
+                    foreach (SimObjPhysics o in CurrentActiveController().VisibleSimObjPhysics) {
                         string suffix = "";
                         // Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
                         // if (GeometryUtility.TestPlanesAABB(planes, bounds)) {

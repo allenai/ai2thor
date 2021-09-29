@@ -117,8 +117,8 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     project_path = os.path.join(os.getcwd(), unity_path)
 
     command = (
-        "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -executeMethod Build.%s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -3483,6 +3483,84 @@ def format_py(context):
         "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
     )
 
+
+@task
+def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")):
+    import stat
+    import requests
+
+    if not sys.platform.startswith("linux"):
+        raise Exception("Installation only support for Linux")
+    
+    res = requests.get("https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage")
+    res.raise_for_status()
+    os.makedirs(target_dir, exist_ok=True)
+
+    target_path = os.path.join(target_dir, "UnityHub.AppImage")
+
+    tmp_path = target_path + ".tmp-" + str(os.getpid())
+    with open(tmp_path, "wb") as f:
+        f.write(res.content)
+
+    if os.path.isfile(target_path):
+        os.unlink(target_path)
+
+    os.rename(tmp_path, target_path)
+    os.chmod(target_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  | stat.S_IROTH | stat.S_IXOTH)
+    print("Installed UnityHub at %s" % target_path)
+
+
+@task
+def install_unity_editor(context, version=None, changeset=None):
+    import yaml
+    import re
+    unity_hub_path = None
+    if sys.platform.startswith("linux"):
+        unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
+    elif sys.platform.startswith("darwin"):
+        unity_hub_path = "/Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub --"
+    else:
+        raise Exception("UnityHub CLI not supported")
+
+    if version is None:
+        with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
+            project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
+        m = re.match(r'^([^\s]+)\s+\(([a-zAZ0-9]+)\)', project_version["m_EditorVersionWithRevision"])
+
+        assert m, "Could not extract version/changeset from %s" % project_version["m_EditorVersionWithRevision"]
+        version = m.group(1)
+        changeset = m.group(2)
+    command = "%s --headless install --version %s" % (unity_hub_path, version) 
+    if changeset:
+        command += " --changeset %s" % changeset
+
+    platform_modules = dict(
+        linux=["mac-mono", "linux-il2cpp", "webgl"],
+        darwin=["mac-il2cpp", "linux-il2cpp", "linux-mono", "webgl"],
+    )
+    for m in platform_modules[sys.platform]:
+        command += " -m %s" % m
+
+
+    subprocess.check_call(command, shell=True)
+
+@task
+def generate_unity_alf(context):
+    # generates Unity License Acitivation file for use 
+    # with manual activation https://docs.unity3d.com/Manual/ManualActivationGuide.html
+
+    alf_path = "Unity_v%s.alf" % _unity_version()
+    subprocess.run("%s -batchmode -createManualActivationFile" % _unity_path(), shell=True)
+    assert os.path.isfile(alf_path), "ALF not found at %s" % alf_path
+
+    print("ALF created at %s. Activate license at: https://license.unity3d.com/manual" % alf_path)
+   
+@task
+def activate_unity_license(context, ulf_path):
+
+    assert os.path.isfile(ulf_path), "License file '%s' not found" % ulf_path
+
+    subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
 @task
 def test_utf(context):
