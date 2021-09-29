@@ -114,11 +114,31 @@ def _unity_path():
     return unity_path
 
 
-def _import_assets(unity_path, build_name, build_target):
+def _remove_system_plugins():
+    # Under Unity >= 2021.2.0, the following libraries are provided by Unity
+    # so they must be removed to avoid conflicting.  Under Unity < 2021.2.0,
+    # they are required for Messagepack to function
+     
+    for filename in ["System.Buffers.dll", "System.Memory.dll", "System.Threading.Tasks.Extensions.dll"]:
+        path = os.path.join("unity/Assets/Plugins", filename)
+        if os.path.isfile(path):
+            print("removing %s" % path)
+            os.unlink(path)
+
+def _initialize_cloudrendering(unity_path):
     project_path = os.path.join(os.getcwd(), unity_path)
     command = (
-        "%s -quit -batchmode -logFile %s/%s-import.log -projectpath %s -buildTarget %s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, build_target)
+        "%s -quit -batchmode -logFile %s/thor-InitializeCloudRendering-import.log -projectpath %s -buildTarget Standalone -executeMethod Build.InitializeCloudRendering"
+        % (_unity_path(), os.getcwd(), project_path)
+    )
+
+    subprocess.check_call(command, shell=True)
+
+def _import_assets(unity_path, build_target):
+    project_path = os.path.join(os.getcwd(), unity_path)
+    command = (
+        "%s -quit -batchmode -logFile %s/thor-%s-import.log -projectpath %s -buildTarget %s"
+        % (_unity_path(), os.getcwd(), build_target, project_path, build_target)
     )
 
     subprocess.check_call(command, shell=True)
@@ -1080,6 +1100,9 @@ def ci_build(context):
 
 @task
 def install_cloudrendering_engine(context):
+    global _unity_version
+    _unity_version = lambda: "2021.1.7f1"
+    #_unity_version = lambda: "2021.2.0b11"
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
@@ -1099,7 +1122,7 @@ def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
-    _unity_version = lambda: "2020.3.18f1"
+    _unity_version = lambda: "2021.2.0b11"
 
     arch = "CloudRendering"
     commit_id = git_commit_id()
@@ -1111,10 +1134,12 @@ def build_cloudrendering(context, push_build=False):
     build_path = build_dir + ".zip"
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
+    _remove_system_plugins()
     generate_msgpack_resolver(context)
+    _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
     # the clang compile
-    _import_assets(unity_path, build_name, arch)
+    _import_assets(unity_path, arch)
     _build(unity_path, arch, build_dir, build_name, {})
     if push_build:
         archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)
