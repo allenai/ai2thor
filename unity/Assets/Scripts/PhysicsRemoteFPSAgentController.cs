@@ -3032,7 +3032,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //utility function, spawn prefab at random position in receptacle
         //Object will fall into place with physics resolution
         public void SpawnObjectInReceptacleRandomly(string objectId, string prefabName, string targetReceptacle, AxisAngleRotation rotation) {
-            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            SimObjPhysics target = getInteractableSimObjectFromId(targetReceptacle, true);
             var spawnedObj = ProceduralTools.spawnObjectInReceptacleRandomly(this, ProceduralTools.getAssetMap(), prefabName, objectId, target, rotation);
             bool result = false;
             //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
@@ -3048,7 +3048,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //spawn prefab in a receptacle at target position. Object will fall into place with physics resolution
         public void SpawnObjectInReceptacle(string objectId, string prefabName, string targetReceptacle, Vector3 position, AxisAngleRotation rotation) {
-            SimObjPhysics target = getTargetObject(targetReceptacle, true);
+            SimObjPhysics target = getInteractableSimObjectFromId(targetReceptacle, true);
             var spawnedObj = ProceduralTools.spawnObjectInReceptacle(this, ProceduralTools.getAssetMap(), prefabName, objectId, target, position, rotation);
             bool result = false;
             //object succesfully spawned, wait for it to settle, then actionReturn success and the object's position
