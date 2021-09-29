@@ -4330,9 +4330,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                );
             }
 
             var asset = assetMap.getAsset(assetId);
@@ -4350,9 +4351,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 simObj.objectID = spawned.name;
             }
 
+            // some spawned assets have nested SimObjPhysics components,
+            // meaning multiple objects beyond simObj may be updated
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
             var bounds = GetObjectSphereBounds(spawned);
 
-           
             if (this.imageSynthesis) {
                 if (this.imageSynthesis.enabled) {
                     this.imageSynthesis.OnSceneChange();
