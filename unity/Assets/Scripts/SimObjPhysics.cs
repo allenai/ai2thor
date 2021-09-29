@@ -12,9 +12,13 @@ using UnityEditor.SceneManagement;
 #endif
 
 public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
-    [Header("Unique String ID of this Object")]
+    [Header("Unique String ID of this Object In Scene")]
     [SerializeField]
     public string objectID = string.Empty;
+
+    [Header("Name of the prefab asset this object uses")]
+    [SerializeField]
+    public string assetID = string.Empty;
 
     [Header("Object Type")]
     [SerializeField]

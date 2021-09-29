@@ -1400,8 +1400,11 @@ public class ObjectMetadata {
     // what type of object is this?
     public string objectType;
 
-    // uuid of the object
+    // uuid of the object in scene
     public string objectId;
+
+    // string name of prefab asset the sim object comes from
+    public string assetId;
 
     //report back what receptacles contain this object
     public string[] parentReceptacles;

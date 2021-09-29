@@ -1362,6 +1362,7 @@ namespace Thor.Procedural {
                     var go = spawnSimObjPrefab(
                         coverPrefab,
                         holeCover.id,
+                        holeCover.asset_id,
                         pos,
                         rotation,
                         true
@@ -1558,6 +1559,7 @@ namespace Thor.Procedural {
             return spawnSimObjPrefab(
                 go,
                 ho.id,
+                ho.asset_id,
                 ho.position,
                 Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
                 ho.kinematic
@@ -1588,6 +1590,7 @@ namespace Thor.Procedural {
         public static GameObject spawnSimObjPrefab(
             GameObject prefab,
             string id,
+            string assetId,
             Vector3 position,
             Quaternion rotation,
             bool kinematic = false
@@ -1602,6 +1605,7 @@ namespace Thor.Procedural {
 
             toSpawn.objectID = id;
             toSpawn.name = id;
+            toSpawn.assetID = assetId;
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
