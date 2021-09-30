@@ -151,6 +151,9 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.LATEST_SCENE_VERSION);
         }
 
+        // Make robot body invisible
+        GameObject.Find("VisibilityCapsule").SetActive(false);
+
         // We should always have debug logs enabled in debug builds.
         if (Debug.isDebugBuild) {
             Debug.unityLogger.logEnabled = true;
