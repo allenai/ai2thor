@@ -2,6 +2,7 @@
 import os
 import string
 import random
+import re
 import copy
 import json
 import pytest
@@ -1047,7 +1048,9 @@ def test_arm_jsonschema_metadata(controller):
 def test_get_scenes_in_build(controller):
     scenes = set()
     for g in glob.glob("unity/Assets/Scenes/*.unity"):
-        scenes.add(os.path.splitext(os.path.basename(g))[0])
+        # we currently ignore the 5xx scenes since they are not being worked on
+        if not re.match(r'^.*\/FloorPlan5[0-9]+_', g):
+            scenes.add(os.path.splitext(os.path.basename(g))[0])
 
     event = controller.step(dict(action="GetScenesInBuild"), raise_for_failure=True)
     return_scenes = set(event.metadata["actionReturn"])
