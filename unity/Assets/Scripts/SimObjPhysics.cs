@@ -16,7 +16,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [SerializeField]
     public string objectID = string.Empty;
 
-    [Header("Name of the prefab asset this object uses")]
+    [Header("Name of Prefab this Object comes from")]
     [SerializeField]
     public string assetID = string.Empty;
 

@@ -1403,7 +1403,7 @@ public class ObjectMetadata {
     // uuid of the object in scene
     public string objectId;
 
-    // string name of prefab asset the sim object comes from
+    //name of this game object's prefab asset if it has one
     public string assetId;
 
     //report back what receptacles contain this object
