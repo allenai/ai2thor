@@ -14,14 +14,14 @@ public class MCSMain : MonoBehaviour {
     private static float FLOOR_SCALE_X = 11f;
     private static float FLOOR_SCALE_Y = 0.5f;
     private static float FLOOR_SCALE_Z = 11f;
-    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 40f;
+    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 15f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
+    private static float INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X = 15f;
     private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 3f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 40f;
     private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 6f;
-    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -20.0f;
-    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 20.0f;
+    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.5f;
+    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.5f;
     private static float ISOMETRIC_FLOOR_SCALE_X = 20f;
     private static float ISOMETRIC_FLOOR_SCALE_Z = 20f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
@@ -344,12 +344,12 @@ public class MCSMain : MonoBehaviour {
 
             this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X,
+            this.wallFront.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X,
                 MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
             this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+            this.wallBack.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X,
                 MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
             this.floor.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_FLOOR_SCALE_X,
@@ -536,7 +536,7 @@ public class MCSMain : MonoBehaviour {
         for(int i = 0; i<numOfFloorSections; i++) {
             bool holeDrop = false;
             if(createHoles) {
-                foreach(MCSFloorHolesAndTexturesXZConfig hole in this.currentScene.holes) {
+                foreach(MCSConfigGrid hole in this.currentScene.holes) {
                     if(posX == hole.x && posZ == hole.z) {
                         holeDrop = true;
                         break;
@@ -548,7 +548,7 @@ public class MCSMain : MonoBehaviour {
             bool changeFloorMaterial = false;
             if(applyTextures) {
                 for(int j = 0; j<this.currentScene.floorTextures.Count && !changeFloorMaterial; j++) {
-                    foreach(MCSFloorHolesAndTexturesXZConfig position in this.currentScene.floorTextures[j].positions) {
+                    foreach(MCSConfigGrid position in this.currentScene.floorTextures[j].positions) {
                         if (posX == position.x && posZ == position.z) {
                             material = this.currentScene.floorTextures[j].material;
                             changeFloorMaterial = true;
@@ -1920,12 +1920,12 @@ public class MCSConfigScene {
     public MCSConfigPhysicsProperties wallProperties;
 
     public Vector3 roomDimensions;
-    public List<MCSFloorHolesAndTexturesXZConfig> holes;
+    public List<MCSConfigGrid> holes;
     public List<MCSConfigFloorTextures> floorTextures;
 }
 
 [Serializable]
-public class MCSFloorHolesAndTexturesXZConfig {
+public class MCSConfigGrid {
     public int x;
     public int z;
 }
@@ -1934,7 +1934,7 @@ public class MCSFloorHolesAndTexturesXZConfig {
 [Serializable]
 public class MCSConfigFloorTextures {
     public string material;
-    public List<MCSFloorHolesAndTexturesXZConfig> positions;
+    public List<MCSConfigGrid> positions;
 }
 
 
