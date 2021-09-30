@@ -1142,6 +1142,13 @@ class Controller(object):
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
+
+            # if the commit is using the default build commit, and 
+            # the platform target is CloudRendering we default to a known built
+            # commit until the build can be automated
+            if commit_id == ai2thor.build.COMMIT_ID and platform == ai2thor.platform.CloudRendering:
+                commits.append(ai2thor.build.DEFAULT_CLOUDRENDERING_COMMIT_ID)
+
             candidate_platforms = [platform]
 
         builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
