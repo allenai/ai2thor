@@ -223,7 +223,7 @@ public enum SimObjType : int {
     SoapContainer = 116,
     Spatula = 117,
     TeddyBear = 118,
-    TennisRacket = 119,
+    TennisRacquet = 119,
     Tissue = 120,
     Vase = 121,
     WallMirror = 122, // maybe don't use this, just use 'Mirror' instead?
