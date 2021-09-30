@@ -1606,6 +1606,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.objectId = simObj.ObjectID;
 
+            objMeta.assetId = simObj.assetID;
+
             // TODO: using the isVisible flag on the object causes weird problems
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
