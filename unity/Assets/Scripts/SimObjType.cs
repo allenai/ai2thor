@@ -589,8 +589,8 @@ public static class ReceptacleRestrictions {
         {SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Safe,
          SimObjType.Stool, SimObjType.Chair}},
 
-		// TENNIS RACKET
-		{SimObjType.TennisRacket, new List<SimObjType>()
+		// TENNIS RACQUET
+		{SimObjType.TennisRacquet, new List<SimObjType>()
         {SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}}, /// place on floor? 
 	
 		// TISSUE BOX
