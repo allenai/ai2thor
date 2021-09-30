@@ -3155,6 +3155,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success);
         }
 
