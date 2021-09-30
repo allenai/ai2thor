@@ -3,15 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+/////////HOW TO USE///////////
+/*
+put the sim object type in the `SimObjectType` string field in this component on 
+`PrefabAssetIdAssigner` in the Asset_Id_Assign scene
+
+Then hit the button to load all prefabs in the project that are sim objects of that type
+These assets will then be modified to include the prefab name in the `assetID` field
+of the prefab so it can be written out to object metadata
+*/
+
+
 #if UNITY_EDITOR
 [ExecuteInEditMode]
 public class PrefabAssetIdAssigner : MonoBehaviour
 {
     public string SimObjectType;
-    public List<GameObject> assetsOfSimObjectType = new List<GameObject>();
+    public Dictionary<GameObject, string> assetToAssetPath = new Dictionary<GameObject, string>();
 
     public void GetAllPrefabsOfType() 
     {
+        assetToAssetPath.Clear();
+
         //var assetsOfSimObjectType = new List<GameObject>();
         string[] guids = AssetDatabase.FindAssets("t:prefab");
 
@@ -34,22 +47,28 @@ public class PrefabAssetIdAssigner : MonoBehaviour
 
                     SimObjPhysics sop = asset.GetComponent<SimObjPhysics>();
                     if(sop.Type.ToString() == SimObjectType)
-                    assetsOfSimObjectType.Add(asset);
+                    assetToAssetPath.Add(asset, assetPath);
                 }
             }
     }
 
     public void AssignIds()
     {
-        if (UnityEditor.EditorApplication.isPlaying)
-            return;
-        UnityEditor.Undo.RecordObject(gameObject, "descriptive name of this operation");
-        /// make changes here
-        UnityEditor.EditorUtility.SetDirty(gameObject);
-        UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
-    }
+        GetAllPrefabsOfType();
+        foreach (KeyValuePair<GameObject, string> go in assetToAssetPath) 
+        {
+            GameObject assetRoot = go.Key;
+            string assetPath = go.Value;
 
+            GameObject contentRoot = PrefabUtility.LoadPrefabContents(assetPath);
+
+            //modify
+            contentRoot.GetComponent<SimObjPhysics>().assetID = assetRoot.name;
+
+            PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
+            PrefabUtility.UnloadPrefabContents(contentRoot);
+        }
+    }
 }
 
 [CustomEditor (typeof(PrefabAssetIdAssigner))]
@@ -59,10 +78,10 @@ public class AssetIdAssigner : Editor
     {
         DrawDefaultInspector();
         PrefabAssetIdAssigner myScript = (PrefabAssetIdAssigner)target;
-        if(GUILayout.Button("Get All Prefabs Of Type <something>"))
-        {
-            myScript.GetAllPrefabsOfType();
-        }
+        // if(GUILayout.Button("Get All Prefabs Of Type <something>"))
+        // {
+        //     myScript.GetAllPrefabsOfType();
+        // }
 
         if(GUILayout.Button("Assign Prefab Name as assetID to All Prefabs Gotten Of Type"))
         {
