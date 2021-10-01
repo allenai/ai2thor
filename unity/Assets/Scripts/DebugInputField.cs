@@ -388,6 +388,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                
+
+
+                case "sim": {
+                        var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
+                        Physics.Simulate(0.02f);
+                        var l = collisionListener.StaticCollisions();
+                        Debug.Log("total collisions: " + l.ToArray().Length);
+                        break;
+                    }
 
                 case "inits": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -395,8 +405,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["agentMode"] = "stretch";
                         //action["agentControllerType"] = "stretch";
-                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                         break;
