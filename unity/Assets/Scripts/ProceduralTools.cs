@@ -961,7 +961,7 @@ namespace Thor.Procedural {
             GameObject wallGameObject,
             string simObjId,
             GameObject visibilityPoints,
-            Collider collider
+            BoxCollider collider
         ) {
             var boundingBox = new GameObject("BoundingBox");
             // SimObjInvisible
@@ -969,13 +969,18 @@ namespace Thor.Procedural {
             var bbCollider = boundingBox.AddComponent<BoxCollider>();
             bbCollider.enabled = false;
             boundingBox.transform.parent = wallGameObject.transform;
+            boundingBox.transform.localPosition = Vector3.zero;
+            boundingBox.transform.localRotation = Quaternion.identity;
+
+            bbCollider.center = collider.center;
+            bbCollider.size = collider.size;
 
             wallGameObject.tag = "SimObjPhysics";
 
             var simObjPhysics = wallGameObject.AddComponent<SimObjPhysics>();
             simObjPhysics.objectID = simObjId;
             simObjPhysics.ObjType = SimObjType.Wall;
-            simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Wall;
+            simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Static;
             simObjPhysics.SecondaryProperties = new SimObjSecondaryProperty[] { };
 
             simObjPhysics.BoundingBox = boundingBox;

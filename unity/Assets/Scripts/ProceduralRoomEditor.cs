@@ -83,16 +83,6 @@ public class ProceduralRoomEditor : MonoBehaviour
     }
 
 
-    [Button] 
-    public void AssignIds() {
-        if (namedSimObjects == null) {
-            this.namedSimObjects = assignObjectIds();
-        }
-        else {
-            Debug.LogError("Ids already assigned!");
-        }
-    }
-
     private List<Vector3> getPolygonFromWallPoints(Vector3 p0, Vector3 p1, float height) {
         return new List<Vector3>() {
             p0,
@@ -270,7 +260,7 @@ public class ProceduralRoomEditor : MonoBehaviour
              var onLine0 = Math.Abs(dot0) >= 1.0f - eps;
              var onLine1 = Math.Abs(dot1) >= 1.0f - eps;
 
-              if (name == "wall_2_6" || name == "wall_2_7" || name == "wall_2_8" && d.gameObject.name == "Window_5") {
+              if (name == "wall_3_1" || name == "wall_3_2" && d.gameObject.name == "Window_3") {
                   Debug.Log($" ^^^^^^^^^^ DIRECTION p0 {p0World.x},{p0World.y},{p0World.z} p1 {p1World.x},{p1World.y},{p1World.z} dir {dir.x},{dir.y},{dir.z}");
                 Debug.Log($"************* wall {name}, wallp0 ({wallP0.x}, {wallP0.y}, {wallP0.z}),  wallp1 ({wallP1.x}, {wallP1.y}, {wallP1.z}), connP0 {p0Ref},  connP1 {p1Ref}, connP0ToWallP1 {connP0ToWallP1}, connP1ToWallP0 {connP1ToWallP0} dir {direction} connP1ToWallP0 {connP1ToWallP0} connP0ToWallP1 {connP0ToWallP1} t0.x {t0.x}, t0.y {t0.y}, t0.z {t0.z} t1.x {t1.x}, t1.y {t1.y}, t1.z {t1.z} onLine0 {onLine0}, onLine1 {onLine1} dot0 {dot0} dot1 {dot1}  num0.z {connP0ToWallP1.z} num1.z {connP1ToWallP0.z} dir.z {direction.z}" );
             }
@@ -408,10 +398,31 @@ public class ProceduralRoomEditor : MonoBehaviour
 
 
         var toDelete = colliderDistances.Where( 
-            next => wallPointOnConnectionLine(next.p0, next.p1, dir, next.collider.transform.forward, next.collider.gameObject.name)
+            next =>
+                (
+                    Vector3.Dot(next.collider.transform.forward, connectionNormal) >= normalEps
+                    && pointOnWallLine(next.p0, dir, p0World, next.collider.gameObject.name, "right")
+                )   
+                ||
+                (
+                    Vector3.Dot(next.collider.transform.forward, connectionNormal) >= normalEps 
+                    && pointOnWallLine(next.p1, -dir, p1World, next.collider.gameObject.name, "left")
+                )
+                ||
+                (
+                    Vector3.Dot(next.collider.transform.forward, -connectionNormal) >= normalEps
+                    && pointOnWallLine(next.p0, -dirNormalized, p1World, next.collider.gameObject.name, "backLeft")
+                )
+                ||
+                (
+                    Vector3.Dot(next.collider.transform.forward, -connectionNormal) >= normalEps 
+                    && pointOnWallLine(next.p1, dirNormalized, p0World, next.collider.gameObject.name, "backRight")
+                )
+            // next => wallPointOnConnectionLine(next.p0, next.p1, dir, next.collider.transform.forward, next.collider.gameObject.name)
         );
+        
 
-        Debug.Log("&&&&&&&&&& TODELETE " + string.Join(", ", toDelete.Select(w => w.collider.gameObject.name)));
+        Debug.Log($"&&&&&&&&&& TODELETE {d.gameObject.name} " + string.Join(", ", toDelete.Select(w => w.collider.gameObject.name)));
 
         //Debug.Log("Walls0 " + wall0.collider.name + " wall 1 " +wall1.collider.gameObject.name);
         // var debug = colliderDistances.ToList()[0];
@@ -462,15 +473,31 @@ public class ProceduralRoomEditor : MonoBehaviour
                     wallLeft.collider.GetComponent<MeshRenderer>().sharedMaterial
             );
 
-            var wallRev = createNewWall(
-                    $"wall_{id}_back", 
-                    connectionProps, 
-                    backWallClosestLeft.p0, 
-                    backWallClosestRight.p1, 
+          var material = backWallClosestRight.collider.GetComponent<MeshRenderer>().sharedMaterial;
+          var lenn = (wall.polygon[1] - wall.polygon[0]).magnitude;
+        //   var height = 
+          var wallRev =   new PolygonWall {
+            id = $"wall_{id}_back",
+            room_id = connectionProps?.OpenToRoomId,
+            polygon = new List<Vector3>() {wall.polygon[1], wall.polygon[0], wall.polygon[3], wall.polygon[2]},
+            // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
+            // TODO get material somehow
+            // material = connectionProps?.openFromWallMaterial?.name
+            material = material.name,
+
+            material_tiling_x_divisor = lenn / material.mainTextureScale.x,
+            material_tiling_y_divisor = backWallClosestRight.height / material.mainTextureScale.y
+        };
+
+            // var wallRev = createNewWall(
+            //         $"wall_{id}_back", 
+            //         connectionProps, 
+            //         backWallClosestLeft.p0, 
+            //         backWallClosestRight.p1, 
                     
-                    backWallClosestRight.height, 
-                    backWallClosestRight.collider.GetComponent<MeshRenderer>().sharedMaterial
-            );
+            //         backWallClosestRight.height, 
+            //         backWallClosestRight.collider.GetComponent<MeshRenderer>().sharedMaterial
+            // );
 
             Debug.Log($"^^^^^^^^^^^^ Created wall p0: {wall.polygon[0].ToString("F8")} p1: {wall.polygon[1].ToString("F8")}");
 
@@ -516,7 +543,7 @@ public class ProceduralRoomEditor : MonoBehaviour
                     room_0 = connectionProps?.OpenFromRoomId,
                     room_1 = connectionProps?.OpenToRoomId,
                     wall_0 = wall.id,
-                    wall_1 = filterType != SimObjType.Window ? wallRev.id : "",
+                    wall_1 = wallRev.id,
                     bounding_box = new Thor.Procedural.Data.BoundingBox { 
                         min = new Vector3(xLen, yMin, box.size.z / 2.0f), 
                         max = new Vector3(xLen+box.size.x, yMin + box.size.y, box.size.z /2.0f) 
@@ -550,7 +577,8 @@ public class ProceduralRoomEditor : MonoBehaviour
             // };
             box.enabled = false;
 
-            var wallsToCreate = new List<(PolygonWall wall, string afterWallId)>() { (wall, wallLeft.collider.name) };
+
+            var wallsToCreate = new List<(PolygonWall wall, string afterWallId)>() { (wall, wallLeft.collider.name), (wallRev, backWallClosestLeft.collider.name) };
 
             // if ( wallLeft.p1SqrDistance > minimumWallSqrDistanceCreateEpsilon ) {
             //     wallsToCreate.Add(
@@ -582,14 +610,14 @@ public class ProceduralRoomEditor : MonoBehaviour
 
             // wallsToCreate.Add((wall, wallLeft.collider.name));
 
-            if (filterType != SimObjType.Window) {
+            // if (filterType != SimObjType.Window) {
                 
-                wallsToCreate.Add((wallRev, backWallClosestLeft.collider.name));
+                // wallsToCreate.Add((wallRev, backWallClosestLeft.collider.name));
                
                 // wallsToCreate = wallsToCreate.(new List<(PolygonWall wall, string afterWallId)>() {(wallRev, backWallClosestLeft.collider.name)});
-            }
+            // }
 
-             Debug.Log("^^^^^^^^^^^^^^^^ SUPPOSED TO ADD PIECE OF SHIT " + string.Join(", ", wallsToCreate.Select(x => x.afterWallId)));
+            Debug.Log("^^^^^^^^^^^^^^^^ SUPPOSED TO ADD PIECE OF SHIT " + string.Join(", ", wallsToCreate.Select(x => x.afterWallId)));
 
 
 
@@ -680,7 +708,7 @@ public class ProceduralRoomEditor : MonoBehaviour
         var len = (p1 - p0).magnitude;
          return new PolygonWall {
             id = id,
-            room_id = connectionProps?.OpenToRoomId,
+            room_id = connectionProps?.OpenFromRoomId,
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
@@ -692,12 +720,12 @@ public class ProceduralRoomEditor : MonoBehaviour
         
     }
 
-    private ProceduralHouse regenerateWallsData() {
+    private ProceduralHouse regenerateWallsData(ProceduralHouse house) {
 
         // if (this.loadedHouse == null) {
         //     this.loadedHouse = readHouseFromJson(this.layoutJSONFilename);
         // }
-        var house = readHouseFromJson(this.layoutJSONFilename);
+        // var house = readHouseFromJson(this.layoutJSONFilename);
         var root = GameObject.Find(ProceduralTools.DefaultRootWallsObjectName);
         var wallsGOs = root.GetComponentsInChildren<SimObjPhysics>().Where(s => s.Type == SimObjType.Wall);
         // var wallsDict = this.loadedHouse.walls.ToDictionary(w => w.id, w => w);
@@ -724,11 +752,11 @@ public class ProceduralRoomEditor : MonoBehaviour
         // foreach (var m in wallsDict) {
         //     Debug.Log("Dict: " + m.Key);
         // }
-        // var doorWalls = serializeConnections(simObjs.Take(0), SimObjType.Doorway, "door", wallsDict).ToList();
-        var doorWalls = new List<ConnectionAndWalls>();
+        var doorWalls = serializeConnections(simObjs, SimObjType.Doorway, "door", wallsDict).ToList();
+        //doorWalls = doorWalls.Take(1).ToList();
+        // var doorWalls = new List<ConnectionAndWalls>();
 
-        
-        var windowWalls = serializeConnections(simObjs.Where(w => w.objectID == "Window_5"), SimObjType.Window, "window", wallsDict).ToList();
+        var windowWalls = serializeConnections(simObjs, SimObjType.Window, "window", wallsDict).ToList();
 
         Debug.Log("+++++++++++++++ Windows " + string.Join(", ", windowWalls.SelectMany(x => x.walls).Select(w => w.wall.id)));
         
@@ -761,34 +789,31 @@ public class ProceduralRoomEditor : MonoBehaviour
         // var allWalls = wallsJson.Concat(doorWalls.SelectMany(d => d.walls)).Concat(windowWalls.SelectMany(d => d.walls));
         var doors = doorWalls.Select(d => d.connection as Thor.Procedural.Data.Door);
         var windows = windowWalls.Select(d => d.connection as Thor.Procedural.Data.Window);
-
-        house.walls = wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList();
-        Debug.Log($"################# WALLS AFTER DELETE {string.Join(",", house.walls.Select(c=> c.id))}");
-        house.doors = doors.ToList();
-        house.windows = windows.ToList();
-        return house;
-
-        // var proc = new ProceduralHouse() {
-        //      public ProceduralParameters procedural_parameters { get; set; }
-        // public string id { get; set; }
-        // public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
-        // public List<PolygonWall> walls { get; set; } = new List<PolygonWall>();
-        // public List<Door> doors { get; set; } = new List<Door>();
-        // public List<Window> windows { get; set; } = new List<Window>();
-        // public List<HouseObject> objects { get; set; } = new List<HouseObject>();
-        // public Roof roof { get; set; }
-        // }
-
-        
+        Debug.Log($"TO DELETE: {string.Join(", ", toDeleteSet)}");
+        //  house.walls = wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList();
+        Debug.Log($"################# WALLS Before DELETE {string.Join(",", house.walls.Select(c=> c.id))}");
+        // house.doors = doors.ToList();
+        // house.windows = windows.ToList();
+        return new ProceduralHouse {
+            procedural_parameters = house.procedural_parameters,
+            id = house.id,
+            rooms = house.rooms,
+            walls =  wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList(),
+            doors = doors.ToList(),
+            windows = windows.ToList(),
+            objects = house.objects,
+            roof = house.roof
+        };
     }
 
-    [Button]
-     public void RegenerateWallsData() {
+    // Debug
+    // [Button]
+    //  public void RegenerateWallsData() {
 
-        this.regenerateWallsData();
+    //     this.regenerateWallsData(readHouseFromJson(this.layoutJSONFilename));
 
         
-    }
+    // }
 
      [Button]
     public void ReloadScene() {
@@ -1041,7 +1066,7 @@ public class ProceduralRoomEditor : MonoBehaviour
  
         // }
 
-            var house = regenerateWallsData();
+            var house = regenerateWallsData(this.readHouseFromJson(this.layoutJSONFilename));
             var outPath = BuildLayoutPath(outFilename);
             Debug.Log($"Serializing to: '{outFilename}', using procedural params and elements not in scene from: '{this.layoutJSONFilename}'");
            
