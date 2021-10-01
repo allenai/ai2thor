@@ -1397,6 +1397,9 @@ public class ObjectMetadata {
     // uuid of the object
     public string objectId;
 
+    //name of this game object's prefab asset if it has one
+    public string assetId;
+
     //report back what receptacles contain this object
     public string[] parentReceptacles;
 
