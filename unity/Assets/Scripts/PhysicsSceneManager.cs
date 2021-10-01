@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 [ExecuteInEditMode]
 
 public class PhysicsSceneManager : MonoBehaviour {
-
+    public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
 
     // get references to the spawned Required objects after spawning them for the first time.
@@ -63,9 +63,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public void SetupScene(bool genObjectID = true) {
-        Debug.Log("------- Setup Scene called " + genObjectID);
+
+        Debug.Log("------- Setup Scene called " + (genObjectID && !ProceduralMode));
         ObjectIdToSimObjPhysics.Clear();
-        GatherSimObjPhysInScene(genObjectID);
+        GatherSimObjPhysInScene(genObjectID && !ProceduralMode);
         GatherAllRBsInScene();
     }
     // Use this for initialization
@@ -205,8 +206,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
         foreach (SimObjPhysics o in allPhysObjects) {
-            if(genObjectID)
-            Generate_ObjectID(o);
+            if(genObjectID) {
+                Generate_ObjectID(o);
+            }
 
             // debug in editor, make sure no two object share ids for some reason
 #if UNITY_EDITOR

@@ -210,7 +210,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>()) {
             if (simObject != this) {
                 childSimObjects.Add(simObject.transform);
+
+                // TODO: fix, This line makes accessing the axisAligned bounding box of some composed object during edior fail
+                // Which is needed for procedural serialization
+
+                // HACK the bounding box function needs to be reworked to not use parenting/unparenting
+                // And more information needs to be stored for the TWO cases of parenting
+                // Firs: structural parenting, where objects are permanently part of each other drawer child of dresser
+                // Second: another functional parenting, where objects are temporarily parented but shouldn't be treated as part of the same prefab
+                // e.g. apple on a plate
+                #if !UNITY_EDITOR
                 simObject.transform.parent = null;
+                #endif
             }
         }
 

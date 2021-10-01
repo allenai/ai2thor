@@ -724,6 +724,8 @@ namespace Thor.Procedural {
                         + Vector3.up * offset.y
 
                     };
+//
+                Debug.Log($"-------- Cut holes vertices  center {center} transformed {String.Join(", ", vertices.Select(v => wallGO.transform.TransformPoint(v).ToString("F8")))}");
 
                 // triangles = new List<int>() {
                 //      1, 0, 2, 1, 2, 3, 1, 3, 4, 4, 5, 3, 4, 5, 6, 0, 6, 7, 0, 7, 2 };
@@ -1144,7 +1146,7 @@ namespace Thor.Procedural {
             };
         }
 
-        public static string DefaultFloorRootObjectName => "Floor";
+        public static string DefaultHouseRootObjectName => "Floor";
         public static string DefaultRootStructureObjectName => "Structure";
 
         public static string DefaultRootWallsObjectName => "Walls";
@@ -1160,7 +1162,7 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
-            string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultFloorRootObjectName;
+            string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultHouseRootObjectName;
             float receptacleHeight = house.procedural_parameters.receptacle_height;
             float floorColliderThickness = house.procedural_parameters.floor_collider_thickness;
             string ceilingMaterialId = house.procedural_parameters.ceiling_material;
@@ -1356,9 +1358,12 @@ namespace Thor.Procedural {
 
                 if (wallExists) {
                     var p0p1 = wall.wall_0.p1 - wall.wall_0.p0;
+                   
 
                     var p0p1_norm = p0p1.normalized;
-                    var pos = wall.wall_0.p0 + (p0p1_norm * holeCover.bounding_box.min.x) + Vector3.up * holeCover.bounding_box.min.y;
+                    var normal = Vector3.Cross(Vector3.up, p0p1_norm);
+                    var pos = wall.wall_0.p0 + (p0p1_norm * holeCover.bounding_box.min.x) + Vector3.up * holeCover.bounding_box.min.y; //- normal * holeCover.bounding_box.min.z/2.0f;
+                    Debug.Log($" ********* Spawn connection at {pos.ToString("F8")}");
                     var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall_0.p1, p1 = wall.wall_0.p0 });
                     //var rotY = getWallDegreesRotation(wall.wall_0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);

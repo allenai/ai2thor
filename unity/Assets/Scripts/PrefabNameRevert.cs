@@ -11,8 +11,9 @@
             RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.OnlyUserModifiable));
         }
 
-        public static string GetPrefabAssetName(GameObject prefab)
+        public static string GetPrefabAssetName(GameObject prefab, string name = "")
         {
+            Debug.Log("Object " + name);
             return PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab).name;
         }
     
