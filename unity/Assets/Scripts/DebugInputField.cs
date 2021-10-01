@@ -388,8 +388,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-                
-
 
                 case "sim": {
                         var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
@@ -404,8 +402,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["action"] = "Initialize";
                         action["agentMode"] = "stretch";
-                        //action["agentControllerType"] = "stretch";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        action["agentControllerType"] = "stretch";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                         break;
                     }
@@ -449,6 +448,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                 }
+
                 case "stretchtest6": {
                         List<string> commands = new List<string>();
                         commands.Add("run move_stretch_arm_6");
@@ -456,6 +456,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                 }
+
                 case "stretchtest7": {
                         List<string> commands = new List<string>();
                         commands.Add("run move_stretch_arm_7");
@@ -463,6 +464,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                 }
+
                 case "stretchtest8": {
                         List<string> commands = new List<string>();
                         commands.Add("run move_stretch_arm_8");
@@ -470,9 +472,115 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                 }
-                case "iktest": {
+                
+                case "stretchtest9": {
                         List<string> commands = new List<string>();
-                        commands.Add("run move_ik_arm");
+                        commands.Add("run move_stretch_arm_9");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest10": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_10");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest11": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_11");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest12": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_12");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest13": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_13");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest14": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_14");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest15": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_15");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest16": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_16");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest17": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_17");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest18": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_18");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+
+                case "stretchtestu": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_u");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtestd": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_d");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest1": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_2");
                         //commands.Add("debugarmjoints");
                         StartCoroutine(ExecuteBatch(commands));
                         break;
