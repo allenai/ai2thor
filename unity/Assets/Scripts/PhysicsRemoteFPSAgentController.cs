@@ -4231,7 +4231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics targetReceptacle = physicsSceneManager.ObjectIdToSimObjPhysics[action.receptacleObjectId];
 
-            if (targetReceptacle == null || !targetReceptacle.GetComponent<SimObjPhysics>()) {
+            if (targetReceptacle == null || !targetReceptacle.GetComponent<SimObjPhysics>() || targetReceptacle.GetComponent<StructureObject>()) {
                 errorMessage = action.receptacleObjectId + " is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
@@ -4973,7 +4973,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
-            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>() || target.GetComponent<StructureObject>()) {
                 errorMessage = action.objectId + " is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
@@ -5790,7 +5790,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
-            if (target == null || !target.GetComponent<SimObjPhysics>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>() || target.GetComponent<StructureObject>()) {
                 errorMessage = action.objectId + " is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
