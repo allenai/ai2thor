@@ -143,7 +143,7 @@ public class AgentManager : MonoBehaviour {
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
-        primaryAgent.SetAgentMode("default");
+        primaryAgent.InitializeBody("default");
 #endif
 
         StartCoroutine(EmitFrame());
@@ -176,28 +176,24 @@ public class AgentManager : MonoBehaviour {
             // if stochastic, set up stochastic controller
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
-                SetUpStochasticController(action);
+                primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
+		return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-                // set up stochastic controller
-                SetUpStochasticController(action);
-            } else {
-                SetUpStochasticController(action);
-            }
+            } 
+            // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
+            SetUpLocobotController(action);
+            
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-
-                // ok now set up drone controller
-                SetUpDroneController(action);
-            } else {
-                SetUpDroneController(action);
-            }
+            } 
+            SetUpDroneController(action);
 
         } else if (action.agentMode.ToLower() == "arm") {
 
@@ -209,7 +205,7 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level") {
                 var error = "'arm' mode must use either low-level or mid-level controller.";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             } else if (action.agentControllerType.ToLower() == "mid-level") {
                 // set up physics controller
@@ -225,14 +221,14 @@ public class AgentManager : MonoBehaviour {
                     } else {
                         var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
                         Debug.Log(error);
-                        primaryAgent.actionFinished(false, error);
+                        primaryAgent.actionFinished(success: false, errorMessage: error);
                         return;
                     }
                 }
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
         }
@@ -264,13 +260,13 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(addAgents(action));
 
     }
-
-    private void SetUpStochasticController(ServerAction action) {
+    
+    private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(StochasticRemoteFPSAgentController), baseAgentComponent);
+        primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
     }
 
     private void SetUpDroneController(ServerAction action) {
@@ -1373,9 +1369,9 @@ public class ObjectMetadata {
     // public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
     public bool visible;
 
-    // If true, object is obstructed by something and actions cannot be performed on it.
+    // If true, object is obstructed by something and actions cannot be performed on it unless forced.
     // This means an object behind glass will be obstructed=True and visible=True
-    public bool obstructed;
+    public bool isInteractable;
 
     // is this object a receptacle?
     public bool receptacle;
@@ -1478,6 +1474,9 @@ public class ObjectMetadata {
 
     // uuid of the object
     public string objectId;
+
+    //name of this game object's prefab asset if it has one
+    public string assetId;
 
     //report back what receptacles contain this object
     public string[] parentReceptacles;

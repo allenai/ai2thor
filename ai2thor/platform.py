@@ -202,7 +202,7 @@ class CloudRendering(BaseLinuxPlatform):
 
     @classmethod
     def dependency_instructions(cls, request):
-        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y libvulkan1"
+        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y install libvulkan1"
 
     @classmethod
     def failure_message(cls):

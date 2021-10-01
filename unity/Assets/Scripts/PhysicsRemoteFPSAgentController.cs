@@ -14,6 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class OrientedPoint {
@@ -27,6 +28,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // face swap stuff here
 
         public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
+
+        protected override void InitializeBody() {
+            VisibilityCapsule = TallVisCap;
+            m_CharacterController.center = new Vector3(0, 0, 0);
+            m_CharacterController.radius = 0.2f;
+            m_CharacterController.height = 1.8f;
+
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.center = m_CharacterController.center;
+            cc.radius = m_CharacterController.radius;
+            cc.height = m_CharacterController.height;
+
+            m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
+
+            // camera position
+            m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
+
+            // camera FOV
+            m_Camera.fieldOfView = 90f;
+
+            // set camera stand/crouch local positions for Tall mode
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0); // bigger y offset if tall
         }
 
         // change visibility check to use this distance when looking down
@@ -70,7 +96,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (decayTime < 0) {
                 throw new ArgumentOutOfRangeException("decayTime must be >= 0. You gave " + decayTime);
             }
-            SimObjPhysics sop = getTargetObject(objectId: objectId, forceAction: true);
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
             sop.SetHowManySecondsUntilRoomTemp(decayTime);
             actionFinished(true);
         }
@@ -134,8 +160,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metaWrapper;
         }
 
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
-            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible, isInteractable);
         }
 
         // change the radius of the agent's capsule on the char controller component, and the capsule collider component
@@ -2048,16 +2074,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target = getSimObjectFromId(action.objectId);
             }
 
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         target = sop;
-            //     }
-            // }
-            // print(target.objectID);
-            // print(target.isInteractable);
-
             if (target == null) {
                 errorMessage = "No valid target!";
                 Debug.Log(errorMessage);
@@ -3018,14 +3034,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float scaleOverSeconds = 1.0f,
             bool forceAction = false
         ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
 
             // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = getInteractableSimObjectFromId(objectId, forceAction);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
 
             // neither objectId nor coordinates found an object
             if (target == null) {
@@ -3655,6 +3666,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
             yield return new WaitForEndOfFrame();
             bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success, errorMessage);
         }
 
@@ -4037,14 +4054,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
-
             // if object is in the scene and visible, assign it to 'target'
-            targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceAction);
+            targetReceptacle = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
 
             placeHeldObject(
                 targetReceptacle: targetReceptacle,
@@ -4322,12 +4333,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
-            SimObjPhysics target = getTargetObject(x: x, y: y, forceAction: forceAction);
+            SimObjPhysics target = getInteractableSimObjectFromId(x: x, y: y, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
         public virtual void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
@@ -4829,14 +4840,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
 
@@ -4950,16 +4955,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private void toggleObject(string objectId, bool toggleOn, bool forceAction) {
             SimObjPhysics target = null;
-            bool forceVisible = forceAction;
-
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
 
             // if object is in the scene and visible, assign it to 'target'
-            target = getInteractableSimObjectFromId(objectId: objectId, forceVisible: forceVisible);
+            target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+
             if (!target) {
 
                 // target not found in currently visible objects, report not found
@@ -5150,7 +5149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             float openness = 1.0f
         ) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: true);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
             target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
             actionFinished(true);
         }
@@ -5161,7 +5160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            SimObjPhysics target = getTargetObject(objectId: objectId, forceAction: forceAction);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
             openObject(
                 target: target,
                 openness: openness,
@@ -5197,8 +5196,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
-        // object ID of an object in this receptacle
+        // XXX: This will return contained objects, but should not be used. Likely depracate this later
         public void Contains(ServerAction action) {
             if (action.objectId == null) {
                 errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
@@ -5206,7 +5204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SimObjPhysics target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
 
             if (target) {
                 List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
@@ -5910,8 +5908,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // Debug.Log(Vector3.Distance(tmp, transform.position));
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) {
                         // if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false) ||
-                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true)) {
+                        if ((CheckIfVisibilityPointInViewport(sop, point, m_Camera, false).visible ||
+                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true).visible)) {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
                         }
@@ -6120,7 +6118,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxDistanceFloat = (float)maxDistance;
             }
 
-            SimObjPhysics theObject = getTargetObject(objectId: objectId, forceAction: true);
+            SimObjPhysics theObject = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
 
             // Populate default standings. Note that these are boolean because that's
             // the most natural integration with Teleport
@@ -6897,7 +6895,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Transform point in sop.VisibilityPoints) {
                     Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
 
-                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false).visible) {
                         minX = Math.Min(viewPoint.x, minX);
                         maxX = Math.Max(viewPoint.x, maxX);
                         minY = Math.Min(viewPoint.y, minY);
@@ -7982,14 +7980,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             // we found it!
@@ -8044,14 +8036,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             // we found it!
@@ -8112,14 +8098,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8168,14 +8148,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8225,14 +8199,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (action.fillLiquid == null) {
@@ -8288,14 +8256,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
                 // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {
@@ -8346,14 +8308,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // an objectId was given, so find that target in the scene if it exists
             else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene and visible, assign it to 'target'
-                target = getInteractableSimObjectFromId(action.objectId, action.forceVisible);
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             if (target) {

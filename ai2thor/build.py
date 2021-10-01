@@ -30,6 +30,9 @@ try:
 except ImportError:
     pass
 
+# Since CloudRendering is manually built, this will act as a fallback
+# until the process is automated
+DEFAULT_CLOUDRENDERING_COMMIT_ID = "3f6d22c71663ac0b4ec0d2094d0ac935e1db158a"
 
 def build_name(arch, commit_id, include_private_scenes=False):
     if include_private_scenes:
