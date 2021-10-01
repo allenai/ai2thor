@@ -783,9 +783,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = StretchVisCap;
-                m_CharacterController.center = new Vector3(0, -0.223f, -0.1247f);
+                m_CharacterController.center = new Vector3(0, -0.213628f, -0.1247f);
                 m_CharacterController.radius = 0.17f;
-                m_CharacterController.height = 1.41f;
+                m_CharacterController.height = 1.412f;
 
                 CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
                 cc.center = m_CharacterController.center;
