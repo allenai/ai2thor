@@ -2,6 +2,7 @@
 import os
 import string
 import random
+import re
 import copy
 import json
 import pytest
@@ -47,7 +48,7 @@ def build_controller(**args):
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
-_stochastic_controller = build_controller(agentControllerType="stochastic")
+_stochastic_controller = build_controller(agentControllerType="stochastic", agentMode="stochastic")
 
 
 def skip_reset(controller):
@@ -129,6 +130,13 @@ def assert_images_far(image1, image2, min_mean_pixel_diff=10):
 def test_stochastic_controller(stochastic_controller):
     stochastic_controller.reset(TEST_SCENE)
     assert stochastic_controller.last_event.metadata["lastActionSuccess"]
+
+def test_stochastic_mismatch(fifo_controller):
+    try:
+        c = fifo_controller.reset(agentControllerType="stochastic", agentMode="default")
+    except RuntimeError as e:
+        error_message = str(e)
+    assert error_message and error_message.startswith("Invalid combination of agentControllerType=stochastic and agentMode=default")
 
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
@@ -809,7 +817,7 @@ def test_action_dispatch(fifo_controller):
 def test_action_dispatch_find_ambiguous_stochastic(fifo_controller):
     event = fifo_controller.step(
         dict(action="TestActionDispatchFindAmbiguous"),
-        typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
+        typeName="UnityStandardAssets.Characters.FirstPerson.LocobotFPSAgentController",
     )
 
     known_ambig = sorted(
@@ -860,7 +868,7 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
 def test_action_dispatch_find_conflicts_stochastic(fifo_controller):
     event = fifo_controller.step(
         dict(action="TestActionDispatchFindConflicts"),
-        typeName="UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController",
+        typeName="UnityStandardAssets.Characters.FirstPerson.LocobotFPSAgentController",
     )
     known_conflicts = {
         "TestActionDispatchConflict": ["param22"],
@@ -1040,7 +1048,9 @@ def test_arm_jsonschema_metadata(controller):
 def test_get_scenes_in_build(controller):
     scenes = set()
     for g in glob.glob("unity/Assets/Scenes/*.unity"):
-        scenes.add(os.path.splitext(os.path.basename(g))[0])
+        # we currently ignore the 5xx scenes since they are not being worked on
+        if not re.match(r'^.*\/FloorPlan5[0-9]+_', g):
+            scenes.add(os.path.splitext(os.path.basename(g))[0])
 
     event = controller.step(dict(action="GetScenesInBuild"), raise_for_failure=True)
     return_scenes = set(event.metadata["actionReturn"])

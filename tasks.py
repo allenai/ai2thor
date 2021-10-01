@@ -1120,6 +1120,7 @@ def ci_build_arch(arch, include_private_scenes=False):
 @task
 def poll_ci_build(context):
     import requests.exceptions
+    import ai2thor.platform
     import requests
 
     commit_id = git_commit_id()
@@ -1133,7 +1134,16 @@ def poll_ci_build(context):
             print(".", end="")
             last_emit_time = time.time()
 
-        for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+        check_platforms = ai2thor.build.AUTO_BUILD_PLATFORMS
+        travis_tag = os.environ.get('TRAVIS_TAG', '').strip()
+        if travis_tag:
+            # we must have CloudRendering available for tags/releases
+            # but it is currently manually built since it requires a 
+            # different verison of Unity, so this is a safety check to 
+            # ensure that it is there
+            check_platforms.append(ai2thor.platform.CloudRendering)
+
+        for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
                 if not commit_build.log_exists():
