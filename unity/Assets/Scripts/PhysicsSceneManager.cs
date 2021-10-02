@@ -284,6 +284,8 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
 
             o.ObjectID = parent.ObjectID + "|" + o.Type.ToString();
+
+            Debug.Log("**************** CALLED GENERATE OBJECT ID " + o.ObjectID);
             return;
 
         }

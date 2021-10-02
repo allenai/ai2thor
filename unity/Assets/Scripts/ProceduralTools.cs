@@ -1362,6 +1362,13 @@ namespace Thor.Procedural {
                 var wallExists = doorsToWalls.TryGetValue(holeCover.id, out wall);
 
                 if (wallExists) {
+                    
+                    // TODO Hack for inconsistent doors and windows
+                    // if (holeCover.GetType().IsAssignableFrom(typeof(Thor.Procedural.Data.Door))) {
+                    //     var tmp = wall.wall_0;    
+                    //     wall.wall_0 = wall.wall_1;
+                    //     wall.wall_1 = tmp;
+                    // }
                     var p0p1 = wall.wall_0.p1 - wall.wall_0.p0;
                    
 

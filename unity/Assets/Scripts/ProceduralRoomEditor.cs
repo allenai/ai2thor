@@ -135,7 +135,7 @@ public class ProceduralRoomEditor : MonoBehaviour
     private IEnumerable<ConnectionAndWalls> serializeConnections(IEnumerable<SimObjPhysics> connections, SimObjType filterType, string prefix, Dictionary<string, PolygonWall> wallMap) {
         var flippedForward = filterType == SimObjType.Window;
         var connectionsWithWalls = connections.Where(s => s.Type == filterType).Select( (d, i) => {
-            var id = d.objectID;
+            var id = d.gameObject.name;
 
             // Debug.Log($"----- {prefix} " + d.gameObject.name);
             var box = d.BoundingBox.GetComponent<BoxCollider>();
@@ -525,11 +525,10 @@ public class ProceduralRoomEditor : MonoBehaviour
 
                     //bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
                     // bounding_box = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
-                    type = connectionProps?.Type,
+                    type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()) ,
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
-                    // TODO
-                    open = false,
+                    open = (connectionProps?.IsOpen).GetValueOrDefault(),
                     asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
                 };
@@ -550,10 +549,10 @@ public class ProceduralRoomEditor : MonoBehaviour
                     },
 
                     // bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
-                    type = connectionProps?.Type,
+                    type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
-                    // TODO
-                    open = false,
+
+                    open = (connectionProps?.IsOpen).GetValueOrDefault(),
                     asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
                 };
@@ -814,6 +813,10 @@ public class ProceduralRoomEditor : MonoBehaviour
 
         
     // }
+    [Button] 
+    public void AssigObjectIds() {
+        this.assignObjectIds();
+    }
 
      [Button]
     public void ReloadScene() {
@@ -1047,6 +1050,8 @@ public class ProceduralRoomEditor : MonoBehaviour
     //     }
 
     // }
+
+    
 
 
     [Button(Expanded=true)] 
