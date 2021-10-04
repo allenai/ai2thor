@@ -783,9 +783,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = StretchVisCap;
-                m_CharacterController.center = new Vector3(0, -0.213628f, -0.1247f);
+                m_CharacterController.center = new Vector3(0, -0.1934924f, -0.1247f);
                 m_CharacterController.radius = 0.17f;
-                m_CharacterController.height = 1.412f;
+                m_CharacterController.height = 1.413f;
 
                 CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
                 cc.center = m_CharacterController.center;
@@ -796,7 +796,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
                 // camera position
-                m_Camera.transform.localPosition = new Vector3(0, 0.35f, 0.0453f);
+                m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
 
                 // camera FOV
                 m_Camera.fieldOfView = 60f;
