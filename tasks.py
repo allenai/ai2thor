@@ -1019,15 +1019,6 @@ def ci_build(context):
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
-            # give the travis poller time to see the result
-            for i in range(6):
-                b = travis_build(build["id"])
-                logger.info("build state for %s: %s" % (build["id"], b["state"]))
-
-                if b["state"] != "started":
-                    break
-                time.sleep(10)
-
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
 
             if (
@@ -1047,6 +1038,16 @@ def ci_build(context):
             build_pip_commit(context)
             push_pip_commit(context)
             generate_pypi_index(context)
+
+            # give the travis poller time to see the result
+            for i in range(12):
+                b = travis_build(build["id"])
+                logger.info("build state for %s: %s" % (build["id"], b["state"]))
+
+                if b["state"] != "started":
+                    break
+                time.sleep(10)
+
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
@@ -1120,7 +1121,6 @@ def ci_build_arch(arch, include_private_scenes=False):
 @task
 def poll_ci_build(context):
     import requests.exceptions
-    import ai2thor.platform
     import requests
 
     commit_id = git_commit_id()
@@ -1135,13 +1135,6 @@ def poll_ci_build(context):
             last_emit_time = time.time()
 
         check_platforms = ai2thor.build.AUTO_BUILD_PLATFORMS
-        travis_tag = os.environ.get('TRAVIS_TAG', '').strip()
-        if travis_tag:
-            # we must have CloudRendering available for tags/releases
-            # but it is currently manually built since it requires a 
-            # different verison of Unity, so this is a safety check to 
-            # ensure that it is there
-            check_platforms.append(ai2thor.platform.CloudRendering)
 
         for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)

@@ -3740,6 +3740,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
             yield return new WaitForEndOfFrame();
             bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success, errorMessage);
         }
 
