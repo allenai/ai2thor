@@ -14,6 +14,7 @@ using Thor.Procedural.Data;
 using System.Linq;
 using System.IO;
 
+#if UNITY_EDITOR
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour
 {
@@ -40,7 +41,7 @@ public class ProceduralRoomEditor : MonoBehaviour
         return obj.ToObject<ProceduralHouse>();
 
     }
-
+    
     private List<NamedSimObj> assignObjectIds() {
         var root = GameObject.Find(ProceduralTools.DefaultObjectsRootName);
             //var counter = new Dictionary<SimObjType, int>();
@@ -57,8 +58,10 @@ public class ProceduralRoomEditor : MonoBehaviour
                     })).ToList();
                 foreach (var namedObj in namedObjects) {
                     Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}" );
+                    namedObj.simObj.assetID = PrefabNameRevert.GetPrefabAssetName(namedObj.simObj.gameObject, namedObj.simObj.objectID);
                     namedObj.simObj.objectID = namedObj.id;
                     namedObj.simObj.gameObject.name = namedObj.id;
+                    
                 }
                 return namedObjects;
                 // foreach (var namedObj in this.namedSimObjects) {
@@ -1245,3 +1248,4 @@ public class ProceduralRoomEditor : MonoBehaviour
         
     }
 }
+#endif
