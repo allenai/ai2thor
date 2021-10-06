@@ -1006,6 +1006,22 @@ class Controller(object):
             stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
             stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
         )
+
+        try:
+            if self._build.platform == ai2thor.platform.CloudRendering:
+                # if Vulkan is not configured correctly then Unity will crash
+                # immediately after launching
+                self.server.unity_proc.wait(timeout=3)
+                if self.server.unity_proc.return_code is not None:
+                    message = (
+                        "Unity process has exited - check Player.log for errors. Confirm that Vulkan is properly configured on this system using vulkaninfo from the vulkan-utils package. returncode=%s"
+                        % (self.server.unity_proc.returncode,)
+                    )
+                    raise Exception(message)
+
+        except subprocess.TimeoutExpired:
+            pass
+
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
