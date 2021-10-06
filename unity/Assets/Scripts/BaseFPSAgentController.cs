@@ -4356,7 +4356,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var simObj = spawned.GetComponent<SimObjPhysics>();
             if (simObj != null) {
+                //currently name and objectId are the same
                 simObj.objectID = spawned.name;
+                //assign assetID to track prefab name from database
+                simObj.assetID = assetId;
             }
 
             // some spawned assets have nested SimObjPhysics components,
