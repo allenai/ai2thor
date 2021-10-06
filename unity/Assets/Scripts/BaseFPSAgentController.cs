@@ -416,7 +416,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float sw = m_CharacterController.skinWidth;
             Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
             rightForwardQueue.Enqueue((0, 0));
-            Vector3 startPosition = transform.position;
+            Vector3 startPosition = transform.TransformPoint(cc.center);
 
             Vector3 right;
             Vector3 forward;

@@ -279,6 +279,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ikArmSolver.ManipulateArm();
                 }
 
+                // TODO: why have two different Manipulate methods, this introduces dependencies to two different
+                // arm classes. We should make these arm classes a non-mono behavior inheriting a common interface
                 else if (controller.GetType() == typeof(StretchAgentController)) {
                     stretchArmSolver.ManipulateStretchArm();
                 }
