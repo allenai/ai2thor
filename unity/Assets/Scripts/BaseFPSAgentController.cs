@@ -416,7 +416,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float sw = m_CharacterController.skinWidth;
             Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
             rightForwardQueue.Enqueue((0, 0));
-            Vector3 startPosition = transform.TransformPoint(cc.center);
+            Vector3 startPosition = transform.position;
 
             Vector3 right;
             Vector3 forward;
@@ -538,6 +538,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             Debug.Log("count of reachable positions: " + reachablePos.Length);
+            // Debug.Log("REACHABLE POSITIONS LIST: ");
+            // for (int i = 0; i < reachablePos.Length; i++) {
+            //      if (Mathf.Abs(reachablePos[i].x - (-1f)) < Mathf.Epsilon &&
+            //          Mathf.Abs(reachablePos[i].y - (0.9109584f)) < Mathf.Epsilon &&
+            //          Mathf.Abs(reachablePos[i].z - (1.5f)) < Mathf.Epsilon ) {
+            //         Debug.Log("Reachable-point " + (i+1) + ": (" + reachablePos[i].x + ", " + reachablePos[i].y + ", " + reachablePos[i].z + ")");
+            //     }
+            // }
 #endif
 
             return reachablePos;
@@ -4027,12 +4035,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float moveMagnitude,
             int layerMask
         ) {
-            // make sure to offset this by capsuleCollider.center since we shrank the capsule size
-            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
+            // make sure to offset this by capsuleCollider.center since we adjust the capsule size vertically, and in some cases horizontally
+            Vector3 startPositionCapsuleCenter = startPosition + capsuleCollider.transform.TransformDirection(capsuleCollider.center);
             float radius = capsuleCollider.radius + skinWidth;
             float innerHeight = capsuleCollider.height / 2.0f - radius;
-            Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
-            Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+
+            Vector3 point1 = startPositionCapsuleCenter + new Vector3(0, innerHeight, 0);
+            Vector3 point2 = startPositionCapsuleCenter + new Vector3(0, -innerHeight + skinWidth, 0);
+            
             return Physics.CapsuleCastAll(
                 point1: point1,
                 point2: point2,
