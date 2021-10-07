@@ -1122,7 +1122,7 @@ def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
-    _unity_version = lambda: "2021.2.0b11"
+    _unity_version = lambda: "2020.3.19f1"
 
     arch = "CloudRendering"
     commit_id = git_commit_id()
@@ -1134,7 +1134,6 @@ def build_cloudrendering(context, push_build=False):
     build_path = build_dir + ".zip"
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
-    _remove_system_plugins()
     generate_msgpack_resolver(context)
     _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
@@ -3393,15 +3392,19 @@ def generate_msgpack_resolver(context):
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
 
     mpc_version = "2.1.194"
-    mpc_path = os.path.join(base_dir, "tmp/mpc-%s" % mpc_version)
+    tmp_dir = os.path.join(base_dir, "tmp")
+    mpc_path = os.path.join(tmp_dir, "mpc-%s" % mpc_version)
     if not os.path.isfile(mpc_path):
         install_msgpack_compiler(context, mpc_version, mpc_path)
         print("installing mpc")
 
+    env = os.environ.copy()
+    env["TMPDIR"] = tmp_dir
     subprocess.check_call(
         "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
-        shell=True,
+        shell=True, env=env
     )
+
     for g in glob.glob(os.path.join(target_dir, "*.cs")):
         with open(g) as f:
             source_code = f.read()
