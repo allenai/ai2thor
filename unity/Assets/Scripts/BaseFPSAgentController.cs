@@ -552,7 +552,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected abstract void InitializeBody();
+        public abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
             this.InitializeBody();

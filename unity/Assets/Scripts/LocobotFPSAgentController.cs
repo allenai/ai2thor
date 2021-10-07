@@ -26,7 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public LocobotFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        protected override void InitializeBody() {
+        public override void InitializeBody() {
             // toggle FirstPersonCharacterCull
 
             VisibilityCapsule = BotVisCap;
