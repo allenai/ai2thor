@@ -223,7 +223,7 @@ public enum SimObjType : int {
     SoapContainer = 116,
     Spatula = 117,
     TeddyBear = 118,
-    TennisRacquet = 119,
+    TennisRacket = 119,
     Tissue = 120,
     Vase = 121,
     WallMirror = 122, // maybe don't use this, just use 'Mirror' instead?
@@ -589,8 +589,8 @@ public static class ReceptacleRestrictions {
         {SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Safe,
          SimObjType.Stool, SimObjType.Chair}},
 
-		// TENNIS RACQUET
-		{SimObjType.TennisRacquet, new List<SimObjType>()
+		// TENNIS RACKET
+		{SimObjType.TennisRacket, new List<SimObjType>()
         {SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}}, /// place on floor? 
 	
 		// TISSUE BOX
