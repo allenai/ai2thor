@@ -13,6 +13,7 @@ import json
 import copy
 import logging
 import math
+import numbers
 import time
 import random
 import shlex
@@ -413,6 +414,24 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.x_display = None
+        self.gpu_device = gpu_device
+        cuda_visible_devices = list(
+            map(int, filter(lambda y: y.isdigit(),
+            map(lambda x: x.strip(),
+                os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
+
+        if self.gpu_device is not None:
+
+            # numbers.Integral works for numpy.int32/64 and Python int
+            if (not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0):
+                raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
+            elif cuda_visible_devices:
+                if self.gpu_device >= len(cuda_visible_devices):
+                    raise ValueError("Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s" % (self.gpu_device, cuda_visible_devices))
+                else:
+                    self.gpu_device = cuda_visible_devices[self.gpu_device]
+        elif cuda_visible_devices:
+            self.gpu_device = cuda_visible_devices[0]
 
         if x_display:
             self.x_display = x_display
@@ -631,23 +650,25 @@ class Controller(object):
 
         # update the initialization parameters
         init_params = init_params.copy()
+        target_width = init_params.pop("width", self.width)
+        target_height = init_params.pop("height", self.height)
 
         # width and height are updates in 'ChangeResolution', not 'Initialize'
-        if ("width" in init_params and init_params["width"] != self.width) or (
-            "height" in init_params and init_params["height"] != self.height
+        # with CloudRendering the command-line height/width aren't respected, so
+        # we compare here with what the desired height/width are and
+        # update the resolution if they are different
+        if (
+            target_width != self.last_event.screen_width
+            or target_height != self.last_event.screen_height
         ):
-            if "width" in init_params:
-                self.width = init_params["width"]
-                del init_params["width"]
-            if "height" in init_params:
-                self.height = init_params["height"]
-                del init_params["height"]
             self.step(
                 action="ChangeResolution",
-                x=self.width,
-                y=self.height,
+                x=target_width,
+                y=target_height,
                 raise_for_failure=True,
             )
+            self.width = target_width
+            self.height = target_height
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
@@ -956,6 +977,9 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
+        
+        if self.gpu_device:
+            command += " -force-device-index %d" % self.gpu_device
 
         return shlex.split(command)
 
@@ -1270,6 +1294,7 @@ class Controller(object):
         # receive the first request
         self.last_event = self.server.receive()
 
+        # we should be able to get rid of this since we check the resolution in .reset()
         if height < 300 or width < 300:
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 

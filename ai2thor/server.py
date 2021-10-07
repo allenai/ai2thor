@@ -302,10 +302,19 @@ class Event:
 
         return depth_image_float
 
-    def add_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
+    def add_third_party_camera_image_robot(self, third_party_image_data, width, height):
+        self.third_party_camera_frames.append(
+            read_buffer_image(
+                third_party_image_data, width, height
+            )
+        )
+
+    def add_third_party_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
         multiplier = 1.0
         camera_far_plane = kwargs.pop("camera_far_plane", 1)
         camera_near_plane = kwargs.pop("camera_near_plane", 0)
+        depth_width = kwargs.pop("depth_width", self.screen_width)
+        depth_height = kwargs.pop("depth_height", self.screen_height)
         if depth_format == DepthFormat.Normalized:
             multiplier = 1.0 / (camera_far_plane - camera_near_plane)
         elif depth_format == DepthFormat.Millimeters:
@@ -313,8 +322,28 @@ class Event:
 
         image_depth = (
             read_buffer_image(
-                image_depth_data, self.screen_width, self.screen_height, **kwargs
-            ).reshape(self.screen_height, self.screen_width)
+                image_depth_data, depth_width, depth_height, **kwargs
+            ).reshape(depth_height, depth_width)
+            * multiplier
+        )
+        self.third_party_depth_frames.append(image_depth.astype(np.float32))
+
+    def add_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
+        multiplier = 1.0
+        camera_far_plane = kwargs.pop("camera_far_plane", 1)
+        camera_near_plane = kwargs.pop("camera_near_plane", 0)
+        depth_width = kwargs.pop("depth_width", self.screen_width)
+        depth_height = kwargs.pop("depth_height", self.screen_height)
+
+        if depth_format == DepthFormat.Normalized:
+            multiplier = 1.0 / (camera_far_plane - camera_near_plane)
+        elif depth_format == DepthFormat.Millimeters:
+            multiplier = 1000.0
+
+        image_depth = (
+            read_buffer_image(
+                image_depth_data, depth_width, depth_height, **kwargs
+            ).reshape(depth_height, depth_width)
             * multiplier
         )
         self.depth_frame = image_depth.astype(np.float32)
@@ -357,7 +386,7 @@ class Event:
     def add_image(self, image_data, **kwargs):
         self.frame = read_buffer_image(
             image_data, self.screen_width, self.screen_height, **kwargs
-        )
+        )[:, :, :3] # CloudRendering returns 4 channels instead of 3
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(

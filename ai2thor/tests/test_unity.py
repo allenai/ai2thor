@@ -73,7 +73,7 @@ def reset_controller(controller):
         controller._original_initialization_parameters
     )
     if not hasattr(controller.last_event, "_pytest_skip_reset"):
-        controller.reset(TEST_SCENE)
+        controller.reset(TEST_SCENE, height=300, width=300)
         skip_reset(controller)
 
     return controller
@@ -111,14 +111,13 @@ def teleport_to_base_location(controller: Controller):
 
 
 def setup_function(function):
-    for c in [_fifo_controller, _wsgi_controller, _stochastic_controller]:
+    for c in fifo_wsgi_stoch:
         reset_controller(c)
 
 
 def teardown_module(module):
-    _wsgi_controller.stop()
-    _fifo_controller.stop()
-    _stochastic_controller.stop()
+    for c in fifo_wsgi_stoch:
+        c.stop()
 
 
 def assert_near(point1, point2, error_message=""):
@@ -907,7 +906,6 @@ def test_action_dispatch_missing_args(fifo_controller):
         event = fifo_controller.step(
             dict(action="TestActionDispatchNoop", param6="foo")
         )
-        print(event.metadata["actionReturn"])
     except ValueError as e:
         caught_exception = True
     assert caught_exception
@@ -1329,15 +1327,12 @@ def test_get_interactable_poses(controller):
         pose["standing"] == event.metadata["agent"]["isStanding"]
     ), "Agent's isStanding is off!"
 
+    # potato should be inside of the fridge (and, thus, non interactable)
     potatoId = next(
         obj["objectId"]
         for obj in controller.last_event.metadata["objects"]
         if obj["objectType"] == "Potato"
     )
-    event = controller.step(action="PickupObject", objectId=potatoId, forceAction=True)
-    # potato should be inside of the fridge (and, thus, non interactable)
-    event = controller.step(action="PutObject", objectId=fridge["objectId"], forceAction=True)
-
     event = controller.step("GetInteractablePoses", objectId=potatoId)
     assert (
         len(event.metadata["actionReturn"]) == 0
@@ -1605,7 +1600,7 @@ def test_get_coordinate_from_raycast(controller):
     query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {"x": -0.6037374, "y": 1.5759981870651245, "z": -1.05186844},
+        {"x": -0.5968407392501831, "y": 1.5759981870651245, "z": -1.0484200716018677},
     )
 
 
