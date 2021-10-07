@@ -61,18 +61,26 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public GameObject InstantiateAddressableGameObject(string path)
-    {
-        AsyncOperationHandle<GameObject> objectOperation = Addressables.LoadAssetAsync<GameObject>(path);
-        GameObject objectAsset = objectOperation.WaitForCompletion();
+    public GameObject InstantiateAddressableGameObject(string path) {
+        GameObject objectInstance;
 
-        AsyncOperationHandle<GameObject> op = Addressables.InstantiateAsync(path);
-        GameObject objectInstance = op.WaitForCompletion();
-        addressableGameObjects.Add(objectInstance);
-
-        Addressables.Release(objectAsset);
+        if (IsAssetAddressable(path)) {
+            objectInstance = Addressables.InstantiateAsync(path).WaitForCompletion();
+            addressableGameObjects.Add(objectInstance);
+            
+            GameObject objectAsset = Addressables.LoadAssetAsync<GameObject>(path).WaitForCompletion();
+            Addressables.Release(objectAsset);
+        }
+        else {
+            var prefab = Resources.Load<GameObject>(path);
+            objectInstance = GameObject.Instantiate(prefab);
+        }
 
         return objectInstance;
+    }
+
+    bool IsAssetAddressable(string path) {
+        return Addressables.LoadResourceLocationsAsync(path).WaitForCompletion().Count > 0;
     }
 
     /// <summary>
