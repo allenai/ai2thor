@@ -1012,15 +1012,6 @@ def ci_build(context):
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
-            # give the travis poller time to see the result
-            for i in range(6):
-                b = travis_build(build["id"])
-                logger.info("build state for %s: %s" % (build["id"], b["state"]))
-
-                if b["state"] != "started":
-                    break
-                time.sleep(10)
-
             # allow webgl to be force deployed with #webgl-deploy in the commit comment
 
             if (
@@ -1040,6 +1031,16 @@ def ci_build(context):
             build_pip_commit(context)
             push_pip_commit(context)
             generate_pypi_index(context)
+
+            # give the travis poller time to see the result
+            for i in range(12):
+                b = travis_build(build["id"])
+                logger.info("build state for %s: %s" % (build["id"], b["state"]))
+
+                if b["state"] != "started":
+                    break
+                time.sleep(10)
+
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
         # if we are in off hours, allow the nightly webgl build to be performed
@@ -1126,7 +1127,9 @@ def poll_ci_build(context):
             print(".", end="")
             last_emit_time = time.time()
 
-        for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+        check_platforms = ai2thor.build.AUTO_BUILD_PLATFORMS
+
+        for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
                 if not commit_build.log_exists():

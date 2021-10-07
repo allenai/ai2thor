@@ -68,6 +68,11 @@ public class Build {
         }
 
         foreach (string f in files) {
+            // ignore entryway scenes in build since these are not yet complete
+            if (f.Contains("FloorPlan5") && !f.EndsWith("FloorPlan5_physics.unity")) {
+                continue;
+            }
+
             if (f.EndsWith(".unity")) {
                 scenes.Add(f);
             }

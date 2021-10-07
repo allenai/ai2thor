@@ -16,7 +16,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 8
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4281170711352246
 Transform:
@@ -395,8 +395,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1198352603759848}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.70710677}
+  m_LocalPosition: {x: -1.301, y: 0.008000001, z: 0.988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4245141206546240}
@@ -407,9 +407,10 @@ Transform:
   - {fileID: 4120710655184140}
   - {fileID: 4131111942678388}
   - {fileID: 2382888395360025938}
+  - {fileID: 1075165563873663556}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!54 &54729765149035186
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -438,7 +439,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectID: Fridge|-01.30|+00.01|+00.99
+  objectID: 
+  assetID: Fridge_17
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 07000000080000000d000000
@@ -867,7 +869,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 8
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4120710655184140
 Transform:
@@ -1529,8 +1531,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.9990066, y: 0.10902627, z: 0.8945144}
-  m_Center: {x: -0.0010017495, y: -0.059560996, z: -0.052742742}
+  m_Size: {x: 0.9706598, y: 0.10902627, z: 0.8945144}
+  m_Center: {x: 0.0037225685, y: -0.059560996, z: -0.05274274}
 --- !u!114 &114705777499601588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1591,7 +1593,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 8
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4048084032072816
 Transform:
@@ -1854,7 +1856,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 8
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4193217770514808
 Transform:
@@ -2378,7 +2380,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 8
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4686325454651488
 Transform:
@@ -2611,6 +2613,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1198352603759848}
+--- !u!1 &7369177045093879485
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1075165563873663556}
+  - component: {fileID: 572395655290639861}
+  m_Layer: 8
+  m_Name: BoundingBox (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1075165563873663556
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7369177045093879485}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4903740557287400}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &572395655290639861
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7369177045093879485}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 1.3449862, y: 1.9216101, z: 1.75616}
+  m_Center: {x: -0.13430548, y: 0.95775115, z: 0.54256415}
 --- !u!1001 &7749942345951029375
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2686,7 +2732,7 @@ PrefabInstance:
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
       propertyPath: m_Size.y
-      value: 1.5395596
+      value: 1.5748796
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
@@ -2696,12 +2742,12 @@ PrefabInstance:
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
       propertyPath: m_Center.x
-      value: -0.004529476
+      value: -0.004529464
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
       propertyPath: m_Center.y
-      value: 0.045789868
+      value: 0.028129816
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}

@@ -106,7 +106,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 HideAllAgentRenderers();
 
                 // The VisibilityCapsule will be set to either Tall or Bot
-                // from the SetAgentMode call in BaseFPSAgentController's Initialize()
+                // from the InitializeBody call in BaseFPSAgentController's Initialize()
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
                 }
@@ -495,26 +495,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        protected abstract void InitializeBody();
+
         public void Initialize(ServerAction action) {
-            if (action.agentMode.ToLower() == "default" ||
-               action.agentMode.ToLower() == "locobot" ||
-               action.agentMode.ToLower() == "drone" ||
-               action.agentMode.ToLower() == "arm"
-               ) {
-                // set agent mode to Default, Bot or Drone accordingly
-                SetAgentMode(action.agentMode);
-            } else {
-                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone' or 'hand'";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
+            this.InitializeBody();
+            m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (action.gridSize == 0) {
                 action.gridSize = 0.25f;
             }
 
-            // note: this overrides the default FOV values set in SetAgentMode()
+            // note: this overrides the default FOV values set in InitializeBody()
             if (action.fieldOfView > 0 && action.fieldOfView < 180) {
                 m_Camera.fieldOfView = action.fieldOfView;
             } else if (action.fieldOfView < 0 || action.fieldOfView >= 180) {
@@ -596,119 +587,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.originalLightingValues = null;
         }
 
-        public void SetAgentMode(string mode) {
-            string whichMode = mode.ToLower();
-
-            // null check for camera, used to ensure no missing references on initialization
-            if (m_Camera == null) {
-                m_Camera = this.gameObject.GetComponentInChildren<Camera>();
-            }
-
-            FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
-
-            // determine if we are in Tall or Bot mode (or other modes as we go on)
-            if (whichMode == "default" || whichMode == "arm") {
-                // toggle FirstPersonCharacterCull
-                fpcc.SwitchRenderersToHide(whichMode);
-
-                VisibilityCapsule = TallVisCap;
-                m_CharacterController.center = new Vector3(0, 0, 0);
-                m_CharacterController.radius = 0.2f;
-                m_CharacterController.height = 1.8f;
-
-                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-                cc.center = m_CharacterController.center;
-                cc.radius = m_CharacterController.radius;
-                cc.height = m_CharacterController.height;
-
-                m_Camera.GetComponent<PostProcessVolume>().enabled = false;
-                m_Camera.GetComponent<PostProcessLayer>().enabled = false;
-
-                // camera position
-                m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
-
-                // camera FOV
-                m_Camera.fieldOfView = 90f;
-
-                // set camera stand/crouch local positions for Tall mode
-                standingLocalCameraPosition = m_Camera.transform.localPosition;
-                crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
-
-                // enable arm component
-                if (whichMode == "arm") {
-                    Debug.Log("initializing arm");
-                    IKArm.SetActive(true);
-                    Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-                    var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
-                    Vector3 pos = armTarget.transform.localPosition;
-                    pos.z = 0.4f; // pulls the arm in from being fully extended
-                    armTarget.transform.localPosition = pos;
-                    var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
-                    Debug.Log("running manipulate arm");
-                    ikSolver.ManipulateArm();
-                }
-            } else if (whichMode == "locobot") {
-                // toggle FirstPersonCharacterCull
-                fpcc.SwitchRenderersToHide(whichMode);
-
-                VisibilityCapsule = BotVisCap;
-                m_CharacterController.center = new Vector3(0, -0.45f, 0);
-                m_CharacterController.radius = 0.175f;
-                m_CharacterController.height = 0.9f;
-
-                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-                cc.center = m_CharacterController.center;
-                cc.radius = m_CharacterController.radius;
-                cc.height = m_CharacterController.height;
-
-                m_Camera.GetComponent<PostProcessVolume>().enabled = true;
-                m_Camera.GetComponent<PostProcessLayer>().enabled = true;
-
-                // camera position
-                m_Camera.transform.localPosition = new Vector3(0, -0.0312f, 0);
-
-                // camera FOV
-                m_Camera.fieldOfView = 60f;
-
-                // set camera stand/crouch local positions for Tall mode
-                standingLocalCameraPosition = m_Camera.transform.localPosition;
-                crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);// smaller y offset if Bot
-
-                // limit camera from looking too far down
-                this.maxDownwardLookAngle = 30f;
-                this.maxUpwardLookAngle = 30f;
-                // this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
-            } else if (whichMode == "drone") {
-                // toggle first person character cull
-                fpcc.SwitchRenderersToHide(whichMode);
-
-                VisibilityCapsule = DroneVisCap;
-                m_CharacterController.center = new Vector3(0, 0, 0);
-                m_CharacterController.radius = 0.2f;
-                m_CharacterController.height = 0.0f;
-
-                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-                cc.center = m_CharacterController.center;
-                cc.radius = m_CharacterController.radius;
-                cc.height = m_CharacterController.height;
-
-                m_Camera.GetComponent<PostProcessVolume>().enabled = false;
-                m_Camera.GetComponent<PostProcessLayer>().enabled = false;
-
-                // camera position set forward a bit for drone
-                m_Camera.transform.localPosition = new Vector3(0, 0, 0.2f);
-
-                // camera FOV for drone
-                m_Camera.fieldOfView = 150f;
-
-                // default camera stand/crouch for drone mode since drone doesn't stand or crouch
-                standingLocalCameraPosition = m_Camera.transform.localPosition;
-                crouchingLocalCameraPosition = m_Camera.transform.localPosition;
-
-                // drone also needs to toggle on the drone basket
-                DroneBasket.SetActive(true);
-            }
-        }
 
         public IEnumerator checkInitializeAgentLocationAction() {
             yield return null;
@@ -1666,6 +1544,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.moveable = simObj.IsMoveable;
 
             objMeta.objectId = simObj.ObjectID;
+
+            objMeta.assetId = simObj.assetID;
 
             // TODO: using the isVisible flag on the object causes weird problems
             // in the multiagent setting, explicitly giving this information for now.
@@ -3217,6 +3097,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success);
         }
 
