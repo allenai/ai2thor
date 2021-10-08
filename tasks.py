@@ -846,6 +846,9 @@ def link_build_cache(root_dir, arch, branch):
     # having to re-import all assets, which can take up to 1 hour
     if not os.path.exists(branch_cache_dir) and os.path.exists(main_cache_dir):
         logger.info("copying main cache for %s" % encoded_branch)
+
+        os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
+
         # -c uses MacOS clonefile
         subprocess.check_call(
             "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
