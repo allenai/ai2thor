@@ -1039,9 +1039,6 @@ def ci_build(context):
             ):
                 ci_build_webgl(context, build["commit_id"])
 
-            build_pip_commit(context)
-            push_pip_commit(context)
-            generate_pypi_index(context)
 
             for p in procs:
                 if p:
@@ -1051,6 +1048,11 @@ def ci_build(context):
                     )
                     p.join()
 
+            # must have this after all the procs are joined
+            # to avoid generating a _builds.py file that would affect pytest execution
+            build_pip_commit(context)
+            push_pip_commit(context)
+            generate_pypi_index(context)
 
             # give the travis poller time to see the result
             for i in range(12):
