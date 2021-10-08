@@ -1029,6 +1029,7 @@ def ci_build(context):
                 link_build_cache(os.getcwd(), "OSXIntel64", build["branch"])
 
                 # link builds directory so pytest can run
+                logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
                 ci_test_utf(context, build)
                 pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build,))
@@ -1078,7 +1079,7 @@ def ci_build(context):
     finally:
         for arch, temp_dir in arch_temp_dirs.items():
             logger.info("deleting temp dir %s" % temp_dir)
-            shutil.rmtree(temp_dir)
+            #shutil.rmtree(temp_dir)
 
 
     lock_f.close()
