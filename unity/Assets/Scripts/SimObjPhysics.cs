@@ -16,6 +16,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [SerializeField]
     public string objectID = string.Empty;
 
+    [Header("Name of Prefab this Object comes from")]
+    [SerializeField]
+    public string assetID = string.Empty;
+
     [Header("Object Type")]
     [SerializeField]
     public SimObjType Type = SimObjType.Undefined;
@@ -47,9 +51,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [Header("State information Bools here")]
 #if UNITY_EDITOR
     public bool debugIsVisible = false;
-#endif
     public bool debugIsInteractable = false;
+#endif
     public bool isInAgentHand = false;
+
+    public DroneFPSAgentController droneFPSAgent;
 
     // these collider references are used for switching physics materials for all colliders on this object
     [Header("Non - Trigger Colliders of this object")]
@@ -109,7 +115,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public bool IsDirtyable;
     public bool IsCookable;
     public bool IsSliceable;
-    public AgentManager agentManager;
     public bool isHeatSource;
     public bool isColdSource;
     private BoundingBoxCacheKey boundingBoxCacheKey;
@@ -382,6 +387,42 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         return null;
     }
+    public void DropContainedObjectsStationary() {
+        this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
+    }
+    
+    public void DropContainedObjects(
+        bool reparentContainedObjects,
+        bool forceKinematic
+    ) {
+        if (this.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            GameObject topObject = null;
+
+            foreach (SimObjPhysics sop in this.ContainedObjectReferences) {
+                // for every object that is contained by this object turn off
+                // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                sop.transform.Find("Colliders").gameObject.SetActive(true);
+                sop.isInAgentHand = false; // Agent hand flag
+
+                if (reparentContainedObjects) {
+                    if (topObject == null) {
+                        topObject = GameObject.Find("Objects");
+                    }
+                    sop.transform.SetParent(topObject.transform);
+                }
+
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = forceKinematic;
+                if (!forceKinematic) {
+                    rb.useGravity = true;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+
+            }
+            this.ClearContainedObjectReferences();
+        }
+    }
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
         get {
@@ -592,16 +633,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
-    private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
+    private void FindMySpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
             Contains containsScript = rtb.GetComponent<Contains>();
-            temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            temp.AddRange(containsScript.GetValidSpawnPoints(agent));
         }
 
-        if (ReturnPointsCloseToAgent) {
-            GameObject agent = GameObject.Find("FPSController");
-
+        if (agent != null) {
             temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
                 return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
             });
@@ -622,8 +661,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
-    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
-        FindMySpawnPoints(ReturnPointsCloseToAgent);
+    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
+        FindMySpawnPoints(agent);
         return MySpawnPoints;
     }
 
@@ -635,18 +674,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
 
-        if (agentManager.PrimaryAgent.GetType() != typeof(DroneFPSAgentController)) {
+        if (droneFPSAgent == null){
             return;
         }
-
-        DroneFPSAgentController droneController = agentManager.PrimaryAgent as DroneFPSAgentController;
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -662,9 +699,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -876,8 +913,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
         // end debug setup stuff
 
         OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
@@ -921,8 +956,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
     // Update is called once per frame
     void Update() {
-        debugIsInteractable = false;
-
         if (sceneManager.AllowDecayTemperature)// only do this if the scene is initialized to use Temperature decay over time
         {
             // if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
@@ -945,9 +978,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
         }
-    }
-    private void FixedUpdate() {
-        // isInteractable = false;
     }
 
     // used for throwing the sim object, or anything that requires adding force for some reason
@@ -1089,7 +1119,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         // interactable drawn in magenta
-        if (debugIsInteractable == true && gameObject.GetComponentInChildren<MeshFilter>()) {
+        if (debugIsInteractable && gameObject.GetComponentInChildren<MeshFilter>()) {
             MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);

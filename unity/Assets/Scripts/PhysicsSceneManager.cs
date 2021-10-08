@@ -23,6 +23,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     public GameObject[] ManipulatorReceptacles;
     public GameObject[] ManipulatorBooks;
     public bool AllowDecayTemperature = true; // if true, temperature of sim objects decays to Room Temp over time
+    public AgentManager agentManager;
 
     // public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 #if UNITY_EDITOR
@@ -44,6 +45,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     public static uint PhysicsSimulateCallCount;
 
     private void OnEnable() {
+        // must do this here instead of Start() since OnEnable gets triggered prior to Start
+        // when the component is enabled.
+        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
         SetupScene();
 
@@ -214,9 +219,10 @@ public class PhysicsSceneManager : MonoBehaviour {
             AddToObjectsInScene(o);
         }
 
-        BaseAgentComponent fpsController = GameObject.FindObjectOfType<BaseAgentComponent>();
-        if (fpsController.agent != null && fpsController.agent.imageSynthesis != null ) {
-            fpsController.agent.imageSynthesis.OnSceneChange();
+        foreach (var agent in this.agentManager.agents) {
+            if (agent.imageSynthesis != null) {
+                agent.imageSynthesis.OnSceneChange();
+            }
         }
     }
 
@@ -393,8 +399,9 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (placeStationary) {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     copy.GetComponent<Rigidbody>().isKinematic = true;
+                } else {
+                    copy.GetComponent<Rigidbody>().isKinematic = false;
                 }
-                // copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
         SetupScene();
@@ -634,7 +641,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         }
                     }
 
-                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints(false);
+                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints();
 
                     // first shuffle the list so it's random
                     targetReceptacleSpawnPoints.Shuffle_(rng);

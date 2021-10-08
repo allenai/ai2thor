@@ -30,7 +30,6 @@ public class Contains : MonoBehaviour {
 
     // this is an object reference to the sim object that is linked to this receptacle box
     public GameObject myParent = null;
-    private AgentManager agentManager;
 
     // can use this list to filter out certain objects with properties, currently unused
     // private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
@@ -60,7 +59,6 @@ public class Contains : MonoBehaviour {
             Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
         }
 #endif
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
     }
 
     // Update is called once per frame
@@ -220,7 +218,7 @@ public class Contains : MonoBehaviour {
     // generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     // the list of points should be filtered closest to agent, if false
     // it will return all points on the receptacle regardless of agent proximity
-    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(bool ReturnPointsCloseToAgent) {
+    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
         Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; // in case we need all the corners later for something...
@@ -283,9 +281,9 @@ public class Contains : MonoBehaviour {
                 // set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
                 if (hit.transform == myParent.transform) {
                     // print("raycast hit: " + hit.transform.name);
-                    if (!ReturnPointsCloseToAgent) {
+                    if (agent == null) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
-                    } else if (NarrowDownValidSpawnPoints(hit.point)) {
+                    } else if (narrowDownValidSpawnPoints(agent, hit.point)) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
                     }
                 }
@@ -293,9 +291,9 @@ public class Contains : MonoBehaviour {
 
             Vector3 BottomPoint = point + -(ydir * ydist);
             // didn't hit anything that could obstruct, so this point is good to go
-            if (!ReturnPointsCloseToAgent) {
+            if (agent == null) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-            } else if (NarrowDownValidSpawnPoints(BottomPoint)) {
+            } else if (narrowDownValidSpawnPoints(agent, BottomPoint)) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
             }
         }
@@ -315,20 +313,16 @@ public class Contains : MonoBehaviour {
     }
 
     // additional checks if the point is valid. Return true if it's valid
-    public bool NarrowDownValidSpawnPoints(Vector3 point) {
-        // check if the point is in range of the agent at all
-        PhysicsRemoteFPSAgentController agent = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
+    private bool narrowDownValidSpawnPoints(BaseFPSAgentController agent, Vector3 point) {
 
         // get agent's camera point, get point to check, find the distance from agent camera point to point to check
-
-        float maxvisdist = agent.WhatIsAgentsMaxVisibleDistance();
 
         // set the distance so that it is within the radius maxvisdist from the agent
         Vector3 tmpForCamera = agent.m_Camera.transform.position;
         tmpForCamera.y = point.y;
 
         // automatically rule out a point if it's beyond our max distance of visibility
-        if (Vector3.Distance(point, tmpForCamera) >= maxvisdist) {
+        if (Vector3.Distance(point, tmpForCamera) >= agent.maxVisibleDistance) {
             return false;
         }
 

@@ -5,11 +5,53 @@ using System;
 using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
-        public StretchAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
+
+        public override void InitializeBody() {
+            VisibilityCapsule = StretchVisCap;
+            m_CharacterController.center = new Vector3(0, -0.1934924f, -0.1247f);
+            m_CharacterController.radius = 0.17f;
+            m_CharacterController.height = 1.413f;
+
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.center = m_CharacterController.center;
+            cc.radius = m_CharacterController.radius;
+            cc.height = m_CharacterController.height;
+
+            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+            m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+
+            // camera position
+            m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
+
+            // camera FOV
+            m_Camera.fieldOfView = 60f;
+
+            // set camera stand/crouch local positions for Tall mode
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+            // limit camera from looking too far down
+            this.maxDownwardLookAngle = 90f;
+            this.maxUpwardLookAngle = 25f;
+
+            // enable stretch arm component
+            Debug.Log("initializing stretch arm");
+            StretchArm.SetActive(true);
+            SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
+            Vector3 pos = armTarget.transform.localPosition;
+            pos.z = 0.0f; // pulls the arm in to be fully contracted
+            armTarget.transform.localPosition = pos;
+            var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
+            Debug.Log("running manipulate stretch arm");
+            StretchSolver.ManipulateStretchArm();
         }
 
         protected Stretch_Robot_Arm_Controller getArm() {

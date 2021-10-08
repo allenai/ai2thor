@@ -9,7 +9,21 @@ using UnityEngine.AI;
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
-        public ArmAgentController(BaseAgentComponent baseAgentComponent) : base(baseAgentComponent) {
+        public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
+
+        public override void InitializeBody() {
+            base.InitializeBody();
+            Debug.Log("initializing arm");
+            IKArm.SetActive(true);
+            Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+            Vector3 pos = armTarget.transform.localPosition;
+            pos.z = 0.4f; // pulls the arm in from being fully extended
+            armTarget.transform.localPosition = pos;
+            var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
+            Debug.Log("running manipulate arm");
+            ikSolver.ManipulateArm();
         }
 
         protected IK_Robot_Arm_Controller getArm() {

@@ -1,5 +1,6 @@
 import ai2thor.controller
 from ai2thor.server import Event
+from ai2thor.platform import CloudRendering, Linux64
 import pytest
 import numpy as np
 import warnings
@@ -34,7 +35,7 @@ def fake_cr_exists(self):
 def fake_not_exists(self):
     return False
 
-def fake_find_platform_builds(self, request, commits, releases_dir, local_build):
+def fake_find_platform_builds(self, canditate_platorms, request, commits, releases_dir, local_build):
     return []
 
 def fake_exists(self):
@@ -52,6 +53,11 @@ def fake_darwin_system():
 def noop_download(self):
     pass
 
+def select_platforms_linux_cr(request):
+    return (Linux64, CloudRendering)
+
+def select_platforms_cr(request):
+    return (CloudRendering, )
 
 @classmethod
 def fake_validate(cls, request):
@@ -108,17 +114,17 @@ def controller(**args):
 
 
 def test_osx_build_missing(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.Controller.find_platform_builds", fake_find_platform_builds)
 
     with pytest.raises(Exception) as ex:
         c = controller()
 
-    assert str(ex.value).startswith("No build exists for arch=Darwin and commits: ")
+    assert str(ex.value).startswith("No build exists for arch=Darwin platforms=OSXIntel64 and commits:")
 
 
 def test_osx_build_invalid_commit_id(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_not_exists)
 
     fake_commit_id = "1234567TEST"
@@ -127,12 +133,12 @@ def test_osx_build_invalid_commit_id(mocker):
 
     assert (
         str(ex.value)
-        == "Invalid commit_id: %s - no build exists for arch=Darwin" % fake_commit_id
+        == "Invalid commit_id: %s - no build exists for arch=Darwin platforms=OSXIntel64" % fake_commit_id
     )
 
 
 def test_osx_build(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
 
@@ -143,7 +149,7 @@ def test_osx_build(mocker):
 
 
 def test_linux_explicit_xdisplay(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch("ai2thor.controller.ai2thor.platform.Linux64.validate", fake_validate)
@@ -156,9 +162,10 @@ def test_linux_explicit_xdisplay(mocker):
 
 def test_linux_invalid_linux64_invalid_cr(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate",
         fake_invalid_cr_validate,
@@ -179,9 +186,10 @@ def test_linux_invalid_linux64_invalid_cr(mocker):
 
 def test_linux_invalid_linux64_valid_cr(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
@@ -200,7 +208,7 @@ def test_linux_invalid_linux64_valid_cr(mocker):
 
 def test_linux_valid_linux64_valid_cloudrendering(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch(
@@ -216,14 +224,16 @@ def test_linux_valid_linux64_valid_cloudrendering(mocker):
 
 def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
     mocker.patch("ai2thor.controller.ai2thor.platform.Linux64.validate", fake_validate)
     mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
+    mocker.patch("ai2thor.platform.Linux64.enabled", False)
 
     fake_commit_id = "1234567TEST"
     c = controller(commit_id=fake_commit_id)
@@ -233,7 +243,7 @@ def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
 
 def test_linux_valid_linux64_invalid_cloudrendering(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch(
@@ -250,13 +260,14 @@ def test_linux_valid_linux64_invalid_cloudrendering(mocker):
 
 def test_linux_missing_linux64(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_cr_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
     mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
 
     fake_commit_id = "1234567TEST"
     c = controller(commit_id=fake_commit_id)
@@ -266,7 +277,7 @@ def test_linux_missing_linux64(mocker):
 
 def test_linux_missing_cloudrendering(mocker):
 
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_linux64_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch("ai2thor.controller.ai2thor.platform.Linux64.validate", fake_validate)
@@ -301,7 +312,7 @@ def test_invalid_commit(mocker):
 
 
 def test_scene_names(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     c = controller()
@@ -311,7 +322,7 @@ def test_scene_names(mocker):
 
 
 def test_invalid_action(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
@@ -335,7 +346,7 @@ def test_invalid_action(mocker):
 
 
 def test_fix_visibility_distance_env(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     try:
@@ -359,7 +370,7 @@ def test_fix_visibility_distance_env(mocker):
 
 
 def test_raise_for_failure(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
 
@@ -382,7 +393,7 @@ def test_raise_for_failure(mocker):
 
 
 def test_failure(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
@@ -404,7 +415,7 @@ def test_failure(mocker):
 
 
 def test_last_action(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_darwin_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_darwin_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     fake_event = Event(
@@ -428,7 +439,7 @@ def test_last_action(mocker):
 
 
 def test_unity_command(mocker):
-    mocker.patch("ai2thor.controller.platform.system", fake_linux_system)
+    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
     mocker.patch("ai2thor.controller.ai2thor.platform.Linux64.validate", fake_validate)
