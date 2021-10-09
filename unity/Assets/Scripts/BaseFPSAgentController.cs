@@ -750,7 +750,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 List<Material> materials = renderer.materials.ToList();
                 foreach (Material material in materials) {
                     materialStrings.Add(material.name.Substring(0, material.name.Length - " (Instance)".Length));
-                    Debug.Log(material.name.Substring(0, material.name.Length - " (Instance)".Length));
                 }
             }
             actionFinishedEmit(true, materialStrings);
