@@ -742,6 +742,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, colorChangeComponent.GetMaterials());
         }
 
+        public void GetMaterialsOnObject(string objectId) {
+            SimObjPhysics sop = getSimObjectFromId(objectId);
+            Renderer[] renderers = sop.gameObject.GetComponentsInChildren<Renderer>();
+            var materialStrings = new List<string>();
+            foreach (Renderer renderer in renderers) {
+                List<Material> materials = renderer.materials.ToList();
+                foreach (Material material in materials) {
+                    materialStrings.Add(material.name);
+                }
+            }
+            actionFinishedEmit(true, materialStrings);
+        }
+
         public void CreateMaterialBall(string materialGroup, string material) {
             ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             if (colorChangeComponent.materials == null) {
