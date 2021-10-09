@@ -81,12 +81,12 @@ public class ColorChanger : MonoBehaviour {
 
                       coffeeMachineMaterials;
 
-    Dictionary<string, Material[]> materials = null;
+    public Dictionary<string, Material[]> materials = null;
     Dictionary<string, Color[]> origColors;
     Dictionary<string, Texture[]> origTextures;
     Dictionary<string, HashSet<Material>> materialGroups;
 
-    protected void cacheMaterials() {
+    public void cacheMaterials() {
         if (materials == null) {
             materials = new Dictionary<string, Material[]> {
                 ["AlarmClock"] = alarmClockMaterials,

@@ -742,6 +742,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, colorChangeComponent.GetMaterials());
         }
 
+        public void CreateMaterialBall(string materialGroup, string material) {
+            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            if (colorChangeComponent.materials == null) {
+                colorChangeComponent.cacheMaterials();
+            }
+
+            foreach (Material m in colorChangeComponent.materials[materialGroup]) {
+                if (m.name == material) {
+                    GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    sphere.GetComponent<MeshRenderer>().material = m;
+                }
+            }
+
+            actionFinishedEmit(
+                false,
+                $"Unknown materialGroup ({materialGroup}) and material ({material}) combo."
+            );
+        }
+
         /**
          * @inRoomTypes assumes all room types by default. Valid room types include
          * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
