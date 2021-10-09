@@ -745,7 +745,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetMaterialsOnObject(string objectId) {
             SimObjPhysics sop = getSimObjectFromId(objectId);
             Renderer[] renderers = sop.gameObject.GetComponentsInChildren<Renderer>();
-            var materialStrings = new List<string>();
+            var materialStrings = new HashSet<string>();
             foreach (Renderer renderer in renderers) {
                 List<Material> materials = renderer.materials.ToList();
                 foreach (Material material in materials) {
