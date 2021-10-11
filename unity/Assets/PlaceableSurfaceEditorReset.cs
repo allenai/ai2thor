@@ -54,6 +54,9 @@ public class PlaceableSurfaceEditorReset : MonoBehaviour
             MeshRenderer[] renderers;
             renderers = contentRoot.GetComponentsInChildren<MeshRenderer>();
 
+
+            bool shouldSave = false;
+
             //just in case something doesn't have a renderer?
             if(renderers.Length > 0)
             {
@@ -64,11 +67,15 @@ public class PlaceableSurfaceEditorReset : MonoBehaviour
                         if(mr.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)")
                         {
                             mr.enabled = false;
-                            PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
-                            break;
+                            shouldSave = true;
+                            continue;
                         }
                     }
                 }
+                
+                if(shouldSave)
+                PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
+
             }
 
             PrefabUtility.UnloadPrefabContents(contentRoot);
