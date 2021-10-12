@@ -4231,7 +4231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void CreateHouseFromJson(ProceduralHouse house) {
+        public void CreateHouse(ProceduralHouse house) {
             var rooms = house.rooms.SelectMany(
                 room => house.rooms
             );
@@ -4328,7 +4328,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, geoList);
         }
 
-        public void SpawnAsset(string assetId, string generatedId = "asset_0", Vector3? position = null) {
+        public void SpawnAsset(
+            string assetId,
+            string generatedId,
+            Vector3? position = null
+        ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
@@ -4493,7 +4497,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`.");
+                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             navmesh.BuildNavMesh();
