@@ -1,5 +1,6 @@
 import ai2thor.controller
 from ai2thor.server import Event
+from ai2thor.platform import CloudRendering, Linux64
 import pytest
 import numpy as np
 import warnings
@@ -52,6 +53,11 @@ def fake_darwin_system():
 def noop_download(self):
     pass
 
+def select_platforms_linux_cr(request):
+    return (Linux64, CloudRendering)
+
+def select_platforms_cr(request):
+    return (CloudRendering, )
 
 @classmethod
 def fake_validate(cls, request):
@@ -159,6 +165,7 @@ def test_linux_invalid_linux64_invalid_cr(mocker):
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate",
         fake_invalid_cr_validate,
@@ -182,6 +189,7 @@ def test_linux_invalid_linux64_valid_cr(mocker):
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
@@ -219,6 +227,7 @@ def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_cr)
     mocker.patch(
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
@@ -258,6 +267,7 @@ def test_linux_missing_linux64(mocker):
         "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
     )
     mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
+    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
 
     fake_commit_id = "1234567TEST"
     c = controller(commit_id=fake_commit_id)
