@@ -777,7 +777,9 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zip_buf = io.BytesIO()
-    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED)
+    # Unity build is done with CompressWithLz4. Zip with compresslevel=1
+    # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
+    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
     zip_buf.seek(0)
