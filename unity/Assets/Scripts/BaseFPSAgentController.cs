@@ -1234,37 +1234,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RemoveFromScene(string objectId) {
             SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
             Destroy(sop.transform.gameObject);
-
-            // Some assets have nested SimObjPhysics components,
-            // meaning multiple objects beyond SimObjIds need to be deleted
-            physicsSceneManager.ResetObjectIdToSimObjPhysics();
-
+            physicsSceneManager.SetupScene();
             actionFinished(success: true);
         }
 
-        // remove a list of given sim object from the scene.
+        [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene instead.", error: false)]
         public void RemoveObjsFromScene(string[] objectIds) {
-            if (objectIds == null || objectIds[0] == null) {
-                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
-                actionFinished(false);
-                return;
+            RemoveFromScene(objectIds: objectIds);
+        }
+
+        // remove a list of given sim object from the scene.
+        public void RemoveFromScene(string[] objectIds) {
+            if (objectIds == null || objectIds.Length == 0) {
+                actionFinished(
+                    success: false,
+                    errorMessage: "objectIds must not be empty!"
+                );
             }
-            bool fail = false;
-            foreach (string objIds in objectIds) {
-                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds)) {
-                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
-                } else {
-                    fail = true;
-                }
+
+            // make sure all objectIds are valid before destorying any
+            GameObject[] gameObjects = new GameObject[objectIds.Length];
+            for (int i = 0; i < objectIds.Length; i++) {
+                GameObject go = getSimObjectFromId(objectId: objectIds[i]).transform.gameObject;
+                gameObjects[i] = go;
+            }
+            foreach (GameObject go in gameObjects) {
+                Destroy(go);
             }
             physicsSceneManager.SetupScene();
-            if (fail) {
-                errorMessage = "some objectsin objectIds were not removed correctly.";
-                actionFinished(false);
-            } else {
-                actionFinished(true);
-            }
-            return;
+            actionFinished(success: true);
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
