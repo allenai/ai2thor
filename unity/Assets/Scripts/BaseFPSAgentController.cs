@@ -4346,19 +4346,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
             );
 
-            // some spawned assets have nested SimObjPhysics components,
-            // meaning multiple objects beyond simObj may be updated
-            physicsSceneManager.ResetObjectIdToSimObjPhysics();
-
             spawned.isStatic = true;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
                 rigidBody.useGravity = false;
                 rigidBody.isKinematic = true;
             }
 
-            if (this.imageSynthesis && this.imageSynthesis.enabled) {
-                this.imageSynthesis.OnSceneChange();
-            }
+            physicsSceneManager.SetupScene();
 
             var bounds = GetObjectSphereBounds(spawned);
             actionFinished(
