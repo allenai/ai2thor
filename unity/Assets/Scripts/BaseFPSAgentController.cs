@@ -4365,10 +4365,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rigidBody.isKinematic = true;
             }
 
-            // some spawned assets have nested SimObjPhysics components,
-            // meaning multiple objects beyond simObj may be updated
-            // physicsSceneManager.ResetObjectIdToSimObjPhysics();
-
             if (this.imageSynthesis && this.imageSynthesis.enabled) {
                 this.imageSynthesis.OnSceneChange();
             }
