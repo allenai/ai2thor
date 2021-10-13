@@ -4331,13 +4331,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SpawnAsset(
             string assetId,
             string generatedId,
-            Vector3? position = null
+            Vector3? position = null,
+            Vector3? rotation = null
         ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
             var assetMap = ProceduralTools.getAssetMap();
 
@@ -4348,41 +4350,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            var asset = assetMap.getAsset(assetId);
+            GameObject asset = assetMap.getAsset(assetId);
+            GameObject spawned = ProceduralTools.spawnSimObjPrefab(
+                prefab: asset,
+                id: generatedId,
+                assetId: assetId,
+                position: position.GetValueOrDefault(Vector3.zero),
+                rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
+            );
 
-            var spawned = GameObject.Instantiate(asset, position.GetValueOrDefault(Vector3.zero), Quaternion.identity);
-            spawned.name = generatedId;
             spawned.isStatic = true;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
                 rigidBody.useGravity = false;
                 rigidBody.isKinematic = true;
             }
 
-            var simObj = spawned.GetComponent<SimObjPhysics>();
-            if (simObj != null) {
-                //currently name and objectId are the same
-                simObj.objectID = spawned.name;
-                //assign assetID to track prefab name from database
-                simObj.assetID = assetId;
-            }
-
             // some spawned assets have nested SimObjPhysics components,
             // meaning multiple objects beyond simObj may be updated
-            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+            // physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
-            var bounds = GetObjectSphereBounds(spawned);
-
-            if (this.imageSynthesis) {
-                if (this.imageSynthesis.enabled) {
-                    this.imageSynthesis.OnSceneChange();
-                }
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
             }
 
-            actionFinished(true, new ObjectSphereBounds() {
-                id = spawned.name,
-                worldSpaceCenter = bounds.center,
-                radius = bounds.extents.magnitude
-            });
+            var bounds = GetObjectSphereBounds(spawned);
+            actionFinished(
+                success: true,
+                actionReturn: new ObjectSphereBounds() {
+                    id = spawned.name,
+                    worldSpaceCenter = bounds.center,
+                    radius = bounds.extents.magnitude
+                }
+            );
         }
 
         public void GetAssetSphereBounds(string assetId) {
