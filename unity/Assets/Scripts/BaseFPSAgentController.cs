@@ -1232,25 +1232,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
-            // pass name of object in from action.objectId
-            if (objectId == null) {
-                errorMessage = "objectId required for RemoveFromScene";
-                actionFinished(false);
-                return;
-            }
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            Destroy(sop.transform.gameObject);
 
-            // see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
-                //don't do a full scene setup to prevent overwriting already assigned objectIds
-                //TODO: More robust objectId system
-                physicsSceneManager.RemoveFromObjectsInScene(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
-                actionFinished(true);
-                return;
-            }
+            // Some assets have nested SimObjPhysics components,
+            // meaning multiple objects beyond SimObjIds need to be deleted
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
-            errorMessage = objectId + " could not be found in this scene, so it can't be removed";
-            actionFinished(false);
+            actionFinished(success: true);
         }
 
         // remove a list of given sim object from the scene.
