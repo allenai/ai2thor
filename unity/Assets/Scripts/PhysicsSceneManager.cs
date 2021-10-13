@@ -206,7 +206,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
         foreach (SimObjPhysics o in allPhysObjects) {
-            if(genObjectID) {
+            if (genObjectID) {
                 Generate_ObjectID(o);
             }
 
