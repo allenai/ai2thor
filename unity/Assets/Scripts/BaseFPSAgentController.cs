@@ -1234,7 +1234,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RemoveFromScene(string objectId) {
             SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
             Destroy(sop.transform.gameObject);
-            physicsSceneManager.SetupScene(genObjectID: false);
+            physicsSceneManager.SetupScene(generateObjectIds: false);
             actionFinished(success: true);
         }
 
@@ -1261,7 +1261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (GameObject go in gameObjects) {
                 Destroy(go);
             }
-            physicsSceneManager.SetupScene(genObjectID: false);
+            physicsSceneManager.SetupScene(generateObjectIds: false);
             actionFinished(success: true);
         }
 
@@ -4352,7 +4352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rigidBody.isKinematic = true;
             }
 
-            physicsSceneManager.SetupScene(genObjectID: false);
+            physicsSceneManager.SetupScene(generateObjectIds: false);
 
             var bounds = GetObjectSphereBounds(spawned);
             actionFinished(
