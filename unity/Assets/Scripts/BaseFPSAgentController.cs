@@ -1216,7 +1216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RemoveFromScene(string objectId) {
             SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
             Destroy(sop.transform.gameObject);
-            physicsSceneManager.SetupScene();
+            physicsSceneManager.SetupScene(generateObjectIds: false);
             actionFinished(success: true);
         }
 
@@ -1243,7 +1243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (GameObject go in gameObjects) {
                 Destroy(go);
             }
-            physicsSceneManager.SetupScene();
+            physicsSceneManager.SetupScene(generateObjectIds: false);
             actionFinished(success: true);
         }
 
