@@ -5797,13 +5797,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            /*if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                 errorMessage = "This target object is NOT a receptacle!";
                 Debug.Log(errorMessage);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
                 actionFinished(false);
                 return;
-            }
+            }*/
 
             target = null;
 
