@@ -98,6 +98,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -111,6 +112,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -226,7 +228,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1558360111528434}
-  occupied: 0
 --- !u!1 &1195385673924308
 GameObject:
   m_ObjectHideFlags: 0
@@ -690,7 +691,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: GarbageCan|+00.00|+00.00|+00.00
+  objectID: 
+  assetID: 
   Type: 28
   PrimaryProperty: 2
   SecondaryProperties: 07000000
@@ -709,8 +711,8 @@ MonoBehaviour:
   - {fileID: 1854929447298622}
   - {fileID: 1769157194892412}
   - {fileID: 1769024128610786}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65157201270637810}
@@ -733,8 +735,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54666030936360804
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -878,7 +897,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1558360111528434}
-  occupied: 0
 --- !u!1 &1769157194892412
 GameObject:
   m_ObjectHideFlags: 0
@@ -938,7 +956,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1558360111528434}
-  occupied: 0
 --- !u!1 &1854929447298622
 GameObject:
   m_ObjectHideFlags: 0
@@ -998,7 +1015,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1558360111528434}
-  occupied: 0
 --- !u!1 &1857220506666468
 GameObject:
   m_ObjectHideFlags: 0
@@ -1055,7 +1071,7 @@ Transform:
   m_GameObject: {fileID: 1897756297107846}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.184, z: 0.1869}
-  m_LocalScale: {x: 0.19574992, y: 0.74156386, z: 0.036725435}
+  m_LocalScale: {x: 0.1957499, y: 0.74156386, z: 0.036725435}
   m_Children: []
   m_Father: {fileID: 4443878807229106}
   m_RootOrder: 0
@@ -1361,8 +1377,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.5130646, y: 0.46975577, z: 0.40465027}
-  m_Center: {x: 0, y: 0.26512212, z: 0}
+  m_Size: {x: 0.49927637, y: 0.43139148, z: 0.39227012}
+  m_Center: {x: -0.002156034, y: 0.25990373, z: 0.007978484}
 --- !u!1 &3636390734143709053
 GameObject:
   m_ObjectHideFlags: 0

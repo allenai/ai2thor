@@ -184,7 +184,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: GarbageCan|+00.00|+00.00|+00.00
+  objectID: 
+  assetID: 
   Type: 28
   PrimaryProperty: 2
   SecondaryProperties: 07000000
@@ -200,8 +201,8 @@ MonoBehaviour:
   - {fileID: 4357624185837406}
   ReceptacleTriggerBoxes:
   - {fileID: 1186062981486642}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65093311593844324}
@@ -219,8 +220,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54081170198086236
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -296,7 +314,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1116501274432910}
-  occupied: 0
 --- !u!1 &1276939404764188
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,6 +450,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -446,6 +464,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -558,7 +577,7 @@ Transform:
   m_GameObject: {fileID: 1657183363810082}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.027, z: 0.1414}
-  m_LocalScale: {x: 0.43499997, y: 0.53789073, z: 0.03255214}
+  m_LocalScale: {x: 0.435, y: 0.53789073, z: 0.03255214}
   m_Children: []
   m_Father: {fileID: 4426794142047462}
   m_RootOrder: 0
@@ -896,8 +915,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.4601894, y: 0.5702573, z: 0.34206188}
-  m_Center: {x: 0, y: 0.28512865, z: 0}
+  m_Size: {x: 0.44050848, y: 0.5487306, z: 0.32661134}
+  m_Center: {x: 0.0000008046627, y: 0.2751345, z: 0.000000044703484}
 --- !u!1 &3416904062644436643
 GameObject:
   m_ObjectHideFlags: 0

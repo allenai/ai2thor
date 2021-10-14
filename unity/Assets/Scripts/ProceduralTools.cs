@@ -1577,20 +1577,19 @@ namespace Thor.Procedural {
         //generic function to spawn object in scene. No bounds or collision checks done
         public static GameObject spawnHouseObject(
             AssetMap<GameObject> goDb,
-            HouseObject ho) {
+            HouseObject ho
+        ) {
             if (goDb.ContainsKey(ho.asset_id)) {
-
-            var go = goDb.getAsset(ho.asset_id);
-            return spawnSimObjPrefab(
-                go,
-                ho.id,
-                ho.asset_id,
-                ho.position,
-                Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
-                ho.kinematic
-            );
-            }
-            else {
+                var go = goDb.getAsset(ho.asset_id);
+                return spawnSimObjPrefab(
+                    go,
+                    ho.id,
+                    ho.asset_id,
+                    ho.position,
+                    Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
+                    ho.kinematic
+                );
+            } else {
                 Debug.LogError("Asset not in Database " + ho.asset_id);
                 return null;
             }
@@ -1635,6 +1634,16 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
             toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+
+            SimObjPhysics[] childSimObjects = toSpawn.transform.gameObject.GetComponentsInChildren<SimObjPhysics>();
+            int childNumber = 0;
+            for (int i = 0; i < childSimObjects.Length; i++) {
+                if (childSimObjects[i].objectID == id) {
+                    // skip the parent object that's ID has already been assigned
+                    continue;
+                }
+                childSimObjects[i].objectID = $"{id}___{childNumber++}";
+            }
 
             return toSpawn.transform.gameObject;
         }
