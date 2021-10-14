@@ -198,11 +198,11 @@ class OSXIntel64(BasePlatform):
 
 
 class CloudRendering(BaseLinuxPlatform):
-    enabled = False
+    enabled = True
 
     @classmethod
     def dependency_instructions(cls, request):
-        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y libvulkan1"
+        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y install libvulkan1"
 
     @classmethod
     def failure_message(cls):
@@ -222,7 +222,7 @@ class WebGL(BasePlatform):
 
 def select_platforms(request):
     candidates = []
-    system_platform_map = dict(Linux=(CloudRendering, Linux64), Darwin=(OSXIntel64,))
+    system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,))
     for p in system_platform_map.get(request.system, ()):
         if not p.enabled:
             continue

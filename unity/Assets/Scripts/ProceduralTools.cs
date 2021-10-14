@@ -724,6 +724,8 @@ namespace Thor.Procedural {
                         + Vector3.up * offset.y
 
                     };
+//
+                Debug.Log($"-------- Cut holes vertices  center {center} transformed {String.Join(", ", vertices.Select(v => wallGO.transform.TransformPoint(v).ToString("F8")))}");
 
                 // triangles = new List<int>() {
                 //      1, 0, 2, 1, 2, 3, 1, 3, 4, 4, 5, 3, 4, 5, 6, 0, 6, 7, 0, 7, 2 };
@@ -814,6 +816,7 @@ namespace Thor.Procedural {
             );
 
             setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxC);
+            ProceduralTools.setFloorProperties(wallGO, toCreate);
 
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
@@ -958,7 +961,7 @@ namespace Thor.Procedural {
             GameObject wallGameObject,
             string simObjId,
             GameObject visibilityPoints,
-            Collider collider
+            BoxCollider collider
         ) {
             var boundingBox = new GameObject("BoundingBox");
             // SimObjInvisible
@@ -966,13 +969,18 @@ namespace Thor.Procedural {
             var bbCollider = boundingBox.AddComponent<BoxCollider>();
             bbCollider.enabled = false;
             boundingBox.transform.parent = wallGameObject.transform;
+            boundingBox.transform.localPosition = Vector3.zero;
+            boundingBox.transform.localRotation = Quaternion.identity;
+
+            bbCollider.center = collider.center;
+            bbCollider.size = collider.size;
 
             wallGameObject.tag = "SimObjPhysics";
 
             var simObjPhysics = wallGameObject.AddComponent<SimObjPhysics>();
             simObjPhysics.objectID = simObjId;
             simObjPhysics.ObjType = SimObjType.Wall;
-            simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Wall;
+            simObjPhysics.PrimaryProperty = SimObjPrimaryProperty.Static;
             simObjPhysics.SecondaryProperties = new SimObjSecondaryProperty[] { };
 
             simObjPhysics.BoundingBox = boundingBox;
@@ -1008,6 +1016,19 @@ namespace Thor.Procedural {
             var roomProps = gameObject.AddComponent<RoomProperties>();
             roomProps.RoomType = room.type;
             return roomProps;
+        }
+
+         public static WallProperties setFloorProperties(GameObject gameObject, Wall wall) {
+            var wallProps = gameObject.AddComponent<WallProperties>();
+            wallProps.RoomId = wall.room_id;
+            return wallProps;
+        }
+
+         public static ConnectionProperties setConnectionProperties(GameObject gameObject, WallRectangularHole hole) {
+            var holeProps = gameObject.AddComponent<ConnectionProperties>();
+            holeProps.OpenFromRoomId = hole.room_0;
+            holeProps.OpenToRoomId = hole.room_1;
+            return holeProps;
         }
 
         public static SimObjPhysics setRoomSimObjectPhysics(
@@ -1109,23 +1130,6 @@ namespace Thor.Procedural {
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
 
-        private static Wall polygonWallToSimpleWall(PolygonWall wall) {
-            //wall.polygon.
-            var polygons = wall.polygon.OrderBy(p => p.y);
-            var maxY = wall.polygon.Max(p => p.y);
-            var p0 = polygons.ElementAt(0);
-            return new Wall() {
-                id = wall.id,
-                p0 = polygons.ElementAt(0),
-                p1 = polygons.ElementAt(1),
-                height = maxY - p0.y,
-                materialId = wall.material,
-                empty = wall.empty,
-                material_tiling_x_divisor = wall.material_tiling_x_divisor,
-                material_tiling_y_divisor = wall.material_tiling_y_divisor
-            };
-        }
-
         private static Wall polygonWallToSimpleWall(PolygonWall wall, Dictionary<string, WallRectangularHole> holes) {
             //wall.polygon.
             var polygons = wall.polygon.OrderBy(p => p.y);
@@ -1140,14 +1144,19 @@ namespace Thor.Procedural {
                 height = maxY - p0.y,
                 materialId = wall.material,
                 empty = wall.empty,
+                room_id = wall.room_id,
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
                 material_tiling_y_divisor = wall.material_tiling_y_divisor
             };
         }
 
-        public static string DefaultFloorRootObjectName => "Floor";
+        public static string DefaultHouseRootObjectName => "Floor";
         public static string DefaultRootStructureObjectName => "Structure";
+
+        public static string DefaultRootWallsObjectName => "Walls";
+
+        public static string  DefaultCeilingRootObjectName => "Ceiling";
 
         public static string DefaultLightingRootName => "ProceduralLighting";
         public static string DefaultObjectsRootName => "Objects";
@@ -1158,7 +1167,7 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
-            string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultFloorRootObjectName;
+            string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultHouseRootObjectName;
             float receptacleHeight = house.procedural_parameters.receptacle_height;
             float floorColliderThickness = house.procedural_parameters.floor_collider_thickness;
             string ceilingMaterialId = house.procedural_parameters.ceiling_material;
@@ -1285,19 +1294,7 @@ namespace Thor.Procedural {
             var collider = ProceduralTools.createFloorCollider(floorGameObject, roomCluster, floorColliderThickness);
 
 
-            // generate ceiling
-            if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject("Ceiling", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
-                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceiling_back_faces);
-
-                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
-                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
-
-                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
-                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
-
-                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
-            }
+            
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
@@ -1310,10 +1307,26 @@ namespace Thor.Procedural {
 
             var structureGO = new GameObject(DefaultRootStructureObjectName);
 
-            var wallsGO = ProceduralTools.createWalls(walls, materialDb, $"Structure");
+            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName);
 
             floorGameObject.transform.parent = structureGO.transform;
             wallsGO.transform.parent = structureGO.transform;
+
+            // generate ceiling
+            if (ceilingMaterialId != "") {
+                var ceilingGameObject = createSimObjPhysicsGameObject(DefaultCeilingRootObjectName, new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceiling_back_faces);
+
+                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
+                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
+
+                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
+                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+
+                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
+
+               ceilingGameObject.transform.parent = structureGO.transform;
+            }
 
             foreach (var obj in house.objects) {
                 // var go = ProceduralTools.spawnObject(ProceduralTools.getAssetMap(), obj);
@@ -1349,10 +1362,20 @@ namespace Thor.Procedural {
                 var wallExists = doorsToWalls.TryGetValue(holeCover.id, out wall);
 
                 if (wallExists) {
+                    
+                    // TODO Hack for inconsistent doors and windows
+                    // if (holeCover.GetType().IsAssignableFrom(typeof(Thor.Procedural.Data.Door))) {
+                    //     var tmp = wall.wall_0;    
+                    //     wall.wall_0 = wall.wall_1;
+                    //     wall.wall_1 = tmp;
+                    // }
                     var p0p1 = wall.wall_0.p1 - wall.wall_0.p0;
+                   
 
                     var p0p1_norm = p0p1.normalized;
-                    var pos = wall.wall_0.p0 + (p0p1_norm * holeCover.bounding_box.min.x) + Vector3.up * holeCover.bounding_box.min.y;
+                    var normal = Vector3.Cross(Vector3.up, p0p1_norm);
+                    var pos = wall.wall_0.p0 + (p0p1_norm * holeCover.bounding_box.min.x) + Vector3.up * holeCover.bounding_box.min.y; //- normal * holeCover.bounding_box.min.z/2.0f;
+                    Debug.Log($" ********* Spawn connection at {pos.ToString("F8")}");
                     var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall_0.p1, p1 = wall.wall_0.p0 });
                     //var rotY = getWallDegreesRotation(wall.wall_0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
@@ -1362,10 +1385,13 @@ namespace Thor.Procedural {
                     var go = spawnSimObjPrefab(
                         coverPrefab,
                         holeCover.id,
+                        holeCover.asset_id,
                         pos,
                         rotation,
                         true
                     );
+
+                    setConnectionProperties(go, holeCover);
 
                     if (holeCover.open) {
                         var canOpen = go.GetComponentInChildren<CanOpen_Object>();
@@ -1527,7 +1553,7 @@ namespace Thor.Procedural {
 
                 // skip all these prefabs
                 if (
-                    assetPath.Contains("SceneSetupPrefabs")
+                    assetPath.Contains("Scene Setup Prefabs") || assetPath.Contains("Entryway Objects")
                     || skipAssetNames.Contains(assetName)
                 ) {
                     continue;
@@ -1551,19 +1577,19 @@ namespace Thor.Procedural {
         //generic function to spawn object in scene. No bounds or collision checks done
         public static GameObject spawnHouseObject(
             AssetMap<GameObject> goDb,
-            HouseObject ho) {
+            HouseObject ho
+        ) {
             if (goDb.ContainsKey(ho.asset_id)) {
-
-            var go = goDb.getAsset(ho.asset_id);
-            return spawnSimObjPrefab(
-                go,
-                ho.id,
-                ho.position,
-                Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
-                ho.kinematic
-            );
-            }
-            else {
+                var go = goDb.getAsset(ho.asset_id);
+                return spawnSimObjPrefab(
+                    go,
+                    ho.id,
+                    ho.asset_id,
+                    ho.position,
+                    Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
+                    ho.kinematic
+                );
+            } else {
                 Debug.LogError("Asset not in Database " + ho.asset_id);
                 return null;
             }
@@ -1588,6 +1614,7 @@ namespace Thor.Procedural {
         public static GameObject spawnSimObjPrefab(
             GameObject prefab,
             string id,
+            string assetId,
             Vector3 position,
             Quaternion rotation,
             bool kinematic = false
@@ -1602,10 +1629,21 @@ namespace Thor.Procedural {
 
             toSpawn.objectID = id;
             toSpawn.name = id;
+            toSpawn.assetID = assetId;
 
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
             toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+
+            SimObjPhysics[] childSimObjects = toSpawn.transform.gameObject.GetComponentsInChildren<SimObjPhysics>();
+            int childNumber = 0;
+            for (int i = 0; i < childSimObjects.Length; i++) {
+                if (childSimObjects[i].objectID == id) {
+                    // skip the parent object that's ID has already been assigned
+                    continue;
+                }
+                childSimObjects[i].objectID = $"{id}___{childNumber++}";
+            }
 
             return toSpawn.transform.gameObject;
         }

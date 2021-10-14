@@ -129,7 +129,7 @@ public class AgentManager : MonoBehaviour {
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
-        primaryAgent.InitializeBody("default");
+        primaryAgent.InitializeBody();
 #endif
 
         StartCoroutine(EmitFrame());
@@ -1400,8 +1400,11 @@ public class ObjectMetadata {
     // what type of object is this?
     public string objectType;
 
-    // uuid of the object
+    // uuid of the object in scene
     public string objectId;
+
+    //name of this game object's prefab asset if it has one
+    public string assetId;
 
     //report back what receptacles contain this object
     public string[] parentReceptacles;

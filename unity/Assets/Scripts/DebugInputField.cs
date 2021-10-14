@@ -385,6 +385,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["fieldOfView"] = 90f;
                         action["snapToGrid"] = true;
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderSemanticSegmentation"] = true;
                         action["action"] = "Initialize";
                         action["procedural"] = true;
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -3528,7 +3530,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
-                        action["action"] = "CreateHouseFromJson";
+                        action["action"] = "CreateHouse";
                         var ROOM_BASE_PATH = "/Resources/rooms/";
 
                         path = Application.dataPath + "/Resources/rooms/house_full.json";
@@ -3595,6 +3597,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnAsset";
                         action["assetId"] = "Dining_Table_16_1";
+                        action["generatedId"] = "asset_0";
                         // action["skyboxColor"] = new Color(0, 0, 0, 1);
 
                         if (splitcommand.Length == 2) {

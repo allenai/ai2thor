@@ -556,7 +556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected abstract void InitializeBody();
+        public abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
             this.InitializeBody();
@@ -1623,6 +1623,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.moveable = simObj.IsMoveable;
 
             objMeta.objectId = simObj.ObjectID;
+
+            objMeta.assetId = simObj.assetID;
 
             // TODO: using the isVisible flag on the object causes weird problems
             // in the multiagent setting, explicitly giving this information for now.
@@ -3171,6 +3173,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success);
         }
 
@@ -4223,7 +4231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void CreateHouseFromJson(ProceduralHouse house) {
+        public void CreateHouse(ProceduralHouse house) {
             var rooms = house.rooms.SelectMany(
                 room => house.rooms
             );
@@ -4320,12 +4328,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, geoList);
         }
 
-        public void SpawnAsset(string assetId, string generatedId = "asset_0", Vector3? position = null) {
+        public void SpawnAsset(
+            string assetId,
+            string generatedId,
+            Vector3? position = null,
+            Vector3? rotation = null
+        ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
             var assetMap = ProceduralTools.getAssetMap();
 
@@ -4336,38 +4350,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            var asset = assetMap.getAsset(assetId);
+            GameObject asset = assetMap.getAsset(assetId);
+            GameObject spawned = ProceduralTools.spawnSimObjPrefab(
+                prefab: asset,
+                id: generatedId,
+                assetId: assetId,
+                position: position.GetValueOrDefault(Vector3.zero),
+                rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
+            );
 
-            var spawned = GameObject.Instantiate(asset, position.GetValueOrDefault(Vector3.zero), Quaternion.identity);
-            spawned.name = generatedId;
+            // some spawned assets have nested SimObjPhysics components,
+            // meaning multiple objects beyond simObj may be updated
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
             spawned.isStatic = true;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
                 rigidBody.useGravity = false;
                 rigidBody.isKinematic = true;
             }
 
-            var simObj = spawned.GetComponent<SimObjPhysics>();
-            if (simObj != null) {
-                simObj.objectID = spawned.name;
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
             }
-
-            // some spawned assets have nested SimObjPhysics components,
-            // meaning multiple objects beyond simObj may be updated
-            physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
             var bounds = GetObjectSphereBounds(spawned);
-
-            if (this.imageSynthesis) {
-                if (this.imageSynthesis.enabled) {
-                    this.imageSynthesis.OnSceneChange();
+            actionFinished(
+                success: true,
+                actionReturn: new ObjectSphereBounds() {
+                    id = spawned.name,
+                    worldSpaceCenter = bounds.center,
+                    radius = bounds.extents.magnitude
                 }
-            }
-
-            actionFinished(true, new ObjectSphereBounds() {
-                id = spawned.name,
-                worldSpaceCenter = bounds.center,
-                radius = bounds.extents.magnitude
-            });
+            );
         }
 
         public void GetAssetSphereBounds(string assetId) {
@@ -4482,7 +4496,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`.");
+                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             navmesh.BuildNavMesh();
