@@ -2570,7 +2570,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance) {
             VisibilityCheck visCheck = new VisibilityCheck();
-            // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+            // check against all visibility points
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
 
@@ -2682,7 +2682,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return visCheck;
         }
-
+        
         // pass in forceVisible bool to force grab all objects of type sim obj
         // if not, gather all visible sim objects maxVisibleDistance away from camera view
         public SimObjPhysics[] VisibleSimObjs(bool forceVisible = false) {
@@ -2692,6 +2692,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
         }
+
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
             Camera camera,
             float maxDistance,
@@ -3155,6 +3156,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
             var camera = this.GetComponentInChildren<Camera>();
             return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
+        }
+
+        //check visibility and interactability from specific camera (third party camera)
+        public void ObjectsFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {
+            if(!maxDistance.HasValue) {
+                maxDistance = maxVisibleDistance;
+            }
+
+            SimObjPhysics[] interactableObjects;
+            SimObjPhysics[] visibleObjects = GetAllVisibleSimObjPhysicsDistance(
+                agentManager.thirdPartyCameras[thirdPartyCameraIndex],
+                maxDistance.Value,
+                null, out interactableObjects);
+//.Select(sop => sop.ObjectID).ToList()
+
+            Dictionary<SimObjPhysics, VisibilityCheck> objectsVisibleAndInteractable = new Dictionary<SimObjPhysics, VisibilityCheck>();
+
+            foreach (SimObjPhysics sop in visibleObjects) {
+                VisibilityCheck vc = new VisibilityCheck();
+                vc.visible = true;
+                vc.interactable = interactableObjects.Contains(sop);
+
+                objectsVisibleAndInteractable.Add(sop, vc);
+            }
+
+            actionFinishedEmit(true, objectsVisibleAndInteractable);
         }
 
         // not sure what this does, maybe delete?
