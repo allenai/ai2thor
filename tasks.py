@@ -913,26 +913,36 @@ def pytest_s3_object(commit_id):
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
 
-def ci_pytest(build):
-    import requests
-    logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
-    commit_id = git_commit_id()
+@task
+def ci_merge_push_pytest_results(context, commit_id):
 
     s3_obj = pytest_s3_object(commit_id)
+
     s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
         s3_obj.bucket_name,
         s3_obj.key,
     )
     logger.info("pytest url %s" % s3_pytest_url)
-    res = requests.get(s3_pytest_url)
 
-    if res.status_code == 200 and res.json()["success"]:
-        # if we already have a successful pytest, skip running
-        logger.info(
-            "pytest results already exist for %s %s"
-            % (build["branch"], build["commit_id"])
-        )
-        return
+    merged_result = dict(success=True, stdout="", stderr="")
+    result_files = ["tmp/pytest_results.json", "tmp/test_utf_results.json"]
+
+    for rf in result_files:
+        with open(rf) as f:
+             result = json.loads(f.read())
+
+        merged_result["success"] &= result["success"]
+        merged_result["stdout"] += result["stdout"] + "\n"
+        merged_result["stderr"] += result["stderr"] + "\n"
+
+    s3_obj.put(
+        Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
+    )
+
+
+def ci_pytest(branch, commit_id):
+    import requests
+    logger.info("running pytest for %s %s" % (branch, commit_id))
 
     proc = subprocess.run(
         "pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -944,11 +954,10 @@ def ci_pytest(build):
         stderr=proc.stderr.decode("ascii"),
     )
 
-    s3_obj.put(
-        Body=json.dumps(result), ACL="public-read", ContentType="application/json"
-    )
+    with open("tmp/pytest_results.json", "w") as f:
+        f.write(json.dumps(result))
 
-    logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
+    logger.info("finished pytest for %s %s" % (branch, commit_id))
 
 
 @task
@@ -1036,8 +1045,10 @@ def ci_build(context):
                 # link builds directory so pytest can run
                 logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
-                ci_test_utf(context, build)
-                pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build,))
+                utf_proc = multiprocessing.Process(target=ci_test_utf, args=(build["branch"], build["commit_id"]))
+                utf_proc.start()
+                procs.append(utf_proc)
+                pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build["branch"], build["commit_id"]))
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
@@ -1057,6 +1068,9 @@ def ci_build(context):
                         % (p.pid, build["branch"], build["commit_id"])
                     )
                     p.join()
+
+            if build["tag"] is None:
+                ci_merge_push_pytest_results(context, build["commit_id"])
 
             # must have this after all the procs are joined
             # to avoid generating a _builds.py file that would affect pytest execution
@@ -3339,27 +3353,38 @@ def generate_pypi_index(context):
     )
 
 
-@task
-def ci_test_utf(context, build):
-    s3 = boto3.resource("s3")
-
+def ci_test_utf(branch, commit_id):
     logger.info(
         "running Unity Test framework testRunner for %s %s"
-        % (build["branch"], build["commit_id"])
+        % (branch, commit_id)
     )
 
-    results_path, results_logfile = test_utf(context)
+    results_path, results_logfile = test_utf()
 
-    for l in [results_path, results_logfile]:
-        key = "builds/" + os.path.basename(l)
-        with open(l) as f:
-            s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, key).put(
-                Body=f.read(), ContentType="text/plain", ACL="public-read"
-            )
+    class_data = generate_pytest_utf(results_path)
+    os.makedirs('tmp', exist_ok=True)
+
+    test_path = "tmp/test_utf.py"
+    with open(test_path, "w") as f:
+        f.write("\n".join(class_data))
+
+    proc = subprocess.run(
+        "pytest %s" % test_path, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
+    result = dict(
+        success=proc.returncode == 0,
+        stdout=proc.stdout.decode("ascii"),
+        stderr=proc.stderr.decode("ascii"),
+    )
+
+    with open("tmp/test_utf_results.json", "w") as f:
+        f.write(json.dumps(result))
+
 
     logger.info(
         "finished Unity Test framework runner for %s %s"
-        % (build["branch"], build["commit_id"])
+        % (branch, commit_id)
     )
 
 
@@ -3516,8 +3541,7 @@ def activate_unity_license(context, ulf_path):
 
     subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
-@task
-def test_utf(context):
+def test_utf():
     """
     Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
     that include failures (if any) extracted from the xml output
@@ -3534,7 +3558,6 @@ def test_utf(context):
     )
     subprocess.call(command, shell=True)
 
-    generate_pytest_utf(test_results_path)
     return test_results_path, logfile_path
 
 
@@ -3595,5 +3618,4 @@ class {encoded_class_name}:
     {test_record_data}
 """
         )
-    with open("ai2thor/tests/test_utf.py", "w") as f:
-        f.write("\n".join(class_data))
+    return class_data
