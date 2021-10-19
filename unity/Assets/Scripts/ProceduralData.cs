@@ -144,6 +144,8 @@ namespace Thor.Procedural.Data {
 
         public float material_tiling_x_divisor = 1.0f;
         public float material_tiling_y_divisor = 1.0f;
+
+        public SerializableColor color { get; set; } = null;
     }
 
     [Serializable]

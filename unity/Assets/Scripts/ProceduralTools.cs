@@ -826,6 +826,9 @@ namespace Thor.Procedural {
             var prev_p0p1 = previous.p1 - previous.p0;
 
             meshRenderer.sharedMaterial.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+            if (toCreate.color != null) {
+                meshRenderer.material.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
+            }
             //}
 
             return wallGO;
@@ -1147,7 +1150,8 @@ namespace Thor.Procedural {
                 room_id = wall.room_id,
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
-                material_tiling_y_divisor = wall.material_tiling_y_divisor
+                material_tiling_y_divisor = wall.material_tiling_y_divisor,
+                color = wall.color
             };
         }
 
