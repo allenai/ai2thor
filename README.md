@@ -338,6 +338,7 @@ For playback:
 ## Assets
 
 - Soccer ball prefab from Ahmet Gencoglu: https://assetstore.unity.com/packages/3d/low-polygon-soccer-ball-84382
+- Lava material from LowlyPoly: https://assetstore.unity.com/packages/2d/textures-materials/nature/stylized-lava-texture-153161
 
 ## Acknowledgements
 
