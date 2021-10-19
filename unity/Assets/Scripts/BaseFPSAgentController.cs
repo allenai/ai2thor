@@ -556,7 +556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected abstract void InitializeBody();
+        public abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
             this.InitializeBody();
@@ -1232,50 +1232,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
-            // pass name of object in from action.objectId
-            if (objectId == null) {
-                errorMessage = "objectId required for RemoveFromScene";
-                actionFinished(false);
-                return;
-            }
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            Destroy(sop.transform.gameObject);
+            physicsSceneManager.SetupScene(generateObjectIds: false);
+            actionFinished(success: true);
+        }
 
-            // see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].transform.gameObject.SetActive(false);
-                //don't do a full scene setup to prevent overwriting already assigned objectIds
-                //TODO: More robust objectId system
-                physicsSceneManager.RemoveFromObjectsInScene(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
-                actionFinished(true);
-                return;
-            }
-
-            errorMessage = objectId + " could not be found in this scene, so it can't be removed";
-            actionFinished(false);
+        [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene instead.", error: false)]
+        public void RemoveObjsFromScene(string[] objectIds) {
+            RemoveFromScene(objectIds: objectIds);
         }
 
         // remove a list of given sim object from the scene.
-        public void RemoveObjsFromScene(string[] objectIds) {
-            if (objectIds == null || objectIds[0] == null) {
-                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
-                actionFinished(false);
-                return;
+        public void RemoveFromScene(string[] objectIds) {
+            if (objectIds == null || objectIds.Length == 0) {
+                actionFinished(
+                    success: false,
+                    errorMessage: "objectIds must not be empty!"
+                );
             }
-            bool fail = false;
-            foreach (string objIds in objectIds) {
-                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds)) {
-                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
-                } else {
-                    fail = true;
-                }
+
+            // make sure all objectIds are valid before destorying any
+            GameObject[] gameObjects = new GameObject[objectIds.Length];
+            for (int i = 0; i < objectIds.Length; i++) {
+                GameObject go = getSimObjectFromId(objectId: objectIds[i]).transform.gameObject;
+                gameObjects[i] = go;
             }
-            physicsSceneManager.SetupScene();
-            if (fail) {
-                errorMessage = "some objectsin objectIds were not removed correctly.";
-                actionFinished(false);
-            } else {
-                actionFinished(true);
+            foreach (GameObject go in gameObjects) {
+                Destroy(go);
             }
-            return;
+            physicsSceneManager.SetupScene(generateObjectIds: false);
+            actionFinished(success: true);
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
@@ -3173,6 +3160,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.autoSimulation = autoSim;
             }
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
             actionFinished(success);
         }
 
@@ -4225,7 +4218,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void CreateHouseFromJson(ProceduralHouse house) {
+        public void CreateHouse(ProceduralHouse house) {
             var rooms = house.rooms.SelectMany(
                 room => house.rooms
             );
@@ -4322,12 +4315,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, geoList);
         }
 
-        public void SpawnAsset(string assetId, string generatedId = "asset_0", Vector3? position = null) {
+        public void SpawnAsset(
+            string assetId,
+            string generatedId,
+            Vector3? position = null,
+            Vector3? rotation = null
+        ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
             }
             var assetMap = ProceduralTools.getAssetMap();
 
@@ -4338,38 +4337,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            var asset = assetMap.getAsset(assetId);
+            GameObject asset = assetMap.getAsset(assetId);
+            GameObject spawned = ProceduralTools.spawnSimObjPrefab(
+                prefab: asset,
+                id: generatedId,
+                assetId: assetId,
+                position: position.GetValueOrDefault(Vector3.zero),
+                rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
+            );
 
-            var spawned = GameObject.Instantiate(asset, position.GetValueOrDefault(Vector3.zero), Quaternion.identity);
-            spawned.name = generatedId;
             spawned.isStatic = true;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
                 rigidBody.useGravity = false;
                 rigidBody.isKinematic = true;
             }
 
-            var simObj = spawned.GetComponent<SimObjPhysics>();
-            if (simObj != null) {
-                simObj.objectID = spawned.name;
-            }
-
-            // some spawned assets have nested SimObjPhysics components,
-            // meaning multiple objects beyond simObj may be updated
-            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+            physicsSceneManager.SetupScene(generateObjectIds: false);
 
             var bounds = GetObjectSphereBounds(spawned);
-
-            if (this.imageSynthesis) {
-                if (this.imageSynthesis.enabled) {
-                    this.imageSynthesis.OnSceneChange();
+            actionFinished(
+                success: true,
+                actionReturn: new ObjectSphereBounds() {
+                    id = spawned.name,
+                    worldSpaceCenter = bounds.center,
+                    radius = bounds.extents.magnitude
                 }
-            }
-
-            actionFinished(true, new ObjectSphereBounds() {
-                id = spawned.name,
-                worldSpaceCenter = bounds.center,
-                radius = bounds.extents.magnitude
-            });
+            );
         }
 
         public void GetAssetSphereBounds(string assetId) {
@@ -4484,7 +4477,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouseFromJson`.");
+                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             navmesh.BuildNavMesh();

@@ -1,5 +1,6 @@
 import os
 import sys
+import fcntl
 import datetime
 import json
 import re
@@ -10,6 +11,7 @@ import hashlib
 import shutil
 import subprocess
 import pprint
+import random
 from invoke import task
 import boto3
 import botocore.exceptions
@@ -775,7 +777,9 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zip_buf = io.BytesIO()
-    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED)
+    # Unity build is done with CompressWithLz4. Zip with compresslevel=1
+    # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
+    zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
     zip_buf.seek(0)
@@ -829,8 +833,8 @@ def ci_prune_cache(cache_dir):
             shutil.rmtree(path)
 
 
-def link_build_cache(branch):
-    library_path = os.path.join("unity", "Library")
+def link_build_cache(root_dir, arch, branch):
+    library_path = os.path.join(root_dir, "unity", "Library")
     logger.info("linking build cache for %s" % branch)
 
     if os.path.lexists(library_path):
@@ -841,17 +845,22 @@ def link_build_cache(branch):
     encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
     cache_base_dir = os.path.join(os.environ["HOME"], "cache")
+    os.makedirs(cache_base_dir, exist_ok=True)
 
     ci_prune_cache(cache_base_dir)
 
-    main_cache_dir = os.path.join(cache_base_dir, "main")
-    branch_cache_dir = os.path.join(cache_base_dir, encoded_branch)
+    main_cache_dir = os.path.join(cache_base_dir, "main", arch)
+    branch_cache_dir = os.path.join(cache_base_dir, encoded_branch, arch)
     # use the main cache as a starting point to avoid
     # having to re-import all assets, which can take up to 1 hour
     if not os.path.exists(branch_cache_dir) and os.path.exists(main_cache_dir):
         logger.info("copying main cache for %s" % encoded_branch)
+
+        os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
+
+        # -c uses MacOS clonefile
         subprocess.check_call(
-            "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+            "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
         )
         logger.info("copying main cache complete for %s" % encoded_branch)
 
@@ -913,7 +922,6 @@ def pytest_s3_object(commit_id):
 
 def ci_pytest(build):
     import requests
-
     logger.info("running pytest for %s %s" % (build["branch"], build["commit_id"]))
     commit_id = git_commit_id()
 
@@ -946,15 +954,19 @@ def ci_pytest(build):
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType="application/json"
     )
+
     logger.info("finished pytest for %s %s" % (build["branch"], build["commit_id"]))
 
 
 @task
 def ci_build(context):
-    import fcntl
+    # using fork can potentially lead to crashes (https://bugs.python.org/issue33725)
+    # if this ever becomes an issue, a separate clone will need to be used
+    # instead of mutating the clone beneath running invoke ci-build task
+    multiprocessing.set_start_method("fork")
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
-
+    arch_temp_dirs = dict()
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
@@ -966,9 +978,7 @@ def ci_build(context):
             clean()
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
-            subprocess.check_call(
-                "git checkout -qf %s" % build["commit_id"], shell=True
-            )
+            subprocess.check_call("git checkout -qf %s" % build["commit_id"], shell=True)
 
             private_scene_options = [False]
 
@@ -979,9 +989,13 @@ def ci_build(context):
                         "starting build for %s %s %s"
                         % (arch, build["branch"], build["commit_id"])
                     )
-                    rdir = os.path.normpath(
-                        os.path.dirname(os.path.realpath(__file__)) + "/unity/builds"
-                    )
+                    temp_dir = arch_temp_dirs[arch] = os.path.join(os.environ["HOME"], "tmp/unity-%s-%s-%s-%s" % (arch, build["commit_id"], os.getpid(), random.randint(0, 2**32 - 1)))
+                    os.makedirs(temp_dir)
+                    logger.info( "copying unity data to %s" % (temp_dir,))
+                    # -c uses MacOS clonefile
+                    subprocess.check_call("cp -a -c unity %s" % temp_dir, shell=True)
+                    logger.info( "completed unity data copy to %s" % (temp_dir,))
+                    rdir = os.path.join(temp_dir, "unity/builds")
                     commit_build = ai2thor.build.Build(
                         arch,
                         build["commit_id"],
@@ -998,43 +1012,50 @@ def ci_build(context):
                     else:
                         # this is done here so that when a tag build request arrives and the commit_id has already
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                        link_build_cache(build["branch"])
+                        link_build_cache(temp_dir, arch, build["branch"])
 
-                        p = ci_build_arch(arch, include_private_scenes)
-
-                        logger.info(
-                            "finished build for %s %s %s"
-                            % (arch, build["branch"], build["commit_id"])
-                        )
+                        p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
+                        p.start()
+                        # wait for Unity to start so that it can pick up the GICache config
+                        # changes
+                        time.sleep(30)
                         procs.append(p)
+
+            # the UnityLockfile is used as a trigger to indicate that Unity has closed
+            # the project and we can run the unit tests
+            lock_file_path = os.path.join(arch_temp_dirs["OSXIntel64"], "unity/Temp/UnityLockfile")
+            if os.path.isfile(lock_file_path):
+                logger.info("attempting to lock %s" % lock_file_path)
+                lock_file = os.open(lock_file_path, os.O_RDWR)
+                fcntl.lockf(lock_file, fcntl.LOCK_EX)
+                fcntl.lockf(lock_file, fcntl.LOCK_UN)
+                os.close(lock_file)
+                logger.info("obtained lock on %s" % lock_file_path)
 
             # don't run tests for a tag since results should exist
             # for the branch commit
             if build["tag"] is None:
+
                 # its possible that the cache doesn't get linked if the builds
-                # succeeded during an earlier runh
-                link_build_cache(build["branch"])
+                # succeeded during an earlier run
+                link_build_cache(os.getcwd(), "OSXIntel64", build["branch"])
+
+                # link builds directory so pytest can run
+                logger.info("current directory pre-symlink %s" % os.getcwd())
+                os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
                 ci_test_utf(context, build)
                 pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build,))
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
-            # give the travis poller time to see the result
-            for i in range(6):
-                b = travis_build(build["id"])
-                logger.info("build state for %s: %s" % (build["id"], b["state"]))
-
-                if b["state"] != "started":
-                    break
-                time.sleep(10)
-
-            # allow webgl to be force deployed with #webgl-deploy in the commit comment
+            ## allow webgl to be force deployed with #webgl-deploy in the commit comment
 
             if (
                 build["branch"] in ["main", "demo-updates"]
                 and "#webgl-deploy" in git_commit_comment()
             ):
                 ci_build_webgl(context, build["commit_id"])
+
 
             for p in procs:
                 if p:
@@ -1044,23 +1065,34 @@ def ci_build(context):
                     )
                     p.join()
 
+            # must have this after all the procs are joined
+            # to avoid generating a _builds.py file that would affect pytest execution
             build_pip_commit(context)
             push_pip_commit(context)
             generate_pypi_index(context)
+
+            # give the travis poller time to see the result
+            for i in range(12):
+                b = travis_build(build["id"])
+                logger.info("build state for %s: %s" % (build["id"], b["state"]))
+
+                if b["state"] != "started":
+                    break
+                time.sleep(10)
+
             logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
-        # if we are in off hours, allow the nightly webgl build to be performed
-        # elif datetime.datetime.now().hour == 2:
-        #    clean()
-        #    subprocess.check_call("git checkout main", shell=True)
-        #    subprocess.check_call("git pull origin main", shell=True)
-        #    if current_webgl_autodeploy_commit_id() != git_commit_id():
-        #        ci_build_webgl(context, git_commit_id())
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
         pass
+
+    finally:
+        for arch, temp_dir in arch_temp_dirs.items():
+            logger.info("deleting temp dir %s" % temp_dir)
+            #shutil.rmtree(temp_dir)
+
 
     lock_f.close()
 
@@ -1072,15 +1104,25 @@ def ci_build_webgl(context, commit_id):
     # linking here in the event we didn't link above since the builds had
     # already completed. Omitting this will cause the webgl build
     # to import all assets from scratch into a new unity/Library
-    link_build_cache(branch)
+    arch = "WebGL"
+    set_gi_cache_folder(arch)
+    link_build_cache(os.getcwd(), arch, branch)
     webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
     logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
 
 
-def ci_build_arch(arch, include_private_scenes=False):
+def set_gi_cache_folder(arch):
+    gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
+    plist_path = os.path.join(os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist")
+    # done to avoid race conditions when modifying GICache from more than one build
+    subprocess.check_call("plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True)
+    subprocess.check_call("plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path), shell=True)
+    subprocess.check_call("plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,), shell=True)
 
-    commit_id = git_commit_id()
+def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
+
+    os.chdir(root_dir)
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
@@ -1093,34 +1135,22 @@ def ci_build_arch(arch, include_private_scenes=False):
         env = {}
         if include_private_scenes:
             env["INCLUDE_PRIVATE_SCENES"] = "true"
-
+        set_gi_cache_folder(arch)
         _build(unity_path, arch, build_dir, build_name, env)
+        logger.info("finished build for %s %s" % (arch, commit_id))
 
-        print("pushing archive")
-        proc = multiprocessing.Process(
-            target=archive_push,
-            args=(
-                unity_path,
-                build_path,
-                build_dir,
-                build_info,
-                include_private_scenes,
-            ),
-        )
-        proc.start()
+        archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes)
 
     except Exception as e:
         print("Caught exception %s" % e)
         build_info["build_exception"] = "Exception building: %s" % e
         build_log_push(build_info, include_private_scenes)
 
-    return proc
 
 
 @task
 def poll_ci_build(context):
     import requests.exceptions
-    import ai2thor.platform
     import requests
 
     commit_id = git_commit_id()
@@ -1135,13 +1165,6 @@ def poll_ci_build(context):
             last_emit_time = time.time()
 
         check_platforms = ai2thor.build.AUTO_BUILD_PLATFORMS
-        travis_tag = os.environ.get('TRAVIS_TAG', '').strip()
-        if travis_tag:
-            # we must have CloudRendering available for tags/releases
-            # but it is currently manually built since it requires a 
-            # different verison of Unity, so this is a safety check to 
-            # ensure that it is there
-            check_platforms.append(ai2thor.platform.CloudRendering)
 
         for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
@@ -1209,7 +1232,6 @@ def build(context, local=False):
             build_dir = os.path.join("builds", build_name)
             build_path = build_dir + ".zip"
             build_info = builds[plat.name()] = {}
-
             build_info["log"] = "%s.log" % (build_name,)
 
             _build(unity_path, plat.name(), build_dir, build_name, env=env)

@@ -1391,8 +1391,8 @@ namespace Thor.Procedural {
                         holeCover.id,
                         holeCover.asset_id,
                         pos,
-                        new AxisAngleRotation() { axis = Vector3.up,  degrees = rotY },
-                        // rotation,
+                        // new AxisAngleRotation() { axis = Vector3.up,  degrees = rotY },
+                        rotation,
                         true,
                         holeCover.color,
                         false
@@ -1584,7 +1584,8 @@ namespace Thor.Procedural {
         //generic function to spawn object in scene. No bounds or collision checks done
         public static GameObject spawnHouseObject(
             AssetMap<GameObject> goDb,
-            HouseObject ho) {
+            HouseObject ho
+        ) {
             if (goDb.ContainsKey(ho.asset_id)) {
 
             var go = goDb.getAsset(ho.asset_id);
@@ -1593,14 +1594,15 @@ namespace Thor.Procedural {
                 ho.id,
                 ho.asset_id,
                 ho.position,
-                ho.rotation,
-                // Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
+                // ho.rotation,
+                Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
                 ho.kinematic,
                 ho.color,
                 true
             );
             }
             else {
+
                 Debug.LogError("Asset not in Database " + ho.asset_id);
                 return null;
             }
@@ -1627,8 +1629,8 @@ namespace Thor.Procedural {
             string id,
             string assetId,
             Vector3 position,
-            // Quaternion rotation,
-            AxisAngleRotation rotation,
+            Quaternion rotation,
+            // AxisAngleRotation rotation,
             bool kinematic = false,
             SerializableColor color = null,
             bool positionBoundingBoxCenter = false
@@ -1637,19 +1639,19 @@ namespace Thor.Procedural {
             var go = prefab;
 
             var spawned = GameObject.Instantiate(go); //, position, Quaternion.identity); //, position, rotation);
-            var rot = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
+            // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
                 var simObj = spawned.GetComponent<SimObjPhysics>();
                 var box = simObj.AxisAlignedBoundingBox;
                 // box.enabled = true;
                 var centerObjectSpace = prefab.transform.TransformPoint(box.center);
                 
-                spawned.transform.position = rot * (spawned.transform.localPosition - box.center) + position;
-                spawned.transform.rotation = rot;   
+                spawned.transform.position = rotation * (spawned.transform.localPosition - box.center) + position;
+                spawned.transform.rotation = rotation;   
             }
             else {
                 spawned.transform.position = position;
-                spawned.transform.rotation = rot;
+                spawned.transform.rotation = rotation;
             }
 
             // spawned.transform.localPosition = centerObjectSpace;
@@ -1682,6 +1684,16 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
             toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+
+            SimObjPhysics[] childSimObjects = toSpawn.transform.gameObject.GetComponentsInChildren<SimObjPhysics>();
+            int childNumber = 0;
+            for (int i = 0; i < childSimObjects.Length; i++) {
+                if (childSimObjects[i].objectID == id) {
+                    // skip the parent object that's ID has already been assigned
+                    continue;
+                }
+                childSimObjects[i].objectID = $"{id}___{childNumber++}";
+            }
 
             return toSpawn.transform.gameObject;
         }
