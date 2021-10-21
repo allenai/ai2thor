@@ -90,6 +90,8 @@ namespace Thor.Procedural.Data {
 
         public bool open { get; set; }
         public string asset_id { get; set; }
+
+        public SerializableColor color { get; set; } = null;
     }
 
     [Serializable]
@@ -142,6 +144,8 @@ namespace Thor.Procedural.Data {
 
         public float material_tiling_x_divisor = 1.0f;
         public float material_tiling_y_divisor = 1.0f;
+
+        public SerializableColor color { get; set; } = null;
     }
 
     [Serializable]
@@ -173,6 +177,8 @@ namespace Thor.Procedural.Data {
         public List<VectorXZ> axes_xz { get; set; }
         public string type { get; set; }
         public string asset_id { get; set; }
+
+        public SerializableColor color { get; set; } = null;
     }
 
     [Serializable]
@@ -218,6 +224,8 @@ namespace Thor.Procedural.Data {
         public List<Taxonomy> types { get; set; }
         public string asset_id { get; set; } //name of prefab asset from asset database
         public string navmesh_area { get; set; }
+
+        public SerializableColor color { get; set; } = null;
     }
 
     [Serializable]
@@ -269,6 +277,8 @@ namespace Thor.Procedural.Data {
 
         bool open { get; set; }
 
+        SerializableColor color { get; set; }
+
     }
 
     
@@ -290,6 +300,8 @@ namespace Thor.Procedural.Data {
 
         public float material_tiling_x_divisor = 1.0f;
         public float material_tiling_y_divisor = 1.0f;
+
+        public SerializableColor color { get; set; } = null;
 
     }
 

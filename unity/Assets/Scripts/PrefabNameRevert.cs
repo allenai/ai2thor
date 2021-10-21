@@ -13,8 +13,15 @@
 
         public static string GetPrefabAssetName(GameObject prefab, string name = "")
         {
-            Debug.Log("Object " + name);
-            return PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab).name;
+            // Debug.Log("Object " + name + " object: " + prefab.name);
+            var original = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
+            if (original != null) {
+                return original.name;
+            } 
+            else {
+                Debug.LogError($"No prefab could be found for object '{prefab.name}'");
+                return null;
+            }
         }
     
         public static void RemoveNameModification(UnityEngine.Object aObj)

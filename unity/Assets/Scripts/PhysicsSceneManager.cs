@@ -62,13 +62,13 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void SetupScene(bool genObjectID = true) {
-
-        Debug.Log("------- Setup Scene called " + (genObjectID && !ProceduralMode));
+    public void SetupScene(bool generateObjectIds = true) {
+        Debug.Log("------- Setup Scene called " + (generateObjectIds && !ProceduralMode));
         ObjectIdToSimObjPhysics.Clear();
-        GatherSimObjPhysInScene(genObjectID && !ProceduralMode);
+        GatherSimObjPhysInScene(generateObjectIds && !ProceduralMode);
         GatherAllRBsInScene();
     }
+
     // Use this for initialization
     void Start() {
         PhysicsSceneManager.PhysicsSimulateCallCount = 0;
@@ -199,14 +199,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void GatherSimObjPhysInScene(bool genObjectID = true) {
+    public void GatherSimObjPhysInScene(bool generateObjectIds = true) {
         List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 
         allPhysObjects.AddRange(FindObjectsOfType<SimObjPhysics>());
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
         foreach (SimObjPhysics o in allPhysObjects) {
-            if(genObjectID) {
+            if (generateObjectIds) {
                 Generate_ObjectID(o);
             }
 
