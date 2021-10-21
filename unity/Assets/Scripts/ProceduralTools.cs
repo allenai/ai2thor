@@ -1525,11 +1525,6 @@ namespace Thor.Procedural {
             var assets = new List<GameObject>();
             string[] guids = AssetDatabase.FindAssets("t:prefab");
 
-            // these assets crash Unity when opening them
-            var skipAssetNames = new HashSet<string>();
-            // skipAssetNames.Add("Knife_3");
-            // skipAssetNames.Add("StoveKnob2");
-
             for (int i = 0; i < guids.Length; i++) {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
                 string assetName = assetPath.Substring(
@@ -1543,7 +1538,6 @@ namespace Thor.Procedural {
                     || assetPath.Contains("Entryway Objects")
                     || assetPath.Contains("Custom Project Objects")
                     || assetPath.Contains("Assets/Resources")
-                    || skipAssetNames.Contains(assetName)
                 ) {
                     continue;
                 }
