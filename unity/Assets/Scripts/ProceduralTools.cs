@@ -1527,7 +1527,6 @@ namespace Thor.Procedural {
 
             // these assets crash Unity when opening them
             var skipAssetNames = new HashSet<string>();
-            // skipAssetNames.Add("Knife_3");
             // skipAssetNames.Add("StoveKnob2");
 
             for (int i = 0; i < guids.Length; i++) {
