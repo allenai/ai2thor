@@ -1558,9 +1558,12 @@ namespace Thor.Procedural {
                     assetPath.Length - (assetPath.LastIndexOf("/") + 1) - ".prefab".Length
                 );
 
-                // skip all these prefabs
+                // skip all these folders and prefabs
                 if (
-                    assetPath.Contains("Scene Setup Prefabs") || assetPath.Contains("Entryway Objects")
+                    assetPath.Contains("Scene Setup Prefabs")
+                    || assetPath.Contains("Entryway Objects")
+                    || assetPath.Contains("Custom Project Objects")
+                    || assetPath.Contains("Assets/Resources")
                     || skipAssetNames.Contains(assetName)
                 ) {
                     continue;
