@@ -826,6 +826,9 @@ namespace Thor.Procedural {
             var prev_p0p1 = previous.p1 - previous.p0;
 
             meshRenderer.sharedMaterial.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+            if (toCreate.color != null) {
+                meshRenderer.material.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
+            }
             //}
 
             return wallGO;
@@ -1147,7 +1150,8 @@ namespace Thor.Procedural {
                 room_id = wall.room_id,
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
-                material_tiling_y_divisor = wall.material_tiling_y_divisor
+                material_tiling_y_divisor = wall.material_tiling_y_divisor,
+                color = wall.color
             };
         }
 
@@ -1387,8 +1391,11 @@ namespace Thor.Procedural {
                         holeCover.id,
                         holeCover.asset_id,
                         pos,
+                        // new AxisAngleRotation() { axis = Vector3.up,  degrees = rotY },
                         rotation,
-                        true
+                        true,
+                        holeCover.color,
+                        false
                     );
 
                     setConnectionProperties(go, holeCover);
@@ -1580,16 +1587,22 @@ namespace Thor.Procedural {
             HouseObject ho
         ) {
             if (goDb.ContainsKey(ho.asset_id)) {
-                var go = goDb.getAsset(ho.asset_id);
-                return spawnSimObjPrefab(
-                    go,
-                    ho.id,
-                    ho.asset_id,
-                    ho.position,
-                    Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
-                    ho.kinematic
-                );
-            } else {
+
+            var go = goDb.getAsset(ho.asset_id);
+            return spawnSimObjPrefab(
+                go,
+                ho.id,
+                ho.asset_id,
+                ho.position,
+                // ho.rotation,
+                Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
+                ho.kinematic,
+                ho.color,
+                true
+            );
+            }
+            else {
+
                 Debug.LogError("Asset not in Database " + ho.asset_id);
                 return null;
             }
@@ -1617,11 +1630,38 @@ namespace Thor.Procedural {
             string assetId,
             Vector3 position,
             Quaternion rotation,
-            bool kinematic = false
+            // AxisAngleRotation rotation,
+            bool kinematic = false,
+            SerializableColor color = null,
+            bool positionBoundingBoxCenter = false
 
         ) {
             var go = prefab;
-            var spawned = GameObject.Instantiate(go, position, rotation);
+
+            var spawned = GameObject.Instantiate(go); //, position, Quaternion.identity); //, position, rotation);
+            // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
+            if (positionBoundingBoxCenter) {
+                var simObj = spawned.GetComponent<SimObjPhysics>();
+                var box = simObj.AxisAlignedBoundingBox;
+                // box.enabled = true;
+                var centerObjectSpace = prefab.transform.TransformPoint(box.center);
+                
+                spawned.transform.position = rotation * (spawned.transform.localPosition - box.center) + position;
+                spawned.transform.rotation = rotation;   
+            }
+            else {
+                spawned.transform.position = position;
+                spawned.transform.rotation = rotation;
+            }
+
+            // spawned.transform.localPosition = centerObjectSpace;
+            // spawned.transform.Rotate(rotation.axis, rotation.degrees);
+            // spawned.transform.position += position;
+
+             //var spawned = GameObject.Instantiate(go, position, Quaternion.AngleAxis(rotation.degrees, rotation.axis));
+            // spa
+            //spawned.transform.position = 
+
 
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
@@ -1631,6 +1671,16 @@ namespace Thor.Procedural {
             toSpawn.name = id;
             toSpawn.assetID = assetId;
 
+            if (color != null) {
+                var materials = toSpawn.GetComponentsInChildren<MeshRenderer>().Select(
+                    mr => mr.material
+                );
+                foreach (var mat in materials) {
+                    mat.color = new Color(color.r, color.g, color.b, color.a);
+                }
+            }
+
+            // TODO (speed up): move to room creator class
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
             toSpawn.transform.SetParent(GameObject.Find("Objects").transform);

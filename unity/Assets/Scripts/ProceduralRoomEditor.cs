@@ -52,13 +52,13 @@ public class ProceduralRoomEditor : MonoBehaviour
                     .Where(s => s.transform.parent.GetComponentInParent<SimObjPhysics>() == null)
                     .GroupBy(s => s.Type)
                     .SelectMany(objsOfType => objsOfType.Select((simObj, index) => new NamedSimObj {
-                        assetId = PrefabNameRevert.GetPrefabAssetName(simObj.gameObject, simObj.objectID),
+                        assetId = !string.IsNullOrEmpty(simObj.assetID) ? simObj.assetID : PrefabNameRevert.GetPrefabAssetName(simObj.gameObject),
                         simObj = simObj,
                         id = $"{Enum.GetName(typeof(SimObjType), simObj.ObjType)}_{index}"
                     })).ToList();
                 foreach (var namedObj in namedObjects) {
                     Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}" );
-                    namedObj.simObj.assetID = PrefabNameRevert.GetPrefabAssetName(namedObj.simObj.gameObject, namedObj.simObj.objectID);
+                    namedObj.simObj.assetID = namedObj.assetId;
                     namedObj.simObj.objectID = namedObj.id;
                     namedObj.simObj.gameObject.name = namedObj.id;
                     
@@ -135,7 +135,7 @@ public class ProceduralRoomEditor : MonoBehaviour
         public List<string> wallIdsToDelete;
     }
 
-    private IEnumerable<ConnectionAndWalls> serializeConnections(IEnumerable<SimObjPhysics> connections, SimObjType filterType, string prefix, Dictionary<string, PolygonWall> wallMap) {
+    private IEnumerable<ConnectionAndWalls> serializeConnections(IEnumerable<SimObjPhysics> connections, SimObjType filterType, string prefix, Dictionary<string, PolygonWall> wallMap, Dictionary<string, WallRectangularHole> connectionMap = null) {
         var flippedForward = filterType == SimObjType.Window;
         var connectionsWithWalls = connections.Where(s => s.Type == filterType).Select( (d, i) => {
             var id = d.gameObject.name;
@@ -320,8 +320,7 @@ public class ProceduralRoomEditor : MonoBehaviour
         // Func<Vector3, Vector3, Vector3, string, bool, bool> pointOnWallLine = (Vector3 p, Vector3 direction, Vector3 origin, string name, bool ignoreSign) => {
             
         // };
-        var test = colliderDistances.First(w => w.collider.name == "wall_2_6");
-        Debug.Log($"$$$$$$  colliderDistances p0: {test.p0.ToString("F8")} p1: {test.p1.ToString("F8")} t {test}");
+        
         var wallRight = colliderDistances.Aggregate( new {
                 collider = box,
                 p0SqrDistance = float.MaxValue,
@@ -512,6 +511,11 @@ public class ProceduralRoomEditor : MonoBehaviour
 
                 Debug.Log($"............. Door {xLen} p0To {p0ToConnection} ");
 
+
+            var asset_id = !string.IsNullOrEmpty(d.assetID) ? d.assetID : PrefabNameRevert.GetPrefabAssetName(d.gameObject);
+
+            // asset_id = asset_id == null ? d.assetID : asset_id;
+
             if (filterType == SimObjType.Doorway) {
 
                 
@@ -532,7 +536,7 @@ public class ProceduralRoomEditor : MonoBehaviour
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+                    asset_id = asset_id
 
                 };
             }
@@ -556,7 +560,7 @@ public class ProceduralRoomEditor : MonoBehaviour
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
 
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+                    asset_id = asset_id
 
                 };
             }
@@ -750,6 +754,8 @@ public class ProceduralRoomEditor : MonoBehaviour
         var simObjs = GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<SimObjPhysics>();
         
         var wallsDict = new Dictionary<string, PolygonWall>(house.walls.ToDictionary(w => w.id, w => w));
+
+        var connectionsDict = new Dictionary<string, WallRectangularHole>(house.doors.Select(d => d as WallRectangularHole).Concat(house.windows).ToDictionary(w => w.id, w => w));
         // var wallsDict = new List<PolygonWall>(this.loadedHouse.walls).ToDictionary(w => w.id, w => w);
         // foreach (var m in wallsDict) {
         //     Debug.Log("Dict: " + m.Key);
@@ -1118,9 +1124,11 @@ public class ProceduralRoomEditor : MonoBehaviour
                 if (!assetDb.ContainsKey(obj.assetId)) {
                     Debug.LogError($"Asset '{obj.assetId}' not in AssetLibrary, so it won't be able to be loaded as part of a procedural scene. Save the asset and rebuild asset library.");
                 }
-                return new HouseObject(){
+                // var box = obj.simObj.BoundingBox.GetComponent<BoxCollider>();
+                // box.enabled = true;
+                var serializedObj = new HouseObject(){
                     id = obj.id,
-                    position = obj.simObj.transform.position,
+                    position = bb.center,
                     rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
                     kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
                     bounding_box = new BoundingBox() { min =  bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
@@ -1128,6 +1136,8 @@ public class ProceduralRoomEditor : MonoBehaviour
                     types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
                     asset_id = obj.assetId
                 };
+                // box.enabled = false;
+                return serializedObj;
             }
             ).ToList();
             
