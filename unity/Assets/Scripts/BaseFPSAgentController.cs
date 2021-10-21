@@ -4298,8 +4298,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var simObj = p.GetComponent<SimObjPhysics>();
                 var bb = simObj.AxisAlignedBoundingBox;
 
-                // TODO: no objects should have duplicate names.
                 if (metadata.ContainsKey(simObj.gameObject.name)) {
+                    throw new InvalidOperationException(
+                        $"There are duplicate assets with the name {simObj.gameObject.name}."
+                    );
                     continue;
                 }
 
