@@ -97,7 +97,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476783502064266
 GameObject:
   m_ObjectHideFlags: 0
@@ -647,7 +646,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476784272495563
 GameObject:
   m_ObjectHideFlags: 0
@@ -703,6 +701,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -714,6 +713,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -952,7 +952,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476784578626691
 GameObject:
   m_ObjectHideFlags: 0
@@ -1204,7 +1203,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476784734900754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,7 +1262,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476784750854561
 GameObject:
   m_ObjectHideFlags: 0
@@ -1291,7 +1288,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6545476784750854561}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.357, y: 1.102, z: 0.29}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6545476784272495562}
@@ -1316,6 +1313,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectID: 
+  assetID: 
   Type: 158
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -1347,8 +1345,8 @@ MonoBehaviour:
   - {fileID: 6545476784498131940}
   - {fileID: 6545476785410384231}
   - {fileID: 6545476783486816649}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 6545476785421906681}
@@ -1369,8 +1367,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &6545476784750854560
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1580,7 +1595,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476785053515938
 GameObject:
   m_ObjectHideFlags: 0
@@ -1758,6 +1772,7 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1769,6 +1784,7 @@ SpriteRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1969,7 +1985,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476785326228858
 GameObject:
   m_ObjectHideFlags: 0
@@ -2103,7 +2118,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 6545476784750854561}
-  occupied: 0
 --- !u!1 &6545476785421906687
 GameObject:
   m_ObjectHideFlags: 0

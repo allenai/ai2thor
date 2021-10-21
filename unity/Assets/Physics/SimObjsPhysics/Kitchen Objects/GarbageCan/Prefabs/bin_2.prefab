@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 1029041358784578}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.1726973, z: 0}
-  m_LocalScale: {x: 0.29453728, y: 0.28272444, z: 0.20514607}
+  m_LocalScale: {x: 0.2945373, y: 0.28272444, z: 0.20514607}
   m_Children: []
   m_Father: {fileID: 4037807972522090}
   m_RootOrder: 0
@@ -59,7 +59,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1942404011819772}
-  occupied: 0
 --- !u!1 &1047100013747316
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,6 +604,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -618,6 +618,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -877,8 +878,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1942404011819772}
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -1.796, y: 0, z: 1.33}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4287092909269814}
@@ -889,7 +890,7 @@ Transform:
   - {fileID: 3701122287124998218}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &114112925092598382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -902,7 +903,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: GarbageCan|-01.80|+00.00|+01.33
+  objectID: 
+  assetID: 
   Type: 28
   PrimaryProperty: 2
   SecondaryProperties: 07000000
@@ -918,8 +920,8 @@ MonoBehaviour:
   - {fileID: 4865620116708314}
   ReceptacleTriggerBoxes:
   - {fileID: 1029041358784578}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65372740771432260}
@@ -941,8 +943,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54337250793270436
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1286,9 +1305,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7669487713238476084}
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.0000002, y: 1, z: 1.0000002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4037807972522090}
   m_RootOrder: 4
@@ -1304,8 +1323,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.46700945, y: 0.5222659, z: 0.6728475}
-  m_Center: {x: 0, y: 0.26113296, z: 0}
+  m_Size: {x: 0.6785667, y: 0.5091997, z: 0.47195888}
+  m_Center: {x: -0.005545199, y: 0.24939415, z: 0.008248001}
 --- !u!1 &7699646609525238546
 GameObject:
   m_ObjectHideFlags: 0
