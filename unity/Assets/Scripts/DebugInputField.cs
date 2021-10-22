@@ -1193,9 +1193,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 case "utpctl": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
-                            ["action"] = "UpdateThirdPartyCameraFollowAgentPivotingAroundObject",
+                            ["action"] = "UpdateThirdPartyCameraFollowAgentAroundPivot",
                             ["thirdPartyCameraId"] = 0,
-                            ["objectId"] = "Apple|-00.47|+01.15|+00.48",
+                            //["objectId"] = "Apple|-00.47|+01.15|+00.48",
+                            ["objectId"] = "Kettle|+01.04|+00.90|-02.60",
                             ["height"] = 0.2,
                             ["pushback"] = 0.4,
                         };

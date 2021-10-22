@@ -604,11 +604,12 @@ public class AgentManager : MonoBehaviour {
 
     // note that using a using a Dictionary<string, float> allows for only x, y, or z
     // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
-    public void UpdateThirdPartyCameraFollowAgentPivotingAroundObject(
+    public void UpdateThirdPartyCameraFollowAgentAroundPivot(
         int thirdPartyCameraId,
-        string objectId,
         float height,
         float pushback,
+        string objectId = null,
+        Vector3? pivot = null,
         int agentId = 0
     ) {
         // camera count is out of bounds
@@ -624,46 +625,57 @@ public class AgentManager : MonoBehaviour {
             );
         }
 
+        if ((objectId == null && !pivot.HasValue) || !(objectId != null || pivot.HasValue)) {
+            throw new NotImplementedException($"Only one of objectId and pivot should have a value specified.");
+        }
+
         Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
         BaseFPSAgentController agent = this.agents[agentId];
 
-        SimObjPhysics sop =  this.activeAgent().getSimObjectFromId(objectId: objectId);
-
-        Vector3 bboxCenter = sop.AxisAlignedBoundingBox.center;
-        float yOffset = sop.AxisAlignedBoundingBox.size.y + 0.01f;
-
-        Ray ray = new Ray(
-            direction: new Vector3(0f, 1f, 0f),
-            origin: bboxCenter + new Vector3(0f, yOffset, 0f)
-        );
-
+        Ray ray;
         RaycastHit hit;
-        bool hitObject = Physics.Raycast(
-            ray: ray,
-            hitInfo: out hit,
-            maxDistance: 2.0f * height,
-            layerMask: LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"),
-            queryTriggerInteraction: QueryTriggerInteraction.Ignore
-        );
+        bool hitObject;
+        Vector3 cameraPivot;
+        if (objectId != null) {
+            SimObjPhysics sop =  this.activeAgent().getSimObjectFromId(objectId: objectId);
 
-        float additionalCameraYOffset = height;
-        if (hitObject) {
-            additionalCameraYOffset = Mathf.Max(hit.distance / 2f, hit.distance - 0.1f);
+            Vector3 bboxCenter = sop.AxisAlignedBoundingBox.center;
+            float yOffset = sop.AxisAlignedBoundingBox.size.y + 0.01f;
+
+            ray = new Ray(
+                direction: new Vector3(0f, 1f, 0f),
+                origin: bboxCenter + new Vector3(0f, yOffset, 0f)
+            );
+
+            hitObject = Physics.Raycast(
+                ray: ray,
+                hitInfo: out hit,
+                maxDistance: 2.0f * height,
+                layerMask: LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"),
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+
+            float additionalCameraYOffset = height;
+            if (hitObject) {
+                additionalCameraYOffset = Mathf.Max(hit.distance / 2f, hit.distance - 0.1f);
+            }
+            cameraPivot = bboxCenter + new Vector3(0f, additionalCameraYOffset + yOffset, 0f);
+        } else {
+            cameraPivot = pivot.Value;
         }
-        Vector3 cameraPosInitial = bboxCenter + new Vector3(0f, additionalCameraYOffset + yOffset, 0f) ;
 
         Vector3 fromCameraToAgentXZ = Vector3.Normalize(
             new Vector3(
-                agent.transform.position.x - cameraPosInitial.x, 
+                agent.transform.position.x - cameraPivot.x,
                 0f, 
-                agent.transform.position.z - cameraPosInitial.z
+                agent.transform.position.z - cameraPivot.z
             )
         );
 
         hitObject = Physics.Raycast(
             ray: new Ray(
                 direction: -fromCameraToAgentXZ,
-                origin: cameraPosInitial
+                origin: cameraPivot
             ),
             hitInfo: out hit,
             maxDistance: 2.0f * pushback,
@@ -673,10 +685,11 @@ public class AgentManager : MonoBehaviour {
 
         float magChangeInXZ = pushback;
         if (hitObject) {
+            Debug.Log($"Hit {hit.collider.gameObject} at a distance of {hit.distance}");
             pushback = Mathf.Max(hit.distance / 2f, hit.distance - 0.1f);
         }
 
-        thirdPartyCamera.transform.position = cameraPosInitial - magChangeInXZ * fromCameraToAgentXZ;
+        thirdPartyCamera.transform.position = cameraPivot - pushback * fromCameraToAgentXZ;
         thirdPartyCamera.transform.LookAt(agent.transform);
 
         this.activeAgent().actionFinished(success: true);
