@@ -159,6 +159,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         BaseFPSAgentController CurrentActiveController() {
+            // Needed to be able to do hot-code reloading
+            // during debugging. Might have unexpected effects
+            // if you do not want the PhysicsController.
+            if (AManager.PrimaryAgent == null) {
+                AManager.SetUpPhysicsController();
+            }
             return AManager.PrimaryAgent;
         }
 
@@ -1185,13 +1191,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "utpctl": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateThirdPartyCameraFollowAgentPivotingAroundObject",
+                            ["thirdPartyCameraId"] = 0,
+                            ["objectId"] = "Apple|-00.47|+01.15|+00.48",
+                            ["height"] = 0.2,
+                            ["pushback"] = 0.4,
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
                 case "atpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = Vector3.zero,
                             ["rotation"] = Vector3.zero,
-                            ["orthographic"] = true,
-                            ["orthographicSize"] = 5,
+                            //["orthographic"] = true,
+                            //["orthographicSize"] = 5,
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

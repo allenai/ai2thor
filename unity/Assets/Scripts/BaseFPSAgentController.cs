@@ -3492,7 +3492,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected SimObjPhysics getSimObjectFromId(string objectId) {
+        public SimObjPhysics getSimObjectFromId(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "Cannot find sim object with id '" + objectId + "'";
                 return null;
