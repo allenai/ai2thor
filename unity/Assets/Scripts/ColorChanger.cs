@@ -148,6 +148,14 @@ public class ColorChanger : MonoBehaviour {
             cacheMaterials();
         }
 
+        Dictionary<string, string> roomTypeLabelMap = new Dictionary<string, string>() {
+            ["kitchen"] = "RawKitchenMaterials",
+            ["livingroom"] = "RawLivingRoomMaterials",
+            ["bedroom"] = "RawBedroomMaterials",
+            ["bathroom"] = "RawBathroomMaterials",
+            ["robothor"] = "RawRobothorMaterials",
+        };
+
         int numTotalMaterials = 0;
 
         HashSet<string> activeMaterialNames = new HashSet<string>();
@@ -170,7 +178,8 @@ public class ColorChanger : MonoBehaviour {
                         numTotalMaterials++;
                     } else {
                         foreach (string roomType in inRoomTypes) {
-                            if (materialGroupPaths[roomType].Contains(resourceAssetReference.ResourcePath)) {
+                            string roomLabel = roomTypeLabelMap[roomType];
+                            if (materialGroupPaths[roomLabel].Contains(resourceAssetReference.ResourcePath)) {
                                 validMaterials.Add(resourceAssetReference);
                                 numTotalMaterials++;
                                 break;
