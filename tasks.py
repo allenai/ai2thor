@@ -1026,14 +1026,16 @@ def ci_build(context):
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
-            lock_file_path = os.path.join(arch_temp_dirs["OSXIntel64"], "unity/Temp/UnityLockfile")
-            if os.path.isfile(lock_file_path):
-                logger.info("attempting to lock %s" % lock_file_path)
-                lock_file = os.open(lock_file_path, os.O_RDWR)
-                fcntl.lockf(lock_file, fcntl.LOCK_EX)
-                fcntl.lockf(lock_file, fcntl.LOCK_UN)
-                os.close(lock_file)
-                logger.info("obtained lock on %s" % lock_file_path)
+            # waiting for all builds to complete before starting tests
+            for arch in ["OSXIntel64", "Linux64"]:
+                lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
+                if os.path.isfile(lock_file_path):
+                    logger.info("attempting to lock %s" % lock_file_path)
+                    lock_file = os.open(lock_file_path, os.O_RDWR)
+                    fcntl.lockf(lock_file, fcntl.LOCK_EX)
+                    fcntl.lockf(lock_file, fcntl.LOCK_UN)
+                    os.close(lock_file)
+                    logger.info("obtained lock on %s" % lock_file_path)
 
             # don't run tests for a tag since results should exist
             # for the branch commit
