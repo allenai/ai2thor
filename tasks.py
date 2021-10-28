@@ -912,7 +912,6 @@ def pytest_s3_object(commit_id):
 
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
-
 @task
 def ci_merge_push_pytest_results(context, commit_id):
 
@@ -974,6 +973,8 @@ def ci_build(context):
         build = pending_travis_build()
         skip_branches = ["vids", "video", "erick/cloudrendering"]
         if build and build["branch"] not in skip_branches:
+            # delete pytest json to allow tests to get rerun
+            pytest_s3_object(build["commit_id"]).delete()
             logger.info(
                 "pending build for %s %s" % (build["branch"], build["commit_id"])
             )
