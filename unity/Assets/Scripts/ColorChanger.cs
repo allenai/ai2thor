@@ -158,6 +158,10 @@ public class ColorChanger : MonoBehaviour {
 
         int numTotalMaterials = 0;
 
+        // the purpose of finding all the active materials is to limit what
+        // assets actually get loaded.  Without this filter, all assets would 
+        // need to get loaded and shuffled, using this the shuffle step
+        // can limit what materials actually get loaded through Resources.Load()
         HashSet<string> activeMaterialNames = new HashSet<string>();
         foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
             foreach (var mat in renderer.sharedMaterials) {
