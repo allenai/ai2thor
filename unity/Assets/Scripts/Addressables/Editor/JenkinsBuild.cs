@@ -193,7 +193,7 @@ public class JenkinsBuild
     {
         var bucketEnv = "";
         string[] args=GetExecuteMethodArguments();
-        if (args.Length > 2){
+        if (args !=null && args.Length > 2){
             bucketEnv = args[2];
         }
         var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
