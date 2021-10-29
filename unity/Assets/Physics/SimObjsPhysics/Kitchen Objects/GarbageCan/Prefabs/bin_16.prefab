@@ -147,7 +147,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1878437474256518}
-  occupied: 0
 --- !u!1 &1092757545832002
 GameObject:
   m_ObjectHideFlags: 0
@@ -385,7 +384,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1878437474256518}
-  occupied: 0
 --- !u!1 &1252411936990714
 GameObject:
   m_ObjectHideFlags: 0
@@ -489,7 +487,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1878437474256518}
-  occupied: 0
 --- !u!1 &1322078646898020
 GameObject:
   m_ObjectHideFlags: 0
@@ -776,6 +773,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -789,6 +787,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -865,7 +864,7 @@ Transform:
   m_GameObject: {fileID: 1721894816310812}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.184, z: 0.1869}
-  m_LocalScale: {x: 0.19574992, y: 0.74156386, z: 0.036725435}
+  m_LocalScale: {x: 0.1957499, y: 0.74156386, z: 0.036725435}
   m_Children: []
   m_Father: {fileID: 4730039744219764}
   m_RootOrder: 0
@@ -1002,7 +1001,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1878437474256518}
-  occupied: 0
 --- !u!1 &1812226391588308
 GameObject:
   m_ObjectHideFlags: 0
@@ -1100,7 +1098,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: GarbageCan|+00.00|+00.00|+00.00
+  objectID: 
+  assetID: bin_16
   Type: 28
   PrimaryProperty: 2
   SecondaryProperties: 07000000
@@ -1119,8 +1118,8 @@ MonoBehaviour:
   - {fileID: 1085177306902648}
   - {fileID: 1272735557625084}
   - {fileID: 1200841646422096}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65753649219813798}
@@ -1143,8 +1142,25 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
 --- !u!54 &54705962224352366
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1537,8 +1553,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.48592615, y: 0.63501203, z: 0.43610942}
-  m_Center: {x: 0, y: 0.33162874, z: 0.020208232}
+  m_Size: {x: 0.4404167, y: 0.5714803, z: 0.4085235}
+  m_Center: {x: -0.0011348724, y: 0.31837884, z: 0.01744984}
 --- !u!1 &6451254886231047356
 GameObject:
   m_ObjectHideFlags: 0
