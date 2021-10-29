@@ -62,6 +62,10 @@ namespace Thor.Procedural.Data {
         public float g { get; set; }
         public float b { get; set; }
         public float a { get; set; }
+
+        public Color toUnityColor() {
+            return new Color(r, g, b, a);
+        }
     }
 
     [Serializable]
@@ -104,6 +108,7 @@ namespace Thor.Procedural.Data {
         public List<LightParameters> lights { get; set; }
 
         public string ceiling_material { get; set; }
+        public SerializableColor ceiling_color { get; set; } = null;
         public float navmesh_voxel_size { get; set; }
         public bool ceiling_back_faces { get; set; }
     }
@@ -122,6 +127,8 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string type { get; set; }
         public string floor_material { get; set; }
+
+        public SerializableColor floor_color { get; set; } = null;
         // public float y { get; set; }
         public List<Vector3> floor_polygon { get; set; }
         public List<Ceiling> ceilings { get; set; }

@@ -820,15 +820,18 @@ namespace Thor.Procedural {
 
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
-            meshRenderer.sharedMaterial = materialDb.getAsset(toCreate.materialId);
-            meshRenderer.sharedMaterial.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
+            // meshRenderer.sharedMaterial = materialDb.getAsset(toCreate.materialId);
+            var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
+            materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
 
             var prev_p0p1 = previous.p1 - previous.p0;
 
-            meshRenderer.sharedMaterial.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+            materialCopy.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
             if (toCreate.color != null) {
-                meshRenderer.material.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
+                materialCopy.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
             }
+
+            meshRenderer.material = materialCopy;
             //}
 
             return wallGO;
@@ -1256,7 +1259,13 @@ namespace Thor.Procedural {
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
-                meshRenderer.material = materialDb.getAsset(room.floor_material);
+                var materialCopy = new Material(materialDb.getAsset(room.floor_material));
+
+                if (room.floor_color != null) {
+                    materialCopy.color = room.floor_color.toUnityColor();
+                }
+
+                meshRenderer.material = materialCopy;
 
                 //set up mesh collider to allow raycasts against only the floor inside the room
                 subFloorGO.AddComponent<MeshCollider>();
@@ -1325,7 +1334,16 @@ namespace Thor.Procedural {
                 so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
 
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
-                ceilingGameObject.GetComponent<MeshRenderer>().material = materialDb.getAsset(ceilingMaterialId);
+                var ceilingMeshRenderer = ceilingGameObject.GetComponent<MeshRenderer>();
+
+                var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
+                
+
+                if (house.procedural_parameters.ceiling_color != null) {
+                    materialCopy.color = house.procedural_parameters.ceiling_color.toUnityColor();
+                }
+
+                ceilingMeshRenderer.material = materialCopy;
 
                 tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
