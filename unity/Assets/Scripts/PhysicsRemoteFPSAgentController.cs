@@ -4980,10 +4980,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                errorMessage = "This target object is NOT a receptacle!";
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+                errorMessage = "This target object is NOT openable!";
                 Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
                 actionFinished(false);
                 return;
             }
@@ -5797,10 +5797,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                errorMessage = "This target object is NOT a receptacle!";
+            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+                errorMessage = "This target object is NOT openable!";
                 Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
                 actionFinished(false);
                 return;
             }
