@@ -364,15 +364,14 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.performerStart.position.z = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
 
-            if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
-                this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
-                this.currentScene.floorProperties.enable = true;
-                this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_PASSIVE;
-                this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_PASSIVE;
-                this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
-                this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
-                this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
-            }
+            // Override the default or configured floorProperties for all intuitivePhysics scenes.
+            this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+            this.currentScene.floorProperties.enable = true;
+            this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_PASSIVE;
+            this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_PASSIVE;
+            this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+            this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+            this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         } else if (this.currentScene.isometric) {
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();

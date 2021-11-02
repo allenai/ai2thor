@@ -72,7 +72,7 @@ public class JenkinsBuild
     /// <returns></returns>
     private static string[] GetExecuteMethodArguments()
     {
-        string[] returnedArgs = new string[] { DEFAULT_BUILD_NAME, DEFAULT_BUILD_DIR, DEFAULT_ADDRESSABLES_PROFILE};
+        string[] returnedArgs = new string[3];
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
@@ -191,7 +191,11 @@ public class JenkinsBuild
     [PostProcessBuild]
     public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
     {
-        var bucketEnv = GetExecuteMethodArguments()[2];
+        var bucketEnv = "";
+        string[] args=GetExecuteMethodArguments();
+        if (args !=null && args.Length > 2){
+            bucketEnv = args[2];
+        }
         var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
         var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
         var localhost = "http://localhost";

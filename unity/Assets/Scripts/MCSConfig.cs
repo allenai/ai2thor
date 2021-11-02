@@ -117,6 +117,10 @@ public class MCSConfig {
         { "Custom/Materials/YellowCarpetMCS", new string[] { "yellow" } }
     };
 
+    public static Dictionary<string, string[]> LAVA_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "Stylized Lava Texture/Materials/Stylize_Lava_diffuse", new string[] { "red", "orange", "black" } }
+    };
+
     public static Dictionary<string, string[]> METAL_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Metals/BlackFoil", new string[] { "black" } },
         { "AI2-THOR/Materials/Metals/BlackSmoothMeta", new string[] { "black" } },
@@ -281,7 +285,8 @@ public class MCSConfig {
         { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
         { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
         { "sofa_2", SOFA_2_MATERIAL_REGISTRY},
-        { "sofa_3", SOFA_3_MATERIAL_REGISTRY}
+        { "sofa_3", SOFA_3_MATERIAL_REGISTRY},
+        { "lava", LAVA_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
