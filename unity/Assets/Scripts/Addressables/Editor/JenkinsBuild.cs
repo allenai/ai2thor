@@ -72,7 +72,7 @@ public class JenkinsBuild
     /// <returns></returns>
     private static string[] GetExecuteMethodArguments()
     {
-        string[] returnedArgs = new string[] {};
+        string[] returnedArgs = new string[3];
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
