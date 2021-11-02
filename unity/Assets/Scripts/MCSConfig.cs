@@ -96,7 +96,9 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Fabrics/RUG7", new string[] { "red", "blue" } },
         { "AI2-THOR/Materials/Fabrics/RugPattern224", new string[] { "green", "brown", "white" } },
         { "Custom/Materials/AzureCarpetMCS", new string[] { "azure", "blue" } },
+        { "Custom/Materials/BlackCarpetMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/BlueCarpetMCS", new string[] { "blue" } },
+        { "Custom/Materials/BrownCarpetMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/ChartreuseCarpetMCS", new string[] { "chartreuse", "green" } },
         { "Custom/Materials/CyanCarpetMCS", new string[] { "cyan", "blue", "green" } },
         { "Custom/Materials/GreenCarpetMCS", new string[] { "green" } },
@@ -111,10 +113,15 @@ public class MCSConfig {
         { "Custom/Materials/RedCarpetMCS", new string[] { "red" } },
         { "Custom/Materials/RoseCarpetMCS", new string[] { "rose", "red" } },
         { "Custom/Materials/SpringGreenCarpetMCS", new string[] { "springgreen", "green" } },
+        { "Custom/Materials/TanCarpetMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/TealCarpetMCS", new string[] { "teal", "blue", "green" } },
         { "Custom/Materials/VioletCarpetMCS", new string[] { "violet", "purple" } },
         { "Custom/Materials/WhiteCarpetMCS", new string[] { "white" } },
         { "Custom/Materials/YellowCarpetMCS", new string[] { "yellow" } }
+    };
+
+    public static Dictionary<string, string[]> LAVA_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "Stylized Lava Texture/Materials/Stylize_Lava_diffuse", new string[] { "red", "orange", "black" } }
     };
 
     public static Dictionary<string, string[]> METAL_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
@@ -202,7 +209,9 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Walls/WallDrywallGrey", new string[] { "grey" } },
         { "AI2-THOR/Materials/Walls/YellowDrywall", new string[] { "yellow" } },
         { "Custom/Materials/AzureDrywallMCS", new string[] { "azure", "blue" } },
+        { "Custom/Materials/BlackDrywallMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/BlueDrywallMCS", new string[] { "blue" } },
+        { "Custom/Materials/BrownDrywallMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/ChartreuseDrywallMCS", new string[] { "chartreuse", "green" } },
         { "Custom/Materials/CyanDrywallMCS", new string[] { "cyan", "blue", "green" } },
         { "Custom/Materials/GreenDrywallMCS", new string[] { "green" } },
@@ -217,6 +226,7 @@ public class MCSConfig {
         { "Custom/Materials/RedDrywallMCS", new string[] { "red" } },
         { "Custom/Materials/RoseDrywallMCS", new string[] { "rose", "red" } },
         { "Custom/Materials/SpringGreenDrywallMCS", new string[] { "springgreen", "green" } },
+        { "Custom/Materials/TanDrywallMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/TealDrywallMCS", new string[] { "teal", "blue", "green" } },
         { "Custom/Materials/VioletDrywallMCS", new string[] { "violet", "purple" } },
         { "Custom/Materials/WhiteDrywallMCS", new string[] { "white" } },
@@ -240,7 +250,9 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Wood/WoodGrain_Tan", new string[] { "brown" } },
         { "AI2-THOR/Materials/Wood/WornWood", new string[] { "brown" } },
         { "Custom/Materials/AzureWoodMCS", new string[] { "azure", "blue" } },
+        { "Custom/Materials/BlackWoodMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/BlueWoodMCS", new string[] { "blue" } },
+        { "Custom/Materials/BrownWoodMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/ChartreuseWoodMCS", new string[] { "chartreuse", "green" } },
         { "Custom/Materials/CyanWoodMCS", new string[] { "cyan", "blue", "green" } },
         { "Custom/Materials/GreenWoodMCS", new string[] { "green" } },
@@ -255,6 +267,7 @@ public class MCSConfig {
         { "Custom/Materials/RedWoodMCS", new string[] { "red" } },
         { "Custom/Materials/RoseWoodMCS", new string[] { "rose", "red" } },
         { "Custom/Materials/SpringGreenWoodMCS", new string[] { "springgreen", "green" } },
+        { "Custom/Materials/TanWoodMCS", new string[] { "azure", "blue" } },
         { "Custom/Materials/TealWoodMCS", new string[] { "teal", "blue", "green" } },
         { "Custom/Materials/VioletWoodMCS", new string[] { "violet", "purple" } },
         { "Custom/Materials/WhiteWoodMCS", new string[] { "white" } },
@@ -281,7 +294,8 @@ public class MCSConfig {
         { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
         { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
         { "sofa_2", SOFA_2_MATERIAL_REGISTRY},
-        { "sofa_3", SOFA_3_MATERIAL_REGISTRY}
+        { "sofa_3", SOFA_3_MATERIAL_REGISTRY},
+        { "lava", LAVA_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
