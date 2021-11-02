@@ -91,12 +91,11 @@ public class AddressablesEditor
         }
         if (path.Length > 0)
         {
-            if (Directory.Exists(path))
+            if (Directory.Exists(Path.GetDirectoryName(path)))
             {
-                return path;
+                return Path.GetDirectoryName(path);
             }
         }
-
         return string.Empty;
     }
 
