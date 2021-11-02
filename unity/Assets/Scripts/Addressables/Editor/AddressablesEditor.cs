@@ -106,7 +106,7 @@ public class AddressablesEditor
         var (sourceDir, targetDir) = GetBuildAssetsDirectories(target, pathToBuiltProject);
 
         #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
-            // Do not copy default addressables if newly generated addressables were detected
+            // If no addressable catalog is found, bring it from cache. Otherwise bring it from S3
             if (!Directory.Exists(targetDir))
             {
                 if(Directory.Exists(sourceDir))

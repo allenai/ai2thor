@@ -62,7 +62,7 @@ public class AddressablesUtil : MonoBehaviour
     /// <param name="path"></param>
     /// <returns></returns>
     public GameObject InstantiateAddressableGameObject(string path) {
-        GameObject objectInstance;
+        GameObject objectInstance = null;
 
         if (IsAssetAddressable(path)) {
             objectInstance = Addressables.InstantiateAsync(path).WaitForCompletion();
@@ -73,7 +73,12 @@ public class AddressablesUtil : MonoBehaviour
         }
         else {
             var prefab = Resources.Load<GameObject>(path);
-            objectInstance = GameObject.Instantiate(prefab);
+            if (prefab != null) {
+                objectInstance = GameObject.Instantiate(prefab);
+            }
+            else {
+                Debug.LogError("Object at " + path + " not found in either Addressables or Resources." );
+            }
         }
 
         return objectInstance;
