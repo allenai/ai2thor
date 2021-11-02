@@ -2312,7 +2312,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
 
                     // MCS Addition
-                    if (!sop.GetComponentInChildren<Renderer>().enabled)
+                    if (sop != null && !sop.GetComponentInChildren<Renderer>().enabled)
                     {
                         continue;
                     }
