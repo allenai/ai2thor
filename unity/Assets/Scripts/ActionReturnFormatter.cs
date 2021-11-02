@@ -34,6 +34,17 @@ namespace MessagePack.Formatters {
         public ActionReturnFormatter() {
         }
 
+        public bool IsGenericCollection(Type t) {
+            if (t.IsGenericType) {
+                foreach (var i in t.GetInterfaces()) {
+                    if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void Serialize(ref MessagePackWriter writer, global::System.Object value, global::MessagePack.MessagePackSerializerOptions options) {
             #if !ENABLE_IL2CPP
                 IMessagePackFormatter<global::System.Object> dynamicFormatter = (IMessagePackFormatter<global::System.Object>)DynamicObjectTypeFallbackFormatter.Instance;
@@ -72,6 +83,14 @@ namespace MessagePack.Formatters {
                     this.Serialize(ref writer, item, options);
                 }
 
+                return;
+            } else if (IsGenericCollection(type)) {
+                var c = value as System.Collections.IEnumerable;
+                ArrayList list = new ArrayList();
+                foreach (var item in c) {
+                    list.Add(item);
+                }
+                this.Serialize(ref writer, list, options);
                 return;
             } else {
                 // all custom types that could appear in actionReturn
