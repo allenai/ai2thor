@@ -54,7 +54,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -764,6 +764,25 @@ public class AgentManager : MonoBehaviour {
         this.resetAllImageSynthesis();
         this.primaryAgent.actionFinished(true);
     }
+
+    public void ChangeQuality(string quality) {
+        string[] names = QualitySettings.names;
+        for (int i = 0; i < names.Length; i++) {
+            if (names[i] == quality) {
+                QualitySettings.SetQualityLevel(i, true);
+                break;
+            }
+        }
+
+        ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+        if (quality == "Low" || quality == "Very Low") {
+            script.enabled = false;
+        } else {
+            script.enabled = true;
+        }
+        this.primaryAgent.actionFinished(true);
+    }
+
 
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
