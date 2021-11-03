@@ -145,8 +145,9 @@ public class AgentManager : MonoBehaviour
 
 		camera.cullingMask = ~(1 << 11);
 
-		if(action.nearClippingPlane != null) {
-		    camera.nearClipPlane = (float) action.nearClippingPlane;
+        if(action.nearClippingPlane >= 0.0f ) {
+            Debug.Log("AddThirdPartyCamera - setting nearClipPlane to " + action.nearClippingPlane);
+            camera.nearClipPlane = action.nearClippingPlane;
         }
 
 		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage)
@@ -914,7 +915,7 @@ public class ServerAction
 	public string objectId;
 	public int agentId;
 	public int thirdPartyCameraId;
-	public float? nearClippingPlane = null;
+	public float nearClippingPlane = -1.0f;
 	public float y;
 	public float fieldOfView = 60f;
 	public float x;
