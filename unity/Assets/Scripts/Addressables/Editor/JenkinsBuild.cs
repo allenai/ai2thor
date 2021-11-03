@@ -192,36 +192,36 @@ public class JenkinsBuild
     public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
     {
         var bucketEnv = "";
+        bool dirty = false;
         string[] args=GetExecuteMethodArguments();
         if (args !=null && args.Length > 2){
             bucketEnv = args[2];
         }
-        var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
-        var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
-        var localhost = "http://localhost";
 
-        var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(target, pathToBuiltProject);
-        if (targetDir == null) throw new NullReferenceException("The target path for the streaming asset settings was not found.");
-        var configFileText = File.ReadAllText(targetDir + "/settings.json");
-        var selectedBucket = devBucket;
+        if (string.IsNullOrEmpty(bucketEnv) == false) {
+            var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
+            var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
+
+            var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(target, pathToBuiltProject);
+            if (targetDir == null) throw new NullReferenceException("The target path for the streaming asset settings was not found.");
+            var configFileText = File.ReadAllText(targetDir + "/settings.json");
+            var selectedBucket = devBucket;
         
-        if(bucketEnv.ToLower() == "prod" || bucketEnv.ToLower() == "production" || bucketEnv.ToLower() == "remote") {
-            selectedBucket = prodBucket;
-            configFileText = configFileText.Replace(devBucket, selectedBucket);
-            configFileText = configFileText.Replace(localhost, selectedBucket);
-        }
-        else if(bucketEnv.ToLower() == "dev" || bucketEnv.ToLower() == "development") {
-            selectedBucket = devBucket;
-            configFileText = configFileText.Replace(prodBucket, selectedBucket);
-            configFileText = configFileText.Replace(localhost, selectedBucket);
-        }
-        else if(bucketEnv.ToLower() == "default") {
-            selectedBucket = localhost;
-            configFileText = configFileText.Replace(prodBucket, selectedBucket);
-            configFileText = configFileText.Replace(devBucket, selectedBucket);
-        }
+            if(bucketEnv.ToLower() == "prod" || bucketEnv.ToLower() == "production" || bucketEnv.ToLower() == "remote") {
+                selectedBucket = prodBucket;
+                configFileText = configFileText.Replace(devBucket, selectedBucket);
+                dirty = true;
+            }
+            else if(bucketEnv.ToLower() == "dev" || bucketEnv.ToLower() == "development") {
+                selectedBucket = devBucket;
+                configFileText = configFileText.Replace(prodBucket, selectedBucket);
+                dirty = true;
+            }
 
-        File.WriteAllText(targetDir + "/settings.json", configFileText);
-        System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + selectedBucket);
+            if (dirty) {
+                File.WriteAllText(targetDir + "/settings.json", configFileText);
+                System.Console.WriteLine("[JenkinsBuild] Addressables Load Path: " + selectedBucket);
+            }
+        }
     }
 }
