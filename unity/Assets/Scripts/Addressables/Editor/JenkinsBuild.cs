@@ -92,12 +92,11 @@ public class JenkinsBuild
                     System.Console.WriteLine("[JenkinsBuild] Parameter 1: " + args[i + 2]);
                     System.Console.WriteLine("[JenkinsBuild] Parameter 2: " + args[i + 3]);
                     System.Console.WriteLine("[JenkinsBuild] Parameter 3: " + args[i + 4]);
-                    return null;
                 }
             }
         }
 
-        return returnedArgs;
+        return null;
     }
 
     private static string[] FindEnabledEditorScenes()
@@ -194,7 +193,7 @@ public class JenkinsBuild
         var bucketEnv = "";
         bool dirty = false;
         string[] args=GetExecuteMethodArguments();
-        if (args !=null && args.Length > 2){
+        if (args != null && args.Length > 2){
             bucketEnv = args[2];
         }
 
