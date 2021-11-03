@@ -143,7 +143,13 @@ public class AgentManager : MonoBehaviour
 		gameObject.AddComponent(typeof(Camera));
 		Camera camera = gameObject.GetComponentInChildren<Camera>();
 
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage) 
+		camera.cullingMask = ~(1 << 11);
+
+		if(action.nearClippingPlane != null) {
+		    camera.nearClipPlane = (float) action.nearClippingPlane;
+        }
+
+		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage)
 		{
 			gameObject.AddComponent(typeof(ImageSynthesis));
 		}
@@ -908,6 +914,7 @@ public class ServerAction
 	public string objectId;
 	public int agentId;
 	public int thirdPartyCameraId;
+	public float? nearClippingPlane = null;
 	public float y;
 	public float fieldOfView = 60f;
 	public float x;
