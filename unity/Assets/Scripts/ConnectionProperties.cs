@@ -10,8 +10,7 @@ public enum ConnectionType {
     Window
 }
 
-public class ConnectionProperties : MonoBehaviour
-{
+public class ConnectionProperties : MonoBehaviour {
     public bool IsOpen = false;
     public string OpenFromRoomId;
     public string OpenToRoomId;
@@ -20,13 +19,13 @@ public class ConnectionProperties : MonoBehaviour
     //public Material WallMaterialId
     [Button]
     public void ToggleOpen() {
-       
-      
+
+
         var canOpen = this.gameObject.GetComponentInChildren<CanOpen_Object>();
         if (canOpen != null) {
-            canOpen.SetOpennessImmediate(!this.IsOpen ?  1.0f : 0.0f);
+            canOpen.SetOpennessImmediate(!this.IsOpen ? 1.0f : 0.0f);
         }
-         this.IsOpen = !this.IsOpen;
+        this.IsOpen = !this.IsOpen;
     }
 
     // [Button]

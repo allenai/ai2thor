@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Transform transform {
             get => this.baseAgentComponent.transform;
         }
-        
+
         public GameObject gameObject {
             get => this.baseAgentComponent.gameObject;
         }
@@ -77,7 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DroneVisCap {
             get => this.baseAgentComponent.DroneVisCap;
         }
-        
+
         public DroneObjectLauncher DroneObjectLauncher {
             get => this.baseAgentComponent.DroneObjectLauncher;
         }
@@ -89,7 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject IKArm {
             get => this.baseAgentComponent.IKArm;
         }
-        
+
         // reference to prefab for activiting the cracked camera effect via CameraCrack()
         public GameObject CrackedCameraCanvas {
             get => this.baseAgentComponent.CrackedCameraCanvas;
@@ -204,7 +204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 movement = Vector3.zero;
             movement.y = Physics.gravity.y * m_GravityMultiplier;
             m_CharacterController.Move(movement);
-            
+
 #if UNITY_WEBGL
             this.jsInterface = this.GetComponent<JavaScriptInterface>();
             this.jsInterface.enabled = true;
@@ -1921,12 +1921,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
             }
-            
+
             SimObjPhysics sop = getSimObjectFromId(objectId);
             if (sop == null) {
                 throw new NullReferenceException($"Object with id '{objectId}' is null");
             }
-            
+
             SimObjPhysics[] interactable;
             bool visible = GetAllVisibleSimObjPhysics(camera: this.m_Camera, maxDistance: this.maxVisibleDistance, out interactable, filterSimObjs: new List<SimObjPhysics> { sop }).Length == 1;
 
@@ -1934,8 +1934,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!visible && !forceAction) {
                 throw new NullReferenceException("Target object not found within the specified visibility.");
             }
-            
-            if(interactable.Length == 0 && !forceAction) {
+
+            if (interactable.Length == 0 && !forceAction) {
                 throw new NullReferenceException("Target object is visible but not interactable. It is likely obstructed by some clear object like glass.");
             }
 
@@ -2617,7 +2617,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // if this particular point is in view...
                     visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, sop.IsReceptacle);
-                    if (visCheck.visible && visCheck.interactable){
+                    if (visCheck.visible && visCheck.interactable) {
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
@@ -2680,8 +2680,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // if this particular point is in view...
                     visCheck |= (CheckIfVisibilityPointRaycast(sop, point, camera, false) | CheckIfVisibilityPointRaycast(sop, point, camera, true));
-                    if (visCheck.visible && visCheck.interactable){
-                        
+                    if (visCheck.visible && visCheck.interactable) {
+
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
@@ -2898,7 +2898,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             interactableItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
             currentlyVisibleItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            
+
             interactable = interactableItemsToList.ToArray();
             return currentlyVisibleItemsToList.ToArray();
         }
@@ -2942,7 +2942,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
 #endif
-                    } 
+                    }
                 }
             }
 
@@ -4493,7 +4493,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 inHighFrictionArea = false;
             }
         }
-        
+
         // use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
         public bool CheckIfPointIsInViewport(Vector3 point) {
             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
@@ -4659,27 +4659,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void StartCoroutine(IEnumerator coroutine) {
             this.baseAgentComponent.StartCoroutine(coroutine);
         }
-        
-        public T GetComponent<T>()  where T : Component {
+
+        public T GetComponent<T>() where T : Component {
             return this.baseAgentComponent.GetComponent<T>();
         }
-        
-        public T GetComponentInParent<T>()  where T : Component {
+
+        public T GetComponentInParent<T>() where T : Component {
             return this.baseAgentComponent.GetComponentInParent<T>();
         }
-        
-        public T GetComponentInChildren<T>()  where T : Component {
+
+        public T GetComponentInChildren<T>() where T : Component {
             return this.baseAgentComponent.GetComponentInChildren<T>();
         }
-        
-        public T[] GetComponentsInChildren<T>()  where T : Component {
+
+        public T[] GetComponentsInChildren<T>() where T : Component {
             return this.baseAgentComponent.GetComponentsInChildren<T>();
         }
-        
+
         public GameObject Instantiate(GameObject original) {
             return UnityEngine.Object.Instantiate(original);
         }
-        
+
         public GameObject Instantiate(GameObject original, Vector3 position, Quaternion rotation) {
             return UnityEngine.Object.Instantiate(original, position, rotation);
         }
@@ -4689,7 +4689,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
     }
-    
+
     public class VisibilityCheck {
         public bool visible;
         public bool interactable;
@@ -4701,5 +4701,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return c;
         }
     }
-    
+
 }
