@@ -288,7 +288,7 @@ namespace Thor.Procedural.Data {
 
     }
 
-    
+
 
 
     [Serializable]

@@ -268,9 +268,8 @@ public static class UtilityFunctions {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = false;
                 }
             }
@@ -284,9 +283,8 @@ public static class UtilityFunctions {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = true;
                 }
             }
