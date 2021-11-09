@@ -2157,7 +2157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "SliceObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2169,7 +2169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "BreakObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
 
@@ -2182,7 +2182,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "DirtyObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2208,7 +2208,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            action.objectId = closestVisibleObjectId(); 
+                            action.objectId = closestVisibleObjectId();
                         }
 
                         action.fillLiquid = "water";
@@ -2270,7 +2270,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "UseUpObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
 
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2542,7 +2542,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
-                        } 
+                        }
 
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2693,7 +2693,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // give the open percentage as 3rd param, from 0.0 to 1.0
                             action["objectId"] = splitcommand[1];
                             action["openness"] = float.Parse(splitcommand[2]);
-                        } 
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

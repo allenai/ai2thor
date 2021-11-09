@@ -19,9 +19,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // count of fixed updates for use in droneCurrentTime
         public float fixupdateCnt = 0f;
         // Update is called once per frame
-        
+
         public DroneFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) { }
-        
+
 
         protected override void resumePhysics() {
             if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused) {
