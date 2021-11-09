@@ -821,17 +821,22 @@ namespace Thor.Procedural {
             visibilityPointsGO.transform.parent = wallGO.transform;
             //if (mats.ContainsKey(wall.materialId)) {
             // meshRenderer.sharedMaterial = materialDb.getAsset(toCreate.materialId);
-            var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
-            materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
-
+            var dimensions = new Vector2(p0p1.magnitude, toCreate.height);
             var prev_p0p1 = previous.p1 - previous.p0;
 
-            materialCopy.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
-            if (toCreate.color != null) {
-                materialCopy.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
-            }
+            var offsetX = (prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor);
 
-            meshRenderer.material = materialCopy;
+            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.material_tiling_x_divisor, toCreate.material_tiling_y_divisor, offsetX, 0.0f, toCreate.unlit);
+
+            // var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
+            // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
+
+            // materialCopy.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+            // if (toCreate.color != null) {
+            //     materialCopy.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
+            // }
+
+            // meshRenderer.material = materialCopy;
             //}
 
             return wallGO;
@@ -1154,8 +1159,66 @@ namespace Thor.Procedural {
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
                 material_tiling_y_divisor = wall.material_tiling_y_divisor,
-                color = wall.color
+                color = wall.color,
+                unlit = wall.unlit
             };
+        }
+
+        private static Vector2 getAxisAlignedWidthDepth(IEnumerable<Vector3> polygon) {
+             // TODO: include rotation in json for floor and ceiling to compute the real scale not axis aligned scale
+
+            if (polygon.Count() > 1) {
+                var maxX = polygon.Max(p => p.x);
+                var maxZ = polygon.Max(p => p.z);
+
+                var minX = polygon.Min(p => p.x);
+                var minZ = polygon.Min(p => p.z);
+                
+
+                var width =  maxX - minX;
+                var depth = maxZ - minZ;
+                return new Vector2(width, depth);
+            }
+            return Vector2.zero;
+        }
+
+        private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false) {
+            // optimization do not copy when not needed
+            if (color == null && !tilingDivisorX.HasValue && !tilingDivisorY.HasValue && offsetX == 0.0f && offsetY == 0.0f && !useUnlitShader) {
+                return sharedMaterial;
+            }
+
+            var materialCopy = new Material(sharedMaterial);
+        
+
+            if (color != null) {
+                materialCopy.color = color.toUnityColor();
+            }
+            
+            // if (polygon.Count() > 1) {
+            //         var maxX = polygon.Max(p => p.x);
+            //         var maxZ = polygon.Max(p => p.z);
+
+            //         var minX = polygon.Min(p => p.x);
+            //         var minZ = polygon.Min(p => p.z);
+
+            //         // TODO: include rotation in json for floor and ceiling to compute the real scale not axis aligned scale
+
+            //         var width =  maxX - minX;
+            //         var depth = maxZ - minZ;
+
+
+                    materialCopy.mainTextureScale = new Vector2(dimensions.x / tilingDivisorX.GetValueOrDefault(1.0f), dimensions.y / tilingDivisorY.GetValueOrDefault(1.0f));
+                    materialCopy.mainTextureOffset = new Vector2(offsetX, offsetY);
+                    
+                // }
+
+            if (useUnlitShader) {
+                var shader = Shader.Find("Unlit/Color");
+                materialCopy.shader = shader;
+            }
+
+            return materialCopy;
         }
 
         public static string DefaultHouseRootObjectName => "Floor";
@@ -1259,13 +1322,8 @@ namespace Thor.Procedural {
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
-                var materialCopy = new Material(materialDb.getAsset(room.floor_material));
-
-                if (room.floor_color != null) {
-                    materialCopy.color = room.floor_color.toUnityColor();
-                }
-
-                meshRenderer.material = materialCopy;
+                var dimensions = getAxisAlignedWidthDepth(room.floor_polygon);
+                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floor_material), room.floor_color, dimensions, room.floor_material_tiling_x_divisor, room.floor_material_tiling_y_divisor);
 
                 //set up mesh collider to allow raycasts against only the floor inside the room
                 subFloorGO.AddComponent<MeshCollider>();
@@ -1336,14 +1394,10 @@ namespace Thor.Procedural {
                 ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
                 var ceilingMeshRenderer = ceilingGameObject.GetComponent<MeshRenderer>();
 
-                var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
+                // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
                 
-
-                if (house.procedural_parameters.ceiling_color != null) {
-                    materialCopy.color = house.procedural_parameters.ceiling_color.toUnityColor();
-                }
-
-                ceilingMeshRenderer.material = materialCopy;
+                var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
+                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.procedural_parameters.ceiling_color, dimensions, house.procedural_parameters.ceiling_material_tiling_x_divisor, house.procedural_parameters.ceiling_material_tiling_y_divisor, 0.0f, 0.0f, house.procedural_parameters.unlit_ceiling);
 
                 tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
