@@ -1213,6 +1213,33 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 object_id = objectLink
             };
         }).ToList();
+        var probes = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<ReflectionProbe>().Concat(
+            GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<ReflectionProbe>()
+        );
+        house.procedural_parameters.reflections = probes.Select( probeComp => {
+            return new ProbeParameters() {
+                background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
+                intensity = probeComp.intensity,
+                box_size = probeComp.size,
+                shadow_distance = probeComp.shadowDistance,
+                box_offset = probeComp.center,
+                id = probeComp.gameObject.name,
+                position = probeComp.transform.position
+            };
+        }).ToList();
+
+        foreach (var probe in house.procedural_parameters.reflections) {
+                var go = new GameObject(probe.id);
+                go.transform.position = probe.position;
+                
+                var probeComp = go.AddComponent<ReflectionProbe>();
+                probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
+                probeComp.center = probe.box_offset;
+                probeComp.intensity = probe.intensity;
+                probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+                probeComp.size = probe.box_size;
+                probeComp.shadowDistance = probe.shadow_distance;
+            }
 
 
 

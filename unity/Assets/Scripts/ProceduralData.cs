@@ -29,6 +29,18 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class ProbeParameters {
+        public string id;
+        public Vector3 position;
+        public float intensity;
+        public Vector3 box_size;
+        public Vector3 box_offset;
+        public float shadow_distance;
+        public SerializableColor background;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
         public string room_id { get; set; }
@@ -47,7 +59,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ShadowParameters {
-        public string type { get; set; }
+        public string type { get; set; } = "Soft";
         public float strength { get; set; }
 
         public float normal_bias { get; set; }
@@ -67,6 +79,10 @@ namespace Thor.Procedural.Data {
 
         public Color toUnityColor() {
             return new Color(r, g, b, a);
+        }
+
+        public static SerializableColor fromUnityColor(Color color) {
+            return new SerializableColor() {r = color.r, g = color.g, b = color.b, a = color.a};
         }
     }
 
@@ -108,6 +124,8 @@ namespace Thor.Procedural.Data {
         public string skybox_id { get; set; }
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
+
+        public List<ProbeParameters> reflections;
 
         public string ceiling_material { get; set; }
         public float? ceiling_material_tiling_x_divisor = null;

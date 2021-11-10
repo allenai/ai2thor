@@ -1514,6 +1514,19 @@ namespace Thor.Procedural {
 
             }
 
+            foreach (var probe in house.procedural_parameters.reflections) {
+                var go = new GameObject(probe.id);
+                go.transform.position = probe.position;
+                
+                var probeComp = go.AddComponent<ReflectionProbe>();
+                probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
+                probeComp.center = probe.box_offset;
+                probeComp.intensity = probe.intensity;
+                probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+                probeComp.size = probe.box_size;
+                probeComp.shadowDistance = probe.shadow_distance;
+            }
+
             buildNavMesh(floorGameObject, house.procedural_parameters.navmesh_voxel_size);
 
             RenderSettings.skybox = materialDb.getAsset(house.procedural_parameters.skybox_id);
