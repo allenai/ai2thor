@@ -828,6 +828,8 @@ namespace Thor.Procedural {
             // TODO Offset Y would require to get joining walls from above and below 
             meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.material_tiling_x_divisor, toCreate.material_tiling_y_divisor, offsetX, 0.0f, toCreate.unlit);
 
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
+
             // var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
             // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
 
