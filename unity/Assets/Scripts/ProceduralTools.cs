@@ -1525,6 +1525,8 @@ namespace Thor.Procedural {
                 probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
                 probeComp.size = probe.box_size;
                 probeComp.shadowDistance = probe.shadow_distance;
+
+                  go.transform.parent = lightingRoot.transform;
             }
 
             buildNavMesh(floorGameObject, house.procedural_parameters.navmesh_voxel_size);
