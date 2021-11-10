@@ -1203,6 +1203,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
 
                 position = l.transform.position,
+                rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
                 //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
                 intensity = l.intensity,
                 indirect_multiplier = l.bounceIntensity,

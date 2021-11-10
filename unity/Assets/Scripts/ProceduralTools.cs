@@ -1490,6 +1490,9 @@ namespace Thor.Procedural {
             foreach (var lightParams in house.procedural_parameters.lights) {
                 var go = new GameObject(lightParams.id);
                 go.transform.position = lightParams.position;
+                if (lightParams.rotation != null) {
+                    go.transform.rotation = lightParams.rotation.toQuaternion();
+                }
                 var light = go.AddComponent<Light>();
                 //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
                 light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
@@ -1647,7 +1650,8 @@ namespace Thor.Procedural {
                     Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
                     ho.kinematic,
                     ho.color,
-                    true
+                    true,
+                    ho.unlit
                 );
             } else {
 
@@ -1681,7 +1685,8 @@ namespace Thor.Procedural {
             // AxisAngleRotation rotation,
             bool kinematic = false,
             SerializableColor color = null,
-            bool positionBoundingBoxCenter = false
+            bool positionBoundingBoxCenter = false,
+            bool unlit = false
 
         ) {
             var go = prefab;
@@ -1718,12 +1723,20 @@ namespace Thor.Procedural {
             toSpawn.name = id;
             toSpawn.assetID = assetId;
 
+            Shader unlitShader = null;
+            if (unlit) {
+                unlitShader = Shader.Find("Unlit/Color");
+            }
+
             if (color != null) {
                 var materials = toSpawn.GetComponentsInChildren<MeshRenderer>().Select(
                     mr => mr.material
                 );
                 foreach (var mat in materials) {
                     mat.color = new Color(color.r, color.g, color.b, color.a);
+                    if (unlit) {
+                        mat.shader = unlitShader;
+                    }
                 }
             }
 
