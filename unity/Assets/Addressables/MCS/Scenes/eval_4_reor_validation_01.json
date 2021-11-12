@@ -1,0 +1,308 @@
+{
+  "name": "eval_4_reor_validation_01",
+  "version": "2",
+  "ceilingMaterial": "AI2-THOR/Materials/Walls/WallDrywallGrey",
+  "floorMaterial": "AI2-THOR/Materials/Fabrics/CarpetWhite 3",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 90
+    }
+  },
+  "objects": [
+    {
+      "id": "target_ball",
+      "type": "soccer_ball",
+      "mass": 1.0,
+      "salientMaterials": ["rubber"],
+      "moveable": true,
+      "pickupable": true,
+      "shows": [
+        {
+          "position": {
+            "x": -5.0,
+            "y": 2.85,
+            "z": -3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 501,
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      ],
+      "materials": [],
+      "kinematic": true,
+      "togglePhysics": [
+        {
+          "stepBegin": 506
+        }
+      ]
+    },
+    {
+      "id": "container_front_right",
+      "type": "cup_2",
+      "mass": 20.0,
+      "salientMaterials": ["wood"],
+      "receptacle": true,
+      "occluder": true,
+      "shows": [
+        {
+          "position": {
+            "x": 5.0,
+            "y": 0.01,
+            "z": 3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 0,
+          "scale": {
+            "x": 4,
+            "y": 2.5,
+            "z": 4
+          }
+        }
+      ],
+      "materials": ["AI2-THOR/Materials/Wood/WornWood"]
+    },
+    {
+      "id": "container_back_right",
+      "type": "cup_2",
+      "mass": 20.0,
+      "salientMaterials": ["wood"],
+      "receptacle": true,
+      "occluder": true,
+      "shows": [
+        {
+          "position": {
+            "x": 5.0,
+            "y": 0.01,
+            "z": -3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 0,
+          "scale": {
+            "x": 4,
+            "y": 2.5,
+            "z": 4
+          }
+        }
+      ],
+      "materials": ["AI2-THOR/Materials/Wood/WornWood"]
+    },
+    {
+      "id": "container_back_left",
+      "type": "cup_2",
+      "mass": 20.0,
+      "salientMaterials": ["wood"],
+      "receptacle": true,
+      "occluder": true,
+      "shows": [
+        {
+          "position": {
+            "x": -5.0,
+            "y": 0.01,
+            "z": -3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 0,
+          "scale": {
+            "x": 4,
+            "y": 2.5,
+            "z": 4
+          }
+        }
+      ],
+      "materials": ["AI2-THOR/Materials/Wood/WornWood"]
+    },
+    {
+      "id": "container_front_left",
+      "type": "cup_2",
+      "mass": 20.0,
+      "salientMaterials": ["wood"],
+      "receptacle": true,
+      "occluder": true,
+      "shows": [
+        {
+          "position": {
+            "x": -5.0,
+            "y": 0.01,
+            "z": 3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 0,
+          "scale": {
+            "x": 4,
+            "y": 2.5,
+            "z": 4
+          }
+        }
+      ],
+      "materials": ["AI2-THOR/Materials/Wood/WornWood"]
+    },
+    {
+      "id": "dropping_device_front_right",
+      "type": "tube_wide",
+      "mass": 10,
+      "materials": ["AI2-THOR/Materials/Metals/Metal"],
+      "kinematic": true,
+      "structure": true,
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": 5.0,
+            "y": 2.85,
+            "z": 3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 0.275,
+            "y": 0.3,
+            "z": 0.275
+          }
+        }
+      ],
+      "states": [["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"]]
+    },
+    {
+      "id": "dropping_device_back_right",
+      "type": "tube_wide",
+      "mass": 10,
+      "materials": ["AI2-THOR/Materials/Metals/Metal"],
+      "kinematic": true,
+      "structure": true,
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": 5.0,
+            "y": 2.85,
+            "z": -3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 0.275,
+            "y": 0.3,
+            "z": 0.275
+          }
+        }
+      ],
+      "states": [["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"]]
+    },
+    {
+      "id": "dropping_device_back_left",
+      "type": "tube_wide",
+      "mass": 10,
+      "materials": ["AI2-THOR/Materials/Metals/Metal"],
+      "kinematic": true,
+      "structure": true,
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -5.0,
+            "y": 2.85,
+            "z": -3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 0.275,
+            "y": 0.3,
+            "z": 0.275
+          }
+        }
+      ],
+      "states": [["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"],["released"]]
+    },
+    {
+      "id": "dropping_device_front_left",
+      "type": "tube_wide",
+      "mass": 10,
+      "materials": ["AI2-THOR/Materials/Metals/Metal"],
+      "kinematic": true,
+      "structure": true,
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -5.0,
+            "y": 2.85,
+            "z": 3.0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 0.275,
+            "y": 0.3,
+            "z": 0.275
+          }
+        }
+      ],
+      "states": [["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"],["held"]]
+    }
+  ],
+  "goal": {
+    "category": "retrieval",
+    "metadata": {
+      "target": {
+        "id": "target_ball"
+      }
+    },
+    "description": "Find and pick up the small light black white rubber ball.",
+    "habituation_total": 2,
+    "action_list": [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],["EndHabituation,xPosition=0,zPosition=0,yRotation=-120"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["EndHabituation,xPosition=0,zPosition=0,yRotation=90"]]
+  },
+  "roomDimensions": {
+    "x": 12,
+    "y": 3,
+    "z": 8
+  },
+  "roomMaterials": {
+    "back": "Custom/Materials/Red",
+    "front": "Custom/Materials/Cyan",
+    "left": "Custom/Materials/Cyan",
+    "right": "Custom/Materials/Cyan"
+  }
+}

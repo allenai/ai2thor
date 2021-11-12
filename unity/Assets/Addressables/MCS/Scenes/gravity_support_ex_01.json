@@ -1,0 +1,155 @@
+{
+  "name": "gravity_support_ex_01",
+  "version": "2",
+  "intuitivePhysics": true,
+  "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+  "floorMaterial": "AI2-THOR/Materials/Fabrics/BedroomCarpet",
+  "wallMaterial": "AI2-THOR/Materials/Walls/BrownDrywall",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": -4.5
+    },
+    "rotation": {
+      "y": 0
+    }
+  },
+  "objects": [
+    {
+      "id": "target_object",
+      "type": "circle_frustum",
+      "mass": 5,
+      "moveable": true,
+      "shows": [
+        {
+          "position": {
+            "x": -1.0,
+            "y": 7.255,
+            "z": 1.6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 1,
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          }
+        }
+      ],
+      "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 2"],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 26,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        }
+      ],
+      "kinematic": true,
+      "togglePhysics": [
+        {
+          "stepBegin": 32
+        }
+      ]
+    },
+    {
+      "id": "pole_object",
+      "type": "cylinder",
+      "kinematic": true,
+      "structure": true,
+      "mass": 50,
+      "materials": ["Custom/Materials/Magenta"],
+      "shows": [
+        {
+          "stepBegin": 1,
+          "position": {
+            "x": -1.0,
+            "y": 12.755,
+            "z": 1.6
+          },
+          "scale": {
+            "x": 0.2,
+            "y": 5,
+            "z": 0.2
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 26,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 37,
+          "stepEnd": 62,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        }
+      ],
+      "changeMaterials": [
+        {
+          "stepBegin": 32,
+          "materials": [
+            "Custom/Materials/Cyan"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "supporting_object",
+      "type": "cube",
+      "mass": 100,
+      "kinematic": true,
+      "structure": true,
+      "shows": [
+        {
+          "position": {
+            "x": -1.0,
+            "y": 0.125,
+            "z": 1.6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "stepBegin": 0,
+          "scale": {
+            "x": 0.5,
+            "y": 0.25,
+            "z": 1
+          }
+        }
+      ],
+      "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 1"]
+    }
+  ],
+  "goal": {
+    "category": "intuitive physics",
+    "last_step": 60,
+    "action_list": [["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"]],
+    "description": "",
+    "metadata": {
+      "choose": [
+        "plausible",
+        "implausible"
+      ]
+    }
+  }
+}
