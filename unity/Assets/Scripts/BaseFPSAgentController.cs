@@ -326,6 +326,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
             Debug.Log("Last Action Status = " + this.lastActionStatus);
+            if (this.errorMessage != "") {
+                Debug.Log("Error Message = " + this.errorMessage);
+            }
         }
 
 		public virtual void actionFinished(bool success, System.Object actionReturn=null) 

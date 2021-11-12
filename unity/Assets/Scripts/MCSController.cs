@@ -305,15 +305,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if ((objectMetadata.objectBounds == null && (simObj.BoundingBox != null || recBox != null))) {
             objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
         }
-        if (objectMetadata.objectBounds != null) {
-            MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-            if (main != null && main.enableVerboseLog) {
-                main.LogVerbose(objectMetadata.objectId + " CENTER = " +
-                    (recBox != null ? recBox : simObj.BoundingBox.transform).position.ToString("F4"));
-                main.LogVerbose(objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
-                    objectMetadata.objectBounds.objectBoundsCorners.Select(point => point.ToString("F4")).ToArray()));
-            }
-        }
 
         HashSet<string> colors = new HashSet<string>();
         simObj.gameObject.GetComponentsInChildren<Renderer>().ToList().ForEach((renderer) => {
@@ -578,7 +569,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                     this.movementActionData.UniqueID,
                     this.movementActionData.maxDistanceToObject,
                     this.movementActionData.forceAction);
-                actionFinished(this.movementActionFinished);
+            actionFinished(this.movementActionFinished);
         } //for rotation
         else if (this.inputWasRotateLook) {
             RotateLookAcrossFrames(this.lookRotationActionData);
