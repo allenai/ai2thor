@@ -65,7 +65,13 @@ public class CanOpen_Object : MonoBehaviour {
         // init Itween in all doors to prep for animation
         if (MovingParts != null) {
             foreach (GameObject go in MovingParts) {
-                iTween.Init(go);
+                // within SimObjPhysics the GameObject is cloned in order to calculate the OOBB.  During 
+                // the Instantiate call,  the existing dynamically created iTween components are copied.  If iTween.Init
+                // is called again on a GameObject with an existing iTween component a NullReferenceException
+                // will get thrown from iTween.RetrieveArgs()
+                if (go.GetComponent<iTween>() != null) {
+                    iTween.Init(go);
+                }
 
                 // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
                 // if (!go.GetComponent<Fridge_Door>())

@@ -302,7 +302,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             }
 
+            // The GameObject is cloned instead of teleporting/rotating to avoid
+            // waking up the rigidbody, which can cause the SimObj to shift by tiny amounts
+            // since it will never sleep.
             GameObject clone = Instantiate(this.gameObject, Vector3.zero, Quaternion.identity);
+
 
             // Get all colliders on the sop, excluding colliders if they are not enabled
             List<(Collider, LayerMask)> cols = new List<(Collider, LayerMask)>();
