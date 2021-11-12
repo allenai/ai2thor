@@ -114,7 +114,9 @@ public class CanToggleOnOff : MonoBehaviour {
     void Awake() {
         if (MovingParts != null) {
             foreach (GameObject go in MovingParts) {
-                    iTween.Init(go);
+                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
+                // before iTween.Awake() gets called which would throw an error if this was done in Start()
+                iTween.Init(go);
             }
         }
     }

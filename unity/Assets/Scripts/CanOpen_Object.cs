@@ -64,6 +64,8 @@ public class CanOpen_Object : MonoBehaviour {
         if (MovingParts != null) {
             // init Itween in all doors to prep for animation
             foreach (GameObject go in MovingParts) {
+                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
+                // before iTween.Awake() gets called which would throw an error if this was done in Start()
                 iTween.Init(go);
 
                 // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
