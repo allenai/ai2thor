@@ -3601,7 +3601,10 @@ def test_testresults_exist():
                 message = json.dumps(fail_message.text + " " + stack_trace.text)
                 test_data = f"""
         def test_{methodname}(self):
-            pytest.fail(json.loads(r'{message}'))
+            pytest.fail(json.loads(r\"\"\"
+{message}
+\"\"\"
+            ))
     """
             else:
                 test_data = f"""
