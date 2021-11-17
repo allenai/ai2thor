@@ -1266,6 +1266,21 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
+    private GameObject InstantiateGameObject(string resourceFile) {
+        var objectInstance = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.PATH_PREFIX + resourceFile + ".prefab");
+        if (objectInstance == null) {
+            var prefab = Resources.Load<GameObject>(resourceFile);
+            if (prefab != null) {
+                objectInstance = GameObject.Instantiate(prefab);
+            }
+            else {
+                Debug.LogError("Object " + resourceFile + " not found in either Addressables or Resources." );
+            }
+        }
+
+        return objectInstance;
+    }
+
     private GameObject CreateCustomGameObject(
         MCSConfigGameObject objectConfig,
         MCSConfigObjectDefinition objectDefinition
@@ -1273,7 +1288,7 @@ public class MCSMain : MonoBehaviour {
         MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
             this.currentScene.version);
         string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
-        GameObject gameObject = AddressablesUtil.Instance.InstantiateGameObject(resourceFile + ".prefab", MCSMain.PATH_PREFIX);
+        GameObject gameObject = InstantiateGameObject(resourceFile + ".prefab");
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
@@ -1300,7 +1315,7 @@ public class MCSMain : MonoBehaviour {
                 }
             });
         }
-
+        
         // Set animation controller.
         if (objectConfig.controller != null && !objectConfig.controller.Equals("")) {
             MCSConfigAnimator animatorDefinition = objectDefinition.animators
@@ -1320,6 +1335,8 @@ public class MCSMain : MonoBehaviour {
 
         return gameObject;
     }
+    
+    
 
     private GameObject CreateGameObject(MCSConfigGameObject objectConfig) {
         MCSConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type.ToUpper()];
