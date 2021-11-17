@@ -61,17 +61,18 @@ public class AddressablesUtil : MonoBehaviour
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public GameObject InstantiateAddressableGameObject(string path) {
+    public GameObject InstantiateGameObject(string path, string pathPrefix = "") {
         GameObject objectInstance = null;
 
-        if (IsAssetAddressable(path)) {
+        //Check Addressables first. 
+        if (IsAssetAddressable(pathPrefix + path)) {
             objectInstance = Addressables.InstantiateAsync(path).WaitForCompletion();
             addressableGameObjects.Add(objectInstance);
             
             GameObject objectAsset = Addressables.LoadAssetAsync<GameObject>(path).WaitForCompletion();
             Addressables.Release(objectAsset);
         }
-        else {
+        else { //If nothing in Addressables, check Resources, without the addressable prefix
             var prefab = Resources.Load<GameObject>(path);
             if (prefab != null) {
                 objectInstance = GameObject.Instantiate(prefab);
