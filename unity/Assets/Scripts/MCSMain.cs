@@ -771,7 +771,7 @@ public class MCSMain : MonoBehaviour {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
 
-                    Material material = AddressablesUtil.Instance.InstantiateAddressableAsset<Material>(MCSMain.PATH_PREFIX + filename + ".mat");
+                    Material material = InstantiateAsset<Material>(filename + ".mat");
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -1316,8 +1316,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = AddressablesUtil.Instance.InstantiateAddressableAsset<AnimationClip>(MCSMain.PATH_PREFIX +
-                        animationDefinition.animationFile);
+                    AnimationClip clip = InstantiateAsset<AnimationClip>(animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
                     animation.AddClip(clip, animationDefinition.id);
@@ -1337,7 +1336,7 @@ public class MCSMain : MonoBehaviour {
                     animator = gameObject.AddComponent<Animator>();
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
-                RuntimeAnimatorController animatorController = AddressablesUtil.Instance.InstantiateAddressableAsset<RuntimeAnimatorController>(MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
+                RuntimeAnimatorController animatorController = InstantiateAsset<RuntimeAnimatorController>(animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
