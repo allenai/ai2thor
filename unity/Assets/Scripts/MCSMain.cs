@@ -7,7 +7,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
-    private static string PATH_PREFIX = "Assets/Addressables/MCS/";
+    private static string ADDRESSABLE_PATH_PREFIX = "Assets/Addressables/MCS/";
+    private static string CUSTOM_OBJECT_PATH_PREFIX = "Resources/MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
@@ -81,7 +82,7 @@ public class MCSMain : MonoBehaviour {
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
-    public TextAsset customObjectRegistryTextAsset;
+    public string customObjectRegistryFile = "custom_object_registry";
     public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
     public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
     public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
@@ -108,7 +109,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
+        TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
@@ -139,8 +140,9 @@ public class MCSMain : MonoBehaviour {
             this.mcsObjectRegistryFile);
         List<MCSConfigObjectDefinition> primitiveObjects = LoadObjectRegistryFromAddressables(
             this.primitiveObjectRegistryFile);
-        List<MCSConfigObjectDefinition> customObjects = LoadObjectRegistryFromTextAsset(
-            this.customObjectRegistryTextAsset);
+        List<MCSConfigObjectDefinition> customObjects = LoadObjectRegistryFromResources(
+            this.customObjectRegistryFile);
+
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).Concat(customObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
@@ -1270,12 +1272,12 @@ public class MCSMain : MonoBehaviour {
         
         //Try to load from Resources first. If this fails, then try and load from Addressables. 
         GameObject objectInstance = null;
-        var prefab = Resources.Load<GameObject>(resourceFile);
+        var prefab = Resources.Load<GameObject>(MCSMain.CUSTOM_OBJECT_PATH_PREFIX + resourceFile);
         if (prefab != null) {
             objectInstance = GameObject.Instantiate(prefab);
         }
         else {
-            objectInstance = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.PATH_PREFIX + resourceFile + ".prefab");
+            objectInstance = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.ADDRESSABLE_PATH_PREFIX + resourceFile + ".prefab");
             if (objectInstance == null) {
                 Debug.LogError("Object " + resourceFile + " not found in either Addressables or Resources." );
             }
@@ -1285,11 +1287,11 @@ public class MCSMain : MonoBehaviour {
     }
     
     public T InstantiateAsset<T>(string path) where T : UnityEngine.Object {
-        var asset = Resources.Load<T>(path);
+        var asset = Resources.Load<T>(MCSMain.CUSTOM_OBJECT_PATH_PREFIX + path);
         if (asset != null)
             return asset;
 
-        return AddressablesUtil.Instance.InstantiateAddressableAsset<T>(MCSMain.PATH_PREFIX + path);
+        return AddressablesUtil.Instance.InstantiateAddressableAsset<T>(MCSMain.ADDRESSABLE_PATH_PREFIX + path);
     }
 
     private GameObject CreateCustomGameObject(
@@ -1401,8 +1403,15 @@ public class MCSMain : MonoBehaviour {
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromAddressables(String filePath) {
-        TextAsset objectRegistryFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.PATH_PREFIX + filePath + ".json");
-        Debug.LogError("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
+        TextAsset objectRegistryFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + filePath + ".json");
+        Debug.LogError("MCS: Config file " + MCSMain.ADDRESSABLE_PATH_PREFIX + filePath + ".json" + (objectRegistryFile == null ?
+            " is null!" : (":\n" + objectRegistryFile.text)));
+        return LoadObjectRegistryFromTextAsset(objectRegistryFile);
+    }
+    
+    private List<MCSConfigObjectDefinition> LoadObjectRegistryFromResources(String filePath) {
+        TextAsset objectRegistryFile = Resources.Load<TextAsset>(MCSMain.CUSTOM_OBJECT_PATH_PREFIX + filePath + ".json");
+        Debug.LogError("MCS: Config file " + MCSMain.CUSTOM_OBJECT_PATH_PREFIX + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         return LoadObjectRegistryFromTextAsset(objectRegistryFile);
     }
