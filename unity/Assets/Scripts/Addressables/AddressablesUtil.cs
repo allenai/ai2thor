@@ -47,7 +47,7 @@ public class AddressablesUtil : MonoBehaviour
     /// <typeparam name="T"></typeparam>
     /// <param name="path"></param>
     /// <returns></returns>
-    public T InstantiateAddressable<T>(string path) where T : UnityEngine.Object
+    public T InstantiateAddressableAsset<T>(string path) where T : UnityEngine.Object
     {
         AsyncOperationHandle<T> objectOperation = Addressables.LoadAssetAsync<T>(path);
         T objectAsset = objectOperation.WaitForCompletion();
@@ -62,11 +62,9 @@ public class AddressablesUtil : MonoBehaviour
     /// <param name="path"></param>
     /// <returns></returns>
     public GameObject InstantiateAddressablesGameObject(string path) {
-        GameObject objectInstance = null;
-
-        //Check Addressables first. 
+        
         if (IsAssetAddressable(path)) {
-            objectInstance = Addressables.InstantiateAsync(path).WaitForCompletion();
+            var objectInstance = Addressables.InstantiateAsync(path).WaitForCompletion();
             addressableGameObjects.Add(objectInstance);
             
             GameObject objectAsset = Addressables.LoadAssetAsync<GameObject>(path).WaitForCompletion();

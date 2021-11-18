@@ -108,7 +108,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
+        TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath + ".json");
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
@@ -771,7 +771,7 @@ public class MCSMain : MonoBehaviour {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
 
-                    Material material = AddressablesUtil.Instance.InstantiateAddressable<Material>(MCSMain.PATH_PREFIX + filename + ".mat");
+                    Material material = AddressablesUtil.Instance.InstantiateAddressableAsset<Material>(MCSMain.PATH_PREFIX + filename + ".mat");
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -1267,18 +1267,29 @@ public class MCSMain : MonoBehaviour {
     }
 
     private GameObject InstantiateGameObject(string resourceFile) {
-        var objectInstance = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.PATH_PREFIX + resourceFile + ".prefab");
-        if (objectInstance == null) {
-            var prefab = Resources.Load<GameObject>(resourceFile);
-            if (prefab != null) {
-                objectInstance = GameObject.Instantiate(prefab);
-            }
-            else {
+        
+        //Try to load from Resources first. If this fails, then try and load from Addressables. 
+        GameObject objectInstance = null;
+        var prefab = Resources.Load<GameObject>(resourceFile);
+        if (prefab != null) {
+            objectInstance = GameObject.Instantiate(prefab);
+        }
+        else {
+            objectInstance = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.PATH_PREFIX + resourceFile + ".prefab");
+            if (objectInstance == null) {
                 Debug.LogError("Object " + resourceFile + " not found in either Addressables or Resources." );
             }
         }
 
         return objectInstance;
+    }
+    
+    public T InstantiateAsset<T>(string path) where T : UnityEngine.Object {
+        var asset = Resources.Load<T>(path);
+        if (asset != null)
+            return asset;
+
+        return AddressablesUtil.Instance.InstantiateAddressableAsset<T>(MCSMain.PATH_PREFIX + path);
     }
 
     private GameObject CreateCustomGameObject(
@@ -1305,7 +1316,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = AddressablesUtil.Instance.InstantiateAddressable<AnimationClip>(MCSMain.PATH_PREFIX +
+                    AnimationClip clip = AddressablesUtil.Instance.InstantiateAddressableAsset<AnimationClip>(MCSMain.PATH_PREFIX +
                         animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
@@ -1326,7 +1337,7 @@ public class MCSMain : MonoBehaviour {
                     animator = gameObject.AddComponent<Animator>();
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
-                RuntimeAnimatorController animatorController = AddressablesUtil.Instance.InstantiateAddressable<RuntimeAnimatorController>(MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
+                RuntimeAnimatorController animatorController = AddressablesUtil.Instance.InstantiateAddressableAsset<RuntimeAnimatorController>(MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
@@ -1391,7 +1402,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromAddressables(String filePath) {
-        TextAsset objectRegistryFile = AddressablesUtil.Instance.InstantiateAddressable<TextAsset>(MCSMain.PATH_PREFIX + filePath + ".json");
+        TextAsset objectRegistryFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.PATH_PREFIX + filePath + ".json");
         Debug.LogError("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         return LoadObjectRegistryFromTextAsset(objectRegistryFile);
