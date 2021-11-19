@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 885047579}
-  m_IndirectSpecularColor: {r: 0.549712, g: 0.5173134, b: 0.60536546, a: 1}
+  m_IndirectSpecularColor: {r: 0.5498301, g: 0.5174929, b: 0.60547996, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3239,6 +3239,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 784740634}
   m_RootOrder: 34
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &81736340
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 81736341}
+  m_Layer: 0
+  m_Name: Colliders
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &81736341
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81736340}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 998332678}
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &82320168
 GameObject:
@@ -24598,8 +24628,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 2.2653432, y: 0.92866075, z: 1.0946666}
-  m_Center: {x: 0.19487917, y: 0.45224935, z: -0.042332478}
+  m_Size: {x: 2.3019621, y: 0.92158026, z: 1.1787335}
+  m_Center: {x: 0.22222555, y: 0.45578602, z: 0.0065168804}
 --- !u!4 &798538114
 Transform:
   m_ObjectHideFlags: 0
@@ -30265,8 +30295,7 @@ MonoBehaviour:
   debugIsVisible: 0
   debugIsInteractable: 0
   isInAgentHand: 0
-  MyColliders:
-  - {fileID: 4334072265585187148}
+  MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
   HFbounciness: 0
@@ -30314,6 +30343,8 @@ Transform:
   - {fileID: 5204941492090711345}
   - {fileID: 277406545}
   - {fileID: 798538114}
+  - {fileID: 81736341}
+  - {fileID: 1135678801}
   m_Father: {fileID: 1954819125}
   m_RootOrder: 77
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -34810,6 +34841,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 789548408}
   m_RootOrder: 113
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1135678800
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1135678801}
+  m_Layer: 0
+  m_Name: TriggerColliders
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1135678801
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135678800}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 998332678}
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1137460242
 GameObject:
@@ -64165,7 +64226,7 @@ GameObject:
   - component: {fileID: 509410159772562012}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_4B
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -64197,7 +64258,7 @@ GameObject:
   - component: {fileID: 580819564988438132}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_6
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -64488,7 +64549,7 @@ GameObject:
   - component: {fileID: 1099754765973202919}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_drawer_1
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -64817,7 +64878,7 @@ GameObject:
   - component: {fileID: 1435231197148457169}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_5
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -64849,7 +64910,7 @@ GameObject:
   - component: {fileID: 1475835813207490733}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_5
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -64881,7 +64942,7 @@ GameObject:
   - component: {fileID: 1477479617518751935}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_3
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -65360,7 +65421,7 @@ GameObject:
   - component: {fileID: 2384977283506871682}
   m_Layer: 8
   m_Name: mesh
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -65520,7 +65581,7 @@ GameObject:
   - component: {fileID: 2561691073137585375}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_4
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -65702,7 +65763,7 @@ GameObject:
   - component: {fileID: 2787189989295669382}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_3
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -66284,7 +66345,7 @@ GameObject:
   - component: {fileID: 3526311205177964948}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_1
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -66356,7 +66417,7 @@ GameObject:
   - component: {fileID: 3581597897824940416}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_4A
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67052,7 +67113,7 @@ GameObject:
   - component: {fileID: 4334072265585187148}
   m_Layer: 8
   m_Name: mesh
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67070,7 +67131,7 @@ MeshCollider:
   serializedVersion: 4
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: -2939855789235990247, guid: e3800ceabc1b0184097a9cadb0c52916, type: 3}
+  m_Mesh: {fileID: 1332947017436303920, guid: e3800ceabc1b0184097a9cadb0c52916, type: 3}
 --- !u!33 &4342778631976250958
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -67107,7 +67168,7 @@ GameObject:
   - component: {fileID: 4382646874560094739}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_drawer_3
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67262,7 +67323,7 @@ GameObject:
   - component: {fileID: 4588494705768136942}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_2
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67425,7 +67486,7 @@ GameObject:
   - component: {fileID: 4726729946921972802}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_1
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67527,7 +67588,7 @@ GameObject:
   - component: {fileID: 4919853852833353155}
   m_Layer: 8
   m_Name: mesh
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -67681,7 +67742,7 @@ GameObject:
   - component: {fileID: 5147766258653238245}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_7
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -68063,7 +68124,7 @@ GameObject:
   - component: {fileID: 5540279015898319851}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_1
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -68361,7 +68422,7 @@ GameObject:
   - component: {fileID: 5892538555724042642}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_4
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -68602,9 +68663,9 @@ GameObject:
   - component: {fileID: 9161305876344250565}
   - component: {fileID: 5773336613349804022}
   - component: {fileID: 1223651721978360598}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: mesh
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -68623,7 +68684,7 @@ GameObject:
   - component: {fileID: 6269350871424545611}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_7
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -68768,7 +68829,7 @@ GameObject:
   - component: {fileID: 6460406891237875955}
   m_Layer: 8
   m_Name: mesh
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69031,7 +69092,7 @@ GameObject:
   - component: {fileID: 6845903945833386358}
   m_Layer: 8
   m_Name: target_house_01_countertop_3_drawer_6
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69119,7 +69180,7 @@ GameObject:
   - component: {fileID: 6927951207127800077}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_drawer_2
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69611,7 +69672,7 @@ GameObject:
   - component: {fileID: 7791108305302251970}
   m_Layer: 8
   m_Name: target_house_countertop_5_drawer_2
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69704,7 +69765,7 @@ GameObject:
   - component: {fileID: 7890868159618638703}
   m_Layer: 8
   m_Name: mesh
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69831,7 +69892,7 @@ GameObject:
   - component: {fileID: 8066510759806339006}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_2A
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -69956,7 +70017,7 @@ GameObject:
   - component: {fileID: 8202739050602495364}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_drawer_4
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -70176,7 +70237,7 @@ GameObject:
   - component: {fileID: 8561141259159209101}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_2B
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -70238,7 +70299,7 @@ GameObject:
   - component: {fileID: 8722293253983471683}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_3A
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -70310,7 +70371,7 @@ GameObject:
   - component: {fileID: 8760871844329026599}
   m_Layer: 8
   m_Name: target_house_01_countertop_1_door_3B
-  m_TagString: Structure
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
