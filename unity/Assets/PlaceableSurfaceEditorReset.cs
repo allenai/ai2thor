@@ -83,6 +83,49 @@ public class PlaceableSurfaceEditorReset : MonoBehaviour
 
     }
 
+    public void ToggleOnPlaceableSurface () 
+    {
+        GetAllSimObjPrefabs();
+
+        foreach (KeyValuePair<GameObject, string> go in assetToAssetPath)
+        {
+            GameObject assetRoot = go.Key;
+            string assetPath = go.Value;
+
+            GameObject contentRoot = PrefabUtility.LoadPrefabContents(assetPath);
+
+            //search all child objects and look for mesh renderers
+            MeshRenderer[] renderers;
+            renderers = contentRoot.GetComponentsInChildren<MeshRenderer>();
+
+
+            bool shouldSave = false;
+
+            //just in case something doesn't have a renderer?
+            if(renderers.Length > 0)
+            {
+                foreach (MeshRenderer mr in renderers)
+                {
+                    if(mr.sharedMaterial != null)
+                    {
+                        if(mr.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)")
+                        {
+                            mr.enabled = true;
+                            shouldSave = true;
+                            continue;
+                        }
+                    }
+                }
+                
+                if(shouldSave)
+                PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
+
+            }
+
+            PrefabUtility.UnloadPrefabContents(contentRoot);
+        }
+
+    }
     [CustomEditor (typeof(PlaceableSurfaceEditorReset))]
     public class PlaceableSurfaceEditorThing : Editor
     {
@@ -95,6 +138,11 @@ public class PlaceableSurfaceEditorReset : MonoBehaviour
             if(GUILayout.Button("Toggle Off Placeable Surface in Prefab Assets"))
             {
                 myScript.ToggleOffPlaceableSurface();
+            }
+
+            if(GUILayout.Button("Toggle ON Placeable Surface in Prefab Assets"))
+            {
+                myScript.ToggleOnPlaceableSurface();
             }
         }
     }
