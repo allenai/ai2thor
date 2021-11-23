@@ -95,6 +95,7 @@ def fifo_controller():
 
 
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
+fifo = [_fifo_controller]
 fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
 BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
@@ -1146,7 +1147,7 @@ def test_change_resolution(controller):
     )
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.parametrize("controller", fifo)
 def test_teleport(controller):
     # Checking y coordinate adjustment works
     controller.step(
@@ -1385,7 +1386,7 @@ def test_get_interactable_poses(controller):
     ), "GetInteractablePoses with large maxDistance is off!"
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.parametrize("controller", fifo)
 def test_2d_semantic_hulls(controller):
     from shapely.geometry import Polygon
 
@@ -1600,7 +1601,7 @@ def test_get_coordinate_from_raycast(controller):
     query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {"x": -0.5968407392501831, "y": 1.5759981870651245, "z": -1.0484200716018677},
+        {'x': -0.6037378311157227, 'y': 1.575998306274414, 'z': -1.0518686771392822},
     )
 
 
@@ -1731,7 +1732,7 @@ def test_unsupported_manipulathor(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_set_random_seed(controller):
-    orig_frame = controller.reset().frame
+    orig_frame = controller.last_event.frame
     controller.step(action="SetRandomSeed", seed=41)
     s41_frame = controller.step(action="RandomizeMaterials").frame
     controller.step(action="SetRandomSeed", seed=42)
@@ -1766,7 +1767,6 @@ def test_randomize_materials_scenes(controller):
         assert meta["useExternalMaterials"]
         assert not meta["useValMaterials"]
         assert not meta["useTestMaterials"]
-        assert meta["totalMaterialsConsidered"] == 679
 
         controller.reset(scene=f"FloorPlan{p + 21}")
         meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
@@ -1774,7 +1774,6 @@ def test_randomize_materials_scenes(controller):
         assert not meta["useExternalMaterials"]
         assert meta["useValMaterials"]
         assert not meta["useTestMaterials"]
-        assert meta["totalMaterialsConsidered"] == 500
 
         controller.reset(scene=f"FloorPlan{p + 25}")
         meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
@@ -1782,7 +1781,6 @@ def test_randomize_materials_scenes(controller):
         assert not meta["useExternalMaterials"]
         assert meta["useValMaterials"]
         assert not meta["useTestMaterials"]
-        assert meta["totalMaterialsConsidered"] == 500
 
         controller.reset(scene=f"FloorPlan{p + 26}")
         meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
@@ -1790,7 +1788,6 @@ def test_randomize_materials_scenes(controller):
         assert not meta["useExternalMaterials"]
         assert not meta["useValMaterials"]
         assert meta["useTestMaterials"]
-        assert meta["totalMaterialsConsidered"] == 358
 
     controller.reset(scene=f"FloorPlan_Train5_3")
     meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
@@ -1798,7 +1795,6 @@ def test_randomize_materials_scenes(controller):
     assert meta["useExternalMaterials"]
     assert not meta["useValMaterials"]
     assert not meta["useTestMaterials"]
-    assert meta["totalMaterialsConsidered"] == 679
 
     controller.reset(scene=f"FloorPlan_Val2_1")
     meta = controller.step("RandomizeMaterials").metadata["actionReturn"]
@@ -1806,13 +1802,12 @@ def test_randomize_materials_scenes(controller):
     assert not meta["useExternalMaterials"]
     assert meta["useValMaterials"]
     assert not meta["useTestMaterials"]
-    assert meta["totalMaterialsConsidered"] == 500
     controller.step(action="ResetMaterials")
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_randomize_materials_clearOnReset(controller):
-    f1 = controller.reset().frame.astype(np.float16)
+    f1 = controller.last_event.frame.astype(np.float16)
     f2 = controller.step(action="RandomizeMaterials").frame.astype(np.float16)
     f3 = controller.reset().frame.astype(np.float16)
     # giving some leway with 0.05, but that as a baseline should be plenty enough
@@ -1840,7 +1835,7 @@ def test_randomize_materials_clearOnReset(controller):
     ).sum() / 300 / 300 < 0.01, "Materials should look the same"
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.parametrize("controller", fifo)
 def test_directionalPush(controller):
     positions = []
     for angle in [0, 90, 180, 270, -1, -90]:
@@ -1891,20 +1886,11 @@ def test_randomize_materials_params(controller):
     assert not meta["useExternalMaterials"]
     assert meta["useValMaterials"]
     assert meta["useTestMaterials"]
-    assert meta["totalMaterialsConsidered"] == 741
 
     assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["Kitchen"])
-    assert (
-        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
-        == 325
-    )
     assert controller.step(
         action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
-    )
-    assert (
-        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
-        == 503
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
@@ -1915,10 +1901,6 @@ def test_randomize_materials_params(controller):
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
-    assert (
-        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
-        == 350
-    )
 
     controller.reset(scene="FloorPlan_Val3_2")
     assert not controller.step(
@@ -1926,17 +1908,12 @@ def test_randomize_materials_params(controller):
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
-    assert (
-        controller.last_event.metadata["actionReturn"]["totalMaterialsConsidered"]
-        == 318
-    )
 
     controller.step(action="ResetMaterials")
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_invalid_arguments(controller):
-    controller.reset()
     with pytest.raises(ValueError):
         event = controller.step(
             action="PutObject",
@@ -1955,7 +1932,7 @@ def test_invalid_arguments(controller):
     ], "errorMessage with invalid argument"
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.parametrize("controller", fifo)
 def test_drop_object(controller):
     for action in ["DropHeldObject", "DropHandObject"]:
         assert not controller.last_event.metadata["inventoryObjects"]
@@ -1991,7 +1968,6 @@ def test_segmentation_colors(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_move_hand(controller):
-    controller.reset()
     h1 = controller.step(
         action="PickupObject",
         objectId="SoapBottle|-00.84|+00.93|-03.76",
@@ -2053,12 +2029,11 @@ def test_move_hand(controller):
     )
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
+@pytest.mark.parametrize("controller", fifo)
 def test_rotate_hand(controller):
     # Tests RotateHeldObject and that event.metadata["hand"] is equivalent to
     # event.metadata["heldObjectPose"] for backwards compatibility purposes
     # PITCH
-    controller.reset()
     h1 = controller.step(
         action="PickupObject",
         objectId="SoapBottle|-00.84|+00.93|-03.76",

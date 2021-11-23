@@ -135,14 +135,14 @@ class Controller(object):
                     self.depth_format,
                     camera_near_plane=self.camera_near_plane,
                     camera_far_plane=self.camera_far_plane,
-                    depth_width=agent_metadata['depthWidth'],
-                    depth_height=agent_metadata['depthHeight'],
+                    depth_width=agent_metadata.get('depthWidth', agent_metadata['screenWidth']),
+                    depth_height=agent_metadata.get('depthHeight', agent_metadata['screenHeight']),
                     flip_y=False,
                     dtype=np.float64,
                 ),
             }
             for key in image_mapping.keys():
-                if key == 'image_depth' and agent_metadata['depthWidth'] != agent_metadata['screenWidth']:
+                if key == 'image_depth' and 'depthWidth' in agent_metadata and agent_metadata['depthWidth'] != agent_metadata['screenWidth']:
                     warnings.warn("Depth and RGB images are not the same resolutions")
 
                 if key in payload and len(payload[key]) > i:

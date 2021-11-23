@@ -1007,6 +1007,22 @@ class Controller(object):
             stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
             stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
         )
+
+        try:
+            if self._build.platform == ai2thor.platform.CloudRendering:
+                # if Vulkan is not configured correctly then Unity will crash
+                # immediately after launching
+                self.server.unity_proc.wait(timeout=1.0)
+                if self.server.unity_proc.returncode is not None:
+                    message = (
+                        "Unity process has exited - check Player.log for errors. Confirm that Vulkan is properly configured on this system using vulkaninfo from the vulkan-utils package. returncode=%s"
+                        % (self.server.unity_proc.returncode,)
+                    )
+                    raise Exception(message)
+
+        except subprocess.TimeoutExpired:
+            pass
+
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -1058,44 +1074,48 @@ class Controller(object):
         import requests
 
         payload = []
-        cache_payload, cache_mtime = self._get_cache_commit_history(branch)
-        # we need to limit how often we hit api.github.com since 
-        # there is a rate limit of 60 per hour per IP
-        if cache_payload and (time.time() - cache_mtime) < 300:
-            payload = cache_payload
-        else:
-            try:
-                res = requests.get(
-                    "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
-                )
-                if res.status_code == 404:
-                    raise ValueError("Invalid branch name: %s" % branch)
-                elif res.status_code == 403:
+        makedirs(self.commits_cache_dir) # must make directory for lock to succeed
+        # must lock to handle case when multiple procs are started
+        # and all fetch from api.github.com
+        with LockEx(self._cache_commit_filename(branch)):
+            cache_payload, cache_mtime = self._get_cache_commit_history(branch)
+            # we need to limit how often we hit api.github.com since 
+            # there is a rate limit of 60 per hour per IP
+            if cache_payload and (time.time() - cache_mtime) < 300:
+                payload = cache_payload
+            else:
+                try:
+                    res = requests.get(
+                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
+                    )
+                    if res.status_code == 404:
+                        raise ValueError("Invalid branch name: %s" % branch)
+                    elif res.status_code == 403:
+                        payload, _ = self._get_cache_commit_history(branch)
+                        if payload:
+                            warnings.warn(
+                                "Error retrieving commits: %s - using cached commit history for %s"
+                                % (res.text, branch)
+                            )
+                        else:
+                            res.raise_for_status()
+                    elif res.status_code == 200:
+                        payload = res.json()
+                        self._cache_commit_history(branch, payload)
+                    else:
+                        res.raise_for_status()
+                except requests.exceptions.ConnectionError as e:
                     payload, _ = self._get_cache_commit_history(branch)
                     if payload:
                         warnings.warn(
-                            "Error retrieving commits: %s - using cached commit history for %s"
-                            % (res.text, branch)
+                            "Unable to connect to github.com: %s - using cached commit history for %s"
+                            % (e, branch)
                         )
                     else:
-                        res.raise_for_status()
-                elif res.status_code == 200:
-                    payload = res.json()
-                    self._cache_commit_history(branch, payload)
-                else:
-                    res.raise_for_status()
-            except requests.exceptions.ConnectionError as e:
-                payload, _ = self._get_cache_commit_history(branch)
-                if payload:
-                    warnings.warn(
-                        "Unable to connect to github.com: %s - using cached commit history for %s"
-                        % (e, branch)
-                    )
-                else:
-                    raise Exception(
-                        "Unable to get commit history for branch %s and no cached history exists: %s"
-                        % (branch, e)
-                    )
+                        raise Exception(
+                            "Unable to get commit history for branch %s and no cached history exists: %s"
+                            % (branch, e)
+                        )
 
         return [c["sha"] for c in payload]
 
@@ -1171,7 +1191,8 @@ class Controller(object):
         # is enabled, then it will get selected over Linux64 (assuming a build is available)
         for build in builds:
             if build.platform.is_valid(request):
-                if build.commit_id != commits[0]:
+                # don't emit warnings for CloudRendering since we allow it to fallback to a default
+                if build.commit_id != commits[0] and build.platform != ai2thor.platform.CloudRendering:
                     warnings.warn(
                         "Build for the most recent commit: %s is not available.  Using commit build %s"
                         % (commits[0], build.commit_id)

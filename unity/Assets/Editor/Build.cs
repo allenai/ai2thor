@@ -54,7 +54,12 @@ public class Build {
         foreach (string scene in scenes) {
             Debug.Log("Adding Scene " + scene);
         }
-        BuildOptions options = BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
+
+        // zip + compresslevel=1 && LZ4 is faster by about 30 seconds 
+        // (and results in smaller .zip files) than
+        // zip + compresslevel=6 (default) && uncomprsesed asset bundles 
+        BuildOptions options = BuildOptions.StrictMode | BuildOptions.CompressWithLz4;
+
         if (ScriptsOnly()) {
             options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
         }

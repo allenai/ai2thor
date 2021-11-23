@@ -59,7 +59,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1506446439275130}
-  occupied: 0
 --- !u!1 &1062299745176302
 GameObject:
   m_ObjectHideFlags: 0
@@ -325,7 +324,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1506446439275130}
-  occupied: 0
 --- !u!1 &1200586537213510
 GameObject:
   m_ObjectHideFlags: 0
@@ -454,6 +452,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -467,6 +466,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -665,8 +665,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4491447725096282}
-  - component: {fileID: 54186622910912130}
   - component: {fileID: 114113340765156384}
+  - component: {fileID: 54186622910912130}
   m_Layer: 8
   m_Name: bin_26
   m_TagString: SimObjPhysics
@@ -698,22 +698,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!54 &54186622910912130
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1506446439275130}
-  serializedVersion: 2
-  m_Mass: 0.7
-  m_Drag: 1
-  m_AngularDrag: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!114 &114113340765156384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -726,7 +710,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: GarbageCan|+00.00|+00.00|+00.00
+  objectID: 
+  assetID: bin_26
   Type: 28
   PrimaryProperty: 2
   SecondaryProperties: 07000000
@@ -751,8 +736,8 @@ MonoBehaviour:
   - {fileID: 1781118258280620}
   - {fileID: 1638636181053158}
   - {fileID: 1875072256731070}
-  isVisible: 0
-  isInteractable: 0
+  debugIsVisible: 0
+  debugIsInteractable: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65472202697095888}
@@ -778,8 +763,41 @@ MonoBehaviour:
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
+  CurrentlyContains: []
+--- !u!54 &54186622910912130
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506446439275130}
+  serializedVersion: 2
+  m_Mass: 0.7
+  m_Drag: 1
+  m_AngularDrag: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1507093461508208
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,7 +1139,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1506446439275130}
-  occupied: 0
 --- !u!1 &1685391870805034
 GameObject:
   m_ObjectHideFlags: 0
@@ -1298,7 +1315,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1506446439275130}
-  occupied: 0
 --- !u!1 &1855481076942558
 GameObject:
   m_ObjectHideFlags: 0
@@ -1388,7 +1404,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1506446439275130}
-  occupied: 0
 --- !u!1 &1893223258759226
 GameObject:
   m_ObjectHideFlags: 0
@@ -1637,8 +1652,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.59164894, y: 0.6833894, z: 0.55621827}
-  m_Center: {x: 0, y: 0.33149254, z: 0}
+  m_Size: {x: 0.5371059, y: 0.6211616, z: 0.48029262}
+  m_Center: {x: 0.00085276365, y: 0.3125766, z: -0.0055268407}
 --- !u!1 &1559212277049850510
 GameObject:
   m_ObjectHideFlags: 0

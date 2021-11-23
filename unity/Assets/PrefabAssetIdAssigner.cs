@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -28,33 +28,85 @@ public class PrefabAssetIdAssigner : MonoBehaviour
         //var assetsOfSimObjectType = new List<GameObject>();
         string[] guids = AssetDatabase.FindAssets("t:prefab");
 
-            for (int i = 0; i < guids.Length; i++) 
+        for (int i = 0; i < guids.Length; i++) 
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            string assetName = assetPath.Substring(
+                assetPath.LastIndexOf("/") + 1,
+                assetPath.Length - (assetPath.LastIndexOf("/") + 1) - ".prefab".Length
+            );
+
+            // skip all these prefabs
+            if (assetPath.Contains("Scene Setup Prefabs") || assetPath.Contains("Entryway Objects")) 
             {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
-                string assetName = assetPath.Substring(
-                    assetPath.LastIndexOf("/") + 1,
-                    assetPath.Length - (assetPath.LastIndexOf("/") + 1) - ".prefab".Length
-                );
-
-                // skip all these prefabs
-                if (assetPath.Contains("Scene Setup Prefabs") || assetPath.Contains("Entryway Objects")) 
-                {
-                    continue;
-                }
-
-                GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-                if (asset != null && asset.GetComponent<SimObjPhysics>()) {
-
-                    SimObjPhysics sop = asset.GetComponent<SimObjPhysics>();
-                    if(sop.Type.ToString() == SimObjectType)
-                    assetToAssetPath.Add(asset, assetPath);
-                }
+                continue;
             }
+
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (asset != null && asset.GetComponent<SimObjPhysics>()) {
+
+                SimObjPhysics sop = asset.GetComponent<SimObjPhysics>();
+                //only add the type specified
+                if(sop.Type.ToString() == SimObjectType)
+                assetToAssetPath.Add(asset, assetPath);
+            }
+        }
+    }
+
+    public void GetAllPrefabs()
+    {
+        assetToAssetPath.Clear();
+
+        //var assetsOfSimObjectType = new List<GameObject>();
+        string[] guids = AssetDatabase.FindAssets("t:prefab");
+
+        for (int i = 0; i < guids.Length; i++) 
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            string assetName = assetPath.Substring(
+                assetPath.LastIndexOf("/") + 1,
+                assetPath.Length - (assetPath.LastIndexOf("/") + 1) - ".prefab".Length
+            );
+
+            // skip all these prefabs
+            if (assetPath.Contains("Scene Setup Prefabs") || 
+            assetPath.Contains("Entryway Objects") || 
+            assetPath.Contains("SceneSetupPrefabs") || 
+            assetPath.Contains("EntrywayObjects")) 
+            {
+                continue;
+            }
+
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (asset != null && asset.GetComponent<SimObjPhysics>()) {
+
+                SimObjPhysics sop = asset.GetComponent<SimObjPhysics>();
+                assetToAssetPath.Add(asset, assetPath);
+            }
+        }
     }
 
     public void AssignIds()
     {
         GetAllPrefabsOfType();
+        foreach (KeyValuePair<GameObject, string> go in assetToAssetPath) 
+        {
+            GameObject assetRoot = go.Key;
+            string assetPath = go.Value;
+
+            GameObject contentRoot = PrefabUtility.LoadPrefabContents(assetPath);
+
+            //modify
+            contentRoot.GetComponent<SimObjPhysics>().assetID = assetRoot.name;
+
+            PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
+            PrefabUtility.UnloadPrefabContents(contentRoot);
+        }
+    }
+
+    public void AssignIdsToAll()
+    {
+        GetAllPrefabs();
         foreach (KeyValuePair<GameObject, string> go in assetToAssetPath) 
         {
             GameObject assetRoot = go.Key;
@@ -86,6 +138,11 @@ public class AssetIdAssigner : Editor
         if(GUILayout.Button("Assign Prefab Name as assetID to All Prefabs Gotten Of Type"))
         {
             myScript.AssignIds();
+        }
+
+        if(GUILayout.Button("Assign Prefab Name as assetID to All Prefabs"))
+        {
+            myScript.AssignIdsToAll();
         }
     }
 }
