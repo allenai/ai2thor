@@ -1150,7 +1150,7 @@ def ci_build(context):
 @task
 def install_cloudrendering_engine(context):
     global _unity_version
-    _unity_version = lambda: "2020.3.21f1"
+    _unity_version = lambda: "2020.3.19f1"
     #_unity_version = lambda: "2021.2.0b11"
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
@@ -1180,6 +1180,9 @@ def build_cloudrendering(context, push_build=False):
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
     print("build name %s" % build_name)
     shutil.rmtree("unity/builds/%s" % build_name, ignore_errors=True)
+    # must clear out the gicache for cloudrendering otherwise the cache for non-cloudrendering gets used causing artifacts 
+    # with certain lighting (FloorPlan28 and window reflection
+    shutil.rmtree(os.path.join(os.environ["HOME"], "Library/Caches/com.unity3d.UnityEditor/GiCache"))
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
