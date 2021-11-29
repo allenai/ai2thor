@@ -973,8 +973,8 @@ def ci_build(context):
         build = pending_travis_build()
         skip_branches = ["vids", "video", "erick/cloudrendering"]
         if build and build["branch"] not in skip_branches:
-            # delete pytest json to allow tests to get rerun
-            pytest_s3_object(build["commit_id"]).delete()
+            # disabling delete temporarily since it interferes with pip releases
+            # pytest_s3_object(build["commit_id"]).delete()
             logger.info(
                 "pending build for %s %s" % (build["branch"], build["commit_id"])
             )
