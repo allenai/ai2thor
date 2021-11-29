@@ -302,20 +302,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             }
 
-            // Align SimObject to origin and axes
-            Vector3 cachedPosition = this.transform.position;
-            Quaternion cachedRotation = this.transform.rotation;
+            // The GameObject is cloned instead of teleporting/rotating to avoid
+            // waking up the rigidbody, which can cause the SimObj to shift by tiny amounts
+            // since it will never sleep.
+            GameObject clone = Instantiate(this.gameObject, Vector3.zero, Quaternion.identity);
 
-            this.transform.position = Vector3.zero;
-            this.transform.rotation = Quaternion.identity;
-            if (!Physics.autoSyncTransforms) {
-                Physics.SyncTransforms();
-            }
 
             // Get all colliders on the sop, excluding colliders if they are not enabled
             List<(Collider, LayerMask)> cols = new List<(Collider, LayerMask)>();
             var nonInteractiveLayer = LayerMask.NameToLayer("NonInteractive");
-            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
+            foreach (Collider c in clone.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
                     // save the state of all the layers prior to modifying
                     cols.Add((c, c.transform.gameObject.layer));
@@ -331,12 +327,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Encapsulate all active colliders in SimObject's array
             foreach ((Collider, LayerMask) colAndLayerMask in cols) {
                 Collider c = colAndLayerMask.Item1;
-                if (!c.isTrigger && c.gameObject != this.BoundingBox) {
+                if (!c.isTrigger && c.gameObject != clone.GetComponent<SimObjPhysics>().BoundingBox) {
                     newBB.Encapsulate(c.bounds);
                 }
             }
             // Encapsulate all visilibity points of the SimObject array
-            foreach (Transform visPoint in this.VisibilityPoints) {
+            foreach (Transform visPoint in clone.GetComponent<SimObjPhysics>().VisibilityPoints) {
                 newBB.Encapsulate(visPoint.position);
             }
 
@@ -346,23 +342,25 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
             this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
 
-            // Revert SimObject back to its initial transform
-            this.transform.position = cachedPosition;
-            this.transform.rotation = cachedRotation;
-            if (!Physics.autoSyncTransforms) {
-                Physics.SyncTransforms();
-            }
-
             // Re-enable colliders, moving them back to their original layer
             foreach ((Collider, LayerMask) colAndLayerMask in cols) {
                 colAndLayerMask.Item1.transform.gameObject.layer = colAndLayerMask.Item2;
-
             }
 
             // reparent child simobjects
             foreach (Transform childSimObject in childSimObjects) {
                 childSimObject.SetParent(this.transform);
             }
+
+            DestroyImmediate(clone);
+
+            // iTween adds references to the iTween.tweens List
+            for (int i = 0; i < iTween.tweens.Count; i++) {
+                if (((GameObject)iTween.tweens[i]["target"]) == null) {
+                   iTween.tweens.RemoveAt(i);
+                }
+            }
+
 
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();
