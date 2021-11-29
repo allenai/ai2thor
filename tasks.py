@@ -912,7 +912,6 @@ def pytest_s3_object(commit_id):
 
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
-
 @task
 def ci_merge_push_pytest_results(context, commit_id):
 
@@ -974,6 +973,8 @@ def ci_build(context):
         build = pending_travis_build()
         skip_branches = ["vids", "video", "erick/cloudrendering"]
         if build and build["branch"] not in skip_branches:
+            # disabling delete temporarily since it interferes with pip releases
+            # pytest_s3_object(build["commit_id"]).delete()
             logger.info(
                 "pending build for %s %s" % (build["branch"], build["commit_id"])
             )
@@ -1025,14 +1026,16 @@ def ci_build(context):
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
-            lock_file_path = os.path.join(arch_temp_dirs["OSXIntel64"], "unity/Temp/UnityLockfile")
-            if os.path.isfile(lock_file_path):
-                logger.info("attempting to lock %s" % lock_file_path)
-                lock_file = os.open(lock_file_path, os.O_RDWR)
-                fcntl.lockf(lock_file, fcntl.LOCK_EX)
-                fcntl.lockf(lock_file, fcntl.LOCK_UN)
-                os.close(lock_file)
-                logger.info("obtained lock on %s" % lock_file_path)
+            # waiting for all builds to complete before starting tests
+            for arch in ["OSXIntel64", "Linux64"]:
+                lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
+                if os.path.isfile(lock_file_path):
+                    logger.info("attempting to lock %s" % lock_file_path)
+                    lock_file = os.open(lock_file_path, os.O_RDWR)
+                    fcntl.lockf(lock_file, fcntl.LOCK_EX)
+                    fcntl.lockf(lock_file, fcntl.LOCK_UN)
+                    os.close(lock_file)
+                    logger.info("obtained lock on %s" % lock_file_path)
 
             # don't run tests for a tag since results should exist
             # for the branch commit
@@ -3598,7 +3601,10 @@ def test_testresults_exist():
                 message = json.dumps(fail_message.text + " " + stack_trace.text)
                 test_data = f"""
         def test_{methodname}(self):
-            pytest.fail(json.loads(r'{message}'))
+            pytest.fail(json.loads(r\"\"\"
+{message}
+\"\"\"
+            ))
     """
             else:
                 test_data = f"""
