@@ -223,9 +223,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 // Firs: structural parenting, where objects are permanently part of each other drawer child of dresser
                 // Second: another functional parenting, where objects are temporarily parented but shouldn't be treated as part of the same prefab
                 // e.g. apple on a plate
-                #if !UNITY_EDITOR
+#if !UNITY_EDITOR
                 simObject.transform.parent = null;
-                #endif
+#endif
             }
         }
 
@@ -400,7 +400,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public void DropContainedObjectsStationary() {
         this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
     }
-    
+
     public void DropContainedObjects(
         bool reparentContainedObjects,
         bool forceKinematic
@@ -687,7 +687,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
 
-        if (droneFPSAgent == null){
+        if (droneFPSAgent == null) {
             return;
         }
 

@@ -235,7 +235,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             rotation = r;
         }
     }
-    
+
 
     public bool PlaceObject(
         SimObjPhysics sop,
@@ -347,7 +347,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         foreach (RotationAndDistanceValues quat in ToCheck) {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false)) {
-                
+
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;

@@ -7,7 +7,7 @@ using RandomExtensions;
 using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-        
+
     public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
         public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }

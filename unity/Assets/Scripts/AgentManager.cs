@@ -163,22 +163,22 @@ public class AgentManager : MonoBehaviour {
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
                 primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
-		return;
+                return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-            } 
+            }
             // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
             SetUpLocobotController(action);
-            
+
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-            } 
+            }
             SetUpDroneController(action);
 
         } else if (action.agentMode.ToLower() == "arm") {
@@ -248,11 +248,11 @@ public class AgentManager : MonoBehaviour {
         //primary agent floating in space, then generates the house, then teleports the primary agent.
         //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
         //agents, which won't work if we initialize the agent(s) before the scene exists
-        if (!action.procedural)
+        if (!action.procedural) {
             StartCoroutine(addAgents(action));
-
+        }
     }
-    
+
     private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
@@ -278,7 +278,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
-        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent, this}) as BaseFPSAgentController;
+        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[] { agentComponent, this }) as BaseFPSAgentController;
         this.agents.Add(agent);
         return agent;
     }
