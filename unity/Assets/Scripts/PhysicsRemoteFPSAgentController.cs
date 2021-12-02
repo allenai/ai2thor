@@ -2992,7 +2992,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // if this is rotated too much, drop any contained object if held item is a receptacle
             if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95) {
-               ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false); 
+                ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
             }
 
             actionFinished(true);
@@ -3688,7 +3688,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            if(simObjs != null) {
+            if (simObjs != null) {
                 foreach (SimObjPhysics sop in simObjs) {
                     if (sop.Type.ToString() == objectType) {
                         if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
@@ -3713,7 +3713,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
             SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            if(simObjs != null) {
+            if (simObjs != null) {
                 foreach (SimObjPhysics sop in simObjs) {
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
                         sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;

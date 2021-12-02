@@ -29,11 +29,25 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class ProbeParameters {
+        public string id;
+        public Vector3 position;
+        public float intensity;
+        public Vector3 box_size;
+        public Vector3 box_offset;
+        public float shadow_distance;
+        public SerializableColor background;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
         public string room_id { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
+
+        public AxisAngleRotation rotation;
         public float intensity { get; set; }
         public float indirect_multiplier { get; set; }
         public float range { get; set; }
@@ -45,7 +59,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ShadowParameters {
-        public string type { get; set; }
+        public string type { get; set; } = "Soft";
         public float strength { get; set; }
 
         public float normal_bias { get; set; }
@@ -62,6 +76,14 @@ namespace Thor.Procedural.Data {
         public float g { get; set; }
         public float b { get; set; }
         public float a { get; set; }
+
+        public Color toUnityColor() {
+            return new Color(r, g, b, a);
+        }
+
+        public static SerializableColor fromUnityColor(Color color) {
+            return new SerializableColor() {r = color.r, g = color.g, b = color.b, a = color.a};
+        }
     }
 
     [Serializable]
@@ -103,9 +125,16 @@ namespace Thor.Procedural.Data {
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
+        public List<ProbeParameters> reflections;
+
         public string ceiling_material { get; set; }
+        public float? ceiling_material_tiling_x_divisor = null;
+        public float? ceiling_material_tiling_y_divisor = null;
+        public SerializableColor ceiling_color { get; set; } = null;
         public float navmesh_voxel_size { get; set; }
         public bool ceiling_back_faces { get; set; }
+
+        public bool unlit_ceiling { get; set; }
     }
 
     [Serializable]
@@ -122,6 +151,10 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string type { get; set; }
         public string floor_material { get; set; }
+        public float? floor_material_tiling_x_divisor = null;
+        public float? floor_material_tiling_y_divisor = null;
+
+        public SerializableColor floor_color { get; set; } = null;
         // public float y { get; set; }
         public List<Vector3> floor_polygon { get; set; }
         public List<Ceiling> ceilings { get; set; }
@@ -146,6 +179,8 @@ namespace Thor.Procedural.Data {
         public float material_tiling_y_divisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
+
+        public bool unlit;
     }
 
     [Serializable]
@@ -224,7 +259,8 @@ namespace Thor.Procedural.Data {
         public List<Taxonomy> types { get; set; }
         public string asset_id { get; set; } //name of prefab asset from asset database
         public string navmesh_area { get; set; }
-
+        
+        public bool unlit;
         public SerializableColor color { get; set; } = null;
     }
 
@@ -281,7 +317,7 @@ namespace Thor.Procedural.Data {
 
     }
 
-    
+
 
 
     [Serializable]
@@ -302,6 +338,8 @@ namespace Thor.Procedural.Data {
         public float material_tiling_y_divisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
+
+        public bool unlit;
 
     }
 

@@ -604,7 +604,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
-                    if(receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
+                    if (receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
                         //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
                         continue;
                     }
