@@ -400,13 +400,13 @@ public class AgentManager : MonoBehaviour {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    private void updateImageSynthesis(bool status) {
+    public void updateImageSynthesis(bool status) {
         foreach (var agent in this.agents) {
             agent.updateImageSynthesis(status);
         }
     }
 
-    private void updateThirdPartyCameraImageSynthesis(bool status) {
+    public void updateThirdPartyCameraImageSynthesis(bool status) {
         if (status) {
             foreach (var camera in this.thirdPartyCameras) {
                 GameObject gameObject = camera.gameObject;
