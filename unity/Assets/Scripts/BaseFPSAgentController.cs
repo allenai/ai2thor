@@ -142,6 +142,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool snapToGrid;
         protected bool continuousMode;// deprecated, use snapToGrid instead
         public ImageSynthesis imageSynthesis;
+        public bool enableImageSynthesis;
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         // outbound object filter
