@@ -143,9 +143,14 @@ public class MCSMain : MonoBehaviour {
         List<MCSConfigObjectDefinition> customObjects = LoadObjectRegistryFromResources(
             this.customObjectRegistryFile);
 
-        ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).Concat(customObjects).ToList().ForEach((objectDefinition) => {
-            this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
-        });
+
+        
+        AddObjectsToRegistry(ai2thorObjects, "ai2thorObjects");
+        AddObjectsToRegistry(mcsObjects, "mcsObjects");
+        AddObjectsToRegistry(primitiveObjects, "primitiveObjects");
+        AddObjectsToRegistry(customObjects, "customObjects");
+        Debug.Log("All object registries loaded.");
+        
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -174,6 +179,17 @@ public class MCSMain : MonoBehaviour {
 #if UNITY_EDITOR
         Debug.unityLogger.logEnabled = enableDebugLogsInEditor;
 #endif
+    }
+
+    void AddObjectsToRegistry(List<MCSConfigObjectDefinition> list, string listName) {
+        Debug.Log("Adding " + listName + " objects to registry...");
+        foreach (var o in list) {
+            if (this.objectDictionary.ContainsKey(o.id.ToUpper())) {
+                Debug.Log("Key " + o.id.ToUpper() + " failed to add to the objectDictionary because it already exists in a previously processed registry.");
+            }
+            
+            this.objectDictionary.Add(o.id.ToUpper(), o);
+        }
     }
 
     // Unity's Update method is called once per frame.
