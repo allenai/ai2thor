@@ -37,14 +37,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // set secondary arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find("FirstPersonCharacter").Find("SecondaryCamera").GetComponent<Camera>();
-            fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(-0.01760002f, 0.1291f, -0.1512001f);
-            fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 60f;
-            this.agentManager.thirdPartyCameras.Add(fp_camera_2);
-
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 90f;
             this.maxUpwardLookAngle = 25f;
