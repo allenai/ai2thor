@@ -142,7 +142,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool snapToGrid;
         protected bool continuousMode;// deprecated, use snapToGrid instead
         public ImageSynthesis imageSynthesis;
-        public bool enableImageSynthesis;
+        // public bool enableImageSynthesis;
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         // outbound object filter
@@ -619,7 +619,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (action.renderDepthImage || action.renderSemanticSegmentation || action.renderInstanceSegmentation || action.renderNormalsImage) {
                 this.updateImageSynthesis(true);
-                enableImageSynthesis = true;
+                // enableImageSynthesis = true;
             }
 
             if (action.visibilityDistance > 0.0f) {
