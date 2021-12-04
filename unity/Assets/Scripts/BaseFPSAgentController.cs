@@ -619,6 +619,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (action.renderDepthImage || action.renderSemanticSegmentation || action.renderInstanceSegmentation || action.renderNormalsImage) {
                 this.updateImageSynthesis(true);
+                enableImageSynthesis = true;
             }
 
             if (action.visibilityDistance > 0.0f) {
