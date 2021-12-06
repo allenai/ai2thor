@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -104,11 +105,15 @@ public class AddressablesEditor
         var (sourceDir, targetDir) = GetBuildAssetsDirectories(target, pathToBuiltProject);
 
         #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
-            // Do not copy default addressables if newly generated addressables were detected
+            // If no addressable catalog is found, bring it from cache. Otherwise bring it from S3
             if (!Directory.Exists(targetDir))
             {
-                CopyFilesRecursively(sourceDir, targetDir);
+                if(Directory.Exists(sourceDir))
+                    CopyFilesRecursively(sourceDir, targetDir);
+                else 
+                    CopyAddressableFilesFromS3(targetDir);
             }
+           
         #endif
     }
 
@@ -138,5 +143,21 @@ public class AddressablesEditor
 
         foreach (var directory in Directory.GetDirectories(sourceDir))
             CopyFilesRecursively(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
+    }
+
+    private static void CopyAddressableFilesFromS3(string targetDir) {
+        string bucketUrl = "https://ai2thor-mcs-addressables.s3.amazonaws.com/";
+        string catalogUrl = bucketUrl + "StandaloneLinux64/catalog.json";
+        string settingsUrl = bucketUrl + "StandaloneLinux64/settings.json";
+        string linkUrl = bucketUrl + "StandaloneLinux64/link.xml";
+
+        //Download files
+        using (var client = new WebClient())
+        {
+            client.DownloadFile(catalogUrl, targetDir + "/catalog.json");
+            client.DownloadFile(settingsUrl, targetDir + "/settings.json");
+            Directory.CreateDirectory(targetDir + "AddressablesLink/");
+            client.DownloadFile(linkUrl, targetDir + "/AddressablesLink/link.xml");
+        }
     }
 }
