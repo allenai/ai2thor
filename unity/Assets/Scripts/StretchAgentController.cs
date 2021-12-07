@@ -44,7 +44,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
             fp_camera_2.fieldOfView = 60f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            if (imageSynthesis.enabled) {
+            
+            if (this.gameObject.GetComponentInChildren<ImageSynthesis>().enabled) {
                 agentManager.updateThirdPartyCameraImageSynthesis(true);
             }
 
