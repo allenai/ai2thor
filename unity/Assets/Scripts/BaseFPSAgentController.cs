@@ -1787,7 +1787,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void updateImageSynthesis(bool status) {
+        public virtual void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
                 imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
             }

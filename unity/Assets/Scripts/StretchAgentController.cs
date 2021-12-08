@@ -13,6 +13,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
+        public override void updateImageSynthesis(bool status) {
+            base.updateImageSynthesis(status);
+            agentManager.updateThirdPartyCameraImageSynthesis(true);
+        }
+
         public override void InitializeBody() {
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, -0.1934924f, -0.1247f);
@@ -44,10 +49,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
             fp_camera_2.fieldOfView = 60f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            
-            if (this.gameObject.GetComponentInChildren<ImageSynthesis>().enabled) {
-                agentManager.updateThirdPartyCameraImageSynthesis(true);
-            }
 
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 90f;
