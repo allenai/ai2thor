@@ -15,7 +15,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void updateImageSynthesis(bool status) {
             base.updateImageSynthesis(status);
-            agentManager.updateThirdPartyCameraImageSynthesis(true);
+
+            // updateImageSynthesis is run in BaseFPSController's Initialize method after the
+            // Stretch Agent's unique secondary camera has been added to the list of third party
+            // cameras in InitializeBody, so a third-party camera image synthesis update is
+            // necessary if we want the secondary camera's image synthesis componenent to match
+            // the primary camera's
+            agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
         public override void InitializeBody() {
