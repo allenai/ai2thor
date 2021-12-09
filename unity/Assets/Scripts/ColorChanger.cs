@@ -240,15 +240,15 @@ public class ColorChanger : MonoBehaviour {
     public Dictionary<string, string[]> GetMaterials() {
         Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
 
-        if (materials == null) {
+        if (objectMaterials == null) {
             cacheMaterials();
         }
 
-        foreach (KeyValuePair<string, Material[]> sm in materials) {
+        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> sm in objectMaterials) {
             List<string> materialNames = new List<string>();
 
-            foreach (Material m in sm.Value) {
-                materialNames.Add(m.name);
+            foreach (ResourceAssetReference<Material> resourceAssetReference in sm.Value) {
+                materialNames.Add(resourceAssetReference.Name);
             }
 
             orSomething.Add(sm.Key, materialNames.ToArray());
