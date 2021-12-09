@@ -60,11 +60,12 @@ public class CanOpen_Object : MonoBehaviour {
         return MustBeOffToOpen;
     }
 
-    // Use this for initialization
-    void Start() {
-        // init Itween in all doors to prep for animation
+    void Awake() {
         if (MovingParts != null) {
+            // init Itween in all doors to prep for animation
             foreach (GameObject go in MovingParts) {
+                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
+                // before iTween.Awake() gets called which would throw an error if this was done in Start()
                 iTween.Init(go);
 
                 // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
@@ -72,6 +73,10 @@ public class CanOpen_Object : MonoBehaviour {
                 // Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
             }
         }
+    }
+
+    // Use this for initialization
+    void Start() {
 
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {

@@ -670,6 +670,11 @@ class Controller(object):
             self.width = target_width
             self.height = target_height
 
+        # the command line -quality parameter is not respected with the CloudRendering
+        # engine, so the quality is manually changed after launch
+        if self._build.platform == ai2thor.platform.CloudRendering:
+            self.step(action="ChangeQuality", quality=self.quality)
+
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
 
