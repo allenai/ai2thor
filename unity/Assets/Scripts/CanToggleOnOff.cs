@@ -111,13 +111,18 @@ public class CanToggleOnOff : MonoBehaviour {
 
 #endif
 
-    // Use this for initialization
-    void Start() {
+    void Awake() {
         if (MovingParts != null) {
             foreach (GameObject go in MovingParts) {
+                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
+                // before iTween.Awake() gets called which would throw an error if this was done in Start()
                 iTween.Init(go);
             }
         }
+    }
+
+    // Use this for initialization
+    void Start() {
 
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
