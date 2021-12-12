@@ -824,16 +824,16 @@ namespace Thor.Procedural {
             var dimensions = new Vector2(p0p1.magnitude, toCreate.height);
             var prev_p0p1 = previous.p1 - previous.p0;
 
-            var offsetX = (prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor);
+            var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor);
             // TODO Offset Y would require to get joining walls from above and below 
-            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.material_tiling_x_divisor, toCreate.material_tiling_y_divisor, offsetX, 0.0f, toCreate.unlit);
+            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit);
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
             // var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
-            // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.material_tiling_x_divisor, toCreate.height / toCreate.material_tiling_y_divisor);
+            // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.materialTilingXDivisor, toCreate.height / toCreate.materialTilingYDivisor);
 
-            // materialCopy.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.material_tiling_x_divisor) - Mathf.Floor(prev_p0p1.magnitude / previous.material_tiling_x_divisor), 0);//previous.height - Mathf.Floor(previous.height));
+            // materialCopy.mainTextureOffset = new Vector2((prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor), 0);//previous.height - Mathf.Floor(previous.height));
             // if (toCreate.color != null) {
             //     materialCopy.color =  new Color(toCreate.color.r, toCreate.color.g, toCreate.color.b, toCreate.color.a);
             // }
@@ -1160,8 +1160,8 @@ namespace Thor.Procedural {
                 empty = wall.empty,
                 roomId = wall.roomId,
                 hole = hole,
-                material_tiling_x_divisor = wall.material_tiling_x_divisor,
-                material_tiling_y_divisor = wall.material_tiling_y_divisor,
+                materialTilingXDivisor = wall.materialTilingXDivisor,
+                materialTilingYDivisor = wall.materialTilingYDivisor,
                 color = wall.color,
                 unlit = wall.unlit
             };
@@ -1326,7 +1326,7 @@ namespace Thor.Procedural {
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
                 var dimensions = getAxisAlignedWidthDepth(room.floor_polygon);
-                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floor_material), room.floor_color, dimensions, room.floor_material_tiling_x_divisor, room.floor_material_tiling_y_divisor);
+                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floor_material), room.floor_color, dimensions, room.floorMaterialTilingXDivisor, room.floorMaterialTilingYDivisor);
 
                 //set up mesh collider to allow raycasts against only the floor inside the room
                 subFloorGO.AddComponent<MeshCollider>();
@@ -1400,7 +1400,7 @@ namespace Thor.Procedural {
                 // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
                 
                 var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
-                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.procedural_parameters.ceiling_color, dimensions, house.procedural_parameters.ceiling_material_tiling_x_divisor, house.procedural_parameters.ceiling_material_tiling_y_divisor, 0.0f, 0.0f, house.procedural_parameters.unlit_ceiling);
+                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.procedural_parameters.ceiling_color, dimensions, house.procedural_parameters.ceilingMaterialTilingXDivisor, house.procedural_parameters.ceilingMaterialTilingYDivisor, 0.0f, 0.0f, house.procedural_parameters.unlit_ceiling);
 
                 tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 

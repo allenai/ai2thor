@@ -128,8 +128,8 @@ namespace Thor.Procedural.Data {
         public List<ProbeParameters> reflections;
 
         public string ceiling_material { get; set; }
-        public float? ceiling_material_tiling_x_divisor = null;
-        public float? ceiling_material_tiling_y_divisor = null;
+        public float? ceilingMaterialTilingXDivisor = null;
+        public float? ceilingMaterialTilingYDivisor = null;
         public SerializableColor ceiling_color { get; set; } = null;
         public float navmesh_voxel_size { get; set; }
         public bool ceiling_back_faces { get; set; }
@@ -151,8 +151,8 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string type { get; set; }
         public string floor_material { get; set; }
-        public float? floor_material_tiling_x_divisor = null;
-        public float? floor_material_tiling_y_divisor = null;
+        public float? floorMaterialTilingXDivisor = null;
+        public float? floorMaterialTilingYDivisor = null;
 
         public SerializableColor floor_color { get; set; } = null;
         // public float y { get; set; }
@@ -175,8 +175,8 @@ namespace Thor.Procedural.Data {
         public string material { get; set; }
         public bool empty { get; set; }
 
-        public float material_tiling_x_divisor = 1.0f;
-        public float material_tiling_y_divisor = 1.0f;
+        public float materialTilingXDivisor = 1.0f;
+        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 
@@ -334,8 +334,8 @@ namespace Thor.Procedural.Data {
 
         public string roomId;
 
-        public float material_tiling_x_divisor = 1.0f;
-        public float material_tiling_y_divisor = 1.0f;
+        public float materialTilingXDivisor = 1.0f;
+        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 

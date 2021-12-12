@@ -447,8 +447,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             //     // material = connectionProps?.openFromWallMaterial?.name
             //     material = wallRight.collider.GetComponent<MeshRenderer>().sharedMaterial.name
 
-            //     // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-            //     // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+            //     // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+            //     // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
             // };
             //  var wallRev = new PolygonWall {
             //     id = $"wall_{id}_back",
@@ -459,8 +459,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
             //     material = backWallClosestLeft.collider.GetComponent<MeshRenderer>().sharedMaterial.name
 
-            //     // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-            //     // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+            //     // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+            //     // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
             // };
 
             var wall = createNewWall(
@@ -484,8 +484,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 // material = connectionProps?.openFromWallMaterial?.name
                 material = material.name,
 
-                material_tiling_x_divisor = lenn / material.mainTextureScale.x,
-                material_tiling_y_divisor = backWallClosestRight.height / material.mainTextureScale.y
+                materialTilingXDivisor = lenn / material.mainTextureScale.x,
+                materialTilingYDivisor = backWallClosestRight.height / material.mainTextureScale.y
             };
 
             // var wallRev = createNewWall(
@@ -658,8 +658,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //             // TODO get material somehow
     //             material = ""
 
-    //             // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-    //             // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+    //             // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+    //             // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
     //         };
     //          var wallRev = new PolygonWall {
     //             id = id,
@@ -668,8 +668,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //             // TODO get material somehow
     //             material = ""
 
-    //             // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-    //             // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+    //             // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+    //             // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
     //         };
     //         var door = new ?? {
 
@@ -715,8 +715,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // material = connectionProps?.openFromWallMaterial?.name
             material = material.name,
 
-            material_tiling_x_divisor = len / material.mainTextureScale.x,
-            material_tiling_y_divisor = height / material.mainTextureScale.y
+            materialTilingXDivisor = len / material.mainTextureScale.x,
+            materialTilingYDivisor = height / material.mainTextureScale.y
         };
 
     }
@@ -742,8 +742,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                 polygon = poly,
                 material = material.name,
-                material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-                material_tiling_y_divisor = box.size.y / material.mainTextureScale.y
+                materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+                materialTilingYDivisor = box.size.y / material.mainTextureScale.y
             };
         }
         ).ToList();
