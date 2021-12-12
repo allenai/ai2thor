@@ -39,7 +39,6 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
-        public string roomId { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
 

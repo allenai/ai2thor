@@ -941,7 +941,13 @@ public class ProceduralRoomEditor : MonoBehaviour {
         house.proceduralParameters.lights = sceneLights.Select(
             l => {
                 RaycastHit hit;
-                var didHit = Physics.Raycast(l.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
+                var didHit = Physics.Raycast(
+                    l.transform.position,
+                    -Vector3.up,
+                    out hit,
+                    Mathf.Infinity,
+                    LayerMask.GetMask("NonInteractive")
+                );
                 string room = "";
                 if (didHit) {
                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
@@ -969,7 +975,6 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 }
                 return new LightParameters() {
                     id = l.gameObject.name,
-                    roomId = room,
                     type = LightType.GetName(typeof(LightType), l.type),
                     position = l.transform.position,
                     rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
