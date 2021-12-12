@@ -1507,7 +1507,7 @@ namespace Thor.Procedural {
                     light.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lightParams.shadow.type, ignoreCase: true);
                     light.shadowBias = lightParams.shadow.bias;
                     light.shadowNormalBias = lightParams.shadow.normal_bias;
-                    light.shadowNearPlane = lightParams.shadow.near_plane;
+                    light.shadowNearPlane = lightParams.shadow.nearPlane;
                     light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
                 }
                 go.transform.parent = lightingRoot.transform;

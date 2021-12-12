@@ -64,7 +64,7 @@ namespace Thor.Procedural.Data {
 
         public float normal_bias { get; set; }
         public float bias { get; set; }
-        public float near_plane { get; set; }
+        public float nearPlane { get; set; }
         public string resolution { get; set; }
 
     }

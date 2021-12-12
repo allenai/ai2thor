@@ -936,7 +936,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //                         type = Enum.GetName(typeof(LightShadows), l.shadows),
     //                         normal_bias = l.shadowNormalBias,
     //                         bias = l.shadowBias,
-    //                         near_plane = l.shadowNearPlane,
+    //                         nearPlane = l.shadowNearPlane,
     //                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
     //                     };
     //                 }
@@ -1191,7 +1191,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     type = Enum.GetName(typeof(LightShadows), l.shadows),
                     normal_bias = l.shadowNormalBias,
                     bias = l.shadowBias,
-                    near_plane = l.shadowNearPlane,
+                    nearPlane = l.shadowNearPlane,
                     resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
                 };
             }
