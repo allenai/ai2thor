@@ -62,7 +62,6 @@ namespace Thor.Procedural.Data {
         public float bias { get; set; }
         public float nearPlane { get; set; }
         public string resolution { get; set; }
-
     }
 
     [Serializable]
@@ -165,7 +164,8 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
-        public bool empty { get; set; }
+
+        public bool empty { get; set; } = false;
 
         public float materialTilingXDivisor = 1.0f;
         public float materialTilingYDivisor = 1.0f;
