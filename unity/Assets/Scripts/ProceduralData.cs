@@ -49,7 +49,7 @@ namespace Thor.Procedural.Data {
 
         public AxisAngleRotation rotation;
         public float intensity { get; set; }
-        public float indirect_multiplier { get; set; }
+        public float indirectMultiplier { get; set; }
         public float range { get; set; }
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;

@@ -1034,7 +1034,7 @@ namespace Thor.Procedural {
 
         public static WallProperties setFloorProperties(GameObject gameObject, Wall wall) {
             var wallProps = gameObject.AddComponent<WallProperties>();
-            wallProps.RoomId = wall.room_id;
+            wallProps.RoomId = wall.roomId;
             return wallProps;
         }
 
@@ -1158,7 +1158,7 @@ namespace Thor.Procedural {
                 height = maxY - p0.y,
                 materialId = wall.material,
                 empty = wall.empty,
-                room_id = wall.room_id,
+                roomId = wall.roomId,
                 hole = hole,
                 material_tiling_x_divisor = wall.material_tiling_x_divisor,
                 material_tiling_y_divisor = wall.material_tiling_y_divisor,
@@ -1256,7 +1256,7 @@ namespace Thor.Procedural {
             //var m = house.rooms.Select(r => r.floor_polygon.Select((p, i) => (p, i)));
 
             // var wallsByRoom = house.walls
-            // .GroupBy(w => w.room_id)
+            // .GroupBy(w => w.roomId)
             // .ToDictionary(g => g.Key, g => g.Select(w => polygonWallToSimpleWall(w, holes)))
             // .Select(
             //     pair => {
@@ -1500,7 +1500,7 @@ namespace Thor.Procedural {
                 light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
                 light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
                 light.intensity = lightParams.intensity;
-                light.bounceIntensity = lightParams.indirect_multiplier;
+                light.bounceIntensity = lightParams.indirectMultiplier;
                 light.range = lightParams.range;
                 if (lightParams.shadow != null) {
                     light.shadowStrength = lightParams.shadow.strength;
