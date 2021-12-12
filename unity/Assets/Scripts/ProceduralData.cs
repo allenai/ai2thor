@@ -275,7 +275,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralHouse {
-        public ProceduralParameters procedural_parameters { get; set; }
+        public ProceduralParameters proceduralParameters { get; set; }
         public string id { get; set; }
         public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
         public List<PolygonWall> walls { get; set; } = new List<PolygonWall>();

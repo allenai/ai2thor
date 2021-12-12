@@ -4231,7 +4231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         .Concat(
                             house.walls.Select(w => w.material)
                         )
-                ).Concat(new List<string>() { house.procedural_parameters.ceilingMaterial })
+                ).Concat(new List<string>() { house.proceduralParameters.ceilingMaterial })
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
             if (missingIds.Count() > 0) {

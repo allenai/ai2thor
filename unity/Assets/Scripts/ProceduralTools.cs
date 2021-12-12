@@ -1241,9 +1241,9 @@ namespace Thor.Procedural {
            Vector3? position = null
        ) {
             string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultHouseRootObjectName;
-            float receptacleHeight = house.procedural_parameters.receptacleHeight;
-            float floorColliderThickness = house.procedural_parameters.floorColliderThickness;
-            string ceilingMaterialId = house.procedural_parameters.ceilingMaterial;
+            float receptacleHeight = house.proceduralParameters.receptacleHeight;
+            float floorColliderThickness = house.proceduralParameters.floorColliderThickness;
+            string ceilingMaterialId = house.proceduralParameters.ceilingMaterial;
 
             var windowsAndDoors = house.doors.Select(d => d as WallRectangularHole).Concat(house.windows);
             var holes = windowsAndDoors
@@ -1389,7 +1389,7 @@ namespace Thor.Procedural {
             // generate ceiling
             if (ceilingMaterialId != "") {
                 var ceilingGameObject = createSimObjPhysicsGameObject(DefaultCeilingRootObjectName, new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
-                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.procedural_parameters.ceilingBackFaces);
+                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.proceduralParameters.ceilingBackFaces);
 
                 StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
                 so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
@@ -1400,7 +1400,7 @@ namespace Thor.Procedural {
                 // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
                 
                 var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
-                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.procedural_parameters.ceilingColor, dimensions, house.procedural_parameters.ceilingMaterialTilingXDivisor, house.procedural_parameters.ceilingMaterialTilingYDivisor, 0.0f, 0.0f, house.procedural_parameters.unlitCeiling);
+                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.proceduralParameters.ceilingColor, dimensions, house.proceduralParameters.ceilingMaterialTilingXDivisor, house.proceduralParameters.ceilingMaterialTilingYDivisor, 0.0f, 0.0f, house.proceduralParameters.unlitCeiling);
 
                 tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
@@ -1489,7 +1489,7 @@ namespace Thor.Procedural {
 
             var lightingRoot = new GameObject(DefaultLightingRootName);
 
-            foreach (var lightParams in house.procedural_parameters.lights) {
+            foreach (var lightParams in house.proceduralParameters.lights) {
                 var go = new GameObject(lightParams.id);
                 go.transform.position = lightParams.position;
                 if (lightParams.rotation != null) {
@@ -1514,7 +1514,7 @@ namespace Thor.Procedural {
 
             }
 
-            foreach (var probe in house.procedural_parameters.reflections) {
+            foreach (var probe in house.proceduralParameters.reflections) {
                 var go = new GameObject(probe.id);
                 go.transform.position = probe.position;
                 
@@ -1529,9 +1529,9 @@ namespace Thor.Procedural {
                   go.transform.parent = lightingRoot.transform;
             }
 
-            buildNavMesh(floorGameObject, house.procedural_parameters.navmeshVoxelSize);
+            buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
 
-            RenderSettings.skybox = materialDb.getAsset(house.procedural_parameters.skyboxId);
+            RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
 
             //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
 

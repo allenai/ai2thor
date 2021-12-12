@@ -799,7 +799,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         // house.doors = doors.ToList();
         // house.windows = windows.ToList();
         return new ProceduralHouse {
-            procedural_parameters = house.procedural_parameters,
+            proceduralParameters = house.proceduralParameters,
             id = house.id,
             rooms = house.rooms,
             walls = wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList(),
@@ -910,9 +910,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
     //         var gatheredLights = new List<LightParameters>();
 
-    //         //this.loadedHouse.procedural_parameters.lights = new List<LightParameters>();
+    //         //this.loadedHouse.proceduralParameters.lights = new List<LightParameters>();
 
-    //         this.loadedHouse.procedural_parameters.lights = sceneLights.Select(l => {
+    //         this.loadedHouse.proceduralParameters.lights = sceneLights.Select(l => {
     //              RaycastHit hit;
     //                 var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
     //                 string room = "";
@@ -982,25 +982,25 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         // ).ToList();
     //         //Debug.Log(gatheredLights.Count);
 
-    //         //this.loadedHouse.procedural_parameters.lights = new List<LightParameters>() {gatheredLights[0]};
-    //         //this.loadedHouse.procedural_parameters.lights.
+    //         //this.loadedHouse.proceduralParameters.lights = new List<LightParameters>() {gatheredLights[0]};
+    //         //this.loadedHouse.proceduralParameters.lights.
 
-    //         // this.loadedHouse.procedural_parameters.lights = new List<LightParameters>(gatheredLights.Count);
-    //          //this.loadedHouse.procedural_parameters.lights.AddRange(Enumerable.Repeat(this.loadedHouse.procedural_parameters.lights[0], 12));
+    //         // this.loadedHouse.proceduralParameters.lights = new List<LightParameters>(gatheredLights.Count);
+    //          //this.loadedHouse.proceduralParameters.lights.AddRange(Enumerable.Repeat(this.loadedHouse.proceduralParameters.lights[0], 12));
 
-    //         //  this.loadedHouse.procedural_parameters = new ProceduralParameters() {
+    //         //  this.loadedHouse.proceduralParameters = new ProceduralParameters() {
     //         //     lights = gatheredLights
     //         //  };
 
 
     //         // for (int i = 0; i < gatheredLights.Count; i++) {
     //         //     Debug.Log("Light copy: " + i);
-    //         //     this.loadedHouse.procedural_parameters.lights[i] =gatheredLights[i];
+    //         //     this.loadedHouse.proceduralParameters.lights[i] =gatheredLights[i];
     //         // }
-    //         //loadedHouse.procedural_parameters.lights = gatheredLights;
+    //         //loadedHouse.proceduralParameters.lights = gatheredLights;
 
 
-    //         // loadedHouse.procedural_parameters.lights = sceneLights.Select(l => {
+    //         // loadedHouse.proceduralParameters.lights = sceneLights.Select(l => {
     //         //     RaycastHit hit;
     //         //     //var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
     //         //     string room = "";
@@ -1036,9 +1036,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         // };}).ToList();
 
 
-    //         loadedHouse.procedural_parameters.skyboxId = RenderSettings.skybox.name;
+    //         loadedHouse.proceduralParameters.skyboxId = RenderSettings.skybox.name;
 
-    //         Debug.Log("Lights " + this.loadedHouse.procedural_parameters.lights.Count);
+    //         Debug.Log("Lights " + this.loadedHouse.proceduralParameters.lights.Count);
 
     //         var jsonResolver = new ShouldSerializeContractResolver();
     //                 var outJson = JObject.FromObject(this.loadedHouse,
@@ -1165,9 +1165,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var gatheredLights = new List<LightParameters>();
 
-        //house.procedural_parameters.lights = new List<LightParameters>();
+        //house.proceduralParameters.lights = new List<LightParameters>();
 
-        house.procedural_parameters.lights = sceneLights.Select(l => {
+        house.proceduralParameters.lights = sceneLights.Select(l => {
             RaycastHit hit;
             var didHit = Physics.Raycast(l.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
             string room = "";
@@ -1216,7 +1216,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var probes = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<ReflectionProbe>().Concat(
             GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<ReflectionProbe>()
         );
-        house.procedural_parameters.reflections = probes.Select( probeComp => {
+        house.proceduralParameters.reflections = probes.Select( probeComp => {
             return new ProbeParameters() {
                 background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
                 intensity = probeComp.intensity,
@@ -1228,7 +1228,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             };
         }).ToList();
 
-        foreach (var probe in house.procedural_parameters.reflections) {
+        foreach (var probe in house.proceduralParameters.reflections) {
                 var go = new GameObject(probe.id);
                 go.transform.position = probe.position;
                 
@@ -1243,10 +1243,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
 
 
-        house.procedural_parameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
-        house.procedural_parameters.skyboxId = RenderSettings.skybox.name;
+        house.proceduralParameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
+        house.proceduralParameters.skyboxId = RenderSettings.skybox.name;
 
-        Debug.Log("Lights " + house.procedural_parameters.lights.Count);
+        Debug.Log("Lights " + house.proceduralParameters.lights.Count);
 
         var jsonResolver = new ShouldSerializeContractResolver();
         var outJson = JObject.FromObject(
