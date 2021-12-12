@@ -1514,19 +1514,21 @@ namespace Thor.Procedural {
 
             }
 
-            foreach (var probe in house.proceduralParameters.reflections) {
-                var go = new GameObject(probe.id);
-                go.transform.position = probe.position;
-                
-                var probeComp = go.AddComponent<ReflectionProbe>();
-                probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
-                probeComp.center = probe.boxOffset;
-                probeComp.intensity = probe.intensity;
-                probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
-                probeComp.size = probe.boxSize;
-                probeComp.shadowDistance = probe.shadow_distance;
+            if (house.proceduralParameters.reflections != null) {
+                foreach (var probe in house.proceduralParameters.reflections) {
+                    var go = new GameObject(probe.id);
+                    go.transform.position = probe.position;
 
-                  go.transform.parent = lightingRoot.transform;
+                    var probeComp = go.AddComponent<ReflectionProbe>();
+                    probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
+                    probeComp.center = probe.boxOffset;
+                    probeComp.intensity = probe.intensity;
+                    probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+                    probeComp.size = probe.boxSize;
+                    probeComp.shadowDistance = probe.shadow_distance;
+
+                    go.transform.parent = lightingRoot.transform;
+                }
             }
 
             buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
