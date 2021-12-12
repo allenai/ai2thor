@@ -33,8 +33,8 @@ namespace Thor.Procedural.Data {
         public string id;
         public Vector3 position;
         public float intensity;
-        public Vector3 box_size;
-        public Vector3 box_offset;
+        public Vector3 boxSize;
+        public Vector3 boxOffset;
         public float shadow_distance;
         public SerializableColor background;
     }
@@ -100,18 +100,18 @@ namespace Thor.Procedural.Data {
     public class Door : WallRectangularHole {
         public string id { get; set; }
         public Margin margin { get; set; }
-        public string room_0 { get; set; }
-        public string room_1 { get; set; }
-        public string wall_0 { get; set; }
-        public string wall_1 { get; set; }
-        public BoundingBox bounding_box { get; set; }
+        public string room0 { get; set; }
+        public string room1 { get; set; }
+        public string wall0 { get; set; }
+        public string wall1 { get; set; }
+        public BoundingBox boundingBox { get; set; }
 
-        public List<VectorXZ> axes_xz { get; set; }
+        public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
 
         public bool open { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
     }
@@ -119,22 +119,22 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralParameters {
-        public float floor_collider_thickness { get; set; }
-        public float receptacle_height { get; set; }
-        public string skybox_id { get; set; }
+        public float floorColliderThickness { get; set; }
+        public float receptacleHeight { get; set; }
+        public string skyboxId { get; set; }
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
         public List<ProbeParameters> reflections;
 
-        public string ceiling_material { get; set; }
+        public string ceilingMaterial { get; set; }
         public float? ceilingMaterialTilingXDivisor = null;
         public float? ceilingMaterialTilingYDivisor = null;
-        public SerializableColor ceiling_color { get; set; } = null;
-        public float navmesh_voxel_size { get; set; }
-        public bool ceiling_back_faces { get; set; }
+        public SerializableColor ceilingColor { get; set; } = null;
+        public float navmeshVoxelSize { get; set; }
+        public bool ceilingBackFaces { get; set; }
 
-        public bool unlit_ceiling { get; set; }
+        public bool unlitCeiling { get; set; }
     }
 
     [Serializable]
@@ -150,13 +150,13 @@ namespace Thor.Procedural.Data {
     public class RoomHierarchy {
         public string id { get; set; }
         public string type { get; set; }
-        public string floor_material { get; set; }
+        public string floorMaterial { get; set; }
         public float? floorMaterialTilingXDivisor = null;
         public float? floorMaterialTilingYDivisor = null;
 
-        public SerializableColor floor_color { get; set; } = null;
+        public SerializableColor floorColor { get; set; } = null;
         // public float y { get; set; }
-        public List<Vector3> floor_polygon { get; set; }
+        public List<Vector3> floorPolygon { get; set; }
         public List<Ceiling> ceilings { get; set; }
         public List<RoomHierarchy> rooms = null;
     }
@@ -201,17 +201,17 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class Window : WallRectangularHole {
         public string id { get; set; }
-        public string room_0 { get; set; }
-        public string room_1 { get; set; }
-        public BoundingBox bounding_box { get; set; }
+        public string room0 { get; set; }
+        public string room1 { get; set; }
+        public BoundingBox boundingBox { get; set; }
         public Margin margin { get; set; }
-        public string wall_0 { get; set; }
-        public string wall_1 { get; set; }
+        public string wall0 { get; set; }
+        public string wall1 { get; set; }
         public bool openable { get; set; }
         public bool open { get; set; }
-        public List<VectorXZ> axes_xz { get; set; }
+        public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
     }
@@ -253,12 +253,12 @@ namespace Thor.Procedural.Data {
         public Vector3 position { get; set; }
         public AxisAngleRotation rotation { get; set; }
         public bool kinematic { get; set; } //should the rigidbody be kinematic or not
-        public BoundingBox bounding_box { get; set; }
+        public BoundingBox boundingBox { get; set; }
         public string room { get; set; }
         public List<HouseObject> children { get; set; }
         public List<Taxonomy> types { get; set; }
-        public string asset_id { get; set; } //name of prefab asset from asset database
-        public string navmesh_area { get; set; }
+        public string assetId { get; set; } //name of prefab asset from asset database
+        public string navmeshArea { get; set; }
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;
@@ -269,7 +269,7 @@ namespace Thor.Procedural.Data {
     public class Roof {
         public float thickness { get; set; }
         public string material { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
     }
 
     [Serializable]
@@ -301,13 +301,13 @@ namespace Thor.Procedural.Data {
     public interface WallRectangularHole {
 
         string id { get; set; }
-        string asset_id { get; set; }
-        string room_0 { get; set; }
-        string room_1 { get; set; }
-        string wall_0 { get; set; }
-        string wall_1 { get; set; }
+        string assetId { get; set; }
+        string room0 { get; set; }
+        string room1 { get; set; }
+        string wall0 { get; set; }
+        string wall1 { get; set; }
 
-        BoundingBox bounding_box { get; set; }
+        BoundingBox boundingBox { get; set; }
 
         Margin margin { get; set; }
 

@@ -4227,11 +4227,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
                     r => r.ceilings.Select(c => c.material).Concat(
-                                new List<string>() { r.floor_material })
+                                new List<string>() { r.floorMaterial })
                         .Concat(
                             house.walls.Select(w => w.material)
                         )
-                ).Concat(new List<string>() { house.procedural_parameters.ceiling_material })
+                ).Concat(new List<string>() { house.procedural_parameters.ceilingMaterial })
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
             if (missingIds.Count() > 0) {

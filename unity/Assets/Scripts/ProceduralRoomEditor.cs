@@ -56,7 +56,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     id = $"{Enum.GetName(typeof(SimObjType), simObj.ObjType)}_{index}"
                 })).ToList();
             foreach (var namedObj in namedObjects) {
-                Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}");
+                Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}");
                 namedObj.simObj.assetID = namedObj.assetId;
                 namedObj.simObj.objectID = namedObj.id;
                 namedObj.simObj.gameObject.name = namedObj.id;
@@ -64,7 +64,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             }
             return namedObjects;
             // foreach (var namedObj in this.namedSimObjects) {
-            //     Debug.Log($" Renamed obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}" );
+            //     Debug.Log($" Renamed obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}" );
             // }
         } else {
             Debug.LogError($"No root object '{ProceduralTools.DefaultObjectsRootName}'");
@@ -280,7 +280,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             //     var t = new Vector3(num.x / direction.x, num.y / direction.y, num.z / direction.z);
             //     var onLine = Math.Abs(t.x - t.z) < eps;
 
-            //      if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+            //      if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
             //         Debug.Log($"************* wall {name}, p {p}, orig {origin}, diff {(p - origin)} dir {direction} PROJ {proyLength} num {num} t.x {t.x}, t.y {t.y}, t.z {t.z} onLine {onLine}" );
             //     }
             //     return onLine && t.x <= (1.0f+tEps) && t.x >= (0.0f-tEps); 
@@ -298,7 +298,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                 var onLine = Math.Abs(dot0) >= 1.0f - eps;
 
-                //  if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+                //  if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
                 // if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44") {
                 if (name == "wall_2_6" || name == "wall_2_7" || name == "wall_2_8" && d.gameObject.name == "Window_5") {
 
@@ -345,7 +345,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             },
                 (min, next) => {
                     var name = next.collider.gameObject.name;
-                // if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+                // if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
                 if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44") {
                         Debug.Log($"########## -- connection {d.gameObject.name} wall Left {name} p1SqrDistance {next.p1SqrDistance}, normal {Vector3.Dot(next.collider.transform.forward, connectionNormal)} !onLine {!pointOnWallLine(next.p1, -dirNormalized, p1World, next.collider.gameObject.name)}");
                     }
@@ -509,9 +509,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
             Debug.Log($"............. Door {xLen} p0To {p0ToConnection} ");
 
 
-            var asset_id = !string.IsNullOrEmpty(d.assetID) ? d.assetID : PrefabNameRevert.GetPrefabAssetName(d.gameObject);
+            var assetId = !string.IsNullOrEmpty(d.assetID) ? d.assetID : PrefabNameRevert.GetPrefabAssetName(d.gameObject);
 
-            // asset_id = asset_id == null ? d.assetID : asset_id;
+            // assetId = assetId == null ? d.assetID : assetId;
 
             if (filterType == SimObjType.Doorway) {
 
@@ -521,19 +521,19 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     id = id,
 
-                    room_0 = connectionProps?.OpenFromRoomId,
-                    room_1 = connectionProps?.OpenToRoomId,
-                    wall_0 = wall.id,
-                    wall_1 = wallRev.id,
-                    bounding_box = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
+                    room0 = connectionProps?.OpenFromRoomId,
+                    room1 = connectionProps?.OpenToRoomId,
+                    wall0 = wall.id,
+                    wall1 = wallRev.id,
+                    boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
 
-                    //bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
-                    // bounding_box = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
+                    //boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = asset_id
+                    assetId = assetId
 
                 };
             } else if (filterType == SimObjType.Window) {
@@ -542,21 +542,21 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     id = id,
 
-                    room_0 = connectionProps?.OpenFromRoomId,
-                    room_1 = connectionProps?.OpenToRoomId,
-                    wall_0 = wall.id,
-                    wall_1 = wallRev.id,
-                    bounding_box = new Thor.Procedural.Data.BoundingBox {
+                    room0 = connectionProps?.OpenFromRoomId,
+                    room1 = connectionProps?.OpenToRoomId,
+                    wall0 = wall.id,
+                    wall1 = wallRev.id,
+                    boundingBox = new Thor.Procedural.Data.BoundingBox {
                         min = new Vector3(xLen, yMin, box.size.z / 2.0f),
                         max = new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f)
                     },
 
-                    // bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
 
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = asset_id
+                    assetId = assetId
 
                 };
             }
@@ -565,16 +565,16 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
             //      id = id,
 
-            //     room_0 = connectionProps?.OpenFromRoomId,
-            //     room_1 = connectionProps?.OpenToRoomId,
-            //     wall_0 = wall.id,
-            //     wall_1 = wallRev.id,
-            //     bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+            //     room0 = connectionProps?.OpenFromRoomId,
+            //     room1 = connectionProps?.OpenToRoomId,
+            //     wall0 = wall.id,
+            //     wall1 = wallRev.id,
+            //     boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
             //     type = "???",
             //     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
             //     // TODO
             //     open = false,
-            //     asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+            //     assetId = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
             // };
             box.enabled = false;
@@ -675,16 +675,16 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
     //              id = $"wall_{id}_back",
 
-    //             room_0 = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
-    //             room_1 = d.GetComponentInChildren<ConnectionProperties>().OpenToRoomId,
-    //             wall_0 = wall.id,
-    //             wall_1 = wallRev.id,
-    //             bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+    //             room0 = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             room1 = d.GetComponentInChildren<ConnectionProperties>().OpenToRoomId,
+    //             wall0 = wall.id,
+    //             wall1 = wallRev.id,
+    //             boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
     //             type = "???",
     //             openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
     //             // TODO
     //             open = false,
-    //             asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+    //             assetId = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
     //         } as WallRectangularHole;
     //         return new ConnectionGameObjects<T>{
@@ -771,7 +771,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var wallWithInsertLocation = allNewConnections.SelectMany(s => s.walls).Select(wallIdPair => {
 
             //    Debug.Log($"All Walls: {string.Join(", ", wallsJson.Select(w => w.id))}");
-            // Debug.Log("Wall " +  wallIdPair.wall.id + " search after: '" + wallIdPair.afterWallId + "' find: " + wallsJson.FirstOrDefault( w => string.Equals(w.id, wallIdPair.afterWallId,StringComparison.InvariantCultureIgnoreCase ) )+ " ." + $" find '{string.Join(", ", wallsJson.Where(w => string.Equals(w.id, "wall_0_17")))}'");
+            // Debug.Log("Wall " +  wallIdPair.wall.id + " search after: '" + wallIdPair.afterWallId + "' find: " + wallsJson.FirstOrDefault( w => string.Equals(w.id, wallIdPair.afterWallId,StringComparison.InvariantCultureIgnoreCase ) )+ " ." + $" find '{string.Join(", ", wallsJson.Where(w => string.Equals(w.id, "wall0_17")))}'");
             return (
                 wall: wallIdPair.wall,
                 index:
@@ -870,10 +870,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //                     position = obj.simObj.transform.position,
     //                     rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
     //                     kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
-    //                     bounding_box = new BoundingBox() { min =  bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
+    //                     boundingBox = new BoundingBox() { min =  bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
     //                     room = room,
     //                     types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
-    //                     asset_id = obj.assetId
+    //                     assetId = obj.assetId
     //                 };
     //             }
     //             ).ToList();
@@ -1036,7 +1036,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         // };}).ToList();
 
 
-    //         loadedHouse.procedural_parameters.skybox_id = RenderSettings.skybox.name;
+    //         loadedHouse.procedural_parameters.skyboxId = RenderSettings.skybox.name;
 
     //         Debug.Log("Lights " + this.loadedHouse.procedural_parameters.lights.Count);
 
@@ -1127,10 +1127,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 position = bb.center,
                 rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
                 kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
-                bounding_box = new BoundingBox() { min = bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
+                boundingBox = new BoundingBox() { min = bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
                 room = room,
                 types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
-                asset_id = obj.assetId
+                assetId = obj.assetId
             };
                 // box.enabled = false;
                 return serializedObj;
@@ -1220,9 +1220,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
             return new ProbeParameters() {
                 background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
                 intensity = probeComp.intensity,
-                box_size = probeComp.size,
+                boxSize = probeComp.size,
                 shadow_distance = probeComp.shadowDistance,
-                box_offset = probeComp.center,
+                boxOffset = probeComp.center,
                 id = probeComp.gameObject.name,
                 position = probeComp.transform.position
             };
@@ -1234,17 +1234,17 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 
                 var probeComp = go.AddComponent<ReflectionProbe>();
                 probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
-                probeComp.center = probe.box_offset;
+                probeComp.center = probe.boxOffset;
                 probeComp.intensity = probe.intensity;
                 probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
-                probeComp.size = probe.box_size;
+                probeComp.size = probe.boxSize;
                 probeComp.shadowDistance = probe.shadow_distance;
             }
 
 
 
-        house.procedural_parameters.ceiling_material = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
-        house.procedural_parameters.skybox_id = RenderSettings.skybox.name;
+        house.procedural_parameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
+        house.procedural_parameters.skyboxId = RenderSettings.skybox.name;
 
         Debug.Log("Lights " + house.procedural_parameters.lights.Count);
 
