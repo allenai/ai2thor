@@ -1028,7 +1028,7 @@ namespace Thor.Procedural {
 
         public static RoomProperties setRoomProperties(GameObject gameObject, RoomHierarchy room) {
             var roomProps = gameObject.AddComponent<RoomProperties>();
-            roomProps.RoomType = room.type;
+            roomProps.RoomType = room.roomType;
             return roomProps;
         }
 

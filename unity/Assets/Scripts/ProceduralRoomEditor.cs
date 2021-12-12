@@ -832,233 +832,6 @@ public class ProceduralRoomEditor : MonoBehaviour {
 #endif        
     }
 
-
-    // [Button(Expanded=true)] 
-    // public void SerializeScene(string outFilename) {
-    //     // var path = BuildLayoutPath(layoutJSONFilename);
-    //     // var jsonStr = System.IO.File.ReadAllText(path);
-    //     // JObject jsonObj = JObject.Parse(jsonStr);
-    //     // this.loadedHouse = jsonObj.ToObject<ProceduralHouse>();
-
-    //     if (this.loadedHouse != null) {
-    //         var outPath = BuildLayoutPath(outFilename);
-    //         Debug.Log($"Serializing to: '{outFilename}'");
-
-
-    //         // var house = jsonObj.ToObject<ProceduralHouse>();
-
-
-    //         if (this.namedSimObjects != null) {
-    //             var assetDb = ProceduralTools.getAssetMap();
-    //             this.loadedHouse.objects = this.namedSimObjects.Select(obj => {
-    //                 Vector3 axis;
-    //                 float degrees; 
-    //                 obj.simObj.transform.rotation.ToAngleAxis(out degrees, out axis);
-    //                 var bb = obj.simObj.AxisAlignedBoundingBox;
-    //                 RaycastHit hit;
-    //                 var didHit = Physics.Raycast(obj.simObj.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //                 string room = "";
-    //                 if (didHit) {
-    //                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //                 }
-    //                 Debug.Log("Processing " + obj.assetId + " ...");
-    //                 if (!assetDb.ContainsKey(obj.assetId)) {
-    //                     Debug.LogError($"Asset '{obj.assetId}' not in AssetLibrary, so it won't be able to be loaded as part of a procedural scene. Save the asset and rebuild asset library.");
-    //                 }
-    //                 return new HouseObject(){
-    //                     id = obj.id,
-    //                     position = obj.simObj.transform.position,
-    //                     rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
-    //                     kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
-    //                     boundingBox = new BoundingBox() { min =  bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
-    //                     room = room,
-    //                     types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
-    //                     assetId = obj.assetId
-    //                 };
-    //             }
-    //             ).ToList();
-    //         }
-
-    //         GameObject floorRoot; 
-    //         floorRoot = GameObject.Find(loadedHouse.id);
-    //         if (floorRoot == null) {
-    //             floorRoot = GameObject.Find(ProceduralTools.DefaultHouseRootObjectName);
-    //         }
-
-    //         if (floorRoot == null) {
-    //             Debug.LogError($"Badly constructed scene, no root layout 'id' : {loadedHouse.id} or '{ProceduralTools.DefaultHouseRootObjectName}' gameobject");
-    //         }
-
-    //         var roomIdToProps = floorRoot.GetComponentsInChildren<RoomProperties>()
-    //             .ToDictionary(
-    //                 rp => rp.GetComponentInParent<SimObjPhysics>().ObjectID,
-    //                 rp => new {
-    //                     roomProps = rp,
-    //                     simOb = rp.GetComponentInParent<SimObjPhysics>()
-    //         });
-
-    //         loadedHouse.rooms = loadedHouse.rooms.Select(r => {
-    //             r.type = roomIdToProps[r.id].roomProps.RoomType;
-    //             // TODO add more room annotations here
-    //             return r;
-    //         }).ToList();
-
-    //         var sceneLights = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<Light>().Concat( 
-    //             GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<Light>()
-    //         );
-    //         Debug.Log("Scene light count " + sceneLights.Count());
-
-    //         var gatheredLights = new List<LightParameters>();
-
-    //         //this.loadedHouse.proceduralParameters.lights = new List<LightParameters>();
-
-    //         this.loadedHouse.proceduralParameters.lights = sceneLights.Select(l => {
-    //              RaycastHit hit;
-    //                 var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //                 string room = "";
-    //                 if (didHit) {
-    //                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //                 }
-    //                 // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
-    //                 string objectLink = "";
-    //                 var parentSim = l.GetComponentInParent<SimObjPhysics>();
-    //                 //SimObjType.Lamp
-    //                 if( parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
-    //                     objectLink = parentSim.ObjectID;
-    //                 }
-    //                 // if (didHit) {
-    //                 //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-    //                 // }
-    //                 ShadowParameters sp = null;
-    //                 if (l.shadows != LightShadows.None) {
-    //                     sp = new ShadowParameters() {
-    //                         strength = l.shadowStrength,
-    //                         type = Enum.GetName(typeof(LightShadows), l.shadows),
-    //                         normalBias = l.shadowNormalBias,
-    //                         bias = l.shadowBias,
-    //                         nearPlane = l.shadowNearPlane,
-    //                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
-    //                     };
-    //                 }
-    //                 return new LightParameters()  {
-    //                     id = l.gameObject.name,
-    //                     roomId = room,
-    //                     type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-    //                     position = l.transform.position,
-    //                     //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //                     intensity = l.intensity,
-    //                     indirectMultiplier = l.bounceIntensity,
-    //                     range = l.range,
-    //                     rgb = new SerializableColor() {r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a},
-    //                     shadow = sp,
-    //                     objectId = objectLink
-    //             };
-    //         }).ToList();
-
-
-
-
-
-    //         // var m = sceneLights.Select(l => 
-    //         //      new LightParameters()  {
-    //         //             id = l.gameObject.name,
-    //         //             roomId = "room",
-    //         //             type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-    //         //             position = l.transform.position,
-    //         //             rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //         //             intensity = l.intensity,
-    //         //             range = l.range,
-    //         //             rgb = l.color,
-    //         //             shadow = null,
-    //         //             objectId = ""
-
-    //         //     }
-    //         // ).ToList();
-    //         //Debug.Log(gatheredLights.Count);
-
-    //         //this.loadedHouse.proceduralParameters.lights = new List<LightParameters>() {gatheredLights[0]};
-    //         //this.loadedHouse.proceduralParameters.lights.
-
-    //         // this.loadedHouse.proceduralParameters.lights = new List<LightParameters>(gatheredLights.Count);
-    //          //this.loadedHouse.proceduralParameters.lights.AddRange(Enumerable.Repeat(this.loadedHouse.proceduralParameters.lights[0], 12));
-
-    //         //  this.loadedHouse.proceduralParameters = new ProceduralParameters() {
-    //         //     lights = gatheredLights
-    //         //  };
-
-
-    //         // for (int i = 0; i < gatheredLights.Count; i++) {
-    //         //     Debug.Log("Light copy: " + i);
-    //         //     this.loadedHouse.proceduralParameters.lights[i] =gatheredLights[i];
-    //         // }
-    //         //loadedHouse.proceduralParameters.lights = gatheredLights;
-
-
-    //         // loadedHouse.proceduralParameters.lights = sceneLights.Select(l => {
-    //         //     RaycastHit hit;
-    //         //     //var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //         //     string room = "";
-    //         //     // if (didHit) {
-    //         //     //     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //         //     // }
-    //         //     //didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 8);
-    //         //     string objectLink = "";
-    //         //     // if (didHit) {
-    //         //     //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-    //         //     // }
-    //         //     ShadowParameters sp = null;
-    //         //     if (l.shadows != LightShadows.None) {
-    //         //         sp = new ShadowParameters() {
-    //         //             strength = l.shadowStrength
-    //         //         };
-    //         //     }
-    //         //     return new LightParameters()  {
-    //         //         id = l.gameObject.name,
-    //         //         roomId = room,
-    //         //         type = Enum.GetName(typeof(LightType), l.type),
-
-
-
-    //         //         position = l.transform.position,
-    //         //         rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //         //         intensity = l.intensity,
-    //         //         range = l.range,
-    //         //         rgb = l.color,
-    //         //         shadow = sp,
-    //         //         objectId = objectLink
-
-    //         // };}).ToList();
-
-
-    //         loadedHouse.proceduralParameters.skyboxId = RenderSettings.skybox.name;
-
-    //         Debug.Log("Lights " + this.loadedHouse.proceduralParameters.lights.Count);
-
-    //         var jsonResolver = new ShouldSerializeContractResolver();
-    //                 var outJson = JObject.FromObject(this.loadedHouse,
-    //                             new Newtonsoft.Json.JsonSerializer() {
-    //                                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-    //                                 ContractResolver = jsonResolver
-    //                             });
-
-    //         Debug.Log($"output json: {outJson.ToString()}");
-    //         System.IO.File.WriteAllText(outPath, outJson.ToString());
-    //     }
-    //     else {
-    //         Debug.LogError("No loaded layout load a layout first");
-    //     }
-
-    // }
-
-
-
-
     [Button(Expanded = true)]
     public void SerializeSceneFromGameObjects(string outFilename) {
         // var path = BuildLayoutPath(layoutJSONFilename);
@@ -1153,7 +926,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 });
 
         house.rooms = house.rooms.Select(r => {
-            r.type = roomIdToProps[r.id].roomProps.RoomType;
+            r.roomType = roomIdToProps[r.id].roomProps.RoomType;
             // TODO add more room annotations here
             return r;
         }).ToList();
@@ -1165,54 +938,51 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var gatheredLights = new List<LightParameters>();
 
-        //house.proceduralParameters.lights = new List<LightParameters>();
-
-        house.proceduralParameters.lights = sceneLights.Select(l => {
-            RaycastHit hit;
-            var didHit = Physics.Raycast(l.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
-            string room = "";
-            if (didHit) {
-                room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-            }
-            // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
-            string objectLink = "";
-            var parentSim = l.GetComponentInParent<SimObjPhysics>();
-            //SimObjType.Lamp
-            if (parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
-                objectLink = parentSim.ObjectID;
-            }
-            // if (didHit) {
-            //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-            // }
-            ShadowParameters sp = null;
-            if (l.shadows != LightShadows.None) {
-                sp = new ShadowParameters() {
-                    strength = l.shadowStrength,
-                    type = Enum.GetName(typeof(LightShadows), l.shadows),
-                    normalBias = l.shadowNormalBias,
-                    bias = l.shadowBias,
-                    nearPlane = l.shadowNearPlane,
-                    resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
+        house.proceduralParameters.lights = sceneLights.Select(
+            l => {
+                RaycastHit hit;
+                var didHit = Physics.Raycast(l.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
+                string room = "";
+                if (didHit) {
+                    room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
+                }
+                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
+                string objectLink = "";
+                var parentSim = l.GetComponentInParent<SimObjPhysics>();
+                //SimObjType.Lamp
+                if (parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
+                    objectLink = parentSim.ObjectID;
+                }
+                // if (didHit) {
+                //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
+                // }
+                ShadowParameters sp = null;
+                if (l.shadows != LightShadows.None) {
+                    sp = new ShadowParameters() {
+                        strength = l.shadowStrength,
+                        type = Enum.GetName(typeof(LightShadows), l.shadows),
+                        normalBias = l.shadowNormalBias,
+                        bias = l.shadowBias,
+                        nearPlane = l.shadowNearPlane,
+                        resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
+                    };
+                }
+                return new LightParameters() {
+                    id = l.gameObject.name,
+                    roomId = room,
+                    type = LightType.GetName(typeof(LightType), l.type),
+                    position = l.transform.position,
+                    rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
+                    //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
+                    intensity = l.intensity,
+                    indirectMultiplier = l.bounceIntensity,
+                    range = l.range,
+                    rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
+                    shadow = sp,
+                    linkedObjectId = objectLink
                 };
             }
-            return new LightParameters() {
-                id = l.gameObject.name,
-                roomId = room,
-                type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-                position = l.transform.position,
-                rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-                //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-                intensity = l.intensity,
-                indirectMultiplier = l.bounceIntensity,
-                range = l.range,
-                rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
-                shadow = sp,
-                objectId = objectLink
-            };
-        }).ToList();
+        ).ToList();
         var probes = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<ReflectionProbe>().Concat(
             GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<ReflectionProbe>()
         );

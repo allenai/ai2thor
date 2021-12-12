@@ -53,7 +53,7 @@ namespace Thor.Procedural.Data {
         public float range { get; set; }
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
-        public string objectId { get; set; }
+        public string linkedObjectId { get; set; }
     }
 
     [Serializable]
@@ -149,7 +149,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class RoomHierarchy {
         public string id { get; set; }
-        public string type { get; set; }
+        public string roomType { get; set; }
         public string floorMaterial { get; set; }
         public float? floorMaterialTilingXDivisor = null;
         public float? floorMaterialTilingYDivisor = null;
