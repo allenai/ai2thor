@@ -441,7 +441,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // }
             //  var wall = new PolygonWall {
             //     id = $"wall_{id}_front",
-            //     room_id = connectionProps?.OpenFromRoomId,
+            //     roomId = connectionProps?.OpenFromRoomId,
             //     polygon = poly,
             //     // TODO get material somehow
             //     // material = connectionProps?.openFromWallMaterial?.name
@@ -452,7 +452,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // };
             //  var wallRev = new PolygonWall {
             //     id = $"wall_{id}_back",
-            //     room_id = connectionProps?.OpenToRoomId,
+            //     roomId = connectionProps?.OpenToRoomId,
             //     polygon = polyRev,
             //     // TODO get material somehow
             //     // material = connectionProps?.openToWallMaterial?.name
@@ -477,7 +477,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             //   var height = 
             var wallRev = new PolygonWall {
                 id = $"wall_{id}_back",
-                room_id = connectionProps?.OpenToRoomId,
+                roomId = connectionProps?.OpenToRoomId,
                 polygon = new List<Vector3>() { wall.polygon[1], wall.polygon[0], wall.polygon[3], wall.polygon[2] },
                 // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
                 // TODO get material somehow
@@ -653,7 +653,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         var id = $"door_{i}";
     //          var wall = new PolygonWall {
     //             id = $"wall_{id}_front",
-    //             room_id = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             roomId = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
     //             polygon = poly,
     //             // TODO get material somehow
     //             material = ""
@@ -663,7 +663,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         };
     //          var wallRev = new PolygonWall {
     //             id = id,
-    //             room_id = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             roomId = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
     //             polygon = polyRev,
     //             // TODO get material somehow
     //             material = ""
@@ -709,7 +709,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var len = (p1 - p0).magnitude;
         return new PolygonWall {
             id = id,
-            room_id = connectionProps?.OpenFromRoomId,
+            roomId = connectionProps?.OpenFromRoomId,
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
@@ -739,7 +739,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
             return new PolygonWall {
                 id = w.gameObject.name,
-                room_id = w.GetComponentInChildren<WallProperties>().RoomId,
+                roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                 polygon = poly,
                 material = material.name,
                 material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
@@ -942,7 +942,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //                 }
     //                 return new LightParameters()  {
     //                     id = l.gameObject.name,
-    //                     room_id = room,
+    //                     roomId = room,
     //                     type = LightType.GetName(typeof(LightType), l.type),
 
 
@@ -965,7 +965,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         // var m = sceneLights.Select(l => 
     //         //      new LightParameters()  {
     //         //             id = l.gameObject.name,
-    //         //             room_id = "room",
+    //         //             roomId = "room",
     //         //             type = LightType.GetName(typeof(LightType), l.type),
 
 
@@ -1020,7 +1020,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         //     }
     //         //     return new LightParameters()  {
     //         //         id = l.gameObject.name,
-    //         //         room_id = room,
+    //         //         roomId = room,
     //         //         type = Enum.GetName(typeof(LightType), l.type),
 
 
@@ -1197,7 +1197,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             }
             return new LightParameters() {
                 id = l.gameObject.name,
-                room_id = room,
+                roomId = room,
                 type = LightType.GetName(typeof(LightType), l.type),
 
 

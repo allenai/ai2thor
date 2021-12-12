@@ -43,7 +43,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
-        public string room_id { get; set; }
+        public string roomId { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
 
@@ -170,7 +170,7 @@ namespace Thor.Procedural.Data {
     public class PolygonWall {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
-        public string room_id { get; set; }
+        public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
         public bool empty { get; set; }
@@ -332,7 +332,7 @@ namespace Thor.Procedural.Data {
         public WallRectangularHole hole = null;
         public string materialId;
 
-        public string room_id;
+        public string roomId;
 
         public float material_tiling_x_divisor = 1.0f;
         public float material_tiling_y_divisor = 1.0f;

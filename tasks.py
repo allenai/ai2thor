@@ -3836,7 +3836,7 @@ def create_json(ctx, file_path, output=None):
             [
                 {
                     "id": "wall_{}_{}".format(room_i, wall_indx),
-                    "room_id": "room_{}".format(room_i),
+                    "roomId": "room_{}".format(room_i),
                     "material": wall['materialId'],
                     "empty": wall['empty'] if 'empty' in wall else False,
                     'polygon': wall_to_poly(wall)
@@ -3928,7 +3928,7 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
     with open(file_path, "r") as f:
         obj = json.load(f)
 
-        obj['walls'] = [wall for wall in obj['walls'] if wall['room_id'] == room_id]
+        obj['walls'] = [wall for wall in obj['walls'] if wall['roomId'] == room_id]
         obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
         obj['objects'] = []
 
