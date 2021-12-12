@@ -53,7 +53,7 @@ namespace Thor.Procedural.Data {
         public float range { get; set; }
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
-        public string object_id { get; set; }
+        public string objectId { get; set; }
     }
 
     [Serializable]

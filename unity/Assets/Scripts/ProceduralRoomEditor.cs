@@ -954,7 +954,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //                     range = l.range,
     //                     rgb = new SerializableColor() {r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a},
     //                     shadow = sp,
-    //                     object_id = objectLink
+    //                     objectId = objectLink
     //             };
     //         }).ToList();
 
@@ -976,7 +976,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         //             range = l.range,
     //         //             rgb = l.color,
     //         //             shadow = null,
-    //         //             object_id = ""
+    //         //             objectId = ""
 
     //         //     }
     //         // ).ToList();
@@ -1031,7 +1031,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         //         range = l.range,
     //         //         rgb = l.color,
     //         //         shadow = sp,
-    //         //         object_id = objectLink
+    //         //         objectId = objectLink
 
     //         // };}).ToList();
 
@@ -1210,7 +1210,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 range = l.range,
                 rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
                 shadow = sp,
-                object_id = objectLink
+                objectId = objectLink
             };
         }).ToList();
         var probes = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<ReflectionProbe>().Concat(
