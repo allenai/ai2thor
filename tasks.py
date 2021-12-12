@@ -3863,7 +3863,7 @@ def create_json(ctx, file_path, output=None):
         house = {
             'rooms': rooms,
             'walls': walls,
-            'procedural_parameters': {
+            'proceduralParameters': {
                 'ceilingMaterial': obj['ceilingMaterialId'],
                 "floorColliderThickness": 1.0,
                 "receptacleHeight": 0.7,
