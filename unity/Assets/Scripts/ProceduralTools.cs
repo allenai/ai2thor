@@ -1525,7 +1525,7 @@ namespace Thor.Procedural {
                     probeComp.intensity = probe.intensity;
                     probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
                     probeComp.size = probe.boxSize;
-                    probeComp.shadowDistance = probe.shadow_distance;
+                    probeComp.shadowDistance = probe.shadowDistance;
 
                     go.transform.parent = lightingRoot.transform;
                 }

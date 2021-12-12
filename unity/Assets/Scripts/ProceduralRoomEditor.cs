@@ -991,7 +991,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
                 intensity = probeComp.intensity,
                 boxSize = probeComp.size,
-                shadow_distance = probeComp.shadowDistance,
+                shadowDistance = probeComp.shadowDistance,
                 boxOffset = probeComp.center,
                 id = probeComp.gameObject.name,
                 position = probeComp.transform.position
@@ -1008,7 +1008,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 probeComp.intensity = probe.intensity;
                 probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
                 probeComp.size = probe.boxSize;
-                probeComp.shadowDistance = probe.shadow_distance;
+                probeComp.shadowDistance = probe.shadowDistance;
             }
 
 

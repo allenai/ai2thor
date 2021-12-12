@@ -35,7 +35,7 @@ namespace Thor.Procedural.Data {
         public float intensity;
         public Vector3 boxSize;
         public Vector3 boxOffset;
-        public float shadow_distance;
+        public float shadowDistance;
         public SerializableColor background;
     }
 
@@ -160,10 +160,6 @@ namespace Thor.Procedural.Data {
         public List<Ceiling> ceilings { get; set; }
         public List<RoomHierarchy> rooms = null;
     }
-
-    // public class m {
-    //     Vector3 
-    // }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -299,7 +295,6 @@ namespace Thor.Procedural.Data {
 
     // }
     public interface WallRectangularHole {
-
         string id { get; set; }
         string assetId { get; set; }
         string room0 { get; set; }
@@ -314,11 +309,7 @@ namespace Thor.Procedural.Data {
         bool open { get; set; }
 
         SerializableColor color { get; set; }
-
     }
-
-
-
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -340,7 +331,6 @@ namespace Thor.Procedural.Data {
         public SerializableColor color { get; set; } = null;
 
         public bool unlit;
-
     }
 
     public interface Floor {
@@ -349,7 +339,6 @@ namespace Thor.Procedural.Data {
     }
 
     [Serializable]
-
     [MessagePackObject(keyAsPropertyName: true)]
     public class RectangleFloor : Floor {
         public Vector3 center;
@@ -392,12 +381,9 @@ namespace Thor.Procedural.Data {
                 (p0, p1) => new Wall() { height = wallHeight, p0 = p0, p1 = p1, thickness = wallThickness, materialId = wallMaterialId }
             ).ToArray();
         }
-
     }
 
     public interface Room {
-
-
         Wall[] walls { get; }
         Floor floor { get; }
 
@@ -421,18 +407,9 @@ namespace Thor.Procedural.Data {
         //         .OrderBy(p => p.z)
         //         .ThenBy(p => p, Comparer<Vector3>.Create((a, b) => System.Math.Sign( (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y)))).ToArray();
         // }
-
-
-
     }
 
-    // public class House<T> where T : Room
-    // {
-
-    // }
-
     [Serializable]
-
     [MessagePackObject(keyAsPropertyName: true)]
     // TODO move to this interface
     public class RectangleRoom : Room {
@@ -450,7 +427,6 @@ namespace Thor.Procedural.Data {
         public float width { get { return rectangleFloor.width; } }
         public float depth { get { return rectangleFloor.depth; } }
 
-
         // TODO decide if needed here
         // public float floorThickness {get;}
 
@@ -461,7 +437,15 @@ namespace Thor.Procedural.Data {
         public Vector3[] cornersClockWise { get { return rectangleFloor.cornersClockwise; } }
 
 
-        public static RectangleRoom roomFromWallPoints(IEnumerable<Vector3> cornersClockWise, float wallHeight, float wallThickness, string floorMaterialId, string wallMaterialId, float marginWidth = 0.0f, float marginDepth = 0.0f) {
+        public static RectangleRoom roomFromWallPoints(
+            IEnumerable<Vector3> cornersClockWise,
+            float wallHeight,
+            float wallThickness,
+            string floorMaterialId,
+            string wallMaterialId,
+            float marginWidth = 0.0f,
+            float marginDepth = 0.0f
+        ) {
 
             var centroid = cornersClockWise.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / cornersClockWise.Count();
 
@@ -533,8 +517,12 @@ namespace Thor.Procedural.Data {
             //initRoom(origin, width, height, walls);
         }
 
-        public static Wall[] wallsFromContiguousPoints(Vector3[] corners, float wallHeight, float wallThickness, string wallMaterialId) {
-            var centroid = corners.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / corners.Length;
+        public static Wall[] wallsFromContiguousPoints(
+            Vector3[] corners, float wallHeight, float wallThickness, string wallMaterialId
+        ) {
+            var centroid = corners.Aggregate(
+                Vector3.zero, (accumulator, c) => accumulator + c
+            ) / corners.Length;
 
 
             // var cornersClockWise = corners
@@ -566,5 +554,4 @@ namespace Thor.Procedural.Data {
         //     this.walls = walls;
         // }
     }
-
 }
