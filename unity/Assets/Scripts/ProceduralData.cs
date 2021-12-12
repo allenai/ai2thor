@@ -17,13 +17,9 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class AssetMetadata {
         public string id;
-
         public string type;
-
         public string primaryProperty;
-
         public List<string> secondaryProperties;
-
         public BoundingBox boundingBox;
     }
 
