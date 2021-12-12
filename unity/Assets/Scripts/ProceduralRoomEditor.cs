@@ -934,7 +934,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //                     sp = new ShadowParameters() {
     //                         strength = l.shadowStrength,
     //                         type = Enum.GetName(typeof(LightShadows), l.shadows),
-    //                         normal_bias = l.shadowNormalBias,
+    //                         normalBias = l.shadowNormalBias,
     //                         bias = l.shadowBias,
     //                         nearPlane = l.shadowNearPlane,
     //                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
@@ -1189,7 +1189,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 sp = new ShadowParameters() {
                     strength = l.shadowStrength,
                     type = Enum.GetName(typeof(LightShadows), l.shadows),
-                    normal_bias = l.shadowNormalBias,
+                    normalBias = l.shadowNormalBias,
                     bias = l.shadowBias,
                     nearPlane = l.shadowNearPlane,
                     resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)

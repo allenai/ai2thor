@@ -62,7 +62,7 @@ namespace Thor.Procedural.Data {
         public string type { get; set; } = "Soft";
         public float strength { get; set; }
 
-        public float normal_bias { get; set; }
+        public float normalBias { get; set; }
         public float bias { get; set; }
         public float nearPlane { get; set; }
         public string resolution { get; set; }
