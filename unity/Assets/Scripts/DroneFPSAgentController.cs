@@ -56,8 +56,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // drone also needs to toggle on the drone basket
+            // drone also needs to toggle on the drone basket and vis cap
             DroneBasket.SetActive(true);
+            DroneVisCap.SetActive(true);
         }
 
 
