@@ -1915,6 +1915,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             rac.transform.localEulerAngles = Vector3.zero;
             rac.AddComponent<BoxCollider>();
             rac.GetComponent<BoxCollider>().enabled = false;
+            BoundingBox = rac;
         }
 
         List<GameObject> recepboxes = new List<GameObject>();
