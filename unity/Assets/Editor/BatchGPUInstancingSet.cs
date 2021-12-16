@@ -6,19 +6,19 @@ using UnityEditor;
  
 class ToggleGpuInstancing
 {
-    [MenuItem("GPU Instancing/Enable")]
+    [MenuItem("Tools/GPU Instancing/Enable")]
     static void EnableGpuInstancing()
     {
         SetGpuInstancing(true);
     }
  
-    [MenuItem("GPU Instancing/Disable")]
+    [MenuItem("Tools/GPU Instancing/Disable")]
     static void DisableGpuInstancing()
     {
         SetGpuInstancing(false);
     }
 
-    [MenuItem("GPU Instancing/Check")]
+    [MenuItem("Tools/GPU Instancing/Check")]
     static void CheckInstancingIsEnabled() {
         var assetGuids = AssetDatabase.FindAssets("t:Material", new[] { "Assets" });
         int enabledCount = 0;
