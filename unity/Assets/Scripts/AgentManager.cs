@@ -18,6 +18,7 @@ using System.Text;
 using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.Rendering;
 using UnityStandardAssets.ImageEffects;
 
 
@@ -850,6 +851,26 @@ public class AgentManager : MonoBehaviour {
 
         }
     }
+    
+    private void addImageSynthesisImageAsync(List<KeyValuePair<string, byte[]>> payload, ImageSynthesis synth, bool flag, string captureName, string fieldName) {
+        if (flag) {
+            if (!synth.hasCapturePass(captureName)) {
+                Debug.LogError(captureName + " not available - sending empty image");
+            }
+
+            synth.EncodeAsync(captureName, callback: (request) => {
+                if (!request.hasError) {
+                    var data = request.GetData<byte>().ToArray();
+                    payload.Add(new KeyValuePair<string, byte[]>(fieldName, data));
+                }
+                else
+                {
+                    Debug.Log("Request error: " + request.hasError);
+                }
+                
+            });
+        }
+    }
 
     private void addImageSynthesisImage(List<KeyValuePair<string, byte[]>> payload, ImageSynthesis synth, bool flag, string captureName, string fieldName) {
         if (flag) {
@@ -998,10 +1019,11 @@ public class AgentManager : MonoBehaviour {
 #if !UNITY_WEBGL
             if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
+                form.AddField("metadata", serializeMetadataJson(multiMeta));
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
                 }
-                form.AddField("metadata", serializeMetadataJson(multiMeta));
                 form.AddField("token", robosimsClientToken);
 
 
@@ -1092,6 +1114,7 @@ public class AgentManager : MonoBehaviour {
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }

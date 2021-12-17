@@ -349,6 +349,32 @@ public class ImageSynthesis : MonoBehaviour {
             r.SetPropertyBlock(mpb);
         }
     }
+    
+    public void EncodeAsync(
+        string passName,
+        Action<AsyncGPUReadbackRequest> callback,
+        RenderTextureFormat format = RenderTextureFormat.Default,
+        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default,
+        int width = -1,
+        int height = -1,
+        bool jpg = false
+    ) {
+        // Must be called after end of Frame
+
+        if (width <= 0) {
+            width = Screen.width;
+        }
+        if (height <= 0) {
+            height = Screen.height;
+        }
+
+        foreach (var pass in capturePasses) {
+            if (pass.name == passName) {
+                EncodeAsync(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, callback, format, textureReadMode);
+                break;
+            }
+        }
+    }
 
     public byte[] Encode(
         string passName,
@@ -405,6 +431,63 @@ public class ImageSynthesis : MonoBehaviour {
         foreach (var pass in capturePasses) {
             Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale);
         }
+    }
+
+    private void EncodeAsync(
+        Camera cam,
+        int width,
+        int height,
+        bool supportsAntialiasing,
+        bool needsRescale,
+        Action<AsyncGPUReadbackRequest> callback,
+        RenderTextureFormat format = RenderTextureFormat.Default,
+        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
+    ) {
+        var mainCamera = GetComponent<Camera>();
+        var depth = 24;
+        var readWrite = textureReadMode;
+        var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
+
+        var finalRT =
+            RenderTexture.GetTemporary(width, height, depth, format, readWrite, antiAliasing);
+        var renderRT = (!needsRescale)
+            ? finalRT
+            : RenderTexture.GetTemporary(mainCamera.pixelWidth, mainCamera.pixelHeight, depth, format, readWrite,
+                antiAliasing);
+        if (tex == null) {
+            tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+        }
+
+        var prevActiveRT = RenderTexture.active;
+        var prevCameraRT = cam.targetTexture;
+
+        // render to offscreen texture (readonly from CPU side)
+        RenderTexture.active = renderRT;
+        cam.targetTexture = renderRT;
+
+        cam.Render();
+
+        if (needsRescale) {
+            // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
+            RenderTexture.active = finalRT;
+            Graphics.Blit(renderRT, finalRT);
+            RenderTexture.ReleaseTemporary(renderRT);
+        }
+
+        // read offsreen texture contents into the CPU readable texture
+        float startTime = Time.realtimeSinceStartup;
+        AsyncGPUReadback.Request(renderRT, 0,  (request) => {
+            // restore state and cleanup
+            cam.targetTexture = prevCameraRT;
+            RenderTexture.active = prevActiveRT;
+            // UnityEngine.Object.Destroy(tex);
+            RenderTexture.ReleaseTemporary(finalRT);
+            callback.Invoke(request);
+        });
+
+    // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
+
+        // Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
     }
 
     private byte[] Encode(
