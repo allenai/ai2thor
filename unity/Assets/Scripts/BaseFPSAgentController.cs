@@ -4297,7 +4297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MeshFilter[] meshFilters = asset.GetComponentsInChildren<MeshFilter>();
 
             var geometries = new List<object>();
-            foreach (MeshFilter meshFilter in geometries) {
+            foreach (MeshFilter meshFilter in meshFilters) {
                 Mesh mesh = meshFilter.sharedMesh;
                 var geo = new Dictionary<string, object>();
                 geo["vertices"] = mesh.vertices;
