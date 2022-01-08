@@ -4298,9 +4298,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var geometries = new List<object>();
             foreach (MeshFilter meshFilter in meshFilters) {
-                Mesh mesh = meshFilter.sharedMesh;
                 var geo = new Dictionary<string, object>();
-                geo["vertices"] = mesh.vertices;
+                Mesh mesh = meshFilter.mesh;
+                Matrix4x4 localToWorld = meshFilter.gameObject.transform.localToWorldMatrix;
+
+                var globalVertices = new List<Vector3>();
+                foreach (Vector3 vertex in mesh.vertices) {
+                    // converts from local space to world space.
+                    Vector3 worldCoordinate = localToWorld.MultiplyPoint3x4(vertex);
+                    globalVertices.Add(worldCoordinate);
+                }
+                geo["vertices"] = globalVertices;
+
                 if (triangles) {
                     geo["triangles"] = mesh.triangles;
                 }
