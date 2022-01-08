@@ -4286,6 +4286,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, metadata);
         }
 
+        // asset geometry 
+        public void GetInSceneAssetGeometry(
+            string objectId,
+            bool triangles = false,
+            bool uv = false,
+            bool normals = false
+        ) {
+            SimObjPhysics asset = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            MeshFilter[] meshFilters = asset.GetComponentsInChildren<MeshFilter>();
+
+            var geometries = new List<object>();
+            foreach (MeshFilter meshFilter in geometries) {
+                Mesh mesh = meshFilter.sharedMesh;
+                var geo = new Dictionary<string, object>();
+                geo["vertices"] = mesh.vertices;
+                if (triangles) {
+                    geo["triangles"] = mesh.triangles;
+                }
+                if (uv) {
+                    geo["uv"] = mesh.uv;
+                }
+                if (normals) {
+                    geo["normals"] = mesh.normals;
+                }
+                geometries.Add(geo);
+            }
+            actionFinished(success: true, actionReturn: geometries);
+        }
+
         public void GetAsset3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
