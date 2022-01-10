@@ -338,7 +338,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             // Update SimObject's BoundingBox collider to match new bounds
             this.BoundingBox.transform.localPosition = Vector3.zero;
-            this.BoundingBox.transform.rotation = Quaternion.identity;
+            this.BoundingBox.transform.localRotation = Quaternion.identity;
             this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
             this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
 
