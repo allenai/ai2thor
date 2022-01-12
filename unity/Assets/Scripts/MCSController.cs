@@ -8,10 +8,10 @@ using System.Collections.Generic;
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
 
-    public static float STANDING_POSITION_Y = 0.762f;
-    public static float STANDING_COLLIDER_HEIGHT = 1.23f;
-    public static float STANDING_COLLIDER_CENTER = -0.33f;
-    public static float CAPSULE_COLLIDER_RADIUS = 0.251f;
+    public static float AGENT_STARTING_HEIGHT = 0.762f;
+    public static float COLLIDER_HEIGHT = 1.23f;
+    public static float COLLIDER_CENTER = -0.33f;
+    public static float COLLIDER_RADIUS = 0.251f;
 
     //This is an extra collider that slightly clips into the ground to ensure collision with objects of any size.
     public CapsuleCollider groundObjectsCollider;
@@ -155,7 +155,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             // X/Z positions are passed in. Y position should always be standing height for now,
             // but this logic may need to change later if there's potential for the y position
             // to change (ramps, etc).
-            targetTeleport = new Vector3(action.teleportPosition.Value.x, STANDING_POSITION_Y, action.teleportPosition.Value.z);
+            targetTeleport = new Vector3(action.teleportPosition.Value.x, AGENT_STARTING_HEIGHT, action.teleportPosition.Value.z);
             transform.position = targetTeleport;
         }
 
@@ -260,9 +260,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public void OnSceneChange() {
         CapsuleCollider cc = GetComponent<CapsuleCollider>();
-        cc.height = STANDING_COLLIDER_HEIGHT;
-        cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
-        cc.radius = CAPSULE_COLLIDER_RADIUS;
+        cc.height = COLLIDER_HEIGHT;
+        cc.center = new Vector3(0,COLLIDER_CENTER,0);
+        cc.radius = COLLIDER_RADIUS;
         groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
     }
 
@@ -547,10 +547,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private void SimulatePhysicsOnce() {
         if(lastInputAction == InputAction.PASS || lastInputAction == InputAction.OTHER) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
         } //for movement
         else if (lastInputAction == InputAction.MOVEMENT) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
             this.movementActionFinished = moveInDirection((this.movementActionData.direction),
                     this.movementActionData.UniqueID,
                     this.movementActionData.maxDistanceToObject,
@@ -558,7 +558,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             actionFinished(this.movementActionFinished);
         } //for rotation
         else if (lastInputAction == InputAction.ROTATE) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
             RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             actionFinished(true);
@@ -762,7 +762,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
-    public float MatchAgentHeightToStructureBelow(bool poseChange) {
+    public float MatchAgentHeightToStructureBelow() {
         //Raycast down
         Vector3 origin = new Vector3(transform.position.x, this.GetComponent<CapsuleCollider>().bounds.max.y, transform.position.z);
         RaycastHit hit;
@@ -773,15 +773,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().IsSeesaw))) {
             hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
             //for pose changes on structures only
-            if (poseChange)
-                return hit.point.y;
-            else {
-                float oldHeight = this.transform.position.y;
-                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + STANDING_POSITION_Y), transform.position.z);
-                this.transform.position = newHeight;
-                if (oldHeight != this.transform.position.y) {
-                    AdjustLocationAfterHeightAdjustment();
-                }
+            float oldHeight = this.transform.position.y;
+            Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
+            this.transform.position = newHeight;
+            if (oldHeight != this.transform.position.y) {
+                AdjustLocationAfterHeightAdjustment();
             }
         }
         //method needs a return value
@@ -826,7 +822,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected override void SubPositionAdjustment() {
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         if (!main.isPassiveScene) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
         }
     }
 

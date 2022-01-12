@@ -305,7 +305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(teleportOnEndHabituation) {
                             action.teleportPosition = new Vector3(
                                 teleportXPosition,
-                                MCSController.STANDING_POSITION_Y,
+                                MCSController.AGENT_STARTING_HEIGHT,
                                 teleportZPosition);
                         }
 
