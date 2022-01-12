@@ -66,20 +66,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private int cameraCullingMask = -1;
 
-    private enum InputAction {
-        MOVEMENT,
-        ROTATE,
-        PASS,
-        OTHER
-    }
-
-    private InputAction lastInputAction = InputAction.PASS;
     private bool movementActionFinished = false;
     private MCSMovementActionData movementActionData; //stores movement direction
+    private bool inputWasMovement = false;
 
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
-
+    private bool inputWasRotateLook = false;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -404,18 +397,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
         this.GetComponentInChildren<Camera>().cullingMask = this.cameraCullingMask;
 
-        this.lastInputAction = 
-                controlCommand.action.Equals("Pass") ? InputAction.PASS :
+        this.inputWasMovement =
                 controlCommand.action.Equals("MoveAhead") ||
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
-                controlCommand.action.Equals("MoveRight") ? InputAction.MOVEMENT :
+                controlCommand.action.Equals("MoveRight");
+        this.inputWasRotateLook =
                 controlCommand.action.Equals("RotateLook") ||
                 controlCommand.action.Equals("RotateLeft") ||
                 controlCommand.action.Equals("RotateRight") ||
                 controlCommand.action.Equals("LookUp") ||
-                controlCommand.action.Equals("LookDown") ? InputAction.ROTATE :
-                InputAction.OTHER;
+                controlCommand.action.Equals("LookDown");
 
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
@@ -570,10 +562,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void SimulatePhysicsOnce() {
-        if(lastInputAction == InputAction.PASS || lastInputAction == InputAction.OTHER) {
-            MatchAgentHeightToStructureBelow(false);
-        } //for movement
-        else if (lastInputAction == InputAction.MOVEMENT) {
+        //for movement
+        if (this.inputWasMovement) {
             MatchAgentHeightToStructureBelow(false);
             this.movementActionFinished = moveInDirection((this.movementActionData.direction),
                     this.movementActionData.UniqueID,
@@ -581,8 +571,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                     this.movementActionData.forceAction);
             actionFinished(this.movementActionFinished);
         } //for rotation
-        else if (lastInputAction == InputAction.ROTATE) {
-            MatchAgentHeightToStructureBelow(false);
+        else if (this.inputWasRotateLook) {
             RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             actionFinished(true);
