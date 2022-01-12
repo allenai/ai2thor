@@ -396,24 +396,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                     }
 
-                    if (Input.GetKeyDown(KeyCode.Q))
-                    {
-                        action.action = "Crawl";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        action.action = "Stand";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.L))
-                    {
-                        action.action = "LieDown";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
                     if (Input.GetKeyDown(KeyCode.Backslash))
                     {
                         foreach (Transform child in this.objectParent.transform)
