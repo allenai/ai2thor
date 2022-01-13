@@ -5903,7 +5903,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         OpenOrCloseObject(codd, previousOpenPercent);
                     }
                 }
-            } 
+            }
             else {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
                 errorMessage = "Object " + action.objectId + " is not openable.";
