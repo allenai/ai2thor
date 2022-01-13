@@ -8,28 +8,14 @@ using System.Collections.Generic;
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
 
-    //Position y creates the pose
-    //Collider height is adjusted for each pose to prevent clipping inside the floor, allow traversal under structures, and allow ramp ascension
-    //Collider center shifts when the position y is changed for poses
-    //These collider numbers were derived from the agents y position on pose changes by hand. 
-    //In an orthographic perspective, the value were shifted until the collider's bottom most point was touching the ground when on a flat surface, 
-    //and the topmost point was touching the tip of the agents head.
-    public static float STANDING_POSITION_Y = 0.762f;
-    public static float STANDING_COLLIDER_HEIGHT = 1.23f;
-    public static float STANDING_COLLIDER_CENTER = -0.33f;
-    public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
-    public static float CRAWLING_COLLIDER_HEIGHT = 0.75f;
-    public static float CRAWLING_COLLIDER_CENTER = -0.05f;
-    public static float LYING_POSITION_Y = 0.1f;
-    public static float LYING_COLLIDER_HEIGHT = 0.05f;
-    public static float LYING_COLLIDER_CENTER = 0.15f;
-    public static float CAPSULE_COLLIDER_RADIUS = 0.251f;
+    public static float AGENT_STARTING_HEIGHT = 0.762f;
+    public static float COLLIDER_HEIGHT = 1.23f;
+    public static float COLLIDER_CENTER = -0.33f;
+    public static float COLLIDER_RADIUS = 0.251f;
 
     //This is an extra collider that slightly clips into the ground to ensure collision with objects of any size.
-    //When lying down, the radius increases to simulate the expansion of the body when horizontal
     public CapsuleCollider groundObjectsCollider;
     public static float GROUND_OBJECTS_COLLIDER_RADIUS = 0.5f;
-    public static float GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS = 0.675f;
 
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
@@ -55,14 +41,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected float maxRotation = 360f;
 
     public GameObject fpsAgent;
-
-    public enum PlayerPose {
-        STANDING,
-        CRAWLING,
-        LYING
-    }
-
-    PlayerPose pose = PlayerPose.STANDING;
 
     private int cameraCullingMask = -1;
 
@@ -176,8 +154,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if(action.teleportPosition.HasValue) {
             // X/Z positions are passed in. Y position should always be standing height for now,
             // but this logic may need to change later if there's potential for the y position
-            // to change (ramps, crawling, etc).
-            targetTeleport = new Vector3(action.teleportPosition.Value.x, STANDING_POSITION_Y, action.teleportPosition.Value.z);
+            // to change (ramps, etc).
+            targetTeleport = new Vector3(action.teleportPosition.Value.x, AGENT_STARTING_HEIGHT, action.teleportPosition.Value.z);
             transform.position = targetTeleport;
         }
 
@@ -225,7 +203,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.performerReach = this.maxVisibleDistance;
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
-        metadata.pose = this.pose.ToString();
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
@@ -282,11 +259,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public void OnSceneChange() {
-        pose = PlayerPose.STANDING;
         CapsuleCollider cc = GetComponent<CapsuleCollider>();
-        cc.height = STANDING_COLLIDER_HEIGHT;
-        cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
-        cc.radius = CAPSULE_COLLIDER_RADIUS;
+        cc.height = COLLIDER_HEIGHT;
+        cc.center = new Vector3(0,COLLIDER_CENTER,0);
+        cc.radius = COLLIDER_RADIUS;
         groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
     }
 
@@ -571,10 +547,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private void SimulatePhysicsOnce() {
         if(lastInputAction == InputAction.PASS || lastInputAction == InputAction.OTHER) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
         } //for movement
         else if (lastInputAction == InputAction.MOVEMENT) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
             this.movementActionFinished = moveInDirection((this.movementActionData.direction),
                     this.movementActionData.UniqueID,
                     this.movementActionData.maxDistanceToObject,
@@ -582,7 +558,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             actionFinished(this.movementActionFinished);
         } //for rotation
         else if (lastInputAction == InputAction.ROTATE) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
             RotateLookAcrossFrames(this.lookRotationActionData);
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             actionFinished(true);
@@ -749,93 +725,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x, Math.Max(handY, minY), handZ);
     }
 
-    public void Crawl(ServerAction action) {
-        if (this.pose == PlayerPose.CRAWLING) {
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-                actionFinished(true);
-                Debug.Log("Agent is already Crawling");
-        } else {
-            float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
-            startHeight += MatchAgentHeightToStructureBelow(true);
-            Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, PlayerPose.CRAWLING);
-        }
-    }
-
-    public void LieDown(ServerAction action) {
-        if (this.pose == PlayerPose.LYING) {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
-            Debug.Log("Agent is already Lying Down");
-        } else {
-            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
-            startHeight += MatchAgentHeightToStructureBelow(true);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, PlayerPose.LYING);
-        }
-    }
-
-    public override void Stand(ServerAction action) {
-        if (this.pose == PlayerPose.STANDING) {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
-            Debug.Log("Agent is already Standing");
-        } else if (this.pose == PlayerPose.LYING) {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.WRONG_POSE);
-            actionFinished(false);
-            Debug.Log("Agent cannot Stand when lying down");
-        } else {
-            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
-            startHeight += MatchAgentHeightToStructureBelow(true);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, PlayerPose.STANDING);
-        }
-    }
-
-    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, PlayerPose pose) {
-        //Raycast up or down the distance of shifting on y-axis
-        Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
-        Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
-        RaycastHit hit;
-        LayerMask layerMask = ~(1 << 10);
-
-        float rayCastDistanceBuffer = pose == PlayerPose.LYING ? 0 : 0.2f; //this is needed for being below an angled incline structure
-        //if raycast hits an object, the agent does not move on y-axis
-        if (direction == Vector3.up && Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight)+rayCastDistanceBuffer, layerMask) &&
-            hit.collider.tag == "SimObjPhysics")
-        {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-            actionFinished(false);
-            Debug.Log("Agent is Obstructed for a pose change by a structure above");
-        } else {
-            this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
-            this.pose = pose;
-            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-            if(this.pose == PlayerPose.LYING)
-            {
-                cc.height = LYING_COLLIDER_HEIGHT;
-                cc.center = new Vector3(0,LYING_COLLIDER_CENTER,0);
-                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_LYING_DOWN_RADIUS;
-            }
-            else if(this.pose == PlayerPose.CRAWLING)
-            {
-                cc.height = CRAWLING_COLLIDER_HEIGHT;
-                cc.center = new Vector3(0,CRAWLING_COLLIDER_CENTER,0);
-                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
-            }
-
-            else
-            {
-                cc.height = STANDING_COLLIDER_HEIGHT;
-                cc.center = new Vector3(0,STANDING_COLLIDER_CENTER,0);
-                groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
-
-            }
-            //SetUpRotationBoxChecks();
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
-        }
-    }
-
-
     //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
     public override void MoveLeft(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
@@ -873,11 +762,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.serverActionMoveMagnitude = action.moveMagnitude;
     }
 
-    public float MatchAgentHeightToStructureBelow(bool poseChange) {
-        float heightDifference;
-        heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y :
-            pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
-
+    public float MatchAgentHeightToStructureBelow() {
         //Raycast down
         Vector3 origin = new Vector3(transform.position.x, this.GetComponent<CapsuleCollider>().bounds.max.y, transform.position.z);
         RaycastHit hit;
@@ -888,15 +773,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().IsSeesaw))) {
             hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
             //for pose changes on structures only
-            if (poseChange)
-                return hit.point.y;
-            else {
-                float oldHeight = this.transform.position.y;
-                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
-                this.transform.position = newHeight;
-                if (oldHeight != this.transform.position.y) {
-                    AdjustLocationAfterHeightAdjustment();
-                }
+            float oldHeight = this.transform.position.y;
+            Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
+            this.transform.position = newHeight;
+            if (oldHeight != this.transform.position.y) {
+                AdjustLocationAfterHeightAdjustment();
             }
         }
         //method needs a return value
@@ -941,7 +822,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected override void SubPositionAdjustment() {
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         if (!main.isPassiveScene) {
-            MatchAgentHeightToStructureBelow(false);
+            MatchAgentHeightToStructureBelow();
         }
     }
 

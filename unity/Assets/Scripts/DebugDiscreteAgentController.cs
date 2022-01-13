@@ -305,7 +305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(teleportOnEndHabituation) {
                             action.teleportPosition = new Vector3(
                                 teleportXPosition,
-                                MCSController.STANDING_POSITION_Y,
+                                MCSController.AGENT_STARTING_HEIGHT,
                                 teleportZPosition);
                         }
 
@@ -393,24 +393,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.horizon = horizonIncrement;
 
                         action.action = "RotateLook";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.Q))
-                    {
-                        action.action = "Crawl";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        action.action = "Stand";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.L))
-                    {
-                        action.action = "LieDown";
                         PhysicsController.ProcessControlCommand(action);
                     }
 
