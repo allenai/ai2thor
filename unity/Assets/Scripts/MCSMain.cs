@@ -284,6 +284,8 @@ public class MCSMain : MonoBehaviour {
         GameObject controller = GameObject.Find("FPSController");
         controller.GetComponent<Rigidbody>().velocity = Vector3.zero;
         controller.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        foreach(Collider c in controller.GetComponents<Collider>())
+            c.enabled = false;
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
