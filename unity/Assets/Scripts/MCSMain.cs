@@ -230,7 +230,7 @@ public class MCSMain : MonoBehaviour {
             // Objects aren't fully added in Start(), so we need to adjust the location here in case we are on a platform.
             if (this.lastStep == 0 && !this.isPassiveScene) {
                 GameObject controller = GameObject.Find("FPSController");
-                controller.GetComponent<MCSController>().MatchAgentHeightToStructureBelow(false);
+                controller.GetComponent<MCSController>().MatchAgentHeightToStructureBelow();
             }
             this.agentController.SimulatePhysics();
         }
@@ -434,8 +434,8 @@ public class MCSMain : MonoBehaviour {
             if (this.currentScene.performerStart.position == null) {
                 this.currentScene.performerStart.position = new MCSConfigVector();
             }
-            if (currentScene.performerStart.position.y < MCSController.STANDING_POSITION_Y) { 
-                this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
+            if (currentScene.performerStart.position.y < MCSController.AGENT_STARTING_HEIGHT) { 
+                this.currentScene.performerStart.position.y = MCSController.AGENT_STARTING_HEIGHT;
             }
         }
 
@@ -499,9 +499,9 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
+                MCSController.AGENT_STARTING_HEIGHT, this.currentScene.performerStart.position.z);
         } else {
-            controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
+            controller.transform.position = new Vector3(0, MCSController.AGENT_STARTING_HEIGHT, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
