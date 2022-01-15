@@ -4321,7 +4321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 geometries.Add(geo);
             }
-            actionFinished(success: true, actionReturn: geometries);
+            actionFinishedEmit(success: true, actionReturn: geometries);
         }
 
         public void DestroyHouse() {
@@ -4362,7 +4362,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 geo.uvs = uvs ? mesh.uv : null;
                 return geo;
             }).ToList();
-            actionFinished(true, geoList);
+            actionFinishedEmit(true, geoList);
         }
 
         public void SpawnAsset(
