@@ -4324,6 +4324,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: true, actionReturn: geometries);
         }
 
+        public void DestroyHouse() {
+            // TODO: asset scene is in procedural.
+            GameObject go = GameObject.Find("Objects");
+            foreach (Transform child in go.transform) {
+                Destroy(child.gameObject);
+            }
+            Destroy(GameObject.Find("Structure"));
+            Destroy(GameObject.Find("ProceduralLighting"));
+            actionFinished(success: true);
+        }
+
         public void GetAsset3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {

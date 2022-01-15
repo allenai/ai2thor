@@ -741,6 +741,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                
+                case "geo": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "GetInSceneAssetGeometry",
+                            ["objectId"] = splitcommand[1],
+                            ["triangles"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "des": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "DestroyHouse"
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 // move ahead stochastic
                 case "mas": {
