@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 //using UnityEditor;
@@ -225,7 +225,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		BaseFPSAgentController fpsController =  GameObject.FindObjectOfType<BaseFPSAgentController>();
 		foreach(Collider c in fpsController.GetComponents<Collider>())
-            c.enabled = true;
+        	c.enabled = true;
 		if (fpsController.imageSynthesis != null) {
 			fpsController.imageSynthesis.OnSceneChange();
 		}
