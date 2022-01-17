@@ -19,7 +19,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.1f;
-    public static float DISTANCE_HELD_OBJECT_Z = 0.3f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.05f;
 
     // TODO MCS-95 Make the room size configurable in the scene configuration file.
     // The room dimensions are always 10x10 so the distance from corner to corner is around 14.15
@@ -698,31 +698,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private void UpdateHandPositionToHoldObject(SimObjPhysics target) {
         float positionY = target.BoundingBox.transform.localPosition.y;
-        float positionZ = target.BoundingBox.transform.localPosition.z;
         float sizeY = target.BoundingBox.transform.localScale.y;
-        float sizeZ = target.BoundingBox.transform.localScale.z;
 
         BoxCollider boundingBoxCollider = target.BoundingBox.GetComponent<BoxCollider>();
         positionY = positionY + (boundingBoxCollider.center.y * target.BoundingBox.transform.localScale.y);
-        positionZ = positionZ + (boundingBoxCollider.center.z * target.BoundingBox.transform.localScale.z);
         sizeY = sizeY * boundingBoxCollider.size.y;
-        sizeZ = sizeZ * boundingBoxCollider.size.z;
 
         float multiplierY = (target.BoundingBox.transform.parent.localScale.y / this.transform.localScale.y);
-        float multiplierZ = (target.BoundingBox.transform.parent.localScale.z / this.transform.localScale.z);
         positionY = positionY * multiplierY;
-        positionZ = positionZ * multiplierZ;
         sizeY = sizeY * multiplierY;
-        sizeZ = sizeZ * multiplierZ;
-
         float handY = -1 * ((sizeY / 2.0f) + positionY + MCSController.DISTANCE_HELD_OBJECT_Y);
-        float handZ = ((sizeZ / 2.0f) - positionZ + MCSController.DISTANCE_HELD_OBJECT_Z);
 
         // Ensure that a tall held object is not positioned inside of the floor below.
         float minY = (sizeY / 2.0f) - positionY - (this.transform.position.y / this.transform.localScale.y) +
             MCSController.DISTANCE_HELD_OBJECT_Y;
 
-        this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x, Math.Max(handY, minY), handZ);
+        // Find the largest side of the object's bounding box and then set the hand position to half the largest side of the object plus the agent's radius 
+        // distance away to ensure the held object is not clipping inside the agent's collider
+        // This first check is if either the bounding box transform or collider size was changed to adjust the size of the bounding box
+        Vector3 boundingBoxSize = 
+            boundingBoxCollider.transform.localScale != Vector3.one ? boundingBoxCollider.transform.localScale : boundingBoxCollider.size;
+        float largestSide = Mathf.Max(target.transform.localScale.x * boundingBoxSize.x, target.transform.localScale.z * boundingBoxSize.z) / 2;
+
+        // Set the rotation of the object to its original rotation
+        target.transform.eulerAngles = Vector3.zero;
+        this.AgentHand.transform.localPosition = 
+            new Vector3(0, Math.Max(handY, minY), ((largestSide + (COLLIDER_RADIUS * transform.localScale.x)) / transform.localScale.x) + DISTANCE_HELD_OBJECT_Z);
     }
 
     //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
