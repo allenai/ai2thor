@@ -735,6 +735,29 @@ public static class SimUtil {
 
     }
 
+    [UnityEditor.MenuItem("AI2-THOR/Add Pickupable Objects to Physics Scene Manager")]
+    static void AddPickupableObjectsToPhysicsSceneManager() {
+        PhysicsSceneManager physicsSceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+        
+        SimObjPhysics[] simObjPhysicsArray = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+
+        if (physicsSceneManager.RequiredObjects.Count != 0 || physicsSceneManager.SpawnedObjects.Count != 0)
+        {
+            physicsSceneManager.RequiredObjects.Clear();
+            physicsSceneManager.RequiredObjects.Clear();
+        }
+
+        foreach (SimObjPhysics simObj in simObjPhysicsArray)
+        {
+            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+            {
+                physicsSceneManager.RequiredObjects.Add(simObj.gameObject);
+                physicsSceneManager.SpawnedObjects.Add(simObj.gameObject);
+            }
+        }
+    }
+
 #endif
 
     #endregion
