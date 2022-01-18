@@ -4286,6 +4286,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, metadata);
         }
 
+        // asset geometry 
+        public void GetInSceneAssetGeometry(
+            string objectId,
+            bool triangles = false,
+            bool uv = false,
+            bool normals = false
+        ) {
+            SimObjPhysics asset = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            MeshFilter[] meshFilters = asset.GetComponentsInChildren<MeshFilter>();
+
+            var geometries = new List<object>();
+            foreach (MeshFilter meshFilter in meshFilters) {
+                var geo = new Dictionary<string, object>();
+                Mesh mesh = meshFilter.mesh;
+                Matrix4x4 localToWorld = meshFilter.gameObject.transform.localToWorldMatrix;
+
+                var globalVertices = new List<Vector3>();
+                foreach (Vector3 vertex in mesh.vertices) {
+                    // converts from local space to world space.
+                    Vector3 worldCoordinate = localToWorld.MultiplyPoint3x4(vertex);
+                    globalVertices.Add(worldCoordinate);
+                }
+                geo["vertices"] = globalVertices;
+
+                if (triangles) {
+                    geo["triangles"] = mesh.triangles;
+                }
+                if (uv) {
+                    geo["uv"] = mesh.uv;
+                }
+                if (normals) {
+                    geo["normals"] = mesh.normals;
+                }
+                geometries.Add(geo);
+            }
+            actionFinishedEmit(success: true, actionReturn: geometries);
+        }
+
+        public void DestroyHouse() {
+            // TODO: asset scene is in procedural.
+            GameObject go = GameObject.Find("Objects");
+            foreach (Transform child in go.transform) {
+                Destroy(child.gameObject);
+            }
+            Destroy(GameObject.Find("Structure"));
+            Destroy(GameObject.Find("ProceduralLighting"));
+            actionFinished(success: true);
+        }
+
         public void GetAsset3DGeometry(string assetId, bool triangleIndices = true, bool uvs = false, bool normals = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
@@ -4313,7 +4362,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 geo.uvs = uvs ? mesh.uv : null;
                 return geo;
             }).ToList();
-            actionFinished(true, geoList);
+            actionFinishedEmit(true, geoList);
         }
 
         public void SpawnAsset(
