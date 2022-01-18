@@ -1872,14 +1872,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            bool canbepushed = false;
-
-            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-                canbepushed = true;
-
-            if (!canbepushed) {
-                errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
+            if (target.GetComponent<StructureObject>() != null) {
+                errorMessage = "Target is Structure object and cannot be moved. Target's primary property must be Pickupable or Moveable and not a Structure";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_MOVEABLE);
                 actionFinished(false);
                 return;
@@ -1904,6 +1898,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log(errorMessage);
                 Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+                actionFinished(false);
+                return;
+            }
+
+            bool canbepushed = false;
+            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                canbepushed = true;
+
+            if (!canbepushed) {
+                errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_MOVEABLE);
                 actionFinished(false);
                 return;
             }
@@ -4980,13 +4986,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-                errorMessage = "This target object is NOT openable!";
-                Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
-                actionFinished(false);
-                return;
-            }
 
             target = null;
 
@@ -5009,6 +5008,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visibleObjects.Length == 0) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 errorMessage = "Object " + action.objectId + " is not within reach or is not really an object.";
+                actionFinished(false);
+                return;
+            }
+
+            if (target != null && !target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+                errorMessage = "This target object is NOT openable!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
                 actionFinished(false);
                 return;
             }
@@ -5797,13 +5804,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if (!target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-                errorMessage = "This target object is NOT openable!";
-                Debug.Log(errorMessage);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
-                actionFinished(false);
-                return;
-            }
 
             target = null;
 
@@ -5826,6 +5826,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visibleObjects.Length == 0) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 errorMessage = "Object " + action.objectId + " is not within reach or is not really an object.";
+                actionFinished(false);
+                return;
+            }
+
+            if (target != null && !target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+                errorMessage = "This target object is NOT openable!";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
                 actionFinished(false);
                 return;
             }
