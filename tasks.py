@@ -3836,7 +3836,7 @@ def create_json(ctx, file_path, output=None):
             [
                 {
                     "id": "wall_{}_{}".format(room_i, wall_indx),
-                    "room_id": "room_{}".format(room_i),
+                    "roomId": "room_{}".format(room_i),
                     "material": wall['materialId'],
                     "empty": wall['empty'] if 'empty' in wall else False,
                     'polygon': wall_to_poly(wall)
@@ -3850,10 +3850,10 @@ def create_json(ctx, file_path, output=None):
             {
                 "id": "room_{}".format(room_i),
                 "type": "",
-                "floor_material": room['rectangleFloor']['materialId'],
+                "floorMaterial": room['rectangleFloor']['materialId'],
                 "children": [],
                 "ceilings": [],
-                "floor_polygon": walls_to_floor_poly(room["walls"])}
+                "floorPolygon": walls_to_floor_poly(room["walls"])}
             for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
 
         ]
@@ -3863,11 +3863,11 @@ def create_json(ctx, file_path, output=None):
         house = {
             'rooms': rooms,
             'walls': walls,
-            'procedural_parameters': {
-                'ceiling_material': obj['ceilingMaterialId'],
-                "floor_collider_thickness": 1.0,
-                "receptacle_height": 0.7,
-                "skybox_id": "Sky1",
+            'proceduralParameters': {
+                'ceilingMaterial': obj['ceilingMaterialId'],
+                "floorColliderThickness": 1.0,
+                "receptacleHeight": 0.7,
+                "skyboxId": "Sky1",
                 "lights": []
             }
         }
@@ -3928,7 +3928,7 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
     with open(file_path, "r") as f:
         obj = json.load(f)
 
-        obj['walls'] = [wall for wall in obj['walls'] if wall['room_id'] == room_id]
+        obj['walls'] = [wall for wall in obj['walls'] if wall['roomId'] == room_id]
         obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
         obj['objects'] = []
 

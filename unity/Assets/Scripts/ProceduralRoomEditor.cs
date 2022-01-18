@@ -56,7 +56,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     id = $"{Enum.GetName(typeof(SimObjType), simObj.ObjType)}_{index}"
                 })).ToList();
             foreach (var namedObj in namedObjects) {
-                Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}");
+                Debug.Log($" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}");
                 namedObj.simObj.assetID = namedObj.assetId;
                 namedObj.simObj.objectID = namedObj.id;
                 namedObj.simObj.gameObject.name = namedObj.id;
@@ -64,7 +64,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             }
             return namedObjects;
             // foreach (var namedObj in this.namedSimObjects) {
-            //     Debug.Log($" Renamed obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, asset_id: {namedObj.assetId}" );
+            //     Debug.Log($" Renamed obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}" );
             // }
         } else {
             Debug.LogError($"No root object '{ProceduralTools.DefaultObjectsRootName}'");
@@ -280,7 +280,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             //     var t = new Vector3(num.x / direction.x, num.y / direction.y, num.z / direction.z);
             //     var onLine = Math.Abs(t.x - t.z) < eps;
 
-            //      if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+            //      if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
             //         Debug.Log($"************* wall {name}, p {p}, orig {origin}, diff {(p - origin)} dir {direction} PROJ {proyLength} num {num} t.x {t.x}, t.y {t.y}, t.z {t.z} onLine {onLine}" );
             //     }
             //     return onLine && t.x <= (1.0f+tEps) && t.x >= (0.0f-tEps); 
@@ -298,7 +298,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                 var onLine = Math.Abs(dot0) >= 1.0f - eps;
 
-                //  if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+                //  if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
                 // if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44") {
                 if (name == "wall_2_6" || name == "wall_2_7" || name == "wall_2_8" && d.gameObject.name == "Window_5") {
 
@@ -345,7 +345,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             },
                 (min, next) => {
                     var name = next.collider.gameObject.name;
-                // if (name == "wall_1_7" || name == "wall_1_6" || name == "wall_1_5" && d.gameObject.name == "Window_1") {
+                // if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
                 if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44") {
                         Debug.Log($"########## -- connection {d.gameObject.name} wall Left {name} p1SqrDistance {next.p1SqrDistance}, normal {Vector3.Dot(next.collider.transform.forward, connectionNormal)} !onLine {!pointOnWallLine(next.p1, -dirNormalized, p1World, next.collider.gameObject.name)}");
                     }
@@ -441,26 +441,26 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // }
             //  var wall = new PolygonWall {
             //     id = $"wall_{id}_front",
-            //     room_id = connectionProps?.OpenFromRoomId,
+            //     roomId = connectionProps?.OpenFromRoomId,
             //     polygon = poly,
             //     // TODO get material somehow
             //     // material = connectionProps?.openFromWallMaterial?.name
             //     material = wallRight.collider.GetComponent<MeshRenderer>().sharedMaterial.name
 
-            //     // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-            //     // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+            //     // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+            //     // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
             // };
             //  var wallRev = new PolygonWall {
             //     id = $"wall_{id}_back",
-            //     room_id = connectionProps?.OpenToRoomId,
+            //     roomId = connectionProps?.OpenToRoomId,
             //     polygon = polyRev,
             //     // TODO get material somehow
             //     // material = connectionProps?.openToWallMaterial?.name
 
             //     material = backWallClosestLeft.collider.GetComponent<MeshRenderer>().sharedMaterial.name
 
-            //     // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-            //     // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+            //     // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+            //     // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
             // };
 
             var wall = createNewWall(
@@ -477,15 +477,15 @@ public class ProceduralRoomEditor : MonoBehaviour {
             //   var height = 
             var wallRev = new PolygonWall {
                 id = $"wall_{id}_back",
-                room_id = connectionProps?.OpenToRoomId,
+                roomId = connectionProps?.OpenToRoomId,
                 polygon = new List<Vector3>() { wall.polygon[1], wall.polygon[0], wall.polygon[3], wall.polygon[2] },
                 // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
                 // TODO get material somehow
                 // material = connectionProps?.openFromWallMaterial?.name
                 material = material.name,
 
-                material_tiling_x_divisor = lenn / material.mainTextureScale.x,
-                material_tiling_y_divisor = backWallClosestRight.height / material.mainTextureScale.y
+                materialTilingXDivisor = lenn / material.mainTextureScale.x,
+                materialTilingYDivisor = backWallClosestRight.height / material.mainTextureScale.y
             };
 
             // var wallRev = createNewWall(
@@ -509,9 +509,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
             Debug.Log($"............. Door {xLen} p0To {p0ToConnection} ");
 
 
-            var asset_id = !string.IsNullOrEmpty(d.assetID) ? d.assetID : PrefabNameRevert.GetPrefabAssetName(d.gameObject);
+            var assetId = !string.IsNullOrEmpty(d.assetID) ? d.assetID : PrefabNameRevert.GetPrefabAssetName(d.gameObject);
 
-            // asset_id = asset_id == null ? d.assetID : asset_id;
+            // assetId = assetId == null ? d.assetID : assetId;
 
             if (filterType == SimObjType.Doorway) {
 
@@ -521,19 +521,19 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     id = id,
 
-                    room_0 = connectionProps?.OpenFromRoomId,
-                    room_1 = connectionProps?.OpenToRoomId,
-                    wall_0 = wall.id,
-                    wall_1 = wallRev.id,
-                    bounding_box = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
+                    room0 = connectionProps?.OpenFromRoomId,
+                    room1 = connectionProps?.OpenToRoomId,
+                    wall0 = wall.id,
+                    wall1 = wallRev.id,
+                    boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
 
-                    //bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
-                    // bounding_box = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
+                    //boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = asset_id
+                    assetId = assetId
 
                 };
             } else if (filterType == SimObjType.Window) {
@@ -542,21 +542,21 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     id = id,
 
-                    room_0 = connectionProps?.OpenFromRoomId,
-                    room_1 = connectionProps?.OpenToRoomId,
-                    wall_0 = wall.id,
-                    wall_1 = wallRev.id,
-                    bounding_box = new Thor.Procedural.Data.BoundingBox {
+                    room0 = connectionProps?.OpenFromRoomId,
+                    room1 = connectionProps?.OpenToRoomId,
+                    wall0 = wall.id,
+                    wall1 = wallRev.id,
+                    boundingBox = new Thor.Procedural.Data.BoundingBox {
                         min = new Vector3(xLen, yMin, box.size.z / 2.0f),
                         max = new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f)
                     },
 
-                    // bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
 
                     open = (connectionProps?.IsOpen).GetValueOrDefault(),
-                    asset_id = asset_id
+                    assetId = assetId
 
                 };
             }
@@ -565,16 +565,16 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
             //      id = id,
 
-            //     room_0 = connectionProps?.OpenFromRoomId,
-            //     room_1 = connectionProps?.OpenToRoomId,
-            //     wall_0 = wall.id,
-            //     wall_1 = wallRev.id,
-            //     bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+            //     room0 = connectionProps?.OpenFromRoomId,
+            //     room1 = connectionProps?.OpenToRoomId,
+            //     wall0 = wall.id,
+            //     wall1 = wallRev.id,
+            //     boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
             //     type = "???",
             //     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
             //     // TODO
             //     open = false,
-            //     asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+            //     assetId = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
             // };
             box.enabled = false;
@@ -653,38 +653,38 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //         var id = $"door_{i}";
     //          var wall = new PolygonWall {
     //             id = $"wall_{id}_front",
-    //             room_id = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             roomId = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
     //             polygon = poly,
     //             // TODO get material somehow
     //             material = ""
 
-    //             // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-    //             // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+    //             // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+    //             // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
     //         };
     //          var wallRev = new PolygonWall {
     //             id = id,
-    //             room_id = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             roomId = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
     //             polygon = polyRev,
     //             // TODO get material somehow
     //             material = ""
 
-    //             // material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-    //             // material_tiling_y_divisor = box.size.y / material.mainTextureScale.y};
+    //             // materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+    //             // materialTilingYDivisor = box.size.y / material.mainTextureScale.y};
     //         };
     //         var door = new ?? {
 
     //              id = $"wall_{id}_back",
 
-    //             room_0 = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
-    //             room_1 = d.GetComponentInChildren<ConnectionProperties>().OpenToRoomId,
-    //             wall_0 = wall.id,
-    //             wall_1 = wallRev.id,
-    //             bounding_box = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
+    //             room0 = d.GetComponentInChildren<ConnectionProperties>().OpenFromRoomId,
+    //             room1 = d.GetComponentInChildren<ConnectionProperties>().OpenToRoomId,
+    //             wall0 = wall.id,
+    //             wall1 = wallRev.id,
+    //             boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
     //             type = "???",
     //             openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
     //             // TODO
     //             open = false,
-    //             asset_id = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
+    //             assetId = PrefabNameRevert.GetPrefabAssetName(d.gameObject)
 
     //         } as WallRectangularHole;
     //         return new ConnectionGameObjects<T>{
@@ -709,14 +709,14 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var len = (p1 - p0).magnitude;
         return new PolygonWall {
             id = id,
-            room_id = connectionProps?.OpenFromRoomId,
+            roomId = connectionProps?.OpenFromRoomId,
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
             material = material.name,
 
-            material_tiling_x_divisor = len / material.mainTextureScale.x,
-            material_tiling_y_divisor = height / material.mainTextureScale.y
+            materialTilingXDivisor = len / material.mainTextureScale.x,
+            materialTilingYDivisor = height / material.mainTextureScale.y
         };
 
     }
@@ -739,11 +739,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
             return new PolygonWall {
                 id = w.gameObject.name,
-                room_id = w.GetComponentInChildren<WallProperties>().RoomId,
+                roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                 polygon = poly,
                 material = material.name,
-                material_tiling_x_divisor = box.size.x / material.mainTextureScale.x,
-                material_tiling_y_divisor = box.size.y / material.mainTextureScale.y
+                materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
+                materialTilingYDivisor = box.size.y / material.mainTextureScale.y
             };
         }
         ).ToList();
@@ -771,7 +771,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var wallWithInsertLocation = allNewConnections.SelectMany(s => s.walls).Select(wallIdPair => {
 
             //    Debug.Log($"All Walls: {string.Join(", ", wallsJson.Select(w => w.id))}");
-            // Debug.Log("Wall " +  wallIdPair.wall.id + " search after: '" + wallIdPair.afterWallId + "' find: " + wallsJson.FirstOrDefault( w => string.Equals(w.id, wallIdPair.afterWallId,StringComparison.InvariantCultureIgnoreCase ) )+ " ." + $" find '{string.Join(", ", wallsJson.Where(w => string.Equals(w.id, "wall_0_17")))}'");
+            // Debug.Log("Wall " +  wallIdPair.wall.id + " search after: '" + wallIdPair.afterWallId + "' find: " + wallsJson.FirstOrDefault( w => string.Equals(w.id, wallIdPair.afterWallId,StringComparison.InvariantCultureIgnoreCase ) )+ " ." + $" find '{string.Join(", ", wallsJson.Where(w => string.Equals(w.id, "wall0_17")))}'");
             return (
                 wall: wallIdPair.wall,
                 index:
@@ -799,7 +799,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
         // house.doors = doors.ToList();
         // house.windows = windows.ToList();
         return new ProceduralHouse {
-            procedural_parameters = house.procedural_parameters,
+            proceduralParameters = house.proceduralParameters,
             id = house.id,
             rooms = house.rooms,
             walls = wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList(),
@@ -831,233 +831,6 @@ public class ProceduralRoomEditor : MonoBehaviour {
         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);
 #endif        
     }
-
-
-    // [Button(Expanded=true)] 
-    // public void SerializeScene(string outFilename) {
-    //     // var path = BuildLayoutPath(layoutJSONFilename);
-    //     // var jsonStr = System.IO.File.ReadAllText(path);
-    //     // JObject jsonObj = JObject.Parse(jsonStr);
-    //     // this.loadedHouse = jsonObj.ToObject<ProceduralHouse>();
-
-    //     if (this.loadedHouse != null) {
-    //         var outPath = BuildLayoutPath(outFilename);
-    //         Debug.Log($"Serializing to: '{outFilename}'");
-
-
-    //         // var house = jsonObj.ToObject<ProceduralHouse>();
-
-
-    //         if (this.namedSimObjects != null) {
-    //             var assetDb = ProceduralTools.getAssetMap();
-    //             this.loadedHouse.objects = this.namedSimObjects.Select(obj => {
-    //                 Vector3 axis;
-    //                 float degrees; 
-    //                 obj.simObj.transform.rotation.ToAngleAxis(out degrees, out axis);
-    //                 var bb = obj.simObj.AxisAlignedBoundingBox;
-    //                 RaycastHit hit;
-    //                 var didHit = Physics.Raycast(obj.simObj.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //                 string room = "";
-    //                 if (didHit) {
-    //                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //                 }
-    //                 Debug.Log("Processing " + obj.assetId + " ...");
-    //                 if (!assetDb.ContainsKey(obj.assetId)) {
-    //                     Debug.LogError($"Asset '{obj.assetId}' not in AssetLibrary, so it won't be able to be loaded as part of a procedural scene. Save the asset and rebuild asset library.");
-    //                 }
-    //                 return new HouseObject(){
-    //                     id = obj.id,
-    //                     position = obj.simObj.transform.position,
-    //                     rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
-    //                     kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
-    //                     bounding_box = new BoundingBox() { min =  bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
-    //                     room = room,
-    //                     types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
-    //                     asset_id = obj.assetId
-    //                 };
-    //             }
-    //             ).ToList();
-    //         }
-
-    //         GameObject floorRoot; 
-    //         floorRoot = GameObject.Find(loadedHouse.id);
-    //         if (floorRoot == null) {
-    //             floorRoot = GameObject.Find(ProceduralTools.DefaultHouseRootObjectName);
-    //         }
-
-    //         if (floorRoot == null) {
-    //             Debug.LogError($"Badly constructed scene, no root layout 'id' : {loadedHouse.id} or '{ProceduralTools.DefaultHouseRootObjectName}' gameobject");
-    //         }
-
-    //         var roomIdToProps = floorRoot.GetComponentsInChildren<RoomProperties>()
-    //             .ToDictionary(
-    //                 rp => rp.GetComponentInParent<SimObjPhysics>().ObjectID,
-    //                 rp => new {
-    //                     roomProps = rp,
-    //                     simOb = rp.GetComponentInParent<SimObjPhysics>()
-    //         });
-
-    //         loadedHouse.rooms = loadedHouse.rooms.Select(r => {
-    //             r.type = roomIdToProps[r.id].roomProps.RoomType;
-    //             // TODO add more room annotations here
-    //             return r;
-    //         }).ToList();
-
-    //         var sceneLights = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<Light>().Concat( 
-    //             GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<Light>()
-    //         );
-    //         Debug.Log("Scene light count " + sceneLights.Count());
-
-    //         var gatheredLights = new List<LightParameters>();
-
-    //         //this.loadedHouse.procedural_parameters.lights = new List<LightParameters>();
-
-    //         this.loadedHouse.procedural_parameters.lights = sceneLights.Select(l => {
-    //              RaycastHit hit;
-    //                 var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //                 string room = "";
-    //                 if (didHit) {
-    //                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //                 }
-    //                 // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
-    //                 string objectLink = "";
-    //                 var parentSim = l.GetComponentInParent<SimObjPhysics>();
-    //                 //SimObjType.Lamp
-    //                 if( parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
-    //                     objectLink = parentSim.ObjectID;
-    //                 }
-    //                 // if (didHit) {
-    //                 //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-    //                 // }
-    //                 ShadowParameters sp = null;
-    //                 if (l.shadows != LightShadows.None) {
-    //                     sp = new ShadowParameters() {
-    //                         strength = l.shadowStrength,
-    //                         type = Enum.GetName(typeof(LightShadows), l.shadows),
-    //                         normal_bias = l.shadowNormalBias,
-    //                         bias = l.shadowBias,
-    //                         near_plane = l.shadowNearPlane,
-    //                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
-    //                     };
-    //                 }
-    //                 return new LightParameters()  {
-    //                     id = l.gameObject.name,
-    //                     room_id = room,
-    //                     type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-    //                     position = l.transform.position,
-    //                     //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //                     intensity = l.intensity,
-    //                     indirect_multiplier = l.bounceIntensity,
-    //                     range = l.range,
-    //                     rgb = new SerializableColor() {r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a},
-    //                     shadow = sp,
-    //                     object_id = objectLink
-    //             };
-    //         }).ToList();
-
-
-
-
-
-    //         // var m = sceneLights.Select(l => 
-    //         //      new LightParameters()  {
-    //         //             id = l.gameObject.name,
-    //         //             room_id = "room",
-    //         //             type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-    //         //             position = l.transform.position,
-    //         //             rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //         //             intensity = l.intensity,
-    //         //             range = l.range,
-    //         //             rgb = l.color,
-    //         //             shadow = null,
-    //         //             object_id = ""
-
-    //         //     }
-    //         // ).ToList();
-    //         //Debug.Log(gatheredLights.Count);
-
-    //         //this.loadedHouse.procedural_parameters.lights = new List<LightParameters>() {gatheredLights[0]};
-    //         //this.loadedHouse.procedural_parameters.lights.
-
-    //         // this.loadedHouse.procedural_parameters.lights = new List<LightParameters>(gatheredLights.Count);
-    //          //this.loadedHouse.procedural_parameters.lights.AddRange(Enumerable.Repeat(this.loadedHouse.procedural_parameters.lights[0], 12));
-
-    //         //  this.loadedHouse.procedural_parameters = new ProceduralParameters() {
-    //         //     lights = gatheredLights
-    //         //  };
-
-
-    //         // for (int i = 0; i < gatheredLights.Count; i++) {
-    //         //     Debug.Log("Light copy: " + i);
-    //         //     this.loadedHouse.procedural_parameters.lights[i] =gatheredLights[i];
-    //         // }
-    //         //loadedHouse.procedural_parameters.lights = gatheredLights;
-
-
-    //         // loadedHouse.procedural_parameters.lights = sceneLights.Select(l => {
-    //         //     RaycastHit hit;
-    //         //     //var didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 12);
-    //         //     string room = "";
-    //         //     // if (didHit) {
-    //         //     //     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-    //         //     // }
-    //         //     //didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, Mathf.Infinity, 1 << 8);
-    //         //     string objectLink = "";
-    //         //     // if (didHit) {
-    //         //     //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-    //         //     // }
-    //         //     ShadowParameters sp = null;
-    //         //     if (l.shadows != LightShadows.None) {
-    //         //         sp = new ShadowParameters() {
-    //         //             strength = l.shadowStrength
-    //         //         };
-    //         //     }
-    //         //     return new LightParameters()  {
-    //         //         id = l.gameObject.name,
-    //         //         room_id = room,
-    //         //         type = Enum.GetName(typeof(LightType), l.type),
-
-
-
-    //         //         position = l.transform.position,
-    //         //         rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-    //         //         intensity = l.intensity,
-    //         //         range = l.range,
-    //         //         rgb = l.color,
-    //         //         shadow = sp,
-    //         //         object_id = objectLink
-
-    //         // };}).ToList();
-
-
-    //         loadedHouse.procedural_parameters.skybox_id = RenderSettings.skybox.name;
-
-    //         Debug.Log("Lights " + this.loadedHouse.procedural_parameters.lights.Count);
-
-    //         var jsonResolver = new ShouldSerializeContractResolver();
-    //                 var outJson = JObject.FromObject(this.loadedHouse,
-    //                             new Newtonsoft.Json.JsonSerializer() {
-    //                                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-    //                                 ContractResolver = jsonResolver
-    //                             });
-
-    //         Debug.Log($"output json: {outJson.ToString()}");
-    //         System.IO.File.WriteAllText(outPath, outJson.ToString());
-    //     }
-    //     else {
-    //         Debug.LogError("No loaded layout load a layout first");
-    //     }
-
-    // }
-
-
-
 
     [Button(Expanded = true)]
     public void SerializeSceneFromGameObjects(string outFilename) {
@@ -1127,10 +900,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 position = bb.center,
                 rotation = new AxisAngleRotation() { axis = axis, degrees = degrees },
                 kinematic = (obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic).GetValueOrDefault(),
-                bounding_box = new BoundingBox() { min = bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
+                boundingBox = new BoundingBox() { min = bb.center - (bb.size / 2.0f), max = bb.center + (bb.size / 2.0f) },
                 room = room,
                 types = new List<Taxonomy>() { new Taxonomy() { name = Enum.GetName(typeof(SimObjType), obj.simObj.ObjType) } },
-                asset_id = obj.assetId
+                assetId = obj.assetId
             };
                 // box.enabled = false;
                 return serializedObj;
@@ -1153,7 +926,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 });
 
         house.rooms = house.rooms.Select(r => {
-            r.type = roomIdToProps[r.id].roomProps.RoomType;
+            r.roomType = roomIdToProps[r.id].roomProps.RoomType;
             // TODO add more room annotations here
             return r;
         }).ToList();
@@ -1165,88 +938,90 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var gatheredLights = new List<LightParameters>();
 
-        //house.procedural_parameters.lights = new List<LightParameters>();
-
-        house.procedural_parameters.lights = sceneLights.Select(l => {
-            RaycastHit hit;
-            var didHit = Physics.Raycast(l.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
-            string room = "";
-            if (didHit) {
-                room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
-            }
-            // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
-            string objectLink = "";
-            var parentSim = l.GetComponentInParent<SimObjPhysics>();
-            //SimObjType.Lamp
-            if (parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
-                objectLink = parentSim.ObjectID;
-            }
-            // if (didHit) {
-            //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
-            // }
-            ShadowParameters sp = null;
-            if (l.shadows != LightShadows.None) {
-                sp = new ShadowParameters() {
-                    strength = l.shadowStrength,
-                    type = Enum.GetName(typeof(LightShadows), l.shadows),
-                    normal_bias = l.shadowNormalBias,
-                    bias = l.shadowBias,
-                    near_plane = l.shadowNearPlane,
-                    resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
+        house.proceduralParameters.lights = sceneLights.Select(
+            l => {
+                RaycastHit hit;
+                var didHit = Physics.Raycast(
+                    l.transform.position,
+                    -Vector3.up,
+                    out hit,
+                    Mathf.Infinity,
+                    LayerMask.GetMask("NonInteractive")
+                );
+                string room = "";
+                if (didHit) {
+                    room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
+                }
+                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
+                string objectLink = "";
+                var parentSim = l.GetComponentInParent<SimObjPhysics>();
+                //SimObjType.Lamp
+                if (parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
+                    objectLink = parentSim.ObjectID;
+                }
+                // if (didHit) {
+                //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
+                // }
+                ShadowParameters sp = null;
+                if (l.shadows != LightShadows.None) {
+                    sp = new ShadowParameters() {
+                        strength = l.shadowStrength,
+                        type = Enum.GetName(typeof(LightShadows), l.shadows),
+                        normalBias = l.shadowNormalBias,
+                        bias = l.shadowBias,
+                        nearPlane = l.shadowNearPlane,
+                        resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
+                    };
+                }
+                return new LightParameters() {
+                    id = l.gameObject.name,
+                    type = LightType.GetName(typeof(LightType), l.type),
+                    position = l.transform.position,
+                    rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
+                    //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
+                    intensity = l.intensity,
+                    indirectMultiplier = l.bounceIntensity,
+                    range = l.range,
+                    rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
+                    shadow = sp,
+                    linkedObjectId = objectLink
                 };
             }
-            return new LightParameters() {
-                id = l.gameObject.name,
-                room_id = room,
-                type = LightType.GetName(typeof(LightType), l.type),
-
-
-
-                position = l.transform.position,
-                rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-                //rotation = AxisAngleRotation.fromQuaternion(l.transform.rotation),
-                intensity = l.intensity,
-                indirect_multiplier = l.bounceIntensity,
-                range = l.range,
-                rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
-                shadow = sp,
-                object_id = objectLink
-            };
-        }).ToList();
+        ).ToList();
         var probes = GameObject.Find(ProceduralTools.DefaultLightingRootName).GetComponentsInChildren<ReflectionProbe>().Concat(
             GameObject.Find(ProceduralTools.DefaultObjectsRootName).GetComponentsInChildren<ReflectionProbe>()
         );
-        house.procedural_parameters.reflections = probes.Select( probeComp => {
+        house.proceduralParameters.reflections = probes.Select( probeComp => {
             return new ProbeParameters() {
                 background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
                 intensity = probeComp.intensity,
-                box_size = probeComp.size,
-                shadow_distance = probeComp.shadowDistance,
-                box_offset = probeComp.center,
+                boxSize = probeComp.size,
+                shadowDistance = probeComp.shadowDistance,
+                boxOffset = probeComp.center,
                 id = probeComp.gameObject.name,
                 position = probeComp.transform.position
             };
         }).ToList();
 
-        foreach (var probe in house.procedural_parameters.reflections) {
+        foreach (var probe in house.proceduralParameters.reflections) {
                 var go = new GameObject(probe.id);
                 go.transform.position = probe.position;
                 
                 var probeComp = go.AddComponent<ReflectionProbe>();
                 probeComp.backgroundColor = (probe.background?.toUnityColor()).GetValueOrDefault();
-                probeComp.center = probe.box_offset;
+                probeComp.center = probe.boxOffset;
                 probeComp.intensity = probe.intensity;
                 probeComp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
-                probeComp.size = probe.box_size;
-                probeComp.shadowDistance = probe.shadow_distance;
+                probeComp.size = probe.boxSize;
+                probeComp.shadowDistance = probe.shadowDistance;
             }
 
 
 
-        house.procedural_parameters.ceiling_material = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
-        house.procedural_parameters.skybox_id = RenderSettings.skybox.name;
+        house.proceduralParameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
+        house.proceduralParameters.skyboxId = RenderSettings.skybox.name;
 
-        Debug.Log("Lights " + house.procedural_parameters.lights.Count);
+        Debug.Log("Lights " + house.proceduralParameters.lights.Count);
 
         var jsonResolver = new ShouldSerializeContractResolver();
         var outJson = JObject.FromObject(

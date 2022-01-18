@@ -4219,32 +4219,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CreateHouse(ProceduralHouse house) {
-            var rooms = house.rooms.SelectMany(
-                room => house.rooms
-            );
+            var rooms = house.rooms.SelectMany(room => house.rooms);
 
             var materials = ProceduralTools.GetMaterials();
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
-                    r => r.ceilings.Select(c => c.material).Concat(
-                                new List<string>() { r.floor_material })
-                        .Concat(
-                            house.walls.Select(w => w.material)
-                        )
-                ).Concat(new List<string>() { house.procedural_parameters.ceiling_material })
+                    r => r.ceilings
+                            .Select(c => c.material)
+                            .Concat(new List<string>() { r.floorMaterial })
+                            .Concat(house.walls.Select(w => w.material))
+                ).Concat(
+                    new List<string>() { house.proceduralParameters.ceilingMaterial }
+                )
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
             if (missingIds.Count() > 0) {
-                errorMessage = $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. Not existing or not loaded to the ProceduralAssetDatabase component.";
-                actionFinished(false);
-                return;
+                actionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
+                        + "Not existing or not loaded to the ProceduralAssetDatabase component."
+                    )
+                );
             }
             Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.CreateHouse(
-                house,
-                materials
-            );
-
+            var floor = ProceduralTools.CreateHouse(house: house, materialDb: materials);
 
             actionFinished(true);
         }

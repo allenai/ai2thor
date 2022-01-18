@@ -17,13 +17,9 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class AssetMetadata {
         public string id;
-
         public string type;
-
         public string primaryProperty;
-
         public List<string> secondaryProperties;
-
         public BoundingBox boundingBox;
     }
 
@@ -33,9 +29,9 @@ namespace Thor.Procedural.Data {
         public string id;
         public Vector3 position;
         public float intensity;
-        public Vector3 box_size;
-        public Vector3 box_offset;
-        public float shadow_distance;
+        public Vector3 boxSize;
+        public Vector3 boxOffset;
+        public float shadowDistance;
         public SerializableColor background;
     }
 
@@ -43,17 +39,16 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
         public string id { get; set; }
-        public string room_id { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
 
         public AxisAngleRotation rotation;
         public float intensity { get; set; }
-        public float indirect_multiplier { get; set; }
+        public float indirectMultiplier { get; set; }
         public float range { get; set; }
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
-        public string object_id { get; set; }
+        public string linkedObjectId { get; set; }
     }
 
     [Serializable]
@@ -62,11 +57,10 @@ namespace Thor.Procedural.Data {
         public string type { get; set; } = "Soft";
         public float strength { get; set; }
 
-        public float normal_bias { get; set; }
+        public float normalBias { get; set; }
         public float bias { get; set; }
-        public float near_plane { get; set; }
+        public float nearPlane { get; set; }
         public string resolution { get; set; }
-
     }
 
     [Serializable]
@@ -100,18 +94,18 @@ namespace Thor.Procedural.Data {
     public class Door : WallRectangularHole {
         public string id { get; set; }
         public Margin margin { get; set; }
-        public string room_0 { get; set; }
-        public string room_1 { get; set; }
-        public string wall_0 { get; set; }
-        public string wall_1 { get; set; }
-        public BoundingBox bounding_box { get; set; }
+        public string room0 { get; set; }
+        public string room1 { get; set; }
+        public string wall0 { get; set; }
+        public string wall1 { get; set; }
+        public BoundingBox boundingBox { get; set; }
 
-        public List<VectorXZ> axes_xz { get; set; }
+        public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
 
         public bool open { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
     }
@@ -119,22 +113,22 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralParameters {
-        public float floor_collider_thickness { get; set; }
-        public float receptacle_height { get; set; }
-        public string skybox_id { get; set; }
+        public float floorColliderThickness { get; set; }
+        public float receptacleHeight { get; set; }
+        public string skyboxId { get; set; }
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
         public List<ProbeParameters> reflections;
 
-        public string ceiling_material { get; set; }
-        public float? ceiling_material_tiling_x_divisor = null;
-        public float? ceiling_material_tiling_y_divisor = null;
-        public SerializableColor ceiling_color { get; set; } = null;
-        public float navmesh_voxel_size { get; set; }
-        public bool ceiling_back_faces { get; set; }
+        public string ceilingMaterial { get; set; }
+        public float? ceilingMaterialTilingXDivisor = null;
+        public float? ceilingMaterialTilingYDivisor = null;
+        public SerializableColor ceilingColor { get; set; } = null;
+        public float navmeshVoxelSize { get; set; }
+        public bool ceilingBackFaces { get; set; }
 
-        public bool unlit_ceiling { get; set; }
+        public bool unlitCeiling { get; set; }
     }
 
     [Serializable]
@@ -149,34 +143,31 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class RoomHierarchy {
         public string id { get; set; }
-        public string type { get; set; }
-        public string floor_material { get; set; }
-        public float? floor_material_tiling_x_divisor = null;
-        public float? floor_material_tiling_y_divisor = null;
+        public string roomType { get; set; }
+        public string floorMaterial { get; set; }
+        public float? floorMaterialTilingXDivisor = null;
+        public float? floorMaterialTilingYDivisor = null;
 
-        public SerializableColor floor_color { get; set; } = null;
+        public SerializableColor floorColor { get; set; } = null;
         // public float y { get; set; }
-        public List<Vector3> floor_polygon { get; set; }
+        public List<Vector3> floorPolygon { get; set; }
         public List<Ceiling> ceilings { get; set; }
         public List<RoomHierarchy> rooms = null;
     }
-
-    // public class m {
-    //     Vector3 
-    // }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class PolygonWall {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
-        public string room_id { get; set; }
+        public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
-        public bool empty { get; set; }
 
-        public float material_tiling_x_divisor = 1.0f;
-        public float material_tiling_y_divisor = 1.0f;
+        public bool empty { get; set; } = false;
+
+        public float materialTilingXDivisor = 1.0f;
+        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 
@@ -201,17 +192,17 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class Window : WallRectangularHole {
         public string id { get; set; }
-        public string room_0 { get; set; }
-        public string room_1 { get; set; }
-        public BoundingBox bounding_box { get; set; }
+        public string room0 { get; set; }
+        public string room1 { get; set; }
+        public BoundingBox boundingBox { get; set; }
         public Margin margin { get; set; }
-        public string wall_0 { get; set; }
-        public string wall_1 { get; set; }
+        public string wall0 { get; set; }
+        public string wall1 { get; set; }
         public bool openable { get; set; }
         public bool open { get; set; }
-        public List<VectorXZ> axes_xz { get; set; }
+        public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
     }
@@ -253,12 +244,12 @@ namespace Thor.Procedural.Data {
         public Vector3 position { get; set; }
         public AxisAngleRotation rotation { get; set; }
         public bool kinematic { get; set; } //should the rigidbody be kinematic or not
-        public BoundingBox bounding_box { get; set; }
+        public BoundingBox boundingBox { get; set; }
         public string room { get; set; }
         public List<HouseObject> children { get; set; }
         public List<Taxonomy> types { get; set; }
-        public string asset_id { get; set; } //name of prefab asset from asset database
-        public string navmesh_area { get; set; }
+        public string assetId { get; set; } //name of prefab asset from asset database
+        public string navmeshArea { get; set; }
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;
@@ -269,13 +260,13 @@ namespace Thor.Procedural.Data {
     public class Roof {
         public float thickness { get; set; }
         public string material { get; set; }
-        public string asset_id { get; set; }
+        public string assetId { get; set; }
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralHouse {
-        public ProceduralParameters procedural_parameters { get; set; }
+        public ProceduralParameters proceduralParameters { get; set; }
         public string id { get; set; }
         public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
         public List<PolygonWall> walls { get; set; } = new List<PolygonWall>();
@@ -299,26 +290,21 @@ namespace Thor.Procedural.Data {
 
     // }
     public interface WallRectangularHole {
-
         string id { get; set; }
-        string asset_id { get; set; }
-        string room_0 { get; set; }
-        string room_1 { get; set; }
-        string wall_0 { get; set; }
-        string wall_1 { get; set; }
+        string assetId { get; set; }
+        string room0 { get; set; }
+        string room1 { get; set; }
+        string wall0 { get; set; }
+        string wall1 { get; set; }
 
-        BoundingBox bounding_box { get; set; }
+        BoundingBox boundingBox { get; set; }
 
         Margin margin { get; set; }
 
         bool open { get; set; }
 
         SerializableColor color { get; set; }
-
     }
-
-
-
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -332,15 +318,14 @@ namespace Thor.Procedural.Data {
         public WallRectangularHole hole = null;
         public string materialId;
 
-        public string room_id;
+        public string roomId;
 
-        public float material_tiling_x_divisor = 1.0f;
-        public float material_tiling_y_divisor = 1.0f;
+        public float materialTilingXDivisor = 1.0f;
+        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 
         public bool unlit;
-
     }
 
     public interface Floor {
@@ -349,7 +334,6 @@ namespace Thor.Procedural.Data {
     }
 
     [Serializable]
-
     [MessagePackObject(keyAsPropertyName: true)]
     public class RectangleFloor : Floor {
         public Vector3 center;
@@ -392,12 +376,9 @@ namespace Thor.Procedural.Data {
                 (p0, p1) => new Wall() { height = wallHeight, p0 = p0, p1 = p1, thickness = wallThickness, materialId = wallMaterialId }
             ).ToArray();
         }
-
     }
 
     public interface Room {
-
-
         Wall[] walls { get; }
         Floor floor { get; }
 
@@ -421,18 +402,9 @@ namespace Thor.Procedural.Data {
         //         .OrderBy(p => p.z)
         //         .ThenBy(p => p, Comparer<Vector3>.Create((a, b) => System.Math.Sign( (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y)))).ToArray();
         // }
-
-
-
     }
 
-    // public class House<T> where T : Room
-    // {
-
-    // }
-
     [Serializable]
-
     [MessagePackObject(keyAsPropertyName: true)]
     // TODO move to this interface
     public class RectangleRoom : Room {
@@ -450,7 +422,6 @@ namespace Thor.Procedural.Data {
         public float width { get { return rectangleFloor.width; } }
         public float depth { get { return rectangleFloor.depth; } }
 
-
         // TODO decide if needed here
         // public float floorThickness {get;}
 
@@ -461,7 +432,15 @@ namespace Thor.Procedural.Data {
         public Vector3[] cornersClockWise { get { return rectangleFloor.cornersClockwise; } }
 
 
-        public static RectangleRoom roomFromWallPoints(IEnumerable<Vector3> cornersClockWise, float wallHeight, float wallThickness, string floorMaterialId, string wallMaterialId, float marginWidth = 0.0f, float marginDepth = 0.0f) {
+        public static RectangleRoom roomFromWallPoints(
+            IEnumerable<Vector3> cornersClockWise,
+            float wallHeight,
+            float wallThickness,
+            string floorMaterialId,
+            string wallMaterialId,
+            float marginWidth = 0.0f,
+            float marginDepth = 0.0f
+        ) {
 
             var centroid = cornersClockWise.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / cornersClockWise.Count();
 
@@ -533,8 +512,12 @@ namespace Thor.Procedural.Data {
             //initRoom(origin, width, height, walls);
         }
 
-        public static Wall[] wallsFromContiguousPoints(Vector3[] corners, float wallHeight, float wallThickness, string wallMaterialId) {
-            var centroid = corners.Aggregate(Vector3.zero, (accumulator, c) => accumulator + c) / corners.Length;
+        public static Wall[] wallsFromContiguousPoints(
+            Vector3[] corners, float wallHeight, float wallThickness, string wallMaterialId
+        ) {
+            var centroid = corners.Aggregate(
+                Vector3.zero, (accumulator, c) => accumulator + c
+            ) / corners.Length;
 
 
             // var cornersClockWise = corners
@@ -566,5 +549,4 @@ namespace Thor.Procedural.Data {
         //     this.walls = walls;
         // }
     }
-
 }
