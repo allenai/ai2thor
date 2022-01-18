@@ -58,6 +58,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
 
+    private enum HapticFeedback {
+        LAVA,
+        SAFE
+    }
+    private List<HapticFeedback> hapticFeedback = new List<HapticFeedback> { HapticFeedback.SAFE };
+
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -204,6 +210,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
+        metadata.hapticFeedback = this.hapticFeedback.Select(hf => hf.ToString()).ToArray();
+        Debug.Log(metadata.hapticFeedback);
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -563,6 +571,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             actionFinished(true);
         }
+        CheckIfInLava();
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."   
@@ -570,6 +579,18 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Physics.Simulate(MCSController.PHYSICS_SIMULATION_STEP_SECONDS);
         }
         physicsFramesPerSecond = 1.0f / (MCSController.PHYSICS_SIMULATION_STEP_SECONDS * MCSController.PHYSICS_SIMULATION_STEPS);
+    }
+
+    private void CheckIfInLava() {
+        hapticFeedback.Clear();
+        Ray ray = new Ray(transform.position, Vector3.down);
+        RaycastHit hit;
+        Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
+        Material material = hit.transform.GetComponent<Renderer>().material;
+        if(material != null && material.name.Contains("Stylize_Lava"))
+            hapticFeedback.Add(HapticFeedback.LAVA);
+        else
+            hapticFeedback.Add(HapticFeedback.SAFE);
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep() {
