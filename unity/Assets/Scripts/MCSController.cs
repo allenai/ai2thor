@@ -211,7 +211,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.hapticFeedback = this.hapticFeedback.Select(hf => hf.ToString()).ToArray();
-        Debug.Log(metadata.hapticFeedback);
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
