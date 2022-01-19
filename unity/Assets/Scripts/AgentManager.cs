@@ -1340,6 +1340,7 @@ public struct MetadataWrapper
     public string pose;
 	public float performerRadius;
 	public string[] hapticFeedback;
+	public int stepsOnLava;
 }
 
 [Serializable]

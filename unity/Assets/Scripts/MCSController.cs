@@ -62,6 +62,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         ON_LAVA,
     }
     private List<HapticFeedback> hapticFeedback = new List<HapticFeedback>();
+    public int stepsOnLava;
 
 
     public override void CloseObject(ServerAction action) {
@@ -210,6 +211,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.hapticFeedback = this.hapticFeedback.Select(hf => hf.ToString()).ToArray();
+        metadata.stepsOnLava = this.stepsOnLava;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -258,6 +260,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.Initialize(action);
 
         this.step = 0;
+        this.stepsOnLava = 0;
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         main.enableVerboseLog = main.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
@@ -270,6 +273,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         cc.center = new Vector3(0,COLLIDER_CENTER,0);
         cc.radius = COLLIDER_RADIUS;
         groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
+        this.stepsOnLava = 0;
     }
 
     public void MCSCloseObject(ServerAction action) {
@@ -593,6 +597,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
             hapticFeedback.Add(HapticFeedback.ON_LAVA);
+            stepsOnLava++;
         }
     }
 
