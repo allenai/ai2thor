@@ -61,7 +61,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private enum HapticFeedback {
         ON_LAVA,
     }
-    private List<HapticFeedback> hapticFeedback = new List<HapticFeedback>();
+  
+    private Dictionary<string, bool> hapticFeedback = new Dictionary<string, bool>();
     public int stepsOnLava;
 
 
@@ -210,8 +211,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
-        metadata.hapticFeedback = this.hapticFeedback.Select(hf => hf.ToString()).ToArray();
         metadata.stepsOnLava = this.stepsOnLava;
+        metadata.hapticFeedback = this.hapticFeedback;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -261,6 +262,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         this.step = 0;
         this.stepsOnLava = 0;
+        foreach(HapticFeedback hf in Enum.GetValues(typeof(HapticFeedback))) {
+            if (!hapticFeedback.ContainsKey(hf.ToString().ToLower()))
+                hapticFeedback.Add(hf.ToString().ToLower(), false);
+        }
+      
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         main.enableVerboseLog = main.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
@@ -574,7 +580,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             actionFinished(true);
         }
         //haptic feedback checks
-        hapticFeedback.Clear();
+        foreach(string hf in hapticFeedback.Keys.ToList()) {
+            hapticFeedback[hf] = false;
+        }
         CheckIfInLava();
 
         // Call Physics.Simulate multiple times with a small step value because a large step
@@ -597,8 +605,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
 
         if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
-            hapticFeedback.Add(HapticFeedback.ON_LAVA);
             stepsOnLava++;
+            hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
         }
     }
 
