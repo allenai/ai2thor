@@ -1248,6 +1248,7 @@ namespace Thor.Procedural {
             var windowsAndDoors = house.doors.Select(d => d as WallRectangularHole).Concat(house.windows);
             var holes = windowsAndDoors
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall0, hole), (hole.wall1, hole) })
+                .Where(pair => !String.IsNullOrEmpty(pair.Item1))
                 .ToDictionary(pair => pair.Item1, pair => pair.Item2);
             //house.doors.SelectMany(door => new List<string>() { door.wall0, door.wall1 });
 
@@ -1296,7 +1297,11 @@ namespace Thor.Procedural {
             var wallsMaxY = wallPoints.Max(p => p.y);
             var wallsMaxHeight = walls.Max(w => w.height);
 
-            var floorGameObject = createSimObjPhysicsGameObject(simObjId, position == null ? new Vector3(0, wallsMinY, 0) : position, withRigidBody: false);
+            var floorGameObject = createSimObjPhysicsGameObject(
+                simObjId,
+                position == null ? new Vector3(0, wallsMinY, 0) : position,
+                withRigidBody: false
+            );
 
             for (int i = 0; i < house.rooms.Count(); i++) {
                 var room = house.rooms.ElementAt(i);
@@ -1400,7 +1405,16 @@ namespace Thor.Procedural {
                 // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
                 
                 var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
-                ceilingMeshRenderer.material = generatePolygonMaterial(materialDb.getAsset(ceilingMaterialId), house.proceduralParameters.ceilingColor, dimensions, house.proceduralParameters.ceilingMaterialTilingXDivisor, house.proceduralParameters.ceilingMaterialTilingYDivisor, 0.0f, 0.0f, house.proceduralParameters.unlitCeiling);
+                ceilingMeshRenderer.material = generatePolygonMaterial(
+                    materialDb.getAsset(ceilingMaterialId),
+                    house.proceduralParameters.ceilingColor,
+                    dimensions,
+                    house.proceduralParameters.ceilingMaterialTilingXDivisor,
+                    house.proceduralParameters.ceilingMaterialTilingYDivisor,
+                    0.0f,
+                    0.0f,
+                    house.proceduralParameters.unlitCeiling
+                );
 
                 tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
@@ -1426,14 +1440,12 @@ namespace Thor.Procedural {
 
             var assetMap = ProceduralTools.getAssetMap();
             var doorsToWalls = windowsAndDoors.Select(
-                    door =>
-                        (
-                         door,
-                         wall0: walls.First(w => w.id == door.wall0),
-                         wall1: walls.FirstOrDefault(w => w.id == door.wall1)
-                        )
-                    ).ToDictionary(d => d.door.id, d => (d.wall0, d.wall1)
-            );
+                door => (
+                    door,
+                    wall0: walls.First(w => w.id == door.wall0),
+                    wall1: walls.FirstOrDefault(w => w.id == door.wall1)
+                )
+            ).ToDictionary(d => d.door.id, d => (d.wall0, d.wall1));
             var count = 0;
             foreach (WallRectangularHole holeCover in windowsAndDoors) {
                 var coverPrefab = assetMap.getAsset(holeCover.assetId);
