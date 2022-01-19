@@ -632,7 +632,13 @@ namespace Thor.Procedural {
             wallGO.layer = layer;
 
             var meshF = wallGO.AddComponent<MeshFilter>();
-            var boxC = wallGO.AddComponent<BoxCollider>();
+            //var boxC = wallGO.AddComponent<BoxCollider>();
+            //var boxC = new BoxCollider();
+            // BoundingBox b;
+
+            Vector3 boxCenter = Vector3.zero;
+            Vector3 boxSize = Vector3.zero;
+
             // boxC.convex = true;
             var generateBackFaces = false;
             const float zeroThicknessEpsilon = 1e-4f;
@@ -663,7 +669,7 @@ namespace Thor.Procedural {
                 p0 = toCreate.p0;
                 p1 = toCreate.p1;
 
-                boxC.center = center;
+                boxCenter = center;
             } else {
                 p0 = -(width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
                 p1 = (width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
@@ -677,9 +683,9 @@ namespace Thor.Procedural {
 
             var colliderOffset = Vector3.zero;//toCreate.thickness < zeroThicknessEpsilon ? normal * colliderThickness : Vector3.zero;
 
-            boxC.center += colliderOffset;
+            boxCenter += colliderOffset;
 
-            boxC.size = new Vector3(width, toCreate.height, colliderThickness);
+            boxSize = new Vector3(width, toCreate.height, colliderThickness);
 
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
@@ -732,6 +738,7 @@ namespace Thor.Procedural {
 
                 triangles = new List<int>() {
                      0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7};
+
             } else {
 
                 vertices = new List<Vector3>() {
@@ -802,10 +809,20 @@ namespace Thor.Procedural {
             mesh.triangles = triangles.ToArray();
             meshF.sharedMesh = mesh;
             var meshRenderer = wallGO.AddComponent<MeshRenderer>();
+
+            if (toCreate.hole != null) {
+                var meshCollider  = wallGO.AddComponent<MeshCollider>();
+                meshCollider.sharedMesh = mesh;
+            }
+            else {
+                var boxC = wallGO.AddComponent<BoxCollider>();
+                boxC.center = boxCenter;
+                boxC.size = boxSize;
+            }
+
             // TODO use a material loader that has this dictionary
             //var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
             // var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
-
 
             var visibilityPointsGO = CreateVisibilityPointsOnPlane(
                 toCreate.p0,
@@ -815,7 +832,7 @@ namespace Thor.Procedural {
                 toCreate.hole
             );
 
-            setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxC);
+            setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxCenter, boxSize);
             ProceduralTools.setFloorProperties(wallGO, toCreate);
 
             visibilityPointsGO.transform.parent = wallGO.transform;
@@ -975,7 +992,8 @@ namespace Thor.Procedural {
             GameObject wallGameObject,
             string simObjId,
             GameObject visibilityPoints,
-            BoxCollider collider
+            Vector3 boxCenter,
+            Vector3 boxSize
         ) {
             var boundingBox = new GameObject("BoundingBox");
             // SimObjInvisible
@@ -986,8 +1004,8 @@ namespace Thor.Procedural {
             boundingBox.transform.localPosition = Vector3.zero;
             boundingBox.transform.localRotation = Quaternion.identity;
 
-            bbCollider.center = collider.center;
-            bbCollider.size = collider.size;
+            bbCollider.center = boxCenter;
+            bbCollider.size = boxSize;
 
             wallGameObject.tag = "SimObjPhysics";
 
@@ -1002,7 +1020,7 @@ namespace Thor.Procedural {
             simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
 
             // simObjPhysics.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBox };
-            simObjPhysics.MyColliders = new Collider[] { collider };
+            simObjPhysics.MyColliders = new Collider[] { wallGameObject.GetComponent<Collider>() };
 
             simObjPhysics.transform.parent = wallGameObject.transform;
 
