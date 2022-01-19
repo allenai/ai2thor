@@ -569,7 +569,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             RotateLookBodyAcrossFrames(this.bodyRotationActionData);
             actionFinished(true);
         }
+        //haptic feedback checks
+        hapticFeedback.Clear();
         CheckIfInLava();
+
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."   
@@ -580,8 +583,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void CheckIfInLava() {
-        hapticFeedback.Clear();
-        
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
