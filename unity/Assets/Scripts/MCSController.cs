@@ -59,10 +59,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private MCSRotationData lookRotationActionData; //stores look rotation direction
 
     private enum HapticFeedback {
-        LAVA,
-        SAFE
+        ON_LAVA,
     }
-    private List<HapticFeedback> hapticFeedback = new List<HapticFeedback> { HapticFeedback.SAFE };
+    private List<HapticFeedback> hapticFeedback = new List<HapticFeedback>();
 
 
     public override void CloseObject(ServerAction action) {
@@ -582,14 +581,19 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private void CheckIfInLava() {
         hapticFeedback.Clear();
+        
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
         Material material = hit.transform.GetComponent<Renderer>().material;
-        if(material != null && material.name.Contains("Stylize_Lava"))
-            hapticFeedback.Add(HapticFeedback.LAVA);
-        else
-            hapticFeedback.Add(HapticFeedback.SAFE);
+        
+        //this is at the end of every material name
+        string materialInstanceString = " (Instance)";
+        string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
+
+        if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
+            hapticFeedback.Add(HapticFeedback.ON_LAVA);
+        }
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep() {
