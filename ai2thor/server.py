@@ -269,8 +269,6 @@ class Event:
         if self.instance_segmentation_frame is None:
             return
 
-        MIN_DETECTION_LEN = 0
-
         self.instance_detections2D = {}
         unique_ids, unique_inverse = unique_rows(
             self.instance_segmentation_frame.reshape(-1, 3), return_inverse=True
@@ -283,9 +281,7 @@ class Event:
             == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
         )
 
-        # for unique_color_ind, unique_color in enumerate(unique_ids):
-        for color_bounds in self.metadata["colorBounds"]:
-            color = np.array(color_bounds["color"])
+        for color_ind, color in enumerate(unique_ids):
             color_name = self.color_to_object_id.get(
                 tuple(int(cc) for cc in color), "background"
             )
@@ -295,29 +291,29 @@ class Event:
                 cls = cls.split("|")[0]
                 simObj = True
 
-            bb = np.array(color_bounds["bounds"])
-            bb[[1, 3]] = self.metadata["screenHeight"] - bb[[3, 1]]
-            if not (
-                (bb[2] - bb[0]) < MIN_DETECTION_LEN
-                or (bb[3] - bb[1]) < MIN_DETECTION_LEN
-            ):
-                if cls not in self.class_detections2D:
-                    self.class_detections2D[cls] = []
+            if cls not in self.class_detections2D:
+                self.class_detections2D[cls] = []
+            mask = unique_masks[color_ind, ...]
+            bb = self.mask_bounding_box(mask)
+            self.class_detections2D[cls].append(bb)
 
-                self.class_detections2D[cls].append(bb)
+            if simObj:
+                self.instance_detections2D[color_name] = bb
+                self.instance_masks[color_name] = mask
 
-                color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
+            if cls not in self.class_masks:
+                self.class_masks[cls] = mask
+            else:
+                self.class_masks[cls] = np.logical_or(self.class_masks[cls], mask)
 
-                if simObj:
-                    self.instance_detections2D[color_name] = bb
-                    self.instance_masks[color_name] = unique_masks[color_ind, ...]
+    def mask_bounding_box(self, mask):
+        rows = np.any(mask, axis=1)
+        cols = np.any(mask, axis=0)
+        rmin, rmax = np.where(rows)[0][[0, -1]]
+        cmin, cmax = np.where(cols)[0][[0, -1]]
 
-                if cls not in self.class_masks:
-                    self.class_masks[cls] = unique_masks[color_ind, ...]
-                else:
-                    self.class_masks[cls] = np.logical_or(
-                        self.class_masks[cls], unique_masks[color_ind, ...]
-                    )
+        return cmin, rmin, cmax, rmax
+
 
     def _image_depth(self, image_depth_data, **kwargs):
         image_depth = read_buffer_image(
