@@ -58,6 +58,8 @@ class EditorBuild(object):
         self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
+        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64)
+        self.platform = external_system_platforms[platform.system()]
 
     def download(self):
         pass

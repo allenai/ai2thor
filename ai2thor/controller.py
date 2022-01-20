@@ -657,7 +657,9 @@ class Controller(object):
         # with CloudRendering the command-line height/width aren't respected, so
         # we compare here with what the desired height/width are and
         # update the resolution if they are different
-        if (
+        # if Python is running against the Unity Editor then
+        # ChangeResolution won't have an affect, so it gets skipped
+        if (self.server.unity_proc is not None) and (
             target_width != self.last_event.screen_width
             or target_height != self.last_event.screen_height
         ):
@@ -1317,7 +1319,7 @@ class Controller(object):
         self.last_event = self.server.receive()
 
         # we should be able to get rid of this since we check the resolution in .reset()
-        if height < 300 or width < 300:
+        if self.server.unity_proc is not None and (height < 300 or width < 300):
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 
         return self.last_event
