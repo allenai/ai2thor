@@ -154,6 +154,8 @@ class Event:
 
         self.process_colors()
         self.process_visible_bounds2D()
+        self.third_party_instance_masks = []
+        self.third_party_class_masks = []
         self.third_party_camera_frames = []
         self.third_party_semantic_segmentation_frames = []
         self.third_party_instance_segmentation_frames = []
@@ -223,6 +225,45 @@ class Event:
             obj for obj in self.metadata["objects"] if obj["objectType"] == object_type
         ]
 
+
+    def process_thirdparty_color_ids(self, instance_segmentation_frame):
+        instance_masks = {}
+        class_masks = {}
+
+        unique_ids, unique_inverse = unique_rows(
+            instance_segmentation_frame.reshape(-1, 3), return_inverse=True
+        )
+        unique_inverse = unique_inverse.reshape(
+            instance_segmentation_frame.shape[:2]
+        )
+        unique_masks = (
+            np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1))
+            == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
+        )
+
+        for color in unique_ids:
+            color_name = self.color_to_object_id.get(
+                tuple(int(cc) for cc in color), "background"
+            )
+            cls = color_name
+            simObj = False
+            if "|" in cls:
+                cls = cls.split("|")[0]
+                simObj = True
+
+            color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
+
+            if simObj:
+                instance_masks[color_name] = unique_masks[color_ind, ...]
+
+            if cls not in class_masks:
+                class_masks[cls] = unique_masks[color_ind, ...]
+            else:
+                class_masks[cls] = np.logical_or(
+                    class_masks[cls], unique_masks[color_ind, ...]
+                )
+
+        return class_masks, instance_masks
 
     def process_colors_ids(self):
         if self.instance_segmentation_frame is None:
@@ -393,9 +434,11 @@ class Event:
         self.process_colors_ids()
 
     def add_third_party_image_ids(self, image_ids_data):
-        self.third_party_instance_segmentation_frames.append(
-            read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
-        )
+        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
+        class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
+        self.third_party_instance_masks.append(instance_masks)
+        self.third_party_class_masks.append(class_masks)
 
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(
