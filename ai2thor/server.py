@@ -84,7 +84,7 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
 
         self._detections2d[cls] = detections = []
 
-        for color_name, color in self.lazy_instance_masks.instance_colors.items():
+        for color_name in self.lazy_instance_masks.instance_colors.keys():
             if "|" in color_name and color_name.split("|")[0] == cls:
                 bb = self.mask_bounding_box(self.lazy_instance_masks[color_name])
                 if bb:
@@ -184,9 +184,20 @@ class LazyClassSegmentationMasks(LazyInstanceSegmentationMasks):
         if key in self._masks:
             return self._masks[key]
 
-        # only allow class names
-        if "|" not in key:
-            class_mask = np.zeros(self.instance_segmentation_frame4.shape, dtype=bool)
+        class_mask = np.zeros(self.instance_segmentation_frame4.shape, dtype=bool)
+
+        if key == "background": 
+            # "background" is a special name for any color that wasn't included in the metadata
+            # this is mainly done for backwards compatibility since we only have a handful of instances
+            # of this across all scenes (e.g. FloorPlan412 - thin strip above the doorway)
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            metadata_color_keys = set([self._integer_color_key(color) for color in self.instance_colors.values()])
+            background_keys = all_integer_keys - metadata_color_keys
+            for ik in background_keys:
+                mask = self.instance_segmentation_frame4 == ik
+                class_mask = np.logical_or(class_mask, mask)
+
+        elif "|" not in key:
             for color_name, color in self.instance_colors.items():
                 if "|" in color_name and color_name.split("|")[0] == key:
                     mask = self.instance_segmentation_frame4 == self._integer_color_key(
@@ -194,7 +205,7 @@ class LazyClassSegmentationMasks(LazyInstanceSegmentationMasks):
                     )
                     class_mask = np.logical_or(class_mask, mask)
 
-            self._masks[key] = class_mask
+        self._masks[key] = class_mask
 
         return self._masks[key]
 
@@ -409,10 +420,6 @@ class Event:
         self.class_masks = LazyClassSegmentationMasks(self.instance_segmentation_frame, self.metadata["colors"])
         self.class_detections2D = LazyClassDetections2D(self.instance_masks)
         self.instance_detections2D = LazyInstanceDetections2D(self.instance_masks)
-        # XXX need to handle this case XXX
-        #color_name = self.color_to_object_id.get(
-        #    tuple(int(cc) for cc in color), "background"
-        #)
 
 
     def _image_depth(self, image_depth_data, **kwargs):

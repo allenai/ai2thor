@@ -3508,6 +3508,18 @@ def test_lazy_class_segmentation(event_with_segmentation):
 def test_lazy_class_segmentation_missing(event_with_segmentation):
     assert event_with_segmentation.class_masks["Stove"].sum() == 0
 
+def test_lazy_class_segmentation_background(event_with_segmentation):
+    # colors that don't appear in the metadata get labeled as "background"
+    cabinet_keys = []
+    for k in event_with_segmentation.class_masks.instance_colors.keys():
+        if k.startswith("Cabinet"):
+            cabinet_keys.append(k)
+
+    for k in cabinet_keys:
+        del(event_with_segmentation.class_masks.instance_colors[k])
+
+    assert event_with_segmentation.class_masks["background"].sum() == 111227
+    assert event_with_segmentation.class_masks["Cabinet"].sum() == 0
 
 def test_lazy_class_detections2d(event_with_segmentation):
     assert event_with_segmentation.class_detections2D["Cabinet"] == [
@@ -3516,6 +3528,7 @@ def test_lazy_class_detections2d(event_with_segmentation):
         (164, 490, 467, 599),
     ]
 
+    assert event_with_segmentation.class_detections2D["Stove"] == []
 
 def test_lazy_class_detections2d_missing(event_with_segmentation):
     assert event_with_segmentation.class_detections2D["Stove"] == []
