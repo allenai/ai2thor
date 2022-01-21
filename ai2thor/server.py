@@ -111,7 +111,7 @@ class LazyInstanceSegmentationMasks(Mapping):
         self.instance_segmentation_frame4.dtype = np.uint32
         # At this point we should have a 2d matrix of shape (height, width)
         # with a 32bit uint as the value
-        #self.instance_segmentation_frame4 = self.instance_segmentation_frame4.squeeze()
+        self.instance_segmentation_frame4 = self.instance_segmentation_frame4.squeeze()
         self.instance_colors = {}
         for c in colors:
             self.instance_colors[c["name"]] = c["color"]
