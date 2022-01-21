@@ -5,6 +5,7 @@ import warnings
 import json
 import numpy as np
 import pytest
+from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 
 from ai2thor.tests.constants import TESTS_DATA_DIR
 
@@ -3254,6 +3255,17 @@ def event_with_frame(event):
     return e
 
 
+@pytest.fixture
+def event_with_segmentation():
+    with open(os.path.join(TESTS_DATA_DIR, "instance_segmentation_metadata.json")) as f:
+        metadata = json.loads(f.read())
+
+    e = Event(metadata)
+    seg_frame = np.load(os.path.join(TESTS_DATA_DIR, "instance_segmentation_frame.npy"))
+    e.add_image_ids(seg_frame.tobytes())
+    return e
+
+
 def test_get_object(event):
     microwave = {
         "bounds3D": [
@@ -3421,3 +3433,89 @@ def test_process_colors(event_complex):
         249,
     )
     assert event_complex.object_id_to_color["Spoon"] == (235, 57, 90)
+
+
+def test_lazy_instance_segmentation(event_with_segmentation):
+    assert (
+        event_with_segmentation.instance_masks[
+            "CoffeeMachine|+00.89|+00.90|-02.13"
+        ].sum()
+        == 14833
+    )
+    expected_keys = [
+        "CoffeeMachine|+00.89|+00.90|-02.13",
+        "Cabinet|+00.95|+02.16|-02.38",
+        "StoveBurner|+01.08|+00.92|-01.50",
+        "Cabinet|+00.95|+02.16|-00.76",
+        "StandardWallSize|1|0|2",
+        "Cabinet|+00.95|+02.44|-01.78",
+        "StoveBurner|+00.84|+00.92|-01.10",
+        "StoveBurner|+00.84|+00.92|-01.50",
+        "StoveBurner|+01.08|+00.92|-01.10",
+        "StandardCounterHeightWidth|0.98|0|0.18",
+        "StandardUpperCabinetHeightWidth|1.28|0|0.18",
+        "StandardWallTileHeight1|1.3|0|0.18",
+        "StoveBase1|0.997|0|-1.302",
+        "StoveTopGas|-1.503001|0|-1.06545",
+        "Pan|+00.85|+00.95|-01.08",
+        "SaltShaker|+01.19|+00.90|-01.80",
+        "Microwave|+01.04|+01.68|-01.30",
+        "Cup|+01.08|+00.90|-00.77",
+        "StoveKnob|+00.67|+00.90|-01.24",
+        "StoveKnob|+00.67|+00.90|-01.09",
+        "StoveKnob|+00.67|+00.90|-01.52",
+        "StoveKnob|+00.67|+00.90|-01.37",
+        "PepperShaker|+01.09|+00.90|-01.82",
+        "Spatula|+01.10|+00.91|-00.63",
+        "PaperTowelRoll|+01.22|+01.01|-00.52",
+        "CounterTop|+00.93|+00.95|-02.05",
+        "CounterTop|+00.93|+00.95|-00.21",
+    ]
+    assert list(event_with_segmentation.instance_masks.keys()) == expected_keys
+
+
+def test_lazy_instance_detections2d(event_with_segmentation):
+    assert event_with_segmentation.instance_detections2D[
+        "CoffeeMachine|+00.89|+00.90|-02.13"
+    ] == (509, 23, 599, 228)
+
+
+def test_lazy_class_segmentation(event_with_segmentation):
+    assert event_with_segmentation.class_masks["Cabinet"].sum() == 111227
+    expected_keys = [
+        "Cabinet",
+        "StoveBurner",
+        "StandardWallSize",
+        "StandardCounterHeightWidth",
+        "StandardUpperCabinetHeightWidth",
+        "StandardWallTileHeight1",
+        "StoveBase1",
+        "StoveTopGas",
+        "Pan",
+        "SaltShaker",
+        "Microwave",
+        "Cup",
+        "StoveKnob",
+        "CoffeeMachine",
+        "PepperShaker",
+        "Spatula",
+        "PaperTowelRoll",
+        "CounterTop",
+    ]
+    assert list(event_with_segmentation.class_masks.keys()) == expected_keys
+
+
+def test_lazy_class_segmentation_missing(event_with_segmentation):
+    assert event_with_segmentation.class_masks["Stove"].sum() == 0
+
+
+def test_lazy_class_detections2d(event_with_segmentation):
+    assert event_with_segmentation.class_detections2D["Cabinet"] == [
+        (473, 315, 599, 599),
+        (0, 315, 145, 599),
+        (164, 490, 467, 599),
+    ]
+
+
+def test_lazy_class_detections2d_missing(event_with_segmentation):
+    assert event_with_segmentation.class_detections2D["Stove"] == []

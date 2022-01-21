@@ -12,6 +12,7 @@ from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
 import sys
+from collections.abc import Mapping
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -21,6 +22,181 @@ class NumpyAwareEncoder(json.JSONEncoder):
         if isinstance(obj, np.generic):
             return obj.item()
         return super(NumpyAwareEncoder, self).default(obj)
+
+
+class LazyInstanceDetections2D(Mapping):
+    def __init__(self, lazy_instance_masks):
+
+        self._detections2d = {}
+        self.lazy_instance_masks = lazy_instance_masks
+
+    def mask_bounding_box(self, mask):
+        rows = np.any(mask, axis=1)
+        cols = np.any(mask, axis=0)
+        rw = np.where(rows)
+        if len(rw[0]) == 0:
+            return None
+
+        rmin, rmax = rw[0][[0, -1]]
+        cmin, cmax = np.where(cols)[0][[0, -1]]
+
+        return cmin, rmin, cmax, rmax
+
+    def __contains__(self, key):
+        return key in self.lazy_instance_masks
+
+    def __getitem__(self, key):
+        if key in self._detections2d:
+            return self._detections2d[key]
+
+        mask = self.lazy_instance_masks[key]
+        self._detections2d[key] = self.mask_bounding_box(mask)
+
+        return self._detections2d[key]
+
+    def __len__(self):
+        return len(self.lazy_instance_masks)
+
+    def __iter__(self):
+        for k in self.lazy_instance_masks.keys():
+            self.__getitem__(key)
+
+        return iter(self._detections2d)
+
+
+class LazyClassDetections2D(LazyInstanceDetections2D):
+
+    def __len__(self):
+        return len(self._class_names())
+
+    def _class_names(self):
+        return set([k.split("|") for k in self.lazy_instance_masks.instance_colors.keys()])
+
+    def __iter__(self):
+        for cls in self._class_names():
+            self.__getitem__(cls)
+
+        return iter(self._detections2d)
+
+    def __getitem__(self, cls):
+        if cls in self._detections2d:
+            return self._detections2d[key]
+
+        self._detections2d[cls] = detections = []
+
+        for color_name, color in self.lazy_instance_masks.instance_colors.items():
+            if "|" in color_name and color_name.split("|")[0] == cls:
+                bb = self.mask_bounding_box(self.lazy_instance_masks[color_name])
+                if bb:
+                    detections.append(bb)
+
+        return self._detections2d[cls]
+
+class LazyInstanceSegmentationMasks(Mapping):
+
+    def __init__(self, instance_segmentation_frame, colors):
+        shape = instance_segmentation_frame.shape
+        self._masks = {}
+        self._loaded = False
+
+        if shape[2] == 3:
+            self.instance_segmentation_frame4 = np.concatenate(
+                (
+                    instance_segmentation_frame,
+                    np.zeros((shape[0], shape[1], 1), dtype=np.uint8),
+                ),
+                axis=2,
+            )
+
+        self.instance_segmentation_frame4.dtype = np.uint32
+        # At this point we should have a 2d matrix of shape (height, width)
+        # with a 32bit uint as the value
+        #self.instance_segmentation_frame4 = self.instance_segmentation_frame4.squeeze()
+        self.instance_colors = {}
+        for c in colors:
+            self.instance_colors[c["name"]] = c["color"]
+
+    def __contains__(self, key):
+        if key in self.instance_colors:
+            color = self.instance_colors[key]
+            return (
+                len(
+                    np.where(
+                        self.instance_segmentation_frame4
+                        == self._integer_color_key(color)
+                    )[0]
+                )
+                > 0
+            )
+        else:
+            return False
+
+    def _integer_color_key(self, color):
+        a = np.array(color + [0], dtype=np.uint8)
+        a.dtype = np.uint32
+        return a[0]
+
+    def _load_all(self):
+        if not self._loaded:
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            for color_name, color in self.instance_colors.items():
+                if self._integer_color_key(color) in all_integer_keys:
+                    self.__getitem__(color_name)
+        self._loaded = True
+
+    def __getitem__(self, key):
+        if key in self._masks:
+            return self._masks[key]
+
+        if key in self.instance_colors:
+            self._masks[
+                key
+            ] = self.instance_segmentation_frame4 == self._integer_color_key(
+                self.instance_colors[key]
+            )
+
+        return self._masks[key]
+
+    def __iter__(self):
+        self._load_all()
+        return iter(self._masks)
+
+    def __len__(self):
+        self._load_all()
+        return len(self._masks)
+
+
+class LazyClassSegmentationMasks(LazyInstanceSegmentationMasks):
+    def _load_all(self):
+        if not self._loaded:
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            for color_name, color in self.instance_colors.items():
+                if self._integer_color_key(color) in all_integer_keys:
+                    cls = color_name.split("|")[0]
+                    self.__getitem__(cls)
+        self._loaded = True
+
+    def __contains__(self, key):
+        self._load_all()
+        return key in self._masks
+
+    def __getitem__(self, key):
+        if key in self._masks:
+            return self._masks[key]
+
+        # only allow class names
+        if "|" not in key:
+            class_mask = np.zeros(self.instance_segmentation_frame4.shape, dtype=bool)
+            for color_name, color in self.instance_colors.items():
+                if "|" in color_name and color_name.split("|")[0] == key:
+                    mask = self.instance_segmentation_frame4 == self._integer_color_key(
+                        color
+                    )
+                    class_mask = np.logical_or(class_mask, mask)
+
+            self._masks[key] = class_mask
+
+        return self._masks[key]
 
 
 class MultiAgentEvent(object):
@@ -225,94 +401,18 @@ class Event:
             obj for obj in self.metadata["objects"] if obj["objectType"] == object_type
         ]
 
-
-    def process_thirdparty_color_ids(self, instance_segmentation_frame):
-        instance_masks = {}
-        class_masks = {}
-
-        unique_ids, unique_inverse = unique_rows(
-            instance_segmentation_frame.reshape(-1, 3), return_inverse=True
-        )
-        unique_inverse = unique_inverse.reshape(
-            instance_segmentation_frame.shape[:2]
-        )
-        unique_masks = (
-            np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1))
-            == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
-        )
-
-        for color in unique_ids:
-            color_name = self.color_to_object_id.get(
-                tuple(int(cc) for cc in color), "background"
-            )
-            cls = color_name
-            simObj = False
-            if "|" in cls:
-                cls = cls.split("|")[0]
-                simObj = True
-
-            color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
-
-            if simObj:
-                instance_masks[color_name] = unique_masks[color_ind, ...]
-
-            if cls not in class_masks:
-                class_masks[cls] = unique_masks[color_ind, ...]
-            else:
-                class_masks[cls] = np.logical_or(
-                    class_masks[cls], unique_masks[color_ind, ...]
-                )
-
-        return class_masks, instance_masks
-
     def process_colors_ids(self):
         if self.instance_segmentation_frame is None:
             return
 
-        self.instance_detections2D = {}
-        unique_ids, unique_inverse = unique_rows(
-            self.instance_segmentation_frame.reshape(-1, 3), return_inverse=True
-        )
-        unique_inverse = unique_inverse.reshape(
-            self.instance_segmentation_frame.shape[:2]
-        )
-        unique_masks = (
-            np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1))
-            == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
-        )
-
-        for color_ind, color in enumerate(unique_ids):
-            color_name = self.color_to_object_id.get(
-                tuple(int(cc) for cc in color), "background"
-            )
-            cls = color_name
-            simObj = False
-            if "|" in cls:
-                cls = cls.split("|")[0]
-                simObj = True
-
-            if cls not in self.class_detections2D:
-                self.class_detections2D[cls] = []
-            mask = unique_masks[color_ind, ...]
-            bb = self.mask_bounding_box(mask)
-            self.class_detections2D[cls].append(bb)
-
-            if simObj:
-                self.instance_detections2D[color_name] = bb
-                self.instance_masks[color_name] = mask
-
-            if cls not in self.class_masks:
-                self.class_masks[cls] = mask
-            else:
-                self.class_masks[cls] = np.logical_or(self.class_masks[cls], mask)
-
-    def mask_bounding_box(self, mask):
-        rows = np.any(mask, axis=1)
-        cols = np.any(mask, axis=0)
-        rmin, rmax = np.where(rows)[0][[0, -1]]
-        cmin, cmax = np.where(cols)[0][[0, -1]]
-
-        return cmin, rmin, cmax, rmax
+        self.instance_masks = LazyInstanceSegmentationMasks(self.instance_segmentation_frame, self.metadata["colors"])
+        self.class_masks = LazyClassSegmentationMasks(self.instance_segmentation_frame, self.metadata["colors"])
+        self.class_detections2D = LazyClassDetections2D(self.instance_masks)
+        self.instance_detections2D = LazyInstanceDetections2D(self.instance_masks)
+        # XXX need to handle this case XXX
+        #color_name = self.color_to_object_id.get(
+        #    tuple(int(cc) for cc in color), "background"
+        #)
 
 
     def _image_depth(self, image_depth_data, **kwargs):
@@ -343,12 +443,12 @@ class Event:
 
     def add_third_party_camera_image_robot(self, third_party_image_data, width, height):
         self.third_party_camera_frames.append(
-            read_buffer_image(
-                third_party_image_data, width, height
-            )
+            read_buffer_image(third_party_image_data, width, height)
         )
 
-    def add_third_party_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
+    def add_third_party_image_depth_robot(
+        self, image_depth_data, depth_format, **kwargs
+    ):
         multiplier = 1.0
         camera_far_plane = kwargs.pop("camera_far_plane", 1)
         camera_near_plane = kwargs.pop("camera_near_plane", 0)
@@ -425,7 +525,9 @@ class Event:
     def add_image(self, image_data, **kwargs):
         self.frame = read_buffer_image(
             image_data, self.screen_width, self.screen_height, **kwargs
-        )[:, :, :3] # CloudRendering returns 4 channels instead of 3
+        )[
+            :, :, :3
+        ]  # CloudRendering returns 4 channels instead of 3
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
@@ -434,11 +536,14 @@ class Event:
         self.process_colors_ids()
 
     def add_third_party_image_ids(self, image_ids_data):
-        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
-        self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
-        class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
-        self.third_party_instance_masks.append(instance_masks)
-        self.third_party_class_masks.append(class_masks)
+        instance_segmentation_frame = read_buffer_image(
+            image_ids_data, self.screen_width, self.screen_height
+        )
+        self.third_party_instance_segmentation_frames.append(
+            instance_segmentation_frame
+        )
+        self.third_party_instance_masks.append(LazyInstanceSegmentationMasks(instance_segmentation_frame, self.metadata["colors"]))
+        self.third_party_class_masks.append(LazyClassSegmentationMasks(instance_segmentation_frame, self.metadata["colors"]))
 
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(
