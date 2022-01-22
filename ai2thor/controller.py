@@ -657,7 +657,9 @@ class Controller(object):
         # with CloudRendering the command-line height/width aren't respected, so
         # we compare here with what the desired height/width are and
         # update the resolution if they are different
-        if (
+        # if Python is running against the Unity Editor then
+        # ChangeResolution won't have an affect, so it gets skipped
+        if (self.server.unity_proc is not None) and (
             target_width != self.last_event.screen_width
             or target_height != self.last_event.screen_height
         ):
@@ -669,6 +671,11 @@ class Controller(object):
             )
             self.width = target_width
             self.height = target_height
+
+        # the command line -quality parameter is not respected with the CloudRendering
+        # engine, so the quality is manually changed after launch
+        if self._build.platform == ai2thor.platform.CloudRendering:
+            self.step(action="ChangeQuality", quality=self.quality)
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
@@ -1073,44 +1080,48 @@ class Controller(object):
         import requests
 
         payload = []
-        cache_payload, cache_mtime = self._get_cache_commit_history(branch)
-        # we need to limit how often we hit api.github.com since 
-        # there is a rate limit of 60 per hour per IP
-        if cache_payload and (time.time() - cache_mtime) < 300:
-            payload = cache_payload
-        else:
-            try:
-                res = requests.get(
-                    "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
-                )
-                if res.status_code == 404:
-                    raise ValueError("Invalid branch name: %s" % branch)
-                elif res.status_code == 403:
+        makedirs(self.commits_cache_dir) # must make directory for lock to succeed
+        # must lock to handle case when multiple procs are started
+        # and all fetch from api.github.com
+        with LockEx(self._cache_commit_filename(branch)):
+            cache_payload, cache_mtime = self._get_cache_commit_history(branch)
+            # we need to limit how often we hit api.github.com since 
+            # there is a rate limit of 60 per hour per IP
+            if cache_payload and (time.time() - cache_mtime) < 300:
+                payload = cache_payload
+            else:
+                try:
+                    res = requests.get(
+                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
+                    )
+                    if res.status_code == 404:
+                        raise ValueError("Invalid branch name: %s" % branch)
+                    elif res.status_code == 403:
+                        payload, _ = self._get_cache_commit_history(branch)
+                        if payload:
+                            warnings.warn(
+                                "Error retrieving commits: %s - using cached commit history for %s"
+                                % (res.text, branch)
+                            )
+                        else:
+                            res.raise_for_status()
+                    elif res.status_code == 200:
+                        payload = res.json()
+                        self._cache_commit_history(branch, payload)
+                    else:
+                        res.raise_for_status()
+                except requests.exceptions.ConnectionError as e:
                     payload, _ = self._get_cache_commit_history(branch)
                     if payload:
                         warnings.warn(
-                            "Error retrieving commits: %s - using cached commit history for %s"
-                            % (res.text, branch)
+                            "Unable to connect to github.com: %s - using cached commit history for %s"
+                            % (e, branch)
                         )
                     else:
-                        res.raise_for_status()
-                elif res.status_code == 200:
-                    payload = res.json()
-                    self._cache_commit_history(branch, payload)
-                else:
-                    res.raise_for_status()
-            except requests.exceptions.ConnectionError as e:
-                payload, _ = self._get_cache_commit_history(branch)
-                if payload:
-                    warnings.warn(
-                        "Unable to connect to github.com: %s - using cached commit history for %s"
-                        % (e, branch)
-                    )
-                else:
-                    raise Exception(
-                        "Unable to get commit history for branch %s and no cached history exists: %s"
-                        % (branch, e)
-                    )
+                        raise Exception(
+                            "Unable to get commit history for branch %s and no cached history exists: %s"
+                            % (branch, e)
+                        )
 
         return [c["sha"] for c in payload]
 
@@ -1295,7 +1306,7 @@ class Controller(object):
         self.last_event = self.server.receive()
 
         # we should be able to get rid of this since we check the resolution in .reset()
-        if height < 300 or width < 300:
+        if self.server.unity_proc is not None and (height < 300 or width < 300):
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 
         return self.last_event

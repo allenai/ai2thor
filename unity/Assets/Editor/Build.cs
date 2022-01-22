@@ -27,7 +27,14 @@ public class Build {
         build(GetBuildName(), BuildTarget.WebGL);
     }
 
+    static void buildResourceAssetJson() {
+        ResourceAssetManager manager = new ResourceAssetManager();
+        manager.BuildCatalog();
+    }
+
     static void build(string buildName, BuildTarget target) {
+        buildResourceAssetJson();
+
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
             var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
