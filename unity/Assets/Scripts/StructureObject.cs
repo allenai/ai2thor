@@ -21,11 +21,11 @@ public class StructureObject : MonoBehaviour
 
     public void AddPlatformLips(float scaleX=1, float scaleY=1, float scaleZ=1, bool addFront=false, bool addBack=false, bool addLeft=false, bool addRight=false)
     {
-        float defaultLipScaleXZ = 0.2f;
-        float defaultLipScaleY = 0.2f;
-        float placementOffsetXWithScale = 0.5f - (defaultLipScaleXZ / scaleX / 2); 
-        float placementOffsetYWithScale = 0.5f + (defaultLipScaleY / scaleY / 2);
-        float placementOffsetZWithScale = 0.5f - (defaultLipScaleXZ / scaleZ / 2);
+        float defaultWidth = 0.2f;
+        float defaultHeight = 0.25f;
+        float placementOffsetXWithScale = 0.5f - (defaultWidth / scaleX / 2); 
+        float placementOffsetYWithScale = 0.5f + (defaultHeight / scaleY / 2);
+        float placementOffsetZWithScale = 0.5f - (defaultWidth / scaleZ / 2);
 
         string clone = " (Clone)";
         GameObject thisPlatform = this.gameObject;
@@ -60,25 +60,25 @@ public class StructureObject : MonoBehaviour
         if(addFront) {
             front.transform.parent = this.transform;
             front.transform.localPosition = new Vector3(0, placementOffsetYWithScale, -placementOffsetZWithScale);
-            front.transform.localScale = new Vector3(1, defaultLipScaleY / scaleY, defaultLipScaleXZ / scaleZ);
+            front.transform.localScale = new Vector3(1, defaultHeight / scaleY, defaultWidth / scaleZ);
         }
 
         if(addBack) {
             back.transform.parent = this.transform;
             back.transform.localPosition = new Vector3(0, placementOffsetYWithScale, placementOffsetZWithScale);
-            back.transform.localScale = new Vector3(1, defaultLipScaleY / scaleY, defaultLipScaleXZ / scaleZ);
+            back.transform.localScale = new Vector3(1, defaultHeight / scaleY, defaultWidth / scaleZ);
         }
         
         if(addLeft) {
             left.transform.parent = this.transform;
             left.transform.localPosition = new Vector3(-placementOffsetXWithScale, placementOffsetYWithScale, 0);
-            left.transform.localScale = new Vector3(defaultLipScaleXZ / scaleX, defaultLipScaleY / scaleY, 1);
+            left.transform.localScale = new Vector3(defaultWidth / scaleX, defaultHeight / scaleY, 1);
         }
 
         if(addRight) {
             right.transform.parent = this.transform;
             right.transform.localPosition = new Vector3(placementOffsetXWithScale, placementOffsetYWithScale, 0);
-            right.transform.localScale = new Vector3(defaultLipScaleXZ / scaleX, defaultLipScaleY / scaleY, 1);
+            right.transform.localScale = new Vector3(defaultWidth / scaleX, defaultHeight / scaleY, 1);
         }
     }
 }
