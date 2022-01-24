@@ -1190,6 +1190,16 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.VisibilityPoints = visibilityPoints;
         }
 
+        if(objectConfig.platformLips != null) {
+            StructureObject so = gameObject.GetComponent<StructureObject>();
+            if(objectConfig.platformLips.front || objectConfig.platformLips.back || objectConfig.platformLips.left || objectConfig.platformLips.right) {
+                float x = objectConfig.shows[0].scale.x;
+                float y = objectConfig.shows[0].scale.y;
+                float z = objectConfig.shows[0].scale.z;
+                so.AddPlatformLips(x,y,z, objectConfig.platformLips.front, objectConfig.platformLips.back, objectConfig.platformLips.left, objectConfig.platformLips.right);
+            }
+        }
+
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
     }
@@ -1798,6 +1808,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public string materialFile; // deprecated; please use materials
     public MCSConfigTransform nullParent = null;
     public bool structure;
+    public MCSConfigPlatformLips platformLips = null;
     public string type;
     public List<MCSConfigAction> actions = new List<MCSConfigAction>();
     public List<MCSConfigChangeMaterial> changeMaterials = new List<MCSConfigChangeMaterial>();
@@ -1999,6 +2010,14 @@ public class MCSConfigGrid {
 public class MCSConfigFloorTextures {
     public string material;
     public List<MCSConfigGrid> positions;
+}
+
+[Serializable]
+public class MCSConfigPlatformLips {
+    public bool left;
+    public bool right;
+    public bool front;
+    public bool back;
 }
 
 
