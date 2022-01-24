@@ -694,7 +694,7 @@ namespace Thor.Procedural {
 
             var min = p0;
             var max = p1 + new Vector3(0.0f, toCreate.height, 0.0f);
-
+            
 
             if (toCreate.hole != null) {
                 var dims = toCreate.hole.boundingBox.max - toCreate.hole.boundingBox.min;
@@ -1154,10 +1154,11 @@ namespace Thor.Procedural {
         }
 
         private static BoundingBox getRoomRectangle(IEnumerable<Vector3> polygonPoints) {
-            var minY = polygonPoints.Min(p => p.y);
+            
+            var minY = polygonPoints.Count() > 0 ? polygonPoints.Min(p => p.y) : 0.0f;
 
-            var minPoint = new Vector3(polygonPoints.Min(c => c.x), minY, polygonPoints.Min(c => c.z));
-            var maxPoint = new Vector3(polygonPoints.Max(c => c.x), minY, polygonPoints.Max(c => c.z));
+            var minPoint = new Vector3(polygonPoints.Count() > 0 ? polygonPoints.Min(c => c.x) : 0.0f, minY, polygonPoints.Count() > 0 ? polygonPoints.Min(c => c.z) : 0.0f);
+            var maxPoint = new Vector3(polygonPoints.Count() > 0 ? polygonPoints.Max(c => c.x) :0.0f, minY, polygonPoints.Count() > 0 ? polygonPoints.Max(c => c.z):0.0f);
             // Debug.Log(" min " + minPoint + " max " + maxPoint);
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
@@ -1311,9 +1312,9 @@ namespace Thor.Procedural {
             var walls = house.walls.Select(w => polygonWallToSimpleWall(w, holes));
 
             var wallPoints = walls.SelectMany(w => new List<Vector3>() { w.p0, w.p1 });
-            var wallsMinY = wallPoints.Min(p => p.y);
-            var wallsMaxY = wallPoints.Max(p => p.y);
-            var wallsMaxHeight = walls.Max(w => w.height);
+            var wallsMinY = wallPoints.Count() > 0? wallPoints.Min(p => p.y) : 0.0f;
+            var wallsMaxY =  wallPoints.Count() > 0? wallPoints.Max(p => p.y) : 0.0f;
+            var wallsMaxHeight =  walls.Count() > 0? walls.Max(w => w.height) : 0.0f;
 
             var floorGameObject = createSimObjPhysicsGameObject(
                 simObjId,
