@@ -1339,6 +1339,7 @@ public struct MetadataWrapper
     public float performerReach;
     public string pose;
 	public float performerRadius;
+	public Dictionary<string, bool> hapticFeedback;
 }
 
 [Serializable]
