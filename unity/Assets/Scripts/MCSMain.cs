@@ -1190,13 +1190,13 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.VisibilityPoints = visibilityPoints;
         }
 
-        if(objectConfig.platformLips != null) {
+        if(objectConfig.lips != null && objectConfig.type == "cube") {
             StructureObject so = gameObject.GetComponent<StructureObject>();
-            if(objectConfig.platformLips.front || objectConfig.platformLips.back || objectConfig.platformLips.left || objectConfig.platformLips.right) {
+            if(objectConfig.lips.front || objectConfig.lips.back || objectConfig.lips.left || objectConfig.lips.right) {
                 float x = objectConfig.shows[0].scale.x;
                 float y = objectConfig.shows[0].scale.y;
                 float z = objectConfig.shows[0].scale.z;
-                so.AddPlatformLips(x,y,z, objectConfig.platformLips.front, objectConfig.platformLips.back, objectConfig.platformLips.left, objectConfig.platformLips.right);
+                so.AddPlatformLips(x,y,z, objectConfig.lips.front, objectConfig.lips.back, objectConfig.lips.left, objectConfig.lips.right);
             }
         }
 
@@ -1808,7 +1808,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public string materialFile; // deprecated; please use materials
     public MCSConfigTransform nullParent = null;
     public bool structure;
-    public MCSConfigPlatformLips platformLips = null;
+    public MCSConfigPlatformLips lips = null;
     public string type;
     public List<MCSConfigAction> actions = new List<MCSConfigAction>();
     public List<MCSConfigChangeMaterial> changeMaterials = new List<MCSConfigChangeMaterial>();
