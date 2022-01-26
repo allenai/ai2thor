@@ -318,6 +318,7 @@ For playback:
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.
 - `Scripts/StructureObject`:
   - In `Start`, ignore collisions of the agent and the structure.
+  - Added `AddPlatformLips` method to add configurable lips to all four sides of a structural platform
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
