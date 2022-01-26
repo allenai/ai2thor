@@ -61,8 +61,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private enum HapticFeedback {
         ON_LAVA,
     }
-
+  
     private Dictionary<string, bool> hapticFeedback = new Dictionary<string, bool>();
+    public int stepsOnLava;
 
 
     public override void CloseObject(ServerAction action) {
@@ -210,6 +211,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
+        metadata.stepsOnLava = this.stepsOnLava;
         metadata.hapticFeedback = this.hapticFeedback;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
@@ -259,11 +261,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.Initialize(action);
 
         this.step = 0;
+        this.stepsOnLava = 0;
         foreach(HapticFeedback hf in Enum.GetValues(typeof(HapticFeedback))) {
             if (!hapticFeedback.ContainsKey(hf.ToString().ToLower()))
                 hapticFeedback.Add(hf.ToString().ToLower(), false);
         }
-
+      
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         main.enableVerboseLog = main.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
@@ -276,6 +279,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         cc.center = new Vector3(0,COLLIDER_CENTER,0);
         cc.radius = COLLIDER_RADIUS;
         groundObjectsCollider.radius = GROUND_OBJECTS_COLLIDER_RADIUS;
+        this.stepsOnLava = 0;
     }
 
     public void MCSCloseObject(ServerAction action) {
@@ -601,6 +605,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
 
         if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
+            stepsOnLava++;
             hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
         }
     }
