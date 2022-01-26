@@ -1150,7 +1150,7 @@ def ci_build(context):
 @task
 def install_cloudrendering_engine(context):
     global _unity_version
-    _unity_version = lambda: "2020.3.19f1"
+    _unity_version = lambda: "2020.3.21f1"
     #_unity_version = lambda: "2021.2.0b11"
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
@@ -1161,6 +1161,7 @@ def install_cloudrendering_engine(context):
         logger.info("skipping installation - CloudRendering engine already installed")
         return
 
+    print("packages/CloudRendering-%s.zip" % _unity_version())
     res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
     data = res["Body"].read()
     z = zipfile.ZipFile(io.BytesIO(data))
@@ -1172,26 +1173,28 @@ def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
-    _unity_version = lambda: "2020.3.19f1"
+    _unity_version = lambda: "2020.3.21f1"
+    #_unity_version = lambda: "2020.3.19f1"
 
     arch = "CloudRendering"
     commit_id = git_commit_id()
+    #commit_id = "ced43d60a6a8e23d7850d5e8295b73391f8cc8e9"
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
     print("build name %s" % build_name)
     shutil.rmtree("unity/builds/%s" % build_name, ignore_errors=True)
     # must clear out the gicache for cloudrendering otherwise the cache for non-cloudrendering gets used causing artifacts 
     # with certain lighting (FloorPlan28 and window reflection
-    shutil.rmtree(os.path.join(os.environ["HOME"], "Library/Caches/com.unity3d.UnityEditor/GiCache"))
+    shutil.rmtree(os.path.join(os.environ["HOME"], "Library/Caches/com.unity3d.UnityEditor/GiCache"), ignore_errors=True)
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
-    generate_msgpack_resolver(context)
+    #generate_msgpack_resolver(context)
     _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
     # the clang compile
-    _import_assets(unity_path, arch)
+    #_import_assets(unity_path, arch)
     _build(unity_path, arch, build_dir, build_name, {})
     if push_build:
         archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)

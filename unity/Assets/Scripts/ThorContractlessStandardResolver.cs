@@ -1,3 +1,7 @@
+#if PLATFORM_CLOUD_RENDERING
+#undef ENABLE_IL2CPP
+#endif
+// CloudRendering does not set ENABLE_IL2CPP correctly when using Mono
 using System.Linq;
 using System;
 using System.Collections.Generic;
@@ -70,9 +74,6 @@ namespace MessagePack.Resolvers {
         private static readonly IFormatterResolver[] Resolvers = new IFormatterResolver[]{
             ThorUnityResolver.Instance,
             BuiltinResolver.Instance, // Try Builtin
-            #if ENABLE_IL2CPP && !UNITY_WEBGL 
-            MessagePack.Resolvers.ThorIL2CPPGeneratedResolver.Instance,
-            #endif 
             #if !ENABLE_IL2CPP 
             DynamicEnumResolver.Instance, // Try Enum
             DynamicGenericResolver.Instance, // Try Array, Tuple, Collection, Enum(Generic Fallback)

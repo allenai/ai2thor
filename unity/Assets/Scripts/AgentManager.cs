@@ -16,9 +16,9 @@ using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
 using UnityEngine.Rendering;
-using Unity.Simulation;
 using UnityEngine.Experimental.Rendering;
 #if PLATFORM_CLOUD_RENDERING
+using Unity.Simulation;
 using UnityEditor;
 using UnityEngine.CloudRendering;
 #endif
@@ -1038,7 +1038,6 @@ public class AgentManager : MonoBehaviour {
             if (!this.canEmit()) {
                 continue;
             }
-
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -1314,8 +1313,6 @@ public class MetadataPatch {
     public string errorCode;
     public bool lastActionSuccess;
     public int agentId;
-    // must remove this when running generate-msgpack-resolver
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
     public object actionReturn;
 }
 
@@ -1680,8 +1677,6 @@ public struct MetadataWrapper {
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
 
-    // must remove this when running generate-msgpack-resolver
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
     public object actionReturn;
 
 }
