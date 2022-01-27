@@ -1148,9 +1148,9 @@ def ci_build(context):
 
 
 @task
-def install_cloudrendering_engine(context):
+def install_cloudrendering_engine(context, force=False):
     global _unity_version
-    _unity_version = lambda: "2020.3.21f1"
+    _unity_version = lambda: "2020.3.25f1"
     #_unity_version = lambda: "2021.2.0b11"
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
@@ -1158,8 +1158,12 @@ def install_cloudrendering_engine(context):
     target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(_unity_version())
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
-        logger.info("skipping installation - CloudRendering engine already installed")
-        return
+        if force:
+            shutil.rmtree(full_dir)
+            logger.info("CloudRendering engine already installed - removing due to force")
+        else:
+            logger.info("skipping installation - CloudRendering engine already installed")
+            return
 
     print("packages/CloudRendering-%s.zip" % _unity_version())
     res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
@@ -1173,7 +1177,7 @@ def build_cloudrendering(context, push_build=False):
     # XXX check for local changes
 
     global _unity_version
-    _unity_version = lambda: "2020.3.21f1"
+    _unity_version = lambda: "2020.3.25f1"
     #_unity_version = lambda: "2020.3.19f1"
 
     arch = "CloudRendering"
