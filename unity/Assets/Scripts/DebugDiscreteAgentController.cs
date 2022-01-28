@@ -34,6 +34,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool rotateOnEndHabituation = false;
         public float teleportYRotate;
 
+        [Range(-1,1)] public float torqueForce = 1;
+
         private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
         private GameObject objectParent = null;
 
@@ -405,6 +407,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "Pass";
                         StartCoroutine(PassThenRecordPosition(action, 0));
                     }
+
+                    if (Input.GetKeyDown(KeyCode.M))
+                    {
+                        action.action = "TorqueObject";
+                        action.objectImageCoords = this.moveOrPickupObjectImageCoords;
+                        action.objectId = this.moveOrPickupObjectId;
+                        action.moveMagnitude = torqueForce;
+                    }
+                        PhysicsController.ProcessControlCommand(action);
                 }
             }
         }
