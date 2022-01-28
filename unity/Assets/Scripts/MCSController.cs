@@ -349,7 +349,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
             // Update our hand's position so that the object we want to hold doesn't clip our body.
             // TODO MCS-77 We may want to change how this function is used.
-            this.UpdateHandPositionToHoldObject(target);
+            if (!ItemInHand) 
+                this.UpdateHandPositionToHoldObject(target);
 
             // Check if the object to be picked up is currently inside a receptacle.
             // If so, we'll need to manually update that receptacle's list of contained objects since the
@@ -759,7 +760,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         float largestSide = Mathf.Max(target.transform.localScale.x * boundingBoxSize.x, target.transform.localScale.z * boundingBoxSize.z) / 2;
 
         // Set the rotation of the object to its original rotation
-        target.transform.eulerAngles = Vector3.zero;
         this.AgentHand.transform.localPosition = 
             new Vector3(0, Math.Max(handY, minY), ((largestSide + (COLLIDER_RADIUS * transform.localScale.x)) / transform.localScale.x) + DISTANCE_HELD_OBJECT_Z);
     }
@@ -918,6 +918,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         Vector3 updatedRotation = new Vector3(0, rotationChange, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
+    }
+
+    public void TorqueObject(ServerAction action) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
+            return;
+        }
+
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+            Debug.Log("Cannot push. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            //AddTorque
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            ApplyForceObject(action);
+        }
     }
 }
 

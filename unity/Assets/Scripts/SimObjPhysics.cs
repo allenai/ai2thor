@@ -1057,6 +1057,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myrb.AddRelativeForce(dir * magnitude);
 	}
 
+	//used for applying torque to an object
+	public void ApplyTorque(ServerAction action)
+	{
+		//Vector3 dir = new Vector3(action.x, action.y, action.z);
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+
+        if(myrb.IsSleeping())
+        myrb.WakeUp();
+        
+		myrb.isKinematic = false;
+		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		float defualtMaxAngularSpeedBeforeChange = 7f;
+		//If keeping the torque input force from the server action between -1 >= x <= 1 the force needs to be divided by the mass 
+		//to make the object rotate at its max angular velocity when the input is -1.0 or 1.0.
+		myrb.AddTorque(Vector3.up * (action.moveMagnitude / myrb.mass) * (Physics.defaultMaxAngularSpeed / defualtMaxAngularSpeedBeforeChange));
+	}
+
 	//return all sim objects contained by this object if it is a receptacle
 	public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers()
 	{
