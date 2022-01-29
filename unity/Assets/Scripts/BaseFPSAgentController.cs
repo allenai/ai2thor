@@ -3075,6 +3075,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectTypeCount[] numDuplicatesOfType = null,
             String[] excludedReceptacles = null,
             String[] excludedObjectIds = null,
+            String[] objectIds = null,
+            String[] receptacleObjectIds = null,
             int numPlacementAttempts = 5,
             bool allowFloor = false
         ) {
@@ -3147,7 +3149,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 staticPlacement: placeStationary,
                 excludedSimObjects: excludedSimObjects,
                 numDuplicatesOfType: numDuplicatesOfType,
-                excludedReceptacleTypes: listOfExcludedReceptacleTypes
+                excludedReceptacleTypes: listOfExcludedReceptacleTypes,
+                receptacleObjectIds: receptacleObjectIds,
+                objectIds: objectIds
             );
 
             if (success && !placeStationary) {
