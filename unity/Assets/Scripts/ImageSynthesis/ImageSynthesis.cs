@@ -235,6 +235,10 @@ public class ImageSynthesis : MonoBehaviour {
         if (!depthMaterial || depthMaterial.shader != depthShader) {
             depthMaterial = new Material(depthShader);
         }
+
+        depthMaterial.SetFloat("_NearClipPlane", capturePasses[1].camera.nearClipPlane);
+        depthMaterial.SetFloat("_FarClipPlane", capturePasses[1].camera.farClipPlane);
+
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
         SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
@@ -418,7 +422,7 @@ public class ImageSynthesis : MonoBehaviour {
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
     ) {
         var mainCamera = GetComponent<Camera>();
-        var depth = 24;
+        var depth = 32;
         var readWrite = textureReadMode;
         var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
 
@@ -427,7 +431,7 @@ public class ImageSynthesis : MonoBehaviour {
         var renderRT = (!needsRescale) ? finalRT :
             RenderTexture.GetTemporary(mainCamera.pixelWidth, mainCamera.pixelHeight, depth, format, readWrite, antiAliasing);
         if (tex == null) {
-            tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
         }
 
         var prevActiveRT = RenderTexture.active;

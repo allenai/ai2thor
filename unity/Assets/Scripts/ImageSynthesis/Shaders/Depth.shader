@@ -5,6 +5,8 @@ Shader "Hidden/Depth" {
      {
          _MainTex ("Base (RGB)", 2D) = "white" {}
          _DepthLevel ("Depth Level", Range(1, 3)) = 1
+        _NearClipPlane("NearClipPlane", Float) = 0.1
+        _FarClipPlane("FarClipPlane", Float) = 20.0
      }
      SubShader
      {
@@ -20,6 +22,9 @@ Shader "Hidden/Depth" {
              uniform sampler2D _CameraDepthTexture;
              uniform fixed _DepthLevel;
              uniform half4 _MainTex_TexelSize;
+
+             float _NearClipPlane;
+             float _FarClipPlane;
  
              struct input
              {
@@ -51,21 +56,16 @@ Shader "Hidden/Depth" {
              fixed4 frag(output o) : COLOR
              {
                  // depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
+                 float multiplier = _FarClipPlane - _NearClipPlane;
+                 float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) * multiplier;
+                 uint depthUint = asint(depth01);
 
-                 // float lowBits = depth01 / 2;
-                 // float medBits = depth01 / 4;
-                 // float highBits = depth01 / 8;
+                 float f1 = float(depthUint & 255) / 256.0;
+                 float f2 = float((depthUint >> 8) & 255) / 256.0;
+                 float f3 = float((depthUint >> 16) & 255)  / 256.0;
+                 float f4 = float((depthUint >> 24) & 255) / 256.0;
 
-                 // float depth01 = 1 - UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv));
-     			 float lowBits = floor(depth01 * 256) / 256;
-				 float medBits = 256 * (depth01 - lowBits);
-				 medBits = floor(256 * medBits) / 256;
-				 float highBits = 256 * 256 * (depth01 - lowBits - medBits / 256);
-			  	 highBits = floor(256 * highBits) / 256;
-
-				 return fixed4(lowBits, medBits, highBits, 0.0);
-                 // return depth01;
+                 return fixed4(f1, f2, f3, f4);
              }
              
              ENDCG

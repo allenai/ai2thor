@@ -51,11 +51,8 @@ class MultiAgentEvent(object):
 def read_buffer_image(
     buf, width, height, flip_y=True, flip_x=False, dtype=np.uint8, flip_rb_colors=False
 ):
-    im_bytes = (
-        np.frombuffer(buf.tobytes(), dtype=dtype)
-        if sys.version_info.major < 3
-        else np.frombuffer(buf, dtype=dtype)
-    )
+    im_bytes = np.frombuffer(buf, dtype=dtype)
+
     im = im_bytes.reshape(height, width, -1)
     if flip_y:
         im = np.flip(im, axis=0)
@@ -316,30 +313,43 @@ class Event:
 
 
     def _image_depth(self, image_depth_data, **kwargs):
-        image_depth = read_buffer_image(
-            image_depth_data, self.screen_width, self.screen_height
-        )
+
+        item_size = int(len(image_depth_data)/(self.screen_width * self.screen_height))
+
         depth_format = kwargs["depth_format"]
-        image_depth_out = (
-            image_depth[:, :, 0]
-            + image_depth[:, :, 1] / np.float32(256)
-            + image_depth[:, :, 2] / np.float32(256 ** 2)
-        )
+
         multiplier = 1.0
         if depth_format != DepthFormat.Normalized:
             multiplier = kwargs["camera_far_plane"] - kwargs["camera_near_plane"]
         elif depth_format == DepthFormat.Millimeters:
             multiplier *= 1000
-        image_depth_out *= multiplier / 256.0
 
-        depth_image_float = image_depth_out.astype(np.float32)
 
-        if "add_noise" in kwargs and kwargs["add_noise"]:
-            depth_image_float = apply_real_noise(
-                depth_image_float, self.screen_width, indices=kwargs["noise_indices"]
+        if item_size == 4: # float32
+            image_depth_out = read_buffer_image(
+                image_depth_data, self.screen_width, self.screen_height, dtype=np.float32
+            )
+        elif item_size  == 3: # 3 byte 1/256.0 precision, legacy depth binary format
+            image_depth = read_buffer_image(
+                image_depth_data, self.screen_width, self.screen_height
+            )
+            image_depth_out = (
+                image_depth[:, :, 0]
+                + image_depth[:, :, 1] / np.float32(256)
+                + image_depth[:, :, 2] / np.float32(256 ** 2)
             )
 
-        return depth_image_float
+            multiplier /= 256.0
+            image_depth_out *= multiplier 
+        else:
+            raise Exception("invalid shape for depth image %s" % (image_depth.shape,))
+
+
+        if "add_noise" in kwargs and kwargs["add_noise"]:
+            image_depth_out = apply_real_noise(
+                image_depth_out, self.screen_width, indices=kwargs["noise_indices"]
+            )
+        return image_depth_out
 
     def add_third_party_camera_image_robot(self, third_party_image_data, width, height):
         self.third_party_camera_frames.append(
@@ -430,11 +440,11 @@ class Event:
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
-        )
+            )[:,:,:3]
         self.process_colors_ids()
 
     def add_third_party_image_ids(self, image_ids_data):
-        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)[:,:,:3]
         self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
         class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
         self.third_party_instance_masks.append(instance_masks)
