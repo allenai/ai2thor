@@ -42,7 +42,7 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
 
-        public AxisAngleRotation rotation;
+        public FlexibleRotation rotation;
         public float intensity { get; set; }
         public float indirectMultiplier { get; set; }
         public float range { get; set; }
@@ -209,12 +209,47 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class AxisAngleRotation {
+    public class FlexibleRotation {
+        // Support Angle-Axis rotation (axis, degrees)
         public Vector3 axis;
         public float degrees;
 
-        public static AxisAngleRotation fromQuaternion(Quaternion quat) {
-            var r = new AxisAngleRotation();
+        // Support for Vector3 rotation
+        private float? _x;
+        private float? _y;
+        private float? _z;
+        public float? x {
+            get { return _x; }
+            set {
+                _x = value;
+                setAngleAxis();
+            }
+        }
+        public float? y {
+            get { return _y; }
+            set {
+                _y = value;
+                setAngleAxis();
+            }
+        }
+        public float? z {
+            get { return _z; }
+            set {
+                _z = value;
+                setAngleAxis();
+            }
+        }
+
+        private void setAngleAxis() {
+            if (x == null || y == null || z == null) {
+                return;
+            }
+            Vector3 rot = new Vector3(x: x.Value, y: y.Value, z: z.Value);
+            Quaternion.Euler(rot).ToAngleAxis(out degrees, out axis);
+        }
+
+        public static FlexibleRotation fromQuaternion(Quaternion quat) {
+            var r = new FlexibleRotation();
             quat.ToAngleAxis(out r.degrees, out r.axis);
             return r;
         }
@@ -242,7 +277,7 @@ namespace Thor.Procedural.Data {
     public class HouseObject {
         public string id { get; set; } //set to SimObjPhysics.objectId
         public Vector3 position { get; set; }
-        public AxisAngleRotation rotation { get; set; }
+        public FlexibleRotation rotation { get; set; }
         public bool kinematic { get; set; } //should the rigidbody be kinematic or not
         public BoundingBox boundingBox { get; set; }
         public string room { get; set; }

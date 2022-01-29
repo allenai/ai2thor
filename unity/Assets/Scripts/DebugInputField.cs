@@ -1545,7 +1545,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         excludeThese[0] = "CounterTop";
                         action["excludedReceptacles"] = excludeThese;
 
-                        action["placeStationary"] = true;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action["placeStationary"] = false;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         CurrentActiveController().ProcessControlCommand(action);
 
                         break;
@@ -3589,7 +3589,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["prefabName"] = "Coffee_Table_211_1";
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
-                        action["rotation"] = new AxisAngleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
+                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
@@ -3600,7 +3600,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
                         action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
-                        action["rotation"] = new AxisAngleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
+                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
@@ -3633,7 +3633,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "asset_0";
 
                         if (splitcommand.Length > 4) {
-                            action["angleAxisRotation"] = new AxisAngleRotation() {
+                            action["angleAxisRotation"] = new FlexibleRotation() {
                                 axis = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3])),
                                 degrees = float.Parse(splitcommand[4])
                             };

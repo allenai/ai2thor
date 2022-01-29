@@ -1497,7 +1497,7 @@ namespace Thor.Procedural {
                         holeCover.id,
                         holeCover.assetId,
                         pos,
-                        // new AxisAngleRotation() { axis = Vector3.up,  degrees = rotY },
+                        // new FlexibleRotation() { axis = Vector3.up,  degrees = rotY },
                         rotation,
                         true,
                         holeCover.color,
@@ -1732,7 +1732,7 @@ namespace Thor.Procedural {
             string assetId,
             Vector3 position,
             Quaternion rotation,
-            // AxisAngleRotation rotation,
+            // FlexibleRotation rotation,
             bool kinematic = false,
             SerializableColor color = null,
             bool positionBoundingBoxCenter = false,
@@ -1815,7 +1815,8 @@ namespace Thor.Procedural {
             string objectId,
             SimObjPhysics receptacleSimObj,
             Vector3 position,
-            AxisAngleRotation rotation = null) {
+            FlexibleRotation rotation = null
+        ) {
             var go = goDb.getAsset(prefabName);
             //var fpsAgent = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
@@ -1893,7 +1894,8 @@ namespace Thor.Procedural {
             string prefabName,
             string objectId,
             SimObjPhysics receptacleSimObj,
-            AxisAngleRotation rotation = null) {
+            FlexibleRotation rotation = null
+        ) {
             var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
