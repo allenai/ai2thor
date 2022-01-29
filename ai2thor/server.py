@@ -313,7 +313,6 @@ class Event:
 
 
     def _image_depth(self, image_depth_data, **kwargs):
-
         item_size = int(len(image_depth_data)/(self.screen_width * self.screen_height))
 
         depth_format = kwargs["depth_format"]
@@ -328,7 +327,8 @@ class Event:
         if item_size == 4: # float32
             image_depth_out = read_buffer_image(
                 image_depth_data, self.screen_width, self.screen_height, dtype=np.float32
-            )
+            ).squeeze()
+
         elif item_size  == 3: # 3 byte 1/256.0 precision, legacy depth binary format
             image_depth = read_buffer_image(
                 image_depth_data, self.screen_width, self.screen_height
@@ -343,7 +343,6 @@ class Event:
             image_depth_out *= multiplier 
         else:
             raise Exception("invalid shape for depth image %s" % (image_depth.shape,))
-
 
         if "add_noise" in kwargs and kwargs["add_noise"]:
             image_depth_out = apply_real_noise(
@@ -440,11 +439,11 @@ class Event:
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
-            )[:,:,:3]
+            )[:, :, :3]
         self.process_colors_ids()
 
     def add_third_party_image_ids(self, image_ids_data):
-        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)[:,:,:3]
+        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)[:, :, :3]
         self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
         class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
         self.third_party_instance_masks.append(instance_masks)
@@ -453,12 +452,12 @@ class Event:
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(
             image_classes_data, self.screen_width, self.screen_height
-        )
+            )[:, :, :3]
 
     def add_third_party_image_classes(self, image_classes_data):
         self.third_party_semantic_segmentation_frames.append(
-            read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
-        )
+            read_buffer_image(image_classes_data, self.screen_width, self.screen_height)[:, :, :3]
+            )
 
     def cv2image(self):
         warnings.warn("Deprecated - please use event.cv2img")
