@@ -315,14 +315,16 @@ class Event:
     def _image_depth(self, image_depth_data, **kwargs):
         item_size = int(len(image_depth_data)/(self.screen_width * self.screen_height))
 
-        depth_format = kwargs["depth_format"]
+        multipliers = {
+            DepthFormat.Normalized: 1.0,
+            DepthFormat.Meters: (kwargs["camera_far_plane"] - kwargs["camera_near_plane"]),
+            DepthFormat.Millimeters: (kwargs["camera_far_plane"] - kwargs["camera_near_plane"]) * 1000.0
+        }
 
-        multiplier = 1.0
-        if depth_format != DepthFormat.Normalized:
-            multiplier = kwargs["camera_far_plane"] - kwargs["camera_near_plane"]
-        elif depth_format == DepthFormat.Millimeters:
-            multiplier *= 1000
-
+        target_depth_format = kwargs["depth_format"]
+        # assume Normalized for backwards compatibility
+        source_depth_format = DepthFormat[self.metadata.get("depthFormat", "Normalized")]
+        multiplier = multipliers[target_depth_format]/multipliers[source_depth_format]
 
         if item_size == 4: # float32
             image_depth_out = read_buffer_image(
@@ -340,14 +342,20 @@ class Event:
             )
 
             multiplier /= 256.0
-            image_depth_out *= multiplier 
         else:
-            raise Exception("invalid shape for depth image %s" % (image_depth.shape,))
+            raise Exception("invali shape for depth image %s" % (image_depth.shape,))
+
+        if multiplier != 1.0:
+            if not image_depth_out.flags["WRITEABLE"]:
+                image_depth_out = np.copy(image_depth_out)
+
+            image_depth_out *= multiplier
 
         if "add_noise" in kwargs and kwargs["add_noise"]:
             image_depth_out = apply_real_noise(
                 image_depth_out, self.screen_width, indices=kwargs["noise_indices"]
             )
+
         return image_depth_out
 
     def add_third_party_camera_image_robot(self, third_party_image_data, width, height):

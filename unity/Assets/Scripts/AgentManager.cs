@@ -875,6 +875,7 @@ public class AgentManager : MonoBehaviour {
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
+            metadata.depthFormat = DepthFormat.Meters.ToString();
             metadata.agentId = i;
 
             // we don't need to render the agent's camera for the first agent
@@ -1563,6 +1564,7 @@ public struct MetadataWrapper {
     public int screenWidth;
     public int screenHeight;
     public int agentId;
+    public string depthFormat;
     public ColorId[] colors;
 
     // Extras
@@ -1993,6 +1995,12 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
             return base.CreateProperty(member, memberSerialization);
         }
     }
+}
+
+public enum DepthFormat {
+    Normalized,
+    Meters,
+    Millimeters
 }
 
 public enum AgentState {
