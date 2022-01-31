@@ -1068,10 +1068,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		float defualtMaxAngularSpeedBeforeChange = 7f;
-		//If keeping the torque input force from the server action between -1 >= x <= 1 the force needs to be divided by the mass 
-		//to make the object rotate at its max angular velocity when the input is -1.0 or 1.0.
-		myrb.AddTorque(Vector3.up * (action.moveMagnitude / myrb.mass) * (Physics.defaultMaxAngularSpeed / defualtMaxAngularSpeedBeforeChange));
+
+		float MCSForceMultiplier = 250f;
+		//torque is mass dependent when using ForceMode.Impulse
+		//applying 100 torque to an object with 500 mass will slightly rotate an object
+		//appling 100 torque to an object with 0.5 mass will spin the object several times
+		myrb.AddTorque(Vector3.up * action.moveMagnitude / MCSForceMultiplier, ForceMode.Impulse);
 	}
 
 	//return all sim objects contained by this object if it is a receptacle

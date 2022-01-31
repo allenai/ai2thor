@@ -1934,14 +1934,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.y = dir.y;
             apply.z = dir.z;
 
-            if(action.action == "TorqueObject") {
-                action.moveMagnitude = Mathf.Clamp(action.moveMagnitude, -1f, 1f);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+            if(action.action == "TorqueObject")
                 target.ApplyTorque(action);
-                actionFinished(true);
-            }
             else
                 sopApplyForce(apply, target);
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }

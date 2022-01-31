@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
-        public float pushPullForce = 150.0f;
+        [Range(-250,250)] public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
@@ -33,8 +33,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float teleportZPosition;
         public bool rotateOnEndHabituation = false;
         public float teleportYRotate;
-
-        [Range(-1,1)] public float torqueForce = 1;
 
         private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
         private GameObject objectParent = null;
@@ -413,9 +411,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "TorqueObject";
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                         action.objectId = this.moveOrPickupObjectId;
-                        action.moveMagnitude = torqueForce;
+                        action.moveMagnitude = pushPullForce;
                     }
-                        PhysicsController.ProcessControlCommand(action);
+                    PhysicsController.ProcessControlCommand(action);
                 }
             }
         }
