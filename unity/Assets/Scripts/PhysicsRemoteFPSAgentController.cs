@@ -1935,9 +1935,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.z = dir.z;
 
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
-            if(action.action == "TorqueObject")
+            if(action.action == "TorqueObject") {
                 target.ApplyTorque(action);
+                actionFinished(true);
+            }
             else
                 sopApplyForce(apply, target);
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
