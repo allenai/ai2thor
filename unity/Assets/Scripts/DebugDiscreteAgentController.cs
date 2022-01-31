@@ -412,8 +412,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                         action.objectId = this.moveOrPickupObjectId;
                         action.moveMagnitude = pushPullForce;
+                        PhysicsController.ProcessControlCommand(action);
                     }
-                    PhysicsController.ProcessControlCommand(action);
                 }
             }
         }
