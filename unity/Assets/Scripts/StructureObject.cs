@@ -28,7 +28,6 @@ public class StructureObject : MonoBehaviour
         float placementOffsetYWithScale = 0.5f + (PLATFORM_LIP_HEIGHT / scaleY / 2);
         float placementOffsetZWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleZ / 2);
 
-        string clone = " (Clone)";
         GameObject thisPlatform = this.gameObject;
         GameObject front = null;
         GameObject back = null;
@@ -38,26 +37,27 @@ public class StructureObject : MonoBehaviour
         //instantiate identical lips
         if(addFront) {
             front = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            front.name = front.name.Substring(0, name.Length - clone.Length) + "-front";
+            //using substring like this gets rid of (Clone) from the end of the instantiated object name
+            front.name = front.name.Substring(0, name.Length) + "-front";
             front.GetComponent<SimObjPhysics>().objectID = front.name;
         }
         
         if(addBack) {
             back = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            back.name = back.name.Substring(0, name.Length - clone.Length) + "-back";
-            front.GetComponent<SimObjPhysics>().objectID = back.name;
+            back.name = back.name.Substring(0, name.Length) + "-back";
+            back.GetComponent<SimObjPhysics>().objectID = back.name;
         }
         
         if(addLeft) {
             left = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            left.name = left.name.Substring(0, name.Length - clone.Length) + "-left";
-            front.GetComponent<SimObjPhysics>().objectID = left.name;
+            left.name = left.name.Substring(0, name.Length) + "-left";
+            left.GetComponent<SimObjPhysics>().objectID = left.name;
         }
         
         if(addRight) {
             right = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            right.name = right.name.Substring(0, name.Length - clone.Length) + "-right";
-            front.GetComponent<SimObjPhysics>().objectID = right.name;
+            right.name = right.name.Substring(0, name.Length) + "-right";
+            right.GetComponent<SimObjPhysics>().objectID = right.name;
         }
         
         //after all lips are instantiated, then their parent can be set to this platform and have
