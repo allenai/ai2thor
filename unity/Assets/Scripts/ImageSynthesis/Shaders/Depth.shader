@@ -5,8 +5,6 @@ Shader "Hidden/Depth" {
      {
          _MainTex ("Base (RGB)", 2D) = "white" {}
          _DepthLevel ("Depth Level", Range(1, 3)) = 1
-        _NearClipPlane("NearClipPlane", Float) = 0.1
-        _FarClipPlane("FarClipPlane", Float) = 20.0
      }
      SubShader
      {
@@ -23,9 +21,6 @@ Shader "Hidden/Depth" {
              uniform fixed _DepthLevel;
              uniform half4 _MainTex_TexelSize;
 
-             float _NearClipPlane;
-             float _FarClipPlane;
- 
              struct input
              {
                  float4 pos : POSITION;
@@ -56,10 +51,12 @@ Shader "Hidden/Depth" {
              fixed4 frag(output o) : COLOR
              {
                  // depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float multiplier = _FarClipPlane - _NearClipPlane;
+                 // https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html
+                 // far - near plane
+                 float multiplier = _ProjectionParams.z - _ProjectionParams.y;
                  float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) * multiplier;
-                 // This converts the float to an int bitwise (not a cast)
-                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/asint
+                 //// This converts the float to an int bitwise (not a cast)
+                 //// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/asint
                  uint depthUint = asint(depth01);
 
                  float f1 = float(depthUint & 255) / 255.0;

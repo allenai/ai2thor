@@ -236,9 +236,6 @@ public class ImageSynthesis : MonoBehaviour {
             depthMaterial = new Material(depthShader);
         }
 
-        depthMaterial.SetFloat("_NearClipPlane", capturePasses[1].camera.nearClipPlane);
-        depthMaterial.SetFloat("_FarClipPlane", capturePasses[1].camera.farClipPlane);
-
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
         SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
