@@ -58,6 +58,8 @@ Shader "Hidden/Depth" {
                  // depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
                  float multiplier = _FarClipPlane - _NearClipPlane;
                  float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) * multiplier;
+                 // This converts the float to an int bitwise (not a cast)
+                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/asint
                  uint depthUint = asint(depth01);
 
                  float f1 = float(depthUint & 255) / 255.0;
