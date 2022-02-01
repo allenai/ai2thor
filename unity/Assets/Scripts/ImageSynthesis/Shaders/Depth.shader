@@ -60,10 +60,10 @@ Shader "Hidden/Depth" {
                  float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) * multiplier;
                  uint depthUint = asint(depth01);
 
-                 float f1 = float(depthUint & 255) / 256.0;
-                 float f2 = float((depthUint >> 8) & 255) / 256.0;
-                 float f3 = float((depthUint >> 16) & 255)  / 256.0;
-                 float f4 = float((depthUint >> 24) & 255) / 256.0;
+                 float f1 = float(depthUint & 255) / 255.0;
+                 float f2 = float((depthUint >> 8) & 255) / 255.0;
+                 float f3 = float((depthUint >> 16) & 255)  / 255.0;
+                 float f4 = float((depthUint >> 24) & 255) / 255.0;
 
                  return fixed4(f1, f2, f3, f4);
              }
