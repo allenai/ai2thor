@@ -1060,11 +1060,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//used for applying torque to an object
 	public void ApplyTorque(ServerAction action)
 	{
-		//Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 
         if(myrb.IsSleeping())
-        myrb.WakeUp();
+        	myrb.WakeUp();
         
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
