@@ -875,6 +875,9 @@ public class AgentManager : MonoBehaviour {
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
+            // This value may never change, but the purpose is to provide a way
+            //  to be backwards compatible in the future by knowing the output format
+            //  so that it can be converted if necessary on the Python side
             metadata.depthFormat = DepthFormat.Meters.ToString();
             metadata.agentId = i;
 
