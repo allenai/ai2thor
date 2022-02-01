@@ -941,7 +941,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             ThrowObject(action);
         } else {
             //AddTorque
-            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
             ApplyForceObject(action);
         }
     }
