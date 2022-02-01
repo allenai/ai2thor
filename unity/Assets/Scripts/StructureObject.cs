@@ -11,6 +11,9 @@ public class StructureObject : MonoBehaviour
     [SerializeField]
     public StructureObjectTag WhatIsMyStructureObjectTag;
 
+    public static float PLATFORM_LIP_WIDTH = 0.1f;
+    public static float PLATFORM_LIP_HEIGHT = 0.3f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -19,10 +22,69 @@ public class StructureObject : MonoBehaviour
             Physics.IgnoreCollision(agent.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void AddPlatformLips(float scaleX=1, float scaleY=1, float scaleZ=1, bool addFront=false, bool addBack=false, bool addLeft=false, bool addRight=false)
     {
+        float placementOffsetXWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleX / 2); 
+        float placementOffsetYWithScale = 0.5f + (PLATFORM_LIP_HEIGHT / scaleY / 2);
+        float placementOffsetZWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleZ / 2);
+
+        GameObject thisPlatform = this.gameObject;
+        GameObject front = null;
+        GameObject back = null;
+        GameObject left = null;
+        GameObject right = null;
+
+        //instantiate identical lips
+        if(addFront) {
+            front = Instantiate(thisPlatform, transform.position, Quaternion.identity);
+            //using substring like this gets rid of (Clone) from the end of the instantiated object name
+            front.name = front.name.Substring(0, name.Length) + "-front";
+            front.GetComponent<SimObjPhysics>().objectID = front.name;
+        }
         
+        if(addBack) {
+            back = Instantiate(thisPlatform, transform.position, Quaternion.identity);
+            back.name = back.name.Substring(0, name.Length) + "-back";
+            back.GetComponent<SimObjPhysics>().objectID = back.name;
+        }
+        
+        if(addLeft) {
+            left = Instantiate(thisPlatform, transform.position, Quaternion.identity);
+            left.name = left.name.Substring(0, name.Length) + "-left";
+            left.GetComponent<SimObjPhysics>().objectID = left.name;
+        }
+        
+        if(addRight) {
+            right = Instantiate(thisPlatform, transform.position, Quaternion.identity);
+            right.name = right.name.Substring(0, name.Length) + "-right";
+            right.GetComponent<SimObjPhysics>().objectID = right.name;
+        }
+        
+        //after all lips are instantiated, then their parent can be set to this platform and have
+        //their position and scale adjusted
+        if(addFront) {
+            front.transform.parent = this.transform;
+            front.transform.localPosition = new Vector3(0, placementOffsetYWithScale, -placementOffsetZWithScale);
+            front.transform.localScale = new Vector3(1, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+        }
+
+        if(addBack) {
+            back.transform.parent = this.transform;
+            back.transform.localPosition = new Vector3(0, placementOffsetYWithScale, placementOffsetZWithScale);
+            back.transform.localScale = new Vector3(1, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+        }
+        
+        if(addLeft) {
+            left.transform.parent = this.transform;
+            left.transform.localPosition = new Vector3(-placementOffsetXWithScale, placementOffsetYWithScale, 0);
+            left.transform.localScale = new Vector3(PLATFORM_LIP_WIDTH / scaleX, PLATFORM_LIP_HEIGHT / scaleY, 1);
+        }
+
+        if(addRight) {
+            right.transform.parent = this.transform;
+            right.transform.localPosition = new Vector3(placementOffsetXWithScale, placementOffsetYWithScale, 0);
+            right.transform.localScale = new Vector3(PLATFORM_LIP_WIDTH / scaleX, PLATFORM_LIP_HEIGHT / scaleY, 1);
+        }
     }
 }
 
