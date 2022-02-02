@@ -11,7 +11,9 @@ public class MCSMain : MonoBehaviour {
     private static string CUSTOM_OBJECT_PATH_PREFIX = "MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
-    private static float CUBE_INTERNAL_GRID = 0.25f;
+    private static float AUTO_GRID_CELL_MIN = 2f;
+    private static float AUTO_GRID_CELL_SPACING = 0.25f;
+    private static float AUTO_GRID_HALF_SCALE = 0.5f;
     private static float FLOOR_SCALE_X = 11f;
     private static float FLOOR_SCALE_Y = 0.5f;
     private static float FLOOR_SCALE_Z = 11f;
@@ -591,6 +593,7 @@ public class MCSMain : MonoBehaviour {
             floorSection.name = "floor" + i;
             floorSection.transform.parent = floors.transform;
             floorSection.isStatic = true;
+            floorSection.GetComponent<Rigidbody>().mass = 10;
             SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
             simObj.objectID = "floor" + i;
 
@@ -924,8 +927,12 @@ public class MCSMain : MonoBehaviour {
             MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
                 objectConfig.shows[0] : null;
             Vector3? scaleNull = null;
-            visibilityPoints = this.AssignVisibilityPoints(gameObject, points,
-                (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull));
+            visibilityPoints = this.AssignVisibilityPoints(
+                gameObject,
+                this.ShouldAutoGenerateVisibilityPoints(objectConfig) ?
+                this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig) : points,
+                (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull)
+            );
         }
 
         if (shouldAddSimObjPhysicsScript) {
@@ -1415,6 +1422,72 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
+    private MCSConfigVector GenerateCubeInternalVisibilityPoint(float x, float y, float z) {
+        MCSConfigVector point = new MCSConfigVector();
+        point.x = x;
+        point.y = y;
+        point.z = z;
+        return point;
+    }
+
+    private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
+        GameObject gameObject,
+        MCSConfigGameObject objectConfig
+    ) {
+        MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
+            objectConfig.shows[0] : null;
+
+        // Determine the size of the object.
+        float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
+        float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
+        float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
+
+        // Calculate the number of cells in the grid going across each axis.
+        // Use Max to ensure visibility points are still set for tiny objects.
+        float xGrid = Mathf.Max(Mathf.Floor(xSize / MCSMain.AUTO_GRID_CELL_SPACING), MCSMain.AUTO_GRID_CELL_MIN);
+        float yGrid = Mathf.Max(Mathf.Floor(ySize / MCSMain.AUTO_GRID_CELL_SPACING), MCSMain.AUTO_GRID_CELL_MIN);
+        float zGrid = Mathf.Max(Mathf.Floor(zSize / MCSMain.AUTO_GRID_CELL_SPACING), MCSMain.AUTO_GRID_CELL_MIN);
+
+        // Calculate the distance between grid cells.
+        float xSpan = 1 / xGrid;
+        float ySpan = 1 / yGrid;
+        float zSpan = 1 / zGrid;
+
+        float half = MCSMain.AUTO_GRID_HALF_SCALE;
+
+        // Collect all of the auto-generated visibility points.
+        List<MCSConfigVector> points = new List<MCSConfigVector>();
+
+        for (float x = 0; x <= xGrid; ++x) {
+            for (float y = 0; y <= yGrid; ++y) {
+                float xPosition = (x * xSpan) - half;
+                float yPosition = (y * ySpan) - half;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, half));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, -half));
+            }
+        }
+
+        for (float y = 0; y <= yGrid; ++y) {
+            for (float z = 0; z <= zGrid; ++z) {
+                float yPosition = (y * ySpan) - half;
+                float zPosition = (z * zSpan) - half;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(half, yPosition, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(-half, yPosition, zPosition));
+            }
+        }
+
+        for (float x = 0; x <= xGrid; ++x) {
+            for (float z = 0; z <= zGrid; ++z) {
+                float xPosition = (x * xSpan) - half;
+                float zPosition = (z * zSpan) - half;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, half, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, -half, zPosition));
+            }
+        }
+
+        return points;
+    }
+
     private void InitializeGameObject(MCSConfigGameObject objectConfig) {
         //try {
             GameObject gameObject = CreateGameObject(objectConfig);
@@ -1577,6 +1650,13 @@ public class MCSMain : MonoBehaviour {
             return legacy.Length > 0 ? legacy[0] : null;
         }
         return null;
+    }
+
+    private bool ShouldAutoGenerateVisibilityPoints(MCSConfigGameObject objectConfig) {
+        if (this.isPassiveScene) {
+            return false;
+        }
+        return objectConfig.type == "cube" || objectConfig.type == "cube_rounded";
     }
 
     private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
