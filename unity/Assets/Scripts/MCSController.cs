@@ -840,6 +840,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //if we are colliding, we need to move a bit
         if (overlapColliders.Length > 0) {
             foreach (Collider c in overlapColliders) {
+                // Don't avoid lightweight objects if the agent can simply move into their space and "shove" them out of the way.
+                Rigidbody rigidbody = c.gameObject.GetComponentInParent<Rigidbody>();
+                if (rigidbody != null && AgentCanMoveIntoObject(rigidbody)) {
+                    continue;
+                }
                 Vector3 direction;
                 float distance;
                 //Need to increase the collider radius temporarily to ensure we collide with something just outside but in our "skin"
