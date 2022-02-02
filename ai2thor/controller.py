@@ -629,19 +629,11 @@ class Controller(object):
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
         # for old builds
         if self.scenes_in_build and scene not in self.scenes_in_build:
-
-            def key_sort_func(scene_name):
-                m = re.search(
-                    r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$", scene_name
-                )
-                last_val = m.group(3) if m.group(3) is not None else -1
-                return m.group(1), int(m.group(2)), int(last_val)
-
             raise ValueError(
                 "\nScene '{}' not contained in build (scene names are case sensitive)."
                 "\nPlease choose one of the following scene names:\n\n{}".format(
                     scene,
-                    ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func)),
+                    ", ".join(sorted(list(self.scenes_in_build))),
                 )
             )
 
