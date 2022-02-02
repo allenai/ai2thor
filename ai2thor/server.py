@@ -11,7 +11,6 @@ import numpy as np
 from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
-import sys
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
