@@ -454,7 +454,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         bool staticPlacement,
         HashSet<SimObjPhysics> excludedSimObjects,
         ObjectTypeCount[] numDuplicatesOfType,
-        List<SimObjType> excludedReceptacleTypes
+        List<SimObjType> excludedReceptacleTypes,
+        String[] receptacleObjectIds,
+        String[] objectIds
     ) {
 #if UNITY_EDITOR
         var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -571,10 +573,14 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             Dictionary<SimObjType, List<SimObjPhysics>> objTypeToReceptacles = new Dictionary<SimObjType, List<SimObjPhysics>>();
             foreach (SimObjPhysics receptacleSop in GatherAllReceptaclesInScene()) {
-
                 SimObjType receptType = receptacleSop.ObjType;
-                if (!excludedReceptacleTypes.Contains(receptacleSop.Type) &&
-                        ((!spawnOnlyOutside) || ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(receptacleSop.ObjType))
+                if (
+                    (receptacleObjectIds == null || receptacleObjectIds.Contains(receptacleSop.ObjectID))
+                    && !excludedReceptacleTypes.Contains(receptacleSop.Type)
+                    && (
+                        (!spawnOnlyOutside)
+                        || ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(receptacleSop.ObjType)
+                    )
                 ) {
                     if (!objTypeToReceptacles.ContainsKey(receptacleSop.ObjType)) {
                         objTypeToReceptacles[receptacleSop.ObjType] = new List<SimObjPhysics>();
@@ -595,7 +601,13 @@ public class PhysicsSceneManager : MonoBehaviour {
                 //     sopToPlaceInReceptacle.GetComponent<Break>().Unbreakable = true;
                 // }
 
-                if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
+                if (
+                    (
+                        objectIds != null
+                        && !objectIds.Contains(sopToPlaceInReceptacle.ObjectID)
+                    )
+                    || excludedSimObjects.Contains(sopToPlaceInReceptacle)
+                ) {
                     HowManyCouldntSpawn--;
                     continue;
                 }

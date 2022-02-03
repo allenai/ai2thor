@@ -3095,6 +3095,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectTypeCount[] numDuplicatesOfType = null,
             String[] excludedReceptacles = null,
             String[] excludedObjectIds = null,
+            String[] objectIds = null,
+            String[] receptacleObjectIds = null,
             int numPlacementAttempts = 5,
             bool allowFloor = false
         ) {
@@ -3167,7 +3169,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 staticPlacement: placeStationary,
                 excludedSimObjects: excludedSimObjects,
                 numDuplicatesOfType: numDuplicatesOfType,
-                excludedReceptacleTypes: listOfExcludedReceptacleTypes
+                excludedReceptacleTypes: listOfExcludedReceptacleTypes,
+                receptacleObjectIds: receptacleObjectIds,
+                objectIds: objectIds
             );
 
             if (success && !placeStationary) {
@@ -4564,7 +4568,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RotateObject(AxisAngleRotation angleAxisRotation, string objectId = "asset_0", bool absolute = true) {
+        public void RotateObject(FlexibleRotation angleAxisRotation, string objectId = "asset_0", bool absolute = true) {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
