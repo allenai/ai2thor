@@ -1934,8 +1934,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.y = dir.y;
             apply.z = dir.z;
 
-            sopApplyForce(apply, target);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            if(action.action == "TorqueObject") {
+                target.ApplyTorque(action);
+                actionFinished(true);
+            }
+            else
+                sopApplyForce(apply, target);
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }
@@ -4547,6 +4552,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //we have succesfully picked up something! 
                 target.GetComponent<SimObjPhysics>().isInAgentHand = true;
+                target.transform.localEulerAngles = Vector3.zero;
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true, target.ObjectID);
                 return;

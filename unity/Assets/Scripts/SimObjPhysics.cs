@@ -1057,6 +1057,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myrb.AddRelativeForce(dir * magnitude);
 	}
 
+	//used for applying torque to an object
+	public void ApplyTorque(ServerAction action)
+	{
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+
+        if(myrb.IsSleeping())
+        	myrb.WakeUp();
+        
+		myrb.isKinematic = false;
+		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+		float MCSForceMultiplier = 250f;
+		//torque is mass dependent when using ForceMode.Impulse
+		//applying 100 torque to an object with 500 mass will slightly rotate an object
+		//appling 100 torque to an object with 0.5 mass will spin the object several times
+		myrb.AddTorque(Vector3.up * action.moveMagnitude / MCSForceMultiplier, ForceMode.Impulse);
+	}
+
 	//return all sim objects contained by this object if it is a receptacle
 	public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers()
 	{
