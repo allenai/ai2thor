@@ -1061,10 +1061,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public void ApplyTorque(ServerAction action)
 	{
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
-
         if(myrb.IsSleeping())
         	myrb.WakeUp();
-        
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
@@ -1073,6 +1071,90 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//applying 100 torque to an object with 500 mass will slightly rotate an object
 		//appling 100 torque to an object with 0.5 mass will spin the object several times
 		myrb.AddTorque(Vector3.up * action.moveMagnitude / MCSForceMultiplier, ForceMode.Impulse);
+	}
+
+	//used for applying rotation to an object
+	public bool ApplyRotation(ServerAction action)
+	{
+		//awake the rigidbody
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+        if(myrb.IsSleeping())
+        	myrb.WakeUp();
+		myrb.isKinematic = false;
+		
+		//rotation direction
+		float direction = action.clockwise ? 5 : -5;		
+
+		//get colliders
+		List<Collider> colliders = new List<Collider>();
+		Collider[] cols = GetComponentsInChildren<Collider>();
+		foreach (Collider c in cols) {
+			if(!c.isTrigger && c.enabled) {
+				colliders.Add(c);
+			}
+		}
+
+		//disable all colliders on this object to avoid detection in collision checks
+		foreach (Collider c in colliders)
+			c.enabled = false;
+		
+		//if the rotatable object has another object on top of them
+		Contains[] receptacles = transform.GetComponentsInChildren<Contains>();
+		Collider[] hitObjectsInReceptacleTriggerBox = null;
+		BoxCollider receptacle = null;
+		Vector3 receptacleBase = Vector3.zero;
+		Vector3 receptacleCheckSize = Vector3.zero;
+		if(receptacles.Length > 0) {
+			float maxY = receptacles.Max(element => element.transform.position.y);
+			receptacle = (receptacles.First(element => element.transform.position.y == maxY)).GetComponent<BoxCollider>();
+			receptacleBase = receptacle.transform.TransformPoint(new Vector3(receptacle.center.x, receptacle.center.y - receptacle.size.y * 0.5f, receptacle.center.z));
+		}
+		if(receptacles.Length > 0) {
+			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z); 
+			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * 0.001f), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
+		}
+
+		//set the rotation to the new rotation to see if collisions will happen
+		transform.eulerAngles = transform.eulerAngles + (Vector3.up * direction);
+
+		//now check for collisions, if there is one other that the object on top it, do not rotate it
+		bool obstructed = false;
+		foreach (Collider c in colliders) {
+			if(obstructed) 
+				break; 
+			BoxCollider boxCollider = c.GetComponent<BoxCollider>();
+			if(boxCollider != null) {
+				Vector3 center = c.transform.TransformPoint(boxCollider.center);
+				Transform trans = c.transform != transform ? c.transform : transform;
+				Vector3 size = new Vector3(trans.lossyScale.x * boxCollider.size.x, trans.lossyScale.y * boxCollider.size.y, trans.lossyScale.z * boxCollider.size.z);
+				Collider[] hitColliders = Physics.OverlapBox(center + (Vector3.up * 0.001f), size * 0.495f, c.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
+				if(hitColliders.Length > 0) {
+					if(hitObjectsInReceptacleTriggerBox != null) {
+						foreach (Collider col in hitColliders) {
+							if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
+								obstructed = true;
+								break;
+							}
+						}
+					}
+					else {
+						obstructed = true;
+					}
+				}
+			}
+		}
+		//enable all colliders
+		foreach (Collider c in colliders) {
+			c.enabled = true;
+		}
+		//reset rotation back to original if obstructed
+		if(obstructed) {
+			transform.eulerAngles = transform.eulerAngles - (Vector3.up * direction);
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is obstructed");
+			return false;
+		}
+		//success
+		return true;
 	}
 
 	//return all sim objects contained by this object if it is a receptacle

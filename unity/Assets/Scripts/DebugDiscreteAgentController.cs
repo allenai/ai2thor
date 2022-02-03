@@ -36,6 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
         private GameObject objectParent = null;
+        public bool clockwise = true;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -412,6 +413,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                         action.objectId = this.moveOrPickupObjectId;
                         action.moveMagnitude = pushPullForce;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.N))
+                    {
+                        action.action = "RotateObject";
+                        action.objectImageCoords = this.moveOrPickupObjectImageCoords;
+                        action.objectId = this.moveOrPickupObjectId;
+                        action.clockwise = clockwise;
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }

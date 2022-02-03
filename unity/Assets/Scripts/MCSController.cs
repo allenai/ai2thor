@@ -940,8 +940,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Cannot Torque object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
-            //AddTorque
-            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+            //Add Torque
+            ApplyForceObject(action);
+        }
+    }
+
+    public void RotateObject(ServerAction action) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
+            return;
+        }
+
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            //Add Rotation
             ApplyForceObject(action);
         }
     }
