@@ -313,7 +313,10 @@ For playback:
   - In `FindMySpawnPoints`, ignore receptacle trigger boxes of stacking receptacles that are currently positioned higher than the receptacle itself (in case the receptacle is rotated).
   - Added `IsSeesaw` property. It locks the XZ position - YZ rotation of the rigidbody and ignores collisions with the agents ground collider. For seesaw pivot points, enable `IsSeesaw` and set that object to `kinematic` so it ignores agent ground collider collisions while not moving
   - Added `ApplyTorque` method to apply a torque force to an object
+<<<<<<< HEAD
   - Added `ApplyRotation` method to apply a rotation transformation to an object
+=======
+>>>>>>> MCS-1123
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.
