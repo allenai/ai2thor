@@ -183,6 +183,14 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class BoundingBoxWithMargin {
+        public Vector3 min { get; set; }
+        public Vector3 max { get; set; }
+        public Vector3 margin {get; set; }
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class VectorXZ {
         public int x;
         public int z;

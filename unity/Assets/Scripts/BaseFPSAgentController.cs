@@ -1456,6 +1456,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void SetObjectFilterForType(string[] objectTypes) {
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            HashSet<SimObjPhysics> filter = new HashSet<SimObjPhysics>();
+            HashSet<string> filterObjectTypes = new HashSet<string>(objectTypes);
+            foreach (var simObj in simObjects) {
+
+
+                if (filterObjectTypes.Contains( Enum.GetName(typeof(SimObjType), simObj.Type) )) {
+                    filter.Add(simObj);
+                }
+            }
+            simObjFilter = filter.ToArray();
+            // this could technically be a FastEmit action
+            // but could cause confusion since the result of this
+            // action should return a limited set of objects. Setting the filter
+            // should cause only the objects in the filter to get returned,
+            // which FastEmit would not do.
+            actionFinished(true);
+        }
+
         public virtual ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] simObjects = null;
             if (this.simObjFilter != null) {
@@ -4284,6 +4304,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             actionFinished(true, metadata);
+        }
+
+        // returns manually annotated "hole" metadata for connectors like doors of windows, to generate
+        // the correct procedural polygons when creating a procedural house.
+        public void GetAssetHoleMetadata(string assetId) {
+             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                actionFinished(
+                    success: false,
+                    errorMessage: "ProceduralAssetDatabase not in scene."
+                );
+            }
+            var assetMap = ProceduralTools.getAssetMap();
+
+            if (!assetMap.ContainsKey(assetId)) {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                );
+            }
+
+            GameObject asset = assetMap.getAsset(assetId);
+
+            var holeMetadata = asset.GetComponentInChildren<HoleMetadata>();
+             if (holeMetadata == null) {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
+                );
+            
+            }
+            else {
+                var diff = holeMetadata.Max - holeMetadata.Min;
+                diff = new Vector3(Math.Abs(diff.x), Math.Abs(diff.y), Math.Abs(diff.z));// - holeMetadata.Margin;
+                actionFinished(
+                    success: false,
+                    actionReturn: new BoundingBoxWithMargin() { min=Vector3.zero, max=diff, margin=holeMetadata.Margin}
+                );
+            }
+
+
+
         }
 
         // asset geometry 

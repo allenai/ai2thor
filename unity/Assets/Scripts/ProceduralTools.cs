@@ -847,6 +847,8 @@ namespace Thor.Procedural {
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
+            meshF.mesh.RecalculateBounds();
+
             // var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
             // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.materialTilingXDivisor, toCreate.height / toCreate.materialTilingYDivisor);
 
@@ -1446,15 +1448,7 @@ namespace Thor.Procedural {
                 spawnObjectHierarchy(obj);
             }
 
-            //generate objectId for newly created wall/floor objects
-            //also add them to objectIdToSimObjPhysics dict so they can be found via
-            //getTargetObject() and other things that use that dict
-            //also add their rigidbodies to the list of all rigid body objects in scene
-            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            sceneManager.SetupScene(false);
-            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            agentManager.ResetSceneBounds();
-
+            
 
 
             var assetMap = ProceduralTools.getAssetMap();
@@ -1565,6 +1559,16 @@ namespace Thor.Procedural {
             buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
 
             RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+
+            //generate objectId for newly created wall/floor objects
+            //also add them to objectIdToSimObjPhysics dict so they can be found via
+            //getTargetObject() and other things that use that dict
+            //also add their rigidbodies to the list of all rigid body objects in scene
+            var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
+            sceneManager.SetupScene(false);
+            var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            agentManager.ResetSceneBounds();
+
 
             //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
 
