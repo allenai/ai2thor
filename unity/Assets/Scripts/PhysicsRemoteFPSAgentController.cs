@@ -1944,6 +1944,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), succesfulRotation ? ActionStatus.SUCCESSFUL : ActionStatus.OBSTRUCTED);
                 actionFinished(succesfulRotation);
             }
+            if(action.action == "MoveObject") {
+                bool succesfullMovement = target.ApplyMovement(action);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), succesfullMovement ? ActionStatus.SUCCESSFUL : ActionStatus.OBSTRUCTED);
+                actionFinished(succesfullMovement);
+            }
             else {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);

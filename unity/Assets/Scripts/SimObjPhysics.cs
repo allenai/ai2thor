@@ -1116,6 +1116,49 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return true;
 	}
 
+	//used for applying movement to an object
+	public bool ApplyMovement(ServerAction action)
+	{
+		//awake the rigidbody
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+        if(myrb.IsSleeping())
+        	myrb.WakeUp();
+		myrb.isKinematic = false;
+		
+		//movement direction
+		float movementAmount = 0.1f;
+		Vector3 movementRelativeToWhereAgentIsLooking = ((action.agentTransform.right * action.xDirection) + (action.agentTransform.forward * action.zDirection)).normalized;
+
+		List<Collider> colliders = GetAllColliders();
+
+		//disable all colliders on this object to avoid detection in collision checks
+		foreach (Collider c in colliders)
+			c.enabled = false;
+		
+		Collider[] hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox();
+
+		Vector3 oldPostion = transform.position;
+		//set the position to the new position
+		transform.position = 
+			new Vector3(movementRelativeToWhereAgentIsLooking.x * movementAmount + transform.position.x, transform.position.y, 
+						movementRelativeToWhereAgentIsLooking.z * movementAmount + transform.position.z);
+
+		bool obstructed = CheckForObstructions(colliders, hitObjectsInReceptacleTriggerBox);
+
+		//enable all colliders
+		foreach (Collider c in colliders) {
+			c.enabled = true;
+		}
+		//reset position back to original if obstructed
+		if(obstructed) {
+			transform.position = oldPostion;
+            Debug.Log("Cannot MoveObject object. Object " + action.objectId + " is obstructed");
+			return false;
+		}
+		//success
+		return true;
+	}
+
 	private bool CheckForObstructions(List<Collider> colliders, Collider[] hitObjectsInReceptacleTriggerBox) {
 		bool obstructed = false;
 		foreach (Collider c in colliders) {
@@ -1155,6 +1198,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		float offset = capusleCollider.height / 2 - capusleCollider.radius;
 		Vector3 point1 = capusleCollider.transform.TransformPoint(capusleCollider.center - direction * offset);
 		Vector3 point2 = capusleCollider.transform.TransformPoint(capusleCollider.center + direction * offset);
+<<<<<<< Updated upstream
+=======
+		Debug.DrawRay(point1, Vector3.right, Color.magenta, 10f);
+		Debug.DrawRay(point2, Vector3.right, Color.red, 10f);
+>>>>>>> Stashed changes
 		Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8, QueryTriggerInteraction.Ignore);
 		if(hitColliders.Length > 0) {
 			if(hitObjectsInReceptacleTriggerBox != null) {
