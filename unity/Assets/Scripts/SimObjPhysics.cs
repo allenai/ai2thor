@@ -1198,11 +1198,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		float offset = capusleCollider.height / 2 - capusleCollider.radius;
 		Vector3 point1 = capusleCollider.transform.TransformPoint(capusleCollider.center - direction * offset);
 		Vector3 point2 = capusleCollider.transform.TransformPoint(capusleCollider.center + direction * offset);
-<<<<<<< Updated upstream
-=======
-		Debug.DrawRay(point1, Vector3.right, Color.magenta, 10f);
-		Debug.DrawRay(point2, Vector3.right, Color.red, 10f);
->>>>>>> Stashed changes
 		Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8, QueryTriggerInteraction.Ignore);
 		if(hitColliders.Length > 0) {
 			if(hitObjectsInReceptacleTriggerBox != null) {
