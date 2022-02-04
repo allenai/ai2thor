@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 using System.Collections.Generic;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
     public const float PHYSICS_SIMULATION_STEP_SECONDS = 0.01f;
@@ -34,6 +36,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float AGENT_RADIUS = 0.12f;
 
     public int step = 0;
+    public AsyncOperationHandle<SceneInstance> asyncOperationHandle;
 
     protected int minHorizon = -90;
     protected int maxHorizon = 90;
@@ -256,6 +259,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void Initialize(ServerAction action) {
+        asyncOperationHandle.WaitForCompletion();
+
         // Set consistentColors to randomize segmentation mask colors if required
         this.agentManager.consistentColors = action.consistentColors;
         base.Initialize(action);
