@@ -808,15 +808,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().IsSeesaw))) {
-            hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
-            //for pose changes on structures only
-            float oldHeight = this.transform.position.y;
-            Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
-            this.transform.position = newHeight;
-            if (oldHeight != this.transform.position.y) {
-                AdjustLocationAfterHeightAdjustment();
+        bool isAnythingBelowAgent = Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit,
+                Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore);
+        if (isAnythingBelowAgent) {
+            // Note that the floor is a structure that's always below the agent, so this hit is usually just the floor.
+            StructureObject structureObjectScript = hit.transform.GetComponent<StructureObject>();
+            SimObjPhysics simObjPhysicsScript = hit.transform.GetComponent<SimObjPhysics>();
+            if ((structureObjectScript != null) || (simObjPhysicsScript != null && simObjPhysicsScript.IsSeesaw)) {
+                hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
+                //for pose changes on structures only
+                float oldHeight = this.transform.position.y;
+                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
+                this.transform.position = newHeight;
+                if (oldHeight != this.transform.position.y) {
+                    AdjustLocationAfterHeightAdjustment();
+                }
             }
         }
         //method needs a return value
@@ -841,8 +847,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (overlapColliders.Length > 0) {
             foreach (Collider c in overlapColliders) {
                 // Don't avoid lightweight objects if the agent can simply move into their space and "shove" them out of the way.
+                SimObjPhysics simObjPhysicsScript = c.gameObject.GetComponentInParent<SimObjPhysics>();
+                bool isSeesaw = (simObjPhysicsScript != null && simObjPhysicsScript.IsSeesaw);
                 Rigidbody rigidbody = c.gameObject.GetComponentInParent<Rigidbody>();
-                if (rigidbody != null && AgentCanMoveIntoObject(rigidbody)) {
+                if (!isSeesaw && rigidbody != null && AgentCanMoveIntoObject(rigidbody)) {
                     continue;
                 }
                 Vector3 direction;

@@ -944,9 +944,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         SimObjPhysics simObjPhysics = res.transform.GetComponent<SimObjPhysics>();
                         StructureObject structureObject = res.transform.GetComponent<StructureObject>();
+                        bool seesaw = simObjPhysics != null && simObjPhysics.IsSeesaw;
                         bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
-                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
-                        if (structureObject != null || immobile || !AgentCanMoveIntoObject(res.rigidbody))
+                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable && !seesaw);
+                        if (structureObject != null || immobile || (!seesaw && !AgentCanMoveIntoObject(res.rigidbody)))
                         { 
                             //checks if the obstruction is a structure ramp at a 45 degree angle
                             if(ShootRay45DegreesUp(this.inputDirection, moveMagnitude) && structureObject != null) 
