@@ -1086,6 +1086,59 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		float direction = action.clockwise ? 5 : -5;		
 
 		//get colliders
+		List<Collider> colliders = GetAllColliders();
+
+		//disable all colliders on this object to avoid detection in collision checks
+		foreach (Collider c in colliders)
+			c.enabled = false;
+		
+		//if the rotatable object has another object on top of them
+		Collider[] hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox();
+		
+		//set the rotation to the new rotation to see if collisions will happen
+		Vector3 oldRotation = transform.eulerAngles;
+		transform.eulerAngles = transform.eulerAngles + (Vector3.up * direction);
+
+		//now check for collisions, if there is one other that the object on top it, do not rotate it
+		bool obstructed = CheckForObstructions(colliders, hitObjectsInReceptacleTriggerBox);
+		
+		//enable all colliders
+		foreach (Collider c in colliders) {
+			c.enabled = true;
+		}
+		//reset rotation back to original if obstructed
+		if(obstructed) {
+			transform.eulerAngles = oldRotation;
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is obstructed");
+			return false;
+		}
+		//success
+		return true;
+	}
+
+	private bool CheckForObstructions(List<Collider> colliders, Collider[] hitObjectsInReceptacleTriggerBox) {
+		bool obstructed = false;
+		foreach (Collider c in colliders) {
+			BoxCollider boxCollider = c.GetComponent<BoxCollider>();
+			if(boxCollider != null) {
+				obstructed = CheckForBoxColliderObstructions(boxCollider, hitObjectsInReceptacleTriggerBox);
+			}
+			SphereCollider sphereCollider = c.GetComponent<SphereCollider>();
+			if(sphereCollider != null) {
+				obstructed = CheckForSphereColliderObstructions(sphereCollider, hitObjectsInReceptacleTriggerBox);
+			}
+			CapsuleCollider capsuleCollider = c.GetComponent<CapsuleCollider>();
+			if(capsuleCollider != null) {
+				obstructed = CheckForCapsuleColliderObstructions(capsuleCollider, hitObjectsInReceptacleTriggerBox);
+			}
+			if(obstructed) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<Collider> GetAllColliders() {
 		List<Collider> colliders = new List<Collider>();
 		Collider[] cols = GetComponentsInChildren<Collider>();
 		foreach (Collider c in cols) {
@@ -1093,12 +1146,72 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				colliders.Add(c);
 			}
 		}
+		return colliders;
+	}
+	private bool CheckForCapsuleColliderObstructions(CapsuleCollider capusleCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = capusleCollider.center;
+		Vector3 direction = new Vector3 {[capusleCollider.direction] = 1};
+		float radius = capusleCollider.radius * Mathf.Max(capusleCollider.transform.lossyScale.x, capusleCollider.transform.lossyScale.z) * 0.995f;
+		float offset = capusleCollider.height / 2 - capusleCollider.radius;
+		Vector3 point1 = capusleCollider.transform.TransformPoint(capusleCollider.center - direction * offset);
+		Vector3 point2 = capusleCollider.transform.TransformPoint(capusleCollider.center + direction * offset);
+		Debug.DrawRay(point1, Vector3.right, Color.magenta, 10f);
+		Debug.DrawRay(point2, Vector3.right, Color.red, 10f);
+		Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8, QueryTriggerInteraction.Ignore);
+		if(hitColliders.Length > 0) {
+			if(hitObjectsInReceptacleTriggerBox != null) {
+				foreach (Collider col in hitColliders) {
+					if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
+						return true;
+					}
+				}
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
+	}
 
-		//disable all colliders on this object to avoid detection in collision checks
-		foreach (Collider c in colliders)
-			c.enabled = false;
-		
-		//if the rotatable object has another object on top of them
+	private bool CheckForSphereColliderObstructions(SphereCollider sphereCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = sphereCollider.transform.TransformPoint(sphereCollider.center);
+		float radius = sphereCollider.radius * Mathf.Max(Mathf.Max(sphereCollider.transform.lossyScale.x, sphereCollider.transform.lossyScale.y), sphereCollider.transform.lossyScale.z) * 0.985f;
+		Collider[] hitColliders = Physics.OverlapSphere(center + (Vector3.up * 0.0001f), radius, 1 << 8, QueryTriggerInteraction.Ignore);
+		if(hitColliders.Length > 0) {
+			if(hitObjectsInReceptacleTriggerBox != null) {
+				foreach (Collider col in hitColliders) {
+					if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
+						return true;
+					}
+				}
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool CheckForBoxColliderObstructions(BoxCollider boxCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = boxCollider.transform.TransformPoint(boxCollider.center);
+		Vector3 size = new Vector3(boxCollider.transform.lossyScale.x * boxCollider.size.x, boxCollider.transform.lossyScale.y * boxCollider.size.y, boxCollider.transform.lossyScale.z * boxCollider.size.z);
+		Collider[] hitColliders = Physics.OverlapBox(center + (Vector3.up * 0.001f), size * 0.495f, boxCollider.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
+		if(hitColliders.Length > 0) {
+			if(hitObjectsInReceptacleTriggerBox != null) {
+				foreach (Collider col in hitColliders) {
+					if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
+						return true;
+					}
+				}
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Collider[] BoxCastInReceptacleTriggerBox() {
 		Contains[] receptacles = transform.GetComponentsInChildren<Contains>();
 		Collider[] hitObjectsInReceptacleTriggerBox = null;
 		BoxCollider receptacle = null;
@@ -1113,48 +1226,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z); 
 			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * 0.001f), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
 		}
-
-		//set the rotation to the new rotation to see if collisions will happen
-		transform.eulerAngles = transform.eulerAngles + (Vector3.up * direction);
-
-		//now check for collisions, if there is one other that the object on top it, do not rotate it
-		bool obstructed = false;
-		foreach (Collider c in colliders) {
-			if(obstructed) 
-				break; 
-			BoxCollider boxCollider = c.GetComponent<BoxCollider>();
-			if(boxCollider != null) {
-				Vector3 center = c.transform.TransformPoint(boxCollider.center);
-				Transform trans = c.transform != transform ? c.transform : transform;
-				Vector3 size = new Vector3(trans.lossyScale.x * boxCollider.size.x, trans.lossyScale.y * boxCollider.size.y, trans.lossyScale.z * boxCollider.size.z);
-				Collider[] hitColliders = Physics.OverlapBox(center + (Vector3.up * 0.001f), size * 0.495f, c.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
-				if(hitColliders.Length > 0) {
-					if(hitObjectsInReceptacleTriggerBox != null) {
-						foreach (Collider col in hitColliders) {
-							if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
-								obstructed = true;
-								break;
-							}
-						}
-					}
-					else {
-						obstructed = true;
-					}
-				}
-			}
-		}
-		//enable all colliders
-		foreach (Collider c in colliders) {
-			c.enabled = true;
-		}
-		//reset rotation back to original if obstructed
-		if(obstructed) {
-			transform.eulerAngles = transform.eulerAngles - (Vector3.up * direction);
-            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is obstructed");
-			return false;
-		}
-		//success
-		return true;
+		return hitObjectsInReceptacleTriggerBox;
 	}
 
 	//return all sim objects contained by this object if it is a receptacle
