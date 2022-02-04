@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
-        public float pushPullForce = 150.0f;
+        [Range(-250,250)] public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
@@ -404,6 +404,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         action.action = "Pass";
                         StartCoroutine(PassThenRecordPosition(action, 0));
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.M))
+                    {
+                        action.action = "TorqueObject";
+                        action.objectImageCoords = this.moveOrPickupObjectImageCoords;
+                        action.objectId = this.moveOrPickupObjectId;
+                        action.moveMagnitude = pushPullForce;
+                        PhysicsController.ProcessControlCommand(action);
                     }
                 }
             }
