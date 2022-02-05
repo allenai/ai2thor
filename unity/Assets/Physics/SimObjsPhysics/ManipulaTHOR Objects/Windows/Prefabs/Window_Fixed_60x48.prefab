@@ -1184,6 +1184,7 @@ GameObject:
   - component: {fileID: 1460382832806026627}
   - component: {fileID: 1460382832806026626}
   - component: {fileID: 1460382832806026624}
+  - component: {fileID: 5751800883539568186}
   m_Layer: 8
   m_Name: Window_Fixed_60x48
   m_TagString: SimObjPhysics
@@ -1223,6 +1224,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectID: Window|+00.00|+00.00|+00.00
+  assetID: 
   Type: 135
   PrimaryProperty: 1
   SecondaryProperties: 
@@ -1289,8 +1291,8 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
-  canChangeTempToHot: 0
-  canChangeTempToCold: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
   CurrentlyContains: []
 --- !u!54 &1460382832806026624
@@ -1309,6 +1311,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5751800883539568186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1460382832806026629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 882cbf27e2a1a478abc0c46c27c6c4bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Min: {x: -0.0031416714, y: 0.0028967261, z: -0.038280733}
+  Max: {x: -1.5221179, y: 1.211208, z: 0.035683278}
+  Margin: {x: 0, y: 0, z: 0}
 --- !u!1 &1460382832819504424
 GameObject:
   m_ObjectHideFlags: 0

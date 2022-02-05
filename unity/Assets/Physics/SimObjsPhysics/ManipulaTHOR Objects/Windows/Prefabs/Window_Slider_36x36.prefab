@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 7627674532716105598}
   - component: {fileID: 7627674532716105599}
   - component: {fileID: 7627674532716105597}
+  - component: {fileID: 4988911897283565973}
   m_Layer: 8
   m_Name: Window_Slider_36x36
   m_TagString: SimObjPhysics
@@ -162,6 +163,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectID: Window|+00.00|+00.00|+00.00
+  assetID: 
   Type: 135
   PrimaryProperty: 1
   SecondaryProperties: 
@@ -218,8 +220,8 @@ MonoBehaviour:
   IsDirtyable: 0
   IsCookable: 0
   IsSliceable: 0
-  canChangeTempToHot: 0
-  canChangeTempToCold: 0
+  isHeatSource: 0
+  isColdSource: 0
   ContainedObjectReferences: []
   CurrentlyContains: []
 --- !u!54 &7627674532716105597
@@ -238,6 +240,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4988911897283565973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7627674532716105592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 882cbf27e2a1a478abc0c46c27c6c4bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Min: {x: -0.001826778, y: 0.000793837, z: -0.0397313}
+  Max: {x: -0.9109974, y: 0.91134167, z: 0.03918115}
+  Margin: {x: 0, y: 0, z: 0}
 --- !u!1 &7627674532947339697
 GameObject:
   m_ObjectHideFlags: 0
