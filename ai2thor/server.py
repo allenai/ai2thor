@@ -60,7 +60,7 @@ class LazyInstanceDetections2D(Mapping):
 
     def __iter__(self):
         for k in self.lazy_instance_masks.keys():
-            self.__getitem__(key)
+            self.__getitem__(k)
 
         return iter(self._detections2d)
 
@@ -71,7 +71,7 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
         return len(self._class_names())
 
     def _class_names(self):
-        return set([k.split("|") for k in self.lazy_instance_masks.instance_colors.keys()])
+        return set([k.split("|")[0] for k in self.lazy_instance_masks.instance_colors.keys()])
 
     def __iter__(self):
         for cls in self._class_names():
