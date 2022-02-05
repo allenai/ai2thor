@@ -7,6 +7,7 @@ are sent to the controller using a pair of request/response queues.
 """
 
 import warnings
+import time
 import numpy as np
 from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
@@ -80,7 +81,7 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
 
     def __getitem__(self, cls):
         if cls in self._detections2d:
-            return self._detections2d[key]
+            return self._detections2d[cls]
 
         self._detections2d[cls] = detections = []
 
@@ -94,26 +95,40 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
 
 class LazyInstanceSegmentationMasks(Mapping):
 
-    def __init__(self, instance_segmentation_frame, colors):
-        shape = instance_segmentation_frame.shape
+    def __init__(self, image_ids_data, metadata):
         self._masks = {}
         self._loaded = False
+        screen_width = metadata["screenWidth"]
+        screen_height = metadata["screenHeight"]
+        item_size = int(len(image_ids_data)/(screen_width * screen_height))
 
-        if shape[2] == 3:
-            self.instance_segmentation_frame4 = np.concatenate(
+        if item_size == 4:
+            self.instance_segmentation_frame_uint32 = read_buffer_image(
+                image_ids_data, screen_width, screen_height, dtype=np.uint32
+            ).squeeze()
+            # within ImageSynthesis.cs a RGBA32 frame is read, the alpha channel
+            # is always equal to 255
+            self._alpha_channel_value = 255
+
+        elif item_size == 3: # 3 byte per pixel for backwards compatibility, RGB24 texture
+            # this is more expensive than the 4 byte variant since copying is required
+            frame = read_buffer_image(image_ids_data, screen_width, screen_height)
+            self.instance_segmentation_frame_uint32 = np.concatenate(
                 (
-                    instance_segmentation_frame,
-                    np.zeros((shape[0], shape[1], 1), dtype=np.uint8),
+                    frame,
+                    np.zeros((frame.shape[0], frame.shape[1], 1), dtype=np.uint8),
                 ),
                 axis=2,
             )
+            self.instance_segmentation_frame_uint32.dtype = np.uint32
+            self.instance_segmentation_frame_uint32 = self.instance_segmentation_frame_uint32.squeeze()
+            self._alpha_channel_value = 0
 
-        self.instance_segmentation_frame4.dtype = np.uint32
         # At this point we should have a 2d matrix of shape (height, width)
         # with a 32bit uint as the value
-        self.instance_segmentation_frame4 = self.instance_segmentation_frame4.squeeze()
+
         self.instance_colors = {}
-        for c in colors:
+        for c in metadata["colors"]:
             self.instance_colors[c["name"]] = c["color"]
 
     def __contains__(self, key):
@@ -122,7 +137,7 @@ class LazyInstanceSegmentationMasks(Mapping):
             return (
                 len(
                     np.where(
-                        self.instance_segmentation_frame4
+                        self.instance_segmentation_frame_uint32
                         == self._integer_color_key(color)
                     )[0]
                 )
@@ -132,13 +147,13 @@ class LazyInstanceSegmentationMasks(Mapping):
             return False
 
     def _integer_color_key(self, color):
-        a = np.array(color + [0], dtype=np.uint8)
+        a = np.array(color + [self._alpha_channel_value], dtype=np.uint8)
         a.dtype = np.uint32
         return a[0]
 
     def _load_all(self):
         if not self._loaded:
-            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame_uint32))
             for color_name, color in self.instance_colors.items():
                 if self._integer_color_key(color) in all_integer_keys:
                     self.__getitem__(color_name)
@@ -151,7 +166,7 @@ class LazyInstanceSegmentationMasks(Mapping):
         if key in self.instance_colors:
             self._masks[
                 key
-            ] = self.instance_segmentation_frame4 == self._integer_color_key(
+            ] = self.instance_segmentation_frame_uint32 == self._integer_color_key(
                 self.instance_colors[key]
             )
 
@@ -169,7 +184,7 @@ class LazyInstanceSegmentationMasks(Mapping):
 class LazyClassSegmentationMasks(LazyInstanceSegmentationMasks):
     def _load_all(self):
         if not self._loaded:
-            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame_uint32))
             for color_name, color in self.instance_colors.items():
                 if self._integer_color_key(color) in all_integer_keys:
                     cls = color_name.split("|")[0]
@@ -184,23 +199,23 @@ class LazyClassSegmentationMasks(LazyInstanceSegmentationMasks):
         if key in self._masks:
             return self._masks[key]
 
-        class_mask = np.zeros(self.instance_segmentation_frame4.shape, dtype=bool)
+        class_mask = np.zeros(self.instance_segmentation_frame_uint32.shape, dtype=bool)
 
         if key == "background": 
             # "background" is a special name for any color that wasn't included in the metadata
             # this is mainly done for backwards compatibility since we only have a handful of instances
             # of this across all scenes (e.g. FloorPlan412 - thin strip above the doorway)
-            all_integer_keys = set(np.unique(self.instance_segmentation_frame4))
+            all_integer_keys = set(np.unique(self.instance_segmentation_frame_uint32))
             metadata_color_keys = set([self._integer_color_key(color) for color in self.instance_colors.values()])
             background_keys = all_integer_keys - metadata_color_keys
             for ik in background_keys:
-                mask = self.instance_segmentation_frame4 == ik
+                mask = self.instance_segmentation_frame_uint32 == ik
                 class_mask = np.logical_or(class_mask, mask)
 
         elif "|" not in key:
             for color_name, color in self.instance_colors.items():
                 if "|" in color_name and color_name.split("|")[0] == key:
-                    mask = self.instance_segmentation_frame4 == self._integer_color_key(
+                    mask = self.instance_segmentation_frame_uint32 == self._integer_color_key(
                         color
                     )
                     class_mask = np.logical_or(class_mask, mask)
@@ -412,12 +427,10 @@ class Event:
             obj for obj in self.metadata["objects"] if obj["objectType"] == object_type
         ]
 
-    def process_colors_ids(self):
-        if self.instance_segmentation_frame is None:
-            return
+    def process_colors_ids(self, image_ids_data):
 
-        self.instance_masks = LazyInstanceSegmentationMasks(self.instance_segmentation_frame, self.metadata["colors"])
-        self.class_masks = LazyClassSegmentationMasks(self.instance_segmentation_frame, self.metadata["colors"])
+        self.instance_masks = LazyInstanceSegmentationMasks(image_ids_data, self.metadata)
+        self.class_masks = LazyClassSegmentationMasks(image_ids_data, self.metadata)
         self.class_detections2D = LazyClassDetections2D(self.instance_masks)
         self.instance_detections2D = LazyInstanceDetections2D(self.instance_masks)
 
@@ -539,28 +552,30 @@ class Event:
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
-        )
-        self.process_colors_ids()
+            )[:, :, :3]
+
+        self.process_colors_ids(image_ids_data)
 
     def add_third_party_image_ids(self, image_ids_data):
         instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
-        )
+        )[:, :, :3]
+
         self.third_party_instance_segmentation_frames.append(
             instance_segmentation_frame
         )
-        self.third_party_instance_masks.append(LazyInstanceSegmentationMasks(instance_segmentation_frame, self.metadata["colors"]))
-        self.third_party_class_masks.append(LazyClassSegmentationMasks(instance_segmentation_frame, self.metadata["colors"]))
+        self.third_party_instance_masks.append(LazyInstanceSegmentationMasks(image_ids_data, self.metadata))
+        self.third_party_class_masks.append(LazyClassSegmentationMasks(image_ids_data, self.metadata))
 
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(
             image_classes_data, self.screen_width, self.screen_height
-        )
+            )[:, :, :3]
 
     def add_third_party_image_classes(self, image_classes_data):
         self.third_party_semantic_segmentation_frames.append(
-            read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
-        )
+            read_buffer_image(image_classes_data, self.screen_width, self.screen_height)[:, :, :3]
+            )
 
     def cv2image(self):
         warnings.warn("Deprecated - please use event.cv2img")

@@ -1113,6 +1113,8 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderSemanticSegmentation=True,
     )
     fifo_controller.step("RotateRight")
+    fifo_controller.step("RotateLeft")
+    fifo_controller.step("RotateRight")
     first_event = fifo_controller.last_event
     first_depth_frame = fifo_controller.last_event.depth_frame
     first_instance_frame = fifo_controller.last_event.instance_segmentation_frame

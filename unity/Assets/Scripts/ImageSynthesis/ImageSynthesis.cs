@@ -427,7 +427,7 @@ public class ImageSynthesis : MonoBehaviour {
         var renderRT = (!needsRescale) ? finalRT :
             RenderTexture.GetTemporary(mainCamera.pixelWidth, mainCamera.pixelHeight, depth, format, readWrite, antiAliasing);
         if (tex == null) {
-            tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
         }
 
         var prevActiveRT = RenderTexture.active;

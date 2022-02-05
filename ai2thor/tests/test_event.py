@@ -3255,16 +3255,30 @@ def event_with_frame(event):
     return e
 
 
-@pytest.fixture
-def event_with_segmentation():
     with open(os.path.join(TESTS_DATA_DIR, "instance_segmentation_metadata.json")) as f:
         metadata = json.loads(f.read())
 
     e = Event(metadata)
-    seg_frame = np.load(os.path.join(TESTS_DATA_DIR, "instance_segmentation_frame.npy"))
-    e.add_image_ids(seg_frame.tobytes())
+    with open(os.path.join(TESTS_DATA_DIR, "instance_segmentation_frame_rgb24.raw"), "rb") as f:
+        seg_frame_data = f.read()
+        e.add_image_ids(seg_frame_data)
+
     return e
 
+def _event_with_segmentation(raw_data_path):
+    with open(os.path.join(TESTS_DATA_DIR, "instance_segmentation_metadata.json")) as f:
+        metadata = json.loads(f.read())
+
+    e = Event(metadata)
+    with open(os.path.join(TESTS_DATA_DIR, raw_data_path), "rb") as f:
+        seg_frame_data = f.read()
+        e.add_image_ids(seg_frame_data)
+
+    return e
+
+segmentation_events = [
+        _event_with_segmentation("instance_segmentation_frame.raw"), 
+        _event_with_segmentation("instance_segmentation_frame_rgb24.raw")]
 
 def test_get_object(event):
     microwave = {
@@ -3435,6 +3449,7 @@ def test_process_colors(event_complex):
     assert event_complex.object_id_to_color["Spoon"] == (235, 57, 90)
 
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_segmentation(event_with_segmentation):
     assert (
         event_with_segmentation.instance_masks[
@@ -3474,12 +3489,14 @@ def test_lazy_instance_segmentation(event_with_segmentation):
     assert list(event_with_segmentation.instance_masks.keys()) == expected_keys
 
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_detections2d(event_with_segmentation):
     assert event_with_segmentation.instance_detections2D[
         "CoffeeMachine|+00.89|+00.90|-02.13"
-    ] == (509, 23, 599, 228)
+    ] == (509, 371, 599, 576)
 
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation(event_with_segmentation):
     assert event_with_segmentation.class_masks["Cabinet"].sum() == 111227
     expected_keys = [
@@ -3505,9 +3522,11 @@ def test_lazy_class_segmentation(event_with_segmentation):
     assert list(event_with_segmentation.class_masks.keys()) == expected_keys
 
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation_missing(event_with_segmentation):
     assert event_with_segmentation.class_masks["Stove"].sum() == 0
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation_background(event_with_segmentation):
     # colors that don't appear in the metadata get labeled as "background"
     cabinet_keys = []
@@ -3515,20 +3534,31 @@ def test_lazy_class_segmentation_background(event_with_segmentation):
         if k.startswith("Cabinet"):
             cabinet_keys.append(k)
 
+    instance_colors_copy = json.loads(json.dumps(event_with_segmentation.class_masks.instance_colors))
     for k in cabinet_keys:
         del(event_with_segmentation.class_masks.instance_colors[k])
+
+    if "background" in event_with_segmentation.class_masks._masks:
+        del(event_with_segmentation.class_masks._masks["background"])
+
+    if "Cabinet" in event_with_segmentation.class_masks._masks:
+        del(event_with_segmentation.class_masks._masks["Cabinet"])
 
     assert event_with_segmentation.class_masks["background"].sum() == 111227
     assert event_with_segmentation.class_masks["Cabinet"].sum() == 0
 
+    event_with_segmentation.class_masks.instance_colors = instance_colors_copy
+
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_detections2d(event_with_segmentation):
     assert event_with_segmentation.class_detections2D["Cabinet"] == [
-        (473, 315, 599, 599),
-        (0, 315, 145, 599),
-        (164, 490, 467, 599),
+        (473, 0, 599, 284),
+        (0, 0, 145, 284),
+        (164, 0, 467, 109),
     ]
 
     assert event_with_segmentation.class_detections2D["Stove"] == []
 
+@pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_detections2d_missing(event_with_segmentation):
     assert event_with_segmentation.class_detections2D["Stove"] == []
