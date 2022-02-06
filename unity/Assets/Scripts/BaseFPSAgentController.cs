@@ -3548,25 +3548,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!String.IsNullOrEmpty(objectType) && String.IsNullOrEmpty(objectId)) {
                 var ids = objectTypeToObjectIds(objectType);
                 if (ids.Length == 0) {
-                    errorMessage = "Object type '" + objectType + "' was not found in the scene.";
-                    return null;
+                    throw new ArgumentException(
+                        $"Object type {objectType} was not found in the scene."
+                    );
                 } else if (ids.Length > 1) {
-                    errorMessage = "Multiple objects of type '" + objectType + "' were found in the scene, cannot disambiguate.";
-                    return null;
+                    throw new ArgumentException(
+                        $"Multiple objects of type {objectType} were found in the scene, cannot disambiguate."
+                    );
                 }
 
                 objectId = ids[0];
             }
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                errorMessage = "Cannot find sim object with id '" + objectId + "'";
-                return null;
+                throw new ArgumentException($"Cannot find sim object with id {objectId}");
             }
 
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             if (sop == null) {
-                errorMessage = "Object with id '" + objectId + "' is null";
-                return null;
+                throw new ArgumentException($"Object with id {objectId} is null");
             }
 
             return sop;
@@ -3722,21 +3722,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float allowedError
         ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
-            if (sop == null) {
-                actionFinished(false);
-                return;
-            }
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                // VisualizePath(startPosition, path);
-                actionFinishedEmit(true, path);
-                return;
-            } else {
-                Debug.Log("AI navmesh error");
-                errorMessage = "Path to target could not be found";
-                actionFinishedEmit(false);
-                return;
-            }
+            // VisualizePath(startPosition, path);
+            actionFinishedEmit(success: true, actionReturn: path);
         }
 
         public void GetShortestPath(
@@ -4064,7 +4052,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var sopPos = targetSOP.transform.position;
             // var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
-            bool pathSuccess = SafelyComputeNavMeshPath(initialPosition, fixedPosition, path, allowedError);
+            SafelyComputeNavMeshPath(initialPosition, fixedPosition, path, allowedError);
 
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -4102,7 +4090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getFloorY(x, hit.point.y + 0.1f, z);
         }
 
-        protected bool SafelyComputeNavMeshPath(
+        protected void SafelyComputeNavMeshPath(
             Vector3 start,
             Vector3 target,
             UnityEngine.AI.NavMeshPath path,
@@ -4128,14 +4116,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (!startWasHit || !targetWasHit) {
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
-                    errorMessage = $"No point on NavMesh near {startPosition}.";
+                    throw new InvalidOperationException(
+                        $"No point on NavMesh near {startPosition}."
+                    );
                 }
                 if (!targetWasHit) {
-                    errorMessage = $"No point on NavMesh near {targetPosition}.";
+                    throw new InvalidOperationException(
+                        $"No point on NavMesh near {targetPosition}."
+                    );
                 }
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
             }
 
             float startOffset = Vector3.Distance(
@@ -4147,13 +4138,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                errorMessage = $"Closest point on NavMesh was too far from the agent: " +
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                throw new InvalidOperationException(
+                    $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +
-                    $" closest navmesh position {targetHit.position.ToString("F3")}).";
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
+                    $" closest navmesh position {targetHit.position.ToString("F3")})."
+                );
             }
 
 #if UNITY_EDITOR
@@ -4162,28 +4154,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-#if UNITY_EDITOR
-                VisualizePath(startHit.position, path);
-#endif
+
+            if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return true;
-            } else {
-                errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
-                    $" and {targetHit.position.ToString("F3")} using the NavMesh.";
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
+                throw new InvalidOperationException(
+                    $"Could not find path between {startHit.position.ToString("F3")}" +
+                    $" and {targetHit.position.ToString("F3")} using the NavMesh."
+                );
             }
+
+#if UNITY_EDITOR
+            VisualizePath(startHit.position, path);
+#endif
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
+
         public void GetShortestPathToPoint(
             Vector3 position, float x, float y, float z, float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            if (SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError)) {
-                actionFinished(true, path);
-            } else {
-                actionFinished(false);
-            }
+            SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError);
+            actionFinished(success: true, actionReturn: path);
         }
 
         public void GetShortestPathToPoint(
