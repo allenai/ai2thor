@@ -423,7 +423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<(int, int)> seenRightForwards = new HashSet<(int, int)>();
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             int stepsTaken = 0;
             while (rightForwardQueue.Count != 0) {
                 stepsTaken += 1;
@@ -1153,7 +1153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.position,
                 offset.normalized,
                 offset.magnitude,
-                1 << 8 | 1 << 10
+                LayerMask.GetMask("SimObjVisible", "Agent")
             );
             // check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
@@ -2080,7 +2080,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
 
             // check if something was hit by raycast
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10 | 1 << 11, QueryTriggerInteraction.Ignore)) {
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"), QueryTriggerInteraction.Ignore)) {
 
                 // DEBUG STUFF PLEASE COMMENT OUT UNLESS USING//////
                 // GameObject empty = new GameObject("empty");
@@ -2412,7 +2412,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     RaycastHit hit;
                     Ray ray = m_Camera.ViewportPointToRay(new Vector3(
                         (i + 0.5f) / n, (j + 0.5f) / n, 0.0f));
-                    if (Physics.Raycast(ray, out hit, 100f, (1 << 8) | (1 << 10))) {
+                    if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("SimObjVisible", "Agent"))) {
                         points.Add(hit.point);
                     }
                 }
@@ -2831,7 +2831,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Find all nearby colliders corresponding to visible components and grab
             // their corresponding SimObjPhysics component
             Collider[] collidersInView = Physics.OverlapCapsule(
-                point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide
+                point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Collide
             );
             if (collidersInView != null) {
                 foreach (Collider c in collidersInView) {
@@ -2846,7 +2846,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
             // this additional check will allow us to see inside of receptacle objects like cabinets/fridges by checking for that interior
             // receptacle trigger box. Oh boy!
-            Collider[] invisibleCollidersInView = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 9, QueryTriggerInteraction.Collide);
+            Collider[] invisibleCollidersInView = Physics.OverlapCapsule(
+                point0,
+                point1,
+                maxDistance,
+                LayerMask.GetMask("SimObjInvisible"),
+                QueryTriggerInteraction.Collide
+            );
             if (invisibleCollidersInView != null) {
                 foreach (Collider c in invisibleCollidersInView) {
                     if (c.tag == "Receptacle") {
@@ -2940,11 +2946,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
 
-            LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
+            LayerMask mask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible", "Agent");
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
             if (sop.Type == SimObjType.Floor) {
-                mask = (1 << 8) | (1 << 10);
+                mask = LayerMask.GetMask("SimObjVisible", "Agent");
             }
 
             bool isSopHeldByArm = Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
@@ -2968,68 +2974,74 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // only check against the visible layer, ignore the invisible layer
             // so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
-            else {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
-                    if (
-                        hit.transform == sop.transform
-                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
-                    ) {
-                        // if this line is drawn, then this visibility point is in camera frame and not occluded
-                        // might want to use this for a targeting check as well at some point....
-                        visCheck.visible = true;
-                        visCheck.interactable = true;
-                    } else {
-                        // we didn't directly hit the sop we are checking for with this cast,
-                        // check if it's because we hit something see-through
-                        SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
+            else if (
+                Physics.Raycast(
+                    camera.transform.position,
+                    point.position - camera.transform.position,
+                    out hit,
+                    raycastDistance,
+                    LayerMask.GetMask("SimObjVisible", "Agent")
+                )
+            ) {
+                if (
+                    hit.transform == sop.transform
+                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                ) {
+                    // if this line is drawn, then this visibility point is in camera frame and not occluded
+                    // might want to use this for a targeting check as well at some point....
+                    visCheck.visible = true;
+                    visCheck.interactable = true;
+                } else {
+                    // we didn't directly hit the sop we are checking for with this cast,
+                    // check if it's because we hit something see-through
+                    SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
 
-                        if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                            // we hit something see through, so now find all objects in the path between
-                            // the sop and the camera
-                            RaycastHit[] hits;
-                            hits = Physics.RaycastAll(
-                                camera.transform.position,
-                                point.position - camera.transform.position,
-                                raycastDistance,
-                                (1 << 8),
-                                QueryTriggerInteraction.Ignore
-                            );
+                    if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                        // we hit something see through, so now find all objects in the path between
+                        // the sop and the camera
+                        RaycastHit[] hits;
+                        hits = Physics.RaycastAll(
+                            camera.transform.position,
+                            point.position - camera.transform.position,
+                            raycastDistance,
+                            LayerMask.GetMask("SimObjVisible"),
+                            QueryTriggerInteraction.Ignore
+                        );
 
-                            float[] hitDistances = new float[hits.Length];
-                            for (int i = 0; i < hitDistances.Length; i++) {
-                                hitDistances[i] = hits[i].distance; // Vector3.Distance(hits[i].transform.position, camera.transform.position);
-                            }
+                        float[] hitDistances = new float[hits.Length];
+                        for (int i = 0; i < hitDistances.Length; i++) {
+                            hitDistances[i] = hits[i].distance; // Vector3.Distance(hits[i].transform.position, camera.transform.position);
+                        }
 
-                            Array.Sort(hitDistances, hits);
+                        Array.Sort(hitDistances, hits);
 
-                            foreach (RaycastHit h in hits) {
-                                if (
-                                    h.transform == sop.transform
-                                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
-                                ) {
-                                    // found the object we are looking for, great!
-                                    //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
-                                    visCheck.visible = true;
-                                    visCheck.interactable = false;
+                        foreach (RaycastHit h in hits) {
+                            if (
+                                h.transform == sop.transform
+                                || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                            ) {
+                                // found the object we are looking for, great!
+                                //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
+                                visCheck.visible = true;
+                                visCheck.interactable = false;
+                                break;
+                            } else {
+                                // Didn't find it, continue on only if the hit object was translucent
+                                SimObjPhysics sopHitOnPath = null;
+                                sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
+                                if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                                     break;
-                                } else {
-                                    // Didn't find it, continue on only if the hit object was translucent
-                                    SimObjPhysics sopHitOnPath = null;
-                                    sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                                    if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                                        break;
-                                    }
                                 }
                             }
                         }
                     }
+                }
 
 #if UNITY_EDITOR
-                    if (visCheck.visible) {
-                        Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
-                    }
-#endif
+                if (visCheck.visible) {
+                    Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
                 }
+#endif
             }
 
             return visCheck;
@@ -3827,7 +3839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (CapsuleCollider cc in soInHand.GetComponentsInChildren<CapsuleCollider>()) {
                 foreach (Collider c in overlapCollider(cc, newHandPosition, rotation, layerMask)) {
                     if (!hasAncestor(c.transform.gameObject, gameObject)) {
@@ -3886,7 +3898,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<Collider> collidersToIgnore = null,
             bool includeErrorMessage = false
         ) {
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (
                 Collider c in PhysicsExtensions.OverlapCapsule(
                     GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
@@ -3917,7 +3929,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected Collider[] objectsCollidingWithAgent() {
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
         }
 
@@ -3941,7 +3953,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<Vector3> seenPoints = new HashSet<Vector3>();
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             int stepsTaken = 0;
             pos = Vector3.negativeInfinity;
             while (pointsQueue.Count != 0) {
@@ -4079,14 +4091,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected float getFloorY(float x, float start_y, float z) {
-            int layerMask = ~(LayerMask.GetMask("Agent") | LayerMask.GetMask("SimObjInvisible"));
+            int layerMask = ~LayerMask.GetMask("Agent", "SimObjInvisible");
 
             float y = start_y;
             RaycastHit hit;
             Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
             if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
-                errorMessage = "Could not find the floor";
-                return float.NegativeInfinity;
+                throw new InvalidOperationException(
+                    "Raycast could not find the floor!"
+                );
             }
             return hit.point.y;
         }
@@ -4629,9 +4642,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(false);
 
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) // reduce distance by slight offset
-                {
+                // reduce distance by slight offset
+                if (
+                    Physics.Raycast(
+                        m_Camera.transform.position,
+                        point - m_Camera.transform.position,
+                        out hit,
+                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f,
+                        LayerMask.GetMask("SimObjVisible", "Agent")
+                    )
+                ) {
                     updateAllAgentCollidersForVisibilityCheck(true);
                     return false;
                 } else {

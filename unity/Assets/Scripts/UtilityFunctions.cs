@@ -93,7 +93,7 @@ public static class UtilityFunctions {
             }
         }
 
-        int layerMask = 1 << 8 | 1 << 10;
+        int layerMask = LayerMask.GetMask("Agent", "SimObjVisible");
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             if (cc.isTrigger) {
                 continue;
@@ -145,7 +145,7 @@ public static class UtilityFunctions {
         }
 
         HashSet<Collider> collidersSet = new HashSet<Collider>();
-        int layerMask = 1 << 8 | 1 << 10;
+        int layerMask = LayerMask.GetMask("SimObjVisible", "Agent");
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {

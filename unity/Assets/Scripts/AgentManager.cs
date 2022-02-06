@@ -496,7 +496,7 @@ public class AgentManager : MonoBehaviour {
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image
-        camera.cullingMask = ~(1 << 11);
+        camera.cullingMask = ~LayerMask.GetMask("PlaceableSurface");
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }

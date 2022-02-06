@@ -875,16 +875,22 @@ public class ProceduralRoomEditor : MonoBehaviour {
             float degrees;
             obj.simObj.transform.rotation.ToAngleAxis(out degrees, out axis);
 
-                // PrefabUtility.UnpackPrefabInstance(obj.simObj.gameObject, PrefabUnpackMode.Completely, InteractionMode.UserAction);
+            // PrefabUtility.UnpackPrefabInstance(obj.simObj.gameObject, PrefabUnpackMode.Completely, InteractionMode.UserAction);
 
-                var bb = obj.simObj.AxisAlignedBoundingBox;
+            var bb = obj.simObj.AxisAlignedBoundingBox;
 
-                // PrefabUtility.Pack
+            // PrefabUtility.Pack
 
-                // PrefabUtility.UnpackPrefabInstance(obj.simObj.gameObject, PrefabUnpackMode.Completely, InteractionMode.UserAction);
+            // PrefabUtility.UnpackPrefabInstance(obj.simObj.gameObject, PrefabUnpackMode.Completely, InteractionMode.UserAction);
 
-                RaycastHit hit;
-            var didHit = Physics.Raycast(obj.simObj.transform.position, -Vector3.up, out hit, Mathf.Infinity, 1 << 12);
+            RaycastHit hit;
+            var didHit = Physics.Raycast(
+                obj.simObj.transform.position,
+                -Vector3.up,
+                out hit,
+                Mathf.Infinity,
+                LayerMask.GetMask("NonInteractive")
+            );
             string room = "";
             if (didHit) {
                 room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
@@ -952,7 +958,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 if (didHit) {
                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
                 }
-                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, 1 << 8);
+                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, LayerMask.GetMask("SimObjVisible"));
                 string objectLink = "";
                 var parentSim = l.GetComponentInParent<SimObjPhysics>();
                 //SimObjType.Lamp

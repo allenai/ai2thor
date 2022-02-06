@@ -1863,7 +1863,14 @@ namespace Thor.Procedural {
 
                 bool floorCheck = true;
                 //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
-                if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12)) {
+                if (
+                    !Physics.Raycast(
+                        toSpawn.transform.position,
+                        -Vector3.up,
+                        Mathf.Infinity,
+                        LayerMask.GetMask("NonInteractive")
+                    )
+                ) {
                     Debug.Log("FloorCheck");
                     floorCheck = false;
                 }
@@ -1946,7 +1953,14 @@ namespace Thor.Procedural {
 
                     bool floorCheck = true;
                     //raycast down from the object's position to see if it hits something on the NonInteractive layer (floor mesh collider)
-                    if (!Physics.Raycast(toSpawn.transform.position, -Vector3.up, Mathf.Infinity, 1 << 12)) {
+                    if (
+                        !Physics.Raycast(
+                            toSpawn.transform.position,
+                            -Vector3.up,
+                            Mathf.Infinity,
+                            LayerMask.GetMask("NonInteractive")
+                        )
+                    ) {
                         floorCheck = false;
                     }
 

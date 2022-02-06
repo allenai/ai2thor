@@ -269,7 +269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 point0.y += maxDistance;
             }
-            return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
+            return Physics.OverlapCapsule(point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Collide);
         }
 
 
@@ -454,18 +454,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Debug.DrawLine(pointsOnArc[i].position, pointsOnArc[i+1].position, Color.magenta, 500.0f);
 
-                if (Physics.BoxCast(pointsOnArc[i].position, bbHalfExtents, pointsOnArc[i + 1].position - pointsOnArc[i].position, out hit,
-                    Quaternion.Lerp(pointsOnArc[i].orientation, pointsOnArc[i + 1].orientation, 0.5f), arcIncrementDistance, 1 << 8 | 1 << 10,
-                    QueryTriggerInteraction.Ignore)) {
+                if (
+                    Physics.BoxCast(
+                        pointsOnArc[i].position,
+                        bbHalfExtents,
+                        pointsOnArc[i + 1].position - pointsOnArc[i].position,
+                        out hit,
+                        Quaternion.Lerp(
+                            pointsOnArc[i].orientation,
+                            pointsOnArc[i + 1].orientation,
+                            0.5f
+                        ),
+                        arcIncrementDistance,
+                        LayerMask.GetMask("SimObjVisible", "Agent"),
+                        QueryTriggerInteraction.Ignore
+                    )
+                ) {
                     // did we hit a sim obj?
-                    if (hit.transform.GetComponentInParent<SimObjPhysics>()) {
+                    if (
+                        (
+                            hit.transform.GetComponentInParent<SimObjPhysics>()
+                            && hit.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform
+                        ) || (
+                            hit.transform == this.transform
+                        )
+                    ) {
                         // if the sim obj we hit is what we are holding, skip
-                        if (hit.transform.GetComponentInParent<SimObjPhysics>().transform == ItemInHand.transform) {
-                            continue;
-                        }
-                    }
-
-                    if (hit.transform == this.transform) {
                         // don't worry about clipping the object into this agent
                         continue;
                     }
@@ -480,7 +494,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             rotPoint.transform.rotation = bb.transform.rotation;
             // Rotate the rotPoint around the origin by the current increment's angle, relative to the correct axis
             rotPoint.transform.RotateAround(origin, dirAxis, dirSign * degrees);
-            Collider[] WhatDidWeHit = Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore);
+            Collider[] WhatDidWeHit = Physics.OverlapBox(
+                rotPoint.position,
+                bbHalfExtents,
+                rotPoint.transform.rotation,
+                LayerMask.GetMask("SimObjVisible", "Agent"),
+                QueryTriggerInteraction.Ignore
+            );
 
             foreach (Collider col in WhatDidWeHit) {
                 if (col.transform.GetComponentInParent<SimObjPhysics>()) {
@@ -496,12 +516,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 result = false;
                 break;
             }
-
-            // if (Physics.OverlapBox(rotPoint.position, bbHalfExtents, rotPoint.transform.rotation, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).Length != 0)
-            // {
-
-            //     result = false;
-            // }
 
             return result;
         }
@@ -840,7 +854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Vector3 testPosition = AgentHand.transform.position + 0.1f * i * transform.right + 0.1f * j * transform.forward;
 
                     RaycastHit hit;
-                    if (Physics.Raycast(testPosition, -transform.up, out hit, 1f, 1 << 8)) {
+                    if (Physics.Raycast(testPosition, -transform.up, out hit, 1f, LayerMask.GetMask("SimObjVisible"))) {
                         Vector3 viewportPoint = m_Camera.WorldToViewportPoint(hit.point);
                         if (viewportPoint.x >= 0f && viewportPoint.x <= 1f && viewportPoint.y >= 0f && viewportPoint.y <= 1f) {
                             SimObjPhysics hitSop = hit.transform.gameObject.GetComponent<SimObjPhysics>();
@@ -1241,8 +1255,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 dir = targetPosition - sop.transform.position;
             RaycastHit[] sweepResults = UtilityFunctions.CastAllPrimitiveColliders(
-                sop.gameObject, targetPosition - sop.transform.position, dir.magnitude,
-                1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore
+                sop.gameObject,
+                targetPosition - sop.transform.position,
+                dir.magnitude,
+                LayerMask.GetMask("SimObjVisible", "Agent"),
+                QueryTriggerInteraction.Ignore
             );
 
             if (sweepResults.Length > 0) {
@@ -2535,7 +2552,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.SetActive(false);
             }
             RaycastHit hit;
-            int layerMask = 3 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
             bool raycastDidHit = Physics.Raycast(
                 AgentHand.transform.position, direction, out hit, 10f, layerMask);
             if (ItemInHand != null) {
@@ -2584,7 +2601,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RaycastHit hit;
 
             // if something was touched, actionFinished(true) always
-            if (Physics.Raycast(ray, out hit, action.handDistance, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore)) {
+            if (
+                Physics.Raycast(
+                    ray,
+                    out hit,
+                    action.handDistance,
+                    LayerMask.GetMask("Default", "SimObjVisible", "Agent"),
+                    QueryTriggerInteraction.Ignore
+                )
+            ) {
                 if (hit.transform.GetComponent<SimObjPhysics>()) {
                     // wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                     // this should basically only happen if the handDistance value is too big
@@ -2933,10 +2958,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
                 // all colliders hit by overlapsphere
-                Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
-                    overlapRadius, 1 << 8, QueryTriggerInteraction.Ignore);
+                Collider[] hitColliders = Physics.OverlapSphere(
+                    AgentHand.transform.position,
+                    overlapRadius,
+                    LayerMask.GetMask("SimObjVisible"),
+                    QueryTriggerInteraction.Ignore
+                );
 
-                // did we even hit enything?
+                // did we even hit anything?
                 if (hitColliders.Length > 0) {
                     foreach (Collider col in hitColliders) {
                         // is this a sim object?
@@ -4655,7 +4684,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             y = 1.0f - y;
 
             RaycastHit hit;
-            int layerMask = 3 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
             if (ItemInHand != null) {
                 foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
                     c.enabled = false;
@@ -4715,7 +4744,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float y = 1.0f - action.y;
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
-            int layerMask = 3 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
             if (ItemInHand != null) {
                 foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
                     c.enabled = false;
@@ -5727,7 +5756,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 toggleColliders(ItemInHand.GetComponentsInChildren<Collider>());
             }
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -5771,7 +5800,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 toggleColliders(ItemInHand.GetComponentsInChildren<Collider>());
             }
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -5932,9 +5961,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // raycast from agentcamera to point, ignore triggers, use layers 8 and 10
                         RaycastHit hit;
 
-                        if (Physics.Raycast(m_Camera.transform.position,
-                        (point.position - m_Camera.transform.position),
-                        out hit, Mathf.Infinity, (1 << 8) | (1 << 10))) {
+                        if (
+                            Physics.Raycast(
+                                m_Camera.transform.position,
+                                point.position - m_Camera.transform.position,
+                                out hit,
+                                Mathf.Infinity,
+                                LayerMask.GetMask("SimObjVisible", "Agent")
+                            )
+                        ) {
                             if (hit.transform != sop.transform) {
                                 result = false;
                             } else {
@@ -6433,7 +6468,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject) {
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
                 if (hasAncestor(c.transform.gameObject, otherGameObject)) {
                     return true;
@@ -6446,7 +6481,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand == null) {
                 return false;
             }
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
                 foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
                     if (hasAncestor(c.transform.gameObject, otherGameObject)) {
@@ -6617,7 +6652,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
             RaycastHit hit;
-            if (Physics.Raycast(position, Vector3.down, out hit, 10f, (1 << 0 | 1 << 8 | 1 << 10), QueryTriggerInteraction.Ignore)) {
+            if (
+                Physics.Raycast(
+                    position,
+                    Vector3.down,
+                    out hit,
+                    10f,
+                    LayerMask.GetMask("Default", "SimObjVisible", "Agent"),
+                    QueryTriggerInteraction.Ignore
+                )
+            ) {
                 point = hit.point;
                 return point;
             }
@@ -6651,7 +6695,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int xGridSize = 100;
             int yGridSize = 100;
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -7378,7 +7422,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 walkableParent.transform.parent = topLevelObject.transform;
             }
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (Vector3 p in reachablePositions) {
                 RaycastHit hit;
                 bool somethingHit = false;
@@ -7727,7 +7771,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var xsToTryArray = xsToTry.ToArray();
             var zsToTryArray = zsToTry.ToArray();
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 float xPos = xsToTryArray[i];
                 float zPos = zsToTryArray[i];
@@ -7934,7 +7978,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var zsToTryArray = zsToTry.ToArray();
 
             List<SimObjPhysics> newObjects = new List<SimObjPhysics>();
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             // int attempts = 0;
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 if (newObjects.Count >= 100) {
@@ -8432,7 +8476,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 newParent.transform.parent = topLevelObject.transform;
             }
 
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             foreach (SimObjPhysics so in physicsSceneManager.ObjectIdToSimObjPhysics.Values) {
                 if (objectIsOfIntoType(so)) {
                     foreach (GameObject rtb in so.ReceptacleTriggerBoxes) {
