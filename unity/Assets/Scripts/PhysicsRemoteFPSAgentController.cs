@@ -1968,31 +1968,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.pushAngle += 360;
             }
 
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene, assign it to 'target', visibility check is performed below in IsInteractable
-                target = getSimObjectFromId(action.objectId);
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
@@ -2003,33 +1987,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     }
             // }
 
-            if (target == null) {
-                errorMessage = "No valid target!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
             // print(target.name);
 
-            if (!target.GetComponent<SimObjPhysics>()) {
-                errorMessage = "Target must be SimObjPhysics!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            bool canbepushed = false;
-
-            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                target.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
-                canbepushed = true;
-            }
-
-            if (!canbepushed) {
-                errorMessage = "Target Primary Property type incompatible with push/pull";
-                actionFinished(false);
-                return;
+            if (
+                target.PrimaryProperty != SimObjPrimaryProperty.CanPickup
+                && target.PrimaryProperty != SimObjPrimaryProperty.Moveable
+            ) {
+                throw new InvalidOperationException(
+                    "Target Primary Property type incompatible with push/pull"
+                );
             }
 
             if (!action.forceAction && !IsInteractable(target)) {
@@ -2060,45 +2026,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ApplyForceObject(ServerAction action) {
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-
-                // if object is in the scene and visible, assign it to 'target'
-                target = getSimObjectFromId(action.objectId);
-            }
-
-            if (target == null) {
-                errorMessage = "No valid target!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
-            }
-
-            if (!target.GetComponent<SimObjPhysics>()) {
-                errorMessage = "Target must be SimObjPhysics!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                return;
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
+                target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
             bool canbepushed = false;
@@ -3168,22 +3104,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float scaleOverSeconds = 1.0f,
             bool forceAction = false
         ) {
-            SimObjPhysics target = null;
-            screenToWorldTarget(
+            SimObjPhysics target = getInteractableSimObjectFromXY(
                 x: x,
                 y: y,
-                target: ref target,
                 forceAction: forceAction
             );
-
-            // neither objectId nor coordinates found an object
-            if (target == null) {
-                errorMessage = $"Could not find interactable object at given (x,y)=({x},{y}) screen coordinates";
-                actionFinished(false);
-                return;
-            } else {
-                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
-            }
+            StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
         }
 
         private IEnumerator scaleObject(
@@ -4154,7 +4080,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomSeed: randomSeed,
                 maxDistance: maxDistance,
                 putNearXY: putNearXY,
-                hit: hit);
+                hit: hit
+            );
         }
 
 
@@ -4442,7 +4369,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
-            SimObjPhysics target = getInteractableSimObjectFromId(x: x, y: y, forceAction: forceAction);
+            SimObjPhysics target = getInteractableSimObjectFromXY(x: x, y: y, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
         }
 
@@ -4930,26 +4857,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
             // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
             if (action.forceAction) {
                 action.forceVisible = true;
             }
-            // no target object specified, so instead try and use x/y screen coordinates
-            if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
 
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = null;
+            if (action.objectId == null) {
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
-
 
             if (target) {
                 if (!action.forceAction && !IsInteractable(target)) {
@@ -5044,15 +4961,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private void toggleObject(float x, float y, bool toggleOn, bool forceAction) {
-            SimObjPhysics target = null;
-            // no target object specified, so instead try and use x/y screen coordinates
-            screenToWorldTarget(
-                x: x,
-                y: y,
-                target: ref target,
-                forceAction: forceAction
+            SimObjPhysics target = getInteractableSimObjectFromXY(
+                x: x, y: y, forceAction: forceAction
             );
-
             toggleObject(target, toggleOn, forceAction);
         }
 
@@ -5280,12 +5191,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness = 1,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            SimObjPhysics target = null;
-            screenToWorldTarget(
-                x: x,
-                y: y,
-                target: ref target,
-                forceAction: forceAction
+            SimObjPhysics target = getInteractableSimObjectFromXY(
+                x: x, y: y, forceAction: forceAction
             );
             openObject(
                 target: target,
@@ -8054,27 +7961,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SliceObject(ServerAction action) {
-
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8108,26 +8002,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void BreakObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8167,26 +8049,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void DirtyObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8214,26 +8084,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CleanObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8262,26 +8120,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc
         public void FillObjectWithLiquid(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8316,26 +8162,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void EmptyLiquidFromObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
-                // if object is in the scene and visible, assign it to 'target'
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 
@@ -8365,25 +8199,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // use up the contents of this object (toilet paper, paper towel, tissue box, etc).
         public void UseUpObject(ServerAction action) {
-            // specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            // no target object specified, so instead try and use x/y screen coordinates
+            SimObjPhysics target = null;
             if (action.objectId == null) {
-                screenToWorldTarget(
-                    x: action.x,
-                    y: action.y,
-                    target: ref target,
-                    forceAction: action.forceAction
-                );
-            }
-
-            // an objectId was given, so find that target in the scene if it exists
-            else {
+                target = getInteractableSimObjectFromXY(x: action.x, y: action.y, forceAction: action.forceAction);
+            } else {
                 target = getInteractableSimObjectFromId(objectId: action.objectId, forceAction: action.forceAction);
             }
 

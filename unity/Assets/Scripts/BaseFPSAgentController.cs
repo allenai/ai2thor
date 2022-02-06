@@ -1964,7 +1964,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Helper method that parses (x and y) parameters to return the
         // sim object that they target.
-        protected SimObjPhysics getInteractableSimObjectFromId(float x, float y, bool forceAction) {
+        protected SimObjPhysics getInteractableSimObjectFromXY(float x, float y, bool forceAction) {
             if (x < 0 || x > 1 || y < 0 || y > 1) {
                 throw new ArgumentOutOfRangeException("x/y must be in [0:1]");
             }
