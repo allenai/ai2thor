@@ -3887,7 +3887,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool includeErrorMessage = false
         ) {
             int layerMask = 1 << 8;
-            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
+            foreach (
+                Collider c in PhysicsExtensions.OverlapCapsule(
+                    GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
+                )
+            ) {
                 if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
                     collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
                 ) {
@@ -3917,7 +3921,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
         }
 
-        public bool getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        public bool getReachablePositionToObjectVisible(
+            SimObjPhysics targetSOP,
+            out Vector3 pos,
+            float gridMultiplier = 1.0f,
+            int maxStepCount = 10000
+        ) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -4009,8 +4018,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
-                    errorMessage = "Too many steps taken in GetReachablePositions.";
-                    break;
+                    throw new InvalidOperationException(
+                        "Too many steps taken in GetReachablePositions!"
+                    );
                 }
             }
 
@@ -4031,28 +4041,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
-            var PhysicsController = this;
-            var agentTransform = PhysicsController.transform;
+            var agentTransform = this.transform;
 
             var originalAgentPosition = agentTransform.position;
-            var orignalAgentRotation = agentTransform.rotation;
+            var originalAgentRotation = agentTransform.rotation;
             var originalCameraRotation = m_Camera.transform.rotation;
 
             var fixedPosition = Vector3.negativeInfinity;
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
+
             getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
+
             agentTransform.position = originalAgentPosition;
-            agentTransform.rotation = orignalAgentRotation;
+            agentTransform.rotation = originalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
 
             var path = new UnityEngine.AI.NavMeshPath();
 
-            var sopPos = targetSOP.transform.position;
-            // var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
-
-            SafelyComputeNavMeshPath(initialPosition, fixedPosition, path, allowedError);
+            SafelyComputeNavMeshPath(
+                start: initialPosition,
+                target: fixedPosition,
+                path: path,
+                allowedError: allowedError
+            );
 
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -4119,12 +4132,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
                     throw new InvalidOperationException(
-                        $"No point on NavMesh near {startPosition}."
+                        $"No point on NavMesh near startPosition {startPosition}."
                     );
                 }
                 if (!targetWasHit) {
                     throw new InvalidOperationException(
-                        $"No point on NavMesh near {targetPosition}."
+                        $"No point on NavMesh near targetPosition {targetPosition}."
                     );
                 }
             }
