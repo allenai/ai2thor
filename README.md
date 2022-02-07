@@ -84,9 +84,14 @@ If you want to run an MCS Scene in the Unity Editor:
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
   - Push Pull Force (positive is push, negative is pull)
-- Q: Crawl
-- E: Stand
-- L: Lie Down
+- M: Torque Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Push Pull Force (positive is clockwise torque, negative is counterclockwise torque)
+- N: Rotate Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Direction (clockwise true is a clockwise rotation, clockwise false is a counterclockwise rotation)
 - Escape: Pass (do nothing)
 - Backspace: Initialize (reset the current scene or go to a new scene)
   - New Scene File
