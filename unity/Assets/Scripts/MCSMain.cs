@@ -1668,10 +1668,11 @@ public class MCSMain : MonoBehaviour {
         objectConfig.forces.Where(force => force.vector != null && WithinInterval(force, step))
             .ToList().ForEach((force) => {
                 if (rigidbody != null) {
+                    ForceMode forceMode = force.impulse ? ForceMode.Impulse : ForceMode.Force;
                     if (force.relative) {
-                        rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                        rigidbody.AddRelativeForce(new Vector3(force.vector.x, force.vector.y, force.vector.z), forceMode);
                     } else {
-                        rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
+                        rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z), forceMode);
                     }
                 }
             });
@@ -1887,6 +1888,7 @@ public class MCSConfigInteractables {
 
 [Serializable]
 public class MCSConfigForce : MCSConfigMove {
+    public bool impulse;
     public bool relative;
 }
 
