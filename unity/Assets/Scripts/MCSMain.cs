@@ -1077,7 +1077,6 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.isInteractable = true;
             ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.Static;
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
-            ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
         }
         ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
