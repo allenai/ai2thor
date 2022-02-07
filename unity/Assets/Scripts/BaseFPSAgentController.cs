@@ -191,6 +191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             NOT_MOVEABLE,
             NOT_OBJECT,
             NOT_OPENABLE,
+            IS_LOCKED,
             NOT_PICKUPABLE,
             NOT_RECEPTACLE,
             OBSTRUCTED,
@@ -1334,6 +1335,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 objMeta.isOpen = simObj.IsOpen;
                 objMeta.openPercent = simObj.OpenPercentage;
             }
+            objMeta.locked = simObj.locked;
 
             objMeta.toggleable = simObj.IsToggleable;
             if (objMeta.toggleable) {

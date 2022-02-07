@@ -461,6 +461,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+	public bool locked
+	{
+		get
+		{
+			CanOpen_Object coo = this.GetComponent<CanOpen_Object>();
+
+			if (coo != null)
+			{
+				return coo.locked;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
 	public bool IsBroken
 	{
 		get
