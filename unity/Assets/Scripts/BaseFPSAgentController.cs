@@ -4366,12 +4366,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var diff = holeMetadata.Max - holeMetadata.Min;
 
                 diff = new Vector3(Math.Abs(diff.x), Math.Abs(diff.y), Math.Abs(diff.z));// - holeMetadata.Margin;
-                // x coordinate is flipped window's or door's right is -x
-                var min = new Vector3(-holeMetadata.Min.x, holeMetadata.Min.y, holeMetadata.Min.z);
+                // inverse offset for the asset
+                var min = new Vector3(holeMetadata.Min.x, -holeMetadata.Min.y, -holeMetadata.Min.z);
                 // var max = new Vector3(-holeMetadata.Max.x, holeMetadata.Max.y, holeMetadata.Max.z);
                 actionFinished(
                     success: false,
-                    actionReturn: new BoundingBoxWithOffset() { min=Vector3.zero, max=diff, margin=min}
+                    actionReturn: new BoundingBoxWithOffset() { min=Vector3.zero, max=diff, offset=min}
                 );
             }
         }
