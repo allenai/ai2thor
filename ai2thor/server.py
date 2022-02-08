@@ -7,7 +7,6 @@ are sent to the controller using a pair of request/response queues.
 """
 
 import warnings
-import time
 import numpy as np
 from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
