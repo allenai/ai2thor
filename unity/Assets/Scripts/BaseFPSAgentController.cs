@@ -2142,6 +2142,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void GetObjectHitFromRaycast(Vector3 from, Vector3 to) {
+            RaycastHit hit;
+            if (
+                !Physics.Raycast(
+                    origin: from,
+                    direction: to - from,
+                    hitInfo: out hit,
+                    maxDistance: Mathf.Infinity,
+                    layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
+                    queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                )
+            ) {
+                actionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        " failed to hit any target object!"
+                    )
+                );
+                return;
+            }
+            SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
+            if (target == null) {
+                actionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        " hit object, but not a SimObject!"
+                    )
+                );
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: target.ObjectID
+            );
+        }
+
         protected void snapAgentToGrid() {
             if (this.snapToGrid) {
                 float mult = 1 / gridSize;

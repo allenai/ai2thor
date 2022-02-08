@@ -463,6 +463,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "gohfr": {
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "GetObjectHitFromRaycast"},
+                        {"from", new Vector3(1.048016f, 1f, 9.798f) },
+                        {"to", new Vector3(1.048016f, 0f, 9.798f) }
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 
