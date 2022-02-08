@@ -599,15 +599,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
-        Material material = hit.transform.GetComponent<Renderer>().material;
-        
-        //this is at the end of every material name
-        string materialInstanceString = " (Instance)";
-        string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
+        Renderer renderer = hit.transform.GetComponent<Renderer>();
+        if(renderer!=null) {
+            Material material = renderer.material;
+            //this is at the end of every material name
+            string materialInstanceString = " (Instance)";
+            string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
 
-        if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
-            stepsOnLava++;
-            hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
+                stepsOnLava++;
+                hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            }
         }
     }
 
