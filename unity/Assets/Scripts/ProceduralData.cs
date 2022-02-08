@@ -122,8 +122,8 @@ namespace Thor.Procedural.Data {
         public List<ProbeParameters> reflections;
 
         public string ceilingMaterial { get; set; }
-        public float? ceilingMaterialTilingXDivisor = null;
-        public float? ceilingMaterialTilingYDivisor = null;
+        public float? ceilingMaterialTilingXDivisor = 1.0f;
+        public float? ceilingMaterialTilingYDivisor = 1.0f;
         public SerializableColor ceilingColor { get; set; } = null;
         public float navmeshVoxelSize { get; set; }
         public bool ceilingBackFaces { get; set; }
@@ -145,8 +145,8 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string roomType { get; set; }
         public string floorMaterial { get; set; }
-        public float? floorMaterialTilingXDivisor = null;
-        public float? floorMaterialTilingYDivisor = null;
+        public float? floorMaterialTilingXDivisor = 1.0f;
+        public float? floorMaterialTilingYDivisor = 1.0f;
 
         public SerializableColor floorColor { get; set; } = null;
         // public float y { get; set; }
