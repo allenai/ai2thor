@@ -275,6 +275,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
+        public float actionSimulationSeconds = 0.0f;
+        public float? actionFixedDeltaTime;
 
 
         public System.Object actionReturn;
@@ -357,11 +359,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.LogError("ActionFinished called with agentState not in processing ");
             }
 
+            float simulationSeconds = this.actionSimulationSeconds;
+            float fixedDeltaTime = this.actionFixedDeltaTime.HasValue ? this.actionFixedDeltaTime.Value : 0.02f;
+            this.actionSimulationSeconds = 0.0f;
+            this.actionFixedDeltaTime = null;
+
             if (
                 (!Physics.autoSyncTransforms)
                 && lastActionInitialPhysicsSimulateCount == PhysicsSceneManager.PhysicsSimulateCallCount
             ) {
                 Physics.SyncTransforms();
+            }
+
+            while (simulationSeconds > 1e-6) {
+                float deltaTime = Mathf.Min(fixedDeltaTime, simulationSeconds);
+                PhysicsSceneManager.PhysicsSimulateTHOR(deltaTime);
+                simulationSeconds -= deltaTime;
             }
 
             lastActionSuccess = success;
@@ -588,6 +601,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
+            }
+
+            if (action.headless) {
+                if (action.height > 0 && action.width > 0) {
+                    RenderTexture rt = new RenderTexture(action.width, action.height, 24);
+                    rt.Create();
+                    m_Camera.targetTexture = rt;
+                } else {
+                    errorMessage = "height/width must be specified when running in headless mode";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
             }
 
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
@@ -1680,6 +1706,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
+            metaMessage.physicsAutoSimulation = Physics.autoSimulation;
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;
@@ -1814,6 +1841,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+
+            actionSimulationSeconds = controlCommand.GetValue("actionSimulationSeconds", 0.0f);
+            controlCommand.Remove("actionSimulationSeconds");
+            if (controlCommand.ContainsKey("fixedDeltaTime")) {
+                actionFixedDeltaTime = (float) controlCommand.GetValue("fixedDeltaTime");
+                controlCommand.Remove("fixedDeltaTime");
+            }
+
             this.agentState = AgentState.Processing;
 
             try {
@@ -2603,7 +2638,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        break;
+                        if (sop.isInteractable) {
+                            // We only break if the object isInteractable as otherwise we might
+                            // think an object that is partially occluded by a transparent object
+                            // is not interactable.
+                            break;
+                        }
 #endif
                     }
                 }
@@ -2667,7 +2707,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if !UNITY_EDITOR
                         // If we're in the unity editor then don't break on finding a visible
                         // point as we want to draw lines to each visible point.
-                        break;
+                        if (sop.isInteractable) {
+                            // We only break if the object isInteractable as otherwise we might
+                            // think an object that is partially occluded by a transparent object
+                            // is not interactable.
+                            break;
+                        }
 #endif
                     }
                 }
@@ -2848,7 +2893,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
-                                    break;
+                                    if (sop.isInteractable) {
+                                        // We only break if the object isInteractable as otherwise we might
+                                        // think an object that is partially occluded by a transparent object
+                                        // is not interactable.
+                                        break;
+                                    }
 #endif
                                 }
                             }
@@ -2914,7 +2964,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
             if (includeInvisible) {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
+                if (
+                    Physics.Raycast(
+                        camera.transform.position,
+                        point.position - camera.transform.position,
+                        out hit,
+                        raycastDistance, mask
+                    )
+                ) {
                     if (
                         hit.transform == sop.transform
                         || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
@@ -2931,7 +2988,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // only check against the visible layer, ignore the invisible layer
             // so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
             else {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
+                if (
+                    Physics.Raycast(
+                        camera.transform.position,
+                        point.position - camera.transform.position,
+                        out hit,
+                        raycastDistance,
+                        (1 << 8) | (1 << 10)
+                    )
+                ) {
                     if (
                         hit.transform == sop.transform
                         || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))

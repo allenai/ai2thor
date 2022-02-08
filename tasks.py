@@ -389,12 +389,14 @@ def local_build(
 ):
     import ai2thor.controller
 
-    build = ai2thor.build.Build(arch, prefix, False)
+    build = ai2thor.build.Build(platform=arch, commit_id=prefix, include_private_scenes=False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
+    print(f"Saving local build to '{os.path.abspath(os.path.join('unity', build_dir))}'")
+
     if scripts_only:
         env["BUILD_SCRIPTS_ONLY"] = "true"
 
@@ -403,8 +405,9 @@ def local_build(
             map(ai2thor.controller.Controller.normalize_scene, scenes)
         )
 
+    start_time = time.time()
     if _build("unity", arch, build_dir, build.name, env=env):
-        print("Build Successful")
+        print(f"Build Successful, took {(time.time() - start_time) / 60:.2f} minutes.")
     else:
         print("Build Failure")
     generate_quality_settings(context)
@@ -1194,7 +1197,7 @@ def poll_ci_build(context):
     for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
         commit_build = ai2thor.build.Build(plat, commit_id, False)
         if not commit_build.exists():
-            print("Build log url: %s" % commit_build.log_url)
+            print(f"Build log url: {commit_build.log_url}")
             raise Exception("Failed to build %s for commit: %s " % (plat.name(), commit_id))
 
     pytest_missing = True

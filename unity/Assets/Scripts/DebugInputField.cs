@@ -2593,19 +2593,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "pose": {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetObjectPoses";
-                        action.objectPoses = new ObjectPose[1];
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetObjectPoses";
 
-                        action.objectPoses[0] = new ObjectPose();
+                        List<ObjectPose> objectPoses = new List<ObjectPose>();
+                        objectPoses.Add(new ObjectPose());
+                        objectPoses[0].objectName = "CellPhone_e292ca89";
+                        objectPoses[0].position = new Vector3(-0.228279f, 0.8988377f, -1.285611f);
+                        objectPoses[0].rotation = new Vector3(0f, 0f, 0f);
+                        action["objectPoses"] = objectPoses;
+                        action["placeStationary"] = true;
+                        action["enablePhysicsJitter"] = true;
 
-                        action.objectPoses[0].objectName = "Book_3d15d052";
-                        action.objectPoses[0].position = new Vector3(0, 0, 0);
-                        action.objectPoses[0].rotation = new Vector3(0, 0, 0);
-
-
-                        CurrentActiveController().ProcessControlCommand(action);
-
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

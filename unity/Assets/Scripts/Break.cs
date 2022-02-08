@@ -64,15 +64,17 @@ public class Break : MonoBehaviour {
     }
 
     public void BreakObject(Collision collision) {
+        SimObjPhysics thisSimObjPhysics = this.gameObject.GetComponent<SimObjPhysics>();
+
         // prefab swap will switch the entire object out with a new prefab object entirely
         if (breakType == BreakType.PrefabSwap) {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
             //before disabling things, if this object is a receptacle, unparent all objects contained
-            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
+            if (thisSimObjPhysics.IsReceptacle) {
                 GameObject objs = GameObject.Find("Objects");
-                foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
+                foreach (GameObject go in thisSimObjPhysics.ContainedGameObjects()) {
                     go.transform.SetParent(objs.transform);
                     Rigidbody childrb = go.GetComponent<Rigidbody>();
                     childrb.isKinematic = false;
@@ -80,6 +82,8 @@ public class Break : MonoBehaviour {
                     childrb.constraints = RigidbodyConstraints.None;
                     childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
+
+                thisSimObjPhysics.ClearContainedObjectReferences();
             }
 
             // turn off everything except the top object
@@ -118,7 +122,7 @@ public class Break : MonoBehaviour {
                 if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked) {
                     resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
                     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                    psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
+                    psm.Generate_InheritedObjectID(thisSimObjPhysics, resultObject.GetComponent<SimObjPhysics>(), 0);
 
                     Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
                     resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -189,7 +193,10 @@ public class Break : MonoBehaviour {
         }
 
         // ImpulseForce.Add(col.impulse.magnitude);
-        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<BaseAgentComponent>()) {
+        if (
+            col.impulse.magnitude > CurrentImpulseThreshold &&
+            !col.transform.GetComponentInParent<BaseAgentComponent>()
+        ) {
             if (readytobreak) {
                 readytobreak = false;
                 BreakObject(col);

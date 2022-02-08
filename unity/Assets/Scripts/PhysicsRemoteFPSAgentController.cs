@@ -310,11 +310,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (CheckIfAgentCanRotate("down", action.degrees)) {
-                base.LookDown(action);
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    if (!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
 
-                // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
-                    DefaultAgentHand();
+                    base.LookDown(action);
+                } else {
+                    Quaternion mCameraStartRotation = m_Camera.transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    m_Camera.transform.Rotate(action.degrees, 0, 0);
+                    if (!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        m_Camera.transform.rotation = mCameraStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after LookDown.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
                 }
             } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates down " + action.degrees + " degrees";
@@ -354,11 +381,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (CheckIfAgentCanRotate("up", action.degrees)) {
-                base.LookUp(action);
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    base.LookUp(action);
 
-                // only default hand if not manually Interacting with things
-                if (!action.manualInteract) {
-                    DefaultAgentHand();
+                    if (!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+                } else {
+                    Quaternion mCameraStartRotation = m_Camera.transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    m_Camera.transform.Rotate(-action.degrees, 0, 0);
+                    if (!action.manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        m_Camera.transform.rotation = mCameraStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after LookUp.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
                 }
             } else {
                 errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates up " + action.degrees + " degrees";
@@ -385,15 +439,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (CheckIfAgentCanRotate("right", degrees.Value) || forceAction) {
+                //only default hand if not manually Interacting with things
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    transform.Rotate(0, degrees.Value, 0);
 
-                transform.Rotate(0, degrees.Value, 0);
+                    if (!manualInteract) {
+                        DefaultAgentHand();
+                    }
+                    actionFinished(true);
+                } else {
+                    Quaternion agentStartRotation = transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
 
-                // only default hand if not manually Interacting with things
-                if (!manualInteract) {
-                    DefaultAgentHand();
+                    transform.Rotate(0, degrees.Value, 0);
+                    if (!manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        transform.rotation = agentStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after rotation.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
                 }
-
-                actionFinished(true);
             } else {
                 errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Right {degrees} degrees";
                 actionFinished(false);
@@ -419,14 +499,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (CheckIfAgentCanRotate("left", degrees.Value) || forceAction) {
-                transform.Rotate(0, -degrees.Value, 0);
+                SimObjPhysics handObj = AgentHand.GetComponentInChildren<SimObjPhysics>();
+                if (handObj == null) {
+                    transform.Rotate(0, -degrees.Value, 0);
 
-                // only default hand if not manually Interacting with things
-                if (!manualInteract) {
-                    DefaultAgentHand();
+                    if (!manualInteract) {
+                        DefaultAgentHand();
+                    }
+                    actionFinished(true);
+                } else {
+                    Quaternion agentStartRotation = transform.rotation;
+                    Vector3 oldHandPos = AgentHand.transform.position;
+                    Vector3 oldHandObjLocalPos = handObj.gameObject.transform.localPosition;
+                    Quaternion oldHandLocalRot = AgentHand.transform.localRotation;
+                    Quaternion oldHandObjRot = handObj.gameObject.transform.rotation;
+
+                    transform.Rotate(0, -degrees.Value, 0);
+                    if (!manualInteract) {
+                        DefaultAgentHand();
+                    }
+
+                    if (isHandObjectColliding(true)) {
+                        transform.rotation = agentStartRotation;
+                        AgentHand.transform.position = oldHandPos;
+                        handObj.gameObject.transform.localPosition = oldHandObjLocalPos;
+                        AgentHand.transform.localRotation = oldHandLocalRot;
+                        handObj.gameObject.transform.rotation = oldHandObjRot;
+
+                        errorMessage = "Agent hand collides after rotation.";
+                        actionFinished(false);
+                        return;
+                    } else {
+                        actionFinished(true);
+                    }
                 }
-
-                actionFinished(true);
             } else {
                 errorMessage = $"a held item: {ItemInHand.transform.name} with something if agent rotates Left {degrees} degrees";
                 actionFinished(false);
@@ -2778,6 +2884,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public bool moveHandToXYZDelta(float x, float y, float z, bool forceVisible = false) {
+            Vector3 handxyz = AgentHand.transform.position;
+            return moveHandToXYZ(handxyz.x + x, handxyz.y + y, handxyz.z + z, forceVisible);
+        }
+
         // coroutine to yield n frames before returning
         protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
             for (int i = 0; i < n; i++) {
@@ -3649,23 +3760,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void SetObjectPoses(ServerAction action) {
-            // make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if (action.objectPoses == null || action.objectPoses[0] == null) {
+        public void MakeObjectBreakable(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Object ID {objectId} appears to be invalid.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (sop.GetComponent<Break>()) {
+                sop.GetComponent<Break>().Unbreakable = false;
+            }
+            actionFinishedEmit(true);
+        }
+
+        public void SetObjectPoses(
+            List<ObjectPose> objectPoses,
+            bool placeStationary = false,
+            bool enablePhysicsJitter = true,
+            bool forceRigidbodySleep = false
+        ) {
+            //make sure objectPoses and also the Object Pose elements inside are initialized correctly
+            if (objectPoses == null || objectPoses[0] == null) {
                 errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
                 actionFinished(false);
                 return;
             }
-            StartCoroutine(setObjectPoses(action.objectPoses, action.placeStationary));
+            StartCoroutine(setObjectPoses(
+                objectPoses: objectPoses.ToArray(),
+                placeStationary: placeStationary,
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep
+            ));
         }
 
         // SetObjectPoses is performed in a coroutine otherwise if
         // a frame does not pass prior to this AND the imageSynthesis
         // is enabled for say depth or normals, Unity will crash on 
         // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
+        protected IEnumerator setObjectPoses(
+            ObjectPose[] objectPoses,
+            bool placeStationary,
+            bool enablePhysicsJitter,
+            bool forceRigidbodySleep
+        ) {
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+            bool success = physicsSceneManager.SetObjectPoses(
+                objectPoses: objectPoses,
+                errorMessage: out errorMessage,
+                placeStationary: placeStationary,
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep
+            );
 
             //update image synthesis since scene has changed
             if (this.imageSynthesis && this.imageSynthesis.enabled) {
@@ -4140,8 +4285,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // they are close together and can overlap and are weird
                     if (osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
                         // PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                        if (physicsSceneManager.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
-                                osr.attachPoint.transform.rotation, false) == false) {
+                        if (
+                            physicsSceneManager.StoveTopCheckSpawnArea(
+                                ItemInHand.GetComponent<SimObjPhysics>(),
+                                osr.attachPoint.transform.position,
+                                osr.attachPoint.transform.rotation,
+                                false
+                            ) == false
+                        ) {
                             errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
                             return;
@@ -4317,9 +4468,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!forceAction && isHandObjectColliding(true) && !manualInteract) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 target.transform.position = savedPos;
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
+                target.isInAgentHand = false; // TODO: is this necessary? I'm getting bugs in THOR where an object that fails to be picked up has this bool as true anyway.
                 ItemInHand = null;
                 target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
                 throw new InvalidOperationException("Picking up object would cause it to collide and clip into something!");
@@ -4345,7 +4498,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
         public void PickupContainedObjects(SimObjPhysics target) {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle) {
+                // Notice that we run .ToList() (which creates a shallow copy) below as we may remove items from
+                // target.SimObjectsContainedByReceptacle in the loop and we want to remain consistent
+                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle.ToList()) {
                     // for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     // turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
                     if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
@@ -4354,7 +4509,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // if this object is sliced, don't pick it up because it is effectively disabled
                             if (sop.GetComponent<SliceObject>().IsSliced()) {
                                 target.RemoveFromContainedObjectReferences(sop);
-                                break;
+                                continue;
                             }
                         }
 
@@ -4376,47 +4531,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
 
-        // private IEnumerator checkDropHeldObjectAction(SimObjPhysics currentHandSimObj) 
-        // {
-        //     yield return null; // wait for two frames to pass
-        //     yield return null;
-        //     float startTime = Time.time;
-
-        //     // if we can't find the currentHandSimObj's rigidbody because the object was destroyed, bypass this check
-        //     if (currentHandSimObj != null)
-        //     {
-        //         Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-        //         while (Time.time - startTime < 2) 
-        //         {
-        //             if(currentHandSimObj == null)
-        //             break;
-
-        //             if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
-        //             {
-        //                 // Debug.Log ("object is now at rest");
-        //                 break;
-        //             } 
-
-        //             else 
-        //             {
-        //                 // Debug.Log ("object is still moving");
-        //                 yield return null;
-        //             }
-        //         }
-        //     }
-
-        //     DefaultAgentHand();
-        //     actionFinished(true);
-        // }
-
         private IEnumerator checkDropHeldObjectActionFast(SimObjPhysics currentHandSimObj) {
             if (currentHandSimObj != null) {
                 Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-                Physics.autoSimulation = false;
-                yield return null;
+                bool oldAutoSimulation = Physics.autoSimulation;
 
                 for (int i = 0; i < 100; i++) {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(0.04f);
+                    PhysicsSceneManager.PhysicsSimulateTHOR(0.02f);
 #if UNITY_EDITOR
                     yield return null;
 #endif
@@ -4424,14 +4545,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 }
-                Physics.autoSimulation = true;
+                Physics.autoSimulation = oldAutoSimulation;
             }
 
             DefaultAgentHand();
+            yield return null;
             actionFinished(true);
         }
 
-        public void DropHeldObject(bool forceAction = false, bool autoSimulation = true) {
+        public void DropHeldObject(
+            bool forceAction = false,
+            bool autoSimulation = true,
+            float randomMagnitude = 1.0f
+        ) {
             // make sure something is actually in our hands
             if (ItemInHand == null) {
                 throw new InvalidOperationException("Nothing is in the agent's hand to drop!");
@@ -4463,21 +4589,102 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             ItemInHand.GetComponent<SimObjPhysics>().DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
 
+            SimObjPhysics objectInHand = ItemInHand.GetComponent<SimObjPhysics>();
+            objectInHand.isInAgentHand = false;
+            ItemInHand = null;
+
             // if physics simulation has been paused by the PausePhysicsAutoSim() action,
             // don't do any coroutine checks
             if (!physicsSceneManager.physicsSimulationPaused) {
                 // this is true by default
                 if (autoSimulation) {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
+                    StartCoroutine(checkIfObjectHasStoppedMoving(objectInHand, 0));
                 } else {
-                    StartCoroutine(checkDropHeldObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                    StartCoroutine(checkDropHeldObjectActionFast(objectInHand));
                 }
             } else {
                 DefaultAgentHand();
                 actionFinished(true);
             }
-            ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-            ItemInHand = null;
+        }
+
+        // Attempts to drop the object the agent is hiding even if the object
+        // is currently "inside" the agent. Does so by attempting to move the
+        // above forward, up, and to the right or left of the agent until it is
+        // no longer colliding and then dropping the object.
+        public void DropHeldObjectAhead(
+            bool autoSimulation = true,
+            bool forceAction = false,
+            float randomMagnitude = 1.0f
+        ) {
+            if (ItemInHand != null) {
+                Vector3 handStartPosition = AgentHand.transform.position;
+
+                bool movedLeft = false;
+                bool movedRight = false;
+                bool movedUp = false;
+                bool movedDown = false;
+                Vector3 forward = 0.1f * transform.forward;
+                Vector3 right = 0.1f * transform.right;
+                Vector3 up = 0.1f * transform.up;
+                bool failed = false;
+                int k = 0;
+                while (isHandObjectColliding(false) && k < 50) {
+                    k++;
+                    if (moveHandToXYZDelta(x: forward.x, y: forward.y, z: forward.z, false)) {
+                        movedLeft = false;
+                        movedRight = false;
+                        movedUp = false;
+                        movedDown = false;
+                    } else if (
+                        (!movedLeft) && moveHandToXYZDelta(
+                            x: right.x,
+                            y: right.y,
+                            z: right.z,
+                            false
+                    )) {
+                        movedRight = true;
+                    } else if (
+                        (!movedRight) && moveHandToXYZDelta(
+                            x: -right.x,
+                            y: -right.y,
+                            z: -right.z,
+                            false
+                    )) {
+                        movedLeft = true;
+                    } else if (
+                        (!movedDown) && moveHandToXYZDelta(x: up.x, y: up.y, z: up.z, false)
+                    ) {
+                        movedUp = true;
+                    } else if (
+                        (!movedUp) && moveHandToXYZDelta(x: -up.x, y: -up.y, z: -up.z, false)
+                    ) {
+                        movedDown = true;
+                    } else {
+                        failed = true;
+                        break;
+                    }
+                }
+
+                if ((!failed) || forceAction) {
+                    DropHandObject(
+                        autoSimulation: autoSimulation,
+                        forceAction: true
+                    );
+                    return;
+                }
+
+                AgentHand.transform.position = handStartPosition;
+                errorMessage = "Could not find a free place to drop the object.";
+                actionFinished(false);
+                return;
+
+            } else {
+                errorMessage = "nothing in hand to drop!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
         }
 
         [ObsoleteAttribute(message: "This action is deprecated. Call DropHeldObject instead.", error: false)]

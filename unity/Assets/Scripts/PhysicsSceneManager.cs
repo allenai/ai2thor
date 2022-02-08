@@ -329,9 +329,17 @@ public class PhysicsSceneManager : MonoBehaviour {
         RequiredObjects.Remove(sop.gameObject);
     }
 
-    public bool SetObjectPoses(ObjectPose[] objectPoses, out string errorMessage, bool placeStationary) {
+    public bool SetObjectPoses(
+        ObjectPose[] objectPoses,
+        out string errorMessage,
+        bool placeStationary,
+        bool enablePhysicsJitter,
+        bool forceRigidbodySleep,
+        bool skipMoveable = false
+    ) {
         SetupScene();
         errorMessage = "";
+
         bool shouldFail = false;
         GameObject topObject = GameObject.Find("Objects");
         if (objectPoses != null && objectPoses.Length > 0) {
@@ -344,12 +352,10 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             // get all sim objects in scene that are either pickupable or moveable and prepare them to be repositioned, cloned, or disabled
             foreach (SimObjPhysics sop in sceneObjects) {
-
-                // note that any moveable or pickupable sim objects not explicitly passed in via objectPoses 
+                // note that any moveable or pickupable sim objects not explicitly passed in via objectPoses
                 // will be disabled since we SetActive(false)
-                if (sop.IsPickupable || sop.IsMoveable) {
+                if (sop.IsPickupable || (!skipMoveable && sop.IsMoveable)) {
                     sop.gameObject.SetActive(false);
-                    // sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
                     nameToObject[sop.name] = sop;
                 }
 
@@ -359,23 +365,28 @@ public class PhysicsSceneManager : MonoBehaviour {
                 }
             }
             HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
+            List<Rigidbody> posedRigidbodies = new List<Rigidbody>();
+            List<Break> breakScripts = new List<Break>();
+            List<bool> wasUnbreakable = new List<bool>();
             for (int ii = 0; ii < objectPoses.Length; ii++) {
                 ObjectPose objectPose = objectPoses[ii];
-
                 if (!nameToObject.ContainsKey(objectPose.objectName)) {
-                    errorMessage = "No Pickupable or Moveable object of name " + objectPose.objectName + " found in scene.";
+                    errorMessage = $"No object of name {objectPose.objectName} found in scene.";
                     Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
                 if (isStaticNameToObject.ContainsKey(objectPose.objectName)) {
-                    errorMessage = objectPose.objectName + " is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
+                    errorMessage = $"{objectPose.objectName} is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
                     Debug.Log(errorMessage);
                     shouldFail = true;
                     continue;
                 }
-                if (!nameToObject.ContainsKey(objectPose.objectName) && !isStaticNameToObject.ContainsKey(objectPose.objectName)) {
-                    errorMessage = objectPose.objectName + " does not exist in scene.";
+                if (
+                    !nameToObject.ContainsKey(objectPose.objectName) &&
+                    !isStaticNameToObject.ContainsKey(objectPose.objectName)
+                ) {
+                    errorMessage = $"{objectPose.objectName} does not exist in scene.";
                     shouldFail = true;
                     continue;
                 }
@@ -398,17 +409,77 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.gameObject.SetActive(true);
                 copy.gameObject.transform.parent = topObject.transform;
 
-                if (placeStationary) {
-                    copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
-                    copy.GetComponent<Rigidbody>().isKinematic = true;
-                } else {
-                    copy.GetComponent<Rigidbody>().isKinematic = false;
+                if (placeStationary || enablePhysicsJitter) {
+                    Rigidbody rb = copy.GetComponent<Rigidbody>();
+                    if (rb != null) {
+                        posedRigidbodies.Add(rb);
+                        Break breakScript = copy.GetComponent<Break>();
+                        breakScripts.Add(breakScript);
+                        if (breakScript != null) {
+                            wasUnbreakable.Add(breakScript.Unbreakable);
+                        } else {
+                            wasUnbreakable.Add(false);
+                        }
+                    }
+                }
+            }
+
+            if (enablePhysicsJitter) {
+                bool savedAutoSimulation = Physics.autoSimulation;
+                Physics.autoSimulation = false;
+
+                List<float> savedDrag = new List<float>();
+                List<float> savedAngularDrag = new List<float>();
+                List<bool> wasKinematic = new List<bool>();
+
+                for (int i = 0; i < posedRigidbodies.Count; i++) {
+                    Rigidbody rb = posedRigidbodies[i];
+                    savedDrag.Add(rb.drag);
+                    savedAngularDrag.Add(rb.angularDrag);
+                    wasKinematic.Add(rb.isKinematic);
+
+                    rb.drag = 100f;
+                    rb.angularDrag = 100f;
+                    rb.isKinematic = false;
+
+                    Break breakScript = breakScripts[i];
+                    if (breakScript != null) {
+                        breakScript.Unbreakable = true;
+                    }
+                }
+                for (int i = 0; i < 20; i++) {
+                    PhysicsSimulateTHOR(0.02f);
+                }
+                for (int i = 0; i < posedRigidbodies.Count; i++) {
+                    posedRigidbodies[i].drag = savedDrag[i];
+                    posedRigidbodies[i].angularDrag = savedAngularDrag[i];
+                    posedRigidbodies[i].isKinematic = wasKinematic[i];
+
+                    Break breakScript = breakScripts[i];
+                    if (breakScript != null) {
+                        breakScript.Unbreakable = wasUnbreakable[i];
+                    }
+                }
+
+                Physics.autoSimulation = savedAutoSimulation;
+            }
+
+            if (placeStationary) {
+                foreach (Rigidbody rb in posedRigidbodies) {
+                    rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                    rb.isKinematic = true;
+                }
+            }
+            if (forceRigidbodySleep) {
+                foreach (Rigidbody rb in FindObjectsOfType<Rigidbody>()) {
+                    rb.Sleep();
                 }
             }
         }
         SetupScene();
         return !shouldFail;
     }
+
 
     public System.Collections.Generic.IEnumerator<SimObjPhysics> GetValidReceptaclesForSimObj(
         SimObjPhysics simObj, List<SimObjPhysics> receptaclesInScene
@@ -923,7 +994,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
 
             // pass in the timeStep to advance the physics simulation
-            Physics.Simulate(timeStep);
+            PhysicsSimulateTHOR(timeStep);
             this.AdvancePhysicsStepCount++;
         }
 
