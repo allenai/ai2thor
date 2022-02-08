@@ -1240,10 +1240,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
-            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
-            Destroy(sop.transform.gameObject);
-            physicsSceneManager.SetupScene(generateObjectIds: false);
-            actionFinished(success: true);
+            string[] objectIds = {objectId};
+            RemoveFromScene(objectIds);
         }
 
         [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene instead.", error: false)]
