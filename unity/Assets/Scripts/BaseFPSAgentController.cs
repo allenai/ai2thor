@@ -1253,24 +1253,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a list of given sim object from the scene.
         public void RemoveFromScene(string[] objectIds) {
-            if (objectIds == null || objectIds.Length == 0) {
-                actionFinished(
-                    success: false,
-                    errorMessage: "objectIds must not be empty!"
-                );
+            if (objectIds == null || objectIds[0] == null) {
+                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
+                actionFinished(false);
+                return;
             }
-
-            // make sure all objectIds are valid before destorying any
-            GameObject[] gameObjects = new GameObject[objectIds.Length];
-            for (int i = 0; i < objectIds.Length; i++) {
-                GameObject go = getSimObjectFromId(objectId: objectIds[i]).transform.gameObject;
-                gameObjects[i] = go;
-            }
-            foreach (GameObject go in gameObjects) {
-                Destroy(go);
+            bool fail = false;
+            foreach (string objIds in objectIds) {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds)) {
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
+                } else {
+                    fail = true;
+                }
             }
             physicsSceneManager.SetupScene(generateObjectIds: false);
-            actionFinished(success: true);
+            if (fail) {
+                errorMessage = "some objectsin objectIds were not removed correctly.";
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
