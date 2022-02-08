@@ -335,7 +335,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         bool placeStationary,
         bool enablePhysicsJitter,
         bool forceRigidbodySleep,
-        bool skipMoveable = false
+        bool skipMoveable
     ) {
         SetupScene();
         errorMessage = "";

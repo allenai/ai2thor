@@ -3777,7 +3777,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<ObjectPose> objectPoses,
             bool placeStationary = false,
             bool enablePhysicsJitter = true,
-            bool forceRigidbodySleep = false
+            bool forceRigidbodySleep = false,
+            bool skipMoveable = false
         ) {
             //make sure objectPoses and also the Object Pose elements inside are initialized correctly
             if (objectPoses == null || objectPoses[0] == null) {
@@ -3789,7 +3790,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectPoses: objectPoses.ToArray(),
                 placeStationary: placeStationary,
                 enablePhysicsJitter: enablePhysicsJitter,
-                forceRigidbodySleep: forceRigidbodySleep
+                forceRigidbodySleep: forceRigidbodySleep,
+                skipMoveable: skipMoveable
             ));
         }
 
@@ -3801,7 +3803,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectPose[] objectPoses,
             bool placeStationary,
             bool enablePhysicsJitter,
-            bool forceRigidbodySleep
+            bool forceRigidbodySleep,
+            bool skipMoveable = false
         ) {
             yield return new WaitForEndOfFrame();
             bool success = physicsSceneManager.SetObjectPoses(
@@ -3809,7 +3812,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage: out errorMessage,
                 placeStationary: placeStationary,
                 enablePhysicsJitter: enablePhysicsJitter,
-                forceRigidbodySleep: forceRigidbodySleep
+                forceRigidbodySleep: forceRigidbodySleep,
+                skipMoveable: skipMoveable
             );
 
             //update image synthesis since scene has changed
