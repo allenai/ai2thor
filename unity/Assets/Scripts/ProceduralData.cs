@@ -93,7 +93,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class Door : WallRectangularHole {
         public string id { get; set; }
-        public Margin margin { get; set; }
+        public Vector3 assetOffset { get; set; }
         public string room0 { get; set; }
         public string room1 { get; set; }
         public string wall0 { get; set; }
@@ -183,7 +183,7 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BoundingBoxWithMargin {
+    public class BoundingBoxWithOffset {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
         public Vector3 margin {get; set; }
@@ -203,7 +203,7 @@ namespace Thor.Procedural.Data {
         public string room0 { get; set; }
         public string room1 { get; set; }
         public BoundingBox boundingBox { get; set; }
-        public Margin margin { get; set; }
+        public Vector3 assetOffset { get; set; }
         public string wall0 { get; set; }
         public string wall1 { get; set; }
         public bool openable { get; set; }
@@ -342,7 +342,7 @@ namespace Thor.Procedural.Data {
 
         BoundingBox boundingBox { get; set; }
 
-        Margin margin { get; set; }
+        Vector3 assetOffset { get; set; }
 
         bool open { get; set; }
 

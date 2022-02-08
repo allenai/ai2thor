@@ -1478,7 +1478,7 @@ namespace Thor.Procedural {
 
                     var p0p1_norm = p0p1.normalized;
                     var normal = Vector3.Cross(Vector3.up, p0p1_norm);
-                    var pos = wall.wall0.p0 + (p0p1_norm * holeCover.boundingBox.min.x) + Vector3.up * holeCover.boundingBox.min.y; //- normal * holeCover.boundingBox.min.z/2.0f;
+                    var pos = wall.wall0.p0 + (p0p1_norm * (holeCover.boundingBox.min.x + holeCover.assetOffset.x)) + Vector3.up * (holeCover.boundingBox.min.y + holeCover.assetOffset.y); //- normal * holeCover.boundingBox.min.z/2.0f;
                     Debug.Log($" ********* Spawn connection at {pos.ToString("F8")}");
                     var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall0.p1, p1 = wall.wall0.p0 });
                     //var rotY = getWallDegreesRotation(wall.wall0);
