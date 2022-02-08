@@ -186,7 +186,7 @@ namespace Thor.Procedural.Data {
     public class BoundingBoxWithOffset {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
-        public Vector3 margin {get; set; }
+        public Vector3 offset {get; set; }
     }
 
     [Serializable]
