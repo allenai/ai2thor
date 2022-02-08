@@ -1127,12 +1127,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
 			if(!objectsOnTop.Contains(objectOnTop)) {
 				objectsOnTop.Add(objectOnTop);
-				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
 
 				//recursive rotation
 				Collider[] objectsOnTopOfObjects = new Collider[0];
 				objectsOnTopOfObjects = BoxCastInReceptacleTriggerBox(objectOnTop);
 				RecursivelyRotateObjectsOnTopOfObject(objectsOnTopOfObjects, direction);
+				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
 			}
 		}
 	}
