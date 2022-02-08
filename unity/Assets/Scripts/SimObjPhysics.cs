@@ -1126,7 +1126,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
 			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
 			if(!objectsOnTop.Contains(objectOnTop)) {
-
 				objectsOnTop.Add(objectOnTop);
 				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
 
@@ -1211,8 +1210,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			float maxY = receptacles.Max(element => element.transform.position.y);
 			receptacle = (receptacles.First(element => element.transform.position.y == maxY)).GetComponent<BoxCollider>();
 			receptacleBase = receptacle.transform.TransformPoint(new Vector3(receptacle.center.x, receptacle.center.y - receptacle.size.y * 0.5f, receptacle.center.z));
-		}
-		if(receptacles.Length > 0) {
 			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z);
 			float flatPlaneSize = 0.01f; //The y size of the box is multiplied by 0.01f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
 			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * flatPlaneSize), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
