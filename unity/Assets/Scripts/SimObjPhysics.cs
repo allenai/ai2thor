@@ -1090,7 +1090,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			c.enabled = false;
 		
 		//if the rotatable object has another object on top of them
-		Collider[] hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox();
+		Collider[] hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox(transform);
 		
 		//set the rotation to the new rotation to see if collisions will happen
 		Vector3 oldRotation = transform.eulerAngles;
@@ -1098,6 +1098,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//now check for collisions, if there is one other than the object on top it, do not rotate it
 		bool obstructed = CheckForObstructions(hitObjectsInReceptacleTriggerBox);
+
+		//rotate any other objects on top of the object too
+		if(!obstructed) {
+			RecursivelyRotateObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, direction);
+		}
 		
 		//enable all colliders
 		foreach (Collider c in MyColliders) {
@@ -1112,6 +1117,25 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 		//success
 		return true;
+	}
+
+	private void RecursivelyRotateObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float direction) {
+		if(hitObjectsInReceptacleTriggerBox.Length == 0)
+			return;		
+		List<Transform> objectsOnTop = new List<Transform>();
+		foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
+			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
+			if(!objectsOnTop.Contains(objectOnTop)) {
+
+				objectsOnTop.Add(objectOnTop);
+				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
+
+				//recursive rotation
+				Collider[] objectsOnTopOfObjects = new Collider[0];
+				objectsOnTopOfObjects = BoxCastInReceptacleTriggerBox(objectOnTop);
+				RecursivelyRotateObjectsOnTopOfObject(objectsOnTopOfObjects, direction);
+			}
+		}
 	}
 
 	private bool CheckForObstructions(Collider[] hitObjectsInReceptacleTriggerBox) {
@@ -1177,9 +1201,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return false;
 	}
 
-	private Collider[] BoxCastInReceptacleTriggerBox() {
+	private Collider[] BoxCastInReceptacleTriggerBox(Transform transform) {
 		Contains[] receptacles = transform.GetComponentsInChildren<Contains>();
-		Collider[] hitObjectsInReceptacleTriggerBox = null;
+		Collider[] hitObjectsInReceptacleTriggerBox = new Collider[0];
 		BoxCollider receptacle = null;
 		Vector3 receptacleBase = Vector3.zero;
 		Vector3 receptacleCheckSize = Vector3.zero;
@@ -1190,7 +1214,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 		if(receptacles.Length > 0) {
 			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z);
-			float flatPlaneSize = 0.001f; //The y size of the box is multiplied by 0.001f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
+			float flatPlaneSize = 0.01f; //The y size of the box is multiplied by 0.001f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
 			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * flatPlaneSize), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
 		}
 		return hitObjectsInReceptacleTriggerBox;
