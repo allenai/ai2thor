@@ -1214,7 +1214,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 		if(receptacles.Length > 0) {
 			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z);
-			float flatPlaneSize = 0.01f; //The y size of the box is multiplied by 0.001f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
+			float flatPlaneSize = 0.01f; //The y size of the box is multiplied by 0.01f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
 			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * flatPlaneSize), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
 		}
 		return hitObjectsInReceptacleTriggerBox;
