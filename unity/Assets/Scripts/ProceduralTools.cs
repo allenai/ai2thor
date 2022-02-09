@@ -230,7 +230,7 @@ namespace Thor.Procedural {
             }
         }
 
-        private static Mesh GenerateFloorMesh(IEnumerable<Vector3> floorPolygon, float yOffset = 0.0f) {
+        private static Mesh GenerateFloorMesh(IEnumerable<Vector3> floorPolygon, float yOffset = 0.0f, bool clockWise = false) {
 
             // Get indices for creating triangles
             var m_points = floorPolygon.Select(p => new Vector2(p.x, p.z)).ToArray();
@@ -297,9 +297,17 @@ namespace Thor.Procedural {
                         a = V[u];
                         b = V[v];
                         c = V[w];
-                        indices.Add(a);
-                        indices.Add(b);
-                        indices.Add(c);
+
+                        if (!clockWise) { 
+                            indices.Add(a);
+                            indices.Add(b);
+                            indices.Add(c);
+                        }
+                        else {
+                            indices.Add(a);
+                            indices.Add(c);
+                            indices.Add(b);
+                        }
                         for (s = v, t = v + 1; t < nv; s++, t++) {
                             V[s] = V[t];
                         }
@@ -847,7 +855,7 @@ namespace Thor.Procedural {
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
-            meshF.mesh.RecalculateBounds();
+            meshF.sharedMesh.RecalculateBounds();
 
             // var materialCopy = new Material(materialDb.getAsset(toCreate.materialId));
             // materialCopy.mainTextureScale = new Vector2(p0p1.magnitude / toCreate.materialTilingXDivisor, toCreate.height / toCreate.materialTilingYDivisor);
@@ -1414,32 +1422,86 @@ namespace Thor.Procedural {
 
             // generate ceiling
             if (ceilingMaterialId != "") {
-                var ceilingGameObject = createSimObjPhysicsGameObject(DefaultCeilingRootObjectName, new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
-                var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.proceduralParameters.ceilingBackFaces);
+                var ceilingParent = new GameObject(DefaultCeilingRootObjectName);
 
-                StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
-                so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;
+                // OLD rectangular ceiling, may be usefull to have as a feature, much faster
+                // var ceilingGameObject = createSimObjPhysicsGameObject(DefaultCeilingRootObjectName, new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+                // var ceilingMesh = ProceduralTools.GetRectangleFloorMesh(new List<RectangleRoom> { roomCluster }, 0.0f, house.proceduralParameters.ceilingBackFaces);
 
-                ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
-                var ceilingMeshRenderer = ceilingGameObject.GetComponent<MeshRenderer>();
+                // var ceilingMesh = ProceduralTools.GenerateFloorMesh()
 
-                // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
+
+                // var k = house.rooms.SelectMany(r =>  r.floorPolygon.Select(p => new Vector3(p.x, p.y + wallsMaxY + wallsMaxHeight, p.z)).ToList()).ToList();
+
+
+                var ceilingMeshes = house.rooms.Select(r => ProceduralTools.GenerateFloorMesh(r.floorPolygon, yOffset:  0.0f, clockWise: true)).ToArray();
+                // var ceilingMesh = house.rooms.Select(r => ProceduralTools.GenerateFloorMesh(r.floorPolygon, yOffset:  0.0f, clockWise: true)).Aggregate(new Mesh(), (acc, mesh) => {
+                //     acc.vertices = acc.vertices.Concat(mesh.vertices).ToArray();
+                //     acc.triangles = acc.triangles.Concat(mesh.triangles).ToArray();
+                //     acc.uv = acc.uv.Concat(mesh.uv).ToArray();
+                //     return acc;
+                // });
+                // ceilingMesh.RecalculateBounds();
+                // ceilingMesh.RecalculateNormals();
+
+                // var ceilingMesh = ProceduralTools.GenerateFloorMesh(house.rooms[0].floorPolygon, yOffset:  0.0f, clockWise: true);
+                //  for (int i = 0; i < house.rooms.Count(); i++) {
+                //     var room = house.rooms.ElementAt(i);
+                //     var subFloorGO = createSimObjPhysicsGameObject(room.id);
+
+                   
+                //     var mesh = ProceduralTools.GenerateFloorMesh(room.floorPolygon);
+                //  }
+
                 
-                var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
-                ceilingMeshRenderer.material = generatePolygonMaterial(
-                    materialDb.getAsset(ceilingMaterialId),
-                    house.proceduralParameters.ceilingColor,
-                    dimensions,
-                    house.proceduralParameters.ceilingMaterialTilingXDivisor,
-                    house.proceduralParameters.ceilingMaterialTilingYDivisor,
-                    0.0f,
-                    0.0f,
-                    house.proceduralParameters.unlitCeiling
-                );
 
-                tagObjectNavmesh(ceilingGameObject, "Not Walkable");
+                for (int i = 0; i < house.rooms.Count(); i++) {
+                    var ceilingMesh = ceilingMeshes[i];
+                    var room = house.rooms[i];
+                    var floorName = house.rooms[i].id;
 
-                ceilingGameObject.transform.parent = structureGO.transform;
+                    var ceilingGameObject = createSimObjPhysicsGameObject($"{DefaultCeilingRootObjectName}_{floorName}", new Vector3(0, wallsMaxY + wallsMaxHeight, 0), "Structure", 0);
+
+                    StructureObject so = ceilingGameObject.AddComponent<StructureObject>();
+                    so.WhatIsMyStructureObjectTag = StructureObjectTag.Ceiling;               
+
+                    ceilingGameObject.GetComponent<MeshFilter>().mesh = ceilingMesh;
+                    var ceilingMeshRenderer = ceilingGameObject.GetComponent<MeshRenderer>();
+
+                    // var materialCopy = new Material(materialDb.getAsset(ceilingMaterialId));
+                    
+                    var dimensions = getAxisAlignedWidthDepth(ceilingMesh.vertices);
+
+                    var roomCeilingMaterialId = ceilingMaterialId;
+                    var ceilingTilingXDivisor =  house.proceduralParameters.ceilingMaterialTilingXDivisor;
+                    var ceilingTilingYDivisor =  house.proceduralParameters.ceilingMaterialTilingYDivisor;
+                    if (room.ceilings.Count > 0) {
+                        ceilingTilingXDivisor = room.ceilings[0].tilingDivisorX;
+                        ceilingTilingYDivisor = room.ceilings[0].tilingDivisorY;
+                        if (!string.IsNullOrEmpty(room.ceilings[0].material)) {
+                            roomCeilingMaterialId = room.ceilings[0].material;
+                            
+                        }
+                    }
+                    ceilingMeshRenderer.material = generatePolygonMaterial(
+                        materialDb.getAsset(roomCeilingMaterialId),
+                        house.proceduralParameters.ceilingColor,
+                        dimensions,
+                        ceilingTilingXDivisor,
+                        ceilingTilingYDivisor,
+                        0.0f,
+                        0.0f,
+                        house.proceduralParameters.unlitCeiling
+                    );
+
+                    tagObjectNavmesh(ceilingGameObject, "Not Walkable");
+
+                    ceilingGameObject.transform.parent = ceilingParent.transform;
+
+                }
+
+                ceilingParent.transform.parent = structureGO.transform;
+
             }
 
             foreach (var obj in house.objects) {
