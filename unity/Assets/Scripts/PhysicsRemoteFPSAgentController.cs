@@ -5815,24 +5815,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void ChangeQuality(ServerAction action) {
-            string[] names = QualitySettings.names;
-            for (int i = 0; i < names.Length; i++) {
-                if (names[i] == action.quality) {
-                    QualitySettings.SetQualityLevel(i, true);
-                    break;
-                }
-            }
-
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            if (action.quality == "Low" || action.quality == "Very Low") {
-                script.enabled = false;
-            } else {
-                script.enabled = true;
-            }
-            actionFinished(true);
-        }
-
         public void DisableScreenSpaceAmbientOcclusion() {
             ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
             script.enabled = false;

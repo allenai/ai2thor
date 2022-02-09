@@ -61,7 +61,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -813,6 +813,25 @@ public class AgentManager : MonoBehaviour {
         this.primaryAgent.actionFinished(true);
     }
 
+    public void ChangeQuality(string quality) {
+        string[] names = QualitySettings.names;
+        for (int i = 0; i < names.Length; i++) {
+            if (names[i] == quality) {
+                QualitySettings.SetQualityLevel(i, true);
+                break;
+            }
+        }
+
+        ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+        if (quality == "Low" || quality == "Very Low") {
+            script.enabled = false;
+        } else {
+            script.enabled = true;
+        }
+        this.primaryAgent.actionFinished(true);
+    }
+
+
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
         Debug.Log("current screen resolution pre change: " + Screen.width + " height" + Screen.height);
@@ -841,43 +860,6 @@ public class AgentManager : MonoBehaviour {
             }
             byte[] bytes = agent.imageSynthesis.Encode("_id");
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
-
-            Color[] id_image = agent.imageSynthesis.tex.GetPixels();
-            Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]>();
-            for (int yy = 0; yy < UnityEngine.Screen.height; yy++) {
-                for (int xx = 0; xx < tex.width; xx++) {
-                    Color colorOn = id_image[yy * UnityEngine.Screen.width + xx];
-                    if (!colorBounds.ContainsKey(colorOn)) {
-                        colorBounds[colorOn] = new int[] { xx, yy, xx, yy };
-                    } else {
-                        int[] oldPoint = colorBounds[colorOn];
-                        if (xx < oldPoint[0]) {
-                            oldPoint[0] = xx;
-                        }
-                        if (yy < oldPoint[1]) {
-                            oldPoint[1] = yy;
-                        }
-                        if (xx > oldPoint[2]) {
-                            oldPoint[2] = xx;
-                        }
-                        if (yy > oldPoint[3]) {
-                            oldPoint[3] = yy;
-                        }
-                    }
-                }
-            }
-            List<ColorBounds> boundsList = new List<ColorBounds>();
-            foreach (Color key in colorBounds.Keys) {
-                ColorBounds bounds = new ColorBounds();
-                bounds.color = new ushort[] {
-                    (ushort)Math.Round (key.r * 255),
-                    (ushort)Math.Round (key.g * 255),
-                    (ushort)Math.Round (key.b * 255)
-                };
-                bounds.bounds = colorBounds[key];
-                boundsList.Add(bounds);
-            }
-            metadata.colorBounds = boundsList.ToArray();
 
             List<ColorId> colors = new List<ColorId>();
             foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
@@ -1657,7 +1639,6 @@ public struct MetadataWrapper {
     public int screenHeight;
     public int agentId;
     public ColorId[] colors;
-    public ColorBounds[] colorBounds;
 
     // Extras
     public float[] flatSurfacesOnGrid;

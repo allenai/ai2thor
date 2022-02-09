@@ -45,7 +45,14 @@ public class Build {
         build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL);
     }
 
+    static void buildResourceAssetJson() {
+        ResourceAssetManager manager = new ResourceAssetManager();
+        manager.BuildCatalog();
+    }
+
     static void build(string buildName, BuildTargetGroup targetGroup, BuildTarget target) {
+        buildResourceAssetJson();
+
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());

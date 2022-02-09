@@ -47,7 +47,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1231056712668961296
 Transform:
@@ -56,7 +56,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1231056712668661296}
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000029504295}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -209,7 +209,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4640236652517499454}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 3be9884f20cfc274690446012714c19e, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -342,7 +342,7 @@ MonoBehaviour:
   objectID: 
   assetID: RoboTHOR_book_ai2_5_v
   Type: 77
-  PrimaryProperty: 1
+  PrimaryProperty: 3
   SecondaryProperties: 
   BoundingBox: {fileID: 4640236652787631098}
   VisibilityPoints:
@@ -357,11 +357,11 @@ MonoBehaviour:
   isInAgentHand: 0
   MyColliders:
   - {fileID: 4640236652517499441}
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  HFdynamicfriction: 0.7
+  HFstaticfriction: 0.7
   HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
+  HFrbdrag: 2
+  HFrbangulardrag: 0.5
   salientMaterials: 09000000
   MySpawnPoints: []
   CurrentTemperature: 0
@@ -394,11 +394,11 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4640236652798957629}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_Mass: 0.5
+  m_Drag: 1
+  m_AngularDrag: 0.2
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
