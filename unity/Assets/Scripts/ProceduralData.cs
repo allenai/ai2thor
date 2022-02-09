@@ -129,6 +129,8 @@ namespace Thor.Procedural.Data {
         public bool ceilingBackFaces { get; set; }
 
         public bool unlitCeiling { get; set; }
+
+        public bool squareTiling = false;
     }
 
     [Serializable]
@@ -137,8 +139,8 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
         public string material { get; set; }
-        public float tilingDivisorX { get; set; }
-        public float tilingDivisorY { get; set; }
+        public float? tilingDivisorX { get; set; }
+        public float? tilingDivisorY { get; set; }
     }
 
     [Serializable]

@@ -304,9 +304,9 @@ namespace Thor.Procedural {
                             indices.Add(c);
                         }
                         else {
+                             indices.Add(c);
+                             indices.Add(b);
                             indices.Add(a);
-                            indices.Add(c);
-                            indices.Add(b);
                         }
                         for (s = v, t = v + 1; t < nv; s++, t++) {
                             V[s] = V[t];
@@ -471,7 +471,7 @@ namespace Thor.Procedural {
             return visibilityPointsGO;
         }
 
-        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
+        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure", bool squareTiling = false) {
             var structure = new GameObject(gameObjectId);
 
             var zip3 = walls.Zip(
@@ -485,7 +485,7 @@ namespace Thor.Procedural {
             var index = 0;
             foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
                 if (!w0.empty) {
-                    var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2);
+                    var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2, squareTiling: squareTiling);
 
                     wallGO.transform.parent = structure.transform;
                     index++;
@@ -633,7 +633,8 @@ namespace Thor.Procedural {
             float visibilityPointInterval = 1 / 3.0f,
             float minimumBoxColliderThickness = 0.1f,
             bool globalVertexPositions = false,
-            int layer = 8
+            int layer = 8,
+            bool squareTiling = false
         ) {
             var wallGO = new GameObject(toCreate.id);
 
@@ -851,7 +852,8 @@ namespace Thor.Procedural {
 
             var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor);
             // TODO Offset Y would require to get joining walls from above and below 
-            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit);
+            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit, 
+                        squareTiling: squareTiling);
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
@@ -1214,7 +1216,7 @@ namespace Thor.Procedural {
             return Vector2.zero;
         }
 
-        private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false) {
+        private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false, bool squareTiling = false) {
             // optimization do not copy when not needed
             if (color == null && !tilingDivisorX.HasValue && !tilingDivisorY.HasValue && offsetX == 0.0f && offsetY == 0.0f && !useUnlitShader) {
                 return sharedMaterial;
@@ -1239,8 +1241,13 @@ namespace Thor.Procedural {
             //         var width =  maxX - minX;
             //         var depth = maxZ - minZ;
 
-
-                    materialCopy.mainTextureScale = new Vector2(dimensions.x / tilingDivisorX.GetValueOrDefault(1.0f), dimensions.y / tilingDivisorY.GetValueOrDefault(1.0f));
+                var tilingX = dimensions.x / tilingDivisorX.GetValueOrDefault(1.0f);
+                var tilingY = dimensions.y / tilingDivisorY.GetValueOrDefault(1.0f);
+                if (squareTiling) {
+                    tilingX = Math.Max(tilingX, tilingY);
+                    tilingY = tilingX;
+                }
+                    materialCopy.mainTextureScale = new Vector2(tilingX, tilingY);
                     materialCopy.mainTextureOffset = new Vector2(offsetX, offsetY);
                     
                 // }
@@ -1360,7 +1367,7 @@ namespace Thor.Procedural {
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
                 var dimensions = getAxisAlignedWidthDepth(room.floorPolygon);
-                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floorMaterial), room.floorColor, dimensions, room.floorMaterialTilingXDivisor, room.floorMaterialTilingYDivisor);
+                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floorMaterial), room.floorColor, dimensions, room.floorMaterialTilingXDivisor, room.floorMaterialTilingYDivisor, squareTiling: house.proceduralParameters.squareTiling);
 
                 //set up mesh collider to allow raycasts against only the floor inside the room
                 subFloorGO.AddComponent<MeshCollider>();
@@ -1415,7 +1422,7 @@ namespace Thor.Procedural {
 
             var structureGO = new GameObject(DefaultRootStructureObjectName);
 
-            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName);
+            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName, house.proceduralParameters.squareTiling);
 
             floorGameObject.transform.parent = structureGO.transform;
             wallsGO.transform.parent = structureGO.transform;
@@ -1491,7 +1498,8 @@ namespace Thor.Procedural {
                         ceilingTilingYDivisor,
                         0.0f,
                         0.0f,
-                        house.proceduralParameters.unlitCeiling
+                        house.proceduralParameters.unlitCeiling,
+                        squareTiling: house.proceduralParameters.squareTiling
                     );
 
                     tagObjectNavmesh(ceilingGameObject, "Not Walkable");
