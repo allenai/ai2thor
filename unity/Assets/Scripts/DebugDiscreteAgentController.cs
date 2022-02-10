@@ -409,7 +409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         StartCoroutine(PassThenRecordPosition(action, 0));
                     }
 
-                    if (Input.GetKeyDown(KeyCode.M))
+                    if (Input.GetKeyDown(KeyCode.B))
                     {
                         action.action = "TorqueObject";
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
@@ -427,7 +427,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                     }
 
-                    if (Input.GetKeyDown(KeyCode.B))
+                    if (Input.GetKeyDown(KeyCode.M))
                     {
                         action.action = "MoveObject";
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;

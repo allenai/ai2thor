@@ -1163,9 +1163,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		bool obstructed = CheckForObstructions(hitObjectsInReceptacleTriggerBox);
 
-		//rotate any other objects on top of the object too
+		//move any other objects on top of the object too
 		if(!obstructed) {
-			RecursivelyMoveObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, movementAmount, transform, movementRelativeToWhereAgentIsLooking);
+			RecursivelyMoveObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, movementAmount, movementRelativeToWhereAgentIsLooking);
 		}
 
 		//enable all colliders
@@ -1182,23 +1182,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return true;
 	}
 
-	private void RecursivelyMoveObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float movementAmount, Transform transform, Vector3 movementRelativeToWhereAgentIsLooking) {
+	private void RecursivelyMoveObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float movementAmount, Vector3 movementRelativeToWhereAgentIsLooking) {
 		if(hitObjectsInReceptacleTriggerBox.Length == 0)
 			return;		
 		List<Transform> objectsOnTop = new List<Transform>();
 		foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
 			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
 			if(!objectsOnTop.Contains(objectOnTop)) {
-
 				objectsOnTop.Add(objectOnTop);
-				objectOnTop.transform.position = 
-					new Vector3(movementRelativeToWhereAgentIsLooking.x * movementAmount + transform.position.x, transform.position.y, 
-						movementRelativeToWhereAgentIsLooking.z * movementAmount + transform.position.z);
 
 				//recursive movement
 				Collider[] objectsOnTopOfObjects = new Collider[0];
 				objectsOnTopOfObjects = BoxCastInReceptacleTriggerBox(objectOnTop);
-				RecursivelyMoveObjectsOnTopOfObject(objectsOnTopOfObjects, movementAmount, objectOnTop, movementRelativeToWhereAgentIsLooking);
+				RecursivelyMoveObjectsOnTopOfObject(objectsOnTopOfObjects, movementAmount, movementRelativeToWhereAgentIsLooking);
+				objectOnTop.transform.position = 
+					new Vector3(movementRelativeToWhereAgentIsLooking.x * movementAmount + objectOnTop.transform.position.x, objectOnTop.transform.position.y, 
+						movementRelativeToWhereAgentIsLooking.z * movementAmount + objectOnTop.transform.position.z);
 			}
 		}
 	}
