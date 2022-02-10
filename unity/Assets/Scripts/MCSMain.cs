@@ -93,7 +93,7 @@ public class MCSMain : MonoBehaviour {
     public bool isPassiveScene = false;
     public AsyncOperationHandle<SceneInstance> asyncOperationHandle;
 
-    private MCSConfigScene currentScene;
+    public MCSConfigScene currentScene;
     private int lastStep = -1;
     private Dictionary<String, MCSConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MCSConfigObjectDefinition>();
@@ -272,15 +272,15 @@ public class MCSMain : MonoBehaviour {
             Debug.Log("MCS: Resetting the current MCS scene...");
         }
 
+        this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
+                this.currentScene.isometric);
+
         if (this.currentScene != null && this.currentScene.objects != null) {
             Debug.Log("MCS: Initializing " + this.currentScene.objects.Count + " objects...");
             this.currentScene.objects.ForEach(InitializeGameObject);
         } else {
             Debug.Log("MCS: No objects to initialize!");
         }
-
-        this.isPassiveScene = (this.currentScene.intuitivePhysics || this.currentScene.observation ||
-                this.currentScene.isometric);
 
         this.AdjustRoomStructuralObjects();
 
