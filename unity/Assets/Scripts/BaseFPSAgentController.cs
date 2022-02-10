@@ -352,7 +352,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void actionFinishedEmit(bool success, object actionReturn = null) {
+        public void actionFinishedEmit(bool success, object actionReturn = null, string errorMessage = null) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
             actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
         }
 
@@ -2154,7 +2157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     queryTriggerInteraction: QueryTriggerInteraction.Ignore
                 )
             ) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: (
                         $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
@@ -2165,7 +2168,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
             if (target == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: (
                         $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
