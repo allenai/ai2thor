@@ -76,9 +76,9 @@ public class SliceObject : MonoBehaviour {
             resultObject = Instantiate(
                 original: ObjectToChangeTo,
                 position: transform.position,
-                rotation: transform.rotation,
-                parent: GameObject.Find("Objects").transform
+                rotation: transform.rotation
             );
+            resultObject.transform.parent = GameObject.Find("Objects").transform;
             isSliced = true;
         }
 
@@ -88,9 +88,9 @@ public class SliceObject : MonoBehaviour {
             resultObject = Instantiate(
                 original: ObjectToChangeTo,
                 position: transform.position,
-                rotation: transform.rotation,
-                parent: GameObject.Find("Objects").transform
+                rotation: transform.rotation
             );
+            resultObject.transform.parent = GameObject.Find("Objects").transform;
             isSliced = true;
 
             if (gameObject.GetComponent<CookObject>().IsCooked()) {

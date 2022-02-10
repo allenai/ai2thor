@@ -1821,7 +1821,8 @@ namespace Thor.Procedural {
         ) {
             var go = prefab;
 
-            var spawned = GameObject.Instantiate(original: go, parent: GameObject.Find("Objects").transform); //, position, Quaternion.identity); //, position, rotation);
+            var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
                 var simObj = spawned.GetComponent<SimObjPhysics>();
@@ -1907,9 +1908,9 @@ namespace Thor.Procedural {
             var spawned = GameObject.Instantiate(
                 original: go,
                 position: initialSpawnPosition,
-                rotation: Quaternion.identity,
-                parent: GameObject.Find("Objects").transform
+                rotation: Quaternion.identity
             );
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
@@ -2000,9 +2001,9 @@ namespace Thor.Procedural {
             var spawned = GameObject.Instantiate(
                 original: go,
                 position: initialSpawnPosition,
-                rotation: Quaternion.identity,
-                parent: GameObject.Find("Objects").transform
+                rotation: Quaternion.identity
             );
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);

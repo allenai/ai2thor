@@ -105,9 +105,9 @@ public class Break : MonoBehaviour {
             GameObject resultObject = Instantiate(
                 original: PrefabToSwapTo,
                 position: transform.position,
-                rotation: transform.rotation,
-                parent: objectsTransform
+                rotation: transform.rotation
             );
+            resultObject.transform.parent = objectsTransform;
             broken = true;
 
             // ContactPoint cp = collision.GetContact(0);
