@@ -2182,6 +2182,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void GetVisibilityPoints(string objectId) {
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            if (sop.VisibilityPoints == null) {
+                throw new ArgumentException($"objectId: {objectId} has no visibility points!");
+            }
+
+            Vector3[] points = new Vector3[sop.VisibilityPoints.Length];
+            for (int i = 0; i < points.Length; i++) {
+                points[i] = sop.VisibilityPoints[i].position;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: points
+            );
+        }
+
         protected void snapAgentToGrid() {
             if (this.snapToGrid) {
                 float mult = 1 / gridSize;
