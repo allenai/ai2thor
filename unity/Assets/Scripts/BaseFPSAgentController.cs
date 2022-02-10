@@ -2145,12 +2145,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void GetObjectHitFromRaycast(Vector3 from, Vector3 to) {
+        public void GetObjectHitFromRaycast(Vector3 origin, Vector3 destination) {
             RaycastHit hit;
             if (
                 !Physics.Raycast(
-                    origin: from,
-                    direction: to - from,
+                    origin: origin,
+                    direction: destination - origin,
                     hitInfo: out hit,
                     maxDistance: Mathf.Infinity,
                     layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
@@ -2160,7 +2160,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinishedEmit(
                     success: false,
                     errorMessage: (
-                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
                         " failed to hit any target object!"
                     )
                 );
@@ -2171,7 +2172,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinishedEmit(
                     success: false,
                     errorMessage: (
-                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
                         " hit object, but not a SimObject!"
                     )
                 );
