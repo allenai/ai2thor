@@ -1067,6 +1067,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		myrb.maxAngularVelocity = 50;
 
 		float MCSForceMultiplier = 250f;
 		//torque is mass dependent when using ForceMode.Impulse
