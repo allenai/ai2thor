@@ -1282,6 +1282,12 @@ namespace Thor.Procedural {
             string ceilingMaterialId = house.proceduralParameters.ceilingMaterial;
 
             var windowsAndDoors = house.doors.Select(d => d as WallRectangularHole).Concat(house.windows);
+            foreach (var obj in windowsAndDoors) {
+                // NOTE: this is currently necessary to make min=0 correctly on the
+                // edge of the wall.
+                obj.boundingBox.min -= obj.assetOffset;
+                obj.boundingBox.max -= obj.assetOffset;
+            }
             var holes = windowsAndDoors
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall0, hole), (hole.wall1, hole) })
                 .Where(pair => !String.IsNullOrEmpty(pair.Item1))
