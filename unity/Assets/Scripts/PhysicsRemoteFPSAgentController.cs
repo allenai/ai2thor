@@ -3498,7 +3498,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             // instantiate a target circle
-            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity) as GameObject;
+            GameObject targetCircle = Instantiate(
+                original: TargetCircles[action.objectVariation],
+                position: new Vector3(0, 100, 0),
+                rotation: Quaternion.identity,
+                parent: GameObject.Find("Objects").transform
+            ) as GameObject;
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
@@ -7446,7 +7451,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(center.x, max.y + offset + size / 2, center.z),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
@@ -7454,7 +7460,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(center.x, min.y - offset - size / 2, center.z),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
@@ -7462,7 +7469,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(center.x, center.y, min.z - offset - size / 2),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
@@ -7470,7 +7478,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(center.x, center.y, max.z + offset + size / 2),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
@@ -7478,7 +7487,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(min.x - offset - size / 2, center.y, center.z),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
 
@@ -7486,7 +7496,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube = Instantiate(
                 Resources.Load("BlueCube") as GameObject,
                 new Vector3(max.x + offset + size / 2, center.y, center.z),
-                Quaternion.identity
+                Quaternion.identity,
+                GameObject.Find("Objects").transform
             ) as GameObject;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
         }

@@ -4422,6 +4422,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Destroy(GameObject.Find("Structure"));
             Destroy(GameObject.Find("ProceduralLighting"));
+
+            // puts the agent below the scene to its starting position
+            GameObject.Find("FPSController").transform.position = new Vector3(-0.5f, -38.86f, 0.5f);
+
             actionFinished(success: true);
         }
 

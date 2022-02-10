@@ -1821,7 +1821,7 @@ namespace Thor.Procedural {
         ) {
             var go = prefab;
 
-            var spawned = GameObject.Instantiate(go); //, position, Quaternion.identity); //, position, rotation);
+            var spawned = GameObject.Instantiate(original: go, parent: GameObject.Find("Objects").transform); //, position, Quaternion.identity); //, position, rotation);
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
                 var simObj = spawned.GetComponent<SimObjPhysics>();
@@ -1904,7 +1904,12 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(
+                original: go,
+                position: initialSpawnPosition,
+                rotation: Quaternion.identity,
+                parent: GameObject.Find("Objects").transform
+            );
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
@@ -1992,7 +1997,12 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(
+                original: go,
+                position: initialSpawnPosition,
+                rotation: Quaternion.identity,
+                parent: GameObject.Find("Objects").transform
+            );
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);

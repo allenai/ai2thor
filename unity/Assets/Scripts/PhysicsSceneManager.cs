@@ -388,7 +388,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
                 SimObjPhysics copy;
                 if (placedOriginal.Contains(existingSOP)) {
-                    copy = Instantiate(existingSOP);
+                    copy = Instantiate(original: existingSOP, parent: GameObject.Find("Objects").transform);
                     copy.name += "_copy_" + ii;
                     copy.ObjectID = existingSOP.ObjectID + "_copy_" + ii;
                     copy.objectID = copy.ObjectID;
@@ -551,7 +551,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                     for (int j = 0; j < numExtra; j++) {
                         // Add a copy of the item to try and match the requested number of duplicates
                         SimObjPhysics sop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
-                        SimObjPhysics copy = Instantiate(sop);
+                        SimObjPhysics copy = Instantiate(original: sop, parent: GameObject.Find("Objects").transform);
                         copy.name += "_random_copy_" + j;
                         copy.ObjectID = sop.ObjectID + "_copy_" + j;
                         copy.objectID = copy.ObjectID;
