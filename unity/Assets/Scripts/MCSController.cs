@@ -604,15 +604,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
-        Material material = hit.transform.GetComponent<Renderer>().material;
-        
-        //this is at the end of every material name
-        string materialInstanceString = " (Instance)";
-        string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
+        Renderer renderer = hit.transform.GetComponent<Renderer>();
+        if(renderer!=null) {
+            Material material = renderer.material;
+            //this is at the end of every material name
+            string materialInstanceString = " (Instance)";
+            string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
 
-        if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
-            stepsOnLava++;
-            hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
+                stepsOnLava++;
+                hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            }
         }
     }
 
@@ -958,7 +960,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Cannot Torque object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
-            //AddTorque
+            //Add Torque
+            ApplyForceObject(action);
+        }
+    }
+
+    public void RotateObject(ServerAction action) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
+            return;
+        }
+
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            //Add Rotation
             ApplyForceObject(action);
         }
     }

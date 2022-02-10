@@ -47,6 +47,7 @@ public class MCSServerActionRecorder : MonoBehaviour
         "PickupObject",
         "DropHandObject",
         "TorqueObject",
+        "RotateObject",
         
         "LaunchDroneObject",
         "Pass",

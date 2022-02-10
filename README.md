@@ -84,9 +84,14 @@ If you want to run an MCS Scene in the Unity Editor:
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
   - Push Pull Force (positive is push, negative is pull)
-- Q: Crawl
-- E: Stand
-- L: Lie Down
+- M: Torque Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Push Pull Force (positive is clockwise torque, negative is counterclockwise torque)
+- N: Rotate Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Direction (clockwise true is a clockwise rotation, clockwise false is a counterclockwise rotation)
 - Escape: Pass (do nothing)
 - Backspace: Initialize (reset the current scene or go to a new scene)
   - New Scene File
@@ -313,6 +318,7 @@ For playback:
   - In `FindMySpawnPoints`, ignore receptacle trigger boxes of stacking receptacles that are currently positioned higher than the receptacle itself (in case the receptacle is rotated).
   - Added `IsSeesaw` property. It locks the XZ position - YZ rotation of the rigidbody and ignores collisions with the agents ground collider. For seesaw pivot points, enable `IsSeesaw` and set that object to `kinematic` so it ignores agent ground collider collisions while not moving
   - Added `ApplyTorque` method to apply a torque force to an object
+  - Added `ApplyRotation` method to apply a rotation transformation to an object
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.

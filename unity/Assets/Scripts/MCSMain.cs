@@ -739,8 +739,7 @@ public class MCSMain : MonoBehaviour {
     ) {
         // We don't care about existing trigger colliders here so just ignore them.
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
-            !collider.isTrigger).ToArray();
-
+            !collider.isTrigger && collider.enabled).ToArray();
         MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
             this.currentScene.version);
         List<MCSConfigCollider> collidersFromConfig = legacy != null && legacy.colliders.Count > 0 ?
@@ -1111,10 +1110,9 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.isInteractable = true;
             ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.Static;
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
-            ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
         }
-
+        ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {

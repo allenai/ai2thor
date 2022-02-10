@@ -1061,10 +1061,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public void ApplyTorque(ServerAction action)
 	{
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
-
         if(myrb.IsSleeping())
         	myrb.WakeUp();
-        
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
@@ -1073,6 +1071,150 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//applying 100 torque to an object with 500 mass will slightly rotate an object
 		//appling 100 torque to an object with 0.5 mass will spin the object several times
 		myrb.AddTorque(Vector3.up * action.moveMagnitude / MCSForceMultiplier, ForceMode.Impulse);
+	}
+
+	//used for applying rotation to an object
+	public bool ApplyRotation(ServerAction action)
+	{
+		//awake the rigidbody
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+        if(myrb.IsSleeping())
+        	myrb.WakeUp();
+		myrb.isKinematic = false;
+		
+		//rotation direction
+		float direction = action.clockwise ? 5 : -5;		
+
+		//disable all colliders on this object to avoid detection in collision checks
+		foreach (Collider c in MyColliders)
+			c.enabled = false;
+		
+		//if the rotatable object has another object on top of them
+		Collider[] hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox(transform);
+		
+		//set the rotation to the new rotation to see if collisions will happen
+		Vector3 oldRotation = transform.eulerAngles;
+		transform.eulerAngles = transform.eulerAngles + (Vector3.up * direction);
+
+		//now check for collisions, if there is one other than the object on top it, do not rotate it
+		bool obstructed = CheckForObstructions(hitObjectsInReceptacleTriggerBox);
+
+		//rotate any other objects on top of the object too
+		if(!obstructed) {
+			RecursivelyRotateObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, direction);
+		}
+		
+		//enable all colliders
+		foreach (Collider c in MyColliders) {
+			c.enabled = true;
+		}
+
+		//reset rotation back to original if obstructed
+		if(obstructed) {
+			transform.eulerAngles = oldRotation;
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is obstructed");
+			return false;
+		}
+		//success
+		return true;
+	}
+
+	private void RecursivelyRotateObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float direction) {
+		if(hitObjectsInReceptacleTriggerBox.Length == 0)
+			return;		
+		List<Transform> objectsOnTop = new List<Transform>();
+		foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
+			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
+			if(!objectsOnTop.Contains(objectOnTop)) {
+				objectsOnTop.Add(objectOnTop);
+
+				//recursive rotation
+				Collider[] objectsOnTopOfObjects = new Collider[0];
+				objectsOnTopOfObjects = BoxCastInReceptacleTriggerBox(objectOnTop);
+				RecursivelyRotateObjectsOnTopOfObject(objectsOnTopOfObjects, direction);
+				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
+			}
+		}
+	}
+
+	private bool CheckForObstructions(Collider[] hitObjectsInReceptacleTriggerBox) {
+		bool obstructed = false;
+		foreach (Collider c in MyColliders) {
+			if(c is BoxCollider) {
+				obstructed = CheckForBoxColliderObstructions(c.GetComponent<BoxCollider>(), hitObjectsInReceptacleTriggerBox);
+			}
+			if(c is SphereCollider) {
+				obstructed = CheckForSphereColliderObstructions(c.GetComponent<SphereCollider>(), hitObjectsInReceptacleTriggerBox);
+			}
+			if(c is CapsuleCollider) {
+				obstructed = CheckForCapsuleColliderObstructions(c.GetComponent<CapsuleCollider>(), hitObjectsInReceptacleTriggerBox);
+			}
+			if(obstructed) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool CheckForCapsuleColliderObstructions(CapsuleCollider capusleCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = capusleCollider.center;
+		Vector3 direction = new Vector3 {[capusleCollider.direction] = 1};
+		float radiusReducer = 0.995f; //this shrinks the sphere radius so the object can rotate closer to an obstructing object and avoid collision detection with objects underneath it
+		float radius = capusleCollider.radius * Mathf.Max(capusleCollider.transform.lossyScale.x, capusleCollider.transform.lossyScale.z) * radiusReducer;
+		float offset = capusleCollider.height / 2 - capusleCollider.radius;
+		Vector3 point1 = capusleCollider.transform.TransformPoint(capusleCollider.center - direction * offset);
+		Vector3 point2 = capusleCollider.transform.TransformPoint(capusleCollider.center + direction * offset);
+		Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, radius, 1 << 8, QueryTriggerInteraction.Ignore);
+		return CheckIfCollisionIsInReceptacleTriggerBox(hitColliders, hitObjectsInReceptacleTriggerBox);
+	}
+
+	private bool CheckForSphereColliderObstructions(SphereCollider sphereCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = sphereCollider.transform.TransformPoint(sphereCollider.center);
+		float radiusReducer = 0.985f; //this shrinks the capsule radius so the object can rotate closer to an obstructing object and avoid collision detection with objects underneath it
+		float radius = sphereCollider.radius * Mathf.Max(Mathf.Max(sphereCollider.transform.lossyScale.x, sphereCollider.transform.lossyScale.y), sphereCollider.transform.lossyScale.z) * radiusReducer;
+		Collider[] hitColliders = Physics.OverlapSphere(center + (Vector3.up * 0.0001f), radius, 1 << 8, QueryTriggerInteraction.Ignore);
+		return CheckIfCollisionIsInReceptacleTriggerBox(hitColliders, hitObjectsInReceptacleTriggerBox);
+	}
+
+	private bool CheckForBoxColliderObstructions(BoxCollider boxCollider, Collider[] hitObjectsInReceptacleTriggerBox) {
+		Vector3 center = boxCollider.transform.TransformPoint(boxCollider.center);
+		float sizeReducer = 0.495f; //this shrinks the box size so the object can rotate closer to an obstructing object and avoid collision detection with objects underneath it
+		Vector3 size = new Vector3(boxCollider.transform.lossyScale.x * boxCollider.size.x, boxCollider.transform.lossyScale.y * boxCollider.size.y, boxCollider.transform.lossyScale.z * boxCollider.size.z);
+		Collider[] hitColliders = Physics.OverlapBox(center + (Vector3.up * 0.001f), size * sizeReducer, boxCollider.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
+		return CheckIfCollisionIsInReceptacleTriggerBox(hitColliders, hitObjectsInReceptacleTriggerBox);
+	}
+
+	private bool CheckIfCollisionIsInReceptacleTriggerBox(Collider[] hitColliders, Collider[] hitObjectsInReceptacleTriggerBox) {
+		if(hitColliders.Length > 0) {
+			if(hitObjectsInReceptacleTriggerBox != null) {
+				foreach (Collider col in hitColliders) {
+					if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
+						return true;
+					}
+				}
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Collider[] BoxCastInReceptacleTriggerBox(Transform transform) {
+		Contains[] receptacles = transform.GetComponentsInChildren<Contains>();
+		Collider[] hitObjectsInReceptacleTriggerBox = new Collider[0];
+		BoxCollider receptacle = null;
+		Vector3 receptacleBase = Vector3.zero;
+		Vector3 receptacleCheckSize = Vector3.zero;
+		if(receptacles.Length > 0) {
+			float maxY = receptacles.Max(element => element.transform.position.y);
+			receptacle = (receptacles.First(element => element.transform.position.y == maxY)).GetComponent<BoxCollider>();
+			receptacleBase = receptacle.transform.TransformPoint(new Vector3(receptacle.center.x, receptacle.center.y - receptacle.size.y * 0.5f, receptacle.center.z));
+			receptacleCheckSize = new Vector3(receptacle.size.x / 2 * receptacle.transform.lossyScale.x, 0.01f, receptacle.size.z / 2 * receptacle.transform.lossyScale.z);
+			float flatPlaneSize = 0.01f; //The y size of the box is multiplied by 0.01f so the box cast becomes a plane that only detects objects touching the bottom of the receptacle area
+			hitObjectsInReceptacleTriggerBox = Physics.OverlapBox(receptacleBase + (Vector3.up * flatPlaneSize), receptacleCheckSize, receptacle.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore);
+		}
+		return hitObjectsInReceptacleTriggerBox;
 	}
 
 	//return all sim objects contained by this object if it is a receptacle

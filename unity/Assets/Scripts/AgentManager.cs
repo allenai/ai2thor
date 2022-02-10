@@ -1470,6 +1470,7 @@ public class ServerAction
 	public bool consistentColors = false;
 	public Vector3? teleportRotation;
 	public Vector3? teleportPosition;
+	public bool clockwise = true;
 
     public SimObjType ReceptableSimObjType()
 	{
