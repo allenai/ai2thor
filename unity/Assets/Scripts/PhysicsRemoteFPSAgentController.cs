@@ -5814,13 +5814,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-
-        public void DisableScreenSpaceAmbientOcclusion() {
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            script.enabled = false;
-            actionFinished(true);
-        }
-
         // in case you want to change the timescale
         public void ChangeTimeScale(ServerAction action) {
             if (action.timeScale > 0) {

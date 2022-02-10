@@ -773,13 +773,7 @@ public class AgentManager : MonoBehaviour {
                 break;
             }
         }
-
-        ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-        if (quality == "Low" || quality == "Very Low") {
-            script.enabled = false;
-        } else {
-            script.enabled = true;
-        }
+        
         this.primaryAgent.actionFinished(true);
     }
 
