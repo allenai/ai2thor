@@ -896,13 +896,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return hasNoBlockingObjectsInWay;
         }
 
+        protected virtual bool AgentCanMoveIntoObject(Rigidbody rigidbody) {
+            return rigidbody.mass <= this.GetComponent<Rigidbody>().mass;
+        }
+
         private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults)
         {
             if (sweepResults.Length > 0)
             {
                 foreach (RaycastHit res in sweepResults)
                 {
-                    Debug.Log("RES = " + res.transform.name);
                     // Don't worry if we hit something thats in our hand.
                     if (ItemInHand != null && ItemInHand.transform == res.transform)
                     {
@@ -941,9 +944,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         SimObjPhysics simObjPhysics = res.transform.GetComponent<SimObjPhysics>();
                         StructureObject structureObject = res.transform.GetComponent<StructureObject>();
+                        bool seesaw = simObjPhysics != null && simObjPhysics.IsSeesaw;
                         bool immobile = simObjPhysics == null || (simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.CanPickup &&
-                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable);
-                        if (structureObject != null || immobile || res.rigidbody.mass > this.GetComponent<Rigidbody>().mass)
+                            simObjPhysics.PrimaryProperty != SimObjPrimaryProperty.Moveable && !seesaw);
+                        if (structureObject != null || immobile || (!seesaw && !AgentCanMoveIntoObject(res.rigidbody)))
                         { 
                             //checks if the obstruction is a structure ramp at a 45 degree angle
                             if(ShootRay45DegreesUp(this.inputDirection, moveMagnitude) && structureObject != null) 
@@ -989,7 +993,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             RaycastHit[] hits = Physics.CapsuleCastAll(p1, p2, radius, direction, length + rayCastBuffer, layerMask, QueryTriggerInteraction.Ignore);
             foreach (RaycastHit point in hits)
             {
-                if (point.transform.GetComponent<StructureObject>() != null || (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass))
+                if (point.transform.GetComponent<StructureObject>() != null || !AgentCanMoveIntoObject(point.rigidbody))
                     return false;
             }
             return true;
