@@ -5,10 +5,14 @@ using System;
 using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 public class MCSMain : MonoBehaviour {
     private static string ADDRESSABLE_PATH_PREFIX = "Assets/Addressables/MCS/";
     private static string CUSTOM_OBJECT_PATH_PREFIX = "MCS/";
+    private static string FLOOR_ADDRESSABLE_PATH_PREFIX =
+        MCSMain.ADDRESSABLE_PATH_PREFIX + "Custom/Prefabs/Floor.prefab";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
@@ -76,7 +80,6 @@ public class MCSMain : MonoBehaviour {
     private static int FLOOR_DIMENSIONS = 1;
     private static int FLOOR_LOWERED_HEIGHT = -100;
     private static float SEESAW_MAX_DEPTH = 0.035f;
-    public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public bool enableDebugLogsInEditor = true;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
@@ -86,7 +89,9 @@ public class MCSMain : MonoBehaviour {
     public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
     public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
     public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
+    public string defaultSceneFile = "";
     public bool isPassiveScene = false;
+    public AsyncOperationHandle<SceneInstance> asyncOperationHandle;
 
     private MCSConfigScene currentScene;
     private int lastStep = -1;
@@ -117,6 +122,8 @@ public class MCSMain : MonoBehaviour {
 
     // Unity's Start method is called before the first frame update
     void Start() {
+        asyncOperationHandle.WaitForCompletion();
+
         this.agentController = GameObject.Find("FPSController").GetComponent<MCSController>();
         this.objectParent = GameObject.Find("Objects");
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
@@ -238,7 +245,7 @@ public class MCSMain : MonoBehaviour {
 
     // Custom Public Methods
 
-    public void ChangeCurrentScene(MCSConfigScene scene) {
+    public void ChangeCurrentScene(MCSConfigScene scene) {        
         if (scene == null && this.currentScene == null) {
             Debug.LogError("MCS: Cannot switch the MCS scene to null... Keeping the current MCS scene.");
             return;
@@ -462,14 +469,14 @@ public class MCSMain : MonoBehaviour {
         } else {
             // Intuitive physics and isometric scenes don't have ceilings.
             if (!this.isPassiveScene) {
-                AssignMaterial(this.ceiling, ceilingMaterial);
+                AssignMaterialFromConfig(this.ceiling, ceilingMaterial);
             }
 
-            AssignMaterial(this.floor, floorMaterial);
-            AssignMaterial(this.wallLeft, leftWallMaterial);
-            AssignMaterial(this.wallRight, rightWallMaterial);
-            AssignMaterial(this.wallFront, frontWallMaterial);
-            AssignMaterial(this.wallBack, backWallMaterial);
+            AssignMaterialFromConfig(this.floor, floorMaterial);
+            AssignMaterialFromConfig(this.wallLeft, leftWallMaterial);
+            AssignMaterialFromConfig(this.wallRight, rightWallMaterial);
+            AssignMaterialFromConfig(this.wallFront, frontWallMaterial);
+            AssignMaterialFromConfig(this.wallBack, backWallMaterial);
 
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
@@ -548,6 +555,9 @@ public class MCSMain : MonoBehaviour {
         int numOfFloorSections = (expandedFloorX + (Mathf.RoundToInt(this.currentScene.roomDimensions.x % 2 == 0 ? 1 : 0))) 
             * (expandedFloorZ + (Mathf.RoundToInt(this.currentScene.roomDimensions.z) % 2 == 0 ? 1 : 0));
 
+        Renderer floorRenderer = this.floor.GetComponentInChildren<Renderer>();
+        Material floorMaterial = floorRenderer.materials[0];
+
         //prepare floor for cloning
         this.floor.isStatic = false;
         GameObject floors = new GameObject();
@@ -584,15 +594,23 @@ public class MCSMain : MonoBehaviour {
             }
 
             //clone the floor
-            GameObject floorSection = Instantiate(this.floor, new Vector3(posX, holeDrop ? posY*2 : posY, posZ), Quaternion.identity);
+            GameObject floorSection = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.FLOOR_ADDRESSABLE_PATH_PREFIX);
+            floorSection.transform.position = new Vector3(posX, holeDrop ? posY*2 : posY, posZ);
             floorSection.transform.localScale = new Vector3(MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
-            if(changeFloorMaterial) 
-                AssignMaterial(floorSection, material); 
+            if(changeFloorMaterial) {
+                AssignMaterialFromConfig(floorSection, material);
+            }
+            else {
+                AssignMaterials(floorSection, floorMaterial, null);
+            }
             floorSection.name = "floor" + i;
             floorSection.transform.parent = floors.transform;
             floorSection.isStatic = true;
             SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
             simObj.objectID = "floor" + i;
+            if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
+                AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, floorSection, simObj);
+            }
 
             posX += MCSMain.FLOOR_DIMENSIONS;
             if(posX > -startingFloorSectionX) {
@@ -806,11 +824,11 @@ public class MCSMain : MonoBehaviour {
         return null;
     }
 
-    private void AssignMaterial(GameObject gameObject, string configMaterialFile) {
-        this.AssignMaterials(gameObject, new string[] { configMaterialFile }, new string[] { }, new string[] { });
+    private void AssignMaterialFromConfig(GameObject gameObject, string configMaterialFile) {
+        this.AssignMaterialsFromConfig(gameObject, new string[] { configMaterialFile }, new string[] { }, new string[] { });
     }
 
-    private void AssignMaterials(
+    private void AssignMaterialsFromConfig(
         GameObject gameObject,
         string[] configMaterialFiles,
         string[] objectMaterialNames,
@@ -841,11 +859,19 @@ public class MCSMain : MonoBehaviour {
             return;
         }
 
+        this.AssignMaterials(gameObject, singleConfigMaterial, assignments);
+    }
+
+    private void AssignMaterials(
+        GameObject gameObject,
+        Material singleConfigMaterial,
+        Dictionary<string, Material> assignments
+    ) {
         // Sometimes objects have multiple renderers with their own materials (like flaps of boxes), so modify each.
         Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
         renderers.ToList().ForEach((renderer) => {
             renderer.materials = renderer.materials.ToList().Select((material) => {
-                if (assignments.Count > 0) {
+                if (assignments != null && assignments.Count > 0) {
                     if (assignments.ContainsKey(material.name)) {
                         return assignments[material.name];
                     }
@@ -946,7 +972,7 @@ public class MCSMain : MonoBehaviour {
         if (materialFiles.Length == 0 && objectConfig.materialFile != null && !objectConfig.materialFile.Equals("")) {
             materialFiles = new string[] { objectConfig.materialFile };
         }
-        this.AssignMaterials(gameObject, materialFiles, objectDefinition.materials != null ?
+        this.AssignMaterialsFromConfig(gameObject, materialFiles, objectDefinition.materials != null ?
             objectDefinition.materials.ToArray() : new string[] { }, objectDefinition.materialRestrictions.ToArray());
 
         this.ModifyChildrenInteractables(gameObject, objectDefinition.interactables);
@@ -1701,7 +1727,7 @@ public class MCSMain : MonoBehaviour {
         });
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
-            this.AssignMaterials(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
+            this.AssignMaterialsFromConfig(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
         });
 
         objectConfig.openClose.Where(change => change.step == step).ToList().ForEach((change) => {
