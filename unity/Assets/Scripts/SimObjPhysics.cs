@@ -13,6 +13,8 @@ using UnityEditor.SceneManagement;
 
 public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 {
+    private static float MAX_ANGULAR_VELOCITY_ON_TORQUE = 50f;
+
 	[Header("Unique String ID of this Object")]
 	[SerializeField]
 	public string objectID = string.Empty;
@@ -1067,7 +1069,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		myrb.maxAngularVelocity = 50;
+		myrb.maxAngularVelocity = SimObjPhysics.MAX_ANGULAR_VELOCITY_ON_TORQUE;
 
 		float MCSForceMultiplier = 250f;
 		//torque is mass dependent when using ForceMode.Impulse
