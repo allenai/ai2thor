@@ -127,15 +127,6 @@ def _remove_system_plugins():
             print("removing %s" % path)
             os.unlink(path)
 
-def _initialize_cloudrendering(unity_path):
-    project_path = os.path.join(os.getcwd(), unity_path)
-    command = (
-        "%s -quit -batchmode -logFile %s/thor-InitializeCloudRendering-import.log -projectpath %s -buildTarget Standalone -executeMethod Build.InitializeCloudRendering"
-        % (_unity_path(), os.getcwd(), project_path)
-    )
-
-    subprocess.check_call(command, shell=True)
-
 def _import_assets(unity_path, build_target):
     project_path = os.path.join(os.getcwd(), unity_path)
     command = (
@@ -1195,7 +1186,6 @@ def build_cloudrendering(context, push_build=False):
     build_info = {}
     build_info["log"] = "%s.log" % (build_name,)
     #generate_msgpack_resolver(context)
-    _initialize_cloudrendering(unity_path)
     # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
     # the clang compile
     #_import_assets(unity_path, arch)

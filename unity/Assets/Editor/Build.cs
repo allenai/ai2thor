@@ -38,6 +38,7 @@ public class Build {
     }
 
     static void CloudRendering() {
+        InitializeCloudRendering();
         build(GetBuildName(), BuildTargetGroup.CloudRendering, BuildTarget.CloudRendering);
     }
 
