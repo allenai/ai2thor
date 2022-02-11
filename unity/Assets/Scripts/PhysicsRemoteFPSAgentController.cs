@@ -5898,6 +5898,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
+                    if (codd.locked){
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_LOCKED);
+                        errorMessage = "Object " + action.objectId + " is locked.";
+                        actionFinished(false);
+                        return;
+                    }
+
                     //pass in percentage open if desired
                     if (action.moveMagnitude > 0.0f) {
                         //if this fails, invalid percentage given

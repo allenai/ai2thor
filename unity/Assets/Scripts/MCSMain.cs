@@ -916,6 +916,7 @@ public class MCSMain : MonoBehaviour {
         bool pickupable = objectConfig.pickupable || objectDefinition.pickupable;
         bool receptacle = objectConfig.receptacle || objectDefinition.receptacle;
         bool seesaw = objectConfig.seesaw || objectDefinition.seesaw;
+        bool locked = objectConfig.locked || objectDefinition.locked;
         bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle || objectConfig.physics ||
             objectDefinition.physics || seesaw;
 
@@ -963,7 +964,7 @@ public class MCSMain : MonoBehaviour {
         if (shouldAddSimObjPhysicsScript) {
             // Add the AI2-THOR SimObjPhysics script with specific properties.
             this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, visibilityPoints,
-                moveable, openable, pickupable, receptacle, seesaw);
+                moveable, openable, pickupable, receptacle, seesaw, locked);
         }
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
@@ -1094,7 +1095,8 @@ public class MCSMain : MonoBehaviour {
         bool openable,
         bool pickupable,
         bool receptacle,
-        bool seesaw
+        bool seesaw,
+        bool locked
     ) {
         gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
 
@@ -1197,6 +1199,7 @@ public class MCSMain : MonoBehaviour {
         if (openable) {
             CanOpen_Object ai2thorCanOpenObjectScript = gameObject.GetComponent<CanOpen_Object>();
             if (ai2thorCanOpenObjectScript != null) {
+                ai2thorCanOpenObjectScript.locked = locked;
                 if ((ai2thorCanOpenObjectScript.isOpen && !objectConfig.opened) ||
                     (!ai2thorCanOpenObjectScript.isOpen && objectConfig.opened)) {
 
@@ -1865,6 +1868,7 @@ public class MCSConfigAbstractObject {
     public bool moveable;
     public bool openable;
     public bool opened;
+    public bool locked;
     public bool physics;
     public bool pickupable;
     public bool receptacle;
