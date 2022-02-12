@@ -1048,6 +1048,7 @@ def ci_build(context):
                 # link builds directory so pytest can run
                 logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
+                os.makedirs('tmp', exist_ok=True)
                 utf_proc = multiprocessing.Process(target=ci_test_utf, args=(build["branch"], build["commit_id"]))
                 utf_proc.start()
                 procs.append(utf_proc)
@@ -3365,7 +3366,6 @@ def ci_test_utf(branch, commit_id):
     results_path, results_logfile = test_utf()
 
     class_data = generate_pytest_utf(results_path)
-    os.makedirs('tmp', exist_ok=True)
 
     test_path = "tmp/test_utf.py"
     with open(test_path, "w") as f:
