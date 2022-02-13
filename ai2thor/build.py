@@ -9,7 +9,7 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
-from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64
+from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering
 import platform
 
 logger = logging.getLogger(__name__)
