@@ -20,7 +20,7 @@ PRIVATE_S3_BUCKET = "ai2-thor-private"
 PYPI_S3_BUCKET = "ai2-thor-pypi"
 
 LOCAL_BUILD_COMMIT_ID = "local"
-AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64]
+AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64, CloudRendering]
 
 COMMIT_ID = None
 try:
