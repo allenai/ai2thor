@@ -9,7 +9,7 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
-from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64
+from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering
 import platform
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ PRIVATE_S3_BUCKET = "ai2-thor-private"
 PYPI_S3_BUCKET = "ai2-thor-pypi"
 
 LOCAL_BUILD_COMMIT_ID = "local"
-AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64]
+AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64, CloudRendering]
 
 COMMIT_ID = None
 try:
