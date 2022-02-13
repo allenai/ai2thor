@@ -15,6 +15,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+#if PLATFORM_CLOUD_RENDERING
+using Unity.Simulation;
+using UnityEditor;
+using UnityEngine.CloudRendering;
+#endif
 using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
@@ -106,7 +113,6 @@ public class AgentManager : MonoBehaviour {
 
         }
 
-
         bool trainPhase = true;
         trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -121,6 +127,14 @@ public class AgentManager : MonoBehaviour {
     void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
+        #if PLATFORM_CLOUD_RENDERING    
+        // must wrap this in PLATFORM_CLOUDRENDERING
+        // needed to ensure that the com.unity.simulation.capture package
+        // gets initialized
+        var instance = Manager.Instance;
+        Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
+        camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
+        #endif
 
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
@@ -494,6 +508,10 @@ public class AgentManager : MonoBehaviour {
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
+        
+        #if PLATFORM_CLOUD_RENDERING
+        camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
+        #endif
 
         antiAliasing = antiAliasing.ToLower();
         PostProcessLayer postProcessLayer = gameObject.GetComponentInChildren<PostProcessLayer>();
@@ -610,6 +628,10 @@ public class AgentManager : MonoBehaviour {
         // clone.m_Camera.targetDisplay = this.agents.Count;
         componentClone.transform.position = clonePosition;
         UpdateAgentColor(agent, agentColors[this.agents.Count]);
+        
+#if PLATFORM_CLOUD_RENDERING
+        agent.m_Camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.targetTexture.width, this.primaryAgent.m_Camera.targetTexture.height);
+#endif 
         agent.ProcessControlCommand(action.dynamicServerAction);
     }
 
@@ -710,6 +732,23 @@ public class AgentManager : MonoBehaviour {
     }
 
 
+    private void captureScreenAsync(List<KeyValuePair<string, byte[]>> payload, string key, Camera camera) {
+        RenderTexture tt = camera.targetTexture;
+        RenderTexture.active = tt;
+        camera.Render();
+        AsyncGPUReadback.Request(tt, 0, (request) =>
+        {
+            if (!request.hasError) {
+                var data = request.GetData<byte>().ToArray();
+                payload.Add(new KeyValuePair<string, byte[]>(key, data));
+            }
+            else
+            {
+                Debug.Log("Request error: " + request.hasError);
+            }
+        });
+    }
+
     private byte[] captureScreen() {
         if (tex.height != UnityEngine.Screen.height ||
             tex.width != UnityEngine.Screen.width) {
@@ -723,19 +762,28 @@ public class AgentManager : MonoBehaviour {
 
 
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
+#if PLATFORM_CLOUD_RENDERING
+        captureScreenAsync(payload, "image-thirdParty-camera", camera);
+#else
         RenderTexture.active = camera.activeTexture;
         camera.Render();
         payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+#endif
     }
 
     private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
         if (this.renderImage) {
 
+#if PLATFORM_CLOUD_RENDERING
+            captureScreenAsync(payload, "image", agent.m_Camera);
+#else
+            // XXX may not need this since we call render in captureScreenAsync
             if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
             payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+#endif
         }
     }
 
@@ -786,6 +834,22 @@ public class AgentManager : MonoBehaviour {
 
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
+        Debug.Log("current screen resolution pre change: " + Screen.width + " height" + Screen.height);
+#if PLATFORM_CLOUD_RENDERING
+        foreach (var agent in this.agents) {
+            var rt = agent.m_Camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           agent.m_Camera.targetTexture = createRenderTexture(x, y); 
+        }
+        
+        foreach (var camera in this.thirdPartyCameras) {
+            var rt = camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           camera.targetTexture = createRenderTexture(x, y); 
+        }
+#endif
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
@@ -878,6 +942,7 @@ public class AgentManager : MonoBehaviour {
             metadata.agentId = i;
 
             // we don't need to render the agent's camera for the first agent
+            
             if (shouldRender) {
                 addImage(renderPayload, agent);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
@@ -885,9 +950,9 @@ public class AgentManager : MonoBehaviour {
                 addObjectImage(renderPayload, agent, ref metadata);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
-
                 metadata.thirdPartyCameras = cameraMetadata;
             }
+
             multiMeta.agents[i] = metadata;
         }
 
@@ -922,6 +987,19 @@ public class AgentManager : MonoBehaviour {
         return this.agentManagerState == AgentState.Emit && emit;
     }
 
+    private RenderTexture createRenderTexture(int width, int height) {
+        RenderTexture rt = new RenderTexture(width: width, height: height,depth:0, GraphicsFormat.R8G8B8A8_UNorm);
+        rt.antiAliasing = 4;
+        if (rt.Create()) {
+            Debug.Log(" created render texture with width= " + width + " height=" + height);
+            return rt;
+        } else {
+            // throw exception ?
+            Debug.LogError("Could not create a renderTexture");
+            return null;
+        }
+
+    }
 
     public IEnumerator EmitFrame() {
         while (true) {
@@ -942,7 +1020,6 @@ public class AgentManager : MonoBehaviour {
             if (!this.canEmit()) {
                 continue;
             }
-
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -961,10 +1038,11 @@ public class AgentManager : MonoBehaviour {
 #if !UNITY_WEBGL
             if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
+                form.AddField("metadata", serializeMetadataJson(multiMeta));
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
                 }
-                form.AddField("metadata", serializeMetadataJson(multiMeta));
                 form.AddField("token", robosimsClientToken);
 
 
@@ -1055,6 +1133,7 @@ public class AgentManager : MonoBehaviour {
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
@@ -1216,10 +1295,6 @@ public class MetadataPatch {
     public string errorCode;
     public bool lastActionSuccess;
     public int agentId;
-    // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 }
 
@@ -1583,10 +1658,6 @@ public struct MetadataWrapper {
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
 
-    // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 
 }

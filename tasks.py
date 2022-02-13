@@ -37,7 +37,10 @@ def add_files(zipf, start_dir):
         for f in files:
             fn = os.path.join(root, f)
             arcname = os.path.relpath(fn, start_dir)
-            # print("adding %s" % arcname)
+            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
+                #print("skipping %s" % arcname)
+                continue
+            #print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
 
@@ -113,14 +116,39 @@ def _unity_path():
     return unity_path
 
 
+def _remove_system_plugins():
+    # Under Unity >= 2021.2.0, the following libraries are provided by Unity
+    # so they must be removed to avoid conflicting.  Under Unity < 2021.2.0,
+    # they are required for Messagepack to function
+     
+    for filename in ["System.Buffers.dll", "System.Memory.dll", "System.Threading.Tasks.Extensions.dll"]:
+        path = os.path.join("unity/Assets/Plugins", filename)
+        if os.path.isfile(path):
+            print("removing %s" % path)
+            os.unlink(path)
+
+def _import_assets(unity_path, build_target):
+    project_path = os.path.join(os.getcwd(), unity_path)
+    command = (
+        "%s -quit -batchmode -logFile %s/thor-%s-import.log -projectpath %s -buildTarget %s"
+        % (_unity_path(), os.getcwd(), build_target, project_path, build_target)
+    )
+
+    subprocess.check_call(command, shell=True)
+
 def _build(unity_path, arch, build_dir, build_name, env={}):
     import yaml
 
     project_path = os.path.join(os.getcwd(), unity_path)
 
+    # osxintel64 is not a BuildTarget
+    build_target_map = dict(OSXIntel64="OSXUniversal")
+
+    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
+    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -778,6 +806,9 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
+    #print("pushing %s" % archive_name)
+    #with open(archive_name, "wb") as f:
+    #    f.write(zip_data)
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -1105,6 +1136,72 @@ def ci_build(context):
 
 
     lock_f.close()
+
+
+@task
+def install_cloudrendering_engine(context, force=False):
+    global _unity_version
+    _unity_version = lambda: "2020.3.25f1"
+    #_unity_version = lambda: "2021.2.0b11"
+    if not sys.platform.startswith("darwin"):
+        raise Exception("CloudRendering Engine can only be installed on Mac")
+    s3 = boto3.resource("s3")
+    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(_unity_version())
+    full_dir = os.path.join(target_base_dir, "CloudRendering")
+    if os.path.isdir(full_dir):
+        if force:
+            shutil.rmtree(full_dir)
+            logger.info("CloudRendering engine already installed - removing due to force")
+        else:
+            logger.info("skipping installation - CloudRendering engine already installed")
+            return
+
+    print("packages/CloudRendering-%s.zip" % _unity_version())
+    res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
+    data = res["Body"].read()
+    z = zipfile.ZipFile(io.BytesIO(data))
+    z.extractall(target_base_dir)
+
+
+@task
+def build_cloudrendering(context, push_build=False):
+    # XXX check for local changes
+
+    global _unity_version
+    _unity_version = lambda: "2020.3.25f1"
+    #_unity_version = lambda: "2020.3.19f1"
+
+    arch = "CloudRendering"
+    commit_id = git_commit_id()
+    #commit_id = "ced43d60a6a8e23d7850d5e8295b73391f8cc8e9"
+    unity_path = "unity"
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes=False)
+    print("build name %s" % build_name)
+    shutil.rmtree("unity/builds/%s" % build_name, ignore_errors=True)
+    # must clear out the gicache for cloudrendering otherwise the cache for non-cloudrendering gets used causing artifacts 
+    # with certain lighting (FloorPlan28 and window reflection
+    shutil.rmtree(os.path.join(os.environ["HOME"], "Library/Caches/com.unity3d.UnityEditor/GiCache"), ignore_errors=True)
+    build_dir = os.path.join("builds", build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+    build_info["log"] = "%s.log" % (build_name,)
+    #generate_msgpack_resolver(context)
+    # must do this otherwise on OSX a build error will be thrown complaining about missing features.h during
+    # the clang compile
+    #_import_assets(unity_path, arch)
+    _build(unity_path, arch, build_dir, build_name, {})
+    if push_build:
+        archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False)
+        build_pip_commit(context)
+        push_pip_commit(context)
+        generate_pypi_index(context)
+
+
+@task
+def build_deploy_cloudrendering(context):
+    pass
+    # ci_build_arch
+    # build_pip_commit
 
 
 @task
@@ -3302,18 +3399,52 @@ def get_physics_determinism(
 
 
 @task
-def generate_msgpack_resolver(task):
+def install_msgpack_compiler(context, version, target_path):
+    import platform
+    import requests
+    import stat
+
+    url = (
+        "https://github.com/neuecc/MessagePack-CSharp/releases/download/v%s/mpc.zip"
+        % version
+    )
+    res = requests.get(url)
+    res.raise_for_status()
+    z = zipfile.ZipFile(io.BytesIO(res.content))
+    member_path = dict(Linux="linux/mpc", Darwin="osx/mpc")
+    mpc_data = z.read(member_path[platform.system()])
+
+    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+    with open(target_path, "wb") as f:
+        f.write(mpc_data)
+
+    os.chmod(target_path, stat.S_IREAD | stat.S_IEXEC | stat.S_IWRITE)
+
+
+@task
+def generate_msgpack_resolver(context):
     import glob
 
     # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
     # need to download/unzip into this path, add gatekeeper permission
     target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
     shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+
+    mpc_version = "2.1.194"
+    tmp_dir = os.path.join(base_dir, "tmp")
+    mpc_path = os.path.join(tmp_dir, "mpc-%s" % mpc_version)
+    if not os.path.isfile(mpc_path):
+        install_msgpack_compiler(context, mpc_version, mpc_path)
+        print("installing mpc")
+
+    env = os.environ.copy()
+    env["TMPDIR"] = tmp_dir
     subprocess.check_call(
         "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
-        shell=True,
+        shell=True, env=env
     )
+
     for g in glob.glob(os.path.join(target_dir, "*.cs")):
         with open(g) as f:
             source_code = f.read()
@@ -3389,7 +3520,6 @@ def ci_test_utf(branch, commit_id):
         "finished Unity Test framework runner for %s %s"
         % (branch, commit_id)
     )
-
 
 @task
 def format(context):
