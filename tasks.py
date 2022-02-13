@@ -32,10 +32,14 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def add_files(zipf, start_dir):
+def add_files(zipf, start_dir, exclude_ext=()):
     for root, dirs, files in os.walk(start_dir):
         for f in files:
             fn = os.path.join(root, f)
+            if any(map(lambda ext: fn.endswith(ext), exclude_ext)):
+                #print("skipping file %s" % fn)
+                continue
+
             arcname = os.path.relpath(fn, start_dir)
             if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
                 #print("skipping %s" % arcname)
@@ -801,7 +805,7 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     # Unity build is done with CompressWithLz4. Zip with compresslevel=1
     # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
     zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
-    add_files(zipf, os.path.join(unity_path, build_dir))
+    add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=('.debug',))
     zipf.close()
     zip_buf.seek(0)
     zip_data = zip_buf.read()
@@ -1017,8 +1021,16 @@ def ci_build(context):
             private_scene_options = [False]
 
             procs = []
+            build_archs = ["OSXIntel64", "Linux64"]
+
+            # CloudRendering only supported with 2020.3.25
+            # should change this in the future to automatically install
+            # cloudrendering engine if available
+            if _unity_version() == "2020.3.25f1":
+                build_archs.append("CloudRendering")
+
             for include_private_scenes in private_scene_options:
-                for arch in ["OSXIntel64", "Linux64"]:
+                for arch in build_archs:
                     logger.info(
                         "starting build for %s %s %s"
                         % (arch, build["branch"], build["commit_id"])
@@ -1058,7 +1070,7 @@ def ci_build(context):
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
             # waiting for all builds to complete before starting tests
-            for arch in ["OSXIntel64", "Linux64"]:
+            for arch in build_archs:
                 lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
                 if os.path.isfile(lock_file_path):
                     logger.info("attempting to lock %s" % lock_file_path)
@@ -1079,6 +1091,7 @@ def ci_build(context):
                 # link builds directory so pytest can run
                 logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
+                os.makedirs('tmp', exist_ok=True)
                 utf_proc = multiprocessing.Process(target=ci_test_utf, args=(build["branch"], build["commit_id"]))
                 utf_proc.start()
                 procs.append(utf_proc)
@@ -1132,7 +1145,7 @@ def ci_build(context):
     finally:
         for arch, temp_dir in arch_temp_dirs.items():
             logger.info("deleting temp dir %s" % temp_dir)
-            #shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir)
 
 
     lock_f.close()
@@ -3496,7 +3509,6 @@ def ci_test_utf(branch, commit_id):
     results_path, results_logfile = test_utf()
 
     class_data = generate_pytest_utf(results_path)
-    os.makedirs('tmp', exist_ok=True)
 
     test_path = "tmp/test_utf.py"
     with open(test_path, "w") as f:
