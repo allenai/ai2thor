@@ -422,17 +422,6 @@ def local_build(
     generate_quality_settings(context)
 
 
-def fix_webgl_unity_loader_regex(unity_loader_path):
-    # Bug in the UnityLoader.js causes Chrome on Big Sur to fail to load
-    # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
-    with open(unity_loader_path) as f:
-        loader = f.read()
-
-    loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
-    with open(unity_loader_path, "w") as f:
-        f.write(loader)
-
-
 @task
 def webgl_build(
     context,
@@ -511,7 +500,6 @@ def webgl_build(
         print("Build Failure")
 
     build_path = _webgl_local_build_path(prefix, directory)
-    fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
     # the remainder of this is only used to generate scene metadata, but it
