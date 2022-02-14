@@ -443,7 +443,7 @@ public class ImageSynthesis : MonoBehaviour {
         bool supportsAntialiasing, 
         bool needsRescale, 
         bool jpg = false, 
-        RenderTextureFormat format = RenderTextureFormat.Default, 
+        RenderTextureFormat format = RenderTextureFormat.RFloat, 
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
     )
 	{
