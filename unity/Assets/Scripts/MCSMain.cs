@@ -491,15 +491,15 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallLeft, wallLeftSimObjPhysics);
-            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallFront, wallFrontSimObjPhysics);
-            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallRight, wallRightSimObjPhysics);
-            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallBack, wallBackSimObjPhysics);
-            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.ceiling, ceilingSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallLeft, wallLeftSimObjPhysics, 0);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallFront, wallFrontSimObjPhysics, 0);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallRight, wallRightSimObjPhysics, 0);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallBack, wallBackSimObjPhysics, 0);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.ceiling, ceilingSimObjPhysics, 0);
         }
 
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics, 0);
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -612,7 +612,7 @@ public class MCSMain : MonoBehaviour {
             SimObjPhysics simObj = floorSection.GetComponent<SimObjPhysics>();
             simObj.objectID = "floor" + i;
             if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-                AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, floorSection, simObj);
+                AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, floorSection, simObj, 0);
             }
 
             posX += MCSMain.FLOOR_DIMENSIONS;
@@ -1074,6 +1074,11 @@ public class MCSMain : MonoBehaviour {
         // Set the mode to continuous dynamic or else fast moving objects may pass through other objects.
         rigidbody.collisionDetectionMode = kinematic ? CollisionDetectionMode.Discrete :
             CollisionDetectionMode.ContinuousDynamic;
+        if (!kinematic) {
+            // Use interpolation for smoother physics simulation, since we don't need to calculate
+            // physics on every frame. Don't use Extrapolate becuase that ignores pausing physics!
+            rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        }
         if (mass > 0) {
             rigidbody.mass = mass;
         }
@@ -1118,9 +1123,11 @@ public class MCSMain : MonoBehaviour {
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript,
+                    objectConfig.maxAngularVelocity);
         } else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject,
+                    ai2thorPhysicsScript, objectConfig.maxAngularVelocity);
         }
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
@@ -1241,7 +1248,8 @@ public class MCSMain : MonoBehaviour {
     private void AssignPhysicsMaterialAndRigidBodyValues(
         MCSConfigPhysicsProperties physicsObject,
         GameObject gameObject,
-        SimObjPhysics ai2thorPhysicsScript
+        SimObjPhysics ai2thorPhysicsScript,
+        float maxAngularVelocity
     ) {
         ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
         ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
@@ -1253,6 +1261,10 @@ public class MCSMain : MonoBehaviour {
         //Gets rigid body of object and changes drag/angular drag
         rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
         rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
+
+        if (maxAngularVelocity > 0) {
+            rigidbody.maxAngularVelocity = maxAngularVelocity;
+        }
 
         //Loops through each collider on the object, creates a new material (other wise it would change)
         //(every instance where this material is used) and then assigns each collider with an updated physics material
@@ -1761,7 +1773,12 @@ public class MCSMain : MonoBehaviour {
         objectConfig.torques.Where(torque => torque.vector != null && WithinInterval(torque, step))
             .ToList().ForEach((torque) => {
                 if (rigidbody != null) {
-                    rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
+                    ForceMode forceMode = torque.impulse ? ForceMode.Impulse : ForceMode.Force;
+                    if (torque.relative) {
+                        rigidbody.AddRelativeTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z), forceMode);
+                    } else {
+                        rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z), forceMode);
+                    }
                 }
             });
 
@@ -1836,6 +1853,16 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
                 .ForEach(objectConfig => 
                 {
+                    // Reset the maxAngularVelocity on the Rigidbody if it's not rotating in case an action modified it.
+                    Rigidbody rigidbody = objectConfig.GetRigidbody();
+                    float maxAngularVelocity = Physics.defaultMaxAngularSpeed;
+                    if (objectConfig.maxAngularVelocity > 0) {
+                        maxAngularVelocity = objectConfig.maxAngularVelocity;
+                    }
+                    if (rigidbody.angularVelocity.magnitude < 1 && rigidbody.maxAngularVelocity != maxAngularVelocity) {
+                        rigidbody.maxAngularVelocity = maxAngularVelocity;
+                    }
+
                     GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
                     // If the object should move during this step, move it a little during each individual substep, so
                     // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
@@ -1866,6 +1893,7 @@ public class MCSConfigAbstractObject {
     public string id;
     public bool kinematic;
     public float mass;
+    public float maxAngularVelocity;
     public bool moveable;
     public bool openable;
     public bool opened;
@@ -1931,7 +1959,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigStepBeginEnd> shrouds = new List<MCSConfigStepBeginEnd>();
     public List<MCSConfigTeleport> teleports = new List<MCSConfigTeleport>();
     public List<MCSConfigStepBegin> togglePhysics = new List<MCSConfigStepBegin>();
-    public List<MCSConfigMove> torques = new List<MCSConfigMove>();
+    public List<MCSConfigForce> torques = new List<MCSConfigForce>();
     public List<MCSContainerOpenClose> openClose = new List<MCSContainerOpenClose>();
     public MCSConfigVector centerOfMass = null;
     public bool resetCenterOfMass = false;
