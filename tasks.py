@@ -42,9 +42,9 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
             arcname = os.path.relpath(fn, start_dir)
             if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
-                #print("skipping %s" % arcname)
+                # print("skipping %s" % arcname)
                 continue
-            #print("adding %s" % arcname)
+            # print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
 
@@ -790,9 +790,6 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
-    #print("pushing %s" % archive_name)
-    #with open(archive_name, "wb") as f:
-    #    f.write(zip_data)
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -3412,6 +3409,7 @@ def ci_test_utf(branch, commit_id):
         "finished Unity Test framework runner for %s %s"
         % (branch, commit_id)
     )
+
 
 @task
 def format(context):
