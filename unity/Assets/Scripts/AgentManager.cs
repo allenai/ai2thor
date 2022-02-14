@@ -130,6 +130,10 @@ public class AgentManager : MonoBehaviour {
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
         primaryAgent.InitializeBody();
+        JavaScriptInterface jsInterface = primaryAgent.GetComponent<JavaScriptInterface>();
+        if (jsInterface != null) {
+            jsInterface.enabled = true;
+        }
 #endif
 
         StartCoroutine(EmitFrame());
