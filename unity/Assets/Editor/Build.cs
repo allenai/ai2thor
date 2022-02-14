@@ -43,7 +43,10 @@ public class Build {
     }
 
     static void WebGL() {
-        build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL);
+        // USIM_USE_... scripting defines are required
+        // to disable the native PNG and JPEG encoders present in the simulation capture package
+        // if these defines are not provide the WebGL build will fail
+        build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL, new string[]{"USIM_USE_BUILTIN_JPG_ENCODER", "USIM_USE_BUILTIN_PNG_ENCODER"});
     }
 
     static void buildResourceAssetJson() {
@@ -51,7 +54,7 @@ public class Build {
         manager.BuildCatalog();
     }
 
-    static void build(string buildName, BuildTargetGroup targetGroup, BuildTarget target) {
+    static void build(string buildName, BuildTargetGroup targetGroup, BuildTarget target, string[] extraScriptingDefines=null) {
         buildResourceAssetJson();
 
         var defines = GetDefineSymbolsFromEnv();
@@ -73,6 +76,9 @@ public class Build {
         }
         Debug.Log("Build options " + options);
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+        if (extraScriptingDefines != null) {
+            buildPlayerOptions.extraScriptingDefines = extraScriptingDefines;
+        }
         buildPlayerOptions.scenes = scenes.ToArray();
         buildPlayerOptions.locationPathName = buildName;
         buildPlayerOptions.target = target;
