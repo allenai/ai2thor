@@ -809,6 +809,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public float MatchAgentHeightToStructureBelow() {
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        if (main.currentScene == null || main.isPassiveScene) {
+            return 0;
+        }
+
         //Raycast down
         Vector3 origin = new Vector3(transform.position.x, this.GetComponent<CapsuleCollider>().bounds.max.y, transform.position.z);
         RaycastHit hit;
@@ -879,10 +884,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     protected override void SubPositionAdjustment() {
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        if (!main.isPassiveScene) {
-            MatchAgentHeightToStructureBelow();
-        }
+        MatchAgentHeightToStructureBelow();
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
