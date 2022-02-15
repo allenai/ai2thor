@@ -865,7 +865,7 @@ def link_build_cache(root_dir, arch, branch):
     os.makedirs(branch_library_cache_dir, exist_ok=True)
     os.symlink(branch_library_cache_dir, library_path)
     # update atime/mtime to simplify cache pruning
-    os.utime(branch_cache_dir)
+    os.utime(os.path.join(cache_base_dir, encoded_branch))
 
 
 def travis_build(build_id):
