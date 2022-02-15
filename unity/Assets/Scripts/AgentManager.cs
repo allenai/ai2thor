@@ -1137,6 +1137,8 @@ public class ObjectMetadata
 	///
 	public bool openable;
 	public bool isOpen;
+
+	public bool locked;
 	public float openPercent;//if the object is openable, what is the current open percent? value from 0 to 1.0
 	///
 	public bool pickupable;
@@ -1470,6 +1472,7 @@ public class ServerAction
 	public bool consistentColors = false;
 	public Vector3? teleportRotation;
 	public Vector3? teleportPosition;
+	public bool clockwise = true;
 
     public SimObjType ReceptableSimObjType()
 	{

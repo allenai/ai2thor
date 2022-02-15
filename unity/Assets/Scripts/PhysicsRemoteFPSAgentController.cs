@@ -1934,15 +1934,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.y = dir.y;
             apply.z = dir.z;
 
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             if(action.action == "TorqueObject") {
-                target.ApplyTorque(action);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);
+                target.ApplyTorque(action);
             }
-            else
+            if(action.action == "RotateObject") {
+                bool succesfulRotation = target.ApplyRotation(action);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), succesfulRotation ? ActionStatus.SUCCESSFUL : ActionStatus.OBSTRUCTED);
+                actionFinished(succesfulRotation);
+            }
+            else {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                actionFinished(true);
                 sopApplyForce(apply, target);
-            //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
-            //actionFinished(true);
+            }
         }
 
         //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
@@ -5890,6 +5896,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             actionFinished(false);
                             return;
                         }
+                    }
+
+                    if (codd.locked){
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_LOCKED);
+                        errorMessage = "Object " + action.objectId + " is locked.";
+                        actionFinished(false);
+                        return;
                     }
 
                     //pass in percentage open if desired

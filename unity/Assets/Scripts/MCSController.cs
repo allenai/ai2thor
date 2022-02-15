@@ -604,15 +604,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
-        Material material = hit.transform.GetComponent<Renderer>().material;
-        
-        //this is at the end of every material name
-        string materialInstanceString = " (Instance)";
-        string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
+        Renderer renderer = hit.transform.GetComponent<Renderer>();
+        if(renderer!=null) {
+            Material material = renderer.material;
+            //this is at the end of every material name
+            string materialInstanceString = " (Instance)";
+            string materialName = material.name.Substring(0, material.name.Length - materialInstanceString.Length);
 
-        if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
-            stepsOnLava++;
-            hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            if(material != null && MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialName))) {
+                stepsOnLava++;
+                hapticFeedback[HapticFeedback.ON_LAVA.ToString().ToLower()] = true;
+            }
         }
     }
 
@@ -807,21 +809,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public float MatchAgentHeightToStructureBelow() {
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        if (main.currentScene == null || main.isPassiveScene) {
+            return 0;
+        }
+
         //Raycast down
         Vector3 origin = new Vector3(transform.position.x, this.GetComponent<CapsuleCollider>().bounds.max.y, transform.position.z);
         RaycastHit hit;
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) &&
-            ((hit.transform.GetComponent<StructureObject>() != null) || (hit.transform.GetComponent<SimObjPhysics>() != null && hit.transform.GetComponent<SimObjPhysics>().IsSeesaw))) {
-            hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
-            //for pose changes on structures only
-            float oldHeight = this.transform.position.y;
-            Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
-            this.transform.position = newHeight;
-            if (oldHeight != this.transform.position.y) {
-                AdjustLocationAfterHeightAdjustment();
+        bool isAnythingBelowAgent = Physics.SphereCast(origin, AGENT_RADIUS, Vector3.down, out hit,
+                Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore);
+        if (isAnythingBelowAgent) {
+            // Note that the floor is a structure that's always below the agent, so this hit is usually just the floor.
+            StructureObject structureObjectScript = hit.transform.GetComponent<StructureObject>();
+            SimObjPhysics simObjPhysicsScript = hit.transform.GetComponent<SimObjPhysics>();
+            if ((structureObjectScript != null) || (simObjPhysicsScript != null && simObjPhysicsScript.IsSeesaw)) {
+                hit.rigidbody.AddForceAtPosition(Physics.gravity * GetComponent<Rigidbody>().mass, hit.point);
+                //for pose changes on structures only
+                float oldHeight = this.transform.position.y;
+                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + AGENT_STARTING_HEIGHT), transform.position.z);
+                this.transform.position = newHeight;
+                if (oldHeight != this.transform.position.y) {
+                    AdjustLocationAfterHeightAdjustment();
+                }
             }
         }
         //method needs a return value
@@ -845,6 +858,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //if we are colliding, we need to move a bit
         if (overlapColliders.Length > 0) {
             foreach (Collider c in overlapColliders) {
+                // Don't avoid lightweight objects if the agent can simply move into their space and "shove" them out of the way.
+                SimObjPhysics simObjPhysicsScript = c.gameObject.GetComponentInParent<SimObjPhysics>();
+                bool isSeesaw = (simObjPhysicsScript != null && simObjPhysicsScript.IsSeesaw);
+                Rigidbody rigidbody = c.gameObject.GetComponentInParent<Rigidbody>();
+                if (!isSeesaw && rigidbody != null && AgentCanMoveIntoObject(rigidbody)) {
+                    continue;
+                }
                 Vector3 direction;
                 float distance;
                 //Need to increase the collider radius temporarily to ensure we collide with something just outside but in our "skin"
@@ -864,10 +884,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     protected override void SubPositionAdjustment() {
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        if (!main.isPassiveScene) {
-            MatchAgentHeightToStructureBelow();
-        }
+        MatchAgentHeightToStructureBelow();
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
@@ -945,7 +962,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Cannot Torque object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
             ThrowObject(action);
         } else {
-            //AddTorque
+            //Add Torque
+            ApplyForceObject(action);
+        }
+    }
+
+    public void RotateObject(ServerAction action) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
+            return;
+        }
+
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+            Debug.Log("Cannot Rotate object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            //Add Rotation
             ApplyForceObject(action);
         }
     }

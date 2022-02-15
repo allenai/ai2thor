@@ -36,6 +36,8 @@ public class CanOpen_Object : MonoBehaviour
 	[SerializeField]
     public bool isOpen = false;
 
+    public bool locked = false;
+
 	[SerializeField]
     public bool canReset = true;
 
@@ -174,7 +176,6 @@ public class CanOpen_Object : MonoBehaviour
 
     public void Interact()
     {
-
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
