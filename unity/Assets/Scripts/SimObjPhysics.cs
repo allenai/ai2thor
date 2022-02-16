@@ -1200,9 +1200,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			Collider[] hitObjectsInReceptacleTriggerBox = new Collider[0];
 			hitObjectsInReceptacleTriggerBox = BoxCastInReceptacleTriggerBox(sop.transform);
 
-			foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
-				Debug.Log(c.GetComponentInParent<SimObjPhysics>().objectID);
-			}
+			//Direction for objects that are collided with by this object, and any further objects that are collided with by those objects 
+			//is calculated from the direction of the movement of this object relative to the agent and the collided objects difference in position relative to this object.
+			//So objects getting pushed by this one will move in the movement direction and eventually move out of the way if they are not centered with this object (such as being near the edge of this object when getting moved).
+			//Direction relative to the agent being divided by 2 here makes this action more useful for tools while also handling when objects are on the edge of colliders.
 			Vector3 direction = ((sop.transform.position - transform.position) + (directionRelativeToAgent/2)).normalized;
 			Vector3 newPosition = sop == this ? position : 
 				new Vector3(direction.x * movementAmount + sop.transform.position.x, sop.transform.position.y, direction.z * movementAmount + sop.transform.position.z);
@@ -1211,13 +1212,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 			if(!obstructed) {
 				onTopOfBaseObject = sop == this;
-				Debug.Log(onTopOfBaseObject);
-				Debug.Log(sop.objectID);
 				direction = onTopOfBaseObject ? new Vector3(directionRelativeToAgent.x, 0, directionRelativeToAgent.z).normalized : Vector3.negativeInfinity;
 				RecursivelyMoveObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, movementAmount, direction, allObjectsToMove, directionRelativeToAgent);
 				foreach(SimObjPhysics simObj in collisionSimObjs) {
 					if(!allObjectsToMove.ContainsKey(simObj)) {
-						Debug.Log(simObj.objectID);
 						RecursiveMove(newPosition, thisOldPosition, movementAmount, simObj, allObjectsToMove, ref obstructed, onTopOfBaseObject, directionRelativeToAgent);
 					}
 				}
