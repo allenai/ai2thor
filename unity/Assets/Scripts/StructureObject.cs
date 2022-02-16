@@ -92,22 +92,18 @@ public class StructureObject : MonoBehaviour
 
 
         if(addFront) {   
-            Debug.Log("front");
             positionLips(frontGaps, fronts, true, placementOffsetYWithScale, -placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
 
         if (addBack){
-            Debug.Log("back");
             positionLips(backGaps, backs, true, placementOffsetYWithScale, placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
         
         if(addLeft) {
-            Debug.Log("left");
             positionLips(leftGaps, lefts, false, placementOffsetYWithScale, -placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
         
         if(addRight) {
-            Debug.Log("right");
             positionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
     }
