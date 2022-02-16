@@ -38,11 +38,15 @@ public class StructureObject : MonoBehaviour
             addBack=lips.back; 
             addLeft=lips.left; 
             addRight=lips.right;
-            if (lips.gaps !=null){
-                frontGaps = lips.gaps.front;
-                backGaps = lips.gaps.back;
-                leftGaps = lips.gaps.left;
-                rightGaps = lips.gaps.right;
+            if (lips.gaps != null) {
+                if (lips.gaps.front != null)
+                    frontGaps = lips.gaps.front;
+                if (lips.gaps.back != null)
+                    backGaps = lips.gaps.back;
+                if (lips.gaps.left != null)
+                    leftGaps = lips.gaps.left;
+                if (lips.gaps.right != null)
+                    rightGaps = lips.gaps.right;
             }
         }
         
@@ -113,7 +117,9 @@ public class StructureObject : MonoBehaviour
             float start = (i == 0 ? 0 : gaps[i - 1].high);
             float end = (i != gaps.Count ? gaps[i].low : 1);
             GameObject my_lip = gameObjects[i];
-            if (end == start) {
+            // Do we want to remove tiny slivers in the middle or only on the ends?
+            bool tiny_end = end-start < .03 ;//&& (end == 1 || start == 0);
+            if (end == start || tiny_end) {
                 GameObject.Destroy(my_lip);
                 continue;
             }
