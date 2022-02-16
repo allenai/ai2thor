@@ -22,22 +22,21 @@ public class StructureObject : MonoBehaviour
             Physics.IgnoreCollision(agent.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
     }
 
-    public void AddPlatformLips(float scaleX=1, float scaleY=1, float scaleZ=1, MCSConfigPlatformLips lips=null)
-    {
-        bool addFront=false; 
-        bool addBack=false; 
-        bool addLeft=false; 
-        bool addRight=false;
+    public void AddPlatformLips(float scaleX = 1, float scaleY = 1, float scaleZ = 1, MCSConfigPlatformLips lips = null) {
+        bool addFront = false;
+        bool addBack = false;
+        bool addLeft = false;
+        bool addRight = false;
         List<LipGapSpan> frontGaps = new List<LipGapSpan>();
-        List<LipGapSpan> backGaps= new List<LipGapSpan>();
-        List<LipGapSpan> leftGaps= new List<LipGapSpan>();
-        List<LipGapSpan> rightGaps= new List<LipGapSpan>();
+        List<LipGapSpan> backGaps = new List<LipGapSpan>();
+        List<LipGapSpan> leftGaps = new List<LipGapSpan>();
+        List<LipGapSpan> rightGaps = new List<LipGapSpan>();
 
-        if (lips !=null){
-            addFront=lips.front; 
-            addBack=lips.back; 
-            addLeft=lips.left; 
-            addRight=lips.right;
+        if (lips != null) {
+            addFront = lips.front;
+            addBack = lips.back;
+            addLeft = lips.left;
+            addRight = lips.right;
             if (lips.gaps != null) {
                 if (lips.gaps.front != null)
                     frontGaps = lips.gaps.front;
@@ -49,8 +48,8 @@ public class StructureObject : MonoBehaviour
                     rightGaps = lips.gaps.right;
             }
         }
-        
-        float placementOffsetXWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleX / 2); 
+
+        float placementOffsetXWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleX / 2);
         float placementOffsetYWithScale = 0.5f + (PLATFORM_LIP_HEIGHT / scaleY / 2);
         float placementOffsetZWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleZ / 2);
 
@@ -60,50 +59,50 @@ public class StructureObject : MonoBehaviour
         List<GameObject> lefts = new List<GameObject>();
         List<GameObject> rights = new List<GameObject>();
         //instantiate identical lips
-        if(addFront) {
-            for (int i = 0;i < frontGaps.Count + 1; i++){ 
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-front-"+i;
+        if (addFront) {
+            for (int i = 0; i < frontGaps.Count + 1; i++) {
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-front-" + i;
                 GameObject front = init_lip(my_name);
                 fronts.Add(front);
             }
         }
 
         if (addBack) {
-            for (int i = 0;i < backGaps.Count + 1; i++){ 
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-back-"+i;
+            for (int i = 0; i < backGaps.Count + 1; i++) {
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-back-" + i;
                 GameObject back = init_lip(my_name);
                 backs.Add(back);
             }
         }
-        if(addLeft) {
-            for (int i = 0; i < leftGaps.Count + 1; i++){ 
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-left-"+i;
+        if (addLeft) {
+            for (int i = 0; i < leftGaps.Count + 1; i++) {
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-left-" + i;
                 GameObject left = init_lip(my_name);
                 lefts.Add(left);
             }
         }
-        if(addRight) {
-            for (int i = 0; i < rightGaps.Count + 1; i++){ 
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-right-"+i;
+        if (addRight) {
+            for (int i = 0; i < rightGaps.Count + 1; i++) {
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-right-" + i;
                 GameObject right = init_lip(my_name);
                 rights.Add(right);
             }
         }
 
 
-        if(addFront) {   
+        if (addFront) {
             positionLips(frontGaps, fronts, true, placementOffsetYWithScale, -placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
 
-        if (addBack){
+        if (addBack) {
             positionLips(backGaps, backs, true, placementOffsetYWithScale, placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
-        
-        if(addLeft) {
+
+        if (addLeft) {
             positionLips(leftGaps, lefts, false, placementOffsetYWithScale, -placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
-        
-        if(addRight) {
+
+        if (addRight) {
             positionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
     }
@@ -114,7 +113,7 @@ public class StructureObject : MonoBehaviour
             float end = (i != gaps.Count ? gaps[i].low : 1);
             GameObject my_lip = gameObjects[i];
             // Do we want to remove tiny slivers in the middle or only on the ends?
-            bool tiny_end = end-start < .03 ;//&& (end == 1 || start == 0);
+            bool tiny_end = end - start < .03;//&& (end == 1 || start == 0);
             if (end == start || tiny_end) {
                 GameObject.Destroy(my_lip);
                 continue;
@@ -123,7 +122,7 @@ public class StructureObject : MonoBehaviour
             end -= 0.5f;
             float scale = end - start;
             float pos = (start + end) / 2.0f;
-            Debug.Log("wall: start="+start+" end="+end+" scale="+scale+" pos="+pos);
+            Debug.Log("wall: start=" + start + " end=" + end + " scale=" + scale + " pos=" + pos);
             my_lip.transform.parent = this.transform;
             if (isFrontBack) {
                 my_lip.transform.localPosition = new Vector3(pos, placementOffsetYWithScale, placementOffsetXZWithScale);
