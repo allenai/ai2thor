@@ -95,8 +95,8 @@ If you want to run an MCS Scene in the Unity Editor:
 - M: Move Object
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
-  - X Direction (Relative to where the agent is looking, -1 for left movement, 0 is no movement, 1 for right movement)
-  - Z Direction (Relative to where the agent is looking, -1 for back movement, 0 is no movement, 1 for forward movement)
+  - Lateral (Relative to where the agent is looking, -1 for left movement, 0 is no movement, 1 for right movement)
+  - Straight (Relative to where the agent is looking, -1 for back movement, 0 is no movement, 1 for forward movement)
 - Escape: Pass (do nothing)
 - Backspace: Initialize (reset the current scene or go to a new scene)
   - New Scene File
