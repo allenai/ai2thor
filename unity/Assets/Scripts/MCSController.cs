@@ -336,6 +336,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        action.restrictOpenDoors = main.currentScene.restrictOpenDoors;
+
         base.OpenObject(action);
     }
 

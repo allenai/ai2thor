@@ -4991,7 +4991,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
-            if (target == null || !target.GetComponent<SimObjPhysics>() || target.GetComponent<StructureObject>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>() || (target.GetComponent<StructureObject>() &&
+                target.GetComponent<StructureObject>().WhatIsMyStructureObjectTag != StructureObjectTag.Door)) {
                 errorMessage = action.objectId + " is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
@@ -5809,13 +5810,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
-            if (target == null || !target.GetComponent<SimObjPhysics>() || target.GetComponent<StructureObject>()) {
+            if (target == null || !target.GetComponent<SimObjPhysics>() || (target.GetComponent<StructureObject>() &&
+                target.GetComponent<StructureObject>().WhatIsMyStructureObjectTag != StructureObjectTag.Door)) {
                 errorMessage = action.objectId + " is not interactable.";
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 actionFinished(false);
                 return;
             }
 
+            if(action.restrictOpenDoors && target.GetComponent<StructureObject>() &&
+                target.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Door) {
+                StructureObject[] structObjs = GameObject.FindObjectsOfType<StructureObject>();
+
+                foreach (StructureObject so in structObjs) {
+                    if(target.objectID != so.GetComponent<SimObjPhysics>().objectID &&
+                        so.WhatIsMyStructureObjectTag == StructureObjectTag.Door) {
+                        if(so.GetComponent<CanOpen_Object>()) {
+                            CanOpen_Object otherDoor = so.GetComponent<CanOpen_Object>();
+
+                            if(otherDoor.isOpen) {
+                                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_LOCKED);
+                                errorMessage = "Door " + action.objectId + " is locked, because another door is already open.";
+                                actionFinished(false);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
 
             target = null;
 

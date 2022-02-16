@@ -1473,6 +1473,7 @@ public class ServerAction
 	public Vector3? teleportRotation;
 	public Vector3? teleportPosition;
 	public bool clockwise = true;
+	public bool restrictOpenDoors = false;
 
     public SimObjType ReceptableSimObjType()
 	{

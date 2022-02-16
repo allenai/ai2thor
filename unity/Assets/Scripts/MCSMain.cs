@@ -921,8 +921,13 @@ public class MCSMain : MonoBehaviour {
             objectDefinition.physics || seesaw;
 
         if (objectConfig.structure) {
+            bool isDoor = false;
+            if (objectConfig.type.Contains("door_")) {
+                isDoor = true;
+            }
+
             // Add the AI2-THOR Structure script with specific properties.
-            this.AssignStructureScript(gameObject);
+            this.AssignStructureScript(gameObject, isDoor);
             // Add the AI2-THOR SimObjPhysics script to generate visibility points for the structure so it will be
             // returned in the output object metadata.
             shouldAddSimObjPhysicsScript = true;
@@ -1265,13 +1270,17 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    private void AssignStructureScript(GameObject gameObject) {
+    private void AssignStructureScript(GameObject gameObject, bool isDoor) {
         // Ensure this object is not moveable.
         gameObject.isStatic = true;
         // Add AI2-THOR specific properties.
         gameObject.tag = "Structure"; // AI2-THOR Tag
         StructureObject ai2thorStructureScript = gameObject.AddComponent<StructureObject>();
-        ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
+        if(isDoor) {
+            ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Door;
+        } else {
+            ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
+        }
     }
 
     private void AssignTransform(
@@ -2105,6 +2114,7 @@ public class MCSConfigScene {
     public Vector3 roomDimensions;
     public List<MCSConfigGrid> holes;
     public List<MCSConfigFloorTextures> floorTextures;
+    public bool restrictOpenDoors;
 }
 
 [Serializable]
