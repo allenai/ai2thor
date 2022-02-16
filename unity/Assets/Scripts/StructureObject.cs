@@ -22,69 +22,123 @@ public class StructureObject : MonoBehaviour
             Physics.IgnoreCollision(agent.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
     }
 
-    public void AddPlatformLips(float scaleX=1, float scaleY=1, float scaleZ=1, bool addFront=false, bool addBack=false, bool addLeft=false, bool addRight=false)
+    public void AddPlatformLips(float scaleX=1, float scaleY=1, float scaleZ=1, MCSConfigPlatformLips lips=null)
     {
+        bool addFront=false; 
+        bool addBack=false; 
+        bool addLeft=false; 
+        bool addRight=false;
+        List<LipGapSpan> frontGaps = new List<LipGapSpan>();
+        List<LipGapSpan> backGaps= new List<LipGapSpan>();
+        List<LipGapSpan> leftGaps= new List<LipGapSpan>();
+        List<LipGapSpan> rightGaps= new List<LipGapSpan>();
+
+        if (lips !=null){
+            addFront=lips.front; 
+            addBack=lips.back; 
+            addLeft=lips.left; 
+            addRight=lips.right;
+            if (lips.gaps !=null){
+                frontGaps = lips.gaps.front;
+                backGaps = lips.gaps.back;
+                leftGaps = lips.gaps.left;
+                rightGaps = lips.gaps.right;
+            }
+        }
+        
         float placementOffsetXWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleX / 2); 
         float placementOffsetYWithScale = 0.5f + (PLATFORM_LIP_HEIGHT / scaleY / 2);
         float placementOffsetZWithScale = 0.5f - (PLATFORM_LIP_WIDTH / scaleZ / 2);
 
         GameObject thisPlatform = this.gameObject;
-        GameObject front = null;
-        GameObject back = null;
-        GameObject left = null;
-        GameObject right = null;
-
+        List<GameObject> fronts = new List<GameObject>();
+        List<GameObject> backs = new List<GameObject>();
+        List<GameObject> lefts = new List<GameObject>();
+        List<GameObject> rights = new List<GameObject>();
         //instantiate identical lips
         if(addFront) {
-            front = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            //using substring like this gets rid of (Clone) from the end of the instantiated object name
-            front.name = front.name.Substring(0, name.Length) + "-front";
-            front.GetComponent<SimObjPhysics>().objectID = front.name;
+            for (int i = 0;i < frontGaps.Count + 1; i++){ 
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-front-"+i;
+                GameObject front = init_lip(my_name);
+                fronts.Add(front);
+            }
         }
-        
-        if(addBack) {
-            back = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            back.name = back.name.Substring(0, name.Length) + "-back";
-            back.GetComponent<SimObjPhysics>().objectID = back.name;
+
+        if (addBack) {
+            for (int i = 0;i < backGaps.Count + 1; i++){ 
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-back-"+i;
+                GameObject back = init_lip(my_name);
+                backs.Add(back);
+            }
+        }
+        if(addLeft) {
+            for (int i = 0; i < leftGaps.Count + 1; i++){ 
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-left-"+i;
+                GameObject left = init_lip(my_name);
+                lefts.Add(left);
+            }
+        }
+        if(addRight) {
+            for (int i = 0; i < rightGaps.Count + 1; i++){ 
+                string my_name = thisPlatform.name.Substring(0, name.Length) + "-right-"+i;
+                GameObject right = init_lip(my_name);
+                rights.Add(right);
+            }
+        }
+
+
+        if(addFront) {   
+            Debug.Log("front");
+            positionLips(frontGaps, fronts, true, placementOffsetYWithScale, -placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+        }
+
+        if (addBack){
+            Debug.Log("back");
+            positionLips(backGaps, backs, true, placementOffsetYWithScale, placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
         
         if(addLeft) {
-            left = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            left.name = left.name.Substring(0, name.Length) + "-left";
-            left.GetComponent<SimObjPhysics>().objectID = left.name;
+            Debug.Log("left");
+            positionLips(leftGaps, lefts, false, placementOffsetYWithScale, -placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
         
         if(addRight) {
-            right = Instantiate(thisPlatform, transform.position, Quaternion.identity);
-            right.name = right.name.Substring(0, name.Length) + "-right";
-            right.GetComponent<SimObjPhysics>().objectID = right.name;
+            Debug.Log("right");
+            positionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
-        
-        //after all lips are instantiated, then their parent can be set to this platform and have
-        //their position and scale adjusted
-        if(addFront) {
-            front.transform.parent = this.transform;
-            front.transform.localPosition = new Vector3(0, placementOffsetYWithScale, -placementOffsetZWithScale);
-            front.transform.localScale = new Vector3(1, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
-        }
+    }
 
-        if(addBack) {
-            back.transform.parent = this.transform;
-            back.transform.localPosition = new Vector3(0, placementOffsetYWithScale, placementOffsetZWithScale);
-            back.transform.localScale = new Vector3(1, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+    private void positionLips(List<LipGapSpan> gaps, List<GameObject> gameObjects, bool isFrontBack, float placementOffsetYWithScale, float placementOffsetXZWithScale, float scaleY, float scaleXZ) {
+        for (int i = 0; i < gaps.Count + 1; i++) {
+            float start = (i == 0 ? 0 : gaps[i - 1].high);
+            float end = (i != gaps.Count ? gaps[i].low : 1);
+            GameObject my_lip = gameObjects[i];
+            if (end == start) {
+                GameObject.Destroy(my_lip);
+                continue;
+            }
+            start -= 0.5f;
+            end -= 0.5f;
+            float scale = end - start;
+            float pos = (start + end) / 2.0f;
+            Debug.Log("wall: start="+start+" end="+end+" scale="+scale+" pos="+pos);
+            my_lip.transform.parent = this.transform;
+            if (isFrontBack) {
+                my_lip.transform.localPosition = new Vector3(pos, placementOffsetYWithScale, placementOffsetXZWithScale);
+                my_lip.transform.localScale = new Vector3(scale, scaleY, scaleXZ);
+            } else {
+                my_lip.transform.localPosition = new Vector3(placementOffsetXZWithScale, placementOffsetYWithScale, pos);
+                my_lip.transform.localScale = new Vector3(scaleXZ, scaleY, scale);
+            }
         }
-        
-        if(addLeft) {
-            left.transform.parent = this.transform;
-            left.transform.localPosition = new Vector3(-placementOffsetXWithScale, placementOffsetYWithScale, 0);
-            left.transform.localScale = new Vector3(PLATFORM_LIP_WIDTH / scaleX, PLATFORM_LIP_HEIGHT / scaleY, 1);
-        }
+    }
 
-        if(addRight) {
-            right.transform.parent = this.transform;
-            right.transform.localPosition = new Vector3(placementOffsetXWithScale, placementOffsetYWithScale, 0);
-            right.transform.localScale = new Vector3(PLATFORM_LIP_WIDTH / scaleX, PLATFORM_LIP_HEIGHT / scaleY, 1);
-        }
+    private GameObject init_lip(string my_name) {
+        GameObject lip = Instantiate(this.gameObject, transform.position, Quaternion.identity);
+        //using substring like this gets rid of (Clone) from the end of the instantiated object name
+        lip.name = my_name;
+        lip.GetComponent<SimObjPhysics>().objectID = lip.name;
+        return lip;
     }
 }
 

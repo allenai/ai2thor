@@ -1237,7 +1237,7 @@ public class MCSMain : MonoBehaviour {
                 float x = objectConfig.shows[0].scale.x;
                 float y = objectConfig.shows[0].scale.y;
                 float z = objectConfig.shows[0].scale.z;
-                so.AddPlatformLips(x,y,z, objectConfig.lips.front, objectConfig.lips.back, objectConfig.lips.left, objectConfig.lips.right);
+                so.AddPlatformLips(x,y,z, objectConfig.lips);
             }
         }
 
@@ -2156,8 +2156,22 @@ public class MCSConfigPlatformLips {
     public bool right;
     public bool front;
     public bool back;
+    public MCSConfigLipGaps gaps;
 }
 
+[Serializable]
+public class MCSConfigLipGaps {
+    public List<LipGapSpan> left;
+    public List<LipGapSpan> right;
+    public List<LipGapSpan> front;
+    public List<LipGapSpan> back;
+}
+
+[Serializable]
+public class LipGapSpan {
+    public float low;
+    public float high;
+}
 
 [Serializable]
 public class MCSConfigWallMaterials {
