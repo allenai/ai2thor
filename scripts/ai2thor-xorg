@@ -186,8 +186,10 @@ EndSection
 
 if __name__ == "__main__":
     if os.geteuid() != 0:
-        print("Error: ai2thor-xorg must be run as root or launched with sudo")
-        sys.exit(1)
+        path = os.path.abspath(__file__)
+        print("Executing ai2thor-xorg with sudo")
+        args = ["--", path] + sys.argv[1:]
+        os.execvp("sudo", args)
 
     if platform.system() != "Linux":
         print("Error: Can only run ai2thor-xorg on linux")
