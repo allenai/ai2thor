@@ -118,7 +118,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
-	private static float APPLY_FORCE_MULTIPLIER = 2.5f;
+	private static float APPLY_FORCE_MULTIPLIER = 5f;
 
 
 	public float GetTimerResetValue()
