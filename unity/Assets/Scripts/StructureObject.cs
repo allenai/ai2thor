@@ -12,7 +12,10 @@ public class StructureObject : MonoBehaviour
     public StructureObjectTag WhatIsMyStructureObjectTag;
 
     public static float PLATFORM_LIP_WIDTH = 0.1f;
-    public static float PLATFORM_LIP_HEIGHT = 0.3f;
+    // Currently if the lips shorter than 0.25 you
+    // can get over the lips.  Values closer to 0.25 will
+    // block most of the time.
+    public static float PLATFORM_LIP_HEIGHT = 0.25f;
 
     // Start is called before the first frame update
     void Start()
