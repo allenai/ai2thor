@@ -675,6 +675,7 @@ public class AgentManager : MonoBehaviour {
             UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         } else {
             UnityEngine.SceneManagement.SceneManager.LoadScene(response.sceneName);
+            DynamicGI.UpdateEnvironment();
         }
     }
 
