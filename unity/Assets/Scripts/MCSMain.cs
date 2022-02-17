@@ -921,13 +921,8 @@ public class MCSMain : MonoBehaviour {
             objectDefinition.physics || seesaw;
 
         if (objectConfig.structure) {
-            bool isDoor = false;
-            if (objectConfig.type.Contains("door_")) {
-                isDoor = true;
-            }
-
             // Add the AI2-THOR Structure script with specific properties.
-            this.AssignStructureScript(gameObject, isDoor);
+            this.AssignStructureScript(gameObject);
             // Add the AI2-THOR SimObjPhysics script to generate visibility points for the structure so it will be
             // returned in the output object metadata.
             shouldAddSimObjPhysicsScript = true;
@@ -1212,6 +1207,9 @@ public class MCSMain : MonoBehaviour {
                     ai2thorCanOpenObjectScript.Interact();
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
+                if (objectConfig.type.Contains("door_")) {
+                    ai2thorCanOpenObjectScript.isDoor = true;
+                }
             }
         }
 
@@ -1270,17 +1268,13 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    private void AssignStructureScript(GameObject gameObject, bool isDoor) {
+    private void AssignStructureScript(GameObject gameObject) {
         // Ensure this object is not moveable.
         gameObject.isStatic = true;
         // Add AI2-THOR specific properties.
         gameObject.tag = "Structure"; // AI2-THOR Tag
         StructureObject ai2thorStructureScript = gameObject.AddComponent<StructureObject>();
-        if(isDoor) {
-            ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Door;
-        } else {
-            ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
-        }
+        ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
     }
 
     private void AssignTransform(
