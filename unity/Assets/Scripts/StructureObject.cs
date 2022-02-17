@@ -61,6 +61,7 @@ public class StructureObject : MonoBehaviour
         //instantiate identical lips
         if (addFront) {
             for (int i = 0; i < frontGaps.Count + 1; i++) {
+                //using substring like this gets rid of (Clone) from the end of the instantiated object name
                 string my_name = thisPlatform.name.Substring(0, name.Length) + "-front-" + i;
                 GameObject front = init_lip(my_name);
                 fronts.Add(front);
@@ -122,7 +123,6 @@ public class StructureObject : MonoBehaviour
             end -= 0.5f;
             float scale = end - start;
             float pos = (start + end) / 2.0f;
-            Debug.Log("wall: start=" + start + " end=" + end + " scale=" + scale + " pos=" + pos);
             my_lip.transform.parent = this.transform;
             if (isFrontBack) {
                 my_lip.transform.localPosition = new Vector3(pos, placementOffsetYWithScale, placementOffsetXZWithScale);
@@ -136,7 +136,6 @@ public class StructureObject : MonoBehaviour
 
     private GameObject init_lip(string my_name) {
         GameObject lip = Instantiate(this.gameObject, transform.position, Quaternion.identity);
-        //using substring like this gets rid of (Clone) from the end of the instantiated object name
         lip.name = my_name;
         lip.GetComponent<SimObjPhysics>().objectID = lip.name;
         return lip;
