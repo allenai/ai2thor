@@ -1795,13 +1795,17 @@ def benchmark(
     gridSize=0.25,
     scenes=None,
     house_json_path=None,
-    procedural=False,
+    filter_object_types="",
     teleport_random_before_actions=False,
     commit_id=ai2thor.build.COMMIT_ID,
+    distance_visibility_scheme=False,
+    title=""
 ):
     import ai2thor.controller
     import random
     import platform
+    import time
+    from functools import reduce
     from pprint import pprint
 
     import os
@@ -1833,38 +1837,70 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
+    procedural = False
     if house_json_path:
         procedural = True
 
-    def telerport_to_random_reachable(env):
-
-        if house_json_path:
-            print("Loading house from path: '{}'. cwd: '{}'".format(house_json_path, curr))
-            with open(house_json_path, "r") as f:
+    def create_procedural_house(procedural_house_path):
+        house = None
+        if procedural_house_path:
+            if verbose:
+                print("Loading house from path: '{}'. cwd: '{}'".format(procedural_house_path, curr))
+            with open(procedural_house_path, "r") as f:
                 house = json.load(f)
-                dict(
-                    action="CreateHouseFromJson",
+                env.step(
+                    action="CreateHouse",
                     house=house
                 )
 
+        if filter_object_types != "":
+            if filter_object_types == "*":
+                if verbose:
+                    print("-- Filter All Objects From Metadata")
+                env.step(action="SetObjectFilter", objectIds=[])
+            else:
+                types = filter_object_types.split(",")
+                evt = env.step(action="SetObjectFilterForType", objectTypes=types)
+                if verbose:
+                    print("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+        return house
 
-        # evt = env.step(
-        #     dict(
-        #         action="TeleportFull",
-        #         x=3,
-        #         y=1,
-        #         z=3,
-        #         rotation=dict(x=0, y=90, z=0),
-        #         horizon=0.0,
-        #         standing=True
-        #     )
-        # )
+    def telerport_to_random_reachable(env, house=None):
+
+        # teleport within scene for reachable positions to work
+        def centroid(poly):
+            n = len(poly)
+            total = reduce(lambda acc, e: {'x':acc['x']+e['x'], 'y': acc['y']+e['y'], 'z': acc['z']+e['z']}, poly, {'x':0, 'y': 2, 'z': 0})
+            return {'x':total['x']/n, 'y': total['y']/n, 'z': total['z']/n}
+
+        if procedural:
+            pos = {'x':0, 'y': 2, 'z': 0}
+
+            if house['rooms'] and len(house['rooms']) > 0 :
+                poly = house['rooms'][0]['floorPolygon']
+                pos = centroid(poly)
+
+                print("poly center: {0}".format(pos))
+            evt = env.step(
+                dict(
+                    action="TeleportFull",
+                    x=1.6,#pos['x'],
+                    y=0.5, #pos['y'],
+                    z=1.6, #pos['z'],
+                    rotation=dict(x=0, y=0, z=0),
+                    horizon=0.0,
+                    standing=True,
+                    forceAction=True
+                )
+            )
+            if verbose:
+                print("--Teleport, " +  " err: " + evt.metadata["errorMessage"])
 
         evt = env.step(action="GetReachablePositions")
 
         # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
-
-        print("-- GetReachablePositionsReturn: {}, message: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+        if verbose:
+            print("-- GetReachablePositions success: {}, message: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
 
         reachable_pos = evt.metadata["actionReturn"]
 
@@ -1897,6 +1933,8 @@ def benchmark(
     args['width'] = width
     args['height'] = height
     args['gridSize'] = gridSize
+    args['snapToGrid'] = True
+    args['visibilityScheme'] = 'Distance' if distance_visibility_scheme else 'Collider'
 
     env = ai2thor.controller.Controller(
         **args
@@ -1912,22 +1950,31 @@ def benchmark(
         scene_list = scenes.split(",")
     else:
         scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range in room_ranges]
-    #if scenes:
+
+    procedural_json_filenames = None
+    if house_json_path:
+        scene_list = house_json_path.split(",")
 
     # inv_args = locals()
     # del inv_args['ctx']
     # inv_args['platform'] =platform.system()
 
-    benchmark_map = {"scenes": {}, "params": {**args, "platform": platform.system()}}
+    benchmark_map = {"scenes": {}, "controller_params": {**args}, "benchmark_params": { "platform": platform.system(), "filter_object_types": filter_object_types, "action_sample_number": number_samples}}
+    if title != '':
+        benchmark_map['title'] = title
     total_average_ft = 0
     scene_count = 0
-    print("Start loop")
+
     for scene in scene_list:
-            # scene = "FloorPlan{}_physics".format(i)
             scene_benchmark = {}
             if verbose:
                 print("Loading scene {}".format(scene))
-            env.reset(scene)
+            if not procedural:
+                 env.reset(scene)
+            else:
+                if verbose:
+                    print("------ RESET")
+                env.reset("procedural")
 
             # env.step(dict(action="Initialize", gridSize=0.25))
 
@@ -1943,8 +1990,13 @@ def benchmark(
                 ("all", all_actions, sample_number),
             ]
             scene_average_fr = 0
+            procedural_house_path = scene if procedural else None
+
+            house = create_procedural_house(procedural_house_path) if procedural else None
+
             for action_name, actions, n in action_tuples:
-                telerport_to_random_reachable(env)
+
+                telerport_to_random_reachable(env, house)
                 ft = benchmark_actions(env, action_name, actions, n)
                 scene_benchmark[action_name] = ft
                 scene_average_fr += ft
@@ -3969,3 +4021,216 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         for j in range(6):
             controller.step("RotateRight")
             time.sleep(0.7)
+
+@task
+def plot(ctx, json_filename, comp_json_filename, ithor_filename):
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    bench_comp = {}
+
+    with  open(comp_json_filename, "r") as f:
+        bench_comp =  json.load(f)
+
+    filter = 'all'
+
+    def get_data(benchmark, filter='all'):
+        keys = list(benchmark['scenes'].keys())
+        y = [benchmark['scenes'][m][filter] for m in keys]
+        return keys, y
+
+    ithor_b = {}
+    with open(ithor_filename) as f1:
+        ithor_b = json.load(f1)
+
+
+    with  open(json_filename, "r") as f:
+
+        benchmark = json.load(f)
+        print(benchmark)
+
+        size = min(len(benchmark['scenes']), len(bench_comp['scenes']))
+        b_keys = list(benchmark['scenes'].keys())
+        c_keys = list(bench_comp['scenes'].keys())
+        # x = np.arange(0, size)
+        x = [x.split("/")[-1] for x in b_keys]
+        y1 = [benchmark['scenes'][m][filter]  for m in b_keys]
+
+        y2 = [bench_comp['scenes'][m][filter] for m in c_keys]
+
+        keys, y_i = get_data(ithor_b, filter)
+
+        print()
+        print("key")
+        print(y1)
+
+        #y2 = [x[x.keys()[0]]['all'] for x in bench_comp['scenes']]
+        #cdf = np.cumsum(y)
+
+        ax = plt.gca()
+        # ax.set_xlim([xmin, xmax])
+        # ax.set_ylim([5, 100])
+
+
+
+
+        plt.rcParams["figure.figsize"] = [7.50, 5.50]
+        plt.rcParams["figure.autolayout"] = True
+        fig = plt.figure()
+
+
+        # for filter in benchmark['scenes'][b_keys[0]].keys():
+        #     y = [benchmark['scenes'][m][filter] for m in b_keys]
+        #     plt.plot(x, y, marker=".", label=filter)
+
+        plt.plot(x, y1, marker="o", label="Procedural filter Walls")
+        plt.plot(x, y2, marker="*", label="Procedural all Metadata")
+
+        plt.plot(x, y_i, marker="^", label="iTHOR")
+        # plt.xlim(0, 7)
+        # plt.ylim(0, 1.5)
+        plt.xlabel("Rooms")
+        plt.ylabel("Actions Per Second")
+
+        plt.title("Procedural Benchmark")
+        plt.legend()
+
+        for i in range(len(x)):
+            plt.annotate(keys[i].split("_")[0], (x[i], y_i[i] + 0.2))
+
+        # plt.show()
+
+        #fig.subplots_adjust(bottom=0.1)
+
+        # plt.ylim(8, 85)
+
+
+        plt.savefig('procedural_benchmark_all.png')
+
+
+        keys, y = get_data(ithor_b, filter)
+
+        plt.rcParams["figure.figsize"] = [7.50, 3.50]
+        plt.rcParams["figure.autolayout"] = True
+
+        fig = plt.figure()
+        x = [m.split("_")[0] for m in keys]
+
+
+        plt.plot(x, y, marker="o", label="iTHOR")
+        # plt.plot(, y2, marker="*", label="Procedural filter Walls")
+
+        # plt.xlim(0, 7)
+        # plt.ylim(0, 1.5)
+        plt.xlabel("Rooms")
+        plt.ylabel("Actions Per Second")
+        plt.title("iTHOR Benchmark")
+        plt.legend()
+        # plt.tick_params(axis='x', which='major', labelsize=__)\
+        fig.subplots_adjust(bottom=0.1)
+
+        # for i in range(len(x)):
+        #     plt.annotate(b_keys[i].split("/")[-1], (x[i], y1[i] + 0.2))
+
+        # plt.show()
+
+        plt.savefig('ithor.png')
+
+
+@task
+def plot(
+        ctx,
+        benchamrk_filenames,
+        plot_titles=None,
+        x_label="Rooms",
+        y_label="Actions Per Second",
+        title="Procedural Benchmark",
+        last_ithor=False,
+        output_filename="benchmark",
+        width=9.50,
+        height=7.5,
+        action_breakdown=False
+):
+    import matplotlib.pyplot as plt
+    from functools import reduce
+    from matplotlib.lines import Line2D
+
+    filter = 'all'
+
+    def get_data(benchmark, filter='all'):
+        keys = list(benchmark['scenes'].keys())
+        if filter is not None:
+            y = [benchmark['scenes'][m][filter] for m in keys]
+        else:
+            y = [benchmark['scenes'][m] for m in keys]
+        return keys, y
+
+    def load_benchmark_filename(filename):
+        with open(filename) as f:
+            return json.load(f)
+
+    def get_benchmark_title(benchmark, default_title=''):
+        if 'title' in benchmark:
+            return benchmark['title']
+        else:
+            return default_title
+
+    benchmark_filenames = benchamrk_filenames.split(",")
+
+
+    # markers = ["o", "*", "^", "+", "~"]
+    markers = list(Line2D.markers.keys())
+    # remove empty marker
+    markers.pop(1)
+    benchmarks = [load_benchmark_filename(filename) for filename in benchmark_filenames]
+
+    benchmark_titles = [get_benchmark_title(b, '') for (i, b) in zip(range(0, len(benchmarks)), benchmarks)]
+
+    if plot_titles is not None:
+        titles = plot_titles.split(",")
+    else:
+        titles = [''] * len(benchmark_titles)
+
+    plot_titles = [benchmark_titles[i] if title == '' else title for (i, title) in zip(range(0, len(titles)), titles)]
+
+    filter = 'all' if not action_breakdown else None
+    all_data = [get_data(b, filter) for b in benchmarks]
+
+    import numpy as np
+    if action_breakdown:
+        plot_titles = reduce(list.__add__, [["{} {}".format(title, action) for action in all_data[0][1][0]] for title in plot_titles])
+        all_data = reduce(list.__add__,[[(x, [y[action] for y in b]) for action in all_data[0][1][0]] for (x, b) in all_data])
+
+    keys = [k for (k, y) in all_data]
+    y = [y for (k, y) in all_data]
+    min_key_number = min(keys)
+
+    ax = plt.gca()
+
+    plt.rcParams["figure.figsize"] = [width, height]
+    plt.rcParams["figure.autolayout"] = True
+    fig = plt.figure()
+
+    for (i, (x, y)) in zip(range(0, len(all_data)), all_data):
+        marker = markers[i] if i < len(markers) else "*"
+
+        ithor_datapoint = last_ithor and i == len(all_data) - 1
+
+        x_a =  all_data[i-1][0] if ithor_datapoint else x
+
+        plt.plot([x_s.split('/')[-1].split("_")[0] for x_s in x_a], y, marker=marker, label=plot_titles[i])
+
+        if ithor_datapoint:
+            for j in range(len(x)):
+                print(j)
+                print(x[j])
+                plt.annotate(x[j].split("_")[0], (j, y[j] + 0.2))
+
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+
+    plt.title(title)
+    plt.legend()
+
+    plt.savefig('{}.png'.format(output_filename.replace(".png", "")))
