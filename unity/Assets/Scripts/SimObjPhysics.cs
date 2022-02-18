@@ -120,6 +120,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
+	private static float APPLY_FORCE_MULTIPLIER = 5f;
+
 
 	public float GetTimerResetValue()
 	{
@@ -1049,10 +1051,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
         if(myrb.IsSleeping())
         myrb.WakeUp();
-        
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		myrb.AddForce(dir * action.moveMagnitude);
+		myrb.AddForce(dir * action.moveMagnitude * APPLY_FORCE_MULTIPLIER, ForceMode.Impulse);
 	}
 
     //overload that doesn't use a server action
@@ -1066,14 +1067,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
         myrb.isKinematic = false;
         myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        myrb.AddForce(dir * magnitude);
+        myrb.AddForce(dir * magnitude * APPLY_FORCE_MULTIPLIER, ForceMode.Impulse);
     }
 
 	public void ApplyRelativeForce(Vector3 dir, float magnitude) {
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		myrb.AddRelativeForce(dir * magnitude);
+		myrb.AddRelativeForce(dir * magnitude * APPLY_FORCE_MULTIPLIER, ForceMode.Impulse);
 	}
 
 	//used for applying torque to an object
@@ -1086,11 +1087,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.maxAngularVelocity = SimObjPhysics.MAX_ANGULAR_VELOCITY_ON_TORQUE;
 
-		float MCSForceMultiplier = 250f;
 		//torque is mass dependent when using ForceMode.Impulse
 		//applying 100 torque to an object with 500 mass will slightly rotate an object
 		//appling 100 torque to an object with 0.5 mass will spin the object several times
-		myrb.AddTorque(Vector3.up * action.moveMagnitude / MCSForceMultiplier, ForceMode.Impulse);
+		myrb.AddTorque(Vector3.up * action.moveMagnitude, ForceMode.Impulse);
 	}
 
 	//used for applying rotation to an object

@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
-        [Range(-250,250)] public float pushPullForce = 150.0f;
+        [Range(-1,1)] public float pushPullForce = 0.5f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
@@ -58,6 +58,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.None;
             }
 
+            pushPullForce = 0.5f;
             ServerAction action = new ServerAction();
             action.action = "Initialize";
             action.gridSize = gridSize;
