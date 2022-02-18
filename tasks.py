@@ -1884,9 +1884,9 @@ def benchmark(
             evt = env.step(
                 dict(
                     action="TeleportFull",
-                    x=1.6,#pos['x'],
-                    y=0.5, #pos['y'],
-                    z=1.6, #pos['z'],
+                    x=pos['x'],
+                    y=pos['y'],
+                    z=pos['z'],
                     rotation=dict(x=0, y=0, z=0),
                     horizon=0.0,
                     standing=True,
@@ -4021,7 +4021,7 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         for j in range(6):
             controller.step("RotateRight")
             time.sleep(0.7)
-            
+
 @task
 def plot(
         ctx,
