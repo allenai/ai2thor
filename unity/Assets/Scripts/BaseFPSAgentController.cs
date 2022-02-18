@@ -352,7 +352,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void actionFinishedEmit(bool success, object actionReturn = null) {
+        public void actionFinishedEmit(bool success, object actionReturn = null, string errorMessage = null) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
             actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
         }
 
@@ -2142,22 +2145,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void GetObjectHitFromRaycast(Vector3 from, Vector3 to) {
+        public void GetObjectHitFromRaycast(Vector3 origin, Vector3 destination) {
             RaycastHit hit;
             if (
                 !Physics.Raycast(
-                    origin: from,
-                    direction: to - from,
+                    origin: origin,
+                    direction: destination - origin,
                     hitInfo: out hit,
                     maxDistance: Mathf.Infinity,
                     layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
                     queryTriggerInteraction: QueryTriggerInteraction.Ignore
                 )
             ) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: (
-                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
                         " failed to hit any target object!"
                     )
                 );
@@ -2165,10 +2169,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
             if (target == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: (
-                        $"Raycast from ({from.x}, {from.y}, {from.z}) to ({to.x}, {to.y}, {to.z})" +
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
                         " hit object, but not a SimObject!"
                     )
                 );
@@ -2176,6 +2181,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(
                 success: true,
                 actionReturn: target.ObjectID
+            );
+        }
+
+        public void GetVisibilityPoints(string objectId) {
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            if (sop.VisibilityPoints == null) {
+                throw new ArgumentException($"objectId: {objectId} has no visibility points!");
+            }
+
+            Vector3[] points = new Vector3[sop.VisibilityPoints.Length];
+            for (int i = 0; i < points.Length; i++) {
+                points[i] = sop.VisibilityPoints[i].position;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: points
             );
         }
 
@@ -4422,6 +4443,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Destroy(GameObject.Find("Structure"));
             Destroy(GameObject.Find("ProceduralLighting"));
+
+            // puts the agent below the scene to its starting position
+            GameObject.Find("FPSController").transform.position = new Vector3(-0.5f, -38.86f, 0.5f);
+
             actionFinished(success: true);
         }
 

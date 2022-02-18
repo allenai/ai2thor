@@ -69,11 +69,13 @@ public class Break : MonoBehaviour {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
+            // Get the list of objects in the hierarchy
+            Transform objectsTransform = GameObject.Find("Objects").transform;
+
             //before disabling things, if this object is a receptacle, unparent all objects contained
             if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
-                GameObject objs = GameObject.Find("Objects");
                 foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
-                    go.transform.SetParent(objs.transform);
+                    go.transform.SetParent(objectsTransform);
                     Rigidbody childrb = go.GetComponent<Rigidbody>();
                     childrb.isKinematic = false;
                     childrb.useGravity = true;
@@ -100,7 +102,12 @@ public class Break : MonoBehaviour {
                 }
             }
 
-            GameObject resultObject = Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
+            GameObject resultObject = Instantiate(
+                original: PrefabToSwapTo,
+                position: transform.position,
+                rotation: transform.rotation
+            );
+            resultObject.transform.parent = objectsTransform;
             broken = true;
 
             // ContactPoint cp = collision.GetContact(0);

@@ -1282,6 +1282,12 @@ namespace Thor.Procedural {
             string ceilingMaterialId = house.proceduralParameters.ceilingMaterial;
 
             var windowsAndDoors = house.doors.Select(d => d as WallRectangularHole).Concat(house.windows);
+            foreach (var obj in windowsAndDoors) {
+                // NOTE: this is currently necessary to make min=0 correctly on the
+                // edge of the wall.
+                obj.boundingBox.min -= obj.assetOffset;
+                obj.boundingBox.max -= obj.assetOffset;
+            }
             var holes = windowsAndDoors
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall0, hole), (hole.wall1, hole) })
                 .Where(pair => !String.IsNullOrEmpty(pair.Item1))
@@ -1815,7 +1821,8 @@ namespace Thor.Procedural {
         ) {
             var go = prefab;
 
-            var spawned = GameObject.Instantiate(go); //, position, Quaternion.identity); //, position, rotation);
+            var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
                 var simObj = spawned.GetComponent<SimObjPhysics>();
@@ -1898,7 +1905,12 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(
+                original: go,
+                position: initialSpawnPosition,
+                rotation: Quaternion.identity
+            );
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
@@ -1986,7 +1998,12 @@ namespace Thor.Procedural {
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             var initialSpawnPosition = new Vector3(receptacleSimObj.transform.position.x, receptacleSimObj.transform.position.y + 100f, receptacleSimObj.transform.position.z); ;
 
-            var spawned = GameObject.Instantiate(go, initialSpawnPosition, Quaternion.identity);
+            var spawned = GameObject.Instantiate(
+                original: go,
+                position: initialSpawnPosition,
+                rotation: Quaternion.identity
+            );
+            spawned.transform.parent = GameObject.Find("Objects").transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);

@@ -3498,7 +3498,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             // instantiate a target circle
-            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity) as GameObject;
+            GameObject targetCircle = Instantiate(
+                original: TargetCircles[action.objectVariation],
+                position: new Vector3(0, 100, 0),
+                rotation: Quaternion.identity
+            ) as GameObject;
+            targetCircle.transform.parent = GameObject.Find("Objects").transform;
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
@@ -7444,50 +7449,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Top
             GameObject cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, max.y + offset + size / 2, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, max.y + offset + size / 2, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
             // Bottom
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, min.y - offset - size / 2, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, min.y - offset - size / 2, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), size, zLen + 2 * (size + offset));
 
             // z min
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, center.y, min.z - offset - size / 2),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, center.y, min.z - offset - size / 2),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
             // z max
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(center.x, center.y, max.z + offset + size / 2),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(center.x, center.y, max.z + offset + size / 2),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(xLen + 2 * (size + offset), yLen + 2 * offset, size);
 
             // x min
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(min.x - offset - size / 2, center.y, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(min.x - offset - size / 2, center.y, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
 
             // x max
             cube = Instantiate(
-                Resources.Load("BlueCube") as GameObject,
-                new Vector3(max.x + offset + size / 2, center.y, center.z),
-                Quaternion.identity
+                original: Resources.Load("BlueCube") as GameObject,
+                position: new Vector3(max.x + offset + size / 2, center.y, center.z),
+                rotation: Quaternion.identity
             ) as GameObject;
+            cube.transform.parent = GameObject.Find("Objects").transform;
             cube.transform.localScale = new Vector3(size, yLen + 2 * offset, zLen + 2 * offset);
         }
 
