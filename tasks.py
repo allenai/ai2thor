@@ -4021,123 +4021,7 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         for j in range(6):
             controller.step("RotateRight")
             time.sleep(0.7)
-
-@task
-def plot(ctx, json_filename, comp_json_filename, ithor_filename):
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    bench_comp = {}
-
-    with  open(comp_json_filename, "r") as f:
-        bench_comp =  json.load(f)
-
-    filter = 'all'
-
-    def get_data(benchmark, filter='all'):
-        keys = list(benchmark['scenes'].keys())
-        y = [benchmark['scenes'][m][filter] for m in keys]
-        return keys, y
-
-    ithor_b = {}
-    with open(ithor_filename) as f1:
-        ithor_b = json.load(f1)
-
-
-    with  open(json_filename, "r") as f:
-
-        benchmark = json.load(f)
-        print(benchmark)
-
-        size = min(len(benchmark['scenes']), len(bench_comp['scenes']))
-        b_keys = list(benchmark['scenes'].keys())
-        c_keys = list(bench_comp['scenes'].keys())
-        # x = np.arange(0, size)
-        x = [x.split("/")[-1] for x in b_keys]
-        y1 = [benchmark['scenes'][m][filter]  for m in b_keys]
-
-        y2 = [bench_comp['scenes'][m][filter] for m in c_keys]
-
-        keys, y_i = get_data(ithor_b, filter)
-
-        print()
-        print("key")
-        print(y1)
-
-        #y2 = [x[x.keys()[0]]['all'] for x in bench_comp['scenes']]
-        #cdf = np.cumsum(y)
-
-        ax = plt.gca()
-        # ax.set_xlim([xmin, xmax])
-        # ax.set_ylim([5, 100])
-
-
-
-
-        plt.rcParams["figure.figsize"] = [7.50, 5.50]
-        plt.rcParams["figure.autolayout"] = True
-        fig = plt.figure()
-
-
-        # for filter in benchmark['scenes'][b_keys[0]].keys():
-        #     y = [benchmark['scenes'][m][filter] for m in b_keys]
-        #     plt.plot(x, y, marker=".", label=filter)
-
-        plt.plot(x, y1, marker="o", label="Procedural filter Walls")
-        plt.plot(x, y2, marker="*", label="Procedural all Metadata")
-
-        plt.plot(x, y_i, marker="^", label="iTHOR")
-        # plt.xlim(0, 7)
-        # plt.ylim(0, 1.5)
-        plt.xlabel("Rooms")
-        plt.ylabel("Actions Per Second")
-
-        plt.title("Procedural Benchmark")
-        plt.legend()
-
-        for i in range(len(x)):
-            plt.annotate(keys[i].split("_")[0], (x[i], y_i[i] + 0.2))
-
-        # plt.show()
-
-        #fig.subplots_adjust(bottom=0.1)
-
-        # plt.ylim(8, 85)
-
-
-        plt.savefig('procedural_benchmark_all.png')
-
-
-        keys, y = get_data(ithor_b, filter)
-
-        plt.rcParams["figure.figsize"] = [7.50, 3.50]
-        plt.rcParams["figure.autolayout"] = True
-
-        fig = plt.figure()
-        x = [m.split("_")[0] for m in keys]
-
-
-        plt.plot(x, y, marker="o", label="iTHOR")
-        # plt.plot(, y2, marker="*", label="Procedural filter Walls")
-
-        # plt.xlim(0, 7)
-        # plt.ylim(0, 1.5)
-        plt.xlabel("Rooms")
-        plt.ylabel("Actions Per Second")
-        plt.title("iTHOR Benchmark")
-        plt.legend()
-        # plt.tick_params(axis='x', which='major', labelsize=__)\
-        fig.subplots_adjust(bottom=0.1)
-
-        # for i in range(len(x)):
-        #     plt.annotate(b_keys[i].split("/")[-1], (x[i], y1[i] + 0.2))
-
-        # plt.show()
-
-        plt.savefig('ithor.png')
-
-
+            
 @task
 def plot(
         ctx,
@@ -4177,7 +4061,6 @@ def plot(
             return default_title
 
     benchmark_filenames = benchamrk_filenames.split(",")
-
 
     # markers = ["o", "*", "^", "+", "~"]
     markers = list(Line2D.markers.keys())
