@@ -944,21 +944,25 @@ public class MCSMain : MonoBehaviour {
             colliders = this.AssignColliders(gameObject, objectDefinition);
         }
 
+        // Use the List constructor to copy the visibility points list from the object definition.
+        List<MCSConfigVector> points = new List<MCSConfigVector>(visibilityPointsFromConfig);
+        if (this.ShouldAutoGenerateVisibilityPoints(objectConfig)) {
+            points = this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig, objectDefinition);
+        }
+
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
-        if (visibilityPointsFromConfig.Count > 0) {
-            // Use the List constructor to copy the visibility points list from the object definition.
-            List<MCSConfigVector> points = new List<MCSConfigVector>(visibilityPointsFromConfig);
+        if (points.Count > 0) {
             // For dynamically generated visibility points, set the scale of the visibility point parent component
             // to be the inverse of the object's scale when the object is first shown.
             MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
                 objectConfig.shows[0] : null;
-            Vector3? scaleNull = null;
-            visibilityPoints = this.AssignVisibilityPoints(
-                gameObject,
-                this.ShouldAutoGenerateVisibilityPoints(objectConfig) ?
-                this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig) : points,
-                (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull)
-            );
+            Vector3? scaleOverride = null;
+            if (objectDefinition.visibilityPointScaleOverride != null && objectDefinition.visibilityPointScaleOverride.x > 0 &&
+                    objectDefinition.visibilityPointScaleOverride.y > 0 && objectDefinition.visibilityPointScaleOverride.z > 0) {
+                scaleOverride = new Vector3(objectDefinition.visibilityPointScaleOverride.x,
+                        objectDefinition.visibilityPointScaleOverride.y, objectDefinition.visibilityPointScaleOverride.z);
+            }
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, points, scaleOverride);
         }
 
         if (shouldAddSimObjPhysicsScript) {
@@ -1471,7 +1475,8 @@ public class MCSMain : MonoBehaviour {
 
     private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
         GameObject gameObject,
-        MCSConfigGameObject objectConfig
+        MCSConfigGameObject objectConfig,
+        MCSConfigObjectDefinition objectDefinition
     ) {
         MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
             objectConfig.shows[0] : null;
@@ -1480,6 +1485,13 @@ public class MCSMain : MonoBehaviour {
         float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
         float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
         float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
+
+        if (objectDefinition.visibilityPointScaleOverride != null && objectDefinition.visibilityPointScaleOverride.x > 0 &&
+                objectDefinition.visibilityPointScaleOverride.y > 0 && objectDefinition.visibilityPointScaleOverride.z > 0) {
+            xSize *= objectDefinition.visibilityPointScaleOverride.x;
+            ySize *= objectDefinition.visibilityPointScaleOverride.y;
+            zSize *= objectDefinition.visibilityPointScaleOverride.z;
+        }
 
         // Calculate the number of cells in the grid going across each axis.
         // Use Max to ensure visibility points are still set for tiny objects.
@@ -1695,7 +1707,8 @@ public class MCSMain : MonoBehaviour {
         if (this.isPassiveScene) {
             return false;
         }
-        return objectConfig.type == "cube" || objectConfig.type == "cube_rounded";
+        return objectConfig.type == "cube" || objectConfig.type == "cube_rounded" ||
+            objectConfig.type.StartsWith("tool");
     }
 
     private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
@@ -2013,9 +2026,9 @@ public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string shape;
     public bool centerMassAtBottom;
     public bool keepColliders;
-    public bool visibilityPointsScaleOne;
     public MCSConfigCollider boundingBox = null;
     public MCSConfigSize scale = null;
+    public MCSConfigVector visibilityPointScaleOverride = null;
     public List<MCSConfigAnimation> animations = new List<MCSConfigAnimation>();
     public List<MCSConfigAnimator> animators = new List<MCSConfigAnimator>();
     public List<MCSConfigCollider> colliders = new List<MCSConfigCollider>();

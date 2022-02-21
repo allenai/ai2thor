@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
-        [Range(-1,1)] public float pushPullForce = 0.5f;
+        [Range(-1,1)] public float pushPullForce = 1.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
