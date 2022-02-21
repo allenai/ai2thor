@@ -62,81 +62,81 @@ public class StructureObject : MonoBehaviour
         if (addFront) {
             for (int i = 0; i < frontGaps.Count + 1; i++) {
                 //using substring like this gets rid of (Clone) from the end of the instantiated object name
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-front-" + i;
-                GameObject front = init_lip(my_name);
+                string myName = thisPlatform.name.Substring(0, name.Length) + "-front-" + i;
+                GameObject front = InitLip(myName);
                 fronts.Add(front);
             }
         }
 
         if (addBack) {
             for (int i = 0; i < backGaps.Count + 1; i++) {
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-back-" + i;
-                GameObject back = init_lip(my_name);
+                string myName = thisPlatform.name.Substring(0, name.Length) + "-back-" + i;
+                GameObject back = InitLip(myName);
                 backs.Add(back);
             }
         }
         if (addLeft) {
             for (int i = 0; i < leftGaps.Count + 1; i++) {
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-left-" + i;
-                GameObject left = init_lip(my_name);
+                string myName = thisPlatform.name.Substring(0, name.Length) + "-left-" + i;
+                GameObject left = InitLip(myName);
                 lefts.Add(left);
             }
         }
         if (addRight) {
             for (int i = 0; i < rightGaps.Count + 1; i++) {
-                string my_name = thisPlatform.name.Substring(0, name.Length) + "-right-" + i;
-                GameObject right = init_lip(my_name);
+                string myName = thisPlatform.name.Substring(0, name.Length) + "-right-" + i;
+                GameObject right = InitLip(myName);
                 rights.Add(right);
             }
         }
 
 
         if (addFront) {
-            positionLips(frontGaps, fronts, true, placementOffsetYWithScale, -placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+            PositionLips(frontGaps, fronts, true, placementOffsetYWithScale, -placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
 
         if (addBack) {
-            positionLips(backGaps, backs, true, placementOffsetYWithScale, placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
+            PositionLips(backGaps, backs, true, placementOffsetYWithScale, placementOffsetZWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleZ);
         }
 
         if (addLeft) {
-            positionLips(leftGaps, lefts, false, placementOffsetYWithScale, -placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
+            PositionLips(leftGaps, lefts, false, placementOffsetYWithScale, -placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
 
         if (addRight) {
-            positionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
+            PositionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
     }
 
-    private void positionLips(List<LipGapSpan> gaps, List<GameObject> gameObjects, bool isFrontBack, float placementOffsetYWithScale, float placementOffsetXZWithScale, float scaleY, float scaleXZ) {
+    private void PositionLips(List<LipGapSpan> gaps, List<GameObject> gameObjects, bool isFrontBack, float placementOffsetYWithScale, float placementOffsetXZWithScale, float scaleY, float scaleXZ) {
         for (int i = 0; i < gaps.Count + 1; i++) {
             float start = (i == 0 ? 0 : gaps[i - 1].high);
             float end = (i != gaps.Count ? gaps[i].low : 1);
-            GameObject my_lip = gameObjects[i];
+            GameObject myLip = gameObjects[i];
             // Do we want to remove tiny slivers in the middle or only on the ends?
-            bool tiny_end = end - start < .03;//&& (end == 1 || start == 0);
-            if (end == start || tiny_end) {
-                GameObject.Destroy(my_lip);
+            bool tinyEnd = end - start < .03;//&& (end == 1 || start == 0);
+            if (end == start || tinyEnd) {
+                GameObject.Destroy(myLip);
                 continue;
             }
             start -= 0.5f;
             end -= 0.5f;
             float scale = end - start;
             float pos = (start + end) / 2.0f;
-            my_lip.transform.parent = this.transform;
+            myLip.transform.parent = this.transform;
             if (isFrontBack) {
-                my_lip.transform.localPosition = new Vector3(pos, placementOffsetYWithScale, placementOffsetXZWithScale);
-                my_lip.transform.localScale = new Vector3(scale, scaleY, scaleXZ);
+                myLip.transform.localPosition = new Vector3(pos, placementOffsetYWithScale, placementOffsetXZWithScale);
+                myLip.transform.localScale = new Vector3(scale, scaleY, scaleXZ);
             } else {
-                my_lip.transform.localPosition = new Vector3(placementOffsetXZWithScale, placementOffsetYWithScale, pos);
-                my_lip.transform.localScale = new Vector3(scaleXZ, scaleY, scale);
+                myLip.transform.localPosition = new Vector3(placementOffsetXZWithScale, placementOffsetYWithScale, pos);
+                myLip.transform.localScale = new Vector3(scaleXZ, scaleY, scale);
             }
         }
     }
 
-    private GameObject init_lip(string my_name) {
+    private GameObject InitLip(string myName) {
         GameObject lip = Instantiate(this.gameObject, transform.position, Quaternion.identity);
-        lip.name = my_name;
+        lip.name = myName;
         lip.GetComponent<SimObjPhysics>().objectID = lip.name;
         return lip;
     }
