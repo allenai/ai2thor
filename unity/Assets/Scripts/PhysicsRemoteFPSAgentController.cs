@@ -6635,17 +6635,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void CreateObjectAtLocation(ServerAction action) {
-            Vector3 targetPosition = action.position;
-            Vector3 targetRotation = action.rotation;
+        public void CreateObjectAtLocation(
+            string objectType,
+            Vector3 position,
+            Vector3 rotation,
+            int objectVariation = 0,
+            bool randomizeObjectAppearance = false,
+            bool forceAction = false,
+            bool forceKinematic = false
+        ) {
+            Vector3 targetPosition = position;
+            Vector3 targetRotation = rotation;
 
-            if (!action.forceAction && !agentManager.SceneBounds.Contains(targetPosition)) {
+            if (!forceAction && !agentManager.SceneBounds.Contains(targetPosition)) {
                 errorMessage = "Target position is out of bounds!";
                 actionFinished(false);
                 return;
             }
 
-            if (action.objectType == null) {
+            if (objectType == null) {
                 errorMessage = "Please give valid Object Type from SimObjType enum list";
                 actionFinished(false);
                 return;
@@ -6653,8 +6661,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // spawn the object at the agent's hand position
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation,
-                targetPosition, targetRotation, false, action.forceAction);
+            SimObjPhysics so = script.SpawnObject(objectType, randomizeObjectAppearance, objectVariation,
+                targetPosition, targetRotation, false, forceAction);
+
+            so.GetComponent<Rigidbody>().isKinematic = forceKinematic;
 
             if (so == null) {
                 errorMessage = "Failed to create object, are you sure it can be spawned?";
@@ -6705,7 +6715,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 action.y = b.extents.y + getFloorY(action.x, action.z) + 0.1f;
                 action.position = new Vector3(action.x, action.y, action.z);
-                CreateObjectAtLocation(action);
+                CreateObjectAtLocation(
+                    objectType: action.objectType,
+                    position: action.position,
+                    rotation: action.rotation,
+                    objectVariation: action.objectVariation,
+                    randomizeObjectAppearance: action.randomizeObjectAppearance,
+                    forceAction: action.forceAction,
+                    forceKinematic: action.forceKinematic
+                );
             }
         }
 
