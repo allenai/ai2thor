@@ -113,8 +113,8 @@ public class StructureObject : MonoBehaviour
             float start = (i == 0 ? 0 : gaps[i - 1].high);
             float end = (i != gaps.Count ? gaps[i].low : 1);
             GameObject myLip = gameObjects[i];
-            // Do we want to remove tiny slivers in the middle or only on the ends?
-            bool tinyEnd = end - start < .03;//&& (end == 1 || start == 0);
+            // Remove tiny slivers in the middle and on the ends.
+            bool tinyEnd = end - start < .03;
             if (end == start || tinyEnd) {
                 GameObject.Destroy(myLip);
                 continue;
