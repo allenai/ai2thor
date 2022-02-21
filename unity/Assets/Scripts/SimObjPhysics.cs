@@ -120,6 +120,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
+	private static float MOVEMENT_AMOUNT = 0.1f;
 
 	public float GetTimerResetValue()
 	{
@@ -1167,7 +1168,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myRigidbody.velocity = Vector3.zero;
 		myRigidbody.angularVelocity = Vector3.zero;
 		
-		float movementAmount = 0.1f;
+		float movementAmount = SimObjPhysics.MOVEMENT_AMOUNT;
 		Vector3 movementRelativeToWhereAgentIsLooking = ((action.agentTransform.right * action.lateral) + (action.agentTransform.forward * action.straight)).normalized;
 		Vector3 oldPosition = transform.position;
 		Vector3 position = new Vector3(movementRelativeToWhereAgentIsLooking.x * movementAmount + transform.position.x, transform.position.y,
@@ -1323,24 +1324,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private void GetCollisionsNotInReceptacleTriggerBox(Collider[] hitColliders, Collider[] hitObjectsInReceptacleTriggerBox, List<SimObjPhysics> collisionSimObjs) {
 		if(hitColliders.Length > 0) {
-			if(hitObjectsInReceptacleTriggerBox != null && hitObjectsInReceptacleTriggerBox.Length>0) {
-				foreach (Collider col in hitColliders) {
-					if(!hitObjectsInReceptacleTriggerBox.Contains(col)) {
-						SimObjPhysics collisionSimObj = col.GetComponentInParent<SimObjPhysics>();
-						if (!collisionSimObjs.Contains(collisionSimObj)) {
-							collisionSimObjs.Add(collisionSimObj);
-						}
-					}
-				}
-			}
-			else {
-				foreach (Collider col in hitColliders) {
+			foreach (Collider col in hitColliders) {
+				if(hitObjectsInReceptacleTriggerBox == null || !hitObjectsInReceptacleTriggerBox.Contains(col)) {
 					SimObjPhysics collisionSimObj = col.GetComponentInParent<SimObjPhysics>();
 					if (!collisionSimObjs.Contains(collisionSimObj)) {
 						collisionSimObjs.Add(collisionSimObj);
 					}
 				}
-			}
+			}	
 		}
 	}
 
