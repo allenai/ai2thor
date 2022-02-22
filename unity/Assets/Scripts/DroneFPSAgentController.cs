@@ -275,7 +275,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             droneMeta.inHighFrictionArea = baseAgent.inHighFrictionArea;
 
             // New drone stuff for agent metadata
-            droneMeta.LauncherPosition = GetLauncherPosition();
+            droneMeta.launcherPosition = GetLauncherPosition();
 
             metadata.agent = droneMeta;
             return metadata;

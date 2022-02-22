@@ -30,6 +30,55 @@ namespace MessagePack.Resolvers {
         }
 
     }
+    
+    // MessagePack doesn't support serializing sub-types that have been assigned to a parameter with the
+    // base type, such as the case for droneAgent and droneObjectMetadata.  This is purely for performance (on msgpack's part)
+    // The following two formatters examine the types of the values to be serialized and use the appropriate formatter.
+    public class ObjectMetadataFormatter : global::MessagePack.Formatters.IMessagePackFormatter<ObjectMetadata[]> {
+        private IMessagePackFormatter<ObjectMetadata[]> formatter = DynamicGenericResolver.Instance.GetFormatter<ObjectMetadata[]>();
+        private IMessagePackFormatter<DroneObjectMetadata> droneFormatter = DynamicObjectResolver.Instance.GetFormatter<DroneObjectMetadata>();
+        public void Serialize(ref MessagePackWriter writer, ObjectMetadata[] value, global::MessagePack.MessagePackSerializerOptions options) {
+            if (value == null) {
+                writer.WriteNil();
+                return;
+            }
+            if (value.Length > 0 && value[0].GetType() == typeof(DroneObjectMetadata)) {
+                writer.WriteArrayHeader(value.Length);
+                foreach (var v in value) {
+                    droneFormatter.Serialize(ref writer, (DroneObjectMetadata)v, options);
+                }
+            } else {
+                formatter.Serialize(ref writer, value, options);
+            }
+        }
+        public ObjectMetadata[] Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
+            throw new System.NotImplementedException();
+        }
+
+    }
+    
+    public class AgentMetadataFormatter : global::MessagePack.Formatters.IMessagePackFormatter<AgentMetadata> {
+        private IMessagePackFormatter<AgentMetadata> formatter = DynamicObjectResolver.Instance.GetFormatter<AgentMetadata>();
+        private IMessagePackFormatter<DroneAgentMetadata> droneFormatter = DynamicObjectResolver.Instance.GetFormatter<DroneAgentMetadata>();
+        public void Serialize(ref MessagePackWriter writer, AgentMetadata value, global::MessagePack.MessagePackSerializerOptions options) {
+            if (value == null) {
+                writer.WriteNil();
+                return;
+            }
+            Type type = value.GetType();
+            if (type == typeof(DroneAgentMetadata)) {
+                droneFormatter.Serialize(ref writer, (DroneAgentMetadata)value, options);
+            } else {
+                formatter.Serialize(ref writer, value, options);
+            }
+        }
+        public AgentMetadata Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
+            throw new System.NotImplementedException();
+        }
+
+    }
+    
+    
     public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3> {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options) {
             writer.WriteMapHeader(3);
@@ -118,7 +167,9 @@ public class ThorUnityResolver : IFormatterResolver {
         {
                 // standard
                 { typeof(Vector3), new Vector3Formatter() },
-                { typeof(NavMeshPath), new NavMeshPathFormatter() }
+                { typeof(NavMeshPath), new NavMeshPathFormatter() },
+                { typeof(AgentMetadata), new AgentMetadataFormatter() },
+                { typeof(ObjectMetadata[]), new ObjectMetadataFormatter() }
 
             };
 
