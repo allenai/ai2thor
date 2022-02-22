@@ -84,7 +84,7 @@ If you want to run an MCS Scene in the Unity Editor:
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
   - Push Pull Force (positive is push, negative is pull)
-- M: Torque Object
+- B: Torque Object
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
   - Push Pull Force (positive is clockwise torque, negative is counterclockwise torque)
@@ -92,6 +92,11 @@ If you want to run an MCS Scene in the Unity Editor:
   - Move Or Pickup Object ID
   - Move Or Pickup Object Direction (instead of using an object ID)
   - Direction (clockwise true is a clockwise rotation, clockwise false is a counterclockwise rotation)
+- M: Move Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Lateral (Relative to where the agent is looking, -1 for left movement, 0 is no movement, 1 for right movement)
+  - Straight (Relative to where the agent is looking, -1 for back movement, 0 is no movement, 1 for forward movement)
 - Escape: Pass (do nothing)
 - Backspace: Initialize (reset the current scene or go to a new scene)
   - New Scene File
@@ -319,6 +324,7 @@ For playback:
   - Added `IsSeesaw` property. It locks the XZ position - YZ rotation of the rigidbody and ignores collisions with the agents ground collider. For seesaw pivot points, enable `IsSeesaw` and set that object to `kinematic` so it ignores agent ground collider collisions while not moving
   - Added `ApplyTorque` method to apply a torque force to an object
   - Added `ApplyRotation` method to apply a rotation transformation to an object
+  - Added `ApplyMovement` method to apply a movement transformation to an object
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.

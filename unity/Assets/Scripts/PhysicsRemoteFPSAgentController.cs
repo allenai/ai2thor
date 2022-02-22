@@ -1939,10 +1939,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
                 target.ApplyTorque(action);
             }
-            if(action.action == "RotateObject") {
+            else if(action.action == "RotateObject") {
                 bool succesfulRotation = target.ApplyRotation(action);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), succesfulRotation ? ActionStatus.SUCCESSFUL : ActionStatus.OBSTRUCTED);
                 actionFinished(succesfulRotation);
+            }
+            else if(action.action == "MoveObject") {
+                bool succesfullMovement = target.ApplyMovement(action);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), succesfullMovement ? ActionStatus.SUCCESSFUL : ActionStatus.OBSTRUCTED);
+                actionFinished(succesfullMovement);
             }
             else {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
