@@ -991,6 +991,32 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             ApplyForceObject(action);
         }
     }
+
+    public void MoveObject(ServerAction action) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            actionFinished(false);
+            return;
+        }
+
+        if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().objectID) {
+            Debug.Log("Cannot Move object. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            //Move Object
+            action.agentTransform = transform;
+            ApplyForceObject(action);
+        }
+    }
 }
 
 /* class for contatining movement data */
