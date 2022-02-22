@@ -49,7 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
             // set secondary arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find("FirstPersonCharacter").Find("SecondaryCamera").GetComponent<Camera>();
+            Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
             fp_camera_2.transform.localPosition = new Vector3(-0.01760002f, 0.1291f, -0.1512001f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
