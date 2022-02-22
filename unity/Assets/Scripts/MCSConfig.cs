@@ -300,6 +300,12 @@ public class MCSConfig {
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
 
+    public static string ChooseRandomLavaMaterial() {
+        List<string> lava = new List<string>(LAVA_MATERIAL_REGISTRY.Keys);
+        System.Random random = new System.Random();
+        return lava[random.Next(lava.Count)];
+    }
+
     private static Dictionary<string, string[]> GenerateMaterialColors() {
         // Hard-code additional materials present in the original playroom scene but not available in the registry.
         Dictionary<string, string[]> materialColors = new Dictionary<string, string[]>() {
