@@ -51,7 +51,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // set secondary arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(-0.01760002f, 0.4791f, -0.02392426f);
+            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.0499f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
             fp_camera_2.fieldOfView = 60f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
