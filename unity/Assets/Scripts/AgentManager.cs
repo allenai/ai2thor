@@ -1473,6 +1473,9 @@ public class ServerAction
 	public Vector3? teleportRotation;
 	public Vector3? teleportPosition;
 	public bool clockwise = true;
+	public int lateral = 0;
+	public int straight = 1;
+	public Transform agentTransform;
 	public bool restrictOpenDoors = false;
 
     public SimObjType ReceptableSimObjType()

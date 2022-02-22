@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
-        [Range(-250,250)] public float pushPullForce = 150.0f;
+        [Range(-1,1)] public float pushPullForce = 0.5f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
@@ -37,6 +37,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Dictionary<string, string[]> positionByStep = new Dictionary<string, string[]>();
         private GameObject objectParent = null;
         public bool clockwise = true;
+	    [Range(-1, 1)] public int lateral = 0;
+	    [Range(-1, 1)] public int straight = 1;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -58,6 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.None;
             }
 
+            pushPullForce = 0.5f;
             ServerAction action = new ServerAction();
             action.action = "Initialize";
             action.gridSize = gridSize;
@@ -407,7 +410,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         StartCoroutine(PassThenRecordPosition(action, 0));
                     }
 
-                    if (Input.GetKeyDown(KeyCode.M))
+                    if (Input.GetKeyDown(KeyCode.B))
                     {
                         action.action = "TorqueObject";
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
@@ -422,6 +425,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                         action.objectId = this.moveOrPickupObjectId;
                         action.clockwise = clockwise;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.M))
+                    {
+                        action.action = "MoveObject";
+                        action.objectImageCoords = this.moveOrPickupObjectImageCoords;
+                        action.objectId = this.moveOrPickupObjectId;
+                        action.lateral = this.lateral;
+                        action.straight = this.straight;
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }
