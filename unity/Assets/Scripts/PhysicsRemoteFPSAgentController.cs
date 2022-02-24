@@ -5280,6 +5280,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            lockOtherDoorsInScene(canOpen, success, restrictOpenDoors);
+
+            actionFinished(success);
+        }
+
+        protected void lockOtherDoorsInScene(CanOpen_Object canOpen, bool success, bool restrictOpenDoors) {
             // If needed, lock all other doors in the scene
             if(success && canOpen.isDoor && restrictOpenDoors && canOpen.isOpen) {
                 CanOpen_Object[] openableObjs = GameObject.FindObjectsOfType<CanOpen_Object>();
@@ -5292,8 +5298,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
-
-            actionFinished(success);
         }
 
         protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f, bool restrictOpenDoors = false)
@@ -5409,18 +5413,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             }
 
-            // If needed, lock all other doors in the scene
-            if(success && coo.isDoor && restrictOpenDoors && coo.isOpen) {
-                CanOpen_Object[] openableObjs = GameObject.FindObjectsOfType<CanOpen_Object>();
-
-                foreach (CanOpen_Object co in openableObjs) {
-                    if(co.isDoor && coo.GetComponent<SimObjPhysics>().objectID != co.GetComponent<SimObjPhysics>().objectID) {
-                        if (!co.locked) {
-                            co.locked = true;
-                        }
-                    }
-                }
-            }
+            lockOtherDoorsInScene(coo, success, restrictOpenDoors);
 
             actionFinished(success);
         }
