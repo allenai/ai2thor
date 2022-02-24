@@ -853,7 +853,7 @@ namespace Thor.Procedural {
             var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor);
             // TODO Offset Y would require to get joining walls from above and below 
             meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit, 
-                        squareTiling: squareTiling);
+                        squareTiling: squareTiling, materialProperties: toCreate.materialProperties);
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
@@ -1188,6 +1188,7 @@ namespace Thor.Procedural {
                 p1 = polygons.ElementAt(1),
                 height = maxY - p0.y,
                 materialId = wall.material,
+                materialProperties = wall.materialProperties,
                 empty = wall.empty,
                 roomId = wall.roomId,
                 hole = hole,
@@ -1216,9 +1217,9 @@ namespace Thor.Procedural {
             return Vector2.zero;
         }
 
-        private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false, bool squareTiling = false) {
+        private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false, bool squareTiling = false, MaterialProperties materialProperties = null) {
             // optimization do not copy when not needed
-            if (color == null && !tilingDivisorX.HasValue && !tilingDivisorY.HasValue && offsetX == 0.0f && offsetY == 0.0f && !useUnlitShader) {
+            if (color == null && !tilingDivisorX.HasValue && !tilingDivisorY.HasValue && offsetX == 0.0f && offsetY == 0.0f && !useUnlitShader && materialProperties == null) {
                 return sharedMaterial;
             }
 
@@ -1255,6 +1256,11 @@ namespace Thor.Procedural {
             if (useUnlitShader) {
                 var shader = Shader.Find("Unlit/Color");
                 materialCopy.shader = shader;
+            }
+
+            if (materialProperties != null) {
+                materialCopy.SetFloat("_Metallic", materialProperties.metallic);
+                materialCopy.SetFloat("_Glossiness", materialProperties.smoothness);
             }
 
             return materialCopy;
@@ -1373,7 +1379,15 @@ namespace Thor.Procedural {
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
                 var dimensions = getAxisAlignedWidthDepth(room.floorPolygon);
-                meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(room.floorMaterial), room.floorColor, dimensions, room.floorMaterialTilingXDivisor, room.floorMaterialTilingYDivisor, squareTiling: house.proceduralParameters.squareTiling);
+                meshRenderer.material = generatePolygonMaterial(
+                    materialDb.getAsset(room.floorMaterial),
+                    room.floorColor, 
+                    dimensions, 
+                    room.floorMaterialTilingXDivisor, 
+                    room.floorMaterialTilingYDivisor, 
+                    squareTiling: house.proceduralParameters.squareTiling, 
+                    materialProperties: room.materialProperties
+                );
 
                 //set up mesh collider to allow raycasts against only the floor inside the room
                 subFloorGO.AddComponent<MeshCollider>();
@@ -1488,9 +1502,11 @@ namespace Thor.Procedural {
                     var roomCeilingMaterialId = ceilingMaterialId;
                     var ceilingTilingXDivisor =  house.proceduralParameters.ceilingMaterialTilingXDivisor;
                     var ceilingTilingYDivisor =  house.proceduralParameters.ceilingMaterialTilingYDivisor;
+                    MaterialProperties ceilingMaterialProperties = null;
                     if (room.ceilings.Count > 0) {
                         ceilingTilingXDivisor = room.ceilings[0].tilingDivisorX;
                         ceilingTilingYDivisor = room.ceilings[0].tilingDivisorY;
+                        ceilingMaterialProperties = room.ceilings[0].materialProperties;
                         if (!string.IsNullOrEmpty(room.ceilings[0].material)) {
                             roomCeilingMaterialId = room.ceilings[0].material;
                             
@@ -1505,7 +1521,8 @@ namespace Thor.Procedural {
                         0.0f,
                         0.0f,
                         house.proceduralParameters.unlitCeiling,
-                        squareTiling: house.proceduralParameters.squareTiling
+                        squareTiling: house.proceduralParameters.squareTiling,
+                        materialProperties: ceilingMaterialProperties
                     );
 
                     tagObjectNavmesh(ceilingGameObject, "Not Walkable");
@@ -1781,7 +1798,8 @@ namespace Thor.Procedural {
                     ho.kinematic,
                     ho.color,
                     true,
-                    ho.unlit
+                    ho.unlit,
+                    ho.materialProperties
                 );
             } else {
 
@@ -1816,8 +1834,8 @@ namespace Thor.Procedural {
             bool kinematic = false,
             SerializableColor color = null,
             bool positionBoundingBoxCenter = false,
-            bool unlit = false
-
+            bool unlit = false,
+            MaterialProperties materialProperties = null
         ) {
             var go = prefab;
 
@@ -1867,6 +1885,10 @@ namespace Thor.Procedural {
                     mat.color = new Color(color.r, color.g, color.b, color.a);
                     if (unlit) {
                         mat.shader = unlitShader;
+                    }
+                    if (materialProperties != null) { 
+                        mat.SetFloat("_Metallic", materialProperties.metallic);
+                        mat.SetFloat("_Glossiness", materialProperties.smoothness);
                     }
                 }
             }
