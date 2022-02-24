@@ -338,7 +338,9 @@ public class MCSConfig {
             { "english-country-village-painting", new string[] { "painting" } },
             { "Kielland-Fra_jaeren", new string[] { "painting" } },
             { "peder-balke-steigen-1849-trivium-art-history", new string[] { "painting" } },
-            { "THORKEA_Shelving_Unit_Kallax_Small_Wood_2_Mat", new string[] { "white" } }
+            { "THORKEA_Shelving_Unit_Kallax_Small_Wood_2_Mat", new string[] { "white" } },
+            // Tool material
+            { "M_YFMM_13", new string[] { "grey" } }
         };
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             foreach (KeyValuePair<string, string[]> materialName in materialType.Value) {

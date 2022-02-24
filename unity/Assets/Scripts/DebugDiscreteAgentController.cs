@@ -60,6 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.None;
             }
 
+            this.pushPullForce = 1.0f;
             ServerAction action = new ServerAction();
             action.action = "Initialize";
             action.gridSize = gridSize;
