@@ -947,7 +947,23 @@ public class MCSMain : MonoBehaviour {
         // Use the List constructor to copy the visibility points list from the object definition.
         List<MCSConfigVector> points = new List<MCSConfigVector>(visibilityPointsFromConfig);
         if (this.ShouldAutoGenerateVisibilityPoints(objectConfig)) {
-            points = this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig, objectDefinition);
+            // Find the size of the object using its "show" config, since its scale is always (1,1,1) on init.
+            MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
+                objectConfig.shows[0] : null;
+            float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
+            float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
+            float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
+
+            // Update the object's size if needed.
+            if (objectDefinition.visibilityPointScaleOverride != null && objectDefinition.visibilityPointScaleOverride.x > 0 &&
+                    objectDefinition.visibilityPointScaleOverride.y > 0 && objectDefinition.visibilityPointScaleOverride.z > 0) {
+                xSize *= objectDefinition.visibilityPointScaleOverride.x;
+                ySize *= objectDefinition.visibilityPointScaleOverride.y;
+                zSize *= objectDefinition.visibilityPointScaleOverride.z;
+            }
+
+            // Automatically generate all visibility points for the object.
+            points = this.GenerateCubeInternalVisibilityPoints(gameObject, xSize, ySize, zSize);
         }
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
@@ -1118,11 +1134,11 @@ public class MCSMain : MonoBehaviour {
         SimObjPhysics ai2thorPhysicsScript = gameObject.GetComponent<SimObjPhysics>();
         if (ai2thorPhysicsScript == null) {
             ai2thorPhysicsScript = gameObject.AddComponent<SimObjPhysics>();
-            ai2thorPhysicsScript.isInteractable = true;
             ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.Static;
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
         }
+        ai2thorPhysicsScript.isInteractable = true;
         ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
@@ -1241,7 +1257,22 @@ public class MCSMain : MonoBehaviour {
                 float x = objectConfig.shows[0].scale.x;
                 float y = objectConfig.shows[0].scale.y;
                 float z = objectConfig.shows[0].scale.z;
-                so.AddPlatformLips(x,y,z, objectConfig.lips);
+                List<GameObject> lips = so.AddPlatformLips(x,y,z, objectConfig.lips);
+                foreach(GameObject lip in lips) {
+                    // Delete the incorrect visibility points cloned from the lip's platform.
+                    Destroy(lip.transform.Find("VisibilityPoints").gameObject);
+                    // Size of the lip equals size of the platform times the lip's size.
+                    float xSizeLip = x * lip.transform.localScale.x;
+                    float ySizeLip = y * lip.transform.localScale.y;
+                    float zSizeLip = z * lip.transform.localScale.z;
+                    // Create new visibility points using the size of the lip.
+                    Transform[] lipPoints = this.AssignVisibilityPoints(lip,
+                            this.GenerateCubeInternalVisibilityPoints(lip, xSizeLip, ySizeLip, zSizeLip), Vector3.one);
+                    // Set the correct visibility points on the lip's SimObjPhysics script.
+                    SimObjPhysics lipSimObjPhysicsScript = lip.GetComponentInChildren<SimObjPhysics>();
+                    lipSimObjPhysicsScript.VisibilityPoints = lipPoints;
+                    lipSimObjPhysicsScript.Start();
+                }
             }
         }
 
@@ -1475,24 +1506,10 @@ public class MCSMain : MonoBehaviour {
 
     private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
         GameObject gameObject,
-        MCSConfigGameObject objectConfig,
-        MCSConfigObjectDefinition objectDefinition
+        float xSize,
+        float ySize,
+        float zSize
     ) {
-        MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
-            objectConfig.shows[0] : null;
-
-        // Determine the size of the object.
-        float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
-        float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
-        float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
-
-        if (objectDefinition.visibilityPointScaleOverride != null && objectDefinition.visibilityPointScaleOverride.x > 0 &&
-                objectDefinition.visibilityPointScaleOverride.y > 0 && objectDefinition.visibilityPointScaleOverride.z > 0) {
-            xSize *= objectDefinition.visibilityPointScaleOverride.x;
-            ySize *= objectDefinition.visibilityPointScaleOverride.y;
-            zSize *= objectDefinition.visibilityPointScaleOverride.z;
-        }
-
         // Calculate the number of cells in the grid going across each axis.
         // Use Max to ensure visibility points are still set for tiny objects.
         float xGrid = Mathf.Max(Mathf.Floor(xSize / MCSMain.AUTO_GRID_CELL_SPACING), MCSMain.AUTO_GRID_CELL_MIN);
