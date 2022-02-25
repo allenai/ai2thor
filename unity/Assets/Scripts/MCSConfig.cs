@@ -339,7 +339,10 @@ public class MCSConfig {
             { "Kielland-Fra_jaeren", new string[] { "painting" } },
             { "peder-balke-steigen-1849-trivium-art-history", new string[] { "painting" } },
             { "THORKEA_Shelving_Unit_Kallax_Small_Wood_2_Mat", new string[] { "white" } },
-            // Tool material
+            // Soccer ball materials
+            { "Black-Ball-Material", new string[] { "black" } },
+            { "White-Ball-Material", new string[] { "white" } },
+            // Tool materials
             { "M_YFMM_13", new string[] { "grey" } }
         };
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
