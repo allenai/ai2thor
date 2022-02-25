@@ -1214,6 +1214,9 @@ public class MCSMain : MonoBehaviour {
                     ai2thorCanOpenObjectScript.Interact();
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
+                if (objectConfig.type.Contains("door_")) {
+                    ai2thorCanOpenObjectScript.isDoor = true;
+                }
             }
         }
 
@@ -2135,6 +2138,7 @@ public class MCSConfigScene {
     public Vector3 roomDimensions;
     public List<MCSConfigGrid> holes;
     public List<MCSConfigFloorTextures> floorTextures;
+    public bool restrictOpenDoors;
 }
 
 [Serializable]

@@ -5232,7 +5232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected void OpenOrCloseObject(CanOpen_Object canOpen, float previousOpenPercent) {
+        protected void OpenOrCloseObject(CanOpen_Object canOpen, float previousOpenPercent, bool restrictOpenDoors = false) {
             List<Collider> collidersDisabled = new List<Collider>();
             foreach (Collider collider in this.GetComponentsInChildren<Collider>()) {
                 if (collider.enabled) {
@@ -5280,10 +5280,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            lockOtherDoorsInScene(canOpen, success, restrictOpenDoors);
+
             actionFinished(success);
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f)
+        protected void lockOtherDoorsInScene(CanOpen_Object canOpen, bool success, bool restrictOpenDoors) {
+            // If needed, lock all other doors in the scene
+            if(success && canOpen.isDoor && restrictOpenDoors && canOpen.isOpen) {
+                CanOpen_Object[] openableObjs = GameObject.FindObjectsOfType<CanOpen_Object>();
+
+                foreach (CanOpen_Object co in openableObjs) {
+                    if(co.isDoor && canOpen.GetComponent<SimObjPhysics>().objectID != co.GetComponent<SimObjPhysics>().objectID) {
+                        if (!co.locked) {
+                            co.locked = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f, bool restrictOpenDoors = false)
         {
             bool ignoreAgentInTransition = true;
 
@@ -5394,8 +5411,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Object failed to open/close successfully.";
                 }
 
-                actionFinished(success);
             }
+
+            lockOtherDoorsInScene(coo, success, restrictOpenDoors);
+
+            actionFinished(success);
         }
 
         protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
@@ -5922,9 +5942,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (Physics.autoSimulation) {
-                        StartCoroutine(InteractAndWait(codd, false, previousOpenPercent));
+                        StartCoroutine(InteractAndWait(codd, false, previousOpenPercent, action.restrictOpenDoors));
                     } else {
-                        OpenOrCloseObject(codd, previousOpenPercent);
+                        OpenOrCloseObject(codd, previousOpenPercent, action.restrictOpenDoors);
                     }
                 }
             }

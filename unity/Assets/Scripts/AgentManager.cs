@@ -1476,6 +1476,7 @@ public class ServerAction
 	public int lateral = 0;
 	public int straight = 1;
 	public Transform agentTransform;
+	public bool restrictOpenDoors = false;
 
     public SimObjType ReceptableSimObjType()
 	{
