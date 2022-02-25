@@ -95,6 +95,7 @@ public class MCSMain : MonoBehaviour {
     public bool isPassiveScene = false;
     public AsyncOperationHandle<SceneInstance> asyncOperationHandle;
 
+    [HideInInspector]
     public MCSConfigScene currentScene;
     private int lastStep = -1;
     private Dictionary<String, MCSConfigObjectDefinition> objectDictionary =

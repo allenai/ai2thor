@@ -20,7 +20,7 @@ Shader "Hidden/Depth" {
              uniform sampler2D _CameraDepthTexture;
              uniform fixed _DepthLevel;
              uniform half4 _MainTex_TexelSize;
-
+             
              struct input
              {
                  float4 pos : POSITION;
@@ -50,15 +50,8 @@ Shader "Hidden/Depth" {
 
              float4 frag(output o) : COLOR
              {
-                 // LinearEyeDepth returns a value between the camera's near and far clipping planes.
-                 float depth = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
-
-                 // Assume the far clipping plane is always 15.
-                 // Split the distance into three sets of 5, each corresponding to an RGB element.
-                 float low = min(5, depth) / 5.0;
-                 float mid = min(5, max(depth - 5, 0)) / 5.0;
-                 float high = min(5, max(depth - 10, 0)) / 5.0;
-                 return float4(low, mid, high, 0.0);
+                 float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
+                 return float4(depth, 0.0, 0.0, 1.0);
              }
 
              ENDCG
