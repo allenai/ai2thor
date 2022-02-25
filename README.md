@@ -310,6 +310,7 @@ For playback:
   - In `InteractAndWait`, parent objects within receptacles to that receptacle so they all move together when a receptacle is opened or closed.
   - Added logic to `InteractAndWait` to reset an object to its prior position if open/close action fails, and to increase the radius used to check if an agent is in the way of the object to be opened/closed.
   - For `OpenObject` and `CloseObject`, only use coroutine if physics are enabled.
+  - For `OpenObject`, if opening a door and `restrictOpenDoors` is `true`, lock all other doors in `InteractAndWait` and `OpenOrCloseObject`.
   - In `isAgentCapsuleCollidingWith`, added expandBy parameter.
   - Added `isAgentOnTopOfObject` function to check for obstructions when opening objects that slide out (like drawers).
   - Change the layer of the `ItemInHand` to `SimObjInvisible` when picked up and to `SimObjVisible` when put/dropped/thrown.

@@ -19,6 +19,10 @@ using System.Collections.Generic;
 
 [RequireComponent (typeof(Camera))]
 public class ImageSynthesis : MonoBehaviour {
+    private static RenderTextureFormat DEPTH_RENDER_FORMAT = RenderTextureFormat.RFloat;
+    private static RenderTextureReadWrite DEPTH_RENDER_READ_WRITE = RenderTextureReadWrite.Linear;
+    private static TextureFormat DEPTH_TEXTURE_FORMAT = TextureFormat.RFloat;
+    private static TextureFormat RGB_TEXTURE_FORMAT = TextureFormat.RGB24;
 
 	// pass configuration
 	private CapturePass[] capturePasses = new CapturePass[] {
@@ -74,7 +78,10 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public bool sentColorCorrespondence;
 
-	public Texture2D tex;
+    // Texture used to save depth data.
+    public Texture2D depthTexture;
+    // Texture used to save RGB images like object segmentation masks.
+    public Texture2D rgbTexture;
 
 	// If needed, use a guid to generate unique segmentation mask colors for each step
 	private string guidForColors = string.Empty;
@@ -381,8 +388,6 @@ public class ImageSynthesis : MonoBehaviour {
 
     public byte[] Encode(
         string passName,
-        RenderTextureFormat format = RenderTextureFormat.Default, 
-        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default, 
         int width = -1, 
         int height = -1, 
         bool jpg = false
@@ -397,9 +402,16 @@ public class ImageSynthesis : MonoBehaviour {
 			height = Screen.height;
 		}
 
+        bool isDepth = (passName == "_depth");
+        RenderTextureFormat renderFormat = (isDepth ? ImageSynthesis.DEPTH_RENDER_FORMAT :
+                RenderTextureFormat.Default);
+        RenderTextureReadWrite renderReadWrite = (isDepth ? ImageSynthesis.DEPTH_RENDER_READ_WRITE :
+                RenderTextureReadWrite.Default);
+
 		foreach (var pass in capturePasses)
             if(pass.name == passName && pass.camera != null)
-                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg, format, textureReadMode);
+                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg,
+                        renderFormat, renderReadWrite, isDepth);
 
 		return(new byte[0]);
     }
@@ -443,22 +455,33 @@ public class ImageSynthesis : MonoBehaviour {
         bool supportsAntialiasing, 
         bool needsRescale, 
         bool jpg = false, 
-        RenderTextureFormat format = RenderTextureFormat.Default, 
-        RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
+        RenderTextureFormat renderFormat = RenderTextureFormat.Default,
+        RenderTextureReadWrite renderReadWrite = RenderTextureReadWrite.Default,
+        bool isDepth = false
     )
 	{
 		var mainCamera = GetComponent<Camera>();
 		var depth = 24;
-		var readWrite = textureReadMode;
 		var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
 
 		var finalRT =
-			RenderTexture.GetTemporary(width, height, depth, format, readWrite, antiAliasing);
+			RenderTexture.GetTemporary(width, height, depth, renderFormat, renderReadWrite, antiAliasing);
 		var renderRT = (!needsRescale) ? finalRT :
-			RenderTexture.GetTemporary(mainCamera.pixelWidth, mainCamera.pixelHeight, depth, format, readWrite, antiAliasing);
-		if (tex == null) {
-			tex = new Texture2D (width, height, TextureFormat.RGB24, false);
-		}
+			RenderTexture.GetTemporary(mainCamera.pixelWidth, mainCamera.pixelHeight, depth, renderFormat, renderReadWrite, antiAliasing);
+
+        Texture2D tex = null;
+        if (isDepth) {
+            if (this.depthTexture == null) {
+                this.depthTexture = new Texture2D(width, height, ImageSynthesis.DEPTH_TEXTURE_FORMAT, false);
+            }
+            tex = this.depthTexture;
+        }
+        else {
+            if (this.rgbTexture == null) {
+                this.rgbTexture = new Texture2D(width, height, ImageSynthesis.RGB_TEXTURE_FORMAT, false);
+            }
+            tex = this.rgbTexture;
+        }
 
 		var prevActiveRT = RenderTexture.active;
 		var prevCameraRT = cam.targetTexture;

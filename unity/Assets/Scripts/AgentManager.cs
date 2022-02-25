@@ -588,8 +588,8 @@ public class AgentManager : MonoBehaviour
     }
 
     public MetadataWrapper UpdateMetadataColors(BaseFPSAgentController agent, MetadataWrapper metadata) {
-		if (this.renderObjectImage && agent != null && agent.imageSynthesis != null && agent.imageSynthesis.tex != null) {
-			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
+		if (this.renderObjectImage && agent != null && agent.imageSynthesis != null && agent.imageSynthesis.rgbTexture != null) {
+			Color[] id_image = agent.imageSynthesis.rgbTexture.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
 			for (int yy = 0; yy < tex.height; yy++) {
 				for (int xx = 0; xx < tex.width; xx++) {
@@ -650,7 +650,7 @@ public class AgentManager : MonoBehaviour
 			if (!synth.hasCapturePass (captureName)) {
 				Debug.LogError (captureName + " not available - sending empty image");
 			}
-			byte[] bytes = synth.Encode (captureName);
+            byte[] bytes = synth.Encode (captureName);
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
 
 
@@ -1476,6 +1476,7 @@ public class ServerAction
 	public int lateral = 0;
 	public int straight = 1;
 	public Transform agentTransform;
+	public bool restrictOpenDoors = false;
 
     public SimObjType ReceptableSimObjType()
 	{

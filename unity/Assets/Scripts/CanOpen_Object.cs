@@ -41,6 +41,8 @@ public class CanOpen_Object : MonoBehaviour
 	[SerializeField]
     public bool canReset = true;
 
+    public bool isDoor = false;
+
 	protected enum MovementType { Slide, Rotate, ScaleX, ScaleY, ScaleZ};
 
 	[SerializeField]
