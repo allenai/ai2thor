@@ -139,6 +139,7 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
         public string material { get; set; }
+        public MaterialProperties materialProperties;
         public float? tilingDivisorX { get; set; }
         public float? tilingDivisorY { get; set; }
     }
@@ -148,6 +149,7 @@ namespace Thor.Procedural.Data {
     public class RoomHierarchy {
         public string id { get; set; }
         public string roomType { get; set; }
+        public MaterialProperties materialProperties;
         public string floorMaterial { get; set; }
         public float? floorMaterialTilingXDivisor = 1.0f;
         public float? floorMaterialTilingYDivisor = 1.0f;
@@ -167,6 +169,8 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
+
+        public MaterialProperties materialProperties;
 
         public bool empty { get; set; } = false;
 
@@ -300,6 +304,7 @@ namespace Thor.Procedural.Data {
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;
+        public MaterialProperties materialProperties;
     }
 
     [Serializable]
@@ -329,6 +334,14 @@ namespace Thor.Procedural.Data {
         public RectangleRoom[] rooms;
         public string ceilingMaterialId;
         public string id;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class MaterialProperties {
+        // TODO: move material id, color (as albedo) and tiling divisors 
+        public float metallic;
+        public float smoothness;
     }
 
     // TODO more general
@@ -364,6 +377,7 @@ namespace Thor.Procedural.Data {
         public bool empty;
         public WallRectangularHole hole = null;
         public string materialId;
+        public MaterialProperties materialProperties;
 
         public string roomId;
 
