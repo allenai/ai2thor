@@ -122,6 +122,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 	private static float MOVEMENT_AMOUNT = 0.1f;
 	private static float APPLY_FORCE_MULTIPLIER = 5f;
+	private static float APPLY_TORQUE_MULTIPLIER = 20f;
 
 
 	public float GetTimerResetValue()
@@ -1086,12 +1087,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         	myrb.WakeUp();
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		// Temporarily increase the rigidbody's max angular velocity (will be reset later).
 		myrb.maxAngularVelocity = SimObjPhysics.MAX_ANGULAR_VELOCITY_ON_TORQUE;
-
-		//torque is mass dependent when using ForceMode.Impulse
-		//applying 100 torque to an object with 500 mass will slightly rotate an object
-		//appling 100 torque to an object with 0.5 mass will spin the object several times
-		myrb.AddTorque(Vector3.up * action.moveMagnitude, ForceMode.Impulse);
+		myrb.AddTorque(Vector3.up * action.moveMagnitude * APPLY_TORQUE_MULTIPLIER, ForceMode.Impulse);
 	}
 
 	//used for applying rotation to an object
