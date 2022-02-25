@@ -535,6 +535,7 @@ public class MCSMain : MonoBehaviour {
         this.floor.transform.localPosition = DEFAULT_FLOOR_POSITION; //resets the floor position to the default
         
         if((this.currentScene.holes != null && this.currentScene.holes.Count > 0) || 
+            (this.currentScene.lava != null && this.currentScene.lava.Count > 0) ||
             (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
             CreateHolesAndApplyFloorTextures();
         }
@@ -567,12 +568,20 @@ public class MCSMain : MonoBehaviour {
         floors.transform.position = Vector3.zero;
         floors.transform.parent = GameObject.Find("Structure").transform;
 
-        bool createHoles = this.currentScene.holes != null && this.currentScene.holes.Count > 0;
-        bool applyTextures = this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0;
+        // Create a local copy of the current scene's floor textures.
+        List<MCSConfigFloorTextures> floorTextures = this.currentScene.floorTextures != null ?
+            new List<MCSConfigFloorTextures>(this.currentScene.floorTextures) : new List<MCSConfigFloorTextures>();
+        // Lava is added in the same way as floor textures, so combine them here, for the sake of this method.
+        if(this.currentScene.lava != null) {
+            MCSConfigFloorTextures lavaFloorTexture = new MCSConfigFloorTextures();
+            lavaFloorTexture.material = MCSConfig.ChooseRandomLavaMaterial();
+            lavaFloorTexture.positions = new List<MCSConfigGrid>(this.currentScene.lava);
+            floorTextures.Add(lavaFloorTexture);
+        }
 
         for(int i = 0; i<numOfFloorSections; i++) {
             bool holeDrop = false;
-            if(createHoles) {
+            if(this.currentScene.holes != null) {
                 foreach(MCSConfigGrid hole in this.currentScene.holes) {
                     if(posX == hole.x && posZ == hole.z) {
                         holeDrop = true;
@@ -583,15 +592,16 @@ public class MCSMain : MonoBehaviour {
 
             string material = "";
             bool changeFloorMaterial = false;
-            if(applyTextures) {
-                for(int j = 0; j<this.currentScene.floorTextures.Count && !changeFloorMaterial; j++) {
-                    foreach(MCSConfigGrid position in this.currentScene.floorTextures[j].positions) {
-                        if (posX == position.x && posZ == position.z) {
-                            material = this.currentScene.floorTextures[j].material;
-                            changeFloorMaterial = true;
-                            break;
-                        }
+            foreach(MCSConfigFloorTextures floorTexture in floorTextures) {
+                foreach(MCSConfigGrid position in floorTexture.positions) {
+                    if (posX == position.x && posZ == position.z) {
+                        material = floorTexture.material;
+                        changeFloorMaterial = true;
+                        break;
                     }
+                }
+                if(changeFloorMaterial) {
+                    break;
                 }
             }
 
@@ -2137,6 +2147,7 @@ public class MCSConfigScene {
 
     public Vector3 roomDimensions;
     public List<MCSConfigGrid> holes;
+    public List<MCSConfigGrid> lava;
     public List<MCSConfigFloorTextures> floorTextures;
     public bool restrictOpenDoors;
 }
