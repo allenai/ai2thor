@@ -1635,6 +1635,7 @@ namespace Thor.Procedural {
             buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
 
             RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+            DynamicGI.UpdateEnvironment();
 
             //generate objectId for newly created wall/floor objects
             //also add them to objectIdToSimObjPhysics dict so they can be found via
