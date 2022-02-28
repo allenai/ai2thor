@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 //this is used to tag Structural objects in the scene. Structural objects are objects with physical collision and are rendered, but are not SimObjects themselves.
 //these objects are all located under the "Structure" object in the Heirarchy, and are always static and purely environmental.
@@ -25,7 +26,7 @@ public class StructureObject : MonoBehaviour
             Physics.IgnoreCollision(agent.groundObjectsCollider, gameObject.GetComponentInChildren<Collider>(), true);
     }
 
-    public void AddPlatformLips(float scaleX = 1, float scaleY = 1, float scaleZ = 1, MCSConfigPlatformLips lips = null) {
+    public List<GameObject> AddPlatformLips(float scaleX = 1, float scaleY = 1, float scaleZ = 1, MCSConfigPlatformLips lips = null) {
         bool addFront = false;
         bool addBack = false;
         bool addLeft = false;
@@ -109,6 +110,8 @@ public class StructureObject : MonoBehaviour
         if (addRight) {
             PositionLips(rightGaps, rights, false, placementOffsetYWithScale, placementOffsetXWithScale, PLATFORM_LIP_HEIGHT / scaleY, PLATFORM_LIP_WIDTH / scaleX);
         }
+
+        return fronts.Concat(backs).Concat(lefts).Concat(rights).ToList();
     }
 
     private void PositionLips(List<LipGapSpan> gaps, List<GameObject> gameObjects, bool isFrontBack, float placementOffsetYWithScale, float placementOffsetXZWithScale, float scaleY, float scaleXZ) {
