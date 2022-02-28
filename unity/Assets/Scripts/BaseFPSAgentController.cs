@@ -3623,8 +3623,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ObjectNavExpertAction(ServerAction action) {
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-            var path = getShortestPath(sop, true);
+            NavMeshPath path = new UnityEngine.AI.NavMeshPath();
+            Func<bool> visibilityTest;
+            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+                SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+                path = getShortestPath(sop, true);
+                visibilityTest = () => objectIsWithinViewport(sop);
+            }
+            else {
+                var startPosition = this.transform.position;
+                var startRotation = this.transform.rotation;
+                SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
+                visibilityTest = () => true;
+            }
+
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
 
                 int parts = (int)Math.Round(360f / rotateStepDegrees);
@@ -3641,7 +3653,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
 
                 if (path.corners.Length <= 1) {
-                    if (objectIsWithinViewport(sop)) {
+                    if (visibilityTest()) {
                         actionFinished(true);
                         return;
                     }
@@ -3653,7 +3665,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
                         for (int horizon = -1; horizon <= 2; horizon++) {
                             m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
-                            if (objectIsWithinViewport(sop)) {
+                            if (visibilityTest()) {
                                 int numActions = Math.Abs(i) + Math.Abs(horizon - (int)(startCameraRot.x / 30f));
                                 if (numActions < bestNumActions) {
                                     bestNumActions = numActions;
@@ -4223,21 +4235,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPathToPoint(
-            Vector3 position, float x, float y, float z, float allowedError = DefaultAllowedErrorInShortestPath
+            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError);
+            SafelyComputeNavMeshPath(position, target, path, allowedError);
             actionFinished(success: true, actionReturn: path);
         }
 
         public void GetShortestPathToPoint(
-            float x,
-            float y,
-            float z,
+            Vector3 target,
             float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, x, y, z, allowedError);
+            GetShortestPathToPoint(startPosition, target, allowedError);
         }
 
         public void VisualizeShortestPaths(ServerAction action) {
