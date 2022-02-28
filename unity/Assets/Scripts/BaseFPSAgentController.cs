@@ -225,6 +225,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     r.enabled = value;
                 }
 
+                //if in arm mode, also set visibility for the arm
+                if (IKArm.gameObject.activeSelf==true) {
+                    foreach (Renderer r in IKArm.GetComponentsInChildren<Renderer>()) {
+                        if(r.gameObject.activeSelf) {
+                            r.enabled = value;
+                        }
+                    }
+                }
+
                 isVisible = value;
             }
         }
@@ -342,6 +351,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    r.enabled = false;
+                }
+            }
+
+            foreach (Renderer r in IKArm.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     r.enabled = false;
                 }
@@ -1172,6 +1187,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             return true;
+        }
+
+        public void ToggleAgentVisibility(bool isAgentVisible) {
+            if (isAgentVisible) {
+                foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
+                    r.enabled = true;
+                }
+
+                //if in arm mode, also set visibility for the arm
+                if (IKArm.gameObject.activeSelf == true) {
+                    foreach (Renderer r in IKArm.GetComponentsInChildren<Renderer>()) {
+                        if(r.gameObject.activeSelf)
+                        r.enabled = true;
+                    }
+                }
+
+                isVisible = true;
+            }
+
+            else {
+                foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
+                    print("here");
+                    r.enabled = false;
+                }
+
+                //if in arm mode, also set visibility for the arm
+                if (IKArm.gameObject.activeSelf == true) {
+                    foreach (Renderer r in IKArm.GetComponentsInChildren<Renderer>()) {
+                        if(r.gameObject.activeSelf)                        
+                        r.enabled = false;
+                    }
+                }
+
+                isVisible = false;
+            }
+
+            actionFinished(true);
         }
 
         //TODO: May need to track enabled/disabled objecst separately since some

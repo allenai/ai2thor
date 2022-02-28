@@ -349,7 +349,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["agentMode"] = "arm";
                         action["agentControllerType"] = "mid-level";
-
+                        action["makeAgentsVisible"] = true;
                         // action.useMassThreshold = true;
                         // action.massThreshold = 10f;
 
@@ -400,6 +400,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(
                             action
                         );
+                        break;
+                    }
+
+                case "invt": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleAgentVisibility";
+                        action["isAgentVisible"] = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "invf": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleAgentVisibility";
+                        action["isAgentVisible"] = false;
+                        CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
 
