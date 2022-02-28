@@ -2802,9 +2802,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "ObjectNavExpertAction";
 
                         // pass in a min range, max range, delay
-                        if (splitcommand.Length > 1) {
+                        if (splitcommand.Length == 2) {
                             // ID of spawner
                             action.objectType = splitcommand[1];
+                        }
+                        else if (splitcommand.Length >= 4) {
+                            // Target position
+                            action.position = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
                         }
 
                         CurrentActiveController().ProcessControlCommand(action);
