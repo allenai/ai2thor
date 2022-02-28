@@ -1121,7 +1121,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//rotate any other objects on top of the object too
 		if(!obstructed) {
-			RecursivelyRotateObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, direction);
+			List<Transform> objectsOnTop = new List<Transform>();
+			RecursivelyRotateObjectsOnTopOfObject(hitObjectsInReceptacleTriggerBox, direction, objectsOnTop);
 		}
 		
 		//enable all colliders
@@ -1139,10 +1140,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return true;
 	}
 
-	private void RecursivelyRotateObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float direction) {
+	private void RecursivelyRotateObjectsOnTopOfObject(Collider[] hitObjectsInReceptacleTriggerBox, float direction, List<Transform> objectsOnTop) {
 		if(hitObjectsInReceptacleTriggerBox.Length == 0)
 			return;		
-		List<Transform> objectsOnTop = new List<Transform>();
 		foreach(Collider c in hitObjectsInReceptacleTriggerBox) {
 			Transform objectOnTop = c.GetComponentInParent<SimObjPhysics>().transform;
 			if(!objectsOnTop.Contains(objectOnTop)) {
@@ -1151,7 +1151,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				//recursive rotation
 				Collider[] objectsOnTopOfObjects = new Collider[0];
 				objectsOnTopOfObjects = BoxCastInReceptacleTriggerBox(objectOnTop);
-				RecursivelyRotateObjectsOnTopOfObject(objectsOnTopOfObjects, direction);
+				RecursivelyRotateObjectsOnTopOfObject(objectsOnTopOfObjects, direction, objectsOnTop);
 				objectOnTop.RotateAround(transform.position, Vector3.up, direction);
 			}
 		}
