@@ -348,7 +348,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void actionFinishedEmit(bool success, object actionReturn = null) {
+        public void actionFinishedEmit(bool success, object actionReturn = null, string errorMessage = null) {
+            if (errorMessage != null) {
+                this.errorMessage = errorMessage;
+            }
             actionFinished(success: success, newState: AgentState.Emit, actionReturn: actionReturn);
         }
 
@@ -2142,6 +2145,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
             }
+        }
+
+        public void GetVisibilityPoints(string objectId) {
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            if (sop.VisibilityPoints == null) {
+                throw new ArgumentException($"objectId: {objectId} has no visibility points!");
+            }
+
+            Vector3[] points = new Vector3[sop.VisibilityPoints.Length];
+            for (int i = 0; i < points.Length; i++) {
+                points[i] = sop.VisibilityPoints[i].position;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: points
+            );
+        }
+
+        public void GetObjectHitFromRaycast(Vector3 origin, Vector3 destination) {
+            RaycastHit hit;
+            if (
+                !Physics.Raycast(
+                    origin: origin,
+                    direction: destination - origin,
+                    hitInfo: out hit,
+                    maxDistance: Mathf.Infinity,
+                    layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
+                    queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                )
+            ) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " failed to hit any target object!"
+                    )
+                );
+                return;
+            }
+            SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
+            if (target == null) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " hit object, but not a SimObject!"
+                    )
+                );
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: target.ObjectID
+            );
         }
 
         protected bool isPositionOnGrid(Vector3 xyz) {
