@@ -13,7 +13,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool handMode = false;
         void Start() {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-            PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
+            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            agentManager.SetUpPhysicsController();
+            PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;

@@ -115,8 +115,8 @@ class Linux64(BaseLinuxPlatform):
                         display_screen_str,
                         width,
                         height,
-                        disp_screen["width_in_pixels"],
-                        disp_screen["height_in_pixels"],
+                        disp_screen.screen()["width_in_pixels"],
+                        disp_screen.screen()["height_in_pixels"],
                     )
                 )
 
@@ -198,11 +198,11 @@ class OSXIntel64(BasePlatform):
 
 
 class CloudRendering(BaseLinuxPlatform):
-    enabled = False
+    enabled = True
 
     @classmethod
     def dependency_instructions(cls, request):
-        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y libvulkan1"
+        return "CloudRendering requires libvulkan1. Please install by running: sudo apt-get -y install libvulkan1"
 
     @classmethod
     def failure_message(cls):
@@ -222,13 +222,13 @@ class WebGL(BasePlatform):
 
 def select_platforms(request):
     candidates = []
-    system_platform_map = dict(Linux=(CloudRendering, Linux64), Darwin=(OSXIntel64,))
+    system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,))
     for p in system_platform_map.get(request.system, ()):
         if not p.enabled:
             continue
-        # skip CloudRendering when a x_display is specified
-        if p == CloudRendering and request.x_display is not None:
-            continue
+        # 
+        # if p == CloudRendering and request.x_display is not None:
+        #    continue
         candidates.append(p)
     return candidates
 
