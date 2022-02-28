@@ -40,10 +40,6 @@ namespace Tests {
             yield return step(action);
         }
 
-        protected AgentManager agentManager {
-            get => GameObject.FindObjectOfType<AgentManager>();
-        }
-
         [SetUp]
         public virtual void Setup() {
             UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan1_physics");

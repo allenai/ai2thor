@@ -29,12 +29,7 @@ public class JavaScriptInterface : MonoBehaviour {
 
     void Start()
     {
-        AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-        agentManager.SetUpPhysicsController();
-        PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
-        
-
-
+        PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
         // inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();// FindObjectOfType<DebugInputField>();
         // GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
         Init();

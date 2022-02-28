@@ -56,7 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
             }
             PhysicsSceneManager.StartPhysicsCoroutine(
-                startCoroutineUsing: this.baseAgentComponent,
+                startCoroutineUsing: this,
                 enumerator: whichContainersDoesAvailableObjectFitIn(
                     objectName: objectName, visibilityCheckCamera: camera
                 )
@@ -180,7 +180,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return false;
                         }
                         if (i == 0) {
-                            if (isSimObjVisible(visibilityCheckCamera, toCover, 10f).visible) {
+                            if (isSimObjVisible(visibilityCheckCamera, toCover, 10f)) {
                                 return false;
                             }
                         }
@@ -415,11 +415,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!maxDistance.HasValue) {
                 maxDistance = maxVisibleDistance;
             }
-
-            SimObjPhysics[] interactable;
             actionFinishedEmit(true,
               GetAllVisibleSimObjPhysicsDistance(
-                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null, out interactable
+                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null
               ).Select(sop => sop.ObjectID).ToList()
             );
         }
@@ -443,8 +441,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
                 foreach (Transform point in visPoints) {
                     // if this particular point is in view...
-                    
-                    if (CheckIfVisibilityPointInViewport(target, point, camera, false).visible) {
+                    if (CheckIfVisibilityPointInViewport(
+                        target, point, camera, false
+                    )) {
                         visPointCount++;
                     }
                 }
@@ -776,7 +775,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtPoint(this, objectType, objectVariation, target, position, rotation)) {
+            if (ersm.SpawnExperimentObjAtPoint(objectType, objectVariation, target, position, rotation)) {
                 actionFinished(true);
             } else {
                 errorMessage = $"Experiment object could not be placed on {receptacleObjectId}";
@@ -821,7 +820,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtRandom(this, objectType, objectVariation, randomSeed, target, rotation)) {
+            if (ersm.SpawnExperimentObjAtRandom(objectType, objectVariation, randomSeed, target, rotation)) {
                 actionFinished(true);
             } else {
                 errorMessage = "Experiment object could not be placed on " + receptacleObjectId;
@@ -1073,7 +1072,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // return all valid spawn coordinates
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(this, objectType, objectVariation, target, rotation));
+            actionFinished(true, ersm.ReturnValidSpawns(objectType, objectVariation, target, rotation));
         }
     }
 }

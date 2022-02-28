@@ -6,7 +6,7 @@ with VideoController() as vc:
     vc.play(vc.MoveAhead())
     vc.wait(5)
     vc.play(vc.MoveAhead())
-    vc.export_video('thor.mp4')
+    vc.exportVideo('thor.mp4')
 Known issues:
 - Multi agent rotations don't work (since TeleportFull breaks when passing in an AgentID)
 """
@@ -27,6 +27,13 @@ class VideoController(Controller):
         cam_fov=60,
         **controller_kwargs,
     ):
+        super().__init__(continuous=True, **controller_kwargs)
+        self.step(
+            action="AddThirdPartyCamera",
+            rotation=initial_camera_rotation,
+            position=initial_camera_position,
+            fieldOfView=initial_camera_fov,
+        )
 
         self.saved_frames = []
         self.ceiling_off = False
@@ -34,18 +41,10 @@ class VideoController(Controller):
         self.initial_cam_pos = cam_pos.copy()
         self.initial_cam_fov = cam_fov
 
-        super().__init__(continuous=True, **controller_kwargs)
-        self.step(
-            action="AddThirdPartyCamera",
-            rotation=self.initial_cam_rot,
-            position=self.initial_cam_pos,
-            fieldOfView=self.initial_cam_fov,
-        )
-
     def reset(self, scene=None, **init_params):
         """Changes the scene and adds a new third party camera to the initial position."""
         super().reset(scene, **init_params)
-        return self.step(
+        self.step(
             action="AddThirdPartyCamera",
             rotation=self.initial_cam_rot,
             position=self.initial_cam_pos,

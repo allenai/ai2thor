@@ -13,7 +13,6 @@ import json
 import copy
 import logging
 import math
-import numbers
 import time
 import random
 import shlex
@@ -21,8 +20,7 @@ import subprocess
 import shutil
 import re
 import os
-from platform import system  as platform_system
-from platform import architecture  as platform_architecture
+import platform
 import uuid
 from functools import lru_cache
 
@@ -391,8 +389,6 @@ class Controller(object):
         download_only=False,
         include_private_scenes=False,
         server_class=None,
-        gpu_device=None,
-        platform=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -414,24 +410,6 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.x_display = None
-        self.gpu_device = gpu_device
-        cuda_visible_devices = list(
-            map(int, filter(lambda y: y.isdigit(),
-            map(lambda x: x.strip(),
-                os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
-
-        if self.gpu_device is not None:
-
-            # numbers.Integral works for numpy.int32/64 and Python int
-            if (not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0):
-                raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
-            elif cuda_visible_devices:
-                if self.gpu_device >= len(cuda_visible_devices):
-                    raise ValueError("Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s" % (self.gpu_device, cuda_visible_devices))
-                else:
-                    self.gpu_device = cuda_visible_devices[self.gpu_device]
-        elif cuda_visible_devices:
-            self.gpu_device = cuda_visible_devices[0]
 
         if x_display:
             self.x_display = x_display
@@ -458,11 +436,11 @@ class Controller(object):
                 )
             )
 
-        if server_class is None and platform_system() == "Windows":
+        if server_class is None and platform.system() == "Windows":
             self.server_class = ai2thor.wsgi_server.WsgiServer
         elif (
             isinstance(server_class, ai2thor.fifo_server.FifoServer)
-            and platform_system() == "Windows"
+            and platform.system() == "Windows"
         ):
             raise ValueError("server_class=FifoServer cannot be used on Windows.")
         elif server_class is None:
@@ -484,7 +462,7 @@ class Controller(object):
         elif local_executable_path:
             self._build = ai2thor.build.ExternalBuild(local_executable_path)
         else:
-            self._build = self.find_build(local_build, commit_id, branch, platform)
+            self._build = self.find_build(local_build, commit_id, branch)
 
         self._build.download()
 
@@ -629,11 +607,19 @@ class Controller(object):
         # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
         # for old builds
         if self.scenes_in_build and scene not in self.scenes_in_build:
+
+            def key_sort_func(scene_name):
+                m = re.search(
+                    r"FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$", scene_name
+                )
+                last_val = m.group(3) if m.group(3) is not None else -1
+                return m.group(1), int(m.group(2)), int(last_val)
+
             raise ValueError(
                 "\nScene '{}' not contained in build (scene names are case sensitive)."
                 "\nPlease choose one of the following scene names:\n\n{}".format(
                     scene,
-                    ", ".join(sorted(list(self.scenes_in_build))),
+                    ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func)),
                 )
             )
 
@@ -642,32 +628,23 @@ class Controller(object):
 
         # update the initialization parameters
         init_params = init_params.copy()
-        target_width = init_params.pop("width", self.width)
-        target_height = init_params.pop("height", self.height)
 
         # width and height are updates in 'ChangeResolution', not 'Initialize'
-        # with CloudRendering the command-line height/width aren't respected, so
-        # we compare here with what the desired height/width are and
-        # update the resolution if they are different
-        # if Python is running against the Unity Editor then
-        # ChangeResolution won't have an affect, so it gets skipped
-        if (self.server.unity_proc is not None) and (
-            target_width != self.last_event.screen_width
-            or target_height != self.last_event.screen_height
+        if ("width" in init_params and init_params["width"] != self.width) or (
+            "height" in init_params and init_params["height"] != self.height
         ):
+            if "width" in init_params:
+                self.width = init_params["width"]
+                del init_params["width"]
+            if "height" in init_params:
+                self.height = init_params["height"]
+                del init_params["height"]
             self.step(
                 action="ChangeResolution",
-                x=target_width,
-                y=target_height,
+                x=self.width,
+                y=self.height,
                 raise_for_failure=True,
             )
-            self.width = target_width
-            self.height = target_height
-
-        # the command line -quality parameter is not respected with the CloudRendering
-        # engine, so the quality is manually changed after launch
-        if self._build.platform == ai2thor.platform.CloudRendering:
-            self.step(action="ChangeQuality", quality=self.quality)
 
         # updates the initialization parameters
         self.initialization_parameters.update(init_params)
@@ -976,9 +953,6 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
-        
-        if self.gpu_device:
-            command += " -force-device-index %d" % self.gpu_device
 
         return shlex.split(command)
 
@@ -1005,22 +979,6 @@ class Controller(object):
             stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
             stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
         )
-
-        try:
-            if self._build.platform == ai2thor.platform.CloudRendering:
-                # if Vulkan is not configured correctly then Unity will crash
-                # immediately after launching
-                self.server.unity_proc.wait(timeout=1.0)
-                if self.server.unity_proc.returncode is not None:
-                    message = (
-                        "Unity process has exited - check Player.log for errors. Confirm that Vulkan is properly configured on this system using vulkaninfo from the vulkan-utils package. returncode=%s"
-                        % (self.server.unity_proc.returncode,)
-                    )
-                    raise Exception(message)
-
-        except subprocess.TimeoutExpired:
-            pass
-
         self.unity_pid = proc.pid
         atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -1072,48 +1030,44 @@ class Controller(object):
         import requests
 
         payload = []
-        makedirs(self.commits_cache_dir) # must make directory for lock to succeed
-        # must lock to handle case when multiple procs are started
-        # and all fetch from api.github.com
-        with LockEx(self._cache_commit_filename(branch)):
-            cache_payload, cache_mtime = self._get_cache_commit_history(branch)
-            # we need to limit how often we hit api.github.com since 
-            # there is a rate limit of 60 per hour per IP
-            if cache_payload and (time.time() - cache_mtime) < 300:
-                payload = cache_payload
-            else:
-                try:
-                    res = requests.get(
-                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
-                    )
-                    if res.status_code == 404:
-                        raise ValueError("Invalid branch name: %s" % branch)
-                    elif res.status_code == 403:
-                        payload, _ = self._get_cache_commit_history(branch)
-                        if payload:
-                            warnings.warn(
-                                "Error retrieving commits: %s - using cached commit history for %s"
-                                % (res.text, branch)
-                            )
-                        else:
-                            res.raise_for_status()
-                    elif res.status_code == 200:
-                        payload = res.json()
-                        self._cache_commit_history(branch, payload)
-                    else:
-                        res.raise_for_status()
-                except requests.exceptions.ConnectionError as e:
+        cache_payload, cache_mtime = self._get_cache_commit_history(branch)
+        # we need to limit how often we hit api.github.com since 
+        # there is a rate limit of 60 per hour per IP
+        if cache_payload and (time.time() - cache_mtime) < 300:
+            payload = cache_payload
+        else:
+            try:
+                res = requests.get(
+                    "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
+                )
+                if res.status_code == 404:
+                    raise ValueError("Invalid branch name: %s" % branch)
+                elif res.status_code == 403:
                     payload, _ = self._get_cache_commit_history(branch)
                     if payload:
                         warnings.warn(
-                            "Unable to connect to github.com: %s - using cached commit history for %s"
-                            % (e, branch)
+                            "Error retrieving commits: %s - using cached commit history for %s"
+                            % (res.text, branch)
                         )
                     else:
-                        raise Exception(
-                            "Unable to get commit history for branch %s and no cached history exists: %s"
-                            % (branch, e)
-                        )
+                        res.raise_for_status()
+                elif res.status_code == 200:
+                    payload = res.json()
+                    self._cache_commit_history(branch, payload)
+                else:
+                    res.raise_for_status()
+            except requests.exceptions.ConnectionError as e:
+                payload, _ = self._get_cache_commit_history(branch)
+                if payload:
+                    warnings.warn(
+                        "Unable to connect to github.com: %s - using cached commit history for %s"
+                        % (e, branch)
+                    )
+                else:
+                    raise Exception(
+                        "Unable to get commit history for branch %s and no cached history exists: %s"
+                        % (branch, e)
+                    )
 
         return [c["sha"] for c in payload]
 
@@ -1133,9 +1087,9 @@ class Controller(object):
 
         return commits
 
-    def find_build(self, local_build, commit_id, branch, platform):
+    def find_build(self, local_build, commit_id, branch):
         releases_dir = self.releases_dir
-        if platform_architecture()[0] != "64bit":
+        if platform.architecture()[0] != "64bit":
             raise Exception("Only 64bit currently supported")
         if branch:
             commits = self._branch_commits(branch)
@@ -1154,34 +1108,19 @@ class Controller(object):
             ] + commits  # we add the commits to the list to allow the ci_build to succeed
 
         request = ai2thor.platform.Request(
-            platform_system(), self.width, self.height, self.x_display, self.headless
+            platform.system(), self.width, self.height, self.x_display, self.headless
         )
-
-
-        if platform is None:
-            candidate_platforms = ai2thor.platform.select_platforms(request)
-        else:
-
-            # if the commit is using the default build commit, and 
-            # the platform target is CloudRendering we default to a known built
-            # commit until the build can be automated
-            if commit_id and commit_id == ai2thor.build.COMMIT_ID and platform == ai2thor.platform.CloudRendering:
-                commits.append(ai2thor.build.DEFAULT_CLOUDRENDERING_COMMIT_ID)
-
-            candidate_platforms = [platform]
-
-        builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
+        builds = self.find_platform_builds(request, commits, releases_dir, local_build)
         if not builds:
-            platforms_message = ",".join(map(lambda p: p.name(), candidate_platforms))
             if commit_id:
                 raise ValueError(
-                    "Invalid commit_id: %s - no build exists for arch=%s platforms=%s"
-                    % (commit_id, platform_system(), platforms_message)
+                    "Invalid commit_id: %s - no build exists for arch=%s"
+                    % (commit_id, platform.system())
                 )
             else:
                 raise Exception(
-                    "No build exists for arch=%s platforms=%s and commits: %s"
-                    % (platform_system(), platforms_message, ", ".join(map(lambda x: x[:8], commits)))
+                    "No build exists for arch=%s and commits: %s"
+                    % (platform.system(), ", ".join(map(lambda x: x[:8], commits)))
                 )
 
         # select the first build + platform that succeeds
@@ -1189,8 +1128,7 @@ class Controller(object):
         # is enabled, then it will get selected over Linux64 (assuming a build is available)
         for build in builds:
             if build.platform.is_valid(request):
-                # don't emit warnings for CloudRendering since we allow it to fallback to a default
-                if build.commit_id != commits[0] and build.platform != ai2thor.platform.CloudRendering:
+                if build.commit_id != commits[0]:
                     warnings.warn(
                         "Build for the most recent commit: %s is not available.  Using commit build %s"
                         % (commits[0], build.commit_id)
@@ -1212,7 +1150,8 @@ class Controller(object):
             error_messages.append(message)
         raise Exception("\n".join(error_messages))
 
-    def find_platform_builds(self, candidate_platforms, request, commits, releases_dir, local_build):
+    def find_platform_builds(self, request, commits, releases_dir, local_build):
+        candidate_platforms = ai2thor.platform.select_platforms(request)
         builds = []
         for plat in candidate_platforms:
             for commit_id in commits:
@@ -1297,8 +1236,7 @@ class Controller(object):
         # receive the first request
         self.last_event = self.server.receive()
 
-        # we should be able to get rid of this since we check the resolution in .reset()
-        if self.server.unity_proc is not None and (height < 300 or width < 300):
+        if height < 300 or width < 300:
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 
         return self.last_event

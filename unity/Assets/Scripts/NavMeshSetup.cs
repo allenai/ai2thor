@@ -163,7 +163,7 @@ public class NavMeshSetup : MonoBehaviour {
         //     SetNavMeshWalkable(floorStruct.gameObject);
         // }
 
-        var agentController = FindObjectOfType<BaseAgentComponent>();
+        var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
         // var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
         var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
         navmeshAgent.enabled = true;

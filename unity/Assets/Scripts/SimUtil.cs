@@ -4,7 +4,6 @@ using System.Collections;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine.SceneManagement;
 
 public static class SimUtil {
@@ -561,14 +560,14 @@ public static class SimUtil {
         }
 
         Dictionary<string, HashSet<Material>> materialMetadata = new Dictionary<string, HashSet<Material>>() {
-            ["RawTrainMaterials"] = new HashSet<Material>(),
-            ["RawValMaterials"] = new HashSet<Material>(),
-            ["RawTestMaterials"] = new HashSet<Material>(),
-            ["RawKitchenMaterials"] = new HashSet<Material>(),
-            ["RawLivingRoomMaterials"] = new HashSet<Material>(),
-            ["RawBedroomMaterials"] = new HashSet<Material>(),
-            ["RawBathroomMaterials"] = new HashSet<Material>(),
-            ["RawRobothorMaterials"] = new HashSet<Material>(),
+            ["train"] = new HashSet<Material>(),
+            ["val"] = new HashSet<Material>(),
+            ["test"] = new HashSet<Material>(),
+            ["kitchen"] = new HashSet<Material>(),
+            ["livingRoom"] = new HashSet<Material>(),
+            ["bedroom"] = new HashSet<Material>(),
+            ["bathroom"] = new HashSet<Material>(),
+            ["robothor"] = new HashSet<Material>(),
         };
 
         // iTHOR scenes
@@ -581,28 +580,28 @@ public static class SimUtil {
 
                 switch (sceneType) {
                     case 0:
-                        materialMetadata["RawKitchenMaterials"].UnionWith(materials);
+                        materialMetadata["kitchen"].UnionWith(materials);
                         break;
                     case 200:
-                        materialMetadata["RawLivingRoomMaterials"].UnionWith(materials);
+                        materialMetadata["livingRoom"].UnionWith(materials);
                         break;
                     case 300:
-                        materialMetadata["RawBedroomMaterials"].UnionWith(materials);
+                        materialMetadata["bedroom"].UnionWith(materials);
                         break;
                     case 400:
-                        materialMetadata["RawBathroomMaterials"].UnionWith(materials);
+                        materialMetadata["bathroom"].UnionWith(materials);
                         break;
                 }
 
                 if (i <= 20) {
                     // train scene
-                    materialMetadata["RawTrainMaterials"].UnionWith(materials);
+                    materialMetadata["train"].UnionWith(materials);
                 } else if (i <= 25) {
                     // val scene
-                    materialMetadata["RawValMaterials"].UnionWith(materials);
+                    materialMetadata["val"].UnionWith(materials);
                 } else {
                     // test scene
-                    materialMetadata["RawTestMaterials"].UnionWith(materials);
+                    materialMetadata["test"].UnionWith(materials);
                 }
             }
         }
@@ -614,8 +613,8 @@ public static class SimUtil {
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
                 HashSet<Material> materials = getMaterialsInScene();
-                materialMetadata["RawRobothorMaterials"].UnionWith(materials);
-                materialMetadata["RawTrainMaterials"].UnionWith(materials);
+                materialMetadata["robothor"].UnionWith(materials);
+                materialMetadata["train"].UnionWith(materials);
             }
         }
 
@@ -626,8 +625,8 @@ public static class SimUtil {
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
                 HashSet<Material> materials = getMaterialsInScene();
-                materialMetadata["RawRobothorMaterials"].UnionWith(materials);
-                materialMetadata["RawValMaterials"].UnionWith(materials);
+                materialMetadata["robothor"].UnionWith(materials);
+                materialMetadata["val"].UnionWith(materials);
             }
         }
 
@@ -636,14 +635,14 @@ public static class SimUtil {
         GameObject physicsSceneManager = UnityEditor.PrefabUtility.LoadPrefabContents(prefabPath);
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
 
-        foreach (KeyValuePair<string, HashSet<Material>> keyValuePair in materialMetadata) {
-            string label = keyValuePair.Key;
-            foreach (Material mat in keyValuePair.Value) {
-                HashSet<string> labels = new HashSet<string>(AssetDatabase.GetLabels(mat));
-                labels.Add(label);
-                AssetDatabase.SetLabels(mat, labels.ToArray());
-            }
-        }
+        colorChangeComponent.rawTrainMaterials = materialMetadata["train"].ToArray();
+        colorChangeComponent.rawValMaterials = materialMetadata["val"].ToArray();
+        colorChangeComponent.rawTestMaterials = materialMetadata["test"].ToArray();
+        colorChangeComponent.rawRobothorMaterials = materialMetadata["robothor"].ToArray();
+        colorChangeComponent.rawKitchenMaterials = materialMetadata["kitchen"].ToArray();
+        colorChangeComponent.rawBedroomMaterials = materialMetadata["bedroom"].ToArray();
+        colorChangeComponent.rawBathroomMaterials = materialMetadata["bathroom"].ToArray();
+        colorChangeComponent.rawLivingRoomMaterials = materialMetadata["livingRoom"].ToArray();
 
         // overrides the saved values on the prefab
         UnityEditor.PrefabUtility.SaveAsPrefabAsset(instanceRoot: physicsSceneManager, assetPath: prefabPath);
@@ -733,29 +732,6 @@ public static class SimUtil {
         }
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());//(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
 
-    }
-
-    [UnityEditor.MenuItem("AI2-THOR/Add Pickupable Objects to Physics Scene Manager")]
-    static void AddPickupableObjectsToPhysicsSceneManager() {
-        PhysicsSceneManager physicsSceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-        
-        SimObjPhysics[] simObjPhysicsArray = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-
-        if (physicsSceneManager.RequiredObjects.Count != 0 || physicsSceneManager.SpawnedObjects.Count != 0)
-        {
-            physicsSceneManager.RequiredObjects.Clear();
-            physicsSceneManager.RequiredObjects.Clear();
-        }
-
-        foreach (SimObjPhysics simObj in simObjPhysicsArray)
-        {
-            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-            {
-                physicsSceneManager.RequiredObjects.Add(simObj.gameObject);
-                physicsSceneManager.SpawnedObjects.Add(simObj.gameObject);
-            }
-        }
     }
 
 #endif

@@ -59,6 +59,9 @@ public class Contains : MonoBehaviour {
             Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
         }
 #endif
+
+
+
     }
 
     // Update is called once per frame
@@ -218,7 +221,7 @@ public class Contains : MonoBehaviour {
     // generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     // the list of points should be filtered closest to agent, if false
     // it will return all points on the receptacle regardless of agent proximity
-    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(BaseFPSAgentController agent = null) {
+    public List<ReceptacleSpawnPoint> GetValidSpawnPoints(bool ReturnPointsCloseToAgent) {
         List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
         Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; // in case we need all the corners later for something...
@@ -281,9 +284,9 @@ public class Contains : MonoBehaviour {
                 // set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
                 if (hit.transform == myParent.transform) {
                     // print("raycast hit: " + hit.transform.name);
-                    if (agent == null) {
+                    if (!ReturnPointsCloseToAgent) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
-                    } else if (narrowDownValidSpawnPoints(agent, hit.point)) {
+                    } else if (NarrowDownValidSpawnPoints(hit.point)) {
                         PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
                     }
                 }
@@ -291,9 +294,9 @@ public class Contains : MonoBehaviour {
 
             Vector3 BottomPoint = point + -(ydir * ydist);
             // didn't hit anything that could obstruct, so this point is good to go
-            if (agent == null) {
+            if (!ReturnPointsCloseToAgent) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-            } else if (narrowDownValidSpawnPoints(agent, BottomPoint)) {
+            } else if (NarrowDownValidSpawnPoints(BottomPoint)) {
                 PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
             }
         }
@@ -313,29 +316,34 @@ public class Contains : MonoBehaviour {
     }
 
     // additional checks if the point is valid. Return true if it's valid
-    private bool narrowDownValidSpawnPoints(BaseFPSAgentController agent, Vector3 point) {
+    public bool NarrowDownValidSpawnPoints(Vector3 point) {
+        // check if the point is in range of the agent at all
+        GameObject agent = GameObject.Find("FPSController");
+        PhysicsRemoteFPSAgentController agentController = agent.GetComponent<PhysicsRemoteFPSAgentController>();
 
         // get agent's camera point, get point to check, find the distance from agent camera point to point to check
 
+        float maxvisdist = agentController.WhatIsAgentsMaxVisibleDistance();
+
         // set the distance so that it is within the radius maxvisdist from the agent
-        Vector3 tmpForCamera = agent.m_Camera.transform.position;
+        Vector3 tmpForCamera = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera.transform.position;
         tmpForCamera.y = point.y;
 
         // automatically rule out a point if it's beyond our max distance of visibility
-        if (Vector3.Distance(point, tmpForCamera) >= agent.maxVisibleDistance) {
+        if (Vector3.Distance(point, tmpForCamera) >= maxvisdist) {
             return false;
         }
 
         // ok cool, it's within distance to the agent, now let's check 
         // if the point is within the viewport of the agent as well
 
-        Camera agentCam = agent.m_Camera;
+        Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
 
         // no offset if the object is below the camera position - a slight offset to account for objects equal in y distance to the camera
         if (point.y < agentCam.transform.position.y - 0.05f) {
             // do this check if the point's y value is below the camera's y value
             // this check will be a raycast vision check from the camera to the point exactly
-            if (agent.CheckIfPointIsInViewport(point)) {
+            if (agentController.CheckIfPointIsInViewport(point)) {
                 return true;
             }
         } else {
@@ -345,7 +353,7 @@ public class Contains : MonoBehaviour {
 
             // might want to adjust this offset amount, or even move this check to ensure object visibility after the
             // checkspawnarea corners are generated?
-            if (agent.CheckIfPointIsInViewport(point + new Vector3(0, 0.05f, 0))) {
+            if (agentController.CheckIfPointIsInViewport(point + new Vector3(0, 0.05f, 0))) {
                 return true;
             }
         }

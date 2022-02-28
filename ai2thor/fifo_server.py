@@ -134,9 +134,9 @@ class FifoServer(ai2thor.server.Server):
             if field_type is FieldType.METADATA:
                 # print("body length %s" % len(body))
                 # print(body)
-                metadata = msgpack.loads(body, raw=False, strict_map_key=False)
+                metadata = msgpack.loads(body, raw=False)
             elif field_type is FieldType.METADATA_PATCH:
-                metadata_patch = msgpack.loads(body, raw=False, strict_map_key=False)
+                metadata_patch = msgpack.loads(body, raw=False)
                 agents = self.raw_metadata["agents"]
                 metadata = dict(
                     agents=[{} for i in range(len(agents))],

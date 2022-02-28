@@ -3,6 +3,7 @@ python:
   - "3.6"
 install:
   - pip install progressbar2 requests invoke boto3 aws-requests-auth jsonschema python-xlib
+cache: pip
 script:
   - invoke poll-ci-build
 git:

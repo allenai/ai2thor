@@ -27,14 +27,7 @@ public class Build {
         build(GetBuildName(), BuildTarget.WebGL);
     }
 
-    static void buildResourceAssetJson() {
-        ResourceAssetManager manager = new ResourceAssetManager();
-        manager.BuildCatalog();
-    }
-
     static void build(string buildName, BuildTarget target) {
-        buildResourceAssetJson();
-
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
             var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
@@ -46,11 +39,7 @@ public class Build {
             Debug.Log("Adding Scene " + scene);
         }
 
-        // zip + compresslevel=1 && LZ4 is faster by about 30 seconds 
-        // (and results in smaller .zip files) than
-        // zip + compresslevel=6 (default) && uncomprsesed asset bundles 
-        BuildOptions options = BuildOptions.StrictMode | BuildOptions.CompressWithLz4;
-
+        BuildOptions options = BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle;
         if (ScriptsOnly()) {
             options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
         }
@@ -79,11 +68,6 @@ public class Build {
         }
 
         foreach (string f in files) {
-            // ignore entryway scenes in build since these are not yet complete
-            if (f.Contains("FloorPlan5") && !f.EndsWith("FloorPlan5_physics.unity")) {
-                continue;
-            }
-
             if (f.EndsWith(".unity")) {
                 scenes.Add(f);
             }

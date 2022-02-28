@@ -55,9 +55,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            agentManager.SetUpPhysicsController();
-            PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
+            PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
             highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, enableHighlightShader, true, MaxThrowForce, MaxChargeThrowSeconds);
 

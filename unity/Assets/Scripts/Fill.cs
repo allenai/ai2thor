@@ -112,8 +112,10 @@ public class Fill : MonoBehaviour {
 
     public void OnTriggerStay(Collider other) {
         // if touching running water, automatically fill with water.
-        if (!isFilled && other.CompareTag("Liquid")) {
-            FillObject("water");
+        if (other.tag == "Liquid") {
+            if (!isFilled) {
+                FillObject("water");
+            }
         }
     }
 }

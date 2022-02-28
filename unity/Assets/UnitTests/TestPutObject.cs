@@ -157,7 +157,8 @@ namespace Tests {
             action["z"] = 5.0f;
             yield return step(action);
 
-            Assert.AreEqual(agentManager.PrimaryAgent.lastActionSuccess, false);
+            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
+            Assert.AreEqual(agent.lastActionSuccess, false);
         }
 
         [UnityTest]
@@ -201,7 +202,8 @@ namespace Tests {
             action["z"] = 5.0f;
             yield return step(action);
 
-            Assert.AreEqual(agentManager.PrimaryAgent.lastActionSuccess, false);
+            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
+            Assert.AreEqual(agent.lastActionSuccess, false);
         }
 
         [UnityTest]
@@ -246,7 +248,8 @@ namespace Tests {
             action["z"] = 5.0f;
             yield return step(action);
 
-            Assert.AreEqual(agentManager.PrimaryAgent.lastActionSuccess, false);
+            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
+            Assert.AreEqual(agent.lastActionSuccess, false);
         }
     }
 }

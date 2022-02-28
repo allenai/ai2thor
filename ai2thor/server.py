@@ -154,8 +154,6 @@ class Event:
 
         self.process_colors()
         self.process_visible_bounds2D()
-        self.third_party_instance_masks = []
-        self.third_party_class_masks = []
         self.third_party_camera_frames = []
         self.third_party_semantic_segmentation_frames = []
         self.third_party_instance_segmentation_frames = []
@@ -225,49 +223,11 @@ class Event:
             obj for obj in self.metadata["objects"] if obj["objectType"] == object_type
         ]
 
-
-    def process_thirdparty_color_ids(self, instance_segmentation_frame):
-        instance_masks = {}
-        class_masks = {}
-
-        unique_ids, unique_inverse = unique_rows(
-            instance_segmentation_frame.reshape(-1, 3), return_inverse=True
-        )
-        unique_inverse = unique_inverse.reshape(
-            instance_segmentation_frame.shape[:2]
-        )
-        unique_masks = (
-            np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1))
-            == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
-        )
-
-        for color in unique_ids:
-            color_name = self.color_to_object_id.get(
-                tuple(int(cc) for cc in color), "background"
-            )
-            cls = color_name
-            simObj = False
-            if "|" in cls:
-                cls = cls.split("|")[0]
-                simObj = True
-
-            color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
-
-            if simObj:
-                instance_masks[color_name] = unique_masks[color_ind, ...]
-
-            if cls not in class_masks:
-                class_masks[cls] = unique_masks[color_ind, ...]
-            else:
-                class_masks[cls] = np.logical_or(
-                    class_masks[cls], unique_masks[color_ind, ...]
-                )
-
-        return class_masks, instance_masks
-
     def process_colors_ids(self):
         if self.instance_segmentation_frame is None:
             return
+
+        MIN_DETECTION_LEN = 0
 
         self.instance_detections2D = {}
         unique_ids, unique_inverse = unique_rows(
@@ -280,8 +240,9 @@ class Event:
             np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1))
             == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis]
         )
-
-        for color_ind, color in enumerate(unique_ids):
+        # for unique_color_ind, unique_color in enumerate(unique_ids):
+        for color_bounds in self.metadata["colorBounds"]:
+            color = np.array(color_bounds["color"])
             color_name = self.color_to_object_id.get(
                 tuple(int(cc) for cc in color), "background"
             )
@@ -291,29 +252,29 @@ class Event:
                 cls = cls.split("|")[0]
                 simObj = True
 
-            if cls not in self.class_detections2D:
-                self.class_detections2D[cls] = []
-            mask = unique_masks[color_ind, ...]
-            bb = self.mask_bounding_box(mask)
-            self.class_detections2D[cls].append(bb)
+            bb = np.array(color_bounds["bounds"])
+            bb[[1, 3]] = self.metadata["screenHeight"] - bb[[3, 1]]
+            if not (
+                (bb[2] - bb[0]) < MIN_DETECTION_LEN
+                or (bb[3] - bb[1]) < MIN_DETECTION_LEN
+            ):
+                if cls not in self.class_detections2D:
+                    self.class_detections2D[cls] = []
 
-            if simObj:
-                self.instance_detections2D[color_name] = bb
-                self.instance_masks[color_name] = mask
+                self.class_detections2D[cls].append(bb)
 
-            if cls not in self.class_masks:
-                self.class_masks[cls] = mask
-            else:
-                self.class_masks[cls] = np.logical_or(self.class_masks[cls], mask)
+                color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
 
-    def mask_bounding_box(self, mask):
-        rows = np.any(mask, axis=1)
-        cols = np.any(mask, axis=0)
-        rmin, rmax = np.where(rows)[0][[0, -1]]
-        cmin, cmax = np.where(cols)[0][[0, -1]]
+                if simObj:
+                    self.instance_detections2D[color_name] = bb
+                    self.instance_masks[color_name] = unique_masks[color_ind, ...]
 
-        return cmin, rmin, cmax, rmax
-
+                if cls not in self.class_masks:
+                    self.class_masks[cls] = unique_masks[color_ind, ...]
+                else:
+                    self.class_masks[cls] = np.logical_or(
+                        self.class_masks[cls], unique_masks[color_ind, ...]
+                    )
 
     def _image_depth(self, image_depth_data, **kwargs):
         image_depth = read_buffer_image(
@@ -341,39 +302,10 @@ class Event:
 
         return depth_image_float
 
-    def add_third_party_camera_image_robot(self, third_party_image_data, width, height):
-        self.third_party_camera_frames.append(
-            read_buffer_image(
-                third_party_image_data, width, height
-            )
-        )
-
-    def add_third_party_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
-        multiplier = 1.0
-        camera_far_plane = kwargs.pop("camera_far_plane", 1)
-        camera_near_plane = kwargs.pop("camera_near_plane", 0)
-        depth_width = kwargs.pop("depth_width", self.screen_width)
-        depth_height = kwargs.pop("depth_height", self.screen_height)
-        if depth_format == DepthFormat.Normalized:
-            multiplier = 1.0 / (camera_far_plane - camera_near_plane)
-        elif depth_format == DepthFormat.Millimeters:
-            multiplier = 1000.0
-
-        image_depth = (
-            read_buffer_image(
-                image_depth_data, depth_width, depth_height, **kwargs
-            ).reshape(depth_height, depth_width)
-            * multiplier
-        )
-        self.third_party_depth_frames.append(image_depth.astype(np.float32))
-
     def add_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
         multiplier = 1.0
         camera_far_plane = kwargs.pop("camera_far_plane", 1)
         camera_near_plane = kwargs.pop("camera_near_plane", 0)
-        depth_width = kwargs.pop("depth_width", self.screen_width)
-        depth_height = kwargs.pop("depth_height", self.screen_height)
-
         if depth_format == DepthFormat.Normalized:
             multiplier = 1.0 / (camera_far_plane - camera_near_plane)
         elif depth_format == DepthFormat.Millimeters:
@@ -381,8 +313,8 @@ class Event:
 
         image_depth = (
             read_buffer_image(
-                image_depth_data, depth_width, depth_height, **kwargs
-            ).reshape(depth_height, depth_width)
+                image_depth_data, self.screen_width, self.screen_height, **kwargs
+            ).reshape(self.screen_height, self.screen_width)
             * multiplier
         )
         self.depth_frame = image_depth.astype(np.float32)
@@ -425,7 +357,7 @@ class Event:
     def add_image(self, image_data, **kwargs):
         self.frame = read_buffer_image(
             image_data, self.screen_width, self.screen_height, **kwargs
-        )[:, :, :3] # CloudRendering returns 4 channels instead of 3
+        )
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
@@ -434,11 +366,9 @@ class Event:
         self.process_colors_ids()
 
     def add_third_party_image_ids(self, image_ids_data):
-        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
-        self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
-        class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
-        self.third_party_instance_masks.append(instance_masks)
-        self.third_party_class_masks.append(class_masks)
+        self.third_party_instance_segmentation_frames.append(
+            read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        )
 
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(

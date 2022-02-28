@@ -23,7 +23,6 @@ public class PhysicsSceneManager : MonoBehaviour {
     public GameObject[] ManipulatorReceptacles;
     public GameObject[] ManipulatorBooks;
     public bool AllowDecayTemperature = true; // if true, temperature of sim objects decays to Room Temp over time
-    public AgentManager agentManager;
 
     // public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 #if UNITY_EDITOR
@@ -45,10 +44,6 @@ public class PhysicsSceneManager : MonoBehaviour {
     public static uint PhysicsSimulateCallCount;
 
     private void OnEnable() {
-        // must do this here instead of Start() since OnEnable gets triggered prior to Start
-        // when the component is enabled.
-        agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
         SetupScene();
 
@@ -62,9 +57,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void SetupScene(bool generateObjectIds = true) {
+    public void SetupScene() {
         ObjectIdToSimObjPhysics.Clear();
-        GatherSimObjPhysInScene(generateObjectIds: generateObjectIds);
+        GatherSimObjPhysInScene();
         GatherAllRBsInScene();
     }
     // Use this for initialization
@@ -197,16 +192,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void GatherSimObjPhysInScene(bool generateObjectIds = true) {
+    public void GatherSimObjPhysInScene() {
         List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 
         allPhysObjects.AddRange(FindObjectsOfType<SimObjPhysics>());
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
         foreach (SimObjPhysics o in allPhysObjects) {
-            if (generateObjectIds) {
-                Generate_ObjectID(o);
-            }
+            Generate_ObjectID(o);
 
             // debug in editor, make sure no two object share ids for some reason
 #if UNITY_EDITOR
@@ -221,10 +214,9 @@ public class PhysicsSceneManager : MonoBehaviour {
             AddToObjectsInScene(o);
         }
 
-        foreach (var agent in this.agentManager.agents) {
-            if (agent.imageSynthesis != null) {
-                agent.imageSynthesis.OnSceneChange();
-            }
+        BaseFPSAgentController fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>();
+        if (fpsController.imageSynthesis != null) {
+            fpsController.imageSynthesis.OnSceneChange();
         }
     }
 
@@ -401,9 +393,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (placeStationary) {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     copy.GetComponent<Rigidbody>().isKinematic = true;
-                } else {
-                    copy.GetComponent<Rigidbody>().isKinematic = false;
                 }
+                // copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
         SetupScene();
@@ -643,7 +634,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                         }
                     }
 
-                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints();
+                    targetReceptacleSpawnPoints = receptacleSop.ReturnMySpawnPoints(false);
 
                     // first shuffle the list so it's random
                     targetReceptacleSpawnPoints.Shuffle_(rng);

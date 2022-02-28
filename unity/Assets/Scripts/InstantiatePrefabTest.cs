@@ -21,6 +21,16 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
 
+    // Use this for initialization
+    void Start() {
+        // m_Started = true;
+    }
+
+    // Update is called once per frame
+    void Update() {
+
+    }
+
     // spawn an object from the Array of prefabs. Used to spawn from a specific set of Prefabs
     // used for Hide and Seek stuff
     public SimObjPhysics Spawn(string prefabType, string objectId, Vector3 position) {
@@ -106,7 +116,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             if (!ignoreChecks) {
                 if (UtilityFunctions.isObjectColliding(
                     prefab,
-                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseAgentComponent>() select agent.gameObject))
+                    new List<GameObject>(from agent in GameObject.FindObjectsOfType<BaseFPSAgentController>() select agent.gameObject))
                 ) {
                     Debug.Log("On spawning object the area was not clear despite CheckSpawnArea saying it was.");
                     prefab.SetActive(false);
@@ -179,7 +189,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
     // same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
 
-    public bool PlaceObjectReceptacleInViewport(PhysicsRemoteFPSAgentController agent, List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
+    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright) {
 
         if (rsps == null) {
 #if UNITY_EDITOR
@@ -208,7 +218,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
-                if (agent.objectIsOnScreen(sop)) {
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                if (primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop)) {
                     return true;
                 }
             }
@@ -234,7 +245,6 @@ public class InstantiatePrefabTest : MonoBehaviour {
             rotation = r;
         }
     }
-    
 
     public bool PlaceObject(
         SimObjPhysics sop,
@@ -440,7 +450,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        sop.DropContainedObjectsStationary(); // use stationary version so that colliders are turned back on, but kinematics remain true
+                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        agent.DropContainedObjectsStationary(sop); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
                 }
 
@@ -456,7 +467,8 @@ public class InstantiatePrefabTest : MonoBehaviour {
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     // if this object is a receptacle and it has other objects inside it, drop them all together
                     if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                        sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: false);
+                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        agent.DropContainedObjects(target: sop, reparentContainedObjects: true, forceKinematic: false);
                     }
                 }
                 sop.isInAgentHand = false;// set agent hand flag
@@ -573,7 +585,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         if (hitColliders.Length > 0) {
             // filter out any AgentTriggerBoxes because those should be ignored now
             foreach (Collider c in hitColliders) {
-                if (c.isTrigger && c.GetComponentInParent<BaseAgentComponent>()) {
+                if (c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>()) {
                     continue;
                 } else {
                     return c;

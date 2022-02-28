@@ -57,22 +57,6 @@ def find_devices(excluded_device_ids):
 
     return devices
 
-def active_display_bus_ids():
-    # this determines whether a monitor is connected to the GPU
-    # if one is, the following Option is added for the Screen "UseDisplayDevice" "None"
-    command = "nvidia-smi --query-gpu=pci.bus_id,display_active --format=csv,noheader"
-    active_bus_ids = set()
-    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-    if result.returncode == 0:
-        for line in result.stdout.decode().strip().split("\n"):
-            nvidia_bus_id, display_status = re.split(r",\s?", line.strip())
-            bus_id = "PCI:" + ":".join(
-                map(lambda x: str(int(x, 16)), re.split(r"[:\.]", nvidia_bus_id)[1:])
-            )
-            if display_status.lower() == "enabled":
-                active_bus_ids.add(bus_id)
-
-    return active_bus_ids
 
 def pci_records():
     records = []
@@ -152,7 +136,6 @@ def generate_xorg_conf(
         excluded_device_ids: List[int], width: int, height: int
 ):
     devices = find_devices(excluded_device_ids)
-    active_display_devices = active_display_bus_ids()
 
     xorg_conf = []
 
@@ -176,8 +159,6 @@ Section "Screen"
     Device         "Device{device_id}"
     DefaultDepth    24
     Option         "AllowEmptyInitialConfiguration" "True"
-    Option         "Interactive" "False"
-    {extra_options}
     SubSection     "Display"
         Depth       24
         Virtual {width} {height}
@@ -186,14 +167,8 @@ EndSection
 """
     screen_records = []
     for i, bus_id in enumerate(devices):
-        extra_options = ""
-        if bus_id in active_display_devices:
-            # See https://github.com/allenai/ai2thor/pull/990
-            # when a monitor is connected, this option must be used otherwise
-            # Xorg will fail to start
-            extra_options = 'Option         "UseDisplayDevice" "None"'
         xorg_conf.append(device_section.format(device_id=i, bus_id=bus_id))
-        xorg_conf.append(screen_section.format(device_id=i, screen_id=i, width=width, height=height, extra_options=extra_options))
+        xorg_conf.append(screen_section.format(device_id=i, screen_id=i, width=width, height=height))
         screen_records.append(
             'Screen {screen_id} "Screen{screen_id}" 0 0'.format(screen_id=i)
         )
@@ -210,10 +185,8 @@ EndSection
 
 if __name__ == "__main__":
     if os.geteuid() != 0:
-        path = os.path.abspath(__file__)
-        print("Executing ai2thor-xorg with sudo")
-        args = ["--", path] + sys.argv[1:]
-        os.execvp("sudo", args)
+        print("Error: ai2thor-xorg must be run as root or launched with sudo")
+        sys.exit(1)
 
     if platform.system() != "Linux":
         print("Error: Can only run ai2thor-xorg on linux")
