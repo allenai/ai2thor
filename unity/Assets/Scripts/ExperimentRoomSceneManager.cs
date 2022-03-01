@@ -201,7 +201,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
 
     // return spawn coordinates above the <receptacleObjectId> that the <objectId> will fit at a given rotation <yRot>
     // excludes coordinates that would cause object <objectId> to fall off the table
-    public List<Vector3> ReturnValidSpawns(string objType, int variation, SimObjPhysics targetReceptacle, float yRot = 0) {
+    public List<Vector3> ReturnValidSpawns(PhysicsRemoteFPSAgentController agent, string objType, int variation, SimObjPhysics targetReceptacle, float yRot = 0) {
         toSpawn = null;
 
         if (objType == "screen") {
@@ -221,15 +221,14 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         // generate grid of potential spawn points
         // GetSpawnCoordinatesAboveReceptacle
         List<Vector3> spawnCoordinates = new List<Vector3>();
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = agent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
 
         List<Vector3> returnCoordinates = new List<Vector3>();
 
         // try and place object at every spawn coordinate and if it works, add it to the valid coords to return
         for (int i = 0; i < spawnCoordinates.Count; i++) {
             // place object at the given point, then check if the corners are ok
-            fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]);
+            agent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]);
 
             List<Vector3> corners = GetCorners(spawned);
 
@@ -265,7 +264,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
     // Note: always run ReturnValidSpawns - to get the current scene state's set of useable coordinates for the objType and Variation
     // spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object at coordinate <point> 
     // a valid <point> should be generated from the ReturnValidSpawns() return
-    public bool SpawnExperimentObjAtPoint(string objType, int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0) {
+    public bool SpawnExperimentObjAtPoint(PhysicsRemoteFPSAgentController agent, string objType, int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0) {
         toSpawn = null;
 
         bool success = false;
@@ -291,8 +290,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         // apply rotation to object, default quaternion.identity
         spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
 
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        if (fpsAgent.placeObjectAtPoint(toSpawn, point)) {
+        if (agent.placeObjectAtPoint(toSpawn, point)) {
             // we set success to true, if one of the corners doesn't fit on the table
             // this will be switched to false and will be returned at the end
             success = true;
@@ -334,7 +332,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
 
 
     // spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object using random seed to pick which spawn coordinate used
-    public bool SpawnExperimentObjAtRandom(string objType, int variation, int seed, SimObjPhysics targetReceptacle, float yRot = 0) {
+    public bool SpawnExperimentObjAtRandom(PhysicsRemoteFPSAgentController agent, string objType, int variation, int seed, SimObjPhysics targetReceptacle, float yRot = 0) {
         toSpawn = null;
 
         bool success = false;
@@ -350,8 +348,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         }
 
         List<Vector3> spawnCoordinates = new List<Vector3>();
-        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = agent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
         spawnCoordinates.Shuffle_(seed);
 
         // instantiate the prefab toSpawn away from every other object
@@ -366,7 +363,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         for (int i = 0; i < spawnCoordinates.Count; i++) {
             // place object at the given point, this also checks the spawn area to see if its clear
             // if not clear, it will return false
-            if (fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i])) {
+            if (agent.placeObjectAtPoint(toSpawn, spawnCoordinates[i])) {
                 // we set success to true, if one of the corners doesn't fit on the table
                 // this will be switched to false and will be returned at the end
                 success = true;

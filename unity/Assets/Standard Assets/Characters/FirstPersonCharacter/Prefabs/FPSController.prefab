@@ -17,11 +17,8 @@ GameObject:
   - component: {fileID: 114749714472260818}
   - component: {fileID: 114372750333748660}
   - component: {fileID: 136752831871764314}
-  - component: {fileID: 2433281640897831673}
   - component: {fileID: 4492823058425331622}
-  - component: {fileID: 7217967414208391840}
   - component: {fileID: 3005771958849600339}
-  - component: {fileID: 2789572543688112514}
   m_Layer: 10
   m_Name: FPSController
   m_TagString: Player
@@ -37,7 +34,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: -1.75}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -96,7 +93,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HandMoveMagnitude: 0.1
-  PhysicsController: {fileID: 0}
 --- !u!114 &3388362411129917294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110,10 +106,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InputFieldObj: {fileID: 0}
-  PhysicsController: {fileID: 0}
-  StochasticController: {fileID: 0}
-  DroneController: {fileID: 0}
-  ArmController: {fileID: 0}
   AManager: {fileID: 0}
   InputMode_Text: {fileID: 0}
 --- !u!114 &114000010621761404
@@ -157,11 +149,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d22dfd375bd14529b5d465c7b493eb0, type: 3}
+  m_Script: {fileID: 11500000, guid: bd0fad20516ef4362a2573d8ecca8044, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsHandDefault: 1
-  ItemInHand: {fileID: 0}
   AgentHand: {fileID: 1340499340313870}
   DefaultHandPosition: {fileID: 1863262018947090}
   rotPoint: {fileID: 8450533553661686078}
@@ -171,35 +161,12 @@ MonoBehaviour:
     type: 3}
   DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
     type: 3}
-  inTopLevelView: 0
-  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
-  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  autoResetTimeScale: 1
-  m_IsWalking: 0
-  m_WalkSpeed: 0
-  m_RunSpeed: 0
-  m_GravityMultiplier: 2
-  imageSynthesis: {fileID: 0}
   VisibilityCapsule: {fileID: 1762015268591634}
   TallVisCap: {fileID: 256261900933697183}
   BotVisCap: {fileID: 1762015268591634}
   DroneVisCap: {fileID: 7970507070051039418}
   DroneBasket: {fileID: 4893713080621194879}
   IKArm: {fileID: 6541060884949338445}
-  inHighFrictionArea: 0
-  agentState: 3
-  clearRandomizeMaterialsOnReset: 0
-  agentManager: {fileID: 0}
-  m_Camera: {fileID: 0}
-  cameraOrthSize: 0
-  m_CharacterController: {fileID: 0}
-  errorMessage: 
-  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  maxVisibleDistance: 1.5
-  objectIdsInBox: []
-  alwaysReturnVisibleRange: 0
-  actionDuration: 3
   CrackedCameraCanvas: {fileID: 8014459988081960210, guid: a1c124e94159179459f1fb49c885a5e7,
     type: 3}
   ToSetActive:
@@ -215,6 +182,8 @@ MonoBehaviour:
   - {fileID: 5816710041462207104, guid: 9215b98f2bb6741b8bafa00989578d49, type: 3}
   - {fileID: 6545476784750854561, guid: aca5ccb301c25451183fa2ae1deceeb9, type: 3}
   - {fileID: 5557411844810648702, guid: 45f2f0b0603de483e89ee8c61cb4cde0, type: 3}
+  DroneObjectLauncher: {fileID: 114390950229851692, guid: cdca5ee44bd7e45e9b82820e69a242f2,
+    type: 3}
 --- !u!114 &114372750333748660
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,60 +210,6 @@ CapsuleCollider:
   m_Height: 0.9
   m_Direction: 1
   m_Center: {x: 0, y: -0.45, z: 0}
---- !u!114 &2433281640897831673
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100000}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6839fe93e39084f7ba1b70ae71c8d153, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  IsHandDefault: 1
-  ItemInHand: {fileID: 0}
-  AgentHand: {fileID: 1340499340313870}
-  DefaultHandPosition: {fileID: 1863262018947090}
-  rotPoint: {fileID: 8450533553661686078}
-  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
-    type: 3}
-  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
-    type: 3}
-  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
-    type: 3}
-  inTopLevelView: 0
-  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
-  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  autoResetTimeScale: 1
-  m_IsWalking: 0
-  m_WalkSpeed: 0
-  m_RunSpeed: 0
-  m_GravityMultiplier: 2
-  imageSynthesis: {fileID: 0}
-  VisibilityCapsule: {fileID: 1762015268591634}
-  TallVisCap: {fileID: 256261900933697183}
-  BotVisCap: {fileID: 1762015268591634}
-  DroneVisCap: {fileID: 7970507070051039418}
-  DroneBasket: {fileID: 4893713080621194879}
-  IKArm: {fileID: 6541060884949338445}
-  inHighFrictionArea: 0
-  agentState: 3
-  clearRandomizeMaterialsOnReset: 0
-  agentManager: {fileID: 0}
-  m_Camera: {fileID: 0}
-  cameraOrthSize: 0
-  m_CharacterController: {fileID: 0}
-  errorMessage: 
-  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  maxVisibleDistance: 1.5
-  objectIdsInBox: []
-  alwaysReturnVisibleRange: 0
-  actionDuration: 3
-  CrackedCameraCanvas: {fileID: 8014459988081960210, guid: a1c124e94159179459f1fb49c885a5e7,
-    type: 3}
 --- !u!195 &4492823058425331622
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -317,67 +232,6 @@ NavMeshAgent:
   m_BaseOffset: 0.9
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &7217967414208391840
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100000}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67054803aa2494b648e38adc641a6788, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  IsHandDefault: 1
-  ItemInHand: {fileID: 0}
-  AgentHand: {fileID: 1340499340313870}
-  DefaultHandPosition: {fileID: 1863262018947090}
-  rotPoint: {fileID: 8450533553661686078}
-  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
-    type: 3}
-  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
-    type: 3}
-  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
-    type: 3}
-  inTopLevelView: 0
-  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
-  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  autoResetTimeScale: 1
-  m_IsWalking: 0
-  m_WalkSpeed: 0
-  m_RunSpeed: 0
-  m_GravityMultiplier: 0
-  imageSynthesis: {fileID: 0}
-  VisibilityCapsule: {fileID: 0}
-  TallVisCap: {fileID: 1762015268591634}
-  BotVisCap: {fileID: 1762015268591634}
-  DroneVisCap: {fileID: 7970507070051039418}
-  DroneBasket: {fileID: 4893713080621194879}
-  IKArm: {fileID: 6541060884949338445}
-  inHighFrictionArea: 0
-  agentState: 3
-  clearRandomizeMaterialsOnReset: 0
-  agentManager: {fileID: 0}
-  m_Camera: {fileID: 0}
-  cameraOrthSize: 0
-  m_CharacterController: {fileID: 0}
-  errorMessage: 
-  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  maxVisibleDistance: 1.5
-  objectIdsInBox: []
-  alwaysReturnVisibleRange: 0
-  actionDuration: 3
-  CrackedCameraCanvas: {fileID: 8014459988081960210, guid: a1c124e94159179459f1fb49c885a5e7,
-    type: 3}
-  basket: {fileID: 4893713080621194879}
-  basketTrigger: {fileID: 4895214489969182531}
-  DroneObjectLauncher: {fileID: 114390950229851692, guid: cdca5ee44bd7e45e9b82820e69a242f2,
-    type: 3}
-  caught_object: []
-  dronePositionRandomNoiseSigma: 0
-  fixupdateCnt: 0
 --- !u!114 &3005771958849600339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -392,64 +246,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   doNotRegisterChildrenWithin:
   - {fileID: 4523525810192944689}
---- !u!114 &2789572543688112514
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100000}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b754f70555175f140bf488bd3ff286e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  IsHandDefault: 1
-  ItemInHand: {fileID: 0}
-  AgentHand: {fileID: 1340499340313870}
-  DefaultHandPosition: {fileID: 1863262018947090}
-  rotPoint: {fileID: 8450533553661686078}
-  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
-    type: 3}
-  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
-    type: 3}
-  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
-    type: 3}
-  inTopLevelView: 0
-  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
-  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  autoResetTimeScale: 1
-  m_IsWalking: 0
-  m_WalkSpeed: 0
-  m_RunSpeed: 0
-  m_GravityMultiplier: 2
-  imageSynthesis: {fileID: 0}
-  VisibilityCapsule: {fileID: 1762015268591634}
-  TallVisCap: {fileID: 256261900933697183}
-  BotVisCap: {fileID: 1762015268591634}
-  DroneVisCap: {fileID: 7970507070051039418}
-  DroneBasket: {fileID: 4893713080621194879}
-  IKArm: {fileID: 6666846618789859528, guid: 6d6864c30f4f772439f94c8f5aff1ac7, type: 3}
-  inHighFrictionArea: 0
-  agentState: 3
-  clearRandomizeMaterialsOnReset: 0
-  agentManager: {fileID: 0}
-  m_Camera: {fileID: 0}
-  cameraOrthSize: 0
-  m_CharacterController: {fileID: 0}
-  errorMessage: 
-  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  maxVisibleDistance: 1.5
-  objectIdsInBox: []
-  alwaysReturnVisibleRange: 0
-  actionDuration: 3
-  CrackedCameraCanvas: {fileID: 8014459988081960210, guid: a1c124e94159179459f1fb49c885a5e7,
-    type: 3}
-  ToSetActive: []
-  ScreenFaces: []
-  MyFaceMesh: {fileID: 0}
-  TargetCircles: []
 --- !u!1 &100002
 GameObject:
   m_ObjectHideFlags: 0
@@ -465,7 +261,6 @@ GameObject:
   - component: {fileID: 6767686627676241163}
   - component: {fileID: 114317082596199212}
   - component: {fileID: 114176532703538896}
-  - component: {fileID: 114785506931627080}
   - component: {fileID: 992261166}
   - component: {fileID: 2007864991}
   - component: {fileID: 2007864990}
@@ -599,27 +394,6 @@ MonoBehaviour:
   heightDensity: 2
   startDistance: 0
   fogShader: {fileID: 4800000, guid: 70d8568987ac0499f952b54c7c13e265, type: 3}
---- !u!114 &114785506931627080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0923359e9e352a4b9b11c7b7161ad67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Radius: 0.4
-  m_SampleCount: 1
-  m_OcclusionIntensity: 1.5
-  m_Blur: 2
-  m_Downsampling: 2
-  m_OcclusionAttenuation: 1
-  m_MinZ: 0.01
-  m_SSAOShader: {fileID: 4800000, guid: 43ca18288c424f645aaa1e9e07f04c50, type: 3}
-  m_RandomTexture: {fileID: 2800000, guid: a181ca8e3c62f3e4b8f183f6c586b032, type: 3}
 --- !u!114 &992261166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -634,37 +408,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RenderersToHide: []
   FPSController: {fileID: 114749714472260818}
-  TallRenderers:
-  - {fileID: 7017155608441549540}
-  - {fileID: 8062658906211223610}
-  - {fileID: 3483942053813509925}
-  - {fileID: 6064727109411318824}
-  - {fileID: 100304098197089726}
-  - {fileID: 8029482607360537864}
-  - {fileID: 2181890140744721973}
-  - {fileID: 1120246803314659994}
-  - {fileID: 3920081168409685708}
-  BotRenderers:
-  - {fileID: 4097500997181748320}
-  - {fileID: 4097500997181748322}
-  - {fileID: 4097500997181748332}
-  - {fileID: 4097500997181748334}
-  - {fileID: 4097500997181748336}
-  - {fileID: 4097500997181748338}
-  - {fileID: 4097500997181748308}
-  - {fileID: 4097500997181748328}
-  - {fileID: 4097500997181748348}
-  - {fileID: 4097500997181748330}
-  - {fileID: 4097500997181748350}
-  - {fileID: 4097500997181748324}
-  - {fileID: 4097500997181748310}
-  - {fileID: 4097500997181748326}
-  - {fileID: 4097500997181748342}
-  - {fileID: 4097500997181748344}
-  - {fileID: 4097500997181748346}
-  DroneRenderers:
-  - {fileID: 1813055551112333577}
-  - {fileID: 1813055551112333579}
 --- !u!114 &2007864991
 MonoBehaviour:
   m_ObjectHideFlags: 0

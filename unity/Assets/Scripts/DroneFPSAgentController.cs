@@ -5,13 +5,13 @@ using System;
 using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class DroneFPSAgentController : BaseFPSAgentController {
         public GameObject basket;
         public GameObject basketTrigger;
-        public DroneObjectLauncher DroneObjectLauncher;
         public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
         private bool hasFixedUpdateHappened = true;// track if the fixed physics update has happened
         protected Vector3 thrust;
@@ -19,9 +19,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // count of fixed updates for use in droneCurrentTime
         public float fixupdateCnt = 0f;
         // Update is called once per frame
-        void Update() {
-
-        }
+        
+        public DroneFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) { }
+        
 
         protected override void resumePhysics() {
             if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused) {
@@ -32,34 +32,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void Start() {
-            m_Camera = this.gameObject.GetComponentInChildren<Camera>();
+        public override void InitializeBody() {
+            VisibilityCapsule = DroneVisCap;
+            m_CharacterController.center = new Vector3(0, 0, 0);
+            m_CharacterController.radius = 0.2f;
+            m_CharacterController.height = 0.0f;
 
-            // set agent initial states
-            targetRotation = transform.rotation;
-            collidedObjects = new string[0];
-            collisionsInAction = new List<string>();
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.center = m_CharacterController.center;
+            cc.radius = m_CharacterController.radius;
+            cc.height = m_CharacterController.height;
 
-            // setting default renderer settings
-            // this hides renderers not used in tall mode, and also sets renderer
-            // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
-            HideAllAgentRenderers();
+            m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
 
-            // record initial positions and rotations
-            init_position = transform.position;
-            init_rotation = transform.rotation;
+            // camera position set forward a bit for drone
+            m_Camera.transform.localPosition = new Vector3(0, 0, 0.2f);
 
-            agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            // camera FOV for drone
+            m_Camera.fieldOfView = 150f;
 
-            // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
-            this.GetComponent<NavMeshAgent>().enabled = false;
+            // default camera stand/crouch for drone mode since drone doesn't stand or crouch
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+            // drone also needs to toggle on the drone basket and vis cap
+            DroneBasket.SetActive(true);
+            DroneVisCap.SetActive(true);
         }
 
-        private void LateUpdate() {
-#if UNITY_EDITOR || UNITY_WEBGL
-            VisibleSimObjPhysics = VisibleSimObjs(false);
-#endif
-        }
 
         public void MoveLeft(ServerAction action) {
             moveCharacter(action, 270);
@@ -105,7 +106,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        void FixedUpdate() {
+        public override void FixedUpdate() {
             // when in drone mode, automatically pause time and physics simulation here
             // time and physics will continue once emitFrame is called
             // Note: this is to keep drone and object movement in sync, as pausing just object physics would
@@ -145,9 +146,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // generates object metadata based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
-            objMeta.isCaught = this.GetComponent<DroneFPSAgentController>().isObjectCaught(simObj);
+            objMeta.isCaught = this.isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;
             objMeta.numFloorHits = simObj.numFloorHit;
             objMeta.numStructureHits = simObj.numStructureHit;
@@ -210,8 +211,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-
-
             // can this object change others to hot?
             objMeta.isHeatSource = simObj.isHeatSource;
 
@@ -241,6 +240,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // TODO: using the isVisible flag on the object causes weird problems
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; // simObj.isVisible;
+
+            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
+            //note using forceAction=True will ignore the isInteractable requirement
+            objMeta.isInteractable = isInteractable;
 
             objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
 
@@ -363,7 +366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, y, thrust_dt_launcher.z);
             transform.position = thrust_dt_drone;
 
-            this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
+            MoveLauncher(thrust_dt_launcher);
             actionFinished(true);
         }
 
@@ -377,7 +380,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // use action.x,y,z for launcher
             Vector3 launcherPosition = new Vector3(x, y, z);
             Vector3 thrust_dt_launcher = launcherPosition;
-            this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
+            MoveLauncher(thrust_dt_launcher);
 
             actionFinished(true);
         }
@@ -433,7 +436,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // for use with the Drone to be able to launch an object into the air
         // Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
         public void LaunchDroneObject(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z) {
-            this.GetComponent<DroneFPSAgentController>().Launch(moveMagnitude, objectName, objectRandom, x, y, z);
+            Launch(moveMagnitude, objectName, objectRandom, x, y, z);
             actionFinished(true);
             fixupdateCnt = 0f;
         }
@@ -441,7 +444,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // spawn a launcher object at action.position coordinates
         public void SpawnDroneLauncher(Vector3 position) {
 
-            this.GetComponent<DroneFPSAgentController>().SpawnLauncher(position);
+            SpawnLauncher(position);
             actionFinished(true);
         }
 
@@ -483,7 +486,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Launch(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z) {
             Vector3 LaunchAngle = new Vector3(x, y, z);
-            DroneObjectLauncher.Launch(moveMagnitude, LaunchAngle, objectName, objectRandom);
+            DroneObjectLauncher.Launch(this, moveMagnitude, LaunchAngle, objectName, objectRandom);
         }
 
         public void MoveLauncher(Vector3 position) {
@@ -495,7 +498,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SpawnLauncher(Vector3 position) {
-            Instantiate(DroneObjectLauncher, position, Quaternion.identity);
+            UnityEngine.Object.Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
 
     }

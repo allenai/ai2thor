@@ -16,6 +16,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [SerializeField]
     public string objectID = string.Empty;
 
+    [Header("Name of Prefab this Object comes from")]
+    [SerializeField]
+    public string assetID = string.Empty;
+
     [Header("Object Type")]
     [SerializeField]
     public SimObjType Type = SimObjType.Undefined;
@@ -47,9 +51,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [Header("State information Bools here")]
 #if UNITY_EDITOR
     public bool debugIsVisible = false;
-#endif
     public bool debugIsInteractable = false;
+#endif
     public bool isInAgentHand = false;
+
+    public DroneFPSAgentController droneFPSAgent;
 
     // these collider references are used for switching physics materials for all colliders on this object
     [Header("Non - Trigger Colliders of this object")]
@@ -296,20 +302,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             }
 
-            // Align SimObject to origin and axes
-            Vector3 cachedPosition = this.transform.position;
-            Quaternion cachedRotation = this.transform.rotation;
+            // The GameObject is cloned instead of teleporting/rotating to avoid
+            // waking up the rigidbody, which can cause the SimObj to shift by tiny amounts
+            // since it will never sleep.
+            GameObject clone = Instantiate(this.gameObject, Vector3.zero, Quaternion.identity);
 
-            this.transform.position = Vector3.zero;
-            this.transform.rotation = Quaternion.identity;
-            if (!Physics.autoSyncTransforms) {
-                Physics.SyncTransforms();
-            }
 
             // Get all colliders on the sop, excluding colliders if they are not enabled
             List<(Collider, LayerMask)> cols = new List<(Collider, LayerMask)>();
             var nonInteractiveLayer = LayerMask.NameToLayer("NonInteractive");
-            foreach (Collider c in this.transform.GetComponentsInChildren<Collider>()) {
+            foreach (Collider c in clone.transform.GetComponentsInChildren<Collider>()) {
                 if (c.enabled) {
                     // save the state of all the layers prior to modifying
                     cols.Add((c, c.transform.gameObject.layer));
@@ -325,38 +327,40 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             // Encapsulate all active colliders in SimObject's array
             foreach ((Collider, LayerMask) colAndLayerMask in cols) {
                 Collider c = colAndLayerMask.Item1;
-                if (!c.isTrigger && c.gameObject != this.BoundingBox) {
+                if (!c.isTrigger && c.gameObject != clone.GetComponent<SimObjPhysics>().BoundingBox) {
                     newBB.Encapsulate(c.bounds);
                 }
             }
             // Encapsulate all visilibity points of the SimObject array
-            foreach (Transform visPoint in this.VisibilityPoints) {
+            foreach (Transform visPoint in clone.GetComponent<SimObjPhysics>().VisibilityPoints) {
                 newBB.Encapsulate(visPoint.position);
             }
 
             // Update SimObject's BoundingBox collider to match new bounds
             this.BoundingBox.transform.localPosition = Vector3.zero;
-            this.BoundingBox.transform.rotation = Quaternion.identity;
+            this.BoundingBox.transform.localRotation = Quaternion.identity;
             this.BoundingBox.GetComponent<BoxCollider>().center = newBB.center;
             this.BoundingBox.GetComponent<BoxCollider>().size = newBB.extents * 2.0f;
-
-            // Revert SimObject back to its initial transform
-            this.transform.position = cachedPosition;
-            this.transform.rotation = cachedRotation;
-            if (!Physics.autoSyncTransforms) {
-                Physics.SyncTransforms();
-            }
 
             // Re-enable colliders, moving them back to their original layer
             foreach ((Collider, LayerMask) colAndLayerMask in cols) {
                 colAndLayerMask.Item1.transform.gameObject.layer = colAndLayerMask.Item2;
-
             }
 
             // reparent child simobjects
             foreach (Transform childSimObject in childSimObjects) {
                 childSimObject.SetParent(this.transform);
             }
+
+            DestroyImmediate(clone);
+
+            // iTween adds references to the iTween.tweens List
+            for (int i = 0; i < iTween.tweens.Count; i++) {
+                if (((GameObject)iTween.tweens[i]["target"]) == null) {
+                   iTween.tweens.RemoveAt(i);
+                }
+            }
+
 
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();
@@ -380,6 +384,42 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         return null;
+    }
+    public void DropContainedObjectsStationary() {
+        this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
+    }
+    
+    public void DropContainedObjects(
+        bool reparentContainedObjects,
+        bool forceKinematic
+    ) {
+        if (this.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+            GameObject topObject = null;
+
+            foreach (SimObjPhysics sop in this.ContainedObjectReferences) {
+                // for every object that is contained by this object turn off
+                // the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                sop.transform.Find("Colliders").gameObject.SetActive(true);
+                sop.isInAgentHand = false; // Agent hand flag
+
+                if (reparentContainedObjects) {
+                    if (topObject == null) {
+                        topObject = GameObject.Find("Objects");
+                    }
+                    sop.transform.SetParent(topObject.transform);
+                }
+
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = forceKinematic;
+                if (!forceKinematic) {
+                    rb.useGravity = true;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+
+            }
+            this.ClearContainedObjectReferences();
+        }
     }
 
     public AxisAlignedBoundingBox AxisAlignedBoundingBox {
@@ -591,16 +631,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
-    private void FindMySpawnPoints(bool ReturnPointsCloseToAgent) {
+    private void FindMySpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
             Contains containsScript = rtb.GetComponent<Contains>();
-            temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
+            temp.AddRange(containsScript.GetValidSpawnPoints(agent));
         }
 
-        if (ReturnPointsCloseToAgent) {
-            GameObject agent = GameObject.Find("FPSController");
-
+        if (agent != null) {
             temp.Sort(delegate (ReceptacleSpawnPoint one, ReceptacleSpawnPoint two) {
                 return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
             });
@@ -621,8 +659,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
-    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent) {
-        FindMySpawnPoints(ReturnPointsCloseToAgent);
+    public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
+        FindMySpawnPoints(agent);
         return MySpawnPoints;
     }
 
@@ -633,25 +671,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     void OnCollisionEnter(Collision col) {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
-        DroneFPSAgentController droneController;
 
-        if (GameObject.Find("FPSController")) {
-            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
-        } else {
-            Debug.LogError("No FPSController in scene!");
-            return;
-        }
-
-        if (!droneController.enabled) {
+        if (droneFPSAgent == null){
             return;
         }
 
         // GameObject agent = GameObject.Find("FPSController");
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -667,9 +697,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>()) {
             // add a check for if it's for initialization
-            if (droneController.HasLaunch(this)) {
+            if (droneFPSAgent.HasLaunch(this)) {
                 // add a check for if this is the object caought by the drone
-                if (!droneController.isObjectCaught(this)) {
+                if (!droneFPSAgent.isObjectCaught(this)) {
                     // emperically find the relative velocity > 1 means a "real" hit.
                     if (col.relativeVelocity.magnitude > 1) {
                         // make sure we only count hit once per time, not for all collision contact points of an object.
@@ -881,7 +911,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 #endif
-
         // end debug setup stuff
 
         OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
@@ -925,8 +954,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
     // Update is called once per frame
     void Update() {
-        debugIsInteractable = false;
-
         if (sceneManager.AllowDecayTemperature)// only do this if the scene is initialized to use Temperature decay over time
         {
             // if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
@@ -949,9 +976,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
         }
-    }
-    private void FixedUpdate() {
-        // isInteractable = false;
     }
 
     // used for throwing the sim object, or anything that requires adding force for some reason
@@ -1093,7 +1117,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         // interactable drawn in magenta
-        if (debugIsInteractable == true && gameObject.GetComponentInChildren<MeshFilter>()) {
+        if (debugIsInteractable && gameObject.GetComponentInChildren<MeshFilter>()) {
             MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
@@ -1877,6 +1901,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             rac.transform.localEulerAngles = Vector3.zero;
             rac.AddComponent<BoxCollider>();
             rac.GetComponent<BoxCollider>().enabled = false;
+            BoundingBox = rac;
         }
 
         List<GameObject> recepboxes = new List<GameObject>();

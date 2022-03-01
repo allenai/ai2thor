@@ -11,7 +11,6 @@ namespace Tests {
         [UnityTest]
         public IEnumerator TestDispatchInvalidArguments() {
             yield return initalizeDefaultDiscrete();
-            var controller = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
             var args = new Dictionary<string, object>() {
                 {"action", "PutObject"},
                 {"x", 0.3f},
@@ -21,7 +20,7 @@ namespace Tests {
                 {"placeStationary", true}
             };
             Assert.Throws<InvalidArgumentsException>(() => {
-                ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
+                ActionDispatcher.Dispatch(agentManager.PrimaryAgent, new DynamicServerAction(args));
             });
         }
 
@@ -39,7 +38,6 @@ namespace Tests {
             };
 
             yield return step(args);
-            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
             Assert.IsFalse(lastActionSuccess);
             Assert.IsTrue(error.Contains("invalid argument: 'z'"));
         }

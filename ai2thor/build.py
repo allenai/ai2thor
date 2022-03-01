@@ -30,6 +30,9 @@ try:
 except ImportError:
     pass
 
+# Since CloudRendering is manually built, this will act as a fallback
+# until the process is automated
+DEFAULT_CLOUDRENDERING_COMMIT_ID = "22d62af5da45708e7bc40bf07a861e7397f9d2f9"
 
 def build_name(arch, commit_id, include_private_scenes=False):
     if include_private_scenes:
@@ -55,6 +58,8 @@ class EditorBuild(object):
         self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
+        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64)
+        self.platform = external_system_platforms[platform.system()]
 
     def download(self):
         pass

@@ -54,7 +54,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -129,14 +129,16 @@ public class AgentManager : MonoBehaviour {
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
-        primaryAgent.SetAgentMode("default");
+        primaryAgent.InitializeBody();
 #endif
 
         StartCoroutine(EmitFrame());
     }
 
     private void initializePrimaryAgent() {
-        SetUpPhysicsController();
+        if (this.PrimaryAgent == null) {
+            SetUpPhysicsController();
+        }
     }
 
     public void Initialize(ServerAction action) {
@@ -160,28 +162,24 @@ public class AgentManager : MonoBehaviour {
             // if stochastic, set up stochastic controller
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
-                SetUpStochasticController(action);
+                primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
+		return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-                // set up stochastic controller
-                SetUpStochasticController(action);
-            } else {
-                SetUpStochasticController(action);
-            }
+            } 
+            // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
+            SetUpLocobotController(action);
+            
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-
-                // ok now set up drone controller
-                SetUpDroneController(action);
-            } else {
-                SetUpDroneController(action);
-            }
+            } 
+            SetUpDroneController(action);
 
         } else if (action.agentMode.ToLower() == "arm") {
 
@@ -193,7 +191,7 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level") {
                 var error = "'arm' mode must use either low-level or mid-level controller.";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             } else if (action.agentControllerType.ToLower() == "mid-level") {
                 // set up physics controller
@@ -209,14 +207,14 @@ public class AgentManager : MonoBehaviour {
                     } else {
                         var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
                         Debug.Log(error);
-                        primaryAgent.actionFinished(false, error);
+                        primaryAgent.actionFinished(success: false, errorMessage: error);
                         return;
                     }
                 }
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
-                primaryAgent.actionFinished(false, error);
+                primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
         }
@@ -248,54 +246,41 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(addAgents(action));
 
     }
-
-    private void SetUpStochasticController(ServerAction action) {
+    
+    private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
-        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-        primaryAgent.enabled = false;
-        primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
-        primaryAgent.agentManager = this;
-        primaryAgent.enabled = true;
-        // primaryAgent.Start();
-        this.agents.Add(primaryAgent);
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
     }
 
     private void SetUpDroneController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false
         action.snapToGrid = false;
-        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-        primaryAgent.enabled = false;
-        primaryAgent = fpsController.GetComponent<DroneFPSAgentController>();
-        primaryAgent.agentManager = this;
-        primaryAgent.enabled = true;
-        this.agents.Add(primaryAgent);
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(DroneFPSAgentController), baseAgentComponent);
     }
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
     // to be false like in other controller types.
-    private void SetUpPhysicsController() {
+    public void SetUpPhysicsController() {
         this.agents.Clear();
-        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-        primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-        primaryAgent.enabled = true;
-        primaryAgent.agentManager = this;
-        this.agents.Add(primaryAgent);
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+    }
+
+    private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
+        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent, this}) as BaseFPSAgentController;
+        this.agents.Add(agent);
+        return agent;
     }
 
     private void SetUpArmController(bool midLevelArm) {
         this.agents.Clear();
-        primaryAgent.enabled = false;
-        GameObject baseController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-        // TODO set correct component
-        primaryAgent = baseController.GetComponent<ArmAgentController>();
-        primaryAgent.enabled = true;
-        primaryAgent.agentManager = this;
-        // primaryAgent.actionComplete = true;
-        this.agents.Add(primaryAgent);
-
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(ArmAgentController), baseAgentComponent);
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
     }
@@ -310,8 +295,8 @@ public class AgentManager : MonoBehaviour {
     }
 
     // return reference to primary agent in case we need a reference to the primary
-    public BaseFPSAgentController ReturnPrimaryAgent() {
-        return primaryAgent;
+    public BaseFPSAgentController PrimaryAgent {
+        get => this.primaryAgent;
     }
 
     private IEnumerator addAgents(ServerAction action) {
@@ -618,18 +603,14 @@ public class AgentManager : MonoBehaviour {
 
     private void addAgent(ServerAction action) {
         Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
-
-        // disable ambient occlusion on primary agent because it causes issues with multiple main cameras
-        // primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
-
-        BaseFPSAgentController clone = UnityEngine.Object.Instantiate(primaryAgent);
-        clone.IsVisible = action.makeAgentsVisible;
-        clone.actionDuration = this.actionDuration;
+        BaseAgentComponent componentClone = UnityEngine.Object.Instantiate(primaryAgent.baseAgentComponent);
+        var agent = createAgentType(primaryAgent.GetType(), componentClone);
+        agent.IsVisible = action.makeAgentsVisible;
+        agent.actionDuration = this.actionDuration;
         // clone.m_Camera.targetDisplay = this.agents.Count;
-        clone.transform.position = clonePosition;
-        UpdateAgentColor(clone, agentColors[this.agents.Count]);
-        clone.ProcessControlCommand(action.dynamicServerAction);
-        this.agents.Add(clone);
+        componentClone.transform.position = clonePosition;
+        UpdateAgentColor(agent, agentColors[this.agents.Count]);
+        agent.ProcessControlCommand(action.dynamicServerAction);
     }
 
     private Vector3 agentStartPosition(BaseFPSAgentController agent) {
@@ -680,7 +661,7 @@ public class AgentManager : MonoBehaviour {
         // try to disable renderers that are invalid (but not null)
         // as the scene they existed in has changed.
         for (int i = 0; i < agents.Count; i++) {
-            Destroy(agents[i]);
+            Destroy(agents[i].baseAgentComponent);
         }
         yield return null;
 
@@ -728,43 +709,6 @@ public class AgentManager : MonoBehaviour {
         physicsSceneManager.isSceneAtRest = true;// assume the scene is at rest by default
     }
 
-    private void LateUpdate() {
-
-        /*
-                if (readyToEmit)
-                {
-                    // start emit frame for physics and stochastic controllers
-                    if(!droneMode)
-                    {
-                        // readyToEmit = false;
-                        // StartCoroutine (EmitFrame());
-                    }
-
-                    // start emit frame for flying drone controller
-                    if(droneMode)
-                    {
-                        // make sure each agent in flightMode has updated at least once
-                        if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
-                        {
-                            readyToEmit = false;
-                            // StartCoroutine (EmitFrame());
-                        }
-                    }
-                }
-         */
-
-        // ok now if the scene is at rest, turn back on physics autosimulation automatically
-        // note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        // if(physicsSceneManager.isSceneAtRest && !droneMode &&
-        // physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
-        // {
-        //     // print("soshite toki wa ugoki desu");
-        //     Physics.autoSimulation = true;
-        //     physicsSceneManager.physicsSimulationPaused = false;
-        //     AdvancePhysicsStepCount = 0;
-        // }
-
-    }
 
     private byte[] captureScreen() {
         if (tex.height != UnityEngine.Screen.height ||
@@ -821,6 +765,19 @@ public class AgentManager : MonoBehaviour {
         this.primaryAgent.actionFinished(true);
     }
 
+    public void ChangeQuality(string quality) {
+        string[] names = QualitySettings.names;
+        for (int i = 0; i < names.Length; i++) {
+            if (names[i] == quality) {
+                QualitySettings.SetQualityLevel(i, true);
+                break;
+            }
+        }
+        
+        this.primaryAgent.actionFinished(true);
+    }
+
+
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
@@ -833,43 +790,6 @@ public class AgentManager : MonoBehaviour {
             }
             byte[] bytes = agent.imageSynthesis.Encode("_id");
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
-
-            Color[] id_image = agent.imageSynthesis.tex.GetPixels();
-            Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]>();
-            for (int yy = 0; yy < UnityEngine.Screen.height; yy++) {
-                for (int xx = 0; xx < tex.width; xx++) {
-                    Color colorOn = id_image[yy * UnityEngine.Screen.width + xx];
-                    if (!colorBounds.ContainsKey(colorOn)) {
-                        colorBounds[colorOn] = new int[] { xx, yy, xx, yy };
-                    } else {
-                        int[] oldPoint = colorBounds[colorOn];
-                        if (xx < oldPoint[0]) {
-                            oldPoint[0] = xx;
-                        }
-                        if (yy < oldPoint[1]) {
-                            oldPoint[1] = yy;
-                        }
-                        if (xx > oldPoint[2]) {
-                            oldPoint[2] = xx;
-                        }
-                        if (yy > oldPoint[3]) {
-                            oldPoint[3] = yy;
-                        }
-                    }
-                }
-            }
-            List<ColorBounds> boundsList = new List<ColorBounds>();
-            foreach (Color key in colorBounds.Keys) {
-                ColorBounds bounds = new ColorBounds();
-                bounds.color = new ushort[] {
-                    (ushort)Math.Round (key.r * 255),
-                    (ushort)Math.Round (key.g * 255),
-                    (ushort)Math.Round (key.b * 255)
-                };
-                bounds.bounds = colorBounds[key];
-                boundsList.Add(bounds);
-            }
-            metadata.colorBounds = boundsList.ToArray();
 
             List<ColorId> colors = new List<ColorId>();
             foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
@@ -950,9 +870,6 @@ public class AgentManager : MonoBehaviour {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
             metadata.agentId = i;
-            metadata.fixedUpdateCount = agent.fixedUpdateCount;
-            metadata.updateCount = agent.updateCount;
-
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -966,7 +883,6 @@ public class AgentManager : MonoBehaviour {
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents[i] = metadata;
-            agent.ResetUpdateCounters();
         }
 
         if (shouldRender) {
@@ -1275,8 +1191,6 @@ public class MultiAgentMetadata {
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public int activeAgentId;
     public int sequenceId;
-    public int fixedUpdateCount;
-    public int updateCount;
 }
 
 [Serializable]
@@ -1353,9 +1267,9 @@ public class ObjectMetadata {
     // public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
     public bool visible;
 
-    // If true, object is obstructed by something and actions cannot be performed on it.
+    // If true, object is obstructed by something and actions cannot be performed on it unless forced.
     // This means an object behind glass will be obstructed=True and visible=True
-    public bool obstructed;
+    public bool isInteractable;
 
     // is this object a receptacle?
     public bool receptacle;
@@ -1458,6 +1372,9 @@ public class ObjectMetadata {
 
     // uuid of the object
     public string objectId;
+
+    //name of this game object's prefab asset if it has one
+    public string assetId;
 
     //report back what receptacles contain this object
     public string[] parentReceptacles;
@@ -1641,7 +1558,6 @@ public struct MetadataWrapper {
     public int screenHeight;
     public int agentId;
     public ColorId[] colors;
-    public ColorBounds[] colorBounds;
 
     // Extras
     public float[] flatSurfacesOnGrid;
@@ -1660,8 +1576,6 @@ public struct MetadataWrapper {
     public List<Vector3> visibleRange;
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
-    public int updateCount;
-    public int fixedUpdateCount;
 
     // must remove this when running generate-msgpack-resolver
 #if ENABLE_IL2CPP

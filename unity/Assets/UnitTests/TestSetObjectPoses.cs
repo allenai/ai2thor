@@ -11,8 +11,9 @@ namespace Tests {
         [UnityTest]
         public IEnumerator TestSetObjectPoses_ObjectHierarchyReset_True() {
             Dictionary<string, object> action = new Dictionary<string, object>();
+            var agentManager = GameObject.FindObjectOfType<AgentManager>();
 
-            BaseFPSAgentController agent = GameObject.FindObjectOfType<BaseFPSAgentController>();
+            BaseFPSAgentController agent = agentManager.PrimaryAgent;
 
             GameObject topObject = GameObject.Find("Objects");
             int numObjectsWithBadParents = 0;

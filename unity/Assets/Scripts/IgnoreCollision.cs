@@ -32,8 +32,8 @@ public class IgnoreCollision : MonoBehaviour {
             }
 
             // do this if we are ignoring the agent
-            if (objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>()) {
-                otherCollidersToIgnore = new Collider[] { objectToIgnoreCollisionsWith.GetComponent<BaseFPSAgentController>().GetComponent<CapsuleCollider>() };
+            if (objectToIgnoreCollisionsWith.GetComponent<BaseAgentComponent>()) {
+                otherCollidersToIgnore = new Collider[] { objectToIgnoreCollisionsWith.GetComponent<BaseAgentComponent>().GetComponent<CapsuleCollider>() };
             }
 
         }
