@@ -3625,20 +3625,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ObjectNavExpertAction(ServerAction action) {
-            NavMeshPath path = new UnityEngine.AI.NavMeshPath();
-            Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
-                SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-                path = getShortestPath(sop, true);
-                visibilityTest = () => objectIsWithinViewport(sop);
-            }
-            else {
-                var startPosition = this.transform.position;
-                var startRotation = this.transform.rotation;
-                SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
-                visibilityTest = () => true;
-            }
-
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            var path = getShortestPath(sop, true);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
 
                 int parts = (int)Math.Round(360f / rotateStepDegrees);
@@ -3655,7 +3643,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
 
                 if (path.corners.Length <= 1) {
-                    if (visibilityTest()) {
+                    if (objectIsWithinViewport(sop)) {
                         actionFinished(true);
                         return;
                     }
@@ -3667,7 +3655,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
                         for (int horizon = -1; horizon <= 2; horizon++) {
                             m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
-                            if (visibilityTest()) {
+                            if (objectIsWithinViewport(sop)) {
                                 int numActions = Math.Abs(i) + Math.Abs(horizon - (int)(startCameraRot.x / 30f));
                                 if (numActions < bestNumActions) {
                                     bestNumActions = numActions;
