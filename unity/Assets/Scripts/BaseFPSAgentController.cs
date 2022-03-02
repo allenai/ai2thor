@@ -242,6 +242,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual void Start()
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
+            m_Camera.nearClipPlane = 0.0001f;
+            m_Camera.farClipPlane = 9999f;
 
 			// set agent initial states
 			targetRotation = transform.rotation;
