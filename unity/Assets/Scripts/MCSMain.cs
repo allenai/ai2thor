@@ -78,7 +78,7 @@ public class MCSMain : MonoBehaviour {
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
     private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
     private static float WALL_WIDTH = .5f;
-    private static int FLOOR_DEPTH = 6;
+    public static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
     private static int FLOOR_LOWERED_HEIGHT = -100;
     private static float SEESAW_MAX_DEPTH = 0.035f;

@@ -340,7 +340,9 @@ public class ImageSynthesis : MonoBehaviour {
                 objTag = "fuse_wall";
             }
 
-
+			bool floor = objTag.Length > "floor".Length && objTag.Substring(0, "floor".Length) == "floor";
+			bool hole = floor && r.transform.position.y == -MCSMain.FLOOR_DEPTH;
+			objTag = floor ? "floor" + r.material.name + (hole ? "hole" : "") : objTag;
 			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
 			Color objColor = ColorEncoding.EncodeTagAsColor(objTag + guidForColors);
 
