@@ -1593,12 +1593,13 @@ namespace Thor.Procedural {
 
                     setConnectionProperties(go, holeCover);
 
-                    if (holeCover.open) {
+                    // if (holeCover.open) {
                         var canOpen = go.GetComponentInChildren<CanOpen_Object>();
                         if (canOpen != null) {
-                            canOpen.SetOpennessImmediate(1.0f);
+                            Debug.Log("OPENNESS --- " + holeCover.openness);
+                            canOpen.SetOpennessImmediate(holeCover.openness);
                         }
-                    }
+                    // }
 
                     count++;
                     tagObjectNavmesh(go, "Not Walkable");
