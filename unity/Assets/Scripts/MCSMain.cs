@@ -625,13 +625,6 @@ public class MCSMain : MonoBehaviour {
                     continue;
                 }
             }
-            else if (xGrid == 0 && zGrid == 0 && noXGrid) {
-                if (zSize < 20)
-                    zGrid = zMax;
-                else
-                    zGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
-                continue;
-            }
 
             //make the light game object
             GameObject lightGameObject = new GameObject("Light("+ i +")");
