@@ -3512,7 +3512,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var id = action.objectId;
 
-            getReachablePositions(1.0f, 10000, action.grid);
+            getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
             Instantiate(DebugTargetPointPrefab, path[path.Count - 1], Quaternion.identity);
             new List<bool>();
@@ -3521,6 +3521,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             textMesh.text = id;
 
             var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+
+            if (action.pathGradient != null && action.pathGradient.colorKeys.Length > 0) {
+                lineRenderer.colorGradient = action.pathGradient;
+            }
+
             lineRenderer.startWidth = 0.015f;
             lineRenderer.endWidth = 0.015f;
 
