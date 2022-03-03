@@ -403,6 +403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int maxStepCount = 10000,
             bool visualize = false,
             Color? gridColor = null,
+            float gridWidth = 0.045f,
             bool directionsRelativeAgent = false
         ) { // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
@@ -505,6 +506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     gridLineRenderer.startColor = gridColor.Value;
                                     gridLineRenderer.endColor = gridColor.Value;
                                 }
+                                gridLineRenderer.SetWidth(start: gridWidth, end: gridWidth);
                                 // gridLineRenderer.startColor = ;
                                 // gridLineRenderer.endColor = ;
                                 gridLineRenderer.positionCount = 2;
@@ -3502,34 +3504,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void VisualizePath(ServerAction action) {
-            var path = action.positions;
-            if (path == null || path.Count == 0) {
-                this.errorMessage = "Invalid path with 0 points.";
-                actionFinished(false);
-                return;
+        public void VisualizePath(
+            Vector3[] positions,
+            float pathWidth = 0.045f,
+            string startText = "0",
+            string endText = null,
+            Gradient pathGradient = null,
+            bool grid = false,
+            Color? gridColor = null,
+            float gridWidth = 0.045f,
+            bool displayCount = false
+        ) {
+            var path = positions;
+            if (path == null || path.Count() == 0) {
+                throw new ArgumentException("Path cannot be null or empty.");
             }
 
-            var id = action.objectId;
+            if (grid) {
+                getReachablePositions(visualize: grid, gridColor: gridColor, gridWidth: gridWidth);
+            }
 
-            getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+            // end text defaults to the path length
+            var endGo = Instantiate(DebugTargetPointPrefab, path[path.Count() - 1], Quaternion.identity);
+            if (endText == null) {
+                endGo.GetComponentInChildren<TextMesh>().text = path.Count().ToString();
+            } else {
+                endGo.GetComponentInChildren<TextMesh>().text = endText;
+            }
 
-            Instantiate(DebugTargetPointPrefab, path[path.Count - 1], Quaternion.identity);
-            new List<bool>();
             var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
-            var textMesh = go.GetComponentInChildren<TextMesh>();
-            textMesh.text = id;
+            if (startText != null) {
+                go.GetComponentInChildren<TextMesh>().text = startText;
+            }
 
             var lineRenderer = go.GetComponentInChildren<LineRenderer>();
 
-            if (action.pathGradient != null && action.pathGradient.colorKeys.Length > 0) {
-                lineRenderer.colorGradient = action.pathGradient;
+            if (pathGradient != null && pathGradient.colorKeys.Length > 0) {
+                lineRenderer.colorGradient = pathGradient;
             }
 
-            lineRenderer.startWidth = 0.015f;
-            lineRenderer.endWidth = 0.015f;
+            lineRenderer.SetWidth(start: pathWidth, end: pathWidth);
 
-            lineRenderer.positionCount = path.Count;
+            lineRenderer.positionCount = path.Count();
             lineRenderer.SetPositions(path.ToArray());
             actionFinished(true);
         }
