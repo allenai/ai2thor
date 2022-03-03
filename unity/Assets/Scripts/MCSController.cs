@@ -66,8 +66,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
   
     private Dictionary<string, bool> hapticFeedback = new Dictionary<string, bool>();
-    public int stepsOnLava;
+    private int stepsOnLava;
 
+    [SerializeField] private string resolvedObjectId;
+    [SerializeField] private string resolvedReceptacleId;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -216,6 +218,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.stepsOnLava = this.stepsOnLava;
         metadata.hapticFeedback = this.hapticFeedback;
+        metadata.resolvedObject = this.resolvedObjectId;
+        metadata.resolvedReceptacle = this.resolvedReceptacleId;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -400,6 +404,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        this.resolvedObjectId = "";
+        this.resolvedReceptacleId = "";
         if (this.cameraCullingMask < 0) {
             this.cameraCullingMask = this.GetComponentInChildren<Camera>().cullingMask;
         }
@@ -712,10 +718,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         action.objectId = this.ConvertScreenPointToId(action.objectImageCoords,
             action.objectId);
 
-        return TryReceptacleObjectIdFromScreenPoint(action);
+        this.resolvedObjectId = action.objectId != null ? action.objectId : "";
+        return agentState != AgentState.ActionComplete;
 
     }
 
+    private bool IsReceptacleAction(string action) {
+        string [] receptacleActions = {"CloseObject","OpenObject"};
+        return receptacleActions.Contains(action);
+    }
+
+    private bool IsInteractionAction(string action) {
+        string [] receptacleActions = {"MoveObject","PickupObject","PullObject","PushObject","RotateObject","TorqueObject"};
+        return receptacleActions.Contains(action);
+    }
+  
     private bool TryObjectIdFromHeldObject(ServerAction action) {
         // Can't currently use direction for objects in player's hand, since held objects are currently invisible
         action.objectId = this.GetHeldObjectId(action.objectId);
@@ -728,6 +745,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (agentState != AgentState.ActionComplete) {
             action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
+            this.resolvedReceptacleId = action.receptacleObjectId != null ? action.receptacleObjectId : "";
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
         return agentState != AgentState.ActionComplete;

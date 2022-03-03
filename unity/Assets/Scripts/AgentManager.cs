@@ -1343,6 +1343,8 @@ public struct MetadataWrapper
 	public float performerRadius;
 	public int stepsOnLava;
 	public Dictionary<string, bool> hapticFeedback;
+	public string resolvedObject;
+	public string resolvedReceptacle;
 }
 
 [Serializable]
