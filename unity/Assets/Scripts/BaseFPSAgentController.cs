@@ -3507,8 +3507,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void VisualizePath(
             Vector3[] positions,
             float pathWidth = 0.045f,
-            string startText = "0",
-            string endText = null,
+            string startText = "",
+            string endText = "",
             Gradient pathGradient = null,
             bool grid = false,
             Color? gridColor = null,
@@ -3524,11 +3524,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 getReachablePositions(visualize: grid, gridColor: gridColor, gridWidth: gridWidth);
             }
 
-            // end text defaults to the path length
             var endGo = Instantiate(DebugTargetPointPrefab, path[path.Count() - 1], Quaternion.identity);
-            if (endText == null) {
-                endGo.GetComponentInChildren<TextMesh>().text = path.Count().ToString();
-            } else {
+            if (endText != null) {
                 endGo.GetComponentInChildren<TextMesh>().text = endText;
             }
 
