@@ -56,6 +56,11 @@ public class MCSMain : MonoBehaviour {
     private static float LIGHT_Y_POSITION_SCREENSHOT = 0.5f;
     private static float LIGHT_Z_POSITION = 0;
     private static float LIGHT_Z_POSITION_SCREENSHOT = -2.0f;
+    private static int DISTANCE_BETWEEN_LIGHTS = 10;
+    private static float LIGHT_INTENSITY = 1f;
+    private static float LIGHT_SHADOW_STRENGTH = 0.5f;
+    private static Color LIGHT_DEFAULT_COLOR = Color.white;
+    private static int MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS = 12;
     private static float PHYSICS_FRICTION_DYNAMIC_DEFAULT = 0.6f;
     private static float PHYSICS_FRICTION_DYNAMIC_PASSIVE = 0.1f;
     private static float PHYSICS_FRICTION_STATIC_DEFAULT = 0.6f;
@@ -115,6 +120,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallRight;
     private GameObject wallFront;
     private GameObject wallBack;
+    private List<Light> sceneLights = new List<Light>();
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -540,10 +546,145 @@ public class MCSMain : MonoBehaviour {
             (this.currentScene.floorTextures != null && this.currentScene.floorTextures.Count > 0)) {
             CreateHolesAndApplyFloorTextures();
         }
+
+        foreach (Light light in this.sceneLights)
+            Destroy(light.gameObject);
+        this.sceneLights.Clear();
+        if((this.currentScene.roomDimensions.x >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS || this.currentScene.roomDimensions.z >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS) 
+            && (!this.currentScene.intuitivePhysics && !this.currentScene.isometric))
+            AddLightsToBigRoom((int) this.currentScene.roomDimensions.x, (int) this.currentScene.roomDimensions.z);
         
         agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
+    }
+
+    private void AddLightsToBigRoom(int xSize, int zSize) {
+        //get the min and max positions of where lights will be placed
+        int xMin = -1 * Mathf.CeilToInt(xSize / 2f);
+        int xMax = Mathf.CeilToInt(xSize / 2f);
+        int zMin = -1 * Mathf.CeilToInt(zSize / 2f);
+        int zMax = Mathf.CeilToInt(zSize / 2f);
+
+
+        //the grid is centered on the origin of (0,0,0)
+        int xMinOnGrid = xMin + (xMax % 10);
+        int xMaxOnGrid = xMax - (xMax % 10);
+        int zMinOnGrid = zMin + (zMax % 10);
+        int zMaxOnGrid = zMax - (zMax % 10);
+
+        //only put lights against the walls if there is a space greater than 2 meters apart (the light range) from the lights that used the 10x10 grid placement
+        int lightRange = (int) MCSMain.LIGHT_RANGE / 10;
+        bool placeLightAgainstWallZ = zMax % 10 > lightRange;
+        bool placeLightAgainstWallX = xMax % 10 > lightRange;
+        
+        //20 because that is the first time the 10x10 grid placement is used and we need to be conscious of smaller rooms being too bright
+        bool underTwentyX = xSize < 20;
+        bool underTwentyZ = zSize < 20;
+        bool noXGrid = xSize < MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS;
+        bool noZGrid = zSize < MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS;
+
+        xMin = noXGrid ? 0 : placeLightAgainstWallX ? xMin : xMinOnGrid;
+        xMax = noXGrid ? 0 : placeLightAgainstWallX ? xMax : xMaxOnGrid;
+        zMin = noZGrid ? 0 : placeLightAgainstWallZ ? zMin : zMinOnGrid;
+        zMax = noZGrid ? 0 : placeLightAgainstWallZ ? zMax : zMaxOnGrid;
+        int xGrid = placeLightAgainstWallX ? xMin : xMinOnGrid;
+        int zGrid = placeLightAgainstWallZ ? zMin : zMinOnGrid;
+        
+        //reduce the intensity of lights if they are against walls proportional to how far away they are from the last grid placed light
+        float againstWallLightIntensityReducerX = 0.1f * (xMax % 10);
+        float againstWallLightIntensityReducerZ = 0.1f * (zMax % 10);
+        
+        //dont want smaller rooms to be too bright
+        float smallRoomIntensityReducer = 3f;
+
+        //first check if it was a grid placed light then check if its a small room light
+        againstWallLightIntensityReducerX = againstWallLightIntensityReducerX == 0 ? 1 : underTwentyX ? againstWallLightIntensityReducerX / smallRoomIntensityReducer : againstWallLightIntensityReducerX;
+        againstWallLightIntensityReducerZ = againstWallLightIntensityReducerZ == 0 ? 1 : underTwentyZ ? againstWallLightIntensityReducerZ / smallRoomIntensityReducer : againstWallLightIntensityReducerZ;
+
+        //add the lights as a child of the Lighting game object
+        GameObject lightParent = GameObject.Find("Lighting");
+        GameObject addtionalLightsParent = new GameObject("AdditionalLights");
+        addtionalLightsParent.transform.parent = lightParent.transform;
+        for (int i=0; ; i++) {
+            //origin light check
+            if(xGrid == 0 && zGrid == 0) {
+                if(!noXGrid) {
+                    //not using the 10x10 grid if the room dimensions are smaller than 20
+                    if (xSize < 20)
+                        xGrid = xMax;
+                    else
+                        xGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
+                    continue;
+                }
+                else {
+                    if (zSize < 20)
+                        zGrid = zMax;
+                    else
+                        zGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
+                    continue;
+                }
+            }
+
+            //make the light game object
+            GameObject lightGameObject = new GameObject("Light("+ i +")");
+            lightGameObject.transform.position = new Vector3(xGrid, MCSMain.LIGHT_Y_POSITION, zGrid);
+            lightGameObject.transform.parent = addtionalLightsParent.transform;
+            lightGameObject.isStatic = true;
+            //add the light component
+            Light light = lightGameObject.AddComponent<Light>();
+            light.shadows = LightShadows.Hard;
+            light.shadowStrength = MCSMain.LIGHT_SHADOW_STRENGTH;
+
+            //add the light to the list of know lights (the origin light at 0,0 is not added)
+            this.sceneLights.Add(light);
+
+            //if its a light on the last row or column away reduce its intensity so it doesn't make the walls too bright
+            light.intensity =
+                noXGrid && (zGrid == zMin || zGrid == zMax) ? againstWallLightIntensityReducerZ :
+                noZGrid && (xGrid == xMin || xGrid == xMax) ? againstWallLightIntensityReducerX :
+                xGrid == xMin || xGrid == xMax ? againstWallLightIntensityReducerX : zGrid == zMin || zGrid == zMax ? againstWallLightIntensityReducerZ :
+                MCSMain.LIGHT_INTENSITY;
+            light.color = MCSMain.LIGHT_DEFAULT_COLOR;
+            light.range = MCSMain.LIGHT_RANGE;
+
+            //if this isnt a room with x dimenions smaller than MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS
+            if (!noXGrid) {
+                if (xGrid < xMinOnGrid && placeLightAgainstWallX)
+                    xGrid = xMinOnGrid;
+                else if (xGrid==xMaxOnGrid && placeLightAgainstWallX)
+                    xGrid = xMax;
+                else
+                    xGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
+
+                if (xGrid > xMax) {
+                    if (zGrid >= zMax)
+                        break;
+                    if (zGrid < zMinOnGrid && placeLightAgainstWallZ)
+                        zGrid = zMinOnGrid;
+                    else
+                        zGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
+                    if (zGrid > zMaxOnGrid && placeLightAgainstWallZ)
+                        zGrid = zMax;
+                    if (zGrid > zMaxOnGrid && !placeLightAgainstWallZ)
+                        break;
+                    xGrid = placeLightAgainstWallX ? xMin : xMinOnGrid;
+                }
+            }
+
+            else {
+                if (zGrid >= zMax)
+                        break;
+                if (zGrid < zMinOnGrid && placeLightAgainstWallZ)
+                    zGrid = zMinOnGrid;
+                else
+                    zGrid += MCSMain.DISTANCE_BETWEEN_LIGHTS;
+                if (zGrid > zMaxOnGrid && placeLightAgainstWallZ)
+                    zGrid = zMax;
+                if (zGrid > zMaxOnGrid && !placeLightAgainstWallZ)
+                    break;
+            }
+        }
     }
 
     private void CreateHolesAndApplyFloorTextures() {
