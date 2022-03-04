@@ -3504,6 +3504,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void HighlightObject(
+            string objectId,
+            float lineWidth = 0.095f,
+            float? height = 2.0f
+        ) {
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            AxisAlignedBoundingBox bbox = sop.AxisAlignedBoundingBox;
+            float minX = bbox.center.x - bbox.size.x / 2;
+            float maxX = bbox.center.x + bbox.size.x / 2;
+            float minZ = bbox.center.z - bbox.size.z / 2;
+            float maxZ = bbox.center.z + bbox.size.z / 2;
+
+            if (height == null) {
+                height = bbox.center.y + bbox.size.y / 2;
+            }
+
+            var go = new GameObject($"{objectId}_highlight");
+            LineRenderer lineRenderer = go.AddComponent<LineRenderer>() as LineRenderer;
+
+            lineRenderer.SetWidth(start: lineWidth, end: lineWidth);
+
+            lineRenderer.positionCount = 5;
+            lineRenderer.SetPositions(new Vector3[] {
+                new Vector3(minX, height.Value, minZ),
+                new Vector3(minX, height.Value, maxZ),
+                new Vector3(maxX, height.Value, maxZ),
+                new Vector3(maxX, height.Value, minZ),
+                new Vector3(minX, height.Value, minZ),
+            });
+            actionFinished(true);
+        }
+
         public void VisualizePath(
             Vector3[] positions,
             float pathWidth = 0.045f,
