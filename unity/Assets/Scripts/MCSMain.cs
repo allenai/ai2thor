@@ -1571,6 +1571,35 @@ public class MCSMain : MonoBehaviour {
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
 
+        // If this object is a simulation-controlled agent...
+        if (objectDefinition.agent) {
+            // Assume all our agent prefabs have this script.
+            MCSSimulationAgent agentScript = gameObject.GetComponent<MCSSimulationAgent>();
+            // Set all of the agent's body and clothing options, including materials.
+            agentScript.SetChest(objectConfig.agentSettings?.chest, objectConfig.agentSettings?.chestMaterial);
+            agentScript.SetEyes(objectConfig.agentSettings?.eyes);
+            agentScript.SetFeet(objectConfig.agentSettings?.feet, objectConfig.agentSettings?.feetMaterial);
+            agentScript.SetLegs(objectConfig.agentSettings?.legs, objectConfig.agentSettings?.legsMaterial);
+            agentScript.SetSkin(objectConfig.agentSettings?.skin);
+            if ((bool)objectConfig.agentSettings?.showBeard) {
+                // Use the same material as the hair for the beard by default.
+                agentScript.SetBeard(objectConfig.agentSettings?.hair);
+            }
+            if ((bool)objectConfig.agentSettings?.showGlasses) {
+                agentScript.SetGlasses(objectConfig.agentSettings?.glasses);
+            }
+            if (!(bool)objectConfig.agentSettings?.hideHair) {
+                agentScript.SetHair(objectConfig.agentSettings?.hair, objectConfig.agentSettings?.hairMaterial,
+                        objectConfig.agentSettings?.hatMaterial);
+            }
+            if ((bool)objectConfig.agentSettings?.showJacket) {
+                agentScript.SetJacket(objectConfig.agentSettings?.jacket, objectConfig.agentSettings?.jacketMaterial);
+            }
+            if ((bool)objectConfig.agentSettings?.showTie) {
+                agentScript.SetTie(objectConfig.agentSettings?.tie, objectConfig.agentSettings?.tieMaterial);
+            }
+        }
+
         // Set animations.
         if (objectDefinition.animations.Any((animationDefinition) => animationDefinition.animationFile != null &&
             !animationDefinition.animationFile.Equals(""))) {
@@ -1712,7 +1741,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private void InitializeGameObject(MCSConfigGameObject objectConfig) {
-        //try {
+        try {
             GameObject gameObject = CreateGameObject(objectConfig);
             objectConfig.SetGameObject(gameObject);
             if (gameObject != null) {
@@ -1720,10 +1749,10 @@ public class MCSMain : MonoBehaviour {
                 // Hide the object until the frame defined in MachineCommonSenseConfigGameObject.shows
                 (parentObject ?? gameObject).SetActive(false);
             }
-        //} catch (Exception e) {
-        //    Debug.LogError("MCS: " + e);
-        //    Debug.LogError(objectConfig.id);
-        //}
+        } catch (Exception e) {
+            Debug.LogError("MCS: " + e);
+            Debug.LogError(objectConfig.id);
+        }
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromAddressables(String filePath) {
@@ -2099,6 +2128,31 @@ public class MCSConfigAction : MCSConfigStepBegin {
 }
 
 [Serializable]
+public class MCSConfigAgentSettings {
+    public int chest;
+    public int chestMaterial;
+    public int eyes;
+    public int feet;
+    public int feetMaterial;
+    public int glasses;
+    public int hair;
+    public int hairMaterial;
+    public int hatMaterial;
+    public bool hideHair;
+    public int jacket;
+    public int jacketMaterial;
+    public int legs;
+    public int legsMaterial;
+    public bool showBeard;
+    public bool showGlasses;
+    public bool showJacket;
+    public bool showTie;
+    public int skin;
+    public int tie;
+    public int tieMaterial;
+}
+
+[Serializable]
 public class MCSConfigAnimation {
     public string id;
     public string animationFile;
@@ -2125,6 +2179,7 @@ public class MCSConfigCollider : MCSConfigTransform {
 
 [Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
+    public MCSConfigAgentSettings agentSettings = null;
     public string controller;
     public string locationParent;
     public string materialFile; // deprecated; please use materials
@@ -2196,6 +2251,7 @@ public class MCSConfigMove : MCSConfigStepBeginEnd {
 public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string resourceFile;
     public string shape;
+    public bool agent;
     public bool centerMassAtBottom;
     public bool keepColliders;
     public MCSConfigCollider boundingBox = null;
