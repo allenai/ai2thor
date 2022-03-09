@@ -604,9 +604,14 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void CheckIfInLava() {
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        if (main.isPassiveScene) {
+            return;
+        }
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit hit;
         Physics.SphereCast(transform.position, AGENT_RADIUS, Vector3.down, out hit, AGENT_STARTING_HEIGHT + 0.01f, 1<<8, QueryTriggerInteraction.Ignore);
+
         Renderer renderer = hit.transform.GetComponent<Renderer>();
         if(renderer!=null) {
             Material material = renderer.material;
