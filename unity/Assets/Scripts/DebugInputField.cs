@@ -262,8 +262,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["fieldOfView"] = 90f;
                         // action.cameraY = 2.0f;
                         action["snapToGrid"] = true;
-                        action["width"] = 100;
-                        action["height"] = 100;
+                        //action["width"] = 100;
+                        //action["height"] = 100;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
