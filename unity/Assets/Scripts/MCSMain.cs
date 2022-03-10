@@ -1909,7 +1909,7 @@ public class MCSMain : MonoBehaviour {
             return false;
         }
         return objectConfig.type == "cube" || objectConfig.type == "cube_rounded" ||
-            objectConfig.type.StartsWith("tool");
+            objectConfig.type.StartsWith("tool_");
     }
 
     private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
