@@ -2069,6 +2069,10 @@ public class MCSMain : MonoBehaviour {
     public string GetCurrentSceneName() {
         return currentScene.name;
     }
+
+    public static int GetFloorDepth() {
+        return MCSMain.FLOOR_DEPTH;
+    }
 }
 
 // Definitions of serializable objects from JSON config files.
