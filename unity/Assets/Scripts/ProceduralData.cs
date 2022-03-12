@@ -103,8 +103,7 @@ namespace Thor.Procedural.Data {
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
-
-        public bool open { get; set; }
+        public float openness { get; set; } = 0.0f;
         public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
@@ -139,6 +138,7 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
         public string material { get; set; }
+        public MaterialProperties materialProperties;
         public float? tilingDivisorX { get; set; }
         public float? tilingDivisorY { get; set; }
     }
@@ -148,6 +148,7 @@ namespace Thor.Procedural.Data {
     public class RoomHierarchy {
         public string id { get; set; }
         public string roomType { get; set; }
+        public MaterialProperties materialProperties;
         public string floorMaterial { get; set; }
         public float? floorMaterialTilingXDivisor = 1.0f;
         public float? floorMaterialTilingYDivisor = 1.0f;
@@ -167,6 +168,8 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
+
+        public MaterialProperties materialProperties;
 
         public bool empty { get; set; } = false;
 
@@ -211,7 +214,7 @@ namespace Thor.Procedural.Data {
         public string wall0 { get; set; }
         public string wall1 { get; set; }
         public bool openable { get; set; }
-        public bool open { get; set; }
+        public float openness { get; set; } = 0.0f;
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public string assetId { get; set; }
@@ -258,6 +261,16 @@ namespace Thor.Procedural.Data {
             }
             Vector3 rot = new Vector3(x: x.Value, y: y.Value, z: z.Value);
             Quaternion.Euler(rot).ToAngleAxis(out degrees, out axis);
+            if (
+                (axis.x == Mathf.Infinity || axis.x == -Mathf.Infinity || float.IsNaN(axis.x))
+                && (axis.y == Mathf.Infinity || axis.y == -Mathf.Infinity || float.IsNaN(axis.y))
+                && (axis.z == Mathf.Infinity || axis.z == -Mathf.Infinity || float.IsNaN(axis.z))
+            ) {
+                axis = Vector3.up;
+            }
+            if (degrees == Mathf.Infinity || degrees == -Mathf.Infinity || float.IsNaN(degrees)) {
+                degrees = 0;
+            }
         }
 
         public static FlexibleRotation fromQuaternion(Quaternion quat) {
@@ -300,6 +313,7 @@ namespace Thor.Procedural.Data {
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;
+        public MaterialProperties materialProperties;
     }
 
     [Serializable]
@@ -331,6 +345,14 @@ namespace Thor.Procedural.Data {
         public string id;
     }
 
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class MaterialProperties {
+        // TODO: move material id, color (as albedo) and tiling divisors 
+        public float metallic;
+        public float smoothness;
+    }
+
     // TODO more general
     // public class House<T> where T : Room
     // {
@@ -348,7 +370,7 @@ namespace Thor.Procedural.Data {
 
         Vector3 assetOffset { get; set; }
 
-        bool open { get; set; }
+        float openness { get; set; }
 
         SerializableColor color { get; set; }
     }
@@ -364,6 +386,7 @@ namespace Thor.Procedural.Data {
         public bool empty;
         public WallRectangularHole hole = null;
         public string materialId;
+        public MaterialProperties materialProperties;
 
         public string roomId;
 
