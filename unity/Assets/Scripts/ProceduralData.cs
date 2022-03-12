@@ -261,6 +261,16 @@ namespace Thor.Procedural.Data {
             }
             Vector3 rot = new Vector3(x: x.Value, y: y.Value, z: z.Value);
             Quaternion.Euler(rot).ToAngleAxis(out degrees, out axis);
+            if (
+                (axis.x == Mathf.Infinity || axis.x == -Mathf.Infinity || float.IsNaN(axis.x))
+                && (axis.y == Mathf.Infinity || axis.y == -Mathf.Infinity || float.IsNaN(axis.y))
+                && (axis.z == Mathf.Infinity || axis.z == -Mathf.Infinity || float.IsNaN(axis.z))
+            ) {
+                axis = Vector3.up;
+            }
+            if (degrees == Mathf.Infinity || degrees == -Mathf.Infinity || float.IsNaN(degrees)) {
+                degrees = 0;
+            }
         }
 
         public static FlexibleRotation fromQuaternion(Quaternion quat) {
