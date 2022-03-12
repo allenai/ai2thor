@@ -310,6 +310,8 @@ namespace Thor.Procedural.Data {
         public List<Taxonomy> types { get; set; }
         public string assetId { get; set; } //name of prefab asset from asset database
         public string navmeshArea { get; set; }
+
+        public float? openness { get; set; } = null;
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;

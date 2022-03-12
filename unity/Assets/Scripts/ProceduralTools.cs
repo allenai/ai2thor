@@ -1580,15 +1580,15 @@ namespace Thor.Procedural {
 
 
                     var go = spawnSimObjPrefab(
-                        coverPrefab,
-                        holeCover.id,
-                        holeCover.assetId,
-                        pos,
+                        prefab: coverPrefab,
+                        id: holeCover.id,
+                        assetId: holeCover.assetId,
+                        position: pos,
                         // new FlexibleRotation() { axis = Vector3.up,  degrees = rotY },
-                        rotation,
-                        true,
-                        holeCover.color,
-                        false
+                        rotation: rotation,
+                        kinematic: true,
+                        color: holeCover.color,
+                        positionBoundingBoxCenter: false
                     );
 
                     setConnectionProperties(go, holeCover);
@@ -1790,17 +1790,18 @@ namespace Thor.Procedural {
 
                 var go = goDb.getAsset(ho.assetId);
                 return spawnSimObjPrefab(
-                    go,
-                    ho.id,
-                    ho.assetId,
-                    ho.position,
+                    prefab: go,
+                    id: ho.id,
+                    assetId: ho.assetId,
+                    position: ho.position,
                     // ho.rotation,
-                    Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
-                    ho.kinematic,
-                    ho.color,
-                    true,
-                    ho.unlit,
-                    ho.materialProperties
+                    rotation: Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
+                    kinematic: ho.kinematic,
+                    color: ho.color,
+                    positionBoundingBoxCenter: true,
+                    unlit: ho.unlit,
+                    materialProperties: ho.materialProperties,
+                    openness: ho.openness
                 );
             } else {
 
@@ -1836,7 +1837,8 @@ namespace Thor.Procedural {
             SerializableColor color = null,
             bool positionBoundingBoxCenter = false,
             bool unlit = false,
-            MaterialProperties materialProperties = null
+            MaterialProperties materialProperties = null,
+            float? openness = null
         ) {
             var go = prefab;
 
@@ -1868,6 +1870,13 @@ namespace Thor.Procedural {
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = kinematic;
+
+            if (openness.HasValue) {
+                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
+                if (canOpen != null) {
+                    canOpen.SetOpennessImmediate(openness.Value);
+                }
+            }
 
             toSpawn.objectID = id;
             toSpawn.name = id;
