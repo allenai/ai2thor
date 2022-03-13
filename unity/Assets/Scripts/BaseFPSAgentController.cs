@@ -3307,44 +3307,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected Dictionary<string, object> getMapViewCameraProperties() {
             StructureObject[] structureObjs = GameObject.FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
-            StructureObject ceiling = null;
 
+            Bounds bounds = new Bounds();
+            bool boundsDidUpdate = false;
             if (structureObjs != null) {
-                StructureObject ceilingStruct = null;
                 foreach (StructureObject structure in structureObjs) {
                     if (
                         structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling
                         && structure.gameObject.name.ToLower().Contains("ceiling")
                     ) {
-                        ceiling = structure;
-                        break;
-                    } else if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
-                        ceilingStruct = structure;
+                        if (!boundsDidUpdate) {
+                            bounds = structure.GetComponent<Renderer>().bounds;
+                        } else {
+                            Bounds b = structure.GetComponent<Renderer>().bounds;
+                            bounds.Encapsulate(b);
+                        }
+                        boundsDidUpdate = true;
                     }
-                }
-
-                if (ceiling == null) {
-                    ceiling = ceilingStruct;
                 }
             }
 
-            Bounds b;
             float yValue;
-            if (ceiling != null) {
+            if (boundsDidUpdate) {
                 // There's a ceiling component in the room!
                 // Let's use it's bounds. (Likely iTHOR.)
-                b = ceiling.GetComponent<Renderer>().bounds;
-                yValue = b.min.y;
+                yValue = bounds.min.y;
             } else {
                 // There's no component in the room!
                 // Let's use the bounds from every object. (Likely RoboTHOR.)
-                b = new Bounds();
-                b.min = agentManager.SceneBounds.min;
-                b.max = agentManager.SceneBounds.max;
-                yValue = b.max.y;
+                bounds = new Bounds();
+                bounds.min = agentManager.SceneBounds.min;
+                bounds.max = agentManager.SceneBounds.max;
+                yValue = bounds.max.y;
             }
-            float midX = (b.max.x + b.min.x) / 2f;
-            float midZ = (b.max.z + b.min.z) / 2f;
+            float midX = (bounds.max.x + bounds.min.x) / 2f;
+            float midZ = (bounds.max.z + bounds.min.z) / 2f;
 
             // solves an edge case where the lowest point of the ceiling
             // is actually below the floor :0
@@ -3356,7 +3353,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return new Dictionary<string, object>() {
                 ["position"] = new Vector3(midX, yValue, midZ),
                 ["rotation"] = new Vector3(90, 0, 0),
-                ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
+                ["orthographicSize"] = Math.Max((bounds.max.x - bounds.min.x) / 2f, (bounds.max.z - bounds.min.z) / 2f),
                 ["orthographic"] = true
             };
         }
