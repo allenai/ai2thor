@@ -3533,6 +3533,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        // Hide a previously visualized path.
+        public void HideVisualizedPath(string pathName = "PathVisualization") {
+            GameObject parent = GameObject.Find(pathName);
+            if (parent != null) {
+                // using SetActive(false) instead of Destroy
+                // since Destroy has hung the controller on
+                // occassion.
+                parent.SetActive(false);
+            }
+            actionFinished(true);
+        }
+
         public void VisualizePath(
             Vector3[] positions,
             float pathWidth = 0.045f,
@@ -3542,8 +3554,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool grid = false,
             Color? gridColor = null,
             float gridWidth = 0.045f,
-            bool displayCount = false
+            bool displayCount = false,
+            string pathName = "PathVisualization"
         ) {
+            // We do not have multiple path visualizations at the same time
+            // by default. This is because we often want to override it
+            // instead of have multiple of them. You can have multiple of them
+            // by changing the pathName parameter.
+
             var path = positions;
             if (path == null || path.Count() == 0) {
                 throw new ArgumentException("Path cannot be null or empty.");
@@ -3553,15 +3571,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 getReachablePositions(visualize: grid, gridColor: gridColor, gridWidth: gridWidth);
             }
 
-            var endGo = Instantiate(DebugTargetPointPrefab, path[path.Count() - 1], Quaternion.identity);
-            if (endText != null) {
-                endGo.GetComponentInChildren<TextMesh>().text = endText;
+            GameObject parent = GameObject.Find(pathName);
+            GameObject go;
+            GameObject endGo;
+            if (parent == null) {
+                parent = new GameObject(pathName);
+                endGo = Instantiate(DebugTargetPointPrefab, path[path.Count() - 1], Quaternion.identity);
+                endGo.name = "End";
+                endGo.transform.parent = parent.transform;
+                if (endText != null) {
+                    endGo.GetComponentInChildren<TextMesh>().text = endText;
+                }
+
+                go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+                go.name = "Start";
+                go.transform.parent = parent.transform;
+                if (startText != null) {
+                    go.GetComponentInChildren<TextMesh>().text = startText;
+                }
+            } else {
+                parent.SetActive(true);
+                endGo = parent.transform.Find("End").gameObject;
+                endGo.transform.position = path[path.Count() - 1];
+                if (endText != null) {
+                    endGo.GetComponentInChildren<TextMesh>().text = endText;
+                }
+
+                go = parent.transform.Find("Start").gameObject;
+                go.transform.position = path[0];
+                if (startText != null) {
+                    go.GetComponentInChildren<TextMesh>().text = startText;
+                }
             }
 
-            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
-            if (startText != null) {
-                go.GetComponentInChildren<TextMesh>().text = startText;
-            }
 
             var lineRenderer = go.GetComponentInChildren<LineRenderer>();
 
