@@ -1598,6 +1598,7 @@ public class MCSMain : MonoBehaviour {
             if ((bool)objectConfig.agentSettings?.showTie) {
                 agentScript.SetTie(objectConfig.agentSettings?.tie, objectConfig.agentSettings?.tieMaterial);
             }
+            agentScript.SetElder((bool)objectConfig.agentSettings?.isElder);
         }
 
         // Set animations.
@@ -2139,6 +2140,7 @@ public class MCSConfigAgentSettings {
     public int hairMaterial;
     public int hatMaterial;
     public bool hideHair;
+    public bool isElder;
     public int jacket;
     public int jacketMaterial;
     public int legs;

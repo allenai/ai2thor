@@ -2,11 +2,14 @@ using System.Collections;
 using UnityEngine;
 
 public class MCSSimulationAgent : MonoBehaviour {
+    private static int ELDER_BLEND_SHAPE = 26;
+
     public ObjectMaterialOption beard = null;
     public HeadObjectMaterialOption head;
     public ObjectMaterialOption glasses;
 
     public Material[] skinOptions;
+    public Material[] elderSkinOptions;
 
     public ChestObjectMaterialOption[] chestOptions;
     public SkinObjectMaterialOption[] feetOptions;
@@ -15,17 +18,13 @@ public class MCSSimulationAgent : MonoBehaviour {
     public SkinObjectMaterialOption[] legsOptions;
     public ObjectMaterialOption[] tieOptions;
 
-    [HideInInspector]
-    public ChestObjectMaterialOption chest = null;
-    [HideInInspector]
-    public SkinObjectMaterialOption feet = null;
-    [HideInInspector]
-    public HairObjectMaterialOption hair = null;
-    [HideInInspector]
-    public ObjectMaterialOption jacket = null;
-    [HideInInspector]
-    public SkinObjectMaterialOption legs = null;
-    [HideInInspector]
+    private ChestObjectMaterialOption chest = null;
+    private bool elder = false;
+    private SkinObjectMaterialOption feet = null;
+    private HairObjectMaterialOption hair = null;
+    private ObjectMaterialOption jacket = null;
+    private SkinObjectMaterialOption legs = null;
+    private int skin = 0;
     public ObjectMaterialOption tie = null;
 
     void Awake() {
@@ -33,6 +32,9 @@ public class MCSSimulationAgent : MonoBehaviour {
         this.SetChest(0, 0);
         this.SetFeet(0, 0);
         this.SetLegs(0, 0);
+        this.SetEyes(0);
+        this.SetSkin(0);
+        this.SetElder(false);
         // Deactivate all the optional body parts and accessories by default.
         this.glasses.gameObject.SetActive(false);
         this.DeactivateGameObjects(this.hairOptions);
@@ -49,7 +51,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
         // Choose a random beard material now to ensure each part of the beard is the same.
         if (beardIndex == null || beardIndex >= this.beard.materials.Length || beardIndex < 0) {
-            beardIndex = Random.Range(0, this.beard.materials.Length);
+            beardIndex = ChooseDefaultIndex(this.beard.materials.Length);
         }
         // The beard has four separate material elements to set in its renderer's materials array.
         for (int i = 0; i <= 3; ++i) {
@@ -60,7 +62,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetChest(int? chestIndex = -1, int? chestMaterialIndex = -1) {
         if (chestIndex == null || chestIndex >= this.chestOptions.Length || chestIndex < 0) {
-            chestIndex = Random.Range(0, this.chestOptions.Length);
+            chestIndex = ChooseDefaultIndex(this.chestOptions.Length);
         }
         this.DeactivateGameObjects(this.chestOptions);
         this.chest = this.chestOptions[(int)chestIndex];
@@ -75,6 +77,14 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
     }
 
+    public void SetElder(bool elder) {
+        this.elder = elder;
+        SkinnedMeshRenderer skinRenderer = this.head.gameObject.GetComponent<SkinnedMeshRenderer>();
+        skinRenderer.SetBlendShapeWeight(MCSSimulationAgent.ELDER_BLEND_SHAPE, elder ? 100 : 0);
+        // Ensure elders have elder skin, and visa-versa.
+        this.SetSkin(this.skin);
+    }
+
     public void SetEyes(int? eyesIndex = -1) {
         // The eyes are a material on the head game object.
         this.SetMaterial(this.head, eyesIndex, this.head.eyesRendererMaterialIndex);
@@ -82,7 +92,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetFeet(int? feetIndex = -1, int? feetMaterialIndex = -1) {
         if (feetIndex == null || feetIndex >= this.feetOptions.Length || feetIndex < 0) {
-            feetIndex = Random.Range(0, this.feetOptions.Length);
+            feetIndex = ChooseDefaultIndex(this.feetOptions.Length);
         }
         this.DeactivateGameObjects(this.feetOptions);
         this.feet = this.feetOptions[(int)feetIndex];
@@ -97,7 +107,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetHair(int? hairIndex = -1, int? hairMaterialIndex = -1, int? hatMaterialIndex = -1) {
         if (hairIndex == null || hairIndex >= this.hairOptions.Length || hairIndex < 0) {
-            hairIndex = Random.Range(0, this.hairOptions.Length);
+            hairIndex = ChooseDefaultIndex(this.hairOptions.Length);
         }
         this.DeactivateGameObjects(this.hairOptions);
         this.hair = this.hairOptions[(int)hairIndex];
@@ -106,7 +116,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         // If the current hair model has a hat, set the hat's material.
         if (this.hair.hatRendererMaterialIndex >= 0 && this.hair.hatMaterials != null) {
             if (hatMaterialIndex == null || hatMaterialIndex >= this.hair.hatMaterials.Length || hatMaterialIndex < 0) {
-                hatMaterialIndex = Random.Range(0, this.hair.hatMaterials.Length);
+                hatMaterialIndex = ChooseDefaultIndex(this.hair.hatMaterials.Length);
             }
             this.SetMaterialFromList(this.hair, this.hair.hatMaterials, (int)hatMaterialIndex,
                     this.hair.hatRendererMaterialIndex);
@@ -115,7 +125,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetJacket(int? jacketIndex = -1, int? jacketMaterialIndex = -1) {
         if (jacketIndex == null || jacketIndex >= this.jacketOptions.Length || jacketIndex < 0) {
-            jacketIndex = Random.Range(0, this.jacketOptions.Length);
+            jacketIndex = ChooseDefaultIndex(this.jacketOptions.Length);
         }
         this.DeactivateGameObjects(this.jacketOptions);
         this.jacket = this.jacketOptions[(int)jacketIndex];
@@ -125,7 +135,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetLegs(int? legsIndex = -1, int? legsMaterialIndex = -1) {
         if (legsIndex == null || legsIndex >= this.legsOptions.Length || legsIndex < 0) {
-            legsIndex = Random.Range(0, this.legsOptions.Length);
+            legsIndex = ChooseDefaultIndex(this.legsOptions.Length);
         }
         this.DeactivateGameObjects(this.legsOptions);
         this.legs = this.legsOptions[(int)legsIndex];
@@ -139,17 +149,20 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetSkin(int? skinIndex = -1) {
         if (skinIndex == null || skinIndex >= this.skinOptions.Length || skinIndex < 0) {
-            skinIndex = Random.Range(0, this.skinOptions.Length);
+            skinIndex = ChooseDefaultIndex(this.skinOptions.Length);
         }
-        this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, (int)skinIndex);
-        this.SetSkinMaterial(this.chestOptions, (int)skinIndex);
-        this.SetSkinMaterial(this.feetOptions, (int)skinIndex);
-        this.SetSkinMaterial(this.legsOptions, (int)skinIndex);
+        // There are 4 elder skins corresponding to the 4 male or 12 female skins.
+        this.skin = this.elder ? ((int)skinIndex % 4) : (int)skinIndex;
+        Material[] skinOptions = this.elder ? this.elderSkinOptions : this.skinOptions;
+        this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, skinOptions, this.skin);
+        this.SetSkinMaterial(this.chestOptions, skinOptions, this.skin);
+        this.SetSkinMaterial(this.feetOptions, skinOptions, this.skin);
+        this.SetSkinMaterial(this.legsOptions, skinOptions, this.skin);
     }
 
     public void SetTie(int? tieIndex = -1, int? tieMaterialIndex = -1) {
         if (tieIndex == null || tieIndex >= this.tieOptions.Length || tieIndex < 0) {
-            tieIndex = Random.Range(0, this.tieOptions.Length);
+            tieIndex = ChooseDefaultIndex(this.tieOptions.Length);
         }
         this.DeactivateGameObjects(this.tieOptions);
         this.tie = this.tieOptions[(int)tieIndex];
@@ -161,6 +174,11 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
     }
 
+    private int ChooseDefaultIndex(int listSize) {
+        // Here in case we want to change this behavior in the future.
+        return 0;
+    }
+
     private void DeactivateGameObjects(ObjectMaterialOption[] options) {
         foreach (ObjectMaterialOption option in options) {
             option.gameObject.SetActive(false);
@@ -169,7 +187,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     private void SetMaterial(ObjectMaterialOption option, int? materialOptionIndex, int rendererMaterialIndex = 0) {
         if (materialOptionIndex == null || materialOptionIndex >= option.materials.Length || materialOptionIndex < 0) {
-            materialOptionIndex = Random.Range(0, option.materials.Length);
+            materialOptionIndex = ChooseDefaultIndex(option.materials.Length);
         }
         this.SetMaterialFromList(option, option.materials, (int)materialOptionIndex, rendererMaterialIndex);
     }
@@ -193,13 +211,12 @@ public class MCSSimulationAgent : MonoBehaviour {
         option.renderer.materials = materials;
     }
 
-    private void SetSkinMaterial(ObjectMaterialOption[] options, int skinMaterialIndex) {
+    private void SetSkinMaterial(ObjectMaterialOption[] options, Material[] skinOptions, int skinMaterialIndex) {
         foreach (SkinObjectMaterialOption option in options) {
             // If this body part shows skin...
             if (option.skinRendererMaterialIndex >= 0) {
                 // Set the skin material for the body part using the chosen index.
-                this.SetMaterialFromList(option, this.skinOptions, skinMaterialIndex,
-                        option.skinRendererMaterialIndex);
+                this.SetMaterialFromList(option, skinOptions, skinMaterialIndex, option.skinRendererMaterialIndex);
             }
         }
     }
