@@ -1,9 +1,16 @@
 using System.Collections;
 using UnityEngine;
 
+[System.Serializable]
+public enum AgentType : int {
+	ToonPeopleFemale = 0,
+	ToonPeopleMale = 1
+}
+
 public class MCSSimulationAgent : MonoBehaviour {
     private static int ELDER_BLEND_SHAPE = 26;
 
+    public AgentType type;
     public ObjectMaterialOption beard = null;
     public HeadObjectMaterialOption head;
     public ObjectMaterialOption glasses;
@@ -25,7 +32,8 @@ public class MCSSimulationAgent : MonoBehaviour {
     private ObjectMaterialOption jacket = null;
     private SkinObjectMaterialOption legs = null;
     private int skin = 0;
-    public ObjectMaterialOption tie = null;
+    private ObjectMaterialOption tie = null;
+    private Animator animator;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -42,6 +50,16 @@ public class MCSSimulationAgent : MonoBehaviour {
         this.DeactivateGameObjects(this.tieOptions);
         if (this.beard != null && this.beard.gameObject != null) {
             this.beard.gameObject.SetActive(false);
+        }
+        this.animator = this.gameObject.GetComponent<Animator>();
+    }
+
+    public void SetAnimation(string name = null) {
+        if (this.type == AgentType.ToonPeopleFemale) {
+            this.animator.Play(name != null ? (string)name : "TPF_idle1");
+        }
+        if (this.type == AgentType.ToonPeopleMale) {
+            this.animator.Play(name != null ? (string)name : "TPM_idle1");
         }
     }
 

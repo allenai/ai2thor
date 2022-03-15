@@ -2029,16 +2029,28 @@ public class MCSMain : MonoBehaviour {
             gameOrParentObject.GetComponentInChildren<Renderer>().enabled = true;
         }
 
+        bool actionPlayed = false;
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
-            // Play the animation on the game object, not on the parent object.
-            Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
-            if (animator != null) {
-                animator.Play(action.id);
-            } else {
-                // If the animator does not exist on this game object, then it must use legacy animations.
-                objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
+            if (objectConfig.agentSettings != null) {
+                objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation(action.id);
             }
+            else {
+                // Play the animation on the game object, not on the parent object.
+                Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
+                if (animator != null) {
+                    animator.Play(action.id);
+                } else {
+                    // If the animator does not exist on this game object, then it must use legacy animations.
+                    objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
+                }
+            }
+            actionPlayed = true;
         });
+
+        // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
+        if (step == 0 && !actionPlayed && objectConfig.agentSettings != null) {
+            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation();
+        }
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
             this.AssignMaterialsFromConfig(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
