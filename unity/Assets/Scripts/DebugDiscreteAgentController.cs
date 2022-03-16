@@ -288,7 +288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // }
 
                     // MCS Additions
-                    if (Input.GetKeyDown(KeyCode.Equals))
+                    if (Input.GetKeyDown(KeyCode.Escape))
                     {
                         action.action = "Pass";
                         PhysicsController.ProcessControlCommand(action);
