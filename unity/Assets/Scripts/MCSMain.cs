@@ -1879,8 +1879,9 @@ public class MCSMain : MonoBehaviour {
         if (this.isPassiveScene) {
             return false;
         }
+        // Cubes (platforms and walls), triangles (ramps), and tools.
         return objectConfig.type == "cube" || objectConfig.type == "cube_rounded" ||
-            objectConfig.type.StartsWith("tool_");
+            objectConfig.type.StartsWith("triangle") || objectConfig.type.StartsWith("tool_");
     }
 
     private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
