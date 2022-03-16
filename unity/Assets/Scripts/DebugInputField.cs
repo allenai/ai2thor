@@ -388,7 +388,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["renderInstanceSegmentation"] = true;
                         action["renderSemanticSegmentation"] = true;
                         action["action"] = "Initialize";
-                        action["procedural"] = true;
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
