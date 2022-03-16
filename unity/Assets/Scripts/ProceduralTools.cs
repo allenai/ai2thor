@@ -471,7 +471,7 @@ namespace Thor.Procedural {
             return visibilityPointsGO;
         }
 
-        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure", bool squareTiling = false) {
+        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
             var structure = new GameObject(gameObjectId);
 
             var zip3 = walls.Zip(
@@ -485,7 +485,14 @@ namespace Thor.Procedural {
             var index = 0;
             foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
                 if (!w0.empty) {
-                    var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2, squareTiling: squareTiling);
+                    var wallGO = createAndJoinWall(
+                        index,
+                        materialDb,
+                        w0,
+                        w1, 
+                        w2,
+                        squareTiling: proceduralParameters.squareTiling,
+                        minimumBoxColliderThickness: proceduralParameters.wallColliderThickness);
 
                     wallGO.transform.parent = structure.transform;
                     index++;
@@ -494,8 +501,8 @@ namespace Thor.Procedural {
             return structure;
         }
 
-        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
-            return createWalls(room.walls, materialDb, gameObjectId);
+        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
+            return createWalls(room.walls, materialDb, proceduralParameters, gameObjectId);
         }
 
         private static Vector3? vectorsIntersectionXZ(Vector3 line1P0, Vector3 line1Dir, Vector3 line2P0, Vector3 line2Dir) {
@@ -1136,7 +1143,7 @@ namespace Thor.Procedural {
             return floorGameObject;
         }
 
-        public static GameObject createFloorGameObject(string name, RectangleRoom room, AssetMap<Material> materialDb, string simObjId, float receptacleHeight = 0.7f, float floorColliderThickness = 1.0f, Vector3? position = null) {
+        public static GameObject createFloorGameObject(string name, RectangleRoom room, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string simObjId, Vector3? position = null) {
             var floorGameObject = createSimObjPhysicsGameObject(name, position);
 
             floorGameObject.GetComponent<MeshFilter>().mesh = ProceduralTools.GetRectangleFloorMesh(room);
@@ -1148,14 +1155,14 @@ namespace Thor.Procedural {
             var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(room);
             visibilityPoints.transform.parent = floorGameObject.transform;
 
-            var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, room, receptacleHeight);
-            var collider = ProceduralTools.createFloorCollider(floorGameObject, room, floorColliderThickness);
+            var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, room, proceduralParameters.receptacleHeight);
+            var collider = ProceduralTools.createFloorCollider(floorGameObject, room, proceduralParameters.floorColliderThickness);
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
             receptacleTriggerBox.AddComponent<Contains>();
 
-            ProceduralTools.createWalls(room, materialDb, "Structure");
+            ProceduralTools.createWalls(room, materialDb, proceduralParameters, "Structure");
             return floorGameObject;
         }
 
@@ -1443,7 +1450,7 @@ namespace Thor.Procedural {
 
             var structureGO = new GameObject(DefaultRootStructureObjectName);
 
-            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName, house.proceduralParameters.squareTiling);
+            var wallsGO = ProceduralTools.createWalls(walls, materialDb, house.proceduralParameters, DefaultRootWallsObjectName);
 
             floorGameObject.transform.parent = structureGO.transform;
             wallsGO.transform.parent = structureGO.transform;
