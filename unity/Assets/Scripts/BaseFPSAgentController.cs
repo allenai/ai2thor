@@ -403,6 +403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int maxStepCount = 10000,
             bool visualize = false,
             Color? gridColor = null,
+            float gridWidth = 0.045f,
             bool directionsRelativeAgent = false
         ) { // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
@@ -505,6 +506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     gridLineRenderer.startColor = gridColor.Value;
                                     gridLineRenderer.endColor = gridColor.Value;
                                 }
+                                gridLineRenderer.SetWidth(start: gridWidth, end: gridWidth);
                                 // gridLineRenderer.startColor = ;
                                 // gridLineRenderer.endColor = ;
                                 gridLineRenderer.positionCount = 2;
@@ -3305,44 +3307,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected Dictionary<string, object> getMapViewCameraProperties() {
             StructureObject[] structureObjs = GameObject.FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
-            StructureObject ceiling = null;
 
+            Bounds bounds = new Bounds();
+            bool boundsDidUpdate = false;
             if (structureObjs != null) {
-                StructureObject ceilingStruct = null;
                 foreach (StructureObject structure in structureObjs) {
                     if (
                         structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling
                         && structure.gameObject.name.ToLower().Contains("ceiling")
                     ) {
-                        ceiling = structure;
-                        break;
-                    } else if (structure.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling) {
-                        ceilingStruct = structure;
+                        if (!boundsDidUpdate) {
+                            bounds = structure.GetComponent<Renderer>().bounds;
+                        } else {
+                            Bounds b = structure.GetComponent<Renderer>().bounds;
+                            bounds.Encapsulate(b);
+                        }
+                        boundsDidUpdate = true;
                     }
-                }
-
-                if (ceiling == null) {
-                    ceiling = ceilingStruct;
                 }
             }
 
-            Bounds b;
             float yValue;
-            if (ceiling != null) {
+            if (boundsDidUpdate) {
                 // There's a ceiling component in the room!
                 // Let's use it's bounds. (Likely iTHOR.)
-                b = ceiling.GetComponent<Renderer>().bounds;
-                yValue = b.min.y;
+                yValue = bounds.min.y;
             } else {
                 // There's no component in the room!
                 // Let's use the bounds from every object. (Likely RoboTHOR.)
-                b = new Bounds();
-                b.min = agentManager.SceneBounds.min;
-                b.max = agentManager.SceneBounds.max;
-                yValue = b.max.y;
+                bounds = new Bounds();
+                bounds.min = agentManager.SceneBounds.min;
+                bounds.max = agentManager.SceneBounds.max;
+                yValue = bounds.max.y;
             }
-            float midX = (b.max.x + b.min.x) / 2f;
-            float midZ = (b.max.z + b.min.z) / 2f;
+            float midX = (bounds.max.x + bounds.min.x) / 2f;
+            float midZ = (bounds.max.z + bounds.min.z) / 2f;
 
             // solves an edge case where the lowest point of the ceiling
             // is actually below the floor :0
@@ -3354,7 +3353,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return new Dictionary<string, object>() {
                 ["position"] = new Vector3(midX, yValue, midZ),
                 ["rotation"] = new Vector3(90, 0, 0),
-                ["orthographicSize"] = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f),
+                ["orthographicSize"] = Math.Max((bounds.max.x - bounds.min.x) / 2f, (bounds.max.z - bounds.min.z) / 2f),
                 ["orthographic"] = true
             };
         }
@@ -3502,29 +3501,119 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void VisualizePath(ServerAction action) {
-            var path = action.positions;
-            if (path == null || path.Count == 0) {
-                this.errorMessage = "Invalid path with 0 points.";
-                actionFinished(false);
-                return;
+        public void HighlightObject(
+            string objectId,
+            float lineWidth = 0.095f,
+            float? height = 2.0f
+        ) {
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            AxisAlignedBoundingBox bbox = sop.AxisAlignedBoundingBox;
+            float minX = bbox.center.x - bbox.size.x / 2;
+            float maxX = bbox.center.x + bbox.size.x / 2;
+            float minZ = bbox.center.z - bbox.size.z / 2;
+            float maxZ = bbox.center.z + bbox.size.z / 2;
+
+            if (height == null) {
+                height = bbox.center.y + bbox.size.y / 2;
             }
 
-            var id = action.objectId;
+            var go = new GameObject($"{objectId}_highlight");
+            LineRenderer lineRenderer = go.AddComponent<LineRenderer>() as LineRenderer;
 
-            getReachablePositions(1.0f, 10000, action.grid);
+            lineRenderer.SetWidth(start: lineWidth, end: lineWidth);
 
-            Instantiate(DebugTargetPointPrefab, path[path.Count - 1], Quaternion.identity);
-            new List<bool>();
-            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
-            var textMesh = go.GetComponentInChildren<TextMesh>();
-            textMesh.text = id;
+            lineRenderer.positionCount = 5;
+            lineRenderer.SetPositions(new Vector3[] {
+                new Vector3(minX, height.Value, minZ),
+                new Vector3(minX, height.Value, maxZ),
+                new Vector3(maxX, height.Value, maxZ),
+                new Vector3(maxX, height.Value, minZ),
+                new Vector3(minX, height.Value, minZ),
+            });
+            actionFinished(true);
+        }
+
+        // Hide a previously visualized path.
+        public void HideVisualizedPath(string pathName = "PathVisualization") {
+            GameObject parent = GameObject.Find(pathName);
+            if (parent != null) {
+                // using SetActive(false) instead of Destroy
+                // since Destroy has hung the controller on
+                // occassion.
+                parent.SetActive(false);
+            }
+            actionFinished(true);
+        }
+
+        public void VisualizePath(
+            Vector3[] positions,
+            float pathWidth = 0.045f,
+            string startText = "",
+            string endText = "",
+            Gradient pathGradient = null,
+            bool grid = false,
+            Color? gridColor = null,
+            float gridWidth = 0.045f,
+            bool displayCount = false,
+            string pathName = "PathVisualization"
+        ) {
+            // We do not have multiple path visualizations at the same time
+            // by default. This is because we often want to override it
+            // instead of have multiple of them. You can have multiple of them
+            // by changing the pathName parameter.
+
+            var path = positions;
+            if (path == null || path.Count() == 0) {
+                throw new ArgumentException("Path cannot be null or empty.");
+            }
+
+            if (grid) {
+                getReachablePositions(visualize: grid, gridColor: gridColor, gridWidth: gridWidth);
+            }
+
+            GameObject parent = GameObject.Find(pathName);
+            GameObject go;
+            GameObject endGo;
+            if (parent == null) {
+                parent = new GameObject(pathName);
+                endGo = Instantiate(DebugTargetPointPrefab, path[path.Count() - 1], Quaternion.identity);
+                endGo.name = "End";
+                endGo.transform.parent = parent.transform;
+                if (endText != null) {
+                    endGo.GetComponentInChildren<TextMesh>().text = endText;
+                }
+
+                go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+                go.name = "Start";
+                go.transform.parent = parent.transform;
+                if (startText != null) {
+                    go.GetComponentInChildren<TextMesh>().text = startText;
+                }
+            } else {
+                parent.SetActive(true);
+                endGo = parent.transform.Find("End").gameObject;
+                endGo.transform.position = path[path.Count() - 1];
+                if (endText != null) {
+                    endGo.GetComponentInChildren<TextMesh>().text = endText;
+                }
+
+                go = parent.transform.Find("Start").gameObject;
+                go.transform.position = path[0];
+                if (startText != null) {
+                    go.GetComponentInChildren<TextMesh>().text = startText;
+                }
+            }
+
 
             var lineRenderer = go.GetComponentInChildren<LineRenderer>();
-            lineRenderer.startWidth = 0.015f;
-            lineRenderer.endWidth = 0.015f;
 
-            lineRenderer.positionCount = path.Count;
+            if (pathGradient != null && pathGradient.colorKeys.Length > 0) {
+                lineRenderer.colorGradient = pathGradient;
+            }
+
+            lineRenderer.SetWidth(start: pathWidth, end: pathWidth);
+
+            lineRenderer.positionCount = path.Count();
             lineRenderer.SetPositions(path.ToArray());
             actionFinished(true);
         }
@@ -3623,8 +3712,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ObjectNavExpertAction(ServerAction action) {
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-            var path = getShortestPath(sop, true);
+            NavMeshPath path = new UnityEngine.AI.NavMeshPath();
+            Func<bool> visibilityTest;
+            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+                SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+                path = getShortestPath(sop, true);
+                visibilityTest = () => objectIsWithinViewport(sop);
+            }
+            else {
+                var startPosition = this.transform.position;
+                var startRotation = this.transform.rotation;
+                SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
+                visibilityTest = () => true;
+            }
+
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
 
                 int parts = (int)Math.Round(360f / rotateStepDegrees);
@@ -3641,7 +3742,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
 
                 if (path.corners.Length <= 1) {
-                    if (objectIsWithinViewport(sop)) {
+                    if (visibilityTest()) {
                         actionFinished(true);
                         return;
                     }
@@ -3653,7 +3754,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
                         for (int horizon = -1; horizon <= 2; horizon++) {
                             m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
-                            if (objectIsWithinViewport(sop)) {
+                            if (visibilityTest()) {
                                 int numActions = Math.Abs(i) + Math.Abs(horizon - (int)(startCameraRot.x / 30f));
                                 if (numActions < bestNumActions) {
                                     bestNumActions = numActions;
@@ -4223,21 +4324,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPathToPoint(
-            Vector3 position, float x, float y, float z, float allowedError = DefaultAllowedErrorInShortestPath
+            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            SafelyComputeNavMeshPath(position, new Vector3(x, y, z), path, allowedError);
+            SafelyComputeNavMeshPath(position, target, path, allowedError);
             actionFinished(success: true, actionReturn: path);
         }
 
         public void GetShortestPathToPoint(
-            float x,
-            float y,
-            float z,
+            Vector3 target,
             float allowedError = DefaultAllowedErrorInShortestPath
         ) {
             var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, x, y, z, allowedError);
+            GetShortestPathToPoint(startPosition, target, allowedError);
         }
 
         public void VisualizeShortestPaths(ServerAction action) {

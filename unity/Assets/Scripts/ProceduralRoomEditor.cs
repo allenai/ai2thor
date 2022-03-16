@@ -532,7 +532,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
-                    open = (connectionProps?.IsOpen).GetValueOrDefault(),
+                    openness = (connectionProps?.IsOpen).GetValueOrDefault() ? 1.0f : 0.0f,
                     assetId = assetId
 
                 };
@@ -555,7 +555,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
 
-                    open = (connectionProps?.IsOpen).GetValueOrDefault(),
+                    openness = (connectionProps?.IsOpen).GetValueOrDefault() ? 1.0f : 0.0f,
                     assetId = assetId
 
                 };
