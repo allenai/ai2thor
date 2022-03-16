@@ -248,7 +248,8 @@ public class AgentManager : MonoBehaviour {
         //primary agent floating in space, then generates the house, then teleports the primary agent.
         //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
         //agents, which won't work if we initialize the agent(s) before the scene exists
-        if (!action.procedural) {
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!sceneName.StartsWith("Procedural")) {
             StartCoroutine(addAgents(action));
         }
     }
@@ -1862,8 +1863,6 @@ public class ServerAction {
     // the mass threshold for how massive a pickupable/moveable sim object needs to be
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
-
-    public bool procedural = false;
 
 
     public SimObjType ReceptableSimObjType() {
