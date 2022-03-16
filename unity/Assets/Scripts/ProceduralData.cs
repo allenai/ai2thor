@@ -113,7 +113,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralParameters {
         public float floorColliderThickness { get; set; }
-        public float wallColliderThickness { get; set; }
+        public float minimumWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
         public string skyboxId { get; set; }
         public string datetime { get; set; }
