@@ -1974,7 +1974,7 @@ def benchmark(
             else:
                 if verbose:
                     print("------ RESET")
-                env.reset("procedural")
+                env.reset("Procedural")
 
             # env.step(dict(action="Initialize", gridSize=0.25))
 
@@ -3782,7 +3782,8 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
         local_executable_path=None,
         local_build=local_build,
         start_unity=False if editor_mode else True,
-        scene="procedural", gridSize=0.25,
+        scene="Procedural",
+        gridSize=0.25,
         procedural = True,
         width=width,
         height=height,
@@ -3950,7 +3951,8 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         local_executable_path=None,
         local_build=local_build,
         start_unity=False if editor_mode else True,
-        scene="procedural", gridSize=0.25,
+        scene="Procedural",
+        gridSize=0.25,
         procedural=True,
         width=width,
         height=height,
