@@ -2876,9 +2876,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                         }
                         else if (splitcommand.Length >= 4) {
-                            // Target Position
+                            // Target position
                             action.position = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
-                        } 
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
