@@ -1190,6 +1190,7 @@ namespace Thor.Procedural {
                 materialId = wall.material,
                 empty = wall.empty,
                 roomId = wall.roomId,
+                thickness = wall.thickness,
                 hole = hole,
                 materialTilingXDivisor = wall.materialTilingXDivisor,
                 materialTilingYDivisor = wall.materialTilingYDivisor,
