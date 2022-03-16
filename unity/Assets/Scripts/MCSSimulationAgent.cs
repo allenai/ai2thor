@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -35,6 +36,14 @@ public class MCSSimulationAgent : MonoBehaviour {
     private ObjectMaterialOption tie = null;
     private Animator animator;
 
+    private int currentFrame = 0;
+    private static int FRAME_RATE = 25;
+    [SerializeField] private string currentClip;
+    private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
+    private bool resetAnimationToIdleAfterPlayingOnce = false;
+    private int stepToEndAnimation = -1;
+    private MCSMain MCSMain;
+
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
         this.SetChest(0, 0);
@@ -52,15 +61,53 @@ public class MCSSimulationAgent : MonoBehaviour {
             this.beard.gameObject.SetActive(false);
         }
         this.animator = this.gameObject.GetComponent<Animator>();
+        animator.speed = 0;
+        foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
+            clipNamesAndDurations.Add(clip.name, clip.length);
+        }
+        MCSMain = FindObjectOfType<MCSMain>();
+        MCSMain.simulationAgents.Add(this);
+        SetDefaultAnimation();
+        IncrementAnimationFrame();
     }
 
-    public void SetAnimation(string name = null) {
+    public void SetDefaultAnimation(string name = null) {
         if (this.type == AgentType.ToonPeopleFemale) {
-            this.animator.Play(name != null ? (string)name : "TPF_idle1");
+            this.currentClip = name != null ? name : "TPF_idle1";
         }
         if (this.type == AgentType.ToonPeopleMale) {
-            this.animator.Play(name != null ? (string)name : "TPM_idle1");
+            this.currentClip = name != null ? name : "TPM_idle1";
         }
+        resetAnimationToIdleAfterPlayingOnce = false;
+        currentFrame = 0;
+
+    }
+
+    public void AssignClip(string clipId) {
+        currentFrame = 0;
+        currentClip = clipId;
+    }
+
+    public void IncrementAnimationFrame() {
+        currentFrame++;
+        int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.FRAME_RATE * clipNamesAndDurations[this.currentClip]);
+        if (resetAnimationToIdleAfterPlayingOnce && currentFrame > totalFrames)
+            SetDefaultAnimation();
+        if(MCSMain.GetStepNumber() == stepToEndAnimation) {
+            SetDefaultAnimation();
+            stepToEndAnimation = -1;
+        }
+        currentFrame = currentFrame > totalFrames ? 0 : currentFrame;
+        float percentOfAnimation = currentFrame / (float)(totalFrames);
+        animator.Play(currentClip, 0, percentOfAnimation);
+    }
+
+    public void AnimationPlaysOnce(bool isLoopAnimation) {
+        resetAnimationToIdleAfterPlayingOnce = !isLoopAnimation;
+    }
+
+    public void SetStepToEndAnimation(int step) {
+        this.stepToEndAnimation = step;
     }
 
     public void SetBeard(int? beardIndex = -1) {
@@ -273,3 +320,183 @@ public class ChestObjectMaterialOption : SkinObjectMaterialOption {
 public class HeadObjectMaterialOption : SkinObjectMaterialOption {
     public int eyesRendererMaterialIndex = 1;
 }
+
+
+/*
+---ALL AVAILABLE ANIMATIONS---
+TPM_brake
+TPM_clap
+TPM_cry
+TPM_fallbackwardsFLY
+TPM_fallbackwardsIN
+TPM_fallbackwardsOUT
+TPM_fallforwardFLY
+TPM_fallforwardIN
+TPM_fallforwardOUT
+TPM_freefall
+TPM_hitbackwards
+TPM_hitforward
+TPM_idle1
+TPM_idle2
+TPM_idle3
+TPM_idle4
+TPM_idle5
+TPM_idleafraid
+TPM_idleangry
+TPM_idlehappy
+TPM_idlesad
+TPM_jump
+TPM_land
+TPM_laugh
+TPM_lookback
+TPM_phone1
+TPM_phone2
+TPM_run
+TPM_runbackwards
+TPM_runjumpFLY
+TPM_runjumpIN
+TPM_runjumpOUT
+TPM_runIN
+TPM_runL
+TPM_runOUT
+TPM_runR
+TPM_runstrafeL
+TPM_runstrafeR
+TPM_scream
+TPM_sitphone1
+TPM_sitphone2
+TPM_sitdownIN
+TPM_sitdownOUT
+TPM_sitidle1
+TPM_sitidle2
+TPM_stairsDOWN
+TPM_stairsUP
+TPM_static
+TPM_talk1
+TPM_talk2
+TPM_telloff
+TPM_turnL45
+TPM_turnL90
+TPM_turnR45
+TPM_turnR90
+TPM_walk
+TPM_walkbackwards
+TPM_strafeL
+TPM_strafeR
+TPM_wave
+TPF_brake
+TPF_clap
+TPF_cry
+TPF_fallbackwardsFLY
+TPF_fallbackwardsIN
+TPF_fallbackwardsOUT
+TPF_fallforwardFLY
+TPF_fallforwardIN
+TPF_fallforwardOUT
+TPF_freefall
+TPF_hitbackwards
+TPF_hitforward
+TPF_idle1
+TPF_idle2
+TPF_idle3
+TPF_idle4
+TPF_idle5
+TPF_idleafraid
+TPF_idleangry
+TPF_idlehappy
+TPF_idlesad
+TPF_jump
+TPF_land
+TPF_laugh
+TPF_lookback
+TPF_phone1
+TPF_phone2
+TPF_run
+TPF_runbackwards
+TPF_runjumpFLY
+TPF_runjumpIN
+TPF_runjumpOUT
+TPF_runIN
+TPF_runL
+TPF_runOUT
+TPF_runR
+TPF_runstrafeL
+TPF_runstrafeR
+TPF_scream
+TPF_sitphone1
+TPF_sitphone2
+TPF_sitdownIN
+TPF_sitdownOUT
+TPF_sitidle1
+TPF_sitidle2
+TPF_stairsDOWN
+TPF_stairsUP
+TPF_static
+TPF_talk1
+TPF_talk2
+TPF_telloff
+TPF_turnL45
+TPF_turnL90
+TPF_turnR45
+TPF_turnR90
+TPF_walk
+TPF_walkbackwards
+TPF_strafeL
+TPF_strafeR
+TPF_wave
+TPE_clap
+TPE_cry
+TPE_freefall
+TPE_hitbackwards
+TPE_hitforward
+TPE_idle1
+TPE_idle2
+TPE_idle3
+TPE_idle4
+TPE_idle5
+TPE_idleafraid
+TPE_idleangry
+TPE_idlehappy
+TPE_idlesad
+TPE_jump
+TPE_land
+TPE_laugh
+TPE_lookback
+TPE_phone1
+TPE_phone2
+TPE_run
+TPE_runbackwards
+TPE_runIN
+TPE_runjumpFLY
+TPE_runjumpIN
+TPE_runjumpOUT
+TPE_runL
+TPE_runOUT
+TPE_runR
+TPE_scream
+TPE_sitphone1
+TPE_sitphone2
+TPE_sitdownIN
+TPE_sitdownOUT
+TPE_sitidle1
+TPE_sitidle2
+TPE_stairsDOWN
+TPE_stairsUP
+TPE_talk1
+TPE_talk2
+TPE_telloff
+TPE_turnL45
+TPE_turnR45
+TPE_turnL90
+TPE_turnR90
+TPE_walk
+TPE_walkbackwards
+TPE_strafeL
+TPE_strafeR
+TPE_wave
+happy
+sad
+angry
+amazed
+disgust
+*/

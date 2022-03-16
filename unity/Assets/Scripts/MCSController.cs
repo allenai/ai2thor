@@ -594,6 +594,14 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
         CheckIfInLava();
 
+        //Simulation Agent Animations
+        List<MCSSimulationAgent> simulationAgents =  GameObject.Find("MCS").GetComponent<MCSMain>().simulationAgents;
+        foreach(MCSSimulationAgent simAgent in simulationAgents) {
+            for(int i = 0; i<MCSMain.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
+                simAgent.IncrementAnimationFrame();
+            }
+        }
+
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."   

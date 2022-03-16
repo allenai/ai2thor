@@ -121,6 +121,8 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallFront;
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
+    public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 2;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -254,12 +256,13 @@ public class MCSMain : MonoBehaviour {
 
     // Custom Public Methods
 
-    public void ChangeCurrentScene(MCSConfigScene scene) {        
+    public void ChangeCurrentScene(MCSConfigScene scene) {
         if (scene == null && this.currentScene == null) {
             Debug.LogError("MCS: Cannot switch the MCS scene to null... Keeping the current MCS scene.");
             return;
         }
 
+        simulationAgents.Clear();
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -2031,25 +2034,26 @@ public class MCSMain : MonoBehaviour {
 
         bool actionPlayed = false;
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
+            Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
             if (objectConfig.agentSettings != null) {
-                objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation(action.id);
+                MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
+                simulationAgent.AssignClip(action.id);
+                simulationAgent.AnimationPlaysOnce(action.isLoopAnimation);
+                simulationAgent.SetStepToEndAnimation(action.stepEnd);
             }
-            else {
+            else if (animator != null) {
                 // Play the animation on the game object, not on the parent object.
-                Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
-                if (animator != null) {
-                    animator.Play(action.id);
-                } else {
-                    // If the animator does not exist on this game object, then it must use legacy animations.
-                    objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
-                }
+                animator.Play(action.id);
+            } else {
+                // If the animator does not exist on this game object, then it must use legacy animations.
+                objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
             }
             actionPlayed = true;
         });
 
         // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
         if (step == 0 && !actionPlayed && objectConfig.agentSettings != null) {
-            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation();
+            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetDefaultAnimation();
         }
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
@@ -2111,6 +2115,10 @@ public class MCSMain : MonoBehaviour {
     public string GetCurrentSceneName() {
         return currentScene.name;
     }
+
+    public int GetStepNumber() {
+        return this.lastStep;
+    }
 }
 
 // Definitions of serializable objects from JSON config files.
@@ -2136,8 +2144,13 @@ public class MCSConfigAbstractObject {
 }
 
 [Serializable]
-public class MCSConfigAction : MCSConfigStepBegin {
+public class MCSConfigAction : MCSConfigStepBeginEnd {
     public string id;
+    public bool isLoopAnimation = false;
+
+    public MCSConfigAction() {
+        base.stepEnd = -1;
+    }
 }
 
 [Serializable]
