@@ -435,9 +435,8 @@ class Controller(object):
 
         if x_display:
             self.x_display = x_display
-        # disabling environment display for cloudrendering
-        # elif "DISPLAY" in os.environ:
-        #     self.x_display = os.environ["DISPLAY"]
+        elif "DISPLAY" in os.environ:
+            self.x_display = os.environ["DISPLAY"]
 
         if self.x_display and ":" not in self.x_display:
             self.x_display = ":" + self.x_display
