@@ -1572,6 +1572,8 @@ public class MCSMain : MonoBehaviour {
 
         // If this object is a simulation-controlled agent...
         if (objectDefinition.agent) {
+            // Ensure the agent property in the object config is true for other parts of our code.
+            objectConfig.agent = true;
             // Assume all our agent prefabs have this script.
             MCSSimulationAgent agentScript = gameObject.GetComponent<MCSSimulationAgent>();
             // Set all of the agent's body and clothing options, including materials.
@@ -2031,7 +2033,7 @@ public class MCSMain : MonoBehaviour {
 
         bool actionPlayed = false;
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
-            if (objectConfig.agentSettings != null) {
+            if (objectConfig.agent) {
                 objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation(action.id);
             }
             else {
@@ -2048,7 +2050,7 @@ public class MCSMain : MonoBehaviour {
         });
 
         // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
-        if (step == 0 && !actionPlayed && objectConfig.agentSettings != null) {
+        if (step == 0 && !actionPlayed && objectConfig.agent) {
             objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation();
         }
 
@@ -2122,6 +2124,7 @@ public class MCSMain : MonoBehaviour {
 [Serializable]
 public class MCSConfigAbstractObject {
     public string id;
+    public bool agent;
     public bool kinematic;
     public float mass;
     public float maxAngularVelocity;
@@ -2269,7 +2272,6 @@ public class MCSConfigMove : MCSConfigStepBeginEnd {
 public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string resourceFile;
     public string shape;
-    public bool agent;
     public bool centerMassAtBottom;
     public bool keepColliders;
     public MCSConfigCollider boundingBox = null;
