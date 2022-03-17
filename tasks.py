@@ -538,9 +538,10 @@ def webgl_build(
         print(scene_metadata)
 
     to_content_addressable = [
-        ("{}.data.unityweb".format(build_name), "dataUrl"),
-        ("{}.wasm.code.unityweb".format(build_name), "wasmCodeUrl"),
-        ("{}.wasm.framework.unityweb".format(build_name), "wasmFrameworkUrl"),
+        ("{}.data".format(build_name), "dataUrl"),
+        ("{}.loader.js".format(build_name), "loaderUrl"),
+        ("{}.wasm".format(build_name), "wasmCodeUrl"),
+        ("{}.framework.js".format(build_name), "wasmFrameworkUrl"),
     ]
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
