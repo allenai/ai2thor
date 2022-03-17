@@ -492,7 +492,7 @@ namespace Thor.Procedural {
                         w1, 
                         w2,
                         squareTiling: proceduralParameters.squareTiling,
-                        minimumBoxColliderThickness: proceduralParameters.minimumWallColliderThickness);
+                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness);
 
                     wallGO.transform.parent = structure.transform;
                     index++;
