@@ -1348,9 +1348,8 @@ public class MCSMain : MonoBehaviour {
 
         // If no salient materials were assigned, set a default or else the script will emit errors.
         if (ai2thorPhysicsScript.salientMaterials == null || ai2thorPhysicsScript.salientMaterials.Length == 0) {
-            // TODO What should we set as the default material? Does it even matter?
             ai2thorPhysicsScript.salientMaterials = new ObjectMetadata.ObjectSalientMaterial[] {
-                ObjectMetadata.ObjectSalientMaterial.Wood
+                ObjectMetadata.ObjectSalientMaterial.Undefined
             };
         }
 
@@ -1857,9 +1856,9 @@ public class MCSMain : MonoBehaviour {
                 case "wax":
                     return ObjectMetadata.ObjectSalientMaterial.Wax;
                 case "wood":
-                // TODO What should the default case be? Does it even matter?
-                default:
                     return ObjectMetadata.ObjectSalientMaterial.Wood;
+                default:
+                    return ObjectMetadata.ObjectSalientMaterial.Undefined;
             }
         }).ToArray();
     }
