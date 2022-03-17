@@ -66,8 +66,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
   
     private Dictionary<string, bool> hapticFeedback = new Dictionary<string, bool>();
-    public int stepsOnLava;
+    private int stepsOnLava;
 
+    [SerializeField] private string resolvedObject;
+    [SerializeField] private string resolvedReceptacle;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -216,6 +218,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.performerRadius = this.GetComponent<CapsuleCollider>().radius;
         metadata.stepsOnLava = this.stepsOnLava;
         metadata.hapticFeedback = this.hapticFeedback;
+        metadata.resolvedObject = this.resolvedObject;
+        metadata.resolvedReceptacle = this.resolvedReceptacle;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -400,6 +404,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        this.resolvedObject = "";
+        this.resolvedReceptacle = "";
         if (this.cameraCullingMask < 0) {
             this.cameraCullingMask = this.GetComponentInChildren<Camera>().cullingMask;
         }
@@ -716,7 +722,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         action.objectId = this.ConvertScreenPointToId(action.objectImageCoords,
             action.objectId);
 
-        return TryReceptacleObjectIdFromScreenPoint(action);
+        this.resolvedObject = action.objectId != null ? action.objectId : "";
+        return agentState != AgentState.ActionComplete;
 
     }
 
@@ -732,6 +739,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         if (agentState != AgentState.ActionComplete) {
             action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
+            this.resolvedReceptacle = action.receptacleObjectId != null ? action.receptacleObjectId : "";
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
         return agentState != AgentState.ActionComplete;

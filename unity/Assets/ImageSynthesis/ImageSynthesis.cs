@@ -301,6 +301,13 @@ public class ImageSynthesis : MonoBehaviour {
         }
 	}
 
+	private string EnsureFloorTexturesAndHolesHaveIdenticalTags(string objTag, Renderer r) {
+		bool floor = objTag.Length > "floor".Length && objTag.Substring(0, "floor".Length) == "floor";
+		bool hole = floor && r.transform.position.y == -MCSMain.GetFloorDepth();
+		objTag = floor ? "floor" + r.material.name + (hole ? "hole" : "") : objTag;
+		return objTag;
+	}
+
 	public void OnSceneChange()
 	{
 		sentColorCorrespondence = false;
@@ -340,7 +347,7 @@ public class ImageSynthesis : MonoBehaviour {
                 objTag = "fuse_wall";
             }
 
-
+			objTag = EnsureFloorTexturesAndHolesHaveIdenticalTags(objTag, r);
 			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
 			Color objColor = ColorEncoding.EncodeTagAsColor(objTag + guidForColors);
 
