@@ -55,12 +55,12 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class ShadowParameters {
         public string type { get; set; } = "Soft";
-        public float strength { get; set; }
+        public float strength { get; set; } = 1.0f;
 
-        public float normalBias { get; set; }
-        public float bias { get; set; }
-        public float nearPlane { get; set; }
-        public string resolution { get; set; }
+        public float normalBias { get; set; } = 0.4f;
+        public float bias { get; set; } = 0.05f;
+        public float nearPlane { get; set; } = 0.2f;
+        public string resolution { get; set; } = "FromQualitySettings";
     }
 
     [Serializable]
