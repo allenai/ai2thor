@@ -1341,10 +1341,6 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.Type = SimObjType.IgnoreType;
         }
 
-        if (objectDefinition.salientMaterials.Count <= 0) {
-            ai2thorPhysicsScript.salientMaterials = new ObjectMetadata.ObjectSalientMaterial[] {ObjectMetadata.ObjectSalientMaterial.Undefined};
-        }
-
         if (objectDefinition.salientMaterials.Count > 0) {
             ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectDefinition.salientMaterials);
         }
@@ -1863,6 +1859,7 @@ public class MCSMain : MonoBehaviour {
                 case "wax":
                     return ObjectMetadata.ObjectSalientMaterial.Wax;
                 case "wood":
+                    return ObjectMetadata.ObjectSalientMaterial.Wood;
                 default:
                     return ObjectMetadata.ObjectSalientMaterial.Undefined;
             }
