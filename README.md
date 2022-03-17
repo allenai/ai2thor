@@ -258,7 +258,7 @@ For playback:
   - Split the existing metadata-update-behavior of the `addObjectImageForm` function into a separate, new function called `UpdateMetadataColors`
   - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
   - Changed `readyToEmit = true;` to `this.setReadyToEmit(true);` in `addAgents`, `ProcessControlCommand`, `Start`
-  - Added Object Types: `Hollow`
+  - Added Object Salient Materials: `Hollow`, `Undefined`
   - Added property `consistentColors`
   - Added property `physicsFramesPerSecond`
 - `Scripts/BaseFPSAgentController`:
