@@ -34,16 +34,20 @@ public class MCSSimulationAgent : MonoBehaviour {
     private SkinObjectMaterialOption legs = null;
     private int skin = 0;
     private ObjectMaterialOption tie = null;
-    private Animator animator;
 
-    private int currentAnimationFrame = 0;
+
+    private Animator animator;
     private static int ANIMATION_FRAME_RATE = 25;
+    public static int AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME = 3;
+    public int currentAnimationFrame = 0;
     [SerializeField] private string currentClip;
     private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
     private bool resetAnimationToIdleAfterPlayingOnce = false;
     private int stepToEndAnimation = -1;
+    public static string[] agentInteractionActionAnimations = {"TPF_land", "TPM_land"};
     private MCSMain mcsMain;
 
+    
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
         this.SetChest(0, 0);
@@ -65,7 +69,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
             clipNamesAndDurations.Add(clip.name, clip.length);
         }
-        MCSMain mcsMain = FindObjectOfType<MCSMain>();
+        mcsMain = FindObjectOfType<MCSMain>();
         mcsMain.GetSimulationAgents().Add(this);
         SetDefaultAnimation();
         IncrementAnimationFrame();

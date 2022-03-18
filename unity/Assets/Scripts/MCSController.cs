@@ -329,6 +329,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         objectMetadata.colorsFromMaterials = colors.ToArray();
 
         objectMetadata.shape = simObj.shape;
+        objectMetadata.associatedWithAgent = simObj.associatedWithAgent;
 
         return objectMetadata;
     }
@@ -1050,13 +1051,17 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
         MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        Debug.Log(simulationAgent.name);
         foreach (SimObjPhysics sop in main.GetAgentObjectAssociations()[simulationAgent.name]) {
             CanOpen_Object associatedObject = sop.GetComponent<CanOpen_Object>();
             associatedObject.locked = false;
             associatedObject.SetOpenPercent(1);
             associatedObject.Interact();
         }
+        int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
+        Debug.Log(type);
+        simulationAgent.AssignClip(MCSSimulationAgent.agentInteractionActionAnimations[type]);
+        simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
+        simulationAgent.currentAnimationFrame = MCSSimulationAgent.AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME;
         actionFinished(true);
     }
 
