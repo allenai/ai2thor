@@ -1174,6 +1174,7 @@ public class ObjectMetadata
     public string shape;
     public bool visibleInCamera;
 
+	public string associatedWithAgent;
 	public ObjectMetadata() { }
 }
 

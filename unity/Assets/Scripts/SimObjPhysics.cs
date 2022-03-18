@@ -116,6 +116,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsSeesaw;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
+	public string associatedWithAgent;
     private Vector3 boundingBoxCachePosition;
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;

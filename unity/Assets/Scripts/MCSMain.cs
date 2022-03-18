@@ -122,6 +122,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
     private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    private Dictionary<string, List<SimObjPhysics>> agentObjectAssociations = new Dictionary<string, List<SimObjPhysics>>();
     public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 2;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
@@ -263,6 +264,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         simulationAgents.Clear();
+        agentObjectAssociations.Clear();
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -1432,6 +1434,17 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
+        if(objectConfig.agentSettings != null)
+            ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
+
+        if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
+            ai2thorPhysicsScript.associatedWithAgent = objectConfig.associatedWithAgent;
+            if(agentObjectAssociations.ContainsKey(ai2thorPhysicsScript.associatedWithAgent))
+                agentObjectAssociations[ai2thorPhysicsScript.associatedWithAgent].Add(ai2thorPhysicsScript);
+            else
+                agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, new List<SimObjPhysics>(){ai2thorPhysicsScript});
+            
+        }
 
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
@@ -2054,8 +2067,10 @@ public class MCSMain : MonoBehaviour {
         });
 
         // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
-        if (step == 0 && !actionPlayed && objectConfig.agent) {
-            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetDefaultAnimation();
+        if (step == 0 && !actionPlayed && objectConfig.agentSettings != null) {
+            MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
+            if(simulationAgent != null)
+                simulationAgent.SetDefaultAnimation();
         }
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
@@ -2122,12 +2137,16 @@ public class MCSMain : MonoBehaviour {
         return this.lastStep;
     }
 
-    public static int GetFloorDepth() {
-        return MCSMain.FLOOR_DEPTH;
-    }
-
     public List<MCSSimulationAgent> GetSimulationAgents() {
         return this.simulationAgents;
+    }
+
+    public Dictionary<string, List<SimObjPhysics>> GetAgentObjectAssociations() {
+        return this.agentObjectAssociations;
+    }
+
+    public static int GetFloorDepth() {
+        return MCSMain.FLOOR_DEPTH;
     }
 }
 
@@ -2218,6 +2237,7 @@ public class MCSConfigCollider : MCSConfigTransform {
 [Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
     public MCSConfigAgentSettings agentSettings = null;
+    public string associatedWithAgent;
     public string controller;
     public string locationParent;
     public string materialFile; // deprecated; please use materials

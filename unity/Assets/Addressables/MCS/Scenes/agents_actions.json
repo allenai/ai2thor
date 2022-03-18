@@ -1,0 +1,235 @@
+﻿{
+    "name": "agents_actions",
+    "version": "1",
+    "ceilingMaterial": "Custom/Materials/GreyDrywallMCS",
+    "floorMaterial": "Custom/Materials/BrownWoodMCS",
+    "wallMaterial": "Custom/Materials/WhiteDrywallMCS",
+    "roomDimensions": {
+        "x": 12,
+        "y": 3,
+        "z": 12
+    },
+    "performerStart": {
+        "position": {
+            "x": 0,
+            "z": -0.7
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+    },
+    "objects": [{
+        "id": "agent_male",
+        "type": "agent_male_02",
+        "agentSettings": {
+            "chest": 4,
+            "chestMaterial": 5,
+            "eyes": -1,
+            "feet": -1,
+            "feetMaterial": -1,
+            "glasses": -1,
+            "hair": 4,
+            "hairMaterial": -1,
+            "hatMaterial": -1,
+            "jacket": 4,
+            "jacketMaterial": 3,
+            "legs": 2,
+            "legsMaterial": -1,
+            "skin": 2,
+            "tie": -1,
+            "tieMaterial": -1
+        },
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "treasure_chest",
+        "type": "chest_2",
+        "salientMaterials": ["wood"],
+        "materials": ["AI2-THOR/Materials/Wood/LightWoodCounters4"],
+        "associatedWithAgent": "agent_male",
+        "locked": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.6,
+                "y": 0,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "ball_b",
+        "type": "ball",
+        "mass": 1,
+        "salientMaterials": ["plastic"],
+        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 1"],
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.6,
+                "y": 0.125,
+                "z": 1
+            },
+            "scale": {
+                "x": 0.2,
+                "y": 0.2,
+                "z": 0.2
+            }
+        }]
+    },
+    {
+        "id": "sturdy_box",
+        "type": "chest_1",
+        "salientMaterials": ["wood"],
+        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 1"],
+        "associatedWithAgent": "agent_male",
+        "locked": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.6,
+                "y": 0,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    },
+    {
+    "id": "agent_male_2",
+        "type": "agent_male_04",
+        "agentSettings": {
+            "chest": 2,
+            "chestMaterial": 5,
+            "eyes": -1,
+            "feet": -1,
+            "feetMaterial": -1,
+            "glasses": -1,
+            "hair": 1,
+            "hairMaterial": 2,
+            "hatMaterial": -1,
+            "jacket": 4,
+            "jacketMaterial": 3,
+            "legs": 3,
+            "legsMaterial": -1,
+            "skin": 2,
+            "tie": -1,
+            "tieMaterial": -1
+        },
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1,
+                "y": 0,
+                "z": -0.7
+            },
+            "rotation": {
+                "x": 0,
+                "y": 270,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "treasure_chest_2",
+        "type": "chest_2",
+        "salientMaterials": ["wood"],
+        "materials": ["AI2-THOR/Materials/Wood/LightWoodCounters3"],
+        "associatedWithAgent": "agent_male_2",
+        "locked": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.4,
+                "y": 0,
+                "z": -0.1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 270,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "ball_b_2",
+        "type": "ball",
+        "mass": 1,
+        "salientMaterials": ["plastic"],
+        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 2"],
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.4,
+                "y": 0.125,
+                "z": -0.1
+            },
+            "scale": {
+                "x": 0.2,
+                "y": 0.2,
+                "z": 0.2
+            }
+        }]
+    },
+    {
+        "id": "sturdy_box_2",
+        "type": "chest_1",
+        "salientMaterials": ["wood"],
+        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 2"],
+        "associatedWithAgent": "agent_male_2",
+        "locked": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.4,
+                "y": 0,
+                "z": -1.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 270,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    }]
+}

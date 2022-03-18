@@ -1040,6 +1040,75 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             ApplyForceObject(action);
         }
     }
+
+    public void InteractWithAgent(ServerAction action) {
+        bool continueInteraction = IsVisableAndInDistance(action, "Simulation Agent");
+        if(!continueInteraction) {
+            actionFinished(false);
+            return;
+        }        
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
+        Debug.Log(simulationAgent.name);
+        foreach (SimObjPhysics sop in main.GetAgentObjectAssociations()[simulationAgent.name]) {
+            CanOpen_Object associatedObject = sop.GetComponent<CanOpen_Object>();
+            associatedObject.locked = false;
+            associatedObject.SetOpenPercent(1);
+            associatedObject.Interact();
+        }
+        actionFinished(true);
+    }
+
+    public bool IsVisableAndInDistance(ServerAction action, string obstructedObject) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return false;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return false;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                return false;
+            }
+            
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+
+        if (target == null || !target.GetComponent<SimObjPhysics>()) {
+            errorMessage = action.objectId + " is not interactable.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+            return false;
+        }
+
+        // Must call this now because it will set target.isInteractable
+        bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
+        if (isNotVisible || !target.isInteractable) {
+            if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
+                errorMessage = obstructedObject + " " + action.objectId + " is obstructed.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                return false;
+            }
+            
+        }
+
+        if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
+            errorMessage = action.objectId + " is not visible.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+            return false;
+        }
+        return true;
+    }
 }
 
 /* class for contatining movement data */
