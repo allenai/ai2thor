@@ -601,7 +601,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         CheckIfInLava();
 
         //Simulation Agent Animations
-        List<MCSSimulationAgent> simulationAgents =  GameObject.Find("MCS").GetComponent<MCSMain>().simulationAgents;
+        List<MCSSimulationAgent> simulationAgents =  GameObject.Find("MCS").GetComponent<MCSMain>().GetSimulationAgents();
         foreach(MCSSimulationAgent simAgent in simulationAgents) {
             for(int i = 0; i<MCSMain.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
                 simAgent.IncrementAnimationFrame();

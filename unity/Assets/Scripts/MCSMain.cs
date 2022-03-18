@@ -121,7 +121,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallFront;
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
-    public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
     public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 2;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
@@ -2122,6 +2122,10 @@ public class MCSMain : MonoBehaviour {
 
     public static int GetFloorDepth() {
         return MCSMain.FLOOR_DEPTH;
+    }
+
+    public List<MCSSimulationAgent> GetSimulationAgents() {
+        return this.simulationAgents;
     }
 }
 
