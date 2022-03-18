@@ -187,6 +187,14 @@ namespace Thor.Procedural.Data {
     public class BoundingBox {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
+
+        public Vector3 center() {
+            return this.min + (this.max - this.min) / 2.0f;
+        }
+
+        public Vector3 size() {
+            return (this.max - this.min);
+        }
     }
 
     [Serializable]
