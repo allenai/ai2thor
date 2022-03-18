@@ -123,7 +123,7 @@ public class MCSMain : MonoBehaviour {
     private List<Light> sceneLights = new List<Light>();
     private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
     private Dictionary<string, List<SimObjPhysics>> agentObjectAssociations = new Dictionary<string, List<SimObjPhysics>>();
-    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 2;
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -2067,7 +2067,7 @@ public class MCSMain : MonoBehaviour {
         });
 
         // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
-        if (step == 0 && !actionPlayed && objectConfig.agentSettings != null) {
+        if (step == 0 && !actionPlayed && objectConfig.agent) {
             MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
             if(simulationAgent != null)
                 simulationAgent.SetDefaultAnimation();

@@ -65,7 +65,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
             clipNamesAndDurations.Add(clip.name, clip.length);
         }
-        MCSMain mcsMain= FindObjectOfType<MCSMain>();
+        MCSMain mcsMain = FindObjectOfType<MCSMain>();
         mcsMain.GetSimulationAgents().Add(this);
         SetDefaultAnimation();
         IncrementAnimationFrame();
