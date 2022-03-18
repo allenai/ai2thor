@@ -471,7 +471,7 @@ namespace Thor.Procedural {
             return visibilityPointsGO;
         }
 
-        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, string gameObjectId = "Structure", bool squareTiling = false) {
+        public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
             var structure = new GameObject(gameObjectId);
 
             var zip3 = walls.Zip(
@@ -485,7 +485,14 @@ namespace Thor.Procedural {
             var index = 0;
             foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
                 if (!w0.empty) {
-                    var wallGO = createAndJoinWall(index, materialDb, w0, w1, w2, squareTiling: squareTiling);
+                    var wallGO = createAndJoinWall(
+                        index,
+                        materialDb,
+                        w0,
+                        w1, 
+                        w2,
+                        squareTiling: proceduralParameters.squareTiling,
+                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness);
 
                     wallGO.transform.parent = structure.transform;
                     index++;
@@ -494,8 +501,8 @@ namespace Thor.Procedural {
             return structure;
         }
 
-        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, string gameObjectId = "Structure") {
-            return createWalls(room.walls, materialDb, gameObjectId);
+        public static GameObject createWalls(Room room, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
+            return createWalls(room.walls, materialDb, proceduralParameters, gameObjectId);
         }
 
         private static Vector3? vectorsIntersectionXZ(Vector3 line1P0, Vector3 line1Dir, Vector3 line2P0, Vector3 line2Dir) {
@@ -624,6 +631,21 @@ namespace Thor.Procedural {
             return theta * 180.0f / Mathf.PI;
         }
 
+        private static float TriangleArea(List<Vector3> vertices, int index0, int index1, int index2) {
+            Vector3 a = vertices[index0];
+            Vector3 b = vertices[index1];
+            Vector3 c = vertices[index2];
+            Vector3 cross = Vector3.Cross(a-b, a-c);
+            float area = cross.magnitude * 0.5f;
+            Debug.Log($"Area between {index0}, {index1}, {index2} = {area}");
+            return area;
+        }
+
+        private static float GetBBXYArea(BoundingBox bb) {
+            var diff = bb.max - bb.min;
+            return diff.x * diff.y;
+        }
+
         public static GameObject createAndJoinWall(
             int index,
             AssetMap<Material> materialDb,
@@ -703,7 +725,13 @@ namespace Thor.Procedural {
 
             var min = p0;
             var max = p1 + new Vector3(0.0f, toCreate.height, 0.0f);
-            
+
+            // BoundingBox box0 = new BoundingBox();
+            // BoundingBox box1 = new BoundingBox();
+            // BoundingBox box2 = new BoundingBox();
+            // BoundingBox box3 = new BoundingBox();
+
+            IEnumerable<BoundingBox> colliderBoundingBoxes = new List<BoundingBox>();
 
             if (toCreate.hole != null) {
                 var dims = toCreate.hole.boundingBox.max - toCreate.hole.boundingBox.min;
@@ -717,6 +745,59 @@ namespace Thor.Procedural {
                         width - toCreate.hole.boundingBox.max.x, toCreate.hole.boundingBox.min.y
                     );
                 }
+
+                colliderBoundingBoxes = new List<BoundingBox>() {
+                    new BoundingBox() {min = p0, max =  p0
+                           + p0p1_norm * offset.x
+                           + Vector3.up * (toCreate.height)},
+                     new BoundingBox() {
+                        min = p0
+                            + p0p1_norm * offset.x
+                            + Vector3.up * (offset.y + dims.y),
+                        max = p0
+                            + p0p1_norm * (offset.x + dims.x)
+                            + Vector3.up * (toCreate.height)},
+                    new BoundingBox() {
+                        min = p0
+                            + p0p1_norm * (offset.x + dims.x),
+                        max = p1 + Vector3.up * (toCreate.height)},
+                    new BoundingBox() {
+                        min = p0
+                            + p0p1_norm * offset.x,
+                        max = p0
+                            + p0p1_norm * (offset.x + dims.x)
+                            + Vector3.up * (offset.y)
+                    }
+                };
+                const float areaEps =0.0001f;
+                colliderBoundingBoxes = colliderBoundingBoxes.Where(bb => Math.Abs(GetBBXYArea(bb)) > areaEps).ToList();
+
+
+                // var box0 = new BoundingBox() {min = p0, max =  p0
+                //            + p0p1_norm * offset.x
+                //            + Vector3.up * (toCreate.height)};
+                // var box1 = new BoundingBox() {
+                //         min = p0
+                //             + p0p1_norm * offset.x
+                //             + Vector3.up * (offset.y + dims.y),
+                //         max = p0
+                //             + p0p1_norm * (offset.x + dims.x)
+                //             + Vector3.up * (toCreate.height)};
+            
+                // var box2 = new BoundingBox() {
+                //         min = p0
+                //             + p0p1_norm * (offset.x + dims.x),
+                //         max = p1 + Vector3.up * (toCreate.height)};
+
+                // var box3 = new BoundingBox() {
+                //         min = p0
+                //             + p0p1_norm * offset.x,
+                //         max = p0
+                //             + p0p1_norm * (offset.x + dims.x)
+                //             + Vector3.up * (offset.y)
+                // };
+
+                
                 vertices = new List<Vector3>() {
                         p0,
                         p0 + new Vector3(0.0f, toCreate.height, 0.0f),
@@ -745,8 +826,27 @@ namespace Thor.Procedural {
                 // triangles = new List<int>() {
                 //      1, 0, 2, 1, 2, 3, 1, 3, 4, 4, 5, 3, 4, 5, 6, 0, 6, 7, 0, 7, 2 };
 
+                
+
                 triangles = new List<int>() {
                      0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7};
+
+                var toRemove = new List<int>();
+                // const float areaEps = 1e-4f;
+                for (int i = 0; i < triangles.Count/3; i++) {
+                    var i0 = triangles[i*3];
+                    var i1 = triangles[ i*3 + 1];
+                    var i2 = triangles[ i*3 + 2];
+                    var area = TriangleArea(vertices, i0, i1, i2);
+                    
+                    if (area <= areaEps) {
+                        toRemove.AddRange(new List<int>() { i*3, i*3 + 1, i*3 + 2 });
+                    }
+                }
+                var toRemoveSet = new HashSet<int>(toRemove);
+                Debug.Log($"ToRemove for wall {toCreate.id} {string.Join(",", toRemove)}");
+                
+                triangles = triangles.Where((t, i) => !toRemoveSet.Contains(i)).ToList();
 
             } else {
 
@@ -820,8 +920,64 @@ namespace Thor.Procedural {
             var meshRenderer = wallGO.AddComponent<MeshRenderer>();
 
             if (toCreate.hole != null) {
-                var meshCollider  = wallGO.AddComponent<MeshCollider>();
-                meshCollider.sharedMesh = mesh;
+                // var meshCollider  = wallGO.AddComponent<MeshCollider>();
+                // meshCollider.sharedMesh = mesh;
+                
+                var holeColliders = new GameObject($"Colliders");
+
+                
+                
+                holeColliders.transform.parent = wallGO.transform;
+                holeColliders.transform.localPosition = Vector3.zero;
+                holeColliders.transform.localRotation = Quaternion.identity;
+
+                var i = 0;
+                foreach (var boundingBox in colliderBoundingBoxes) {
+
+                    var colliderObj = new GameObject($"Collider_{i}");
+                    colliderObj.transform.parent = holeColliders.transform;
+                    colliderObj.transform.localPosition = Vector3.zero;
+                    colliderObj.transform.localRotation = Quaternion.identity;
+                    var boxCollider = colliderObj.AddComponent<BoxCollider>();
+                    boxCollider.center = boundingBox.center();
+                    boxCollider.size = boundingBox.size() + Vector3.forward * colliderThickness;
+
+                }
+
+                // var colliderObj0 = new GameObject($"Collider_0");
+                // colliderObj0.transform.parent = holeColliders.transform;
+                // colliderObj0.transform.localPosition = Vector3.zero;
+                // colliderObj0.transform.localRotation = Quaternion.identity;
+                // var collider0 = colliderObj0.AddComponent<BoxCollider>();
+                // collider0.center = box0.center();
+                // collider0.size = box0.size();
+
+                // var colliderObj1 = new GameObject($"Collider_1");
+                // colliderObj1.transform.parent = holeColliders.transform;
+                // colliderObj1.transform.localPosition = Vector3.zero;
+                // colliderObj1.transform.localRotation = Quaternion.identity;
+                // var collider1 = colliderObj1.AddComponent<BoxCollider>();
+                // collider1.center = box1.center();
+                // collider1.size = box1.size();
+
+                // var colliderObj2 = new GameObject($"Collider_2");
+                // colliderObj2.transform.parent = holeColliders.transform;
+                // colliderObj2.transform.localPosition = Vector3.zero;
+                // colliderObj2.transform.localRotation = Quaternion.identity;
+                // var collider2 = colliderObj2.AddComponent<BoxCollider>();
+                // collider2.center = box2.center();
+                // collider2.size = box2.size();
+                
+                // if (Math.Abs(box3.max.y - box3.min.y) > 1e-4) {
+                //     var colliderObj3 = new GameObject($"Collider_3");
+                //     colliderObj3.transform.parent = holeColliders.transform;
+                //     colliderObj3.transform.localPosition = Vector3.zero;
+                //     colliderObj3.transform.localRotation = Quaternion.identity;
+                //     var collider3 = colliderObj3.AddComponent<BoxCollider>();
+                //     collider3.center = box3.center();
+                //     collider3.size = box3.size();
+                // }
+                
             }
             else {
                 var boxC = wallGO.AddComponent<BoxCollider>();
@@ -1032,7 +1188,8 @@ namespace Thor.Procedural {
             simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
 
             // simObjPhysics.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBox };
-            simObjPhysics.MyColliders = new Collider[] { wallGameObject.GetComponent<Collider>() };
+           
+            simObjPhysics.MyColliders =  wallGameObject.GetComponentsInChildren<Collider>();
 
             simObjPhysics.transform.parent = wallGameObject.transform;
 
@@ -1136,7 +1293,7 @@ namespace Thor.Procedural {
             return floorGameObject;
         }
 
-        public static GameObject createFloorGameObject(string name, RectangleRoom room, AssetMap<Material> materialDb, string simObjId, float receptacleHeight = 0.7f, float floorColliderThickness = 1.0f, Vector3? position = null) {
+        public static GameObject createFloorGameObject(string name, RectangleRoom room, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string simObjId, Vector3? position = null) {
             var floorGameObject = createSimObjPhysicsGameObject(name, position);
 
             floorGameObject.GetComponent<MeshFilter>().mesh = ProceduralTools.GetRectangleFloorMesh(room);
@@ -1148,14 +1305,14 @@ namespace Thor.Procedural {
             var visibilityPoints = ProceduralTools.CreateVisibilityPointsGameObject(room);
             visibilityPoints.transform.parent = floorGameObject.transform;
 
-            var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, room, receptacleHeight);
-            var collider = ProceduralTools.createFloorCollider(floorGameObject, room, floorColliderThickness);
+            var receptacleTriggerBox = ProceduralTools.createFloorReceptacle(floorGameObject, room, proceduralParameters.receptacleHeight);
+            var collider = ProceduralTools.createFloorCollider(floorGameObject, room, proceduralParameters.floorColliderThickness);
 
             ProceduralTools.setRoomSimObjectPhysics(floorGameObject, simObjId, visibilityPoints, receptacleTriggerBox, collider.GetComponentInChildren<Collider>());
 
             receptacleTriggerBox.AddComponent<Contains>();
 
-            ProceduralTools.createWalls(room, materialDb, "Structure");
+            ProceduralTools.createWalls(room, materialDb, proceduralParameters, "Structure");
             return floorGameObject;
         }
 
@@ -1191,6 +1348,7 @@ namespace Thor.Procedural {
                 materialProperties = wall.materialProperties,
                 empty = wall.empty,
                 roomId = wall.roomId,
+                thickness = wall.thickness,
                 hole = hole,
                 materialTilingXDivisor = wall.materialTilingXDivisor,
                 materialTilingYDivisor = wall.materialTilingYDivisor,
@@ -1288,12 +1446,14 @@ namespace Thor.Procedural {
             string ceilingMaterialId = house.proceduralParameters.ceilingMaterial;
 
             var windowsAndDoors = house.doors.Select(d => d as WallRectangularHole).Concat(house.windows);
-            foreach (var obj in windowsAndDoors) {
-                // NOTE: this is currently necessary to make min=0 correctly on the
-                // edge of the wall.
-                obj.boundingBox.min -= obj.assetOffset;
-                obj.boundingBox.max -= obj.assetOffset;
-            }
+            // This is incorrect was leading to collision issues assetOffset should not affect the hole cut,
+            // it's just an offset for the asset
+            // foreach (var obj in windowsAndDoors) {
+            //     // NOTE: this is currently necessary to make min=0 correctly on the
+            //     // edge of the wall.
+            //     obj.boundingBox.min -= obj.assetOffset;
+            //     obj.boundingBox.max -= obj.assetOffset;
+            // }
             var holes = windowsAndDoors
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall0, hole), (hole.wall1, hole) })
                 .Where(pair => !String.IsNullOrEmpty(pair.Item1))
@@ -1442,7 +1602,7 @@ namespace Thor.Procedural {
 
             var structureGO = new GameObject(DefaultRootStructureObjectName);
 
-            var wallsGO = ProceduralTools.createWalls(walls, materialDb, DefaultRootWallsObjectName, house.proceduralParameters.squareTiling);
+            var wallsGO = ProceduralTools.createWalls(walls, materialDb, house.proceduralParameters, DefaultRootWallsObjectName);
 
             floorGameObject.transform.parent = structureGO.transform;
             wallsGO.transform.parent = structureGO.transform;

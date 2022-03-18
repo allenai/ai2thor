@@ -55,12 +55,12 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class ShadowParameters {
         public string type { get; set; } = "Soft";
-        public float strength { get; set; }
+        public float strength { get; set; } = 1.0f;
 
-        public float normalBias { get; set; }
-        public float bias { get; set; }
-        public float nearPlane { get; set; }
-        public string resolution { get; set; }
+        public float normalBias { get; set; } = 0.4f;
+        public float bias { get; set; } = 0.05f;
+        public float nearPlane { get; set; } = 0.2f;
+        public string resolution { get; set; } = "FromQualitySettings";
     }
 
     [Serializable]
@@ -113,6 +113,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralParameters {
         public float floorColliderThickness { get; set; }
+        public float minWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
         public string skyboxId { get; set; }
         public string datetime { get; set; }
@@ -186,6 +187,14 @@ namespace Thor.Procedural.Data {
     public class BoundingBox {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
+
+        public Vector3 center() {
+            return this.min + (this.max - this.min) / 2.0f;
+        }
+
+        public Vector3 size() {
+            return (this.max - this.min);
+        }
     }
 
     [Serializable]

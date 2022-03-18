@@ -390,7 +390,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["renderInstanceSegmentation"] = true;
                         action["renderSemanticSegmentation"] = true;
                         action["action"] = "Initialize";
-                        action["procedural"] = true;
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         break;
                     }
@@ -2878,9 +2877,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                         }
                         else if (splitcommand.Length >= 4) {
-                            // Target Position
+                            // Target position
                             action.position = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
-                        } 
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -2968,28 +2967,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "visualize_path": {
-                        ServerAction action = new ServerAction();
-                        action.action = "VisualizePath";
-                        action.objectId = "0";
-
-                        // pass in a min range, max range, delay
-                        if (splitcommand.Length > 1) {
-                            // ID of spawner
-                            action.objectId = splitcommand[1];
-
-                            if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3]),
-                                    float.Parse(splitcommand[4])
-                                );
-                            } else {
-                                action.positions = new List<Vector3>() {
-                                    new Vector3( 4.258f, 1.0f, -1.69f),
-                                    new Vector3(6.3f, 1.0f, -3.452f)
-                                };
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "VisualizePath",
+                            ["positions"] = new List<Vector3>() {
+                                new Vector3(4.258f, 1.0f, -1.69f),
+                                new Vector3(6.3f, 1.0f, -3.452f)
                             }
-                        }
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "visualize_path2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "VisualizePath",
+                            ["positions"] = new List<Vector3>() {
+                                new Vector3(4.258f, 1.0f, -1.69f),
+                                new Vector3(8.3f, 1.0f, 3.452f)
+                            }
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "hide_path": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "HideVisualizedPath"
+                        };
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

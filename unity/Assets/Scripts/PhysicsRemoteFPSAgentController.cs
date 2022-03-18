@@ -5826,13 +5826,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-
-        public void DisableScreenSpaceAmbientOcclusion() {
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            script.enabled = false;
-            actionFinished(true);
-        }
-
         // in case you want to change the timescale
         public void ChangeTimeScale(ServerAction action) {
             if (action.timeScale > 0) {
@@ -6416,7 +6409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public float roundToGridSize(float x, float gridSize, bool roundUp) {
-            int mFactor = (int)(1.0f / gridSize);
+            int mFactor = Convert.ToInt32(1.0f / gridSize);
             if (Math.Abs(mFactor - 1.0f / gridSize) > 1e-3) {
                 throw new Exception("1.0 / gridSize should be an integer.");
             }
@@ -6494,7 +6487,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log(xMax);
             // Debug.Log(zMin);
             // Debug.Log(zMax);
-
 
             List<GameObject> agentGameObjects = new List<GameObject>();
             foreach (BaseFPSAgentController agent in agentManager.agents) {
