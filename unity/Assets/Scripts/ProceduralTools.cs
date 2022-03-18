@@ -938,6 +938,8 @@ namespace Thor.Procedural {
                     colliderObj.transform.parent = holeColliders.transform;
                     colliderObj.transform.localPosition = Vector3.zero;
                     colliderObj.transform.localRotation = Quaternion.identity;
+                    colliderObj.tag = "SimObjPhysics";
+                    colliderObj.layer = 8;
                     var boxCollider = colliderObj.AddComponent<BoxCollider>();
                     boxCollider.center = boundingBox.center();
                     boxCollider.size = boundingBox.size() + Vector3.forward * colliderThickness;
