@@ -122,7 +122,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
     private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
-    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 2;
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
