@@ -1029,15 +1029,12 @@ def ci_build(context):
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
                         link_build_cache(temp_dir, arch, build["branch"])
 
-                        if build["branch"] == "nanna":
-                            ci_build_arch(temp_dir, arch, build["commit_id"], include_private_scenes)
-                        else:
-                            p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
-                            p.start()
-                            # wait for Unity to start so that it can pick up the GICache config
-                            # changes
-                            time.sleep(30)
-                            procs.append(p)
+                        p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
+                        p.start()
+                        # wait for Unity to start so that it can pick up the GICache config
+                        # changes
+                        time.sleep(30)
+                        procs.append(p)
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
