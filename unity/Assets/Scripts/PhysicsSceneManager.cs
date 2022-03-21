@@ -457,7 +457,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         ObjectTypeCount[] numDuplicatesOfType,
         List<SimObjType> excludedReceptacleTypes,
         String[] receptacleObjectIds,
-        String[] objectIds
+        String[] objectIds,
+        bool allowMoveable
     ) {
 #if UNITY_EDITOR
         var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -468,7 +469,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         SimObjPhysics[] simObjsInScene = GameObject.FindObjectsOfType<SimObjPhysics>();
         List<GameObject> simObjsInSceneToGameObjectList = new List<GameObject>();
         foreach (SimObjPhysics sop in simObjsInScene) {
-            if (sop.IsPickupable) {
+            if (allowMoveable || sop.IsPickupable) {
                 simObjsInSceneToGameObjectList.Add(sop.gameObject);
             }
         }

@@ -3139,7 +3139,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             String[] objectIds = null,
             String[] receptacleObjectIds = null,
             int numPlacementAttempts = 5,
-            bool allowFloor = false
+            bool allowFloor = false,
+            bool allowMoveable = false
         ) {
             if (numPlacementAttempts <= 0) {
                 errorMessage = "numPlacementAttempts must be a positive integer.";
@@ -3212,7 +3213,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 numDuplicatesOfType: numDuplicatesOfType,
                 excludedReceptacleTypes: listOfExcludedReceptacleTypes,
                 receptacleObjectIds: receptacleObjectIds,
-                objectIds: objectIds
+                objectIds: objectIds,
+                allowMoveable: allowMoveable
             );
 
             if (success && !placeStationary) {
