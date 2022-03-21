@@ -122,7 +122,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
     private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
-    private Dictionary<string, List<SimObjPhysics>> agentObjectAssociations = new Dictionary<string, List<SimObjPhysics>>();
+    private Dictionary<string, SimObjPhysics> agentObjectAssociations = new Dictionary<string, SimObjPhysics>();
     public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
@@ -325,6 +325,16 @@ public class MCSMain : MonoBehaviour {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
+        }
+
+        foreach(string simulationAgentId in agentObjectAssociations.Keys) {
+            MCSSimulationAgent simulationAgent = null;
+            foreach (MCSSimulationAgent simAgent in this.simulationAgents) {
+                if(simAgent.name == simulationAgentId)
+                    simulationAgent = simAgent.GetComponent<MCSSimulationAgent>();
+            }
+            SimObjPhysics heldSimObj = agentObjectAssociations[simulationAgentId];
+            simulationAgent.heldObject = heldSimObj;
         }
 
         this.lastStep = -1;
@@ -1439,11 +1449,7 @@ public class MCSMain : MonoBehaviour {
 
         if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
             ai2thorPhysicsScript.associatedWithAgent = objectConfig.associatedWithAgent;
-            if(agentObjectAssociations.ContainsKey(ai2thorPhysicsScript.associatedWithAgent))
-                agentObjectAssociations[ai2thorPhysicsScript.associatedWithAgent].Add(ai2thorPhysicsScript);
-            else
-                agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, new List<SimObjPhysics>(){ai2thorPhysicsScript});
-            
+            agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, ai2thorPhysicsScript);
         }
 
         // Call Start to initialize the script since it did not exist on game start.
@@ -2139,10 +2145,6 @@ public class MCSMain : MonoBehaviour {
 
     public List<MCSSimulationAgent> GetSimulationAgents() {
         return this.simulationAgents;
-    }
-
-    public Dictionary<string, List<SimObjPhysics>> GetAgentObjectAssociations() {
-        return this.agentObjectAssociations;
     }
 
     public static int GetFloorDepth() {

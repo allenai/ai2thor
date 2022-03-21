@@ -1051,17 +1051,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
         MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        foreach (SimObjPhysics sop in main.GetAgentObjectAssociations()[simulationAgent.name]) {
-            CanOpen_Object associatedObject = sop.GetComponent<CanOpen_Object>();
-            associatedObject.locked = false;
-            associatedObject.SetOpenPercent(1);
-            associatedObject.Interact();
-        }
         int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
-        Debug.Log(type);
-        simulationAgent.AssignClip(MCSSimulationAgent.agentInteractionActionAnimations[type]);
-        simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
-        simulationAgent.currentAnimationFrame = MCSSimulationAgent.AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME;
+        if(simulationAgent.isHoldingHeldObject && !simulationAgent.reachingIntoBackpack) {
+            simulationAgent.PlayGetObjectOutOfBackpackAnimation();
+            simulationAgent.currentAnimationFrame = MCSSimulationAgent.AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME;
+        }
+        else if(simulationAgent.reachingIntoBackpack) {
+            string outputMessage = "Simulation Agent is currently giving held object.";
+            Debug.Log(outputMessage);
+        }
+        else {
+            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.AGENT_INTERACTION_ALREADY_DROPPED_OBJECT_ANIMATION]);
+            simulationAgent.AssignClip(MCSSimulationAgent.AGENT_INTERACTION_ALREADY_DROPPED_OBJECT_ANIMATION);
+            simulationAgent.currentAnimationFrame = totalFrames - 5;
+            simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
+        }
         actionFinished(true);
     }
 
