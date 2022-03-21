@@ -3692,6 +3692,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void MakeObjectBreakable(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                throw new ArgumentException($"Object ID {objectId} appears to be invalid.");
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (sop.GetComponent<Break>()) {
+                sop.GetComponent<Break>().Unbreakable = false;
+            }
+            actionFinishedEmit(true);
+        }
+
         public void SetObjectPoses(ServerAction action) {
             // make sure objectPoses and also the Object Pose elements inside are initialized correctly
             if (action.objectPoses == null || action.objectPoses[0] == null) {
