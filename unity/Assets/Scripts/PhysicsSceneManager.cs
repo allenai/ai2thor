@@ -469,7 +469,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         SimObjPhysics[] simObjsInScene = GameObject.FindObjectsOfType<SimObjPhysics>();
         List<GameObject> simObjsInSceneToGameObjectList = new List<GameObject>();
         foreach (SimObjPhysics sop in simObjsInScene) {
-            if (allowMoveable || sop.IsPickupable) {
+            if (allowMoveable && sop.IsMoveable || sop.IsPickupable) {
                 simObjsInSceneToGameObjectList.Add(sop.gameObject);
             }
         }
